@@ -30,7 +30,13 @@ Decisiones (eran ambiguas, elegí la más simple):
 - Postes de luz de neón a los costados de las baldosas (20 con luz real, el resto solo neón), columnas oscuras con aros, plataformas flotantes y notas musicales gigantes. Zona 2 suma teclas de piano flotando; zona 3, un pentagrama de luz; zona 1, ondas detrás del spawn.
 - Fondo por zona: un disco de luz grande y lejano (`Ambiente.Fondos`, siempre cargado). Cielo por zona (bruma, horizonte, luz ambiente y estrellas) que cambia con fundido en el cliente (`AmbienteZona.client.luau`).
 - El piso no cambió de brillo; la decoración está fuera de la pista para que el piso siga siendo lo que más se distingue.
-- Rendimiento: 339 piezas en total, ancladas, sin colisión, sin sombras y sin consultas de física; 20 luces sin sombra.
+- Rendimiento (antes del ajuste de luz): 339 piezas, ancladas, sin colisión, sin sombras y sin consultas de física; 20 luces sin sombra.
+
+**Ajuste de mapa y luz (pedido del usuario, 2026-10-07)**
+- Más luz: brillo 1,2 → 2,2, exposición −0,25 → +0,15, luz del cielo sobre los materiales 0,3 → 0,7, bruma menos densa (0,22) y menos haze (0,25), bloom un poco más fuerte, y corrección de color (contraste +0,1, saturación +0,2). Luz ambiente de cada zona más clara. Todo en `Config.Ambiente` y `Config.Zonas`.
+- Las baldosas suben un poco (apagada 0,3, prendida 0,6) para que el camino se lea en celular, pero siguen por debajo del entorno.
+- Mapa: bordes de luz donde termina el camino (marcan bien el piso), arcos de neón con luz sobre los tramos rectos (uno cada ~40 studs) y un suelo lejano oscuro con cuadrícula de luz del color de la zona, para que no se vea vacío abajo.
+- Total de `Workspace.Ambiente`: 582 piezas y 31 luces sin sombra.
 
 ## Etapa 4 (pedido del usuario, 2026-10-07)
 

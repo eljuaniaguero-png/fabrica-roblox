@@ -271,8 +271,8 @@ local Config = {
 			Cielo = {
 				Atmosfera = Color3.fromRGB(25, 40, 90), -- color de la bruma
 				Decaimiento = Color3.fromRGB(10, 20, 55), -- color del horizonte
-				Densidad = 0.3,
-				LuzAmbiente = Color3.fromRGB(50, 70, 115),
+				Densidad = 0.22,
+				LuzAmbiente = Color3.fromRGB(95, 125, 185),
 				Estrellas = 3000,
 			},
 		},
@@ -284,8 +284,8 @@ local Config = {
 			Cielo = {
 				Atmosfera = Color3.fromRGB(80, 20, 70),
 				Decaimiento = Color3.fromRGB(45, 10, 45),
-				Densidad = 0.34,
-				LuzAmbiente = Color3.fromRGB(100, 50, 95),
+				Densidad = 0.24,
+				LuzAmbiente = Color3.fromRGB(165, 95, 160),
 				Estrellas = 1500,
 			},
 		},
@@ -297,8 +297,8 @@ local Config = {
 			Cielo = {
 				Atmosfera = Color3.fromRGB(90, 55, 25),
 				Decaimiento = Color3.fromRGB(50, 25, 40),
-				Densidad = 0.3,
-				LuzAmbiente = Color3.fromRGB(105, 80, 70),
+				Densidad = 0.22,
+				LuzAmbiente = Color3.fromRGB(175, 135, 110),
 				Estrellas = 500,
 			},
 		},
@@ -454,8 +454,8 @@ local Config = {
 	-- lo que pase primero: pisaste BaldosasParaApagar baldosas más, o pasaron SegundosParaApagar.
 	-- El estado es de cada jugador y lo lleva el servidor (Pisadas.luau).
 	Baldosas = {
-		BrilloApagada = 0.22,
-		BrilloEncendida = 0.5,
+		BrilloApagada = 0.3,
+		BrilloEncendida = 0.6,
 		FundidoEncendido = 0.5, -- segundos del fundido al encenderse
 		FundidoApagado = 1.5, -- segundos del fundido al apagarse
 		BaldosasParaApagar = 10, -- se apaga después de pisar esta cantidad de baldosas nuevas
@@ -469,13 +469,19 @@ local Config = {
 
 	-- Luz del ambiente. La aplica el servidor al arrancar (Ambiente.luau).
 	Ambiente = {
-		Brillo = 1.2, -- Lighting.Brightness
-		Exposicion = -0.25, -- Lighting.ExposureCompensation
-		LuzAmbiente = Color3.fromRGB(70, 60, 105), -- Lighting.Ambient
-		LuzExterior = Color3.fromRGB(60, 50, 95), -- Lighting.OutdoorAmbient
-		BloomIntensidad = 0.4,
-		BloomTamano = 24,
-		BloomUmbral = 0.9,
+		Brillo = 2.2, -- Lighting.Brightness
+		Exposicion = 0.15, -- Lighting.ExposureCompensation
+		LuzAmbiente = Color3.fromRGB(110, 100, 160), -- Lighting.Ambient (el cliente la cambia por zona)
+		LuzExterior = Color3.fromRGB(100, 90, 150), -- Lighting.OutdoorAmbient
+		LuzEntorno = 0.7, -- Lighting.EnvironmentDiffuseScale: cuánto ilumina el cielo a los materiales
+		ReflejoEntorno = 0.8, -- Lighting.EnvironmentSpecularScale
+		BloomIntensidad = 0.6,
+		BloomTamano = 28,
+		BloomUmbral = 0.85,
+		BrumaHaze = 0.25, -- Atmosphere.Haze (más bajo = se ve más lejos)
+		BrumaBrillo = 0.3, -- Atmosphere.Glare (resplandor de la bruma)
+		Contraste = 0.1, -- ColorCorrection.Contrast
+		Saturacion = 0.2, -- ColorCorrection.Saturation
 	},
 
 	-- Guardado
