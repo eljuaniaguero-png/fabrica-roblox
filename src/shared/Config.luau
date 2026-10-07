@@ -78,6 +78,7 @@ local efectos = {
 	Caida = { Notas = { -6.5 }, Separacion = 0 }, -- desafinada: medio semitono corrido y grave
 	Trampolin = { Notas = { 12, 19 }, Separacion = 0.04 },
 	SubirNivel = { Notas = { 7, 7, 12, 16, 19, 24 }, Separacion = 0.08 },
+	Puerta = { Notas = { 12, 16, 19, 24, 28 }, Separacion = 0.035 },
 }
 
 -- Paleta de la guía de estilo (Neón nocturno), para lo que pinta el código.
@@ -120,6 +121,34 @@ local Config = {
 		Particulas = 50,
 		RadioAnillo = 9, -- studs hasta donde se abre el anillo de luz
 		DuracionAnillo = 0.8,
+	},
+
+	-- Sensación de velocidad (solo visual). La rapidez es la del personaje en studs/s.
+	Sensacion = {
+		RapidezSinEfecto = 16, -- por debajo no cambia nada (es el WalkSpeed base)
+		RapidezMaxima = 50, -- efecto a pleno (el tope de WalkSpeed)
+		AnimacionExtra = 0.4, -- a rapidez máxima, la animación de correr va 40% más rápida que la normal
+		FovBase = 70, -- campo de visión de la cámara parado
+		FovExtra = 14, -- grados que se abre la cámara a rapidez máxima
+		SuavizadoFov = 5, -- más alto = la cámara se ajusta más rápido
+		SuavizadoRapidez = 8,
+		Histeresis = 2, -- studs/s de margen para bajar de tramo (evita que la estela parpadee)
+		DuracionEstela = 0.35, -- segundos que dura la estela detrás del personaje
+		-- Tramos: desde qué rapidez se activa cada uno, color de la estela y de las chispas,
+		-- chispas por segundo y tamaño de cada chispa.
+		Tramos = {
+			{ Desde = 20, Color = paleta.Cian, Particulas = 6, TamanoParticula = 0.35 },
+			{ Desde = 28, Color = paleta.Violeta, Particulas = 14, TamanoParticula = 0.45 },
+			{ Desde = 36, Color = paleta.Rosa, Particulas = 26, TamanoParticula = 0.55 },
+			{ Desde = 44, Color = paleta.Amarillo, Particulas = 45, TamanoParticula = 0.7 },
+		},
+	},
+
+	-- Cruzar una puerta abierta: destello en pantalla, chispas y sonido (solo visual).
+	CruzarPuerta = {
+		Destello = 0.55, -- transparencia del destello al empezar (0 = blanco total)
+		DuracionDestello = 0.45,
+		Particulas = 40,
 	},
 
 	-- Caídas
