@@ -5,8 +5,32 @@ Estado: **aprobada (2026-10-06)**, versión 2, con los cambios del usuario: melo
 Versión 3 (2026-10-06): OK del usuario + **nota desafinada al caer** + orden por etapas. Estilo elegido: **A — Neón nocturno**.
 Versión 4 (2026-10-06): Etapa 2 con los cambios del usuario: el rebirth da monedas, tienda y conversión **físicas** en el mapa, más sonidos y más variantes de parkour.
 Versión 5 (2026-10-06): Etapa 3 con los cambios del usuario: arreglo de la música, piso que se ilumina, niveles por pasos, sensación de velocidad, vendedor y HUD nuevo.
-Versión 6 (2026-10-07): Etapa 4, bloques 1 y 2 (pedido del usuario): una canción por zona que sube de dificultad, pasos solo por baldosa apagada, baldosas usadas y zonas bloqueadas. Los bloques 3 (tienda con pestañas) y 4 (mapa) quedan para después.
+Versión 6 (2026-10-07): Etapa 4, bloques 1 y 2 (pedido del usuario): una canción por zona que sube de dificultad, pasos solo por baldosa apagada, baldosas usadas y zonas bloqueadas.
+Versión 7 (2026-10-07): Etapa 4, bloques 3 (tienda con tres pestañas) y 4 (mapa con paleta y cielo por zona).
 Próximo punto de control: **prototipo jugable terminado** (Etapas 1 a 4).
+
+## Etapa 4, bloques 3 y 4 (2026-10-07)
+
+Revisión previa con playtest: a ✅, b ✅, d ✅ (canción y cielo cambian al pisar la primera baldosa de otra zona), bloque 1 ✅ (apagado a las 10 baldosas y a los 60 s medidos), bloque 2 ✅. **c** sigue sin hacer por decisión del usuario (zona 1: 41 baldosas y 62 notas; zona 2: 35 y 35; zona 3: 6 y 38). Arreglo: si la red demoraba, el servidor rechazaba la pisada y la baldosa quedaba muda; ahora el cliente reintenta (`Config.Baldosas.ReintentoPisada`).
+
+**Bloque 3 · Tienda** — el menú "Comprar" del vendedor tiene tres pestañas:
+- *Mejoras* (varios niveles, precio = base × factor^nivel): Zapatillas, Pisada firme (+1 paso por baldosa, 5 niv.), Turbo (+4 al tope de velocidad, 5 niv.), Combo firme (el combo aguanta 1 error más por nivel, 3 niv.), Apagado rápido (−1 baldosa y −8 s por nivel, 4 niv.: llega a 6 baldosas y 28 s), Bolsillo.
+- *Consumibles*: Doble paso, Escudo, Imán (15 s, prende solo de a una las baldosas apagadas a menos de 24 studs) y Reinicio (apaga al instante tus baldosas de la zona donde estás).
+- *Cosméticos* (sin ventaja): estelas Fuego, Hielo y Arcoíris; efectos al pisar Chispas, Anillo y Columna. Se compran una vez; tocarlos de nuevo los pone o los saca (uno de cada tipo).
+- Lo que no alcanza se ve en gris con el precio. Todo lo valida el servidor.
+
+Decisiones (eran ambiguas, elegí la más simple):
+- **Combo** (no existía): pisadas válidas seguidas. Cada una suma +1% de velocidad por paso (tope +50%). Error = pisar una baldosa prendida o caerte sin Escudo. Volver a la baldosa que acabás de prender (menos de 1,5 s) no es error. Se ve en el HUD arriba del inventario.
+- El Escudo también salva el combo.
+- El Imán cuenta como pisada normal: da pasos, velocidad, nota y combo.
+- Para las pruebas automáticas hay un `ServerStorage.Pruebas` que solo existe en Studio (da monedas o pasos).
+
+**Bloque 4 · Mapa** — carpeta `Workspace.Ambiente`:
+- Paleta por zona (en `Config.Zonas`): zona 1 cian + violeta, zona 2 rosa + violeta, zona 3 amarillo + rosa. Las baldosas se repintaron en damero con esos dos colores.
+- Postes de luz de neón a los costados de las baldosas (20 con luz real, el resto solo neón), columnas oscuras con aros, plataformas flotantes y notas musicales gigantes. Zona 2 suma teclas de piano flotando; zona 3, un pentagrama de luz; zona 1, ondas detrás del spawn.
+- Fondo por zona: un disco de luz grande y lejano (`Ambiente.Fondos`, siempre cargado). Cielo por zona (bruma, horizonte, luz ambiente y estrellas) que cambia con fundido en el cliente (`AmbienteZona.client.luau`).
+- El piso no cambió de brillo; la decoración está fuera de la pista para que el piso siga siendo lo que más se distingue.
+- Rendimiento: 339 piezas en total, ancladas, sin colisión, sin sombras y sin consultas de física; 20 luces sin sombra.
 
 ## Etapa 4 (pedido del usuario, 2026-10-07)
 
@@ -186,7 +210,7 @@ Obby incremental: cada paso te da velocidad y pasos, cada baldosa que pisás se 
 
 ## Queda AFUERA del prototipo
 
-- Más de una zona o melodía.
+- Más de tres zonas o canciones.
 - Mascotas, Robux, gamepasses, tablas de posiciones.
 - Efectos visuales elaborados más allá de estelas, chispas y destellos (Etapa 3).
 
@@ -203,6 +227,7 @@ Obby incremental: cada paso te da velocidad y pasos, cada baldosa que pisás se 
 - Puertas y checkpoints: marcos de neón (puertas rosa, checkpoints cian, meta amarilla).
 - Luz: noche (ClockTime 0), bruma violeta, mucho bloom.
 - Fuente de la UI: Michroma.
+- Cada zona usa dos colores de la paleta (zona 1 cian + violeta, zona 2 rosa + violeta, zona 3 amarillo + rosa) y su propio cielo.
 
 Las muestras quedaron guardadas en `ServerStorage.MuestrasEstilo` (fuera del mapa). Puertas: rosa si te falta velocidad, cian si ya pasás. Bases de vidrio oscuro debajo de cada baldosa en `Pista.Bases`.
 
