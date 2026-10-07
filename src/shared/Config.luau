@@ -133,13 +133,16 @@ local Config = {
 	VolumenEfectos = 0.8,
 	Melodia = melodia,
 	Efectos = efectos,
-	DuracionDestello = 0.25,
-	ColorDestello = Color3.new(1, 1, 1),
 
 	-- Baldosas: el color del estilo vive en cada baldosa del mapa; el código lo atenúa.
 	-- Brillo = parte del color que se ve (0 = negro, 1 = color pleno).
+	-- Arrancan apagadas, se encienden al pisarlas y se apagan solas un rato después.
 	Baldosas = {
-		BrilloEncendida = 0.45,
+		BrilloApagada = 0.22,
+		BrilloEncendida = 0.5,
+		FundidoEncendido = 0.5, -- segundos del fundido al encenderse
+		FundidoApagado = 2.5, -- segundos del fundido al apagarse
+		TiempoEncendida = 300, -- segundos desde la última pisada hasta que se apaga (5 minutos)
 	},
 
 	-- Luz del ambiente. La aplica el servidor al arrancar (Ambiente.luau).
