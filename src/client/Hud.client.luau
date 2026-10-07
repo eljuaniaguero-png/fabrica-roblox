@@ -2,6 +2,7 @@
 -- Conecta el HUD (StarterGui.HUD, armado en Studio) con los atributos que publica el servidor.
 -- HUD > Tarjeta (con UIScale) > Nivel, Progreso (TextLabel), Barra > Relleno (Frame)
 --                             > Stats > Velocidad, Pasos, Monedas (Frame > Valor)
+--                             > Zonas > Zona1, Zona2, Zona3 (Frame > Texto, Candado; UIStroke = estás ahí)
 --                             > RebirthListo (TextLabel debajo: solo cuando podés hacer rebirth)
 -- HUD > Inventario > DoblePaso, Escudo (TextButton)
 -- HUD > Aviso (TextLabel)
@@ -27,6 +28,7 @@ local stats = tarjeta:WaitForChild("Stats")
 local valorVelocidad = stats:WaitForChild("Velocidad"):WaitForChild("Valor") :: TextLabel
 local valorPasos = stats:WaitForChild("Pasos"):WaitForChild("Valor") :: TextLabel
 local valorMonedas = stats:WaitForChild("Monedas"):WaitForChild("Valor") :: TextLabel
+local zonas = tarjeta:WaitForChild("Zonas")
 local rebirthListo = tarjeta:WaitForChild("RebirthListo") :: TextLabel
 local inventario = hud:WaitForChild("Inventario")
 local aviso = hud:WaitForChild("Aviso") :: TextLabel
@@ -61,6 +63,33 @@ local function formato(numero: number): string
 	return (texto:reverse():gsub("(%d%d%d)(%d)", "%1.%2"):reverse())
 end
 
+-- Zonas: las bloqueadas muestran candado y el nivel que piden; la zona donde estás, con borde.
+local function actualizarZonas(nivel: number)
+	local actual = math.max(atributoNumero("Zona"), 1)
+	for indice in Config.Zonas do
+		local chip = zonas:FindFirstChild(`Zona{indice}`)
+		if chip then
+			local minimo = if indice == 1 then 0 else Config.NivelPuertas[indice - 1] or 0
+			local abierta = nivel >= minimo
+			local texto = chip:FindFirstChild("Texto")
+			if texto and texto:IsA("TextLabel") then
+				texto.Text = if abierta then `ZONA {indice}` else `NIV {minimo}`
+				texto.TextColor3 = if abierta
+					then Color3.new(1, 1, 1)
+					else Color3.fromRGB(170, 160, 210)
+			end
+			local candado = chip:FindFirstChild("Candado")
+			if candado and candado:IsA("GuiObject") then
+				candado.Visible = not abierta
+			end
+			local borde = chip:FindFirstChildOfClass("UIStroke")
+			if borde then
+				borde.Enabled = abierta and indice == actual
+			end
+		end
+	end
+end
+
 local ultimoNivel = 0
 local function actualizarTarjeta()
 	local nivel, dentro, necesarios = Niveles.progreso(atributoNumero("PasosTotales"))
@@ -77,6 +106,8 @@ local function actualizarTarjeta()
 			{ Size = UDim2.fromScale(fraccion, 1) }
 		):Play()
 	end
+
+	actualizarZonas(nivel)
 
 	local velocidad = atributoNumero("Velocidad")
 	valorVelocidad.Text = formato(velocidad)

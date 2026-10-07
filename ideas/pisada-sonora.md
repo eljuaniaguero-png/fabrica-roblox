@@ -43,6 +43,13 @@ Revisión previa (playtest + código): estos puntos **no** estaban hechos.
 - La niebla y el candado son visuales y por jugador (cada uno ve los suyos según su nivel). Quién pasa lo siguen decidiendo las puertas en el servidor.
 - Si subís de nivel lejos de la puerta, la animación del candado se guarda y se ve cuando te acercás.
 
+### Cómo quedó en el mapa (Etapa 4)
+
+- `Pista.Bloqueos` > `Bloqueo1` y `Bloqueo2` (Models con streaming Persistent): `Niebla` (pared de neón violeta oscuro de 520 × 300 studs, 2,5 studs detrás de la puerta), `Bruma` (humo que se mueve delante de la pared) y `Candado` (cuerpo con "NIVEL N" y arco de neón rosa que gira sobre su pata izquierda).
+- El cartel de cada puerta subió por encima del candado: dice qué zona abre y cuántos pasos te faltan.
+- HUD: debajo de la tarjeta, `Zonas` con tres fichas. Las bloqueadas muestran candado y "NIV N"; la zona donde estás, con borde amarillo.
+- Cada baldosa tiene el atributo `Zona`: 41 en la zona 1, 35 en la 2 y 6 en la 3.
+
 ## Etapa 3 (pedido del usuario) — se hace por bloques, con un playtest por bloque
 
 **Bloque 1 · Arreglos**

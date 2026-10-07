@@ -15,7 +15,7 @@ local Niveles = require(ReplicatedStorage.Shared.Niveles)
 local jugador = Players.LocalPlayer
 
 -- Con streaming, las puertas llegan y se van mientras jugás: se guardan por parte.
-local puertas: { [BasePart]: number } = {} -- parte -> nivel mínimo
+local puertas: { [BasePart]: number } = {} -- parte -> índice de la puerta
 
 -- Los colores los define el estilo, en atributos de cada puerta (ColorAbierta, ColorCerrada).
 local function colorDe(parte: BasePart, nombre: string, porDefecto: Color3): Color3
@@ -38,7 +38,7 @@ local function texto(parte: BasePart, cartel: string, nombre: string?): TextLabe
 	return if etiqueta and etiqueta:IsA("TextLabel") then etiqueta else nil
 end
 
-local function pintar(parte: BasePart, minimo: number)
+local function pintar(parte: BasePart, indice: number, minimo: number)
 	local pasos = pasosTotales()
 	local abierta = Niveles.nivelDe(pasos) >= minimo
 	local color = if abierta
@@ -51,9 +51,11 @@ local function pintar(parte: BasePart, minimo: number)
 	if enPuerta then
 		enPuerta.Text = if abierta then "¡PASÁ!" else `NIVEL {minimo}`
 	end
+	-- Encima del candado: qué zona abre esta puerta (el nivel lo muestra el candado).
 	local nivel = texto(parte, "CartelNivel", "Nivel")
 	if nivel then
-		nivel.Text = `NIVEL {minimo}`
+		local zona = Config.Zonas[indice + 1]
+		nivel.Text = if zona then string.upper(zona.Nombre) else `NIVEL {minimo}`
 		nivel.TextColor3 = color
 	end
 	local detalle = texto(parte, "CartelNivel", "Detalle")
@@ -64,8 +66,8 @@ local function pintar(parte: BasePart, minimo: number)
 end
 
 local function actualizar()
-	for parte, minimo in puertas do
-		pintar(parte, minimo)
+	for parte, indice in puertas do
+		pintar(parte, indice, Config.NivelPuertas[indice])
 	end
 end
 
@@ -79,9 +81,9 @@ local function registrar(objeto: Instance)
 	end
 	local indice = parte:GetAttribute("PuertaIndice")
 	local minimo = if typeof(indice) == "number" then Config.NivelPuertas[indice] else nil
-	if minimo then
-		puertas[parte] = minimo
-		pintar(parte, minimo)
+	if typeof(indice) == "number" and minimo then
+		puertas[parte] = indice
+		pintar(parte, indice, minimo)
 	end
 end
 
