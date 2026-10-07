@@ -2,7 +2,26 @@
 
 Origen: idea del usuario (2026-10-07). Mecánica de colección + fusión; el contenido (criaturas, nombres, mapa) es todo propio.
 Carpeta del juego: `mutant-lab/`.
-Estado: **borrador, versión 1 (2026-10-07). Esperando el OK del usuario.** En esta etapa solo se diseña: nada de Studio ni código.
+Estado: versión 1 (2026-10-07), aprobada con el pedido de la Parte 1.
+Versión 2 (2026-10-07): **Parte 1 hecha.** Estilo elegido por el usuario: "el que más le gusta a los nenes y el más dopamínico" → **A, Laboratorio caramelo, en versión saturada** (ver "Guía de estilo"). Cambió la regla de colores de la fusión (ver "Ajustes de la Parte 1").
+Próximo punto de control: **Parte 2, máquina de fusión** (esperando el OK del usuario).
+
+## Guía de estilo (elegida: A, Laboratorio caramelo saturado)
+
+- **Paleta**: piso crema `#FFF4E0`, menta `#3EE6B5`, rosa chicle `#FF5FA2`, amarillo `#FFD23F`, violeta oscuro `#4B2C83`. Están en `mutant-lab/src/shared/Config.luau` (`Config.Estilo`).
+- **Materiales**: SmoothPlastic en todo; Glass solo para cosas de agua o hielo; Neon solo para chispas, luces y brasas.
+- **Iluminación**: de día (ClockTime 14), Brightness 2,2 con exposición −0,35, Atmosphere rosada suave, ColorCorrection con +20 % de saturación y un Bloom leve.
+- **Formas**: redondeadas y gordas, ojos grandes con borde oscuro. Las criaturas se muestran sobre pedestales violeta con un borde amarillo para que resalten (sobre todo las blancas).
+- **Textos**: fuente FredokaOne en blanco con borde violeta.
+
+## Ajustes de la Parte 1 (después de mirar las capturas)
+
+1. **Colores de las fusiones (cambio de regla).** Con la regla original, toda la fusión salía del color del primer padre y Glumulo o Roparo parecían una sola especie de un color. Ahora **cada pieza conserva el color del padre que la trae**, y sus manchas llevan el color del padre siguiente. En gen 2, las piezas del primero tienen manchas del segundo y al revés. En gen 3 las manchas van en ronda: primero → medio → último → primero. Esto reemplaza "color principal", "manchas" y "brillo" de las tablas del punto 2. La mezcla se ve de un vistazo.
+2. **Ojos con borde oscuro.** En cabezas blancas (Brinoza) los ojos blancos no se veían. Ahora todos los ojos llevan un borde oscuro.
+3. **Cara del hongo color crema.** La cara de Sutomi era blanca con ojos blancos; ahora es crema y lleva el sombrero del color del padre.
+4. **Raíces y patas de insecto inclinadas hacia adentro.** Antes se abrían desde arriba y parecían palitos sueltos.
+5. **Alas de membrana en abanico de frente.** Las alas de Nerulo quedaban de canto y desde adelante solo se veía un palito; ahora son tres "dedos" abiertos hacia los costados. Las alas transparentes (Fotina) también se abrían hacia adentro y se cruzaban; se dieron vuelta y se hicieron menos transparentes.
+6. **Proyecto aparte.** Mutant Lab tiene su propio proyecto de Rojo en `mutant-lab/` (puerto **34873**), para no pisar Pisada Sonora (34872). El lugar de Studio es `mutant-lab/MutantLab.rbxlx` y no se sube a git.
 
 ## La idea en una línea
 
@@ -206,7 +225,7 @@ Cómo lo vamos a mirar en el playtest:
 
 ## 9. Plan de construcción
 
-- [ ] **Parte 1 - Criaturas por piezas**: carpeta del juego, módulo de especies (tabla de las 10 bases y regla de herencia), armado de una criatura a partir de sus piezas, las 50 generadas y revisadas en una captura.
+- [x] **Parte 1 - Criaturas por piezas** (hecha el 2026-10-07): carpeta del juego, módulo de especies (tabla de las 10 bases y regla de herencia), armado de una criatura a partir de sus piezas, las 50 generadas y revisadas en una captura.
 - [ ] **Parte 2 - Máquina de fusión**: dos cápsulas, validación en el servidor (reacciona / no reacciona), animación de suspenso, aparición de la especie y tirada del mutante.
 - [ ] **Parte 3 - Mutadex**: UI con las 50 siluetas alrededor de la rueda, generación, casilla mutante, cuaderno de parejas tachadas y escáner.
 - [ ] **Parte 4 - Laboratorio y economía**: el mapa del laboratorio, criaturas paseando, ADN por segundo, terminal para comprar bases y mejoras.

@@ -25,26 +25,22 @@ function Generador.crear(c: Fusion.Criatura, donde: CFrame, padre: Instance?): M
 	raiz.Parent = modelo
 	modelo.PrimaryPart = raiz
 
-	local ctx: Piezas.Ctx = {
-		Modelo = modelo,
-		Origen = donde,
-		Color = c.Color,
-		Manchas = c.Manchas,
-	}
-
-	Piezas.Patas[c.Patas](ctx)
-	Piezas.Cuerpos[c.Cuerpo](ctx)
-	Piezas.Cabezas[c.Cabeza](ctx)
-
-	-- En gen 3 la cola o las alas llevan el color "brillo" del último padre.
-	local ctxExtremidad = ctx
-	if c.Brillo then
-		ctxExtremidad = table.clone(ctx)
-		ctxExtremidad.Color = c.Brillo
+	-- Cada pieza se pinta con los colores del padre que la trae.
+	local function ctx(base: number): Piezas.Ctx
+		local color, manchas = Fusion.pintura(c, base)
+		return {
+			Modelo = modelo,
+			Origen = donde,
+			Color = color,
+			Manchas = manchas,
+		}
 	end
-	Piezas.Extremidades[c.Extremidad](ctxExtremidad)
 
-	Piezas.Rasgos[c.Rasgo](ctx, raiz, c.Cuerpo)
+	Piezas.Patas[c.Patas](ctx(c.Patas))
+	Piezas.Cuerpos[c.Cuerpo](ctx(c.Cuerpo))
+	Piezas.Cabezas[c.Cabeza](ctx(c.Cabeza))
+	Piezas.Extremidades[c.Extremidad](ctx(c.Extremidad))
+	Piezas.Rasgos[c.Rasgo](ctx(c.Cuerpo), raiz, c.Cuerpo)
 	if c.Gen >= 3 then
 		Piezas.aura(raiz)
 	end

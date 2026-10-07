@@ -16,9 +16,7 @@ export type Criatura = {
 	Patas: number,
 	Extremidad: number, -- cola o alas
 	Rasgo: number,
-	Color: Color3,
-	Manchas: Color3,
-	Brillo: Color3?, -- solo gen 3: color de la cola o alas
+	Color: Color3, -- color de la cabeza (para la UI)
 }
 
 local N = Config.TamanioRueda
@@ -57,8 +55,6 @@ function Fusion.base(n: number): Criatura
 		Extremidad = n,
 		Rasgo = n,
 		Color = e.Color,
-		Manchas = e.Manchas,
-		Brillo = nil,
 	}
 end
 
@@ -85,8 +81,6 @@ local function gen2(a: number, b: number): Criatura?
 		Extremidad = segundo,
 		Rasgo = segundo,
 		Color = p.Color,
-		Manchas = s.Color,
-		Brillo = nil,
 	}
 end
 
@@ -113,9 +107,7 @@ local function gen3(bases: { number }): Criatura?
 				Patas = u,
 				Extremidad = u,
 				Rasgo = m,
-				Color = em.Color,
-				Manchas = ep.Color,
-				Brillo = eu.Color,
+				Color = ep.Color,
 			}
 		end
 	end
@@ -166,6 +158,18 @@ function Fusion.todas(): { Criatura }
 		end
 	end
 	return lista
+end
+
+-- Colores de una pieza: cada pieza conserva el color del padre que la trae,
+-- y sus manchas llevan el color del padre siguiente (así se nota la mezcla).
+function Fusion.pintura(c: Criatura, base: number): (Color3, Color3)
+	if c.Gen == 1 then
+		local e = Especies[base]
+		return e.Color, e.Manchas
+	end
+	local i = table.find(c.Bases, base) or 1
+	local otra = c.Bases[i % #c.Bases + 1]
+	return Especies[base].Color, Especies[otra].Color
 end
 
 -- Busca una especie por nombre (útil para pruebas y para la vitrina).

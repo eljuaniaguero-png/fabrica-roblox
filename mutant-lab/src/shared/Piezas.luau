@@ -22,6 +22,7 @@ local BASE_COLA = Vector3.new(0, 2.8, 1.55)
 
 local BLANCO = Color3.new(1, 1, 1)
 local NEGRO = Color3.fromHex("1B1030")
+local CREMA = Color3.fromHex("FFE9D2") -- cara del hongo
 
 local Piezas = {}
 
@@ -85,7 +86,9 @@ local function neon(p: BasePart): BasePart
 end
 
 -- Ojos grandes y brillantes: lo que más hace "tierna" a una criatura.
+-- El borde oscuro hace que el ojo se lea también sobre cabezas blancas o claras.
 local function ojo(ctx: Ctx, pos: Vector3, tam: number)
+	bola(ctx, pos + Vector3.new(0, 0, 0.12), tam * 1.14, NEGRO)
 	bola(ctx, pos, tam, BLANCO)
 	bola(ctx, pos + Vector3.new(0, 0, -tam * 0.32), tam * 0.55, NEGRO)
 	neon(bola(ctx, pos + Vector3.new(tam * 0.12, tam * 0.14, -tam * 0.5), tam * 0.18, BLANCO))
@@ -131,7 +134,7 @@ end
 -- 3 Sutomi: sombrero de hongo con lunares
 cabezas[3] = function(ctx)
 	local c = CENTRO_CABEZA
-	bola(ctx, c, 1.5, ctx.Manchas)
+	bola(ctx, c, 1.5, CREMA)
 	cilindro(ctx, CFrame.new(c + Vector3.new(0, 0.75, 0)), "Y", 0.6, 2.8)
 	bola(ctx, c + Vector3.new(0, 1.0, 0), 2.0)
 	for _, p in
@@ -403,7 +406,7 @@ patas[2] = function(ctx)
 		for _, z in { -0.9, 0, 0.9 } do
 			cilindro(
 				ctx,
-				CFrame.new(Vector3.new(s * 0.95, 0.85, z)) * CFrame.Angles(0, 0, math.rad(-s * 20)),
+				CFrame.new(Vector3.new(s * 0.95, 0.85, z)) * CFrame.Angles(0, 0, math.rad(s * 20)),
 				"Y",
 				1.9,
 				0.32,
@@ -502,7 +505,7 @@ patas[9] = function(ctx)
 		for _, z in { -0.9, 0.1, 1.1 } do
 			cilindro(
 				ctx,
-				CFrame.new(Vector3.new(s * 0.95, 0.8, z)) * CFrame.Angles(0, 0, math.rad(-s * 35)),
+				CFrame.new(Vector3.new(s * 0.95, 0.8, z)) * CFrame.Angles(0, 0, math.rad(s * 35)),
 				"Y",
 				1.9,
 				0.2,
@@ -636,28 +639,41 @@ extremidades[9] = function(ctx)
 			local ala = bloque(
 				ctx,
 				CFrame.new(Vector3.new(s * 0.9, 3.65 - i * 0.15, z))
-					* CFrame.Angles(0, math.rad(s * (i == 1 and 15 or 35)), math.rad(s * 60))
+					* CFrame.Angles(0, math.rad(s * (i == 1 and 15 or 35)), math.rad(-s * 60))
 					* CFrame.new(0, 0.9, 0),
 				Vector3.new(0.08, 1.9, 0.85),
 				ctx.Manchas
 			)
 			ala.Material = Enum.Material.Neon
-			ala.Transparency = 0.45
+			ala.Transparency = 0.25
 		end
 	end
 end
 
 -- 10 alas de membrana
 extremidades[10] = function(ctx)
+	-- Abanico de tres "dedos" de membrana, abiertos hacia los costados y de frente
+	-- (si el ala queda de canto a la cámara, desde adelante no se ve).
 	for _, s in { -1, 1 } do
-		local base = CFrame.new(Vector3.new(s * 0.75, 3.3, 0.3))
-			* CFrame.Angles(0, 0, math.rad(s * 55))
-		cilindro(ctx, base * CFrame.new(0, 0.9, 0), "Y", 1.9, 0.16, NEGRO)
-		cunia(
+		local hombro = Vector3.new(s * 0.7, 3.4, 0.5)
+		for i, a in { 15, 40, 65 } do
+			local brazo = CFrame.new(hombro) * CFrame.Angles(0, 0, math.rad(s * a))
+			bloque(
+				ctx,
+				brazo * CFrame.new(s * 0.95, 0, 0),
+				Vector3.new(1.9 - i * 0.15, 0.75, 0.1),
+				ctx.Manchas
+			)
+		end
+		cilindro(
 			ctx,
-			base * CFrame.new(0, 0.9, 0.75) * CFrame.Angles(0, math.rad(180), 0),
-			Vector3.new(0.1, 1.8, 1.4),
-			ctx.Manchas
+			CFrame.new(hombro)
+				* CFrame.Angles(0, 0, math.rad(s * 75))
+				* CFrame.new(s * 1.0, 0, -0.06),
+			"X",
+			2.0,
+			0.18,
+			NEGRO
 		)
 	end
 end
