@@ -49,7 +49,7 @@ Todos los números nuevos van en `Config.luau`. Cada sonido nuevo queda marcado 
 - Un paso es distancia real recorrida (4 studs). El Doble paso sigue duplicando la velocidad, no los pasos.
 - Puertas: la 1 pide nivel 3 y la 2 pide nivel 5 (`Config.NivelPuertas`). Como el nivel no baja, una puerta que abriste queda abierta para siempre, también después del rebirth.
 - El rebirth sigue igual (velocidad → monedas). Ahora hay dos formas de ganar monedas: rebirth y vender pasos.
-- Vender pasos: un solo botón "Vender todo", 2 pasos = 1 moneda (`Config.Tienda.PasosPorMoneda`).
+- Vender pasos: un solo botón "Vender todo", 2 pasos = 1 moneda (`Config.PasosPorMoneda`).
 - Los 4 puestos de la tienda se guardaron en `ServerStorage.Retirado_PuestosTienda` (no se borraron) y el vendedor ocupa su lugar. El cartel "TIENDA" queda sobre el vendedor.
 - El servidor solo acepta compras y ventas si estás cerca del vendedor.
 - Tramos de velocidad: se miden con la rapidez real del personaje (no la de la stat), así la estela aparece solo cuando corrés.
@@ -76,12 +76,12 @@ Todos los precios y valores van en `Config.luau`.
 
 ## Concepto en una línea
 
-Obby incremental: cada paso te da +1 de velocidad y cada baldosa que pisás toca la siguiente nota de una melodía clásica. En el portal de rebirth tu velocidad se convierte en monedas y sube tu multiplicador; con las monedas comprás mejoras y consumibles en la tienda del inicio.
+Obby incremental: cada paso te da velocidad y pasos, cada baldosa que pisás se ilumina y toca la siguiente nota de una melodía clásica, y los pasos totales te suben de nivel (abre puertas). En el portal de rebirth tu velocidad se convierte en monedas; al vendedor le vendés pasos y le comprás mejoras y consumibles.
 
 ## Loop de 30 segundos
 
 1. Corrés por el anillo: cada paso suma velocidad y la melodía avanza nota por nota.
-2. Llegás a una puerta que pide una velocidad mínima; si te falta, das otra vuelta.
+2. Llegás a una puerta que pide un nivel mínimo; si te falta, das otra vuelta (el cartel dice cuántos pasos faltan).
 3. Pasás, tocás el checkpoint y encarás el tramo de saltos. Si te caés, perdés un poco de velocidad y volvés al checkpoint.
 4. En el camino agarrás consumibles (Doble paso, Escudo).
 5. Decidís: ¿hago rebirth ya (menos monedas) o sigo juntando velocidad para pasar la próxima puerta?
@@ -90,16 +90,18 @@ Obby incremental: cada paso te da +1 de velocidad y cada baldosa que pisás toca
 
 | # | Sistema | Dónde | Qué hace |
 |---|---|---|---|
-| 1 | **Velocidad por paso** | servidor + UI | Cuenta pasos por distancia (validada en el servidor) y suma `PuntosPorPaso × multiplicador de rebirth × bonus de zapatillas × doble paso`. Ajusta `WalkSpeed` con un tope. |
-| 2 | **Baldosas con melodía** | cliente | Cada baldosa nueva que pisás toca **la siguiente nota** de la melodía (Oda a la Alegría, Beethoven, 1824, de dominio público) con **un solo sample de piano**, cambiando el tono con `PlaybackSpeed`. La melodía da la vuelta sola al terminar. |
-| 3 | **Puertas, checkpoints y caídas** | servidor | Puertas por velocidad mínima (colisión por jugador). Un checkpoint detrás de cada puerta. **Al caer**: volvés al último checkpoint y perdés el 10% de la velocidad, salvo que tengas un Escudo (se gasta solo). |
-| 4 | **Rebirth (portal)** | servidor + mapa | Portal en la plaza del inicio (ProximityPrompt). Pide 150 de velocidad: toda tu velocidad pasa a monedas (1 a 1, +20% por nivel de Bolsillo), la velocidad y el checkpoint vuelven a 0 y el multiplicador sube +0,5. |
-| 5 | **Tienda física** | servidor + mapa | 4 puestos en la plaza del inicio (ProximityPrompt). Mejoras permanentes: **Zapatillas** (+25% de velocidad por paso por nivel) y **Bolsillo** (+20% monedas por rebirth por nivel); el precio sube por nivel. Consumibles: Escudo y Doble paso. Cada cartel muestra tu precio y si te alcanza. El servidor valida cada compra. |
-| 6 | **Consumibles** | servidor + UI | **Doble paso**: cada paso vale doble durante 30 s (botón del HUD). **Escudo**: te perdona una caída (se usa solo). Se compran en la tienda o se agarran en el mapa (reaparecen cada 30 s). |
-| 7 | **Guardado** | servidor | Velocidad, rebirths, checkpoint, monedas, mejoras e inventario. DataStore solo funciona en lugares publicados: mientras tanto se guarda en memoria y avisa por consola. |
-
-| 8 | **Sonidos** | cliente | Todos los efectos salen del mismo sample de piano: checkpoint (arpegio), compra, rebirth (arpegio largo), recoger, usar, escudo, trampolín, error y caída (notas desafinadas). Cada efecto es una lista de notas en `Config.Efectos`. |
-| 9 | **Parkour** | cliente | Plataformas que se mueven, baldosas que desaparecen, trampolín, cinta que te tira para atrás, barra giratoria que empuja y viga angosta. Las mueve cada cliente con el reloj del servidor, así el personaje viaja suave encima. |
+| 1 | **Pasos y velocidad** | servidor + UI | Cuenta pasos por distancia (validada en el servidor). Cada paso suma 1 a los **pasos totales** (dan el nivel) y a los **pasos disponibles** (se venden), y suma velocidad: `PuntosPorPaso × multiplicador de rebirth × bonus de zapatillas × doble paso`. Ajusta `WalkSpeed` con un tope. |
+| 2 | **Piso que se ilumina y melodía** | cliente | Las baldosas arrancan apagadas. Cada baldosa que pisás se enciende con fundido y toca **la siguiente nota** de la melodía (Oda a la Alegría, Beethoven, 1824, de dominio público) con **un solo sample de piano**. Se apaga sola 5 minutos después de la última pisada. |
+| 3 | **Niveles** | servidor + UI | El nivel sale de los pasos totales y nunca baja (`Niveles.luau`). Al subir: onda de luz y chispas alrededor del personaje (las ven todos), cartel "¡NIVEL N!" y sonido. |
+| 4 | **Puertas, checkpoints y caídas** | servidor | Puertas por **nivel mínimo** (colisión por jugador), con el nivel que piden y los pasos que te faltan encima de cada una. Un checkpoint detrás de cada puerta. **Al caer**: volvés al último checkpoint y perdés el 10% de la velocidad, salvo que tengas un Escudo. |
+| 5 | **Rebirth (portal)** | servidor + mapa | Portal en la plaza del inicio (ProximityPrompt). Pide 150 de velocidad: toda tu velocidad pasa a monedas (1 a 1, +20% por nivel de Bolsillo), la velocidad y el checkpoint vuelven a 0 y el multiplicador sube +0,5. El nivel no cambia. |
+| 6 | **Vendedor (Don Compás)** | servidor + mapa + UI | Personaje en la plaza con "Hablar". Menú con **Vender pasos** (2 pasos disponibles = 1 moneda, botón "Vender todo") y **Comprar**: Zapatillas, Bolsillo, Doble paso y Escudo. El servidor valida cercanía, espera entre pedidos y saldo. |
+| 7 | **Consumibles** | servidor + UI | **Doble paso**: cada paso vale doble de velocidad durante 30 s (botón del HUD). **Escudo**: te perdona una caída (se usa solo). Se compran al vendedor o se agarran en el mapa (reaparecen cada 30 s). |
+| 8 | **Sensación de velocidad** | cliente | 4 tramos de rapidez (desde 20, 28, 36 y 44 studs/s) con estela y chispas cian, violeta, rosa y amarilla. Animación de correr hasta 40% más rápida y cámara que se abre hasta 14°. Al cruzar una puerta: destello, chispas y sonido. |
+| 9 | **HUD** | UI | Tarjeta arriba a la izquierda: nivel con barra al siguiente, velocidad, pasos disponibles y monedas (aviso de "Rebirth listo" debajo cuando corresponde). Se escala con el alto de la pantalla. Consumibles abajo al centro. |
+| 10 | **Guardado** | servidor | Velocidad, pasos totales, pasos disponibles, rebirths, checkpoint, monedas, mejoras e inventario. DataStore solo funciona en lugares publicados: mientras tanto se guarda en memoria y avisa por consola. |
+| 11 | **Sonidos** | cliente | Todos los efectos salen del mismo sample de piano: checkpoint, compra, rebirth, recoger, usar, escudo, trampolín, subir de nivel, cruzar puerta, hablar, vender, error y caída (notas desafinadas). Cada efecto es una lista de notas en `Config.Efectos`. |
+| 12 | **Parkour** | cliente | Plataformas que se mueven, baldosas que desaparecen, trampolín, cinta que te tira para atrás, barra giratoria que empuja y viga angosta. Las mueve cada cliente con el reloj del servidor, así el personaje viaja suave encima. |
 
 ## Decisiones tomadas (eran ambiguas, elegí la más simple)
 
@@ -121,26 +123,29 @@ Obby incremental: cada paso te da +1 de velocidad y cada baldosa que pisás toca
 ## Mundo
 
 - Anillo 1 (36 baldosas) con el spawn al sur.
-- Camino → Puerta 1 (100) → Checkpoint 1.
+- Camino → Puerta 1 (nivel 3) → Checkpoint 1.
 - Tramo de saltos (5 plataformas).
 - Anillo 2 (28 baldosas).
-- Plaza del inicio (al sur del spawn): tienda con 4 puestos y portal de rebirth.
+- Plaza del inicio (al sur del spawn): vendedor Don Compás con su mostrador (bajo el cartel "TIENDA") y portal de rebirth. Los 4 puestos viejos están en `ServerStorage.Retirado_PuestosTienda`.
 - Tramo de saltos: la plataforma 2 se mueve de costado y la 4 desaparece al pisarla.
-- Camino → Puerta 2 (300) → Checkpoint 2.
+- Camino → Puerta 2 (nivel 5) → Checkpoint 2.
 - Tramo 3 (parkour): cinta → trampolín → Checkpoint 3 (arriba) → 4 baldosas que desaparecen → plaza con barra giratoria → 2 plataformas móviles → viga angosta → Meta.
 - Consumibles: Doble paso en el anillo 1 y en el anillo 2, Escudo antes de los saltos.
-- El trazado está pintado con el estilo Neón nocturno (2026-10-06). HUD completo en `StarterGui.HUD` con fuente Michroma.
+- El trazado está pintado con el estilo Neón nocturno (2026-10-06). HUD en `StarterGui.HUD` (Tarjeta, Inventario, Aviso, CartelNivel, Destello) y menú en `StarterGui.MenuVendedor`, con fuente Michroma. El panel viejo del HUD está en `ServerStorage.Retirado_HUDViejo`.
 
 ## Audio (todo en `Config.luau`)
 
 - Nota de piano: "Piano Note C4", gratuita en la Creator Store (ID 96243649310055). Reemplazable.
 - Melodía: Oda a la Alegría (Beethoven), escrita en semitonos dentro de `Config.Melodia`.
+- Efectos nuevos de la Etapa 3 (mismo sample, marcados con `-- SONIDO:`): SubirNivel, Puerta, Hablar y Vender.
+- Partículas: textura de chispas que viene con Roblox (`rbxasset://textures/particles/sparkles_main.dds`), sin assets externos.
+- El vendedor usa la animación "quieto" por defecto de Roblox.
 
 ## Queda AFUERA del prototipo
 
 - Más de una zona o melodía.
 - Mascotas, Robux, gamepasses, tablas de posiciones.
-- Efectos visuales elaborados.
+- Efectos visuales elaborados más allá de estelas, chispas y destellos (Etapa 3).
 
 ## Pregunta que tiene que responder el prototipo
 
