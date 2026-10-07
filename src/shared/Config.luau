@@ -55,13 +55,51 @@ local mejoras: { [string]: Mejora } = {
 	},
 }
 
--- Oda a la Alegría (Beethoven, 1824, dominio público). Semitonos desde Do: Do=0 Re=2 Mi=4 Fa=5 Sol=7.
+export type Cancion = { Titulo: string, Autor: string, Notas: { number } }
+
+-- Canciones de dominio público (compositores muertos hace más de 100 años), una por zona y cada
+-- una más difícil que la anterior. Notas en semitonos desde el Do central: Do=0 Re=2 Mi=4 Fa=5
+-- Sol=7 La=9 Si=11, Do de arriba=12; negativos = más grave.
 -- stylua: ignore
-local melodia = {
-	4, 4, 5, 7, 7, 5, 4, 2, 0, 0, 2, 4, 4, 2, 2,
-	4, 4, 5, 7, 7, 5, 4, 2, 0, 0, 2, 4, 2, 0, 0,
-	2, 2, 4, 0, 2, 4, 5, 4, 0, 2, 4, 5, 4, 2, 0, 2, -5,
-	4, 4, 5, 7, 7, 5, 4, 2, 0, 0, 2, 4, 2, 0, 0,
+local canciones: { Cancion } = {
+	{
+		-- Fácil: notas seguidas, casi sin saltos.
+		Titulo = "Oda a la Alegría",
+		Autor = "Beethoven",
+		Notas = {
+			4, 4, 5, 7, 7, 5, 4, 2, 0, 0, 2, 4, 4, 2, 2,
+			4, 4, 5, 7, 7, 5, 4, 2, 0, 0, 2, 4, 2, 0, 0,
+			2, 2, 4, 0, 2, 4, 5, 4, 0, 2, 4, 5, 4, 2, 0, 2, -5,
+			4, 4, 5, 7, 7, 5, 4, 2, 0, 0, 2, 4, 2, 0, 0,
+		},
+	},
+	{
+		-- Media: medio tono que va y viene, y saltos más grandes.
+		Titulo = "Para Elisa",
+		Autor = "Beethoven",
+		Notas = {
+			16, 15, 16, 15, 16, 11, 14, 12, 9,
+			0, 4, 9, 11,
+			4, 8, 11, 12,
+			4, 16, 15, 16, 15, 16, 11, 14, 12, 9,
+			0, 4, 9, 11,
+			4, 12, 11, 9,
+		},
+	},
+	{
+		-- Difícil: rápida, cromática y con más registro.
+		Titulo = "Marcha turca",
+		Autor = "Mozart",
+		Notas = {
+			-1, -3, -4, -3, 0,
+			2, 0, -1, 0, 4,
+			5, 4, 3, 4, 11, 9, 8, 9, 11, 9, 8, 9, 12,
+			9, 12,
+			11, 9, 7, 9,
+			11, 9, 7, 9,
+			11, 9, 7, 6, 4,
+		},
+	},
 }
 
 -- Efectos de sonido: todos con el mismo sample de piano. Cada uno es una lista de notas
@@ -81,6 +119,7 @@ local efectos = {
 	Puerta = { Notas = { 12, 16, 19, 24, 28 }, Separacion = 0.035 },
 	Hablar = { Notas = { 4, 7, 12 }, Separacion = 0.06 },
 	Vender = { Notas = { 19, 24, 28 }, Separacion = 0.05 },
+	Desbloquear = { Notas = { 0, 7, 12, 19, 24 }, Separacion = 0.07 },
 }
 
 -- Paleta de la guía de estilo (Neón nocturno), para lo que pinta el código.
@@ -101,21 +140,40 @@ local Config = {
 	WalkSpeedPorPunto = 0.05, -- cuánto WalkSpeed suma cada punto de velocidad
 	WalkSpeedTope = 50,
 	AlturaSaltoBase = 7.2,
-	DistanciaPorPaso = 4, -- studs recorridos que cuentan como un paso
-	PuntosPorPaso = 1,
-	IntervaloMedicion = 0.2, -- segundos entre mediciones del servidor
-	ToleranciaTeletransporte = 1.5, -- si se mueve más que tope * intervalo * esto, no cuenta
+	-- Pasos y velocidad se ganan solo al pisar una baldosa apagada (Pisadas.luau).
+	PasosPorBaldosa = 1, -- pasos que da cada baldosa apagada que pisás
+	PuntosPorPaso = 1, -- velocidad que da cada paso (antes de multiplicadores)
+	IntervaloMedicion = 0.2, -- segundos entre chequeos de caídas en el servidor
 
 	-- Niveles: salen de los pasos totales históricos, así que nunca bajan (Niveles.luau).
 	-- Para pasar del nivel n al n+1 hacen falta PasosPrimerNivel + PasosExtraPorNivel * (n - 1) pasos.
 	Niveles = {
-		PasosPrimerNivel = 50,
-		PasosExtraPorNivel = 25,
+		PasosPrimerNivel = 30,
+		PasosExtraPorNivel = 15,
+	},
+
+	-- Zonas: cada baldosa del mapa tiene un atributo Zona (1, 2, 3). La zona n+1 se abre con la
+	-- puerta n (NivelPuertas). Cada zona tiene su canción; al entrar a otra zona arranca de cero.
+	Zonas = {
+		{ Nombre = "Zona 1", Cancion = canciones[1] },
+		{ Nombre = "Zona 2", Cancion = canciones[2] },
+		{ Nombre = "Zona 3", Cancion = canciones[3] },
 	},
 
 	-- Puertas: nivel mínimo para pasar cada una, en orden. Detrás de cada una hay un checkpoint.
 	-- Los checkpoints con número más alto que la cantidad de puertas (los del parkour) no piden nivel.
 	NivelPuertas = { 3, 5 },
+
+	-- Zonas bloqueadas (solo visual, por jugador): niebla opaca y candado hasta tener el nivel.
+	Bloqueos = {
+		SubidaArco = 0.25, -- segundos que tarda el arco del candado en saltar
+		AlturaArco = 1.2, -- studs que sube el arco
+		GiroArco = 0.35, -- segundos que tarda el arco en girar para abrirse
+		AnguloArco = 110, -- grados que gira el arco
+		DesvanecerCandado = 0.6, -- segundos que tarda el candado en desaparecer
+		DuracionNiebla = 1.8, -- segundos que tarda la niebla en disolverse
+		DistanciaAnimacion = 90, -- studs: si se abre más lejos, la animación espera a que te acerques
+	},
 
 	-- Subir de nivel: efecto alrededor del personaje y cartel en pantalla.
 	SubirNivel = {
@@ -200,18 +258,22 @@ local Config = {
 	SemitonoDelSample = 0, -- qué nota es el sample, en semitonos desde Do (Do = 0)
 	VolumenNota = 1,
 	VolumenEfectos = 0.8,
-	Melodia = melodia,
 	Efectos = efectos,
 
 	-- Baldosas: el color del estilo vive en cada baldosa del mapa; el código lo atenúa.
 	-- Brillo = parte del color que se ve (0 = negro, 1 = color pleno).
-	-- Arrancan apagadas, se encienden al pisarlas y se apagan solas un rato después.
+	-- Una baldosa pisada queda prendida y usada (no da paso ni suena) hasta que se apaga sola con
+	-- lo que pase primero: pisaste BaldosasParaApagar baldosas más, o pasaron SegundosParaApagar.
+	-- El estado es de cada jugador y lo lleva el servidor (Pisadas.luau).
 	Baldosas = {
 		BrilloApagada = 0.22,
 		BrilloEncendida = 0.5,
 		FundidoEncendido = 0.5, -- segundos del fundido al encenderse
-		FundidoApagado = 2.5, -- segundos del fundido al apagarse
-		TiempoEncendida = 300, -- segundos desde la última pisada hasta que se apaga (5 minutos)
+		FundidoApagado = 1.5, -- segundos del fundido al apagarse
+		BaldosasParaApagar = 10, -- se apaga después de pisar esta cantidad de baldosas nuevas
+		SegundosParaApagar = 60, -- o cuando pasaron estos segundos desde que la pisaste
+		EsperaMinimaPisada = 0.08, -- segundos mínimos entre dos pisadas válidas (más rápido no cuenta)
+		ToleranciaDistancia = 6, -- studs de margen para aceptar que estás encima de la baldosa
 	},
 
 	-- Luz del ambiente. La aplica el servidor al arrancar (Ambiente.luau).

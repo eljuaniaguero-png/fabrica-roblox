@@ -5,7 +5,43 @@ Estado: **aprobada (2026-10-06)**, versión 2, con los cambios del usuario: melo
 Versión 3 (2026-10-06): OK del usuario + **nota desafinada al caer** + orden por etapas. Estilo elegido: **A — Neón nocturno**.
 Versión 4 (2026-10-06): Etapa 2 con los cambios del usuario: el rebirth da monedas, tienda y conversión **físicas** en el mapa, más sonidos y más variantes de parkour.
 Versión 5 (2026-10-06): Etapa 3 con los cambios del usuario: arreglo de la música, piso que se ilumina, niveles por pasos, sensación de velocidad, vendedor y HUD nuevo.
-Próximo punto de control: **prototipo jugable terminado** (Etapas 1, 2 y 3).
+Versión 6 (2026-10-07): Etapa 4, bloques 1 y 2 (pedido del usuario): una canción por zona que sube de dificultad, pasos solo por baldosa apagada, baldosas usadas y zonas bloqueadas. Los bloques 3 (tienda con pestañas) y 4 (mapa) quedan para después.
+Próximo punto de control: **prototipo jugable terminado** (Etapas 1 a 4).
+
+## Etapa 4 (pedido del usuario, 2026-10-07)
+
+Revisión previa (playtest + código): estos puntos **no** estaban hechos.
+- a. Pasos y velocidad solo al pisar una baldosa apagada → antes se sumaban por distancia caminada en cualquier lado. **Se arregla en el bloque 1.**
+- b / d. Una canción por zona, que cambia al pasar de zona → había una sola canción. **Se arregla: una canción por zona, cada puerta abre una más difícil.**
+- c. Una baldosa por nota → el usuario decidió que no hace falta; la canción avanza nota por nota con cada pisada válida y da la vuelta al terminar.
+
+**Canciones por zona** (dominio público, una más difícil que la otra)
+- Zona 1: *Oda a la Alegría* (Beethoven, 1824) — fácil: notas seguidas, poco salto.
+- Zona 2: *Para Elisa* (Beethoven, 1810) — media: semitonos y saltos más grandes.
+- Zona 3: *Marcha turca* (Mozart, 1783) — difícil: rápida, cromática y con más registro.
+
+**Bloque 1 · Baldosas usadas**
+1. Una baldosa pisada queda prendida y no se puede volver a usar: mientras está prendida no suma paso, no suma velocidad y no suena.
+2. Se apaga y vuelve a estar disponible con lo que pase primero: pisaste 10 baldosas más después de ella, o pasó 1 minuto desde que la pisaste.
+3. Al apagarse hace un fundido suave.
+4. Los dos valores van en `Config.luau` por separado.
+5. El estado es por jugador y lo controla el servidor.
+
+**Bloque 2 · Zonas bloqueadas**
+6. La zona siguiente no se ve mientras está bloqueada: una pared de niebla opaca detrás de la puerta tapa todo lo que hay atrás.
+7. Sobre cada puerta bloqueada, un candado grande con el nivel que pide.
+8. Al desbloquearla: el candado se abre con una animación, la niebla se disuelve y se revela la zona.
+9. En el HUD, las zonas bloqueadas aparecen con candado.
+
+### Decisiones de la Etapa 4 (eran ambiguas, elegí la más simple)
+
+- Zonas: la 1 va desde la plaza hasta la puerta 1, la 2 hasta la puerta 2 y la 3 es el parkour hasta la meta. Cada baldosa tiene un atributo `Zona`.
+- El cliente avisa "pisé esta baldosa"; el servidor valida (que estés encima, que no sea demasiado rápido, que esté apagada para vos) y decide paso, velocidad, nota y cuándo se apaga. Al haber ida y vuelta con el servidor, en un servidor real la nota puede sonar unas centésimas tarde.
+- "Pisé 10 baldosas más" cuenta solo pisadas válidas (baldosas apagadas).
+- Al entrar a otra zona la canción arranca desde el principio y aparece un aviso con su nombre.
+- Cada pisada válida da 1 paso (`Config.PasosPorBaldosa`). Como ahora hay menos pasos que antes (una baldosa mide 8 studs y antes contaba un paso cada 4), los niveles son más baratos: 30 pasos para el nivel 2 y 15 más por cada nivel siguiente.
+- La niebla y el candado son visuales y por jugador (cada uno ve los suyos según su nivel). Quién pasa lo siguen decidiendo las puertas en el servidor.
+- Si subís de nivel lejos de la puerta, la animación del candado se guarda y se ve cuando te acercás.
 
 ## Etapa 3 (pedido del usuario) — se hace por bloques, con un playtest por bloque
 

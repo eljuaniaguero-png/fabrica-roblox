@@ -1,6 +1,6 @@
 --!strict
--- Cuenta pasos por distancia recorrida (medida en el servidor): suman velocidad, pasos totales
--- (dan el nivel) y pasos disponibles (se venden). Avisa a todos cuando alguien sube de nivel.
+-- Suma los pasos de cada baldosa apagada que pisás: velocidad, pasos totales (dan el nivel)
+-- y pasos disponibles (se venden). Avisa a todos cuando alguien sube de nivel.
 -- También publica el perfil como atributos del jugador para que el cliente lo muestre.
 
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
@@ -12,9 +12,6 @@ local Efectos = require(script.Parent.Efectos)
 local Remotos = require(script.Parent.Remotos)
 
 local Velocidad = {}
-
-local ultimaPosicion: { [Player]: Vector3 } = {}
-local acumulado: { [Player]: number } = {}
 
 -- Multiplicador permanente por rebirths (el que se muestra en el HUD).
 function Velocidad.multiplicador(perfil: Datos.Perfil): number
@@ -87,47 +84,14 @@ function Velocidad.aplicar(jugador: Player)
 	end
 end
 
--- Llamar cuando el personaje se teletransporta, para no contar ese salto como pasos.
-function Velocidad.olvidarPosicion(jugador: Player)
-	ultimaPosicion[jugador] = nil
-end
-
--- Mide cuánto caminó desde la última vez. Devuelve true si subió de nivel.
-function Velocidad.medir(jugador: Player, dt: number): boolean
+-- Suma los pasos de una baldosa apagada que pisó (ya validada en Pisadas.luau).
+-- Devuelve true si subió de nivel.
+function Velocidad.sumarPisada(jugador: Player): boolean
 	local perfil = Datos.obtener(jugador)
-	local personaje = jugador.Character
-	local raiz = if personaje then personaje:FindFirstChild("HumanoidRootPart") else nil
-	local humanoide = if personaje then personaje:FindFirstChildOfClass("Humanoid") else nil
-	if
-		not perfil
-		or not raiz
-		or not raiz:IsA("BasePart")
-		or not humanoide
-		or humanoide.Health <= 0
-	then
-		ultimaPosicion[jugador] = nil
+	if not perfil then
 		return false
 	end
-
-	local posicion = raiz.Position * Vector3.new(1, 0, 1)
-	local anterior = ultimaPosicion[jugador]
-	ultimaPosicion[jugador] = posicion
-	if not anterior then
-		return false
-	end
-
-	local distancia = (posicion - anterior).Magnitude
-	local maximo = Config.WalkSpeedTope * dt * Config.ToleranciaTeletransporte
-	if distancia > maximo then
-		return false
-	end
-
-	local total = (acumulado[jugador] or 0) + distancia
-	local pasos = math.floor(total / Config.DistanciaPorPaso)
-	acumulado[jugador] = total - pasos * Config.DistanciaPorPaso
-	if pasos == 0 then
-		return false
-	end
+	local pasos = Config.PasosPorBaldosa
 
 	local nivelAntes = Niveles.nivelDe(perfil.PasosTotales)
 	perfil.PasosTotales += pasos
@@ -142,11 +106,6 @@ function Velocidad.medir(jugador: Player, dt: number): boolean
 		return true
 	end
 	return false
-end
-
-function Velocidad.olvidar(jugador: Player)
-	ultimaPosicion[jugador] = nil
-	acumulado[jugador] = nil
 end
 
 return Velocidad

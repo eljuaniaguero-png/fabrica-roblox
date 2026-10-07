@@ -19,6 +19,8 @@ local Remotos = {
 	SubioNivel = crear("SubioNivel"), -- servidor -> todos: (jugador, nivel nuevo)
 	Comprar = crear("Comprar"), -- cliente -> servidor: (artículo) en el menú del vendedor
 	VenderPasos = crear("VenderPasos"), -- cliente -> servidor: vende todos los pasos disponibles
+	Pisada = crear("Pisada"), -- cliente -> servidor: (baldosa) que acaba de pisar
+	Baldosa = crear("Baldosa"), -- servidor -> cliente: ("encender", clave, nota) o ("apagar", clave)
 }
 
 carpeta.Parent = ReplicatedStorage

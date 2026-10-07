@@ -146,7 +146,6 @@ function Puertas.teletransportar(jugador: Player)
 	end
 	personaje:PivotTo(CFrame.new(destino))
 	raiz.AssemblyLinearVelocity = Vector3.zero
-	Velocidad.olvidarPosicion(jugador)
 end
 
 function Puertas.chequearCaida(jugador: Player)
@@ -184,7 +183,6 @@ function Puertas.alAparecer(jugador: Player, personaje: Model)
 			parte.CollisionGroup = grupoDe(jugador)
 		end
 	end)
-	Velocidad.olvidarPosicion(jugador)
 	local perfil = Datos.obtener(jugador)
 	if perfil and perfil.Checkpoint > 0 then
 		task.defer(Puertas.teletransportar, jugador)
