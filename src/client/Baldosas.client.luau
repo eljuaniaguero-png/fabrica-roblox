@@ -3,15 +3,14 @@
 -- Es solo efecto local: no toca la lógica del juego.
 -- Una baldosa es cualquier BasePart con atributo Baldosa = true.
 
-local Debris = game:GetService("Debris")
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService = game:GetService("RunService")
-local SoundService = game:GetService("SoundService")
 local TweenService = game:GetService("TweenService")
 
 local Config = require(ReplicatedStorage.Shared.Config)
 local Notas = require(ReplicatedStorage.Shared.Notas)
+local Sonidos = require(script.Parent.Sonidos)
 
 local jugador = Players.LocalPlayer
 
@@ -20,36 +19,15 @@ local indiceNota = 0
 local coloresOriginales: { [BasePart]: Color3 } = {}
 local destellos: { [BasePart]: Tween } = {}
 
--- SONIDO: sample único de piano para todas las notas (Config.SonidoNotaId). El tono lo da PlaybackSpeed.
-local sonidoBase = Instance.new("Sound")
-sonidoBase.Name = "NotaBase"
-sonidoBase.SoundId = Config.SonidoNotaId
-sonidoBase.Volume = Config.VolumenNota
-sonidoBase.Parent = SoundService
-
+-- SONIDO: la siguiente nota de la melodía (sample de piano de Config.SonidoNotaId).
 local function tocarSiguienteNota()
 	indiceNota += 1
-	local sonido = sonidoBase:Clone()
-	sonido.PlaybackSpeed = Notas.velocidadReproduccion(Notas.notaDeMelodia(indiceNota))
-	sonido.Parent = SoundService
-	sonido:Play()
-	Debris:AddItem(sonido, 3)
+	Sonidos.nota(Notas.notaDeMelodia(indiceNota), Config.VolumenNota)
 end
 
--- SONIDO: nota desafinada al caer (mismo sample, Config.NotaCaidaSemitonos).
-local function tocarNotaCaida()
-	local sonido = sonidoBase:Clone()
-	sonido.PlaybackSpeed = Notas.velocidadReproduccion(Config.NotaCaidaSemitonos)
-	sonido.Volume = Config.VolumenNotaCaida
-	sonido.Parent = SoundService
-	sonido:Play()
-	Debris:AddItem(sonido, 3)
-end
-
--- El servidor suma 1 al atributo "Caidas" cada vez que te caés.
+-- El servidor suma 1 al atributo "Caidas" cada vez que te caés (la nota desafinada llega con el aviso).
 jugador:GetAttributeChangedSignal("Caidas"):Connect(function()
 	ultimaBaldosa = nil
-	tocarNotaCaida()
 end)
 
 local function destellar(baldosa: BasePart)

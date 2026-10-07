@@ -18,13 +18,14 @@ function Velocidad.multiplicador(perfil: Datos.Perfil): number
 	return 1 + perfil.Rebirths * Config.MultiplicadorPorRebirth
 end
 
--- Cuánta velocidad da un paso ahora mismo, con rebirths, zapatillas y turbo.
+-- Cuánta velocidad da un paso ahora mismo, con rebirths, zapatillas y doble paso.
 local function gananciaPorPaso(jugador: Player, perfil: Datos.Perfil): number
-	local zapatillas = 1 + perfil.Zapatillas * Config.Zapatillas.BonusPorNivel
-	local turbo = if Efectos.activo(jugador, "Turbo")
-		then Config.Consumibles.Turbo.Factor or 1
+	local zapatillas = 1
+		+ (perfil.Mejoras.Zapatillas or 0) * Config.Mejoras.Zapatillas.BonusPorNivel
+	local doble = if Efectos.activo(jugador, "DoblePaso")
+		then Config.Consumibles.DoblePaso.Factor or 1
 		else 1
-	return Config.PuntosPorPaso * Velocidad.multiplicador(perfil) * zapatillas * turbo
+	return Config.PuntosPorPaso * Velocidad.multiplicador(perfil) * zapatillas * doble
 end
 
 function Velocidad.crearLeaderstats(jugador: Player)
@@ -46,7 +47,7 @@ local function ponerStat(jugador: Player, nombre: string, valor: number)
 	end
 end
 
--- Copia el perfil a atributos, leaderstats, WalkSpeed y altura de salto.
+-- Copia el perfil a atributos, leaderstats y WalkSpeed.
 function Velocidad.aplicar(jugador: Player)
 	local perfil = Datos.obtener(jugador)
 	if not perfil then
@@ -57,7 +58,9 @@ function Velocidad.aplicar(jugador: Player)
 	jugador:SetAttribute("Multiplicador", Velocidad.multiplicador(perfil))
 	jugador:SetAttribute("Checkpoint", perfil.Checkpoint)
 	jugador:SetAttribute("Monedas", perfil.Monedas)
-	jugador:SetAttribute("Zapatillas", perfil.Zapatillas)
+	for nombre, nivel in perfil.Mejoras do
+		jugador:SetAttribute(`Mej_{nombre}`, nivel)
+	end
 	for nombre, cantidad in perfil.Inventario do
 		jugador:SetAttribute(`Inv_{nombre}`, cantidad)
 	end
@@ -72,9 +75,7 @@ function Velocidad.aplicar(jugador: Player)
 		local walkSpeed = Config.WalkSpeedBase + perfil.Velocidad * Config.WalkSpeedPorPunto
 		humanoide.WalkSpeed = math.min(walkSpeed, Config.WalkSpeedTope)
 		humanoide.UseJumpPower = false
-		humanoide.JumpHeight = if Efectos.activo(jugador, "Resorte")
-			then Config.Consumibles.Resorte.AlturaSalto or Config.AlturaSaltoBase
-			else Config.AlturaSaltoBase
+		humanoide.JumpHeight = Config.AlturaSaltoBase
 	end
 end
 

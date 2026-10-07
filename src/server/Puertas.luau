@@ -69,13 +69,14 @@ local function alTocarCheckpoint(indice: number, otra: BasePart)
 	if not perfil or perfil.Checkpoint >= indice then
 		return
 	end
-	-- Solo cuenta si de verdad tiene la velocidad para haber pasado la puerta.
-	if perfil.Velocidad < Config.UmbralesPuertas[indice] then
+	-- Solo cuenta si de verdad tiene la velocidad para haber pasado la puerta (los del parkour no piden).
+	if perfil.Velocidad < (Config.UmbralesPuertas[indice] or 0) then
 		return
 	end
 	perfil.Checkpoint = indice
 	Velocidad.aplicar(jugador)
-	Remotos.avisar(jugador, `¡Checkpoint {indice}!`)
+	-- SONIDO: checkpoint (Config.Efectos.Checkpoint)
+	Remotos.avisar(jugador, `¡Checkpoint {indice}!`, "Checkpoint")
 end
 
 function Puertas.iniciar()
@@ -157,13 +158,14 @@ function Puertas.chequearCaida(jugador: Player)
 
 	if (perfil.Inventario.Escudo or 0) > 0 then
 		perfil.Inventario.Escudo -= 1
-		Remotos.avisar(jugador, "¡El Escudo te salvó!")
+		-- SONIDO: escudo (Config.Efectos.Escudo)
+		Remotos.avisar(jugador, "¡El Escudo te salvó!", "Escudo")
 	else
 		local perdida = math.floor(perfil.Velocidad * Config.PenalizacionCaida)
 		perfil.Velocidad -= perdida
-		Remotos.avisar(jugador, `¡Te caíste! -{perdida} velocidad`)
+		-- SONIDO: nota desafinada (Config.Efectos.Caida)
+		Remotos.avisar(jugador, `¡Te caíste! -{perdida} velocidad`, "Caida")
 	end
-	-- SONIDO: caída (lo dispara el cliente al ver el atributo "Caidas")
 	jugador:SetAttribute("Caidas", (jugador:GetAttribute("Caidas") or 0) :: number + 1)
 	Velocidad.aplicar(jugador)
 	Puertas.actualizarNivel(jugador)

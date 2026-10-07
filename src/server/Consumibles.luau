@@ -1,6 +1,6 @@
 --!strict
 -- Usar consumibles del inventario y agarrar los que están en el mapa.
--- En el mapa: BasePart con atributo Recolectable = "Turbo" | "Resorte" | "Escudo".
+-- En el mapa: BasePart con atributo Recolectable = "DoblePaso" | "Escudo".
 
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
@@ -30,10 +30,10 @@ local function usar(jugador: Player, nombre: unknown)
 	local hasta = Efectos.activar(jugador, nombre, consumible.Duracion)
 	jugador:SetAttribute(`Hasta_{nombre}`, hasta)
 	Velocidad.aplicar(jugador)
-	-- SONIDO: usar consumible (Turbo / Resorte)
-	Remotos.avisar(jugador, `¡{consumible.Nombre} activado!`)
+	-- SONIDO: usar consumible (Config.Efectos.Usar)
+	Remotos.avisar(jugador, `¡{consumible.Nombre} activado!`, "Usar")
 
-	-- Cuando se termina, volver a aplicar para sacar el efecto (por ejemplo, el salto alto).
+	-- Cuando se termina, volver a aplicar para que el HUD se entere.
 	task.delay(hasta - workspace:GetServerTimeNow() + 0.1, function()
 		if jugador.Parent and not Efectos.activo(jugador, nombre) then
 			Velocidad.aplicar(jugador)
@@ -67,8 +67,8 @@ local function prepararRecolectable(parte: BasePart, nombre: string)
 		disponible = false
 		perfil.Inventario[nombre] = (perfil.Inventario[nombre] or 0) + 1
 		Velocidad.aplicar(jugador)
-		-- SONIDO: agarrar consumible del mapa
-		Remotos.avisar(jugador, `+1 {consumible.Nombre}`)
+		-- SONIDO: agarrar consumible del mapa (Config.Efectos.Recoger)
+		Remotos.avisar(jugador, `+1 {consumible.Nombre}`, "Recoger")
 
 		parte.Transparency = 1
 		for _, hijo in parte:GetDescendants() do

@@ -1,14 +1,17 @@
 --!strict
 -- Conecta el HUD (StarterGui.HUD, armado en Studio) con los atributos que publica el servidor.
--- HUD > Panel     > Velocidad, Monedas, Rebirths (TextLabel), BotonRebirth, BotonConvertir (TextButton)
--- HUD > Inventario > Turbo, Resorte, Escudo (TextButton)
+-- HUD > Panel      > Velocidad, Monedas, Rebirths, ProximoRebirth (TextLabel)
+-- HUD > Inventario > DoblePaso, Escudo (TextButton)
 -- HUD > Aviso (TextLabel)
+-- La tienda y el rebirth no están acá: son puestos en el mapa (TiendaFisica.client.luau).
 
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local TweenService = game:GetService("TweenService")
 
 local Config = require(ReplicatedStorage.Shared.Config)
+local Precios = require(ReplicatedStorage.Shared.Precios)
+local Sonidos = require(script.Parent.Sonidos)
 
 local jugador = Players.LocalPlayer
 local hud = jugador:WaitForChild("PlayerGui"):WaitForChild("HUD")
@@ -16,14 +19,11 @@ local panel = hud:WaitForChild("Panel")
 local etiquetaVelocidad = panel:WaitForChild("Velocidad") :: TextLabel
 local etiquetaMonedas = panel:WaitForChild("Monedas") :: TextLabel
 local etiquetaRebirths = panel:WaitForChild("Rebirths") :: TextLabel
-local botonRebirth = panel:WaitForChild("BotonRebirth") :: TextButton
-local botonConvertir = panel:WaitForChild("BotonConvertir") :: TextButton
+local etiquetaProximo = panel:WaitForChild("ProximoRebirth") :: TextLabel
 local inventario = hud:WaitForChild("Inventario")
 local aviso = hud:WaitForChild("Aviso") :: TextLabel
 
 local remotos = ReplicatedStorage:WaitForChild("Remotos")
-local pedirRebirth = remotos:WaitForChild("PedirRebirth") :: RemoteEvent
-local pedirConversion = remotos:WaitForChild("Convertir") :: RemoteEvent
 local usarConsumible = remotos:WaitForChild("UsarConsumible") :: RemoteEvent
 local remotoAviso = remotos:WaitForChild("Aviso") :: RemoteEvent
 
@@ -48,17 +48,14 @@ local function actualizarPanel()
 	etiquetaMonedas.Text = `Monedas: {math.floor(atributoNumero("Monedas"))}`
 	etiquetaRebirths.Text = `Rebirths: {atributoNumero("Rebirths")}  (x{multiplicador})`
 
-	local listoRebirth = velocidad >= Config.CostoRebirth
-	botonRebirth.Text = if listoRebirth
-		then "¡REBIRTH!"
-		else `Rebirth: {math.floor(velocidad)}/{Config.CostoRebirth}`
-	botonRebirth.BackgroundColor3 = if listoRebirth then COLOR_LISTO else COLOR_ESPERA
-	botonRebirth.AutoButtonColor = listoRebirth
-
-	local listoConvertir = velocidad >= Config.MinimoConversion
-	botonConvertir.Text = `Convertir → {math.floor(velocidad * Config.TasaConversion)} monedas`
-	botonConvertir.BackgroundColor3 = if listoConvertir then COLOR_LISTO else COLOR_ESPERA
-	botonConvertir.AutoButtonColor = listoConvertir
+	if velocidad >= Config.CostoRebirth then
+		local monedas = Precios.monedasPorRebirth(velocidad, atributoNumero("Mej_Bolsillo"))
+		etiquetaProximo.Text = `¡Rebirth listo! Portal: +{monedas} monedas`
+		etiquetaProximo.TextColor3 = COLOR_LISTO
+	else
+		etiquetaProximo.Text = `Rebirth: {math.floor(velocidad)}/{Config.CostoRebirth}`
+		etiquetaProximo.TextColor3 = Color3.fromRGB(170, 160, 210)
+	end
 end
 
 local function actualizarInventario()
@@ -81,16 +78,6 @@ local function actualizarInventario()
 	end
 end
 
-botonRebirth.Activated:Connect(function()
-	if atributoNumero("Velocidad") >= Config.CostoRebirth then
-		pedirRebirth:FireServer()
-	end
-end)
-
-botonConvertir.Activated:Connect(function()
-	pedirConversion:FireServer()
-end)
-
 for _, nombre in Config.OrdenConsumibles do
 	local boton = inventario:FindFirstChild(nombre)
 	if boton and boton:IsA("TextButton") and Config.Consumibles[nombre].Usable then
@@ -100,9 +87,12 @@ for _, nombre in Config.OrdenConsumibles do
 	end
 end
 
--- Aviso: aparece un momento y se desvanece.
+-- Aviso: aparece un momento y se desvanece. Si trae un efecto, lo toca.
 local avisoTween: Tween? = nil
-remotoAviso.OnClientEvent:Connect(function(texto: string)
+remotoAviso.OnClientEvent:Connect(function(texto: string, sonido: string?)
+	if sonido then
+		Sonidos.efecto(sonido)
+	end
 	if avisoTween then
 		avisoTween:Cancel()
 	end
@@ -121,24 +111,14 @@ end)
 
 jugador.AttributeChanged:Connect(function(nombre)
 	if nombre == "Rebirths" then
-		-- SONIDO: rebirth hecho
 		print("[Cliente] Rebirth")
 	elseif nombre == "Caidas" then
-		-- La nota desafinada de la caída la toca Baldosas.client.luau
 		print("[Cliente] Caída")
+	elseif nombre == "Checkpoint" then
+		print(`[Cliente] Checkpoint {atributoNumero("Checkpoint")}`)
 	end
 	actualizarPanel()
 	actualizarInventario()
-end)
-
-local checkpointAnterior = atributoNumero("Checkpoint")
-jugador:GetAttributeChangedSignal("Checkpoint"):Connect(function()
-	local checkpoint = atributoNumero("Checkpoint")
-	if checkpoint > checkpointAnterior then
-		-- SONIDO: checkpoint alcanzado
-		print(`[Cliente] Checkpoint {checkpoint}`)
-	end
-	checkpointAnterior = checkpoint
 end)
 
 actualizarPanel()

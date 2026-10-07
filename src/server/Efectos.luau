@@ -1,5 +1,5 @@
 --!strict
--- Efectos temporales activos (Turbo, Resorte). No se guardan: duran segundos.
+-- Efectos temporales activos (Doble paso). No se guardan: duran segundos.
 
 local Efectos = {}
 

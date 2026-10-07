@@ -14,17 +14,15 @@ local function crear(nombre: string): RemoteEvent
 end
 
 local Remotos = {
-	PedirRebirth = crear("PedirRebirth"),
-	Convertir = crear("Convertir"),
-	Comprar = crear("Comprar"),
 	UsarConsumible = crear("UsarConsumible"),
-	Aviso = crear("Aviso"), -- servidor -> cliente: texto corto para mostrar en pantalla
+	Aviso = crear("Aviso"), -- servidor -> cliente: texto corto y, opcional, el efecto de sonido a tocar
 }
 
 carpeta.Parent = ReplicatedStorage
 
-function Remotos.avisar(jugador: Player, texto: string)
-	Remotos.Aviso:FireClient(jugador, texto)
+-- `sonido` es una clave de Config.Efectos (por ejemplo "Compra"). El cliente lo toca.
+function Remotos.avisar(jugador: Player, texto: string, sonido: string?)
+	Remotos.Aviso:FireClient(jugador, texto, sonido)
 end
 
 return Remotos

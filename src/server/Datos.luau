@@ -12,7 +12,7 @@ export type Perfil = {
 	Rebirths: number,
 	Checkpoint: number,
 	Monedas: number,
-	Zapatillas: number,
+	Mejoras: { [string]: number },
 	Inventario: { [string]: number },
 }
 
@@ -68,7 +68,7 @@ function Datos.cargar(jugador: Player): Perfil
 		Rebirths = 0,
 		Checkpoint = 0,
 		Monedas = 0,
-		Zapatillas = 0,
+		Mejoras = {},
 		Inventario = {},
 	}
 	if typeof(guardado) == "table" then
@@ -76,7 +76,15 @@ function Datos.cargar(jugador: Player): Perfil
 		perfil.Rebirths = numeroO(guardado.Rebirths, 0)
 		perfil.Checkpoint = numeroO(guardado.Checkpoint, 0)
 		perfil.Monedas = numeroO(guardado.Monedas, 0)
-		perfil.Zapatillas = math.min(numeroO(guardado.Zapatillas, 0), Config.Zapatillas.NivelMaximo)
+	end
+	local mejorasGuardadas = if typeof(guardado) == "table" then guardado.Mejoras else nil
+	for _, nombre in Config.OrdenMejoras do
+		local nivel = if typeof(mejorasGuardadas) == "table" then mejorasGuardadas[nombre] else nil
+		-- Guardados viejos tenían Zapatillas suelto en el perfil.
+		if nivel == nil and nombre == "Zapatillas" and typeof(guardado) == "table" then
+			nivel = guardado.Zapatillas
+		end
+		perfil.Mejoras[nombre] = math.min(numeroO(nivel, 0), Config.Mejoras[nombre].NivelMaximo)
 	end
 	local inventarioGuardado = if typeof(guardado) == "table" then guardado.Inventario else nil
 	for _, nombre in Config.OrdenConsumibles do
