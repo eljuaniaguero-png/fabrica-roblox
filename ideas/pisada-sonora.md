@@ -38,6 +38,7 @@ Decisiones (eran ambiguas, elegí la más simple):
 - Mapa: bordes de luz donde termina el camino (marcan bien el piso), arcos de neón con luz sobre los tramos rectos (uno cada ~40 studs) y un suelo lejano oscuro con cuadrícula de luz del color de la zona, para que no se vea vacío abajo.
 - Total de `Workspace.Ambiente`: 582 piezas y 31 luces sin sombra.
 - Segunda pasada (con capturas del usuario: había demasiado neón y el piso no se leía): se sacaron los arcos (parecían puertas), quedó 1 de cada 3 postes, la mitad de las columnas, bordes finos del color de la zona y semitransparentes, cuadrícula hundida y apenas marcada, fondos más tenues y la niebla de las zonas bloqueadas pasó a oscuro mate. Menos resplandor (bloom 0,3) y baldosas más legibles (apagada 0,42, prendida 0,8). Quedan 405 piezas y 20 luces.
+- Tercera pasada (el usuario lo veía muy oscuro): sigue siendo de noche, pero con cielo que brilla del color de la zona (bruma más clara y haze 1), luz ambiente mucho más alta (brillo 3, exposición +0,35, luz de entorno 1) y el suelo, las columnas y las plataformas en violeta medio en vez de casi negro.
 
 ## Etapa 4 (pedido del usuario, 2026-10-07)
 

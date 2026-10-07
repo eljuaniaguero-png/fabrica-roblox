@@ -269,10 +269,10 @@ local Config = {
 			Principal = paleta.Cian,
 			Secundario = paleta.Violeta,
 			Cielo = {
-				Atmosfera = Color3.fromRGB(25, 40, 90), -- color de la bruma
-				Decaimiento = Color3.fromRGB(10, 20, 55), -- color del horizonte
-				Densidad = 0.22,
-				LuzAmbiente = Color3.fromRGB(95, 125, 185),
+				Atmosfera = Color3.fromRGB(90, 130, 210), -- color de la bruma
+				Decaimiento = Color3.fromRGB(70, 90, 190), -- color del horizonte
+				Densidad = 0.25,
+				LuzAmbiente = Color3.fromRGB(150, 180, 230),
 				Estrellas = 3000,
 			},
 		},
@@ -282,10 +282,10 @@ local Config = {
 			Principal = paleta.Rosa,
 			Secundario = paleta.Violeta,
 			Cielo = {
-				Atmosfera = Color3.fromRGB(80, 20, 70),
-				Decaimiento = Color3.fromRGB(45, 10, 45),
-				Densidad = 0.24,
-				LuzAmbiente = Color3.fromRGB(165, 95, 160),
+				Atmosfera = Color3.fromRGB(190, 90, 175),
+				Decaimiento = Color3.fromRGB(140, 60, 160),
+				Densidad = 0.25,
+				LuzAmbiente = Color3.fromRGB(215, 160, 210),
 				Estrellas = 1500,
 			},
 		},
@@ -295,10 +295,10 @@ local Config = {
 			Principal = paleta.Amarillo,
 			Secundario = paleta.Rosa,
 			Cielo = {
-				Atmosfera = Color3.fromRGB(90, 55, 25),
-				Decaimiento = Color3.fromRGB(50, 25, 40),
-				Densidad = 0.22,
-				LuzAmbiente = Color3.fromRGB(175, 135, 110),
+				Atmosfera = Color3.fromRGB(210, 150, 90),
+				Decaimiento = Color3.fromRGB(160, 90, 120),
+				Densidad = 0.25,
+				LuzAmbiente = Color3.fromRGB(225, 195, 165),
 				Estrellas = 500,
 			},
 		},
@@ -469,17 +469,17 @@ local Config = {
 
 	-- Luz del ambiente. La aplica el servidor al arrancar (Ambiente.luau).
 	Ambiente = {
-		Brillo = 2.2, -- Lighting.Brightness
-		Exposicion = 0, -- Lighting.ExposureCompensation
-		LuzAmbiente = Color3.fromRGB(110, 100, 160), -- Lighting.Ambient (el cliente la cambia por zona)
-		LuzExterior = Color3.fromRGB(100, 90, 150), -- Lighting.OutdoorAmbient
-		LuzEntorno = 0.7, -- Lighting.EnvironmentDiffuseScale: cuánto ilumina el cielo a los materiales
+		Brillo = 3, -- Lighting.Brightness
+		Exposicion = 0.35, -- Lighting.ExposureCompensation
+		LuzAmbiente = Color3.fromRGB(150, 140, 200), -- Lighting.Ambient (el cliente la cambia por zona)
+		LuzExterior = Color3.fromRGB(140, 130, 190), -- Lighting.OutdoorAmbient
+		LuzEntorno = 1, -- Lighting.EnvironmentDiffuseScale: cuánto ilumina el cielo a los materiales
 		ReflejoEntorno = 0.8, -- Lighting.EnvironmentSpecularScale
 		BloomIntensidad = 0.3, -- resplandor del neón (más alto = más borroso)
 		BloomTamano = 18,
 		BloomUmbral = 0.95,
-		BrumaHaze = 0.25, -- Atmosphere.Haze (más bajo = se ve más lejos)
-		BrumaBrillo = 0.3, -- Atmosphere.Glare (resplandor de la bruma)
+		BrumaHaze = 1, -- Atmosphere.Haze: tiñe el horizonte con el color de la zona (cielo que brilla)
+		BrumaBrillo = 0.5, -- Atmosphere.Glare (resplandor de la bruma)
 		Contraste = 0.1, -- ColorCorrection.Contrast
 		Saturacion = 0.2, -- ColorCorrection.Saturation
 	},
