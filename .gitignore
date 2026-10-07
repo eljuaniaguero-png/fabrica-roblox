@@ -2,3 +2,4 @@
 *.rbxlx.lock
 sourcemap.json
 .env
+mutant-lab/*.rbxlx

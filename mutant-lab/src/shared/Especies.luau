@@ -1,0 +1,109 @@
+--!strict
+-- Las 10 especies base, en el orden de la rueda.
+-- Cada pieza se identifica con el número de la base que la trae
+-- (Cabeza = 3 quiere decir "la cabeza de Sutomi").
+
+export type Base = {
+	Numero: number,
+	Nombre: string,
+	Silabas: { string }, -- siempre 3, se usan para armar los nombres
+	Tema: string,
+	Color: Color3,
+	Manchas: Color3, -- color secundario propio (solo se ve en la base pura)
+	Rasgo: string,
+}
+
+local bases: { Base } = {
+	{
+		Numero = 1,
+		Nombre = "Glupona",
+		Silabas = { "Glu", "po", "na" },
+		Tema = "Agua",
+		Color = Color3.fromHex("38C8FF"),
+		Manchas = Color3.fromHex("E8FAFF"),
+		Rasgo = "Burbujas",
+	},
+	{
+		Numero = 2,
+		Nombre = "Rámulo",
+		Silabas = { "Ra", "mu", "lo" },
+		Tema = "Musgo",
+		Color = Color3.fromHex("4CCB4A"),
+		Manchas = Color3.fromHex("2E8A3A"),
+		Rasgo = "Flores",
+	},
+	{
+		Numero = 3,
+		Nombre = "Sutomi",
+		Silabas = { "Su", "to", "mi" },
+		Tema = "Hongo",
+		Color = Color3.fromHex("F23DB8"),
+		Manchas = Color3.fromHex("FFFFFF"),
+		Rasgo = "Esporas",
+	},
+	{
+		Numero = 4,
+		Nombre = "Rocote",
+		Silabas = { "Ro", "co", "te" },
+		Tema = "Roca",
+		Color = Color3.fromHex("7D8A9C"),
+		Manchas = Color3.fromHex("4E5866"),
+		Rasgo = "Rueda",
+	},
+	{
+		Numero = 5,
+		Nombre = "Chisparo",
+		Silabas = { "Chis", "pa", "ro" },
+		Tema = "Fuego",
+		Color = Color3.fromHex("FF3B30"),
+		Manchas = Color3.fromHex("FFB020"),
+		Rasgo = "Chispas",
+	},
+	{
+		Numero = 6,
+		Nombre = "Dunaqui",
+		Silabas = { "Du", "na", "qui" },
+		Tema = "Arena",
+		Color = Color3.fromHex("E0A040"),
+		Manchas = Color3.fromHex("A86A22"),
+		Rasgo = "SeEntierra",
+	},
+	{
+		Numero = 7,
+		Nombre = "Zoplito",
+		Silabas = { "Zo", "pli", "to" },
+		Tema = "Viento",
+		Color = Color3.fromHex("B07CFF"),
+		Manchas = Color3.fromHex("FFFFFF"),
+		Rasgo = "Flota",
+	},
+	{
+		Numero = 8,
+		Nombre = "Brinoza",
+		Silabas = { "Bri", "no", "za" },
+		Tema = "Hielo",
+		Color = Color3.fromHex("F2FBFF"),
+		Manchas = Color3.fromHex("8FE3FF"),
+		Rasgo = "Escarcha",
+	},
+	{
+		Numero = 9,
+		Nombre = "Fotina",
+		Silabas = { "Fo", "ti", "na" },
+		Tema = "Luz",
+		Color = Color3.fromHex("FFE21F"),
+		Manchas = Color3.fromHex("FF8A00"),
+		Rasgo = "Brilla",
+	},
+	{
+		Numero = 10,
+		Nombre = "Nerulo",
+		Silabas = { "Ne", "ru", "lo" },
+		Tema = "Noche",
+		Color = Color3.fromHex("2F4BD8"),
+		Manchas = Color3.fromHex("8EF0FF"),
+		Rasgo = "Transparente",
+	},
+}
+
+return bases
