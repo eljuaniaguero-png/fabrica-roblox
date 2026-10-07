@@ -18,7 +18,8 @@ local COLOR_ALCANZA = Color3.fromRGB(43, 210, 255)
 local COLOR_FALTA = Color3.fromRGB(170, 160, 210)
 
 type Puesto = { articulo: string?, precio: TextLabel }
-local puestos: { Puesto } = {}
+-- Con streaming, las partes llegan y se van mientras jugás: se registran por parte.
+local puestos: { [BasePart]: Puesto } = {}
 
 local function atributoNumero(nombre: string): number
 	local valor = jugador:GetAttribute(nombre)
@@ -75,7 +76,7 @@ local function actualizar()
 end
 
 local function registrar(parte: Instance)
-	if not parte:IsA("BasePart") then
+	if not parte:IsA("BasePart") or puestos[parte] then
 		return
 	end
 	local articulo = parte:GetAttribute("Articulo")
@@ -92,11 +93,25 @@ local function registrar(parte: Instance)
 		articulo = if typeof(articulo) == "string" then articulo else nil,
 		precio = precio,
 	}
-	table.insert(puestos, puesto)
+	puestos[parte] = puesto
 	actualizarPuesto(puesto)
 end
 
 for _, parte in workspace:GetDescendants() do
 	registrar(parte)
 end
+workspace.DescendantAdded:Connect(function(objeto)
+	-- El cartel puede llegar después que la parte: se reintenta cuando aparece el texto del precio.
+	local parte = if objeto:IsA("BasePart")
+		then objeto
+		else objeto:FindFirstAncestorWhichIsA("BasePart")
+	if parte then
+		registrar(parte)
+	end
+end)
+workspace.DescendantRemoving:Connect(function(objeto)
+	if objeto:IsA("BasePart") then
+		puestos[objeto] = nil
+	end
+end)
 jugador.AttributeChanged:Connect(actualizar)

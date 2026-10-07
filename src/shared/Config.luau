@@ -120,6 +120,9 @@ local Config = {
 		TiempoAntesDeDesaparecer = 0.5, -- segundos desde que la pisás hasta que se va
 		TiempoDesaparecida = 2.5, -- segundos hasta que vuelve
 		EsperaTrampolin = 0.4,
+		EmpujeBarra = 45, -- velocidad de costado con la que te empuja una barra giratoria
+		EmpujeBarraArriba = 30, -- y hacia arriba
+		EsperaEmpuje = 0.6,
 	},
 
 	-- Sonido: un solo sample de piano, el tono cambia con PlaybackSpeed.

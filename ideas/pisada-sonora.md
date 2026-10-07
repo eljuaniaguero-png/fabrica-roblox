@@ -3,7 +3,8 @@
 Origen: [2026-10-06-tendencias.md](2026-10-06-tendencias.md), idea 1.
 Estado: **aprobada (2026-10-06)**, versión 2, con los cambios del usuario: melodía clásica de dominio público, checkpoints, consecuencia al caer, consumibles, tienda y conversión de velocidad a monedas.
 Versión 3 (2026-10-06): OK del usuario + **nota desafinada al caer** + orden por etapas. Estilo elegido: **A — Neón nocturno**.
-Próximo punto de control: **prototipo jugable terminado**.
+Versión 4 (2026-10-06): Etapa 2 con los cambios del usuario: el rebirth da monedas, tienda y conversión **físicas** en el mapa, más sonidos y más variantes de parkour.
+Próximo punto de control: **prototipo jugable terminado** (Etapas 1 y 2).
 
 ## Etapa 1 (núcleo) — se prueba primero
 
@@ -11,39 +12,57 @@ Próximo punto de control: **prototipo jugable terminado**.
 2. Un checkpoint después de cada puerta.
 3. Al caerte: suena una nota desafinada (mismo sample, tono corrido medio semitono), perdés 10% de la velocidad y reaparecés en el último checkpoint.
 
-Lo demás (rebirth, tienda, consumibles, guardado) es la Etapa 2: ya está escrito y se prueba después del núcleo.
+## Etapa 2 (pedido del usuario)
+
+5. El rebirth convierte tu velocidad en monedas y además sube el multiplicador.
+6. Una tienda donde las monedas compran mejoras permanentes.
+7. Dos consumibles en la tienda: Escudo (perdona una caída) y Doble paso (30 s).
+8. Tienda y conversión físicas (puestos en el mapa, no botones del HUD).
+9. Que se escuche: efectos con el mismo sample de piano.
+10. Más variantes de parkour.
+
+Todos los precios y valores van en `Config.luau`.
 
 ## Concepto en una línea
 
-Obby incremental: cada paso te da +1 de velocidad y cada baldosa que pisás toca la siguiente nota de una melodía clásica. La velocidad se puede gastar en un rebirth (multiplicador permanente) o convertir en monedas para la tienda.
+Obby incremental: cada paso te da +1 de velocidad y cada baldosa que pisás toca la siguiente nota de una melodía clásica. En el portal de rebirth tu velocidad se convierte en monedas y sube tu multiplicador; con las monedas comprás mejoras y consumibles en la tienda del inicio.
 
 ## Loop de 30 segundos
 
 1. Corrés por el anillo: cada paso suma velocidad y la melodía avanza nota por nota.
 2. Llegás a una puerta que pide una velocidad mínima; si te falta, das otra vuelta.
 3. Pasás, tocás el checkpoint y encarás el tramo de saltos. Si te caés, perdés un poco de velocidad y volvés al checkpoint.
-4. En el camino agarrás consumibles (Turbo, Escudo, Resorte).
-5. Decidís: ¿convierto velocidad en monedas para comprar mejoras, o la junto para un rebirth?
+4. En el camino agarrás consumibles (Doble paso, Escudo).
+5. Decidís: ¿hago rebirth ya (menos monedas) o sigo juntando velocidad para pasar la próxima puerta?
 
 ## Sistemas
 
 | # | Sistema | Dónde | Qué hace |
 |---|---|---|---|
-| 1 | **Velocidad por paso** | servidor + UI | Cuenta pasos por distancia (validada en el servidor) y suma `PuntosPorPaso × multiplicador de rebirth × bonus de zapatillas × turbo`. Ajusta `WalkSpeed` con un tope. |
+| 1 | **Velocidad por paso** | servidor + UI | Cuenta pasos por distancia (validada en el servidor) y suma `PuntosPorPaso × multiplicador de rebirth × bonus de zapatillas × doble paso`. Ajusta `WalkSpeed` con un tope. |
 | 2 | **Baldosas con melodía** | cliente | Cada baldosa nueva que pisás toca **la siguiente nota** de la melodía (Oda a la Alegría, Beethoven, 1824, de dominio público) con **un solo sample de piano**, cambiando el tono con `PlaybackSpeed`. La melodía da la vuelta sola al terminar. |
 | 3 | **Puertas, checkpoints y caídas** | servidor | Puertas por velocidad mínima (colisión por jugador). Un checkpoint detrás de cada puerta. **Al caer**: volvés al último checkpoint y perdés el 10% de la velocidad, salvo que tengas un Escudo (se gasta solo). |
-| 4 | **Rebirth** | servidor + UI | Cuesta 500 de velocidad: te deja en 0, vuelve el checkpoint a 0 y sube el multiplicador. |
-| 5 | **Economía y tienda** | servidor + UI | Botón **Convertir**: toda tu velocidad pasa a monedas (1 a 1) y la velocidad queda en 0. La **tienda** vende consumibles y la mejora permanente **Zapatillas** (+25% de velocidad por paso en cada nivel, el precio sube por nivel). El servidor valida cada compra. |
-| 6 | **Consumibles** | servidor + UI | **Turbo**: el doble de velocidad ganada durante 30 s. **Resorte**: salto alto durante 30 s. **Escudo**: la próxima caída no te quita velocidad. Se compran en la tienda o se agarran en el mapa (reaparecen cada 30 s). Turbo y Resorte se usan con un botón del HUD; el Escudo se usa solo. |
-| 7 | **Guardado** | servidor | Velocidad, rebirths, checkpoint, monedas, zapatillas e inventario. DataStore solo funciona en lugares publicados: mientras tanto se guarda en memoria y avisa por consola. |
+| 4 | **Rebirth (portal)** | servidor + mapa | Portal en la plaza del inicio (ProximityPrompt). Pide 150 de velocidad: toda tu velocidad pasa a monedas (1 a 1, +20% por nivel de Bolsillo), la velocidad y el checkpoint vuelven a 0 y el multiplicador sube +0,5. |
+| 5 | **Tienda física** | servidor + mapa | 4 puestos en la plaza del inicio (ProximityPrompt). Mejoras permanentes: **Zapatillas** (+25% de velocidad por paso por nivel) y **Bolsillo** (+20% monedas por rebirth por nivel); el precio sube por nivel. Consumibles: Escudo y Doble paso. Cada cartel muestra tu precio y si te alcanza. El servidor valida cada compra. |
+| 6 | **Consumibles** | servidor + UI | **Doble paso**: cada paso vale doble durante 30 s (botón del HUD). **Escudo**: te perdona una caída (se usa solo). Se compran en la tienda o se agarran en el mapa (reaparecen cada 30 s). |
+| 7 | **Guardado** | servidor | Velocidad, rebirths, checkpoint, monedas, mejoras e inventario. DataStore solo funciona en lugares publicados: mientras tanto se guarda en memoria y avisa por consola. |
 
-Pasamos de 5 a 7 sistemas porque el usuario agregó tienda, consumibles y economía.
+| 8 | **Sonidos** | cliente | Todos los efectos salen del mismo sample de piano: checkpoint (arpegio), compra, rebirth (arpegio largo), recoger, usar, escudo, trampolín, error y caída (notas desafinadas). Cada efecto es una lista de notas en `Config.Efectos`. |
+| 9 | **Parkour** | cliente | Plataformas que se mueven, baldosas que desaparecen, trampolín, cinta que te tira para atrás, barra giratoria que empuja y viga angosta. Las mueve cada cliente con el reloj del servidor, así el personaje viaja suave encima. |
 
 ## Decisiones tomadas (eran ambiguas, elegí la más simple)
 
 - "Al caerte pase algo" → perdés el 10% de la velocidad, con un aviso en pantalla. El Escudo te salva.
 - La melodía avanza por pasos, no por baldosa fija: camines para donde camines, suena la melodía en orden. El ritmo lo ponés vos con tu velocidad.
-- Convertir se hace desde un botón del HUD, en cualquier lugar.
+- Rebirth y conversión son una sola cosa (el portal). Se sacaron el botón Convertir y la tienda del HUD.
+- Se sacaron Turbo y Resorte: la tienda tiene solo los dos consumibles pedidos. El trampolín reemplaza al salto alto.
+- Segunda mejora permanente: Bolsillo (más monedas por rebirth), para que haya una elección en la tienda.
+- Rebirth más barato (150) y multiplicador +0,5, porque ahora el rebirth también es la forma de ganar monedas.
+- El parkour se mueve en el cliente (si lo moviera el servidor, el personaje no viajaría encima).
+- La barra giratoria no choca: al tocarte te da un empujón fijo (`Config.Parkour`). Con choque físico te podía mandar a volar lejos.
+- Los checkpoints del parkour no piden velocidad (no tienen puerta).
+- El juego usa streaming: los scripts del cliente registran también las partes que llegan después.
+- Sonido: el sample carga y suena (medido en el playtest). Si no se oye, revisar que Studio o Windows no estén silenciados.
 - Los consumibles del mapa son para todos: cuando alguien agarra uno, desaparece y reaparece a los 30 s.
 - Inventario: máximo 9 de cada consumible.
 - Comprar y agarrar consumibles es determinista: nada de cajas ni azar.
@@ -54,8 +73,11 @@ Pasamos de 5 a 7 sistemas porque el usuario agregó tienda, consumibles y econom
 - Camino → Puerta 1 (100) → Checkpoint 1.
 - Tramo de saltos (5 plataformas).
 - Anillo 2 (28 baldosas).
-- Camino → Puerta 2 (300) → Checkpoint 2 → Meta.
-- Consumibles: un Turbo en el anillo 1, un Escudo antes de los saltos y un Resorte en el anillo 2.
+- Plaza del inicio (al sur del spawn): tienda con 4 puestos y portal de rebirth.
+- Tramo de saltos: la plataforma 2 se mueve de costado y la 4 desaparece al pisarla.
+- Camino → Puerta 2 (300) → Checkpoint 2.
+- Tramo 3 (parkour): cinta → trampolín → Checkpoint 3 (arriba) → 4 baldosas que desaparecen → plaza con barra giratoria → 2 plataformas móviles → viga angosta → Meta.
+- Consumibles: Doble paso en el anillo 1 y en el anillo 2, Escudo antes de los saltos.
 - El trazado está pintado con el estilo Neón nocturno (2026-10-06). HUD completo en `StarterGui.HUD` con fuente Michroma.
 
 ## Audio (todo en `Config.luau`)
