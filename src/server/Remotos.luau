@@ -17,6 +17,8 @@ local Remotos = {
 	UsarConsumible = crear("UsarConsumible"),
 	Aviso = crear("Aviso"), -- servidor -> cliente: texto corto y, opcional, el efecto de sonido a tocar
 	SubioNivel = crear("SubioNivel"), -- servidor -> todos: (jugador, nivel nuevo)
+	Comprar = crear("Comprar"), -- cliente -> servidor: (artículo) en el menú del vendedor
+	VenderPasos = crear("VenderPasos"), -- cliente -> servidor: vende todos los pasos disponibles
 }
 
 carpeta.Parent = ReplicatedStorage

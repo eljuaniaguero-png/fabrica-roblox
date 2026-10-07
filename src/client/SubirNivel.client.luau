@@ -95,7 +95,7 @@ local function mostrarCartel(nivel: number)
 			{ Scale = 1 }
 		):Play()
 	end
-	TweenService:Create(
+	local desvanecer = TweenService:Create(
 		cartel,
 		TweenInfo.new(
 			0.5,
@@ -106,7 +106,14 @@ local function mostrarCartel(nivel: number)
 			ajustes.DuracionCartel
 		),
 		{ GroupTransparency = 1 }
-	):Play()
+	)
+	desvanecer.Completed:Connect(function(estado)
+		-- Ocultarlo del todo: un CanvasGroup transparente a veces deja un rastro dibujado.
+		if estado == Enum.PlaybackState.Completed then
+			cartel.Visible = false
+		end
+	end)
+	desvanecer:Play()
 end
 
 remoto.OnClientEvent:Connect(function(quien: Player, nivel: number)

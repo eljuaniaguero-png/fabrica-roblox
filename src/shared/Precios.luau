@@ -14,6 +14,11 @@ function Precios.mejora(nombre: string, nivelActual: number): number?
 	return math.floor(mejora.PrecioBase * mejora.FactorPrecio ^ nivelActual)
 end
 
+-- Monedas enteras que da vender estos pasos disponibles al vendedor.
+function Precios.monedasPorPasos(pasosDisponibles: number): number
+	return math.floor(pasosDisponibles / Config.PasosPorMoneda)
+end
+
 -- Monedas que da un rebirth con esta velocidad y este nivel de Bolsillo.
 function Precios.monedasPorRebirth(velocidad: number, nivelBolsillo: number): number
 	local bonus = 1 + nivelBolsillo * Config.Mejoras.Bolsillo.BonusPorNivel

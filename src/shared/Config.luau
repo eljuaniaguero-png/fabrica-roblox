@@ -79,6 +79,8 @@ local efectos = {
 	Trampolin = { Notas = { 12, 19 }, Separacion = 0.04 },
 	SubirNivel = { Notas = { 7, 7, 12, 16, 19, 24 }, Separacion = 0.08 },
 	Puerta = { Notas = { 12, 16, 19, 24, 28 }, Separacion = 0.035 },
+	Hablar = { Notas = { 4, 7, 12 }, Separacion = 0.06 },
+	Vender = { Notas = { 19, 24, 28 }, Separacion = 0.05 },
 }
 
 -- Paleta de la guía de estilo (Neón nocturno), para lo que pinta el código.
@@ -161,8 +163,12 @@ local Config = {
 	MultiplicadorPorRebirth = 0.5, -- multiplicador = 1 + rebirths * esto
 	EsperaRebirth = 1, -- segundos mínimos entre pedidos
 
-	-- Tienda (puestos en el mapa)
-	EsperaCompra = 0.3, -- segundos mínimos entre compras
+	-- Tienda: un vendedor en la plaza (modelo con atributo Vendedor = true).
+	-- Se le puede vender pasos disponibles y comprar mejoras y consumibles.
+	EsperaCompra = 0.3, -- segundos mínimos entre compras o ventas
+	PasosPorMoneda = 2, -- pasos disponibles que valen 1 moneda al venderlos
+	DistanciaVendedor = 14, -- studs: más lejos, el servidor no acepta compras ni ventas (y se cierra el menú)
+	NombreVendedor = "Don Compás",
 	Consumibles = consumibles,
 	OrdenConsumibles = { "DoblePaso", "Escudo" },
 	InventarioMaximo = 9,
