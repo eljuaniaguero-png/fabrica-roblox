@@ -146,6 +146,14 @@ local Config = {
 		},
 	},
 
+	-- HUD: la tarjeta se agranda o achica según el alto de la pantalla (legible en celular).
+	Hud = {
+		AltoReferencia = 720, -- alto de pantalla (en puntos) con escala 1
+		EscalaMinima = 0.85,
+		EscalaMaxima = 1.25,
+		DuracionBarra = 0.25, -- segundos que tarda la barra de nivel en moverse
+	},
+
 	-- Cruzar una puerta abierta: destello en pantalla, chispas y sonido (solo visual).
 	CruzarPuerta = {
 		Destello = 0.55, -- transparencia del destello al empezar (0 = blanco total)

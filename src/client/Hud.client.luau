@@ -1,25 +1,33 @@
 --!strict
 -- Conecta el HUD (StarterGui.HUD, armado en Studio) con los atributos que publica el servidor.
--- HUD > Panel      > Velocidad, Monedas, Rebirths, ProximoRebirth (TextLabel)
+-- HUD > Tarjeta (con UIScale) > Nivel, Progreso (TextLabel), Barra > Relleno (Frame)
+--                             > Stats > Velocidad, Pasos, Monedas (Frame > Valor)
+--                             > RebirthListo (TextLabel debajo: solo cuando podés hacer rebirth)
 -- HUD > Inventario > DoblePaso, Escudo (TextButton)
 -- HUD > Aviso (TextLabel)
--- La tienda y el rebirth no están acá: son puestos en el mapa (TiendaFisica.client.luau).
+-- La tienda está en el vendedor (Vendedor.client.luau) y el rebirth en el portal.
 
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local TweenService = game:GetService("TweenService")
 
 local Config = require(ReplicatedStorage.Shared.Config)
+local Niveles = require(ReplicatedStorage.Shared.Niveles)
 local Precios = require(ReplicatedStorage.Shared.Precios)
 local Sonidos = require(script.Parent.Sonidos)
 
 local jugador = Players.LocalPlayer
 local hud = jugador:WaitForChild("PlayerGui"):WaitForChild("HUD")
-local panel = hud:WaitForChild("Panel")
-local etiquetaVelocidad = panel:WaitForChild("Velocidad") :: TextLabel
-local etiquetaMonedas = panel:WaitForChild("Monedas") :: TextLabel
-local etiquetaRebirths = panel:WaitForChild("Rebirths") :: TextLabel
-local etiquetaProximo = panel:WaitForChild("ProximoRebirth") :: TextLabel
+local tarjeta = hud:WaitForChild("Tarjeta") :: Frame
+local escala = tarjeta:WaitForChild("Escala") :: UIScale
+local etiquetaNivel = tarjeta:WaitForChild("Nivel") :: TextLabel
+local etiquetaProgreso = tarjeta:WaitForChild("Progreso") :: TextLabel
+local relleno = tarjeta:WaitForChild("Barra"):WaitForChild("Relleno") :: Frame
+local stats = tarjeta:WaitForChild("Stats")
+local valorVelocidad = stats:WaitForChild("Velocidad"):WaitForChild("Valor") :: TextLabel
+local valorPasos = stats:WaitForChild("Pasos"):WaitForChild("Valor") :: TextLabel
+local valorMonedas = stats:WaitForChild("Monedas"):WaitForChild("Valor") :: TextLabel
+local rebirthListo = tarjeta:WaitForChild("RebirthListo") :: TextLabel
 local inventario = hud:WaitForChild("Inventario")
 local aviso = hud:WaitForChild("Aviso") :: TextLabel
 
@@ -32,29 +40,55 @@ local function colorDelHud(nombre: string, porDefecto: Color3): Color3
 	local valor = hud:GetAttribute(nombre)
 	return if typeof(valor) == "Color3" then valor else porDefecto
 end
-local COLOR_LISTO = colorDelHud("ColorListo", Color3.fromRGB(70, 200, 110))
-local COLOR_ESPERA = colorDelHud("ColorEspera", Color3.fromRGB(90, 90, 100))
+local COLOR_LISTO = colorDelHud("ColorListo", Config.Paleta.Cian)
+local COLOR_ESPERA = colorDelHud("ColorEspera", Color3.fromRGB(55, 45, 95))
+local AMARILLO_HEX = Config.Paleta.Amarillo:ToHex()
 
 local function atributoNumero(nombre: string): number
 	local valor = jugador:GetAttribute(nombre)
 	return if typeof(valor) == "number" then valor else 0
 end
 
-local function actualizarPanel()
-	local velocidad = atributoNumero("Velocidad")
-	local multiplicador = math.max(atributoNumero("Multiplicador"), 1)
+-- 1250 -> "1.250", 12500 -> "12,5k", 1250000 -> "1,2M": que entre en la tarjeta.
+local function formato(numero: number): string
+	local n = math.floor(numero)
+	if n >= 1000000 then
+		return (string.format("%.1fM", n / 1000000):gsub("%.", ","))
+	elseif n >= 10000 then
+		return (string.format("%.1fk", n / 1000):gsub("%.", ","))
+	end
+	local texto = tostring(n)
+	return (texto:reverse():gsub("(%d%d%d)(%d)", "%1.%2"):reverse())
+end
 
-	etiquetaVelocidad.Text = `Velocidad: {math.floor(velocidad)}`
-	etiquetaMonedas.Text = `Monedas: {math.floor(atributoNumero("Monedas"))}`
-	etiquetaRebirths.Text = `Rebirths: {atributoNumero("Rebirths")}  (x{multiplicador})`
+local ultimoNivel = 0
+local function actualizarTarjeta()
+	local nivel, dentro, necesarios = Niveles.progreso(atributoNumero("PasosTotales"))
+	etiquetaNivel.Text = `NIVEL <font color="#{AMARILLO_HEX}">{nivel}</font>`
+	etiquetaProgreso.Text = `{formato(dentro)} / {formato(necesarios)} pasos`
+	local fraccion = math.clamp(dentro / necesarios, 0, 1)
+	if nivel ~= ultimoNivel then
+		relleno.Size = UDim2.fromScale(fraccion, 1) -- nivel nuevo: la barra arranca de cero, sin animar
+		ultimoNivel = nivel
+	else
+		TweenService:Create(
+			relleno,
+			TweenInfo.new(Config.Hud.DuracionBarra, Enum.EasingStyle.Quad),
+			{ Size = UDim2.fromScale(fraccion, 1) }
+		):Play()
+	end
+
+	local velocidad = atributoNumero("Velocidad")
+	valorVelocidad.Text = formato(velocidad)
+	valorPasos.Text = formato(atributoNumero("PasosDisponibles"))
+	valorMonedas.Text = formato(atributoNumero("Monedas"))
 
 	if velocidad >= Config.CostoRebirth then
 		local monedas = Precios.monedasPorRebirth(velocidad, atributoNumero("Mej_Bolsillo"))
-		etiquetaProximo.Text = `¡Rebirth listo! Portal: +{monedas} monedas`
-		etiquetaProximo.TextColor3 = COLOR_LISTO
+		rebirthListo.Text = `Rebirth listo · portal +{formato(monedas)}`
+		rebirthListo.Visible = true
 	else
-		etiquetaProximo.Text = `Rebirth: {math.floor(velocidad)}/{Config.CostoRebirth}`
-		etiquetaProximo.TextColor3 = Color3.fromRGB(170, 160, 210)
+		rebirthListo.Visible = false
 	end
 end
 
@@ -76,6 +110,20 @@ local function actualizarInventario()
 				else COLOR_ESPERA
 		end
 	end
+end
+
+-- La tarjeta se agranda o achica con el alto de la pantalla, así se lee en celular y en PC.
+local function ajustarEscala()
+	local camara = workspace.CurrentCamera
+	if not camara then
+		return
+	end
+	local ajustes = Config.Hud
+	escala.Scale = math.clamp(
+		camara.ViewportSize.Y / ajustes.AltoReferencia,
+		ajustes.EscalaMinima,
+		ajustes.EscalaMaxima
+	)
 end
 
 for _, nombre in Config.OrdenConsumibles do
@@ -117,11 +165,16 @@ jugador.AttributeChanged:Connect(function(nombre)
 	elseif nombre == "Checkpoint" then
 		print(`[Cliente] Checkpoint {atributoNumero("Checkpoint")}`)
 	end
-	actualizarPanel()
+	actualizarTarjeta()
 	actualizarInventario()
 end)
 
-actualizarPanel()
+local camara = workspace.CurrentCamera
+if camara then
+	camara:GetPropertyChangedSignal("ViewportSize"):Connect(ajustarEscala)
+end
+ajustarEscala()
+actualizarTarjeta()
 actualizarInventario()
 
 -- Cuenta regresiva de los efectos activos.
