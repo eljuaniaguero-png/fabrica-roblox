@@ -9,6 +9,8 @@ local Config = require(ReplicatedStorage.Shared.Config)
 
 export type Perfil = {
 	Velocidad: number,
+	PasosTotales: number, -- históricos: dan el nivel y nunca bajan
+	PasosDisponibles: number, -- saldo que se puede vender al vendedor
 	Rebirths: number,
 	Checkpoint: number,
 	Monedas: number,
@@ -65,6 +67,8 @@ function Datos.cargar(jugador: Player): Perfil
 
 	local perfil: Perfil = {
 		Velocidad = 0,
+		PasosTotales = 0,
+		PasosDisponibles = 0,
 		Rebirths = 0,
 		Checkpoint = 0,
 		Monedas = 0,
@@ -73,6 +77,8 @@ function Datos.cargar(jugador: Player): Perfil
 	}
 	if typeof(guardado) == "table" then
 		perfil.Velocidad = numeroO(guardado.Velocidad, 0)
+		perfil.PasosTotales = numeroO(guardado.PasosTotales, 0)
+		perfil.PasosDisponibles = numeroO(guardado.PasosDisponibles, 0)
 		perfil.Rebirths = numeroO(guardado.Rebirths, 0)
 		perfil.Checkpoint = numeroO(guardado.Checkpoint, 0)
 		perfil.Monedas = numeroO(guardado.Monedas, 0)

@@ -1,12 +1,15 @@
 --!strict
--- Cuenta pasos por distancia recorrida (medida en el servidor) y los convierte en velocidad.
+-- Cuenta pasos por distancia recorrida (medida en el servidor): suman velocidad, pasos totales
+-- (dan el nivel) y pasos disponibles (se venden). Avisa a todos cuando alguien sube de nivel.
 -- También publica el perfil como atributos del jugador para que el cliente lo muestre.
 
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local Config = require(ReplicatedStorage.Shared.Config)
+local Niveles = require(ReplicatedStorage.Shared.Niveles)
 local Datos = require(script.Parent.Datos)
 local Efectos = require(script.Parent.Efectos)
+local Remotos = require(script.Parent.Remotos)
 
 local Velocidad = {}
 
@@ -31,7 +34,7 @@ end
 function Velocidad.crearLeaderstats(jugador: Player)
 	local carpeta = Instance.new("Folder")
 	carpeta.Name = "leaderstats"
-	for _, nombre in { "Velocidad", "Monedas", "Rebirths" } do
+	for _, nombre in { "Nivel", "Velocidad", "Monedas", "Rebirths" } do
 		local valor = Instance.new("IntValue")
 		valor.Name = nombre
 		valor.Parent = carpeta
@@ -53,18 +56,23 @@ function Velocidad.aplicar(jugador: Player)
 	if not perfil then
 		return
 	end
+	local nivel = Niveles.nivelDe(perfil.PasosTotales)
 	jugador:SetAttribute("Velocidad", perfil.Velocidad)
+	jugador:SetAttribute("PasosTotales", perfil.PasosTotales)
+	jugador:SetAttribute("PasosDisponibles", perfil.PasosDisponibles)
+	jugador:SetAttribute("Nivel", nivel)
 	jugador:SetAttribute("Rebirths", perfil.Rebirths)
 	jugador:SetAttribute("Multiplicador", Velocidad.multiplicador(perfil))
 	jugador:SetAttribute("Checkpoint", perfil.Checkpoint)
 	jugador:SetAttribute("Monedas", perfil.Monedas)
-	for nombre, nivel in perfil.Mejoras do
-		jugador:SetAttribute(`Mej_{nombre}`, nivel)
+	for nombre, nivelMejora in perfil.Mejoras do
+		jugador:SetAttribute(`Mej_{nombre}`, nivelMejora)
 	end
 	for nombre, cantidad in perfil.Inventario do
 		jugador:SetAttribute(`Inv_{nombre}`, cantidad)
 	end
 
+	ponerStat(jugador, "Nivel", nivel)
 	ponerStat(jugador, "Velocidad", perfil.Velocidad)
 	ponerStat(jugador, "Monedas", perfil.Monedas)
 	ponerStat(jugador, "Rebirths", perfil.Rebirths)
@@ -84,7 +92,7 @@ function Velocidad.olvidarPosicion(jugador: Player)
 	ultimaPosicion[jugador] = nil
 end
 
--- Mide cuánto caminó desde la última vez. Devuelve true si ganó velocidad.
+-- Mide cuánto caminó desde la última vez. Devuelve true si subió de nivel.
 function Velocidad.medir(jugador: Player, dt: number): boolean
 	local perfil = Datos.obtener(jugador)
 	local personaje = jugador.Character
@@ -121,9 +129,19 @@ function Velocidad.medir(jugador: Player, dt: number): boolean
 		return false
 	end
 
+	local nivelAntes = Niveles.nivelDe(perfil.PasosTotales)
+	perfil.PasosTotales += pasos
+	perfil.PasosDisponibles += pasos
 	perfil.Velocidad += pasos * gananciaPorPaso(jugador, perfil)
 	Velocidad.aplicar(jugador)
-	return true
+
+	local nivel = Niveles.nivelDe(perfil.PasosTotales)
+	if nivel > nivelAntes then
+		-- Todos ven el efecto alrededor del personaje; el cartel y el sonido son solo para él.
+		Remotos.SubioNivel:FireAllClients(jugador, nivel)
+		return true
+	end
+	return false
 end
 
 function Velocidad.olvidar(jugador: Player)

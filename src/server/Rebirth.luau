@@ -39,7 +39,6 @@ local function alPedir(jugador: Player)
 	perfil.Rebirths += 1
 	perfil.Checkpoint = 0
 	Velocidad.aplicar(jugador)
-	Puertas.actualizarNivel(jugador)
 	Puertas.teletransportar(jugador)
 	-- SONIDO: rebirth (Config.Efectos.Rebirth)
 	Remotos.avisar(

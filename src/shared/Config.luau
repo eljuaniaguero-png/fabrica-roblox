@@ -77,10 +77,21 @@ local efectos = {
 	Error = { Notas = { -5.5 }, Separacion = 0 }, -- desafinada: no alcanza la plata o la velocidad
 	Caida = { Notas = { -6.5 }, Separacion = 0 }, -- desafinada: medio semitono corrido y grave
 	Trampolin = { Notas = { 12, 19 }, Separacion = 0.04 },
+	SubirNivel = { Notas = { 7, 7, 12, 16, 19, 24 }, Separacion = 0.08 },
+}
+
+-- Paleta de la guía de estilo (Neón nocturno), para lo que pinta el código.
+local paleta = {
+	Rosa = Color3.fromRGB(255, 60, 172),
+	Cian = Color3.fromRGB(43, 210, 255),
+	Violeta = Color3.fromRGB(123, 47, 247),
+	Amarillo = Color3.fromRGB(255, 228, 94),
+	Fondo = Color3.fromRGB(20, 17, 43),
 }
 
 local Config = {
 	NombreDelJuego = "Pisada Sonora",
+	Paleta = paleta,
 
 	-- Velocidad
 	WalkSpeedBase = 16,
@@ -92,9 +103,24 @@ local Config = {
 	IntervaloMedicion = 0.2, -- segundos entre mediciones del servidor
 	ToleranciaTeletransporte = 1.5, -- si se mueve más que tope * intervalo * esto, no cuenta
 
-	-- Puertas: velocidad mínima para pasar cada una, en orden. Detrás de cada una hay un checkpoint.
-	-- Los checkpoints con número más alto que la cantidad de puertas (los del parkour) no piden velocidad.
-	UmbralesPuertas = { 100, 300 },
+	-- Niveles: salen de los pasos totales históricos, así que nunca bajan (Niveles.luau).
+	-- Para pasar del nivel n al n+1 hacen falta PasosPrimerNivel + PasosExtraPorNivel * (n - 1) pasos.
+	Niveles = {
+		PasosPrimerNivel = 50,
+		PasosExtraPorNivel = 25,
+	},
+
+	-- Puertas: nivel mínimo para pasar cada una, en orden. Detrás de cada una hay un checkpoint.
+	-- Los checkpoints con número más alto que la cantidad de puertas (los del parkour) no piden nivel.
+	NivelPuertas = { 3, 5 },
+
+	-- Subir de nivel: efecto alrededor del personaje y cartel en pantalla.
+	SubirNivel = {
+		DuracionCartel = 2.5, -- segundos que se ve el cartel antes de desvanecerse
+		Particulas = 50,
+		RadioAnillo = 9, -- studs hasta donde se abre el anillo de luz
+		DuracionAnillo = 0.8,
+	},
 
 	-- Caídas
 	AlturaCaida = 20, -- por debajo de esta altura volvés al último checkpoint

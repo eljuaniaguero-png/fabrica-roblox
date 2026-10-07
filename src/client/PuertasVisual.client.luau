@@ -1,19 +1,21 @@
 --!strict
--- Pinta cada puerta de verde si ya te alcanza la velocidad, o de rojo si no, y escribe su número.
--- Es solo visual: quién pasa lo decide el servidor.
+-- Pinta cada puerta según tu nivel (color "abierta" si ya pasás, "cerrada" si no) y escribe el nivel
+-- que pide. Es solo visual: quién pasa lo decide el servidor.
+--
+-- En el mapa: puerta = BasePart con atributo PuertaIndice, y adentro:
+--   SurfaceGui "Cartel" > TextLabel          (texto sobre el campo de fuerza)
+--   BillboardGui "CartelNivel" > Nivel, Detalle (TextLabel)  (cartel encima de la puerta)
 
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local Config = require(ReplicatedStorage.Shared.Config)
+local Niveles = require(ReplicatedStorage.Shared.Niveles)
 
 local jugador = Players.LocalPlayer
 
-local COLOR_ABIERTA = Color3.fromRGB(80, 220, 120)
-local COLOR_CERRADA = Color3.fromRGB(230, 70, 70)
-
-type Puerta = { parte: BasePart, umbral: number, texto: TextLabel? }
-local puertas: { Puerta } = {}
+-- Con streaming, las puertas llegan y se van mientras jugás: se guardan por parte.
+local puertas: { [BasePart]: number } = {} -- parte -> nivel mínimo
 
 -- Los colores los define el estilo, en atributos de cada puerta (ColorAbierta, ColorCerrada).
 local function colorDe(parte: BasePart, nombre: string, porDefecto: Color3): Color3
@@ -21,43 +23,75 @@ local function colorDe(parte: BasePart, nombre: string, porDefecto: Color3): Col
 	return if typeof(valor) == "Color3" then valor else porDefecto
 end
 
-local function velocidadActual(): number
-	local valor = jugador:GetAttribute("Velocidad")
+local function pasosTotales(): number
+	local valor = jugador:GetAttribute("PasosTotales")
 	return if typeof(valor) == "number" then valor else 0
 end
 
-local function pintar(puerta: Puerta, velocidad: number)
-	local abierta = velocidad >= puerta.umbral
-	puerta.parte.Color = if abierta
-		then colorDe(puerta.parte, "ColorAbierta", COLOR_ABIERTA)
-		else colorDe(puerta.parte, "ColorCerrada", COLOR_CERRADA)
-	puerta.parte.Transparency = if abierta then 0.7 else 0.3
-	if puerta.texto then
-		puerta.texto.Text = if abierta then "¡PASÁ!" else `Velocidad {puerta.umbral}`
-	end
+local function texto(parte: BasePart, cartel: string, nombre: string?): TextLabel?
+	local gui = parte:FindFirstChild(cartel)
+	local etiqueta = if gui
+		then (if nombre
+			then gui:FindFirstChild(nombre, true)
+			else gui:FindFirstChildWhichIsA("TextLabel", true))
+		else nil
+	return if etiqueta and etiqueta:IsA("TextLabel") then etiqueta else nil
 end
 
-local function registrar(parte: Instance)
-	local indice = parte:GetAttribute("PuertaIndice")
-	if parte:IsA("BasePart") and typeof(indice) == "number" then
-		local cartel = parte:FindFirstChild("Cartel")
-		local texto = if cartel then cartel:FindFirstChildWhichIsA("TextLabel", true) else nil
-		local puerta: Puerta =
-			{ parte = parte, umbral = Config.UmbralesPuertas[indice], texto = texto }
-		table.insert(puertas, puerta)
-		pintar(puerta, velocidadActual())
+local function pintar(parte: BasePart, minimo: number)
+	local pasos = pasosTotales()
+	local abierta = Niveles.nivelDe(pasos) >= minimo
+	local color = if abierta
+		then colorDe(parte, "ColorAbierta", Config.Paleta.Cian)
+		else colorDe(parte, "ColorCerrada", Config.Paleta.Rosa)
+	parte.Color = color
+	parte.Transparency = if abierta then 0.7 else 0.3
+
+	local enPuerta = texto(parte, "Cartel")
+	if enPuerta then
+		enPuerta.Text = if abierta then "¡PASÁ!" else `NIVEL {minimo}`
+	end
+	local nivel = texto(parte, "CartelNivel", "Nivel")
+	if nivel then
+		nivel.Text = `NIVEL {minimo}`
+		nivel.TextColor3 = color
+	end
+	local detalle = texto(parte, "CartelNivel", "Detalle")
+	if detalle then
+		local faltan = math.max(Niveles.pasosParaLlegar(minimo) - pasos, 0)
+		detalle.Text = if abierta then "ABIERTA" else `Te faltan {math.ceil(faltan)} pasos`
 	end
 end
 
 local function actualizar()
-	local velocidad = velocidadActual()
-	for _, puerta in puertas do
-		pintar(puerta, velocidad)
+	for parte, minimo in puertas do
+		pintar(parte, minimo)
 	end
 end
 
-for _, parte in workspace:GetDescendants() do
-	registrar(parte)
+local function registrar(objeto: Instance)
+	-- Los carteles pueden llegar después que la puerta: se repinta cuando aparece cualquier hijo.
+	local parte = if objeto:IsA("BasePart")
+		then objeto
+		else objeto:FindFirstAncestorWhichIsA("BasePart")
+	if not parte then
+		return
+	end
+	local indice = parte:GetAttribute("PuertaIndice")
+	local minimo = if typeof(indice) == "number" then Config.NivelPuertas[indice] else nil
+	if minimo then
+		puertas[parte] = minimo
+		pintar(parte, minimo)
+	end
+end
+
+for _, objeto in workspace:GetDescendants() do
+	registrar(objeto)
 end
 workspace.DescendantAdded:Connect(registrar)
-jugador:GetAttributeChangedSignal("Velocidad"):Connect(actualizar)
+workspace.DescendantRemoving:Connect(function(objeto)
+	if objeto:IsA("BasePart") then
+		puertas[objeto] = nil
+	end
+end)
+jugador:GetAttributeChangedSignal("PasosTotales"):Connect(actualizar)

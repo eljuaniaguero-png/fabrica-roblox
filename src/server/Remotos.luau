@@ -16,6 +16,7 @@ end
 local Remotos = {
 	UsarConsumible = crear("UsarConsumible"),
 	Aviso = crear("Aviso"), -- servidor -> cliente: texto corto y, opcional, el efecto de sonido a tocar
+	SubioNivel = crear("SubioNivel"), -- servidor -> todos: (jugador, nivel nuevo)
 }
 
 carpeta.Parent = ReplicatedStorage

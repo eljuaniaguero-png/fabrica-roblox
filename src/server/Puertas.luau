@@ -1,5 +1,5 @@
 --!strict
--- Puertas que piden velocidad mínima, checkpoints detrás de cada puerta,
+-- Puertas que piden un nivel mínimo, checkpoints detrás de cada puerta,
 -- y vuelta al último checkpoint si te caés.
 --
 -- En el mapa:
@@ -12,6 +12,7 @@ local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local Config = require(ReplicatedStorage.Shared.Config)
+local Niveles = require(ReplicatedStorage.Shared.Niveles)
 local Datos = require(script.Parent.Datos)
 local Remotos = require(script.Parent.Remotos)
 local Velocidad = require(script.Parent.Velocidad)
@@ -21,8 +22,9 @@ local Puertas = {}
 local checkpoints: { [number]: BasePart } = {}
 local inicio: BasePart? = nil
 
-local function grupoNivel(nivel: number): string
-	return `Nivel{nivel}`
+-- Grupo de colisión del personaje: cuántas puertas tiene abiertas.
+local function grupoAbiertas(cantidad: number): string
+	return `PuertasAbiertas{cantidad}`
 end
 
 local function grupoPuerta(indice: number): string
@@ -35,20 +37,24 @@ local function registrarGrupo(nombre: string)
 	end
 end
 
--- Cuántas puertas puede pasar con esta velocidad.
-local function nivelDe(velocidad: number): number
-	local nivel = 0
-	for indice, umbral in Config.UmbralesPuertas do
-		if velocidad >= umbral then
-			nivel = math.max(nivel, indice)
+-- Cuántas puertas puede pasar con este nivel.
+local function puertasAbiertas(nivel: number): number
+	local abiertas = 0
+	for indice, minimo in Config.NivelPuertas do
+		if nivel >= minimo then
+			abiertas = math.max(abiertas, indice)
 		end
 	end
-	return nivel
+	return abiertas
+end
+
+local function nivelDe(perfil: Datos.Perfil): number
+	return Niveles.nivelDe(perfil.PasosTotales)
 end
 
 local function grupoDe(jugador: Player): string
 	local perfil = Datos.obtener(jugador)
-	return grupoNivel(if perfil then nivelDe(perfil.Velocidad) else 0)
+	return grupoAbiertas(if perfil then puertasAbiertas(nivelDe(perfil)) else 0)
 end
 
 local function asignarGrupo(personaje: Model, grupo: string)
@@ -69,8 +75,8 @@ local function alTocarCheckpoint(indice: number, otra: BasePart)
 	if not perfil or perfil.Checkpoint >= indice then
 		return
 	end
-	-- Solo cuenta si de verdad tiene la velocidad para haber pasado la puerta (los del parkour no piden).
-	if perfil.Velocidad < (Config.UmbralesPuertas[indice] or 0) then
+	-- Solo cuenta si de verdad tiene el nivel para haber pasado la puerta (los del parkour no piden).
+	if nivelDe(perfil) < (Config.NivelPuertas[indice] or 0) then
 		return
 	end
 	perfil.Checkpoint = indice
@@ -80,17 +86,17 @@ local function alTocarCheckpoint(indice: number, otra: BasePart)
 end
 
 function Puertas.iniciar()
-	local cantidad = #Config.UmbralesPuertas
-	for nivel = 0, cantidad do
-		registrarGrupo(grupoNivel(nivel))
+	local cantidad = #Config.NivelPuertas
+	for abiertas = 0, cantidad do
+		registrarGrupo(grupoAbiertas(abiertas))
 	end
 	for indice = 1, cantidad do
 		registrarGrupo(grupoPuerta(indice))
-		for nivel = 0, cantidad do
+		for abiertas = 0, cantidad do
 			PhysicsService:CollisionGroupSetCollidable(
 				grupoPuerta(indice),
-				grupoNivel(nivel),
-				nivel < indice
+				grupoAbiertas(abiertas),
+				abiertas < indice
 			)
 		end
 	end
@@ -168,7 +174,6 @@ function Puertas.chequearCaida(jugador: Player)
 	end
 	jugador:SetAttribute("Caidas", (jugador:GetAttribute("Caidas") or 0) :: number + 1)
 	Velocidad.aplicar(jugador)
-	Puertas.actualizarNivel(jugador)
 	Puertas.teletransportar(jugador)
 end
 
