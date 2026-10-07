@@ -136,6 +136,23 @@ local Config = {
 	DuracionDestello = 0.25,
 	ColorDestello = Color3.new(1, 1, 1),
 
+	-- Baldosas: el color del estilo vive en cada baldosa del mapa; el código lo atenúa.
+	-- Brillo = parte del color que se ve (0 = negro, 1 = color pleno).
+	Baldosas = {
+		BrilloEncendida = 0.45,
+	},
+
+	-- Luz del ambiente. La aplica el servidor al arrancar (Ambiente.luau).
+	Ambiente = {
+		Brillo = 1.2, -- Lighting.Brightness
+		Exposicion = -0.25, -- Lighting.ExposureCompensation
+		LuzAmbiente = Color3.fromRGB(70, 60, 105), -- Lighting.Ambient
+		LuzExterior = Color3.fromRGB(60, 50, 95), -- Lighting.OutdoorAmbient
+		BloomIntensidad = 0.4,
+		BloomTamano = 24,
+		BloomUmbral = 0.9,
+	},
+
 	-- Guardado
 	NombreDataStore = "PisadaSonora_v1",
 }

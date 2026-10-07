@@ -4,7 +4,58 @@ Origen: [2026-10-06-tendencias.md](2026-10-06-tendencias.md), idea 1.
 Estado: **aprobada (2026-10-06)**, versión 2, con los cambios del usuario: melodía clásica de dominio público, checkpoints, consecuencia al caer, consumibles, tienda y conversión de velocidad a monedas.
 Versión 3 (2026-10-06): OK del usuario + **nota desafinada al caer** + orden por etapas. Estilo elegido: **A — Neón nocturno**.
 Versión 4 (2026-10-06): Etapa 2 con los cambios del usuario: el rebirth da monedas, tienda y conversión **físicas** en el mapa, más sonidos y más variantes de parkour.
-Próximo punto de control: **prototipo jugable terminado** (Etapas 1 y 2).
+Versión 5 (2026-10-06): Etapa 3 con los cambios del usuario: arreglo de la música, piso que se ilumina, niveles por pasos, sensación de velocidad, vendedor y HUD nuevo.
+Próximo punto de control: **prototipo jugable terminado** (Etapas 1, 2 y 3).
+
+## Etapa 3 (pedido del usuario) — se hace por bloques, con un playtest por bloque
+
+**Bloque 1 · Arreglos**
+1. La música tiene que sonar desde el primer paso en todas las baldosas.
+2. Bajar el brillo de las baldosas y del ambiente para que no encandile.
+
+**Bloque 2 · Piso que se ilumina**
+3. Las baldosas arrancan apagadas. Al pisarla se enciende con un fundido suave y queda encendida.
+4. Cada baldosa se apaga sola 5 minutos después de la última pisada, también con fundido.
+
+**Bloque 3 · Niveles**
+5. Cada nivel pide una cantidad de pasos totales acumulados, que crece de un nivel al siguiente.
+6. El nivel sale de los pasos totales históricos: nunca baja.
+7. Las puertas piden un nivel mínimo (no velocidad). El nivel requerido se ve sobre cada puerta.
+8. Al subir de nivel: efecto alrededor del personaje, sonido y cartel en pantalla.
+
+**Bloque 4 · Sensación de velocidad**
+9. Más rápido = animación de correr más rápida, estela detrás del personaje y cámara un poco más abierta.
+10. 4 tramos de velocidad, cada uno con estela de otro color y partículas más intensas.
+11. Al cruzar una puerta: destello, partículas y sonido.
+
+**Bloque 5 · Tienda con vendedor**
+12. Un vendedor en la plaza reemplaza a los puestos. Te acercás, aparece "Hablar" y se abre un menú: "Vender pasos" y "Comprar".
+13. Vender pasos: los **pasos disponibles** (saldo aparte de los pasos totales) se cambian por monedas. Vender no baja el nivel.
+14. Comprar: las mejoras y los consumibles de la Etapa 2.
+15. Toda compra y venta se valida en el servidor.
+
+**Bloque 6 · HUD**
+16. HUD nuevo con la guía de estilo: nivel con barra al siguiente, velocidad, pasos disponibles y monedas. Legible en celular y sin tapar el centro.
+
+Todos los números nuevos van en `Config.luau`. Cada sonido nuevo queda marcado con `-- SONIDO:`.
+
+### Decisiones de la Etapa 3 (eran ambiguas, elegí la más simple)
+
+- Música: la causa era que las 76 baldosas de los primeros tramos no tenían el atributo `Baldosa = true` (solo las del tramo 3). Se les puso y además el sample se precarga al entrar, para que suene desde la primera pisada.
+- El brillo de las baldosas lo pone el código (`Config.Baldosas`), sobre el color del estilo guardado en cada baldosa. El ambiente (luz, bloom, bruma) sale de `Config.Ambiente` y lo aplica el servidor al arrancar.
+- El piso iluminado es tuyo: cada jugador ve encendidas las baldosas que pisó él. Es solo visual.
+- Los 5 minutos se cuentan desde la **última** pisada de esa baldosa. Si la baldosa sale y vuelve por streaming, recuerda su estado.
+- Niveles: arrancás en el nivel 1. Para pasar del nivel n al n+1 hacen falta `50 + 25 × (n − 1)` pasos (50, 75, 100...). Los números están en `Config.Niveles`.
+- Un paso es distancia real recorrida (4 studs). El Doble paso sigue duplicando la velocidad, no los pasos.
+- Puertas: la 1 pide nivel 3 y la 2 pide nivel 5 (`Config.NivelPuertas`). Como el nivel no baja, una puerta que abriste queda abierta para siempre, también después del rebirth.
+- El rebirth sigue igual (velocidad → monedas). Ahora hay dos formas de ganar monedas: rebirth y vender pasos.
+- Vender pasos: un solo botón "Vender todo", 2 pasos = 1 moneda (`Config.Tienda.PasosPorMoneda`).
+- Los 4 puestos de la tienda se guardaron en `ServerStorage.Retirado_PuestosTienda` (no se borraron) y el vendedor ocupa su lugar. El cartel "TIENDA" queda sobre el vendedor.
+- El servidor solo acepta compras y ventas si estás cerca del vendedor.
+- Tramos de velocidad: se miden con la rapidez real del personaje (no la de la stat), así la estela aparece solo cuando corrés.
+- Estela y partículas se ven en todos los jugadores (cada cliente las dibuja). El cartel y el sonido de subir de nivel son solo para vos; el efecto alrededor del personaje lo ven todos.
+- El efecto de cruzar una puerta es local (lo ves vos).
+- La tabla de jugadores suma la columna Nivel.
 
 ## Etapa 1 (núcleo) — se prueba primero
 

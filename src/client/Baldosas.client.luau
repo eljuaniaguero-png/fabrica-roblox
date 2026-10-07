@@ -1,7 +1,8 @@
 --!strict
 -- Cada baldosa nueva que pisás toca la siguiente nota de la melodía y brilla.
 -- Es solo efecto local: no toca la lógica del juego.
--- Una baldosa es cualquier BasePart con atributo Baldosa = true.
+-- Una baldosa es cualquier BasePart con atributo Baldosa = true. Su color en el mapa es el del
+-- estilo; acá se atenúa con Config.Baldosas para que no encandile.
 
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
@@ -16,8 +17,32 @@ local jugador = Players.LocalPlayer
 
 local ultimaBaldosa: BasePart? = nil
 local indiceNota = 0
-local coloresOriginales: { [BasePart]: Color3 } = {}
+-- Con streaming, las baldosas llegan y se van mientras jugás: todo se guarda por parte.
+local coloresBase: { [BasePart]: Color3 } = {}
 local destellos: { [BasePart]: Tween } = {}
+
+local function atenuar(color: Color3, brillo: number): Color3
+	return Color3.new(color.R * brillo, color.G * brillo, color.B * brillo)
+end
+
+local function registrar(parte: Instance)
+	if not parte:IsA("BasePart") or parte:GetAttribute("Baldosa") ~= true or coloresBase[parte] then
+		return
+	end
+	coloresBase[parte] = parte.Color
+	parte.Color = atenuar(parte.Color, Config.Baldosas.BrilloEncendida)
+end
+
+for _, parte in workspace:GetDescendants() do
+	registrar(parte)
+end
+workspace.DescendantAdded:Connect(registrar)
+workspace.DescendantRemoving:Connect(function(objeto)
+	if objeto:IsA("BasePart") then
+		coloresBase[objeto] = nil
+		destellos[objeto] = nil
+	end
+end)
 
 -- SONIDO: la siguiente nota de la melodía (sample de piano de Config.SonidoNotaId).
 local function tocarSiguienteNota()
@@ -31,18 +56,20 @@ jugador:GetAttributeChangedSignal("Caidas"):Connect(function()
 end)
 
 local function destellar(baldosa: BasePart)
-	local original = coloresOriginales[baldosa]
-	if not original then
-		original = baldosa.Color
-		coloresOriginales[baldosa] = original
+	local base = coloresBase[baldosa]
+	if not base then
+		return
 	end
 	local anterior = destellos[baldosa]
 	if anterior then
 		anterior:Cancel()
 	end
 	baldosa.Color = Config.ColorDestello
-	local destello =
-		TweenService:Create(baldosa, TweenInfo.new(Config.DuracionDestello), { Color = original })
+	local destello = TweenService:Create(
+		baldosa,
+		TweenInfo.new(Config.DuracionDestello),
+		{ Color = atenuar(base, Config.Baldosas.BrilloEncendida) }
+	)
 	destellos[baldosa] = destello
 	destello:Play()
 end

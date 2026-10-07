@@ -2,6 +2,7 @@
 -- Todos los sonidos del juego salen de un solo sample de piano (Config.SonidoNotaId).
 -- El tono se cambia con PlaybackSpeed. Para usar sonidos propios, cambiá los IDs en Config.
 
+local ContentProvider = game:GetService("ContentProvider")
 local Debris = game:GetService("Debris")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local SoundService = game:GetService("SoundService")
@@ -16,6 +17,11 @@ local sonidoBase = Instance.new("Sound")
 sonidoBase.Name = "NotaBase"
 sonidoBase.SoundId = Config.SonidoNotaId
 sonidoBase.Parent = SoundService
+
+-- Precargar el sample al entrar, así la primera pisada ya suena.
+task.spawn(function()
+	ContentProvider:PreloadAsync({ sonidoBase })
+end)
 
 function Sonidos.nota(semitonos: number, volumen: number)
 	local sonido = sonidoBase:Clone()
