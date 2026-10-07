@@ -454,8 +454,8 @@ local Config = {
 	-- lo que pase primero: pisaste BaldosasParaApagar baldosas más, o pasaron SegundosParaApagar.
 	-- El estado es de cada jugador y lo lleva el servidor (Pisadas.luau).
 	Baldosas = {
-		BrilloApagada = 0.3,
-		BrilloEncendida = 0.6,
+		BrilloApagada = 0.42,
+		BrilloEncendida = 0.8,
 		FundidoEncendido = 0.5, -- segundos del fundido al encenderse
 		FundidoApagado = 1.5, -- segundos del fundido al apagarse
 		BaldosasParaApagar = 10, -- se apaga después de pisar esta cantidad de baldosas nuevas
@@ -470,14 +470,14 @@ local Config = {
 	-- Luz del ambiente. La aplica el servidor al arrancar (Ambiente.luau).
 	Ambiente = {
 		Brillo = 2.2, -- Lighting.Brightness
-		Exposicion = 0.15, -- Lighting.ExposureCompensation
+		Exposicion = 0, -- Lighting.ExposureCompensation
 		LuzAmbiente = Color3.fromRGB(110, 100, 160), -- Lighting.Ambient (el cliente la cambia por zona)
 		LuzExterior = Color3.fromRGB(100, 90, 150), -- Lighting.OutdoorAmbient
 		LuzEntorno = 0.7, -- Lighting.EnvironmentDiffuseScale: cuánto ilumina el cielo a los materiales
 		ReflejoEntorno = 0.8, -- Lighting.EnvironmentSpecularScale
-		BloomIntensidad = 0.6,
-		BloomTamano = 28,
-		BloomUmbral = 0.85,
+		BloomIntensidad = 0.3, -- resplandor del neón (más alto = más borroso)
+		BloomTamano = 18,
+		BloomUmbral = 0.95,
 		BrumaHaze = 0.25, -- Atmosphere.Haze (más bajo = se ve más lejos)
 		BrumaBrillo = 0.3, -- Atmosphere.Glare (resplandor de la bruma)
 		Contraste = 0.1, -- ColorCorrection.Contrast
