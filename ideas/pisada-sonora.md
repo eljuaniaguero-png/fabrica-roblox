@@ -49,6 +49,14 @@ Próximo punto de control: **capturas de la plaza y la zona 1** (desde abajo, de
 - **Mapa viejo**: se guarda en `ServerStorage.Retirado_MapaViejo` (no se borra). Puerta, candado, niebla y checkpoint se usan como plantillas (`ServerStorage.Plantillas`).
 - **Cómo se construye**: `src/server/GeneradorTorre.luau` arma la torre desde Config. Se corre en Studio por MCP (el mapa queda guardado en el lugar) y se puede volver a correr para regenerar.
 
+### Cómo quedó (plaza + zona 1, 2026-10-07)
+
+- `Workspace.Torre` > `Plaza` (piso de piedra, tambor gigante, inicio, vendedor, portal, tubo "Subir", 4 faroles), `Zona1` (62 baldosas `Baldosa1_N` con atributos Zona y Nota, bases de madera, baranda de madera con pasamanos de bronce del lado de afuera, lámparas, atriles y parlantes cada 5 baldosas, Doble paso y Escudo sobre la pista), `Transicion1` (puerta nivel 3, escalera de 28 escalones de 1 stud, descanso con checkpoint 1 y tubo "Bajar", `Bloqueo1` = capa de nubes con candado) y `Eje` (un tramo por zona con anillos tenues del color de la zona).
+- 401 piezas y 9 luces dinámicas.
+- Probado: las 62 baldosas tocan la Oda en orden; al completarla aparece el aviso y se prende el tramo 1 del eje. Caída (tirarse de la pista) → vuelve al checkpoint. Escalera caminando + puerta con nivel 3 + checkpoint 1. Tubo Bajar → plaza sin perder el checkpoint; tubo Subir → vuelve al checkpoint. Cámara: caminando toda la vuelta nunca se acercó a menos de 11 studs (no se traba). La zona 1 no tiene saltos; la prueba de saltos con velocidad máxima va con las zonas 2 a 4.
+- La luz quedó de noche pero legible: piso de la plaza en piedra media, faroles cálidos, baldosas apagadas al 45% y prendidas al 90%. El piso del checkpoint es oscuro con filo cian (el neón entero encandilaba). Las nubes vistas desde abajo son discos chatos azul frío (las esferas parecían rocas).
+- Nota: las capturas de Studio salían grises porque la pared de niebla del mapa viejo tapaba la cámara.
+
 ## Etapa 4, bloques 3 y 4 (2026-10-07)
 
 Revisión previa con playtest: a ✅, b ✅, d ✅ (canción y cielo cambian al pisar la primera baldosa de otra zona), bloque 1 ✅ (apagado a las 10 baldosas y a los 60 s medidos), bloque 2 ✅. **c** sigue sin hacer por decisión del usuario (zona 1: 41 baldosas y 62 notas; zona 2: 35 y 35; zona 3: 6 y 38). Arreglo: si la red demoraba, el servidor rechazaba la pisada y la baldosa quedaba muda; ahora el cliente reintenta (`Config.Baldosas.ReintentoPisada`).

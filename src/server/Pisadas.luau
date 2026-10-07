@@ -28,7 +28,8 @@ type Estado = {
 	contador: number, -- pisadas válidas que lleva
 	prendidas: { [BasePart]: Prendida },
 	zona: number, -- zona de la última pisada válida (0 = todavía ninguna)
-	nota: number, -- cuántas notas de la canción de esa zona lleva
+	nota: number, -- nota (baldosa) de la última pisada válida en esta zona
+	racha: number, -- baldosas seguidas en orden (para completar la canción)
 	ultimaPisada: number,
 	combo: number, -- pisadas válidas seguidas
 	aguante: number, -- errores que todavía le aguanta el combo
@@ -55,6 +56,7 @@ local function estadoDe(jugador: Player): Estado
 			prendidas = {},
 			zona = 0,
 			nota = 0,
+			racha = 0,
 			ultimaPisada = 0,
 			combo = 0,
 			aguante = aguanteMaximo(jugador),
@@ -141,20 +143,30 @@ local function prender(jugador: Player, estado: Estado, parte: BasePart)
 
 	-- Canción de la zona: al entrar a otra zona arranca de cero.
 	local zona = zonaDe(parte)
+	local cancion = Notas.cancionDe(zona)
 	if zona ~= estado.zona then
 		estado.zona = zona
 		estado.nota = 0
+		estado.racha = 0
 		jugador:SetAttribute("Zona", zona)
-		local cancion = Notas.cancionDe(zona)
 		Remotos.avisar(jugador, `{Config.Zonas[zona].Nombre} · {cancion.Titulo} ({cancion.Autor})`)
 	end
-	estado.nota += 1
-	Remotos.Baldosa:FireClient(
-		jugador,
-		"encender",
-		clave(parte),
-		Notas.notaDeZona(zona, estado.nota)
-	)
+	-- Cada baldosa toca su nota (atributo Nota: la baldosa N es la nota N). Si no tiene, la siguiente.
+	local valorNota = parte:GetAttribute("Nota")
+	local nota = if typeof(valorNota) == "number" then valorNota else estado.nota + 1
+	Remotos.Baldosa:FireClient(jugador, "encender", clave(parte), Notas.notaDeZona(zona, nota))
+
+	-- Canción completa: todas las baldosas de la zona seguidas, de la 1 a la última.
+	if nota == estado.nota + 1 then
+		estado.racha += 1
+	else
+		estado.racha = if nota == 1 then 1 else 0
+	end
+	estado.nota = nota
+	if estado.racha >= #cancion.Notas and nota == #cancion.Notas then
+		estado.racha = 0
+		Velocidad.completarCancion(jugador, zona)
+	end
 
 	if estado.combo == 0 then
 		estado.aguante = aguanteMaximo(jugador) -- combo nuevo: aguante lleno (con las mejoras al día)

@@ -7,7 +7,8 @@
 --
 -- En el mapa (Models con ModelStreamingMode = Persistent, así siempre están cargados):
 --   Model con atributo BloqueoPuerta = índice de la puerta >
---     Niebla (BasePart opaca), Bruma (BasePart invisible con ParticleEmitter),
+--     Niebla y Nube (capa de nubes que tapa la zona de arriba; las arma GeneradorTorre.luau),
+--     Bruma (BasePart invisible con ParticleEmitter),
 --     Candado (Model) > Cuerpo (BasePart con SurfaceGui "Cartel" > Marco > Nivel), Arco (Model)
 
 local Players = game:GetService("Players")
@@ -98,12 +99,14 @@ local function abrir(bloqueo: Bloqueo)
 	if candado and candado:IsA("Model") then
 		task.spawn(abrirCandado, candado)
 	end
-	local niebla = modelo:FindFirstChild("Niebla")
-	if niebla and niebla:IsA("BasePart") then
-		task.delay(ajustes.SubidaArco + ajustes.GiroArco, function()
-			tween(niebla, ajustes.DuracionNiebla, { Transparency = 1 })
-		end)
-	end
+	-- La capa de nubes (Niebla) y sus bollos (Nube) se disuelven juntos.
+	task.delay(ajustes.SubidaArco + ajustes.GiroArco, function()
+		for _, objeto in modelo:GetChildren() do
+			if objeto:IsA("BasePart") and (objeto.Name == "Niebla" or objeto.Name == "Nube") then
+				tween(objeto, ajustes.DuracionNiebla, { Transparency = 1 })
+			end
+		end
+	end)
 end
 
 local function registrar(objeto: Instance)

@@ -18,6 +18,7 @@ export type Perfil = {
 	Inventario: { [string]: number },
 	Cosmeticos: { [string]: boolean }, -- los que compró
 	Equipados: { [string]: string }, -- tipo ("Estela", "Pisada") -> cosmético puesto
+	Canciones: { number }, -- zonas cuya canción completó (prenden el eje central)
 }
 
 local Datos = {}
@@ -78,6 +79,7 @@ function Datos.cargar(jugador: Player): Perfil
 		Inventario = {},
 		Cosmeticos = {},
 		Equipados = {},
+		Canciones = {},
 	}
 	if typeof(guardado) == "table" then
 		perfil.Velocidad = numeroO(guardado.Velocidad, 0)
@@ -102,6 +104,18 @@ function Datos.cargar(jugador: Player): Perfil
 			then inventarioGuardado[nombre]
 			else 0
 		perfil.Inventario[nombre] = math.min(numeroO(cantidad, 0), Config.InventarioMaximo)
+	end
+	local cancionesGuardadas = if typeof(guardado) == "table" then guardado.Canciones else nil
+	if typeof(cancionesGuardadas) == "table" then
+		for _, zona in cancionesGuardadas do
+			if
+				typeof(zona) == "number"
+				and Config.Zonas[zona]
+				and not table.find(perfil.Canciones, zona)
+			then
+				table.insert(perfil.Canciones, zona)
+			end
+		end
 	end
 	local cosmeticosGuardados = if typeof(guardado) == "table" then guardado.Cosmeticos else nil
 	local equipadosGuardados = if typeof(guardado) == "table" then guardado.Equipados else nil

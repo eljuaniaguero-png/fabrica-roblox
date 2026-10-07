@@ -21,6 +21,9 @@ local Puertas = {}
 
 local checkpoints: { [number]: BasePart } = {}
 local alCaerSinEscudo: { (Player) -> () } = {}
+local apoyo: { [Player]: number } = setmetatable({}, { __mode = "k" }) :: any -- altura del último piso donde estuvo parado
+local parametrosPiso = RaycastParams.new()
+parametrosPiso.FilterType = Enum.RaycastFilterType.Exclude
 local inicio: BasePart? = nil
 
 -- Grupo de colisión del personaje: cuántas puertas tiene abiertas.
@@ -138,27 +141,54 @@ local function posicionReaparicion(jugador: Player): Vector3?
 	return destino.Position + Vector3.new(0, destino.Size.Y / 2 + 3, 0)
 end
 
-function Puertas.teletransportar(jugador: Player)
+local function llevarA(jugador: Player, destino: Vector3?)
 	local personaje = jugador.Character
 	local raiz = if personaje then personaje:FindFirstChild("HumanoidRootPart") else nil
-	local destino = posicionReaparicion(jugador)
 	if not personaje or not raiz or not raiz:IsA("BasePart") or not destino then
 		return
 	end
+	apoyo[jugador] = nil -- un viaje no es una caída
 	personaje:PivotTo(CFrame.new(destino))
 	raiz.AssemblyLinearVelocity = Vector3.zero
+end
+
+-- Al último checkpoint (o al inicio si no tiene).
+function Puertas.teletransportar(jugador: Player)
+	llevarA(jugador, posicionReaparicion(jugador))
+end
+
+-- A la plaza (el inicio), sin tocar el checkpoint guardado.
+function Puertas.irAPlaza(jugador: Player)
+	llevarA(
+		jugador,
+		if inicio then inicio.Position + Vector3.new(0, inicio.Size.Y / 2 + 3, 0) else nil
+	)
+end
+
+-- Altura del piso que tiene debajo, o nil si está en el aire.
+local function pisoDebajo(personaje: Model, raiz: BasePart): number?
+	parametrosPiso.FilterDescendantsInstances = { personaje }
+	local resultado = workspace:Raycast(raiz.Position, Vector3.new(0, -4.5, 0), parametrosPiso)
+	return if resultado then resultado.Position.Y else nil
 end
 
 function Puertas.chequearCaida(jugador: Player)
 	local personaje = jugador.Character
 	local raiz = if personaje then personaje:FindFirstChild("HumanoidRootPart") else nil
 	local perfil = Datos.obtener(jugador)
-	if
-		not perfil
-		or not raiz
-		or not raiz:IsA("BasePart")
-		or raiz.Position.Y >= Config.AlturaCaida
-	then
+	if not perfil or not personaje or not raiz or not raiz:IsA("BasePart") then
+		return
+	end
+	-- Caída: al vacío, o aterrizar más de CaidaMinima por debajo de donde estaba parado
+	-- (por ejemplo, de una vuelta de la espiral a la de abajo). Bajar caminando no cuenta.
+	local cayo = raiz.Position.Y < Config.AlturaCaida
+	local piso = pisoDebajo(personaje, raiz)
+	if not cayo and piso then
+		local antes = apoyo[jugador]
+		cayo = antes ~= nil and piso < antes - Config.Torre.CaidaMinima
+		apoyo[jugador] = piso
+	end
+	if not cayo then
 		return
 	end
 
@@ -186,6 +216,7 @@ function Puertas.alCaer(funcion: (Player) -> ())
 end
 
 function Puertas.alAparecer(jugador: Player, personaje: Model)
+	apoyo[jugador] = nil
 	asignarGrupo(personaje, grupoDe(jugador))
 	personaje.DescendantAdded:Connect(function(parte)
 		if parte:IsA("BasePart") then

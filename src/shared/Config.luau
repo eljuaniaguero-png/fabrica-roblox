@@ -257,53 +257,88 @@ local Config = {
 		PasosExtraPorNivel = 15,
 	},
 
-	-- Zonas: cada baldosa del mapa tiene un atributo Zona (1, 2, 3). La zona n+1 se abre con la
-	-- puerta n (NivelPuertas). Cada zona tiene su canción; al entrar a otra zona arranca de cero.
-	-- Cada zona tiene su paleta (sale de la guía Neón nocturno, con un color que manda) y su cielo.
-	-- Las baldosas y la decoración del mapa ya están pintadas con Principal y Secundario; el cielo
-	-- lo cambia el cliente al entrar a la zona (AmbienteZona.client.luau).
+	-- Zonas = vueltas de la torre (La Espiral), de abajo hacia arriba. Cada baldosa del mapa tiene
+	-- los atributos Zona y Nota: la baldosa N de la zona toca la nota N de su canción (una baldosa
+	-- por nota). La zona n+1 se abre con la puerta n (NivelPuertas).
+	-- Tema = qué decoración arma el generador (GeneradorTorre.luau). Principal/Secundario = color de
+	-- las baldosas (damero). Cielo = lo que cambia el cliente al entrar (AmbienteZona.client.luau).
+	-- Para sumar una zona: agregá una canción y una entrada acá (y su nivel en NivelPuertas).
 	Zonas = {
 		{
-			Nombre = "Zona 1",
+			Nombre = "Sala de ensayo",
+			Tema = "Ensayo",
 			Cancion = canciones[1],
-			Principal = paleta.Cian,
-			Secundario = paleta.Violeta,
+			Principal = Color3.fromRGB(255, 179, 71), -- ámbar
+			Secundario = Color3.fromRGB(255, 122, 89), -- coral
 			Cielo = {
-				Atmosfera = Color3.fromRGB(90, 130, 210), -- color de la bruma
-				Decaimiento = Color3.fromRGB(70, 90, 190), -- color del horizonte
-				Densidad = 0.18,
-				LuzAmbiente = Color3.fromRGB(150, 180, 230),
-				Estrellas = 3000,
-			},
-		},
-		{
-			Nombre = "Zona 2",
-			Cancion = canciones[2],
-			Principal = paleta.Rosa,
-			Secundario = paleta.Violeta,
-			Cielo = {
-				Atmosfera = Color3.fromRGB(190, 90, 175),
-				Decaimiento = Color3.fromRGB(140, 60, 160),
-				Densidad = 0.18,
-				LuzAmbiente = Color3.fromRGB(215, 160, 210),
+				Atmosfera = Color3.fromRGB(58, 36, 24), -- bruma marrón
+				Decaimiento = Color3.fromRGB(30, 18, 22), -- horizonte
+				Densidad = 0.3,
+				LuzAmbiente = Color3.fromRGB(115, 90, 75),
 				Estrellas = 1500,
 			},
 		},
 		{
-			Nombre = "Zona 3",
-			Cancion = canciones[3],
-			Principal = paleta.Amarillo,
-			Secundario = paleta.Rosa,
+			Nombre = "Ciudad de noche",
+			Tema = "Ciudad",
+			Cancion = canciones[2],
+			Principal = paleta.Rosa,
+			Secundario = paleta.Cian,
 			Cielo = {
-				Atmosfera = Color3.fromRGB(210, 150, 90),
-				Decaimiento = Color3.fromRGB(160, 90, 120),
-				Densidad = 0.18,
-				LuzAmbiente = Color3.fromRGB(225, 195, 165),
-				Estrellas = 500,
+				Atmosfera = Color3.fromRGB(42, 24, 64),
+				Decaimiento = Color3.fromRGB(20, 12, 36),
+				Densidad = 0.3,
+				LuzAmbiente = Color3.fromRGB(60, 50, 85),
+				Estrellas = 800,
+			},
+		},
+		{
+			Nombre = "Sobre las nubes",
+			Tema = "Nubes",
+			Cancion = canciones[3],
+			Principal = Color3.fromRGB(200, 182, 255), -- lila
+			Secundario = Color3.fromRGB(160, 231, 255), -- celeste
+			Cielo = {
+				Atmosfera = Color3.fromRGB(28, 35, 64),
+				Decaimiento = Color3.fromRGB(14, 18, 40),
+				Densidad = 0.25,
+				LuzAmbiente = Color3.fromRGB(75, 85, 120),
+				Estrellas = 3000,
 			},
 		},
 	},
 	DuracionCambioCielo = 2, -- segundos que tarda el cielo en pasar de una zona a otra
+
+	-- La Espiral: la torre se genera con estos números y las canciones de Config.Zonas
+	-- (GeneradorTorre.luau, se corre en Studio). Medidas en studs; el centro de la torre es (0, 0).
+	Torre = {
+		ZonasConstruidas = 1, -- cuántas vueltas arma el generador (las demás esperan el OK)
+		AlturaPlaza = 50, -- altura del piso de la plaza (donde se camina)
+		RadioPlaza = 45,
+		Radio = 50, -- radio del centro de la pista
+		AnchoPista = 9, -- ancho de cada baldosa (de adentro hacia afuera)
+		Hueco = 0.4, -- separación entre baldosas
+		SubidaPorVuelta = 16, -- cuánto sube la pista en una vuelta (una zona)
+		AnguloInicio = -90, -- grados: dónde empieza la zona 1 (al sur de la plaza)
+		-- Escalera entre zonas: atraviesa la capa de nubes. Escalones de 1 stud se suben caminando.
+		Escalones = 28,
+		LargoEscalon = 1.4,
+		LargoPuerta = 6, -- tramo plano con la puerta, al pie de la escalera
+		LargoDescanso = 14, -- descanso con el checkpoint, arriba de la escalera
+		AltoPuerta = 10,
+		-- Capa de nubes que tapa la zona de arriba hasta que abrís la puerta
+		AlturaNubes = 22, -- sobre el final de la zona (la escalera llega a 28)
+		GrosorNubes = 6,
+		RadioNubes = 130,
+		-- Eje central: columna que se prende por tramos (uno por canción completada)
+		RadioEje = 5,
+		-- Tambor gigante de la plaza (base de la torre)
+		RadioTambor = 14,
+		AltoTambor = 9,
+		-- Caída: aterrizar más de esto por debajo de donde estabas parado
+		CaidaMinima = 10,
+		DecoracionCada = 5, -- una pieza de decoración cada tantas baldosas
+	},
 
 	-- Puertas: nivel mínimo para pasar cada una, en orden. Detrás de cada una hay un checkpoint.
 	-- Los checkpoints con número más alto que la cantidad de puertas (los del parkour) no piden nivel.
@@ -454,8 +489,8 @@ local Config = {
 	-- lo que pase primero: pisaste BaldosasParaApagar baldosas más, o pasaron SegundosParaApagar.
 	-- El estado es de cada jugador y lo lleva el servidor (Pisadas.luau).
 	Baldosas = {
-		BrilloApagada = 0.42,
-		BrilloEncendida = 0.8,
+		BrilloApagada = 0.45,
+		BrilloEncendida = 0.9,
 		FundidoEncendido = 0.5, -- segundos del fundido al encenderse
 		FundidoApagado = 1.5, -- segundos del fundido al apagarse
 		BaldosasParaApagar = 10, -- se apaga después de pisar esta cantidad de baldosas nuevas
@@ -469,19 +504,19 @@ local Config = {
 
 	-- Luz del ambiente. La aplica el servidor al arrancar (Ambiente.luau).
 	Ambiente = {
-		Brillo = 3, -- Lighting.Brightness
-		Exposicion = 0.35, -- Lighting.ExposureCompensation
-		LuzAmbiente = Color3.fromRGB(150, 140, 200), -- Lighting.Ambient (el cliente la cambia por zona)
-		LuzExterior = Color3.fromRGB(140, 130, 190), -- Lighting.OutdoorAmbient
-		LuzEntorno = 1, -- Lighting.EnvironmentDiffuseScale: cuánto ilumina el cielo a los materiales
-		ReflejoEntorno = 0.8, -- Lighting.EnvironmentSpecularScale
-		BloomIntensidad = 0.3, -- resplandor del neón (más alto = más borroso)
+		Brillo = 2, -- Lighting.Brightness
+		Exposicion = 0, -- Lighting.ExposureCompensation
+		LuzAmbiente = Color3.fromRGB(90, 80, 110), -- Lighting.Ambient (el cliente la cambia por zona)
+		LuzExterior = Color3.fromRGB(80, 70, 100), -- Lighting.OutdoorAmbient
+		LuzEntorno = 0.4, -- Lighting.EnvironmentDiffuseScale: cuánto ilumina el cielo a los materiales
+		ReflejoEntorno = 0.6, -- Lighting.EnvironmentSpecularScale
+		BloomIntensidad = 0.35, -- resplandor del neón (más alto = más borroso)
 		BloomTamano = 18,
-		BloomUmbral = 0.95,
-		BrumaHaze = 1, -- Atmosphere.Haze: tiñe el horizonte con el color de la zona (cielo que brilla)
-		BrumaBrillo = 0.5, -- Atmosphere.Glare (resplandor de la bruma)
+		BloomUmbral = 0.9,
+		BrumaHaze = 0.4, -- Atmosphere.Haze: cuánto se tiñe el horizonte con el color de la zona
+		BrumaBrillo = 0.2, -- Atmosphere.Glare (resplandor de la bruma)
 		Contraste = 0.1, -- ColorCorrection.Contrast
-		Saturacion = 0.2, -- ColorCorrection.Saturation
+		Saturacion = 0.1, -- ColorCorrection.Saturation
 	},
 
 	-- Guardado

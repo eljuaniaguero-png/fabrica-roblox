@@ -78,6 +78,8 @@ function Velocidad.aplicar(jugador: Player)
 	-- Los cosméticos puestos los ven todos (la estela la dibuja cada cliente).
 	jugador:SetAttribute("Estela", perfil.Equipados.Estela or "")
 	jugador:SetAttribute("EfectoPisada", perfil.Equipados.Pisada or "")
+	-- Canciones completas, como texto ",1,3," (el eje central prende esos tramos).
+	jugador:SetAttribute("Canciones", "," .. table.concat(perfil.Canciones, ",") .. ",")
 
 	ponerStat(jugador, "Nivel", nivel)
 	ponerStat(jugador, "Velocidad", perfil.Velocidad)
@@ -119,6 +121,28 @@ function Velocidad.sumarPisada(jugador: Player, bonusCombo: number): boolean
 		return true
 	end
 	return false
+end
+
+-- Completó la canción de una zona (todas sus baldosas en orden): se guarda y prende su tramo del eje.
+function Velocidad.completarCancion(jugador: Player, zona: number)
+	local perfil = Datos.obtener(jugador)
+	if not perfil then
+		return
+	end
+	local nueva = not table.find(perfil.Canciones, zona)
+	if nueva then
+		table.insert(perfil.Canciones, zona)
+		Velocidad.aplicar(jugador)
+	end
+	local cancion = Config.Zonas[zona].Cancion
+	-- SONIDO: canción completa (Config.Efectos.SubirNivel)
+	Remotos.avisar(
+		jugador,
+		if nueva
+			then `¡Completaste {cancion.Titulo}! Se prende el eje`
+			else `¡{cancion.Titulo} otra vez!`,
+		"SubirNivel"
+	)
 end
 
 return Velocidad
