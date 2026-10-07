@@ -12,6 +12,7 @@ local RunService = game:GetService("RunService")
 local TweenService = game:GetService("TweenService")
 
 local Config = require(ReplicatedStorage.Shared.Config)
+local EfectoPisada = require(script.Parent.EfectoPisada)
 local Sonidos = require(script.Parent.Sonidos)
 
 local jugador = Players.LocalPlayer
@@ -32,6 +33,7 @@ type Baldosa = {
 local baldosas: { [string]: Baldosa } = {}
 local prendidas: { [string]: boolean } = {}
 local ultimaBaldosa: BasePart? = nil
+local ultimoAviso = 0 -- os.clock() del último aviso al servidor
 
 local function atenuar(color: Color3, brillo: number): Color3
 	return Color3.new(color.R * brillo, color.G * brillo, color.B * brillo)
@@ -93,6 +95,9 @@ remotoBaldosa.OnClientEvent:Connect(function(accion: string, clave: string, nota
 	local baldosa = baldosas[clave]
 	if baldosa then
 		fundir(baldosa, encender)
+		if encender then
+			EfectoPisada.mostrar(jugador, baldosa.parte, baldosa.base)
+		end
 	end
 end)
 
@@ -123,10 +128,17 @@ RunService.Heartbeat:Connect(function()
 		ultimaBaldosa = nil
 		return
 	end
+	local ahora = os.clock()
 	if parte ~= ultimaBaldosa then
+		-- Baldosa nueva: se avisa siempre (si está usada, el servidor lo cuenta como error del combo).
 		ultimaBaldosa = parte
-		if not prendidas[parte:GetFullName()] then
-			remotoPisada:FireServer(parte)
-		end
+		ultimoAviso = ahora
+		remotoPisada:FireServer(parte)
+	elseif
+		not prendidas[parte:GetFullName()] and ahora - ultimoAviso >= ajustes.ReintentoPisada
+	then
+		-- Seguís encima y el servidor todavía no la prendió (la red llegó tarde): avisar de nuevo.
+		ultimoAviso = ahora
+		remotoPisada:FireServer(parte)
 	end
 end)

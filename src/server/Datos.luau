@@ -16,6 +16,8 @@ export type Perfil = {
 	Monedas: number,
 	Mejoras: { [string]: number },
 	Inventario: { [string]: number },
+	Cosmeticos: { [string]: boolean }, -- los que compró
+	Equipados: { [string]: string }, -- tipo ("Estela", "Pisada") -> cosmético puesto
 }
 
 local Datos = {}
@@ -74,6 +76,8 @@ function Datos.cargar(jugador: Player): Perfil
 		Monedas = 0,
 		Mejoras = {},
 		Inventario = {},
+		Cosmeticos = {},
+		Equipados = {},
 	}
 	if typeof(guardado) == "table" then
 		perfil.Velocidad = numeroO(guardado.Velocidad, 0)
@@ -98,6 +102,20 @@ function Datos.cargar(jugador: Player): Perfil
 			then inventarioGuardado[nombre]
 			else 0
 		perfil.Inventario[nombre] = math.min(numeroO(cantidad, 0), Config.InventarioMaximo)
+	end
+	local cosmeticosGuardados = if typeof(guardado) == "table" then guardado.Cosmeticos else nil
+	local equipadosGuardados = if typeof(guardado) == "table" then guardado.Equipados else nil
+	for _, nombre in Config.OrdenCosmeticos do
+		if typeof(cosmeticosGuardados) == "table" and cosmeticosGuardados[nombre] == true then
+			perfil.Cosmeticos[nombre] = true
+		end
+	end
+	if typeof(equipadosGuardados) == "table" then
+		for _, nombre in equipadosGuardados do
+			if typeof(nombre) == "string" and perfil.Cosmeticos[nombre] then
+				perfil.Equipados[Config.Cosmeticos[nombre].Tipo] = nombre
+			end
+		end
 	end
 
 	perfiles[jugador] = perfil

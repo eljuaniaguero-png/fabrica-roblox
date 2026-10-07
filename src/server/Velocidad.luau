@@ -18,14 +18,18 @@ function Velocidad.multiplicador(perfil: Datos.Perfil): number
 	return 1 + perfil.Rebirths * Config.MultiplicadorPorRebirth
 end
 
--- Cuánta velocidad da un paso ahora mismo, con rebirths, zapatillas y doble paso.
-local function gananciaPorPaso(jugador: Player, perfil: Datos.Perfil): number
+-- Cuánta velocidad da un paso ahora mismo, con rebirths, zapatillas, doble paso y combo.
+local function gananciaPorPaso(jugador: Player, perfil: Datos.Perfil, bonusCombo: number): number
 	local zapatillas = 1
 		+ (perfil.Mejoras.Zapatillas or 0) * Config.Mejoras.Zapatillas.BonusPorNivel
 	local doble = if Efectos.activo(jugador, "DoblePaso")
 		then Config.Consumibles.DoblePaso.Factor or 1
 		else 1
-	return Config.PuntosPorPaso * Velocidad.multiplicador(perfil) * zapatillas * doble
+	return Config.PuntosPorPaso
+		* Velocidad.multiplicador(perfil)
+		* zapatillas
+		* doble
+		* (1 + bonusCombo)
 end
 
 function Velocidad.crearLeaderstats(jugador: Player)
@@ -68,6 +72,12 @@ function Velocidad.aplicar(jugador: Player)
 	for nombre, cantidad in perfil.Inventario do
 		jugador:SetAttribute(`Inv_{nombre}`, cantidad)
 	end
+	for nombre in perfil.Cosmeticos do
+		jugador:SetAttribute(`Cos_{nombre}`, true)
+	end
+	-- Los cosméticos puestos los ven todos (la estela la dibuja cada cliente).
+	jugador:SetAttribute("Estela", perfil.Equipados.Estela or "")
+	jugador:SetAttribute("EfectoPisada", perfil.Equipados.Pisada or "")
 
 	ponerStat(jugador, "Nivel", nivel)
 	ponerStat(jugador, "Velocidad", perfil.Velocidad)
@@ -78,25 +88,28 @@ function Velocidad.aplicar(jugador: Player)
 	local humanoide = if personaje then personaje:FindFirstChildOfClass("Humanoid") else nil
 	if humanoide then
 		local walkSpeed = Config.WalkSpeedBase + perfil.Velocidad * Config.WalkSpeedPorPunto
-		humanoide.WalkSpeed = math.min(walkSpeed, Config.WalkSpeedTope)
+		local tope = Config.WalkSpeedTope
+			+ (perfil.Mejoras.TopeVelocidad or 0) * Config.Mejoras.TopeVelocidad.BonusPorNivel
+		humanoide.WalkSpeed = math.min(walkSpeed, tope)
 		humanoide.UseJumpPower = false
 		humanoide.JumpHeight = Config.AlturaSaltoBase
 	end
 end
 
 -- Suma los pasos de una baldosa apagada que pisó (ya validada en Pisadas.luau).
--- Devuelve true si subió de nivel.
-function Velocidad.sumarPisada(jugador: Player): boolean
+-- `bonusCombo` es la velocidad extra del combo (0.1 = +10%). Devuelve true si subió de nivel.
+function Velocidad.sumarPisada(jugador: Player, bonusCombo: number): boolean
 	local perfil = Datos.obtener(jugador)
 	if not perfil then
 		return false
 	end
 	local pasos = Config.PasosPorBaldosa
+		+ (perfil.Mejoras.PasosExtra or 0) * Config.Mejoras.PasosExtra.BonusPorNivel
 
 	local nivelAntes = Niveles.nivelDe(perfil.PasosTotales)
 	perfil.PasosTotales += pasos
 	perfil.PasosDisponibles += pasos
-	perfil.Velocidad += pasos * gananciaPorPaso(jugador, perfil)
+	perfil.Velocidad += pasos * gananciaPorPaso(jugador, perfil, bonusCombo)
 	Velocidad.aplicar(jugador)
 
 	local nivel = Niveles.nivelDe(perfil.PasosTotales)

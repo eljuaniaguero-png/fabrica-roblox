@@ -4,7 +4,8 @@
 --                             > Stats > Velocidad, Pasos, Monedas (Frame > Valor)
 --                             > Zonas > Zona1, Zona2, Zona3 (Frame > Texto, Candado; UIStroke = estás ahí)
 --                             > RebirthListo (TextLabel debajo: solo cuando podés hacer rebirth)
--- HUD > Inventario > DoblePaso, Escudo (TextButton)
+-- HUD > Inventario > DoblePaso, Escudo, Iman, Reinicio (TextButton)
+-- HUD > Combo (TextLabel arriba del inventario: combo y errores que aguanta)
 -- HUD > Aviso (TextLabel)
 -- La tienda está en el vendedor (Vendedor.client.luau) y el rebirth en el portal.
 
@@ -32,6 +33,7 @@ local zonas = tarjeta:WaitForChild("Zonas")
 local rebirthListo = tarjeta:WaitForChild("RebirthListo") :: TextLabel
 local inventario = hud:WaitForChild("Inventario")
 local aviso = hud:WaitForChild("Aviso") :: TextLabel
+local etiquetaCombo = hud:WaitForChild("Combo") :: TextLabel
 
 local remotos = ReplicatedStorage:WaitForChild("Remotos")
 local usarConsumible = remotos:WaitForChild("UsarConsumible") :: RemoteEvent
@@ -123,6 +125,16 @@ local function actualizarTarjeta()
 	end
 end
 
+-- Combo: se ve desde 2 pisadas seguidas, con los errores que todavía aguanta (Combo firme).
+local function actualizarCombo()
+	local combo = atributoNumero("Combo")
+	local aguante = atributoNumero("ComboAguante")
+	local bonus = math.min(combo * Config.Combo.BonusPorPisada, Config.Combo.BonusMaximo)
+	etiquetaCombo.Visible = combo >= 2
+	etiquetaCombo.Text = `COMBO x{combo} · +{math.floor(bonus * 100 + 0.5)}%`
+		.. if aguante > 0 then ` · aguanta {aguante}` else ""
+end
+
 local function actualizarInventario()
 	local ahora = workspace:GetServerTimeNow()
 	for _, nombre in Config.OrdenConsumibles do
@@ -198,6 +210,7 @@ jugador.AttributeChanged:Connect(function(nombre)
 	end
 	actualizarTarjeta()
 	actualizarInventario()
+	actualizarCombo()
 end)
 
 local camara = workspace.CurrentCamera

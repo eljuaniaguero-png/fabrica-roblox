@@ -16,6 +16,8 @@ local ajustes = Config.Sensacion
 local CHISPA = "rbxasset://textures/particles/sparkles_main.dds"
 
 type Efectos = {
+	jugador: Player?,
+	estelaId: string, -- cosmético de estela puesto ("" = ninguno)
 	raiz: BasePart,
 	estela: Trail,
 	chispas: ParticleEmitter,
@@ -69,7 +71,15 @@ local function crearEfectos(personaje: Model): Efectos?
 	chispas.Drag = 2
 	chispas.Parent = punto("ChispasPies", Vector3.new(0, -2.6, 0.5))
 
-	return { raiz = raiz, estela = estela, chispas = chispas, tramo = 0, rapidez = 0 }
+	return {
+		jugador = Players:GetPlayerFromCharacter(personaje),
+		estelaId = "",
+		raiz = raiz,
+		estela = estela,
+		chispas = chispas,
+		tramo = 0,
+		rapidez = 0,
+	}
 end
 
 -- Tramo que corresponde a la rapidez. Para bajar de tramo pide un margen (Histeresis).
@@ -87,21 +97,45 @@ local function tramoDe(rapidez: number, actual: number): number
 	return tramo
 end
 
+-- Colores de la estela cosmética puesta (Config.Cosmeticos), o nil si no tiene.
+local function coloresCosmeticos(e: Efectos): ColorSequence?
+	local cosmetico = Config.Cosmeticos[e.estelaId]
+	if not cosmetico or cosmetico.Tipo ~= "Estela" then
+		return nil
+	end
+	local colores = cosmetico.Colores
+	if #colores == 1 then
+		return ColorSequence.new(colores[1])
+	end
+	local puntos = {}
+	for indice, color in colores do
+		table.insert(puntos, ColorSequenceKeypoint.new((indice - 1) / (#colores - 1), color))
+	end
+	return ColorSequence.new(puntos)
+end
+
 local function aplicarTramo(e: Efectos, tramo: number)
 	if tramo == e.tramo then
 		return
 	end
 	e.tramo = tramo
 	local datos = ajustes.Tramos[tramo]
+	local cosmetica = coloresCosmeticos(e)
 	if not datos then
-		e.estela.Enabled = false
+		-- Con estela cosmética se ve apenas corrés; sin ella, recién desde el primer tramo.
+		e.estela.Enabled = cosmetica ~= nil
+			and tramo == 0
+			and e.rapidez >= ajustes.RapidezEstelaCosmetica
+		if cosmetica then
+			e.estela.Color = cosmetica
+		end
 		e.chispas.Rate = 0
 		return
 	end
 	if not e.estela.Enabled then
 		e.estela:Clear() -- que no dibuje un tramo viejo al volver a prenderse
 	end
-	e.estela.Color = ColorSequence.new(datos.Color)
+	e.estela.Color = cosmetica or ColorSequence.new(datos.Color)
 	e.estela.Enabled = true
 	e.chispas.Color = ColorSequence.new(datos.Color)
 	e.chispas.Size = NumberSequence.new(datos.TamanoParticula, 0)
@@ -129,7 +163,15 @@ RunService.Heartbeat:Connect(function(dt)
 		local v = e.raiz.AssemblyLinearVelocity
 		local rapidez = Vector3.new(v.X, 0, v.Z).Magnitude
 		e.rapidez += (rapidez - e.rapidez) * suavizado
-		aplicarTramo(e, tramoDe(e.rapidez, e.tramo))
+		local valor = if e.jugador then e.jugador:GetAttribute("Estela") else nil
+		local estelaId: string = if typeof(valor) == "string" then valor else ""
+		local tramo = tramoDe(e.rapidez, e.tramo)
+		if estelaId ~= e.estelaId or (tramo == 0 and e.tramo == 0) then
+			-- Cambió la estela puesta, o está en el tramo 0 (la cosmética depende de la rapidez).
+			e.estelaId = estelaId
+			e.tramo = -1
+		end
+		aplicarTramo(e, tramo)
 	end
 
 	-- Cámara: se abre un poco con la rapidez.

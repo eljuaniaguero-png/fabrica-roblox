@@ -8,6 +8,7 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Config = require(ReplicatedStorage.Shared.Config)
 local Datos = require(script.Parent.Datos)
 local Efectos = require(script.Parent.Efectos)
+local Pisadas = require(script.Parent.Pisadas)
 local Remotos = require(script.Parent.Remotos)
 local Velocidad = require(script.Parent.Velocidad)
 
@@ -19,7 +20,7 @@ local function usar(jugador: Player, nombre: unknown)
 		return
 	end
 	local consumible = Config.Consumibles[nombre]
-	if not consumible or not consumible.Usable or not consumible.Duracion then
+	if not consumible or not consumible.Usable then
 		return
 	end
 	if (perfil.Inventario[nombre] or 0) <= 0 then
@@ -27,6 +28,14 @@ local function usar(jugador: Player, nombre: unknown)
 	end
 
 	perfil.Inventario[nombre] -= 1
+	if not consumible.Duracion then
+		-- Instantáneo (Reinicio): apaga tus baldosas de la zona donde estás.
+		local apagadas = Pisadas.reiniciarZona(jugador)
+		Velocidad.aplicar(jugador)
+		-- SONIDO: usar consumible (Config.Efectos.Usar)
+		Remotos.avisar(jugador, `¡{consumible.Nombre}! {apagadas} baldosas apagadas`, "Usar")
+		return
+	end
 	local hasta = Efectos.activar(jugador, nombre, consumible.Duracion)
 	jugador:SetAttribute(`Hasta_{nombre}`, hasta)
 	Velocidad.aplicar(jugador)

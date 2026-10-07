@@ -89,11 +89,39 @@ local function comprarConsumible(jugador: Player, perfil: Datos.Perfil, nombre: 
 	Remotos.avisar(jugador, `+1 {consumible.Nombre}`, "Compra")
 end
 
+-- Cosmético: si no lo tenés, se cobra y se pone. Si ya lo tenés, tocarlo lo pone o lo saca (gratis).
+local function comprarCosmetico(jugador: Player, perfil: Datos.Perfil, nombre: string)
+	local cosmetico = Config.Cosmeticos[nombre]
+	if perfil.Cosmeticos[nombre] then
+		local puesto = perfil.Equipados[cosmetico.Tipo] == nombre
+		perfil.Equipados[cosmetico.Tipo] = if puesto then nil else nombre
+		Velocidad.aplicar(jugador)
+		Remotos.avisar(
+			jugador,
+			if puesto then `Te sacaste {cosmetico.Nombre}` else `Te pusiste {cosmetico.Nombre}`,
+			"Recoger"
+		)
+		return
+	end
+	if not cobrar(jugador, perfil, cosmetico.Precio) then
+		return
+	end
+	perfil.Cosmeticos[nombre] = true
+	perfil.Equipados[cosmetico.Tipo] = nombre
+	Velocidad.aplicar(jugador)
+	-- SONIDO: compra (Config.Efectos.Compra)
+	Remotos.avisar(jugador, `¡{cosmetico.Nombre}!`, "Compra")
+end
+
 local function comprar(jugador: Player, articulo: unknown)
 	if typeof(articulo) ~= "string" then
 		return
 	end
-	if not Config.Mejoras[articulo] and not Config.Consumibles[articulo] then
+	if
+		not Config.Mejoras[articulo]
+		and not Config.Consumibles[articulo]
+		and not Config.Cosmeticos[articulo]
+	then
 		return
 	end
 	local perfil = pedidoValido(jugador)
@@ -102,8 +130,10 @@ local function comprar(jugador: Player, articulo: unknown)
 	end
 	if Config.Mejoras[articulo] then
 		comprarMejora(jugador, perfil, articulo)
-	else
+	elseif Config.Consumibles[articulo] then
 		comprarConsumible(jugador, perfil, articulo)
+	else
+		comprarCosmetico(jugador, perfil, articulo)
 	end
 end
 

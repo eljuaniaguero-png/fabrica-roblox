@@ -20,6 +20,7 @@ local Velocidad = require(script.Parent.Velocidad)
 local Puertas = {}
 
 local checkpoints: { [number]: BasePart } = {}
+local alCaerSinEscudo: { (Player) -> () } = {}
 local inicio: BasePart? = nil
 
 -- Grupo de colisión del personaje: cuántas puertas tiene abiertas.
@@ -170,10 +171,18 @@ function Puertas.chequearCaida(jugador: Player)
 		perfil.Velocidad -= perdida
 		-- SONIDO: nota desafinada (Config.Efectos.Caida)
 		Remotos.avisar(jugador, `¡Te caíste! -{perdida} velocidad`, "Caida")
+		for _, funcion in alCaerSinEscudo do
+			funcion(jugador)
+		end
 	end
 	jugador:SetAttribute("Caidas", (jugador:GetAttribute("Caidas") or 0) :: number + 1)
 	Velocidad.aplicar(jugador)
 	Puertas.teletransportar(jugador)
+end
+
+-- Llama a `funcion` cada vez que alguien se cae sin Escudo (Pisadas.luau corta el combo).
+function Puertas.alCaer(funcion: (Player) -> ())
+	table.insert(alCaerSinEscudo, funcion)
 end
 
 function Puertas.alAparecer(jugador: Player, personaje: Model)

@@ -7,6 +7,7 @@
 --   Encabezado > Nombre, Subtitulo, Monedas, Cerrar
 --   Cuerpo > Opciones > Vender, Comprar (TextButton)
 --            Vender > Saldo, Ganancia, Tasa, BotonVender, Nota
+--            Pestanas > Mejoras, Consumibles, Cosmeticos (TextButton con UIStroke = pestaña elegida)
 --            Comprar (ScrollingFrame) > Plantilla (Frame) > Nombre, Detalle, Boton
 --   Pie > Volver (TextButton), Mensaje (TextLabel)
 
@@ -30,6 +31,7 @@ local opciones = cuerpo:WaitForChild("Opciones") :: Frame
 local vistaVender = cuerpo:WaitForChild("Vender") :: Frame
 local vistaComprar = cuerpo:WaitForChild("Comprar") :: ScrollingFrame
 local plantilla = vistaComprar:WaitForChild("Plantilla") :: Frame
+local barraPestanas = cuerpo:WaitForChild("Pestanas") :: Frame
 local pie = panel:WaitForChild("Pie")
 local botonVolver = pie:WaitForChild("Volver") :: TextButton
 local mensaje = pie:WaitForChild("Mensaje") :: TextLabel
@@ -41,21 +43,45 @@ local remotoAviso = remotos:WaitForChild("Aviso") :: RemoteEvent
 
 local ANIMACION_QUIETO = "rbxassetid://507766388" -- animación "idle" por defecto de Roblox
 local COLOR_ALCANZA = Config.Paleta.Cian
-local COLOR_NO_ALCANZA = Color3.fromRGB(55, 45, 95)
+local COLOR_PUESTO = Config.Paleta.Amarillo
+local COLOR_PESTANA = Color3.fromRGB(55, 45, 95)
 
 local vendedor: Model? = nil
 local avisoHablar: ProximityPrompt? = nil
 local filas: { [string]: Frame } = {}
+local pestanaDe: { [string]: string } = {} -- artículo -> pestaña donde va
+local pestanaActual = "Mejoras"
+
+-- string.upper no cambia las letras con tilde: "Imán" -> "IMÁN".
+local function mayusculas(texto: string): string
+	local resultado = string.upper(texto)
+	for minuscula, mayuscula in
+		{ ["á"] = "Á", ["é"] = "É", ["í"] = "Í", ["ó"] = "Ó", ["ú"] = "Ú", ["ñ"] = "Ñ" }
+	do
+		resultado = string.gsub(resultado, minuscula, mayuscula)
+	end
+	return resultado
+end
 
 local function atributoNumero(nombre: string): number
 	local valor = jugador:GetAttribute(nombre)
 	return if typeof(valor) == "number" then valor else 0
 end
 
-local function pintarBoton(boton: TextButton, texto: string, habilitado: boolean)
+-- Lo que no te alcanza (o ya está al máximo) se ve en gris, con el precio igual a la vista.
+local function pintarBoton(boton: TextButton, texto: string, habilitado: boolean, color: Color3?)
 	boton.Text = texto
-	boton.BackgroundColor3 = if habilitado then COLOR_ALCANZA else COLOR_NO_ALCANZA
-	boton.TextColor3 = if habilitado then Config.Paleta.Fondo else Color3.fromRGB(170, 160, 210)
+	boton.BackgroundColor3 = if habilitado
+		then color or COLOR_ALCANZA
+		else Config.Tienda.ColorNoAlcanza
+	boton.TextColor3 = if habilitado then Config.Paleta.Fondo else Config.Tienda.TextoNoAlcanza
+end
+
+local function pintarFila(fila: Frame, habilitado: boolean)
+	local nombre = fila:FindFirstChild("Nombre")
+	if nombre and nombre:IsA("TextLabel") then
+		nombre.TextColor3 = if habilitado then Color3.new(1, 1, 1) else Config.Tienda.TextoNoAlcanza
+	end
 end
 
 local function actualizar()
@@ -86,26 +112,54 @@ local function actualizar()
 	for articulo, fila in filas do
 		local detalle = fila:FindFirstChild("Detalle") :: TextLabel
 		local boton = fila:FindFirstChild("Boton") :: TextButton
+		fila.Visible = pestanaDe[articulo] == pestanaActual
 		local mejora = Config.Mejoras[articulo]
+		local consumible = Config.Consumibles[articulo]
+		local cosmetico = Config.Cosmeticos[articulo]
+		local habilitado = false
 		if mejora then
 			local nivel = atributoNumero(`Mej_{articulo}`)
 			local precio = Precios.mejora(articulo, nivel)
-			detalle.Text = `{mejora.Descripcion} · nivel {nivel}`
-			if precio then
-				pintarBoton(boton, `{precio} monedas`, monedas >= precio)
-			else
-				pintarBoton(boton, "MÁXIMO", false)
-			end
-		else
-			local consumible = Config.Consumibles[articulo]
+			detalle.Text = `{mejora.Descripcion} · nivel {nivel}/{mejora.NivelMaximo}`
+			habilitado = precio ~= nil and monedas >= precio
+			pintarBoton(boton, if precio then `{precio} monedas` else "MÁXIMO", habilitado)
+		elseif consumible then
 			local cantidad = atributoNumero(`Inv_{articulo}`)
 			detalle.Text = `{consumible.Descripcion} · tenés {cantidad}`
 			local lleno = cantidad >= Config.InventarioMaximo
-			pintarBoton(
-				boton,
-				if lleno then "LLENO" else `{consumible.Precio} monedas`,
-				not lleno and monedas >= consumible.Precio
+			habilitado = not lleno and monedas >= consumible.Precio
+			pintarBoton(boton, if lleno then "LLENO" else `{consumible.Precio} monedas`, habilitado)
+		elseif cosmetico then
+			local tipo = if cosmetico.Tipo == "Estela" then "Estela" else "Al pisar"
+			detalle.Text = `{cosmetico.Descripcion} · {tipo}`
+			local equipado = jugador:GetAttribute(
+				if cosmetico.Tipo == "Estela" then "Estela" else "EfectoPisada"
 			)
+			if jugador:GetAttribute(`Cos_{articulo}`) == true then
+				habilitado = true
+				local puesto = equipado == articulo
+				pintarBoton(
+					boton,
+					if puesto then "PUESTO" else "PONER",
+					true,
+					if puesto then COLOR_PUESTO else nil
+				)
+			else
+				habilitado = monedas >= cosmetico.Precio
+				pintarBoton(boton, `{cosmetico.Precio} monedas`, habilitado)
+			end
+		end
+		pintarFila(fila, habilitado)
+	end
+
+	for _, pestana in barraPestanas:GetChildren() do
+		if pestana:IsA("TextButton") then
+			local elegida = pestana.Name == pestanaActual
+			pestana.BackgroundColor3 = if elegida then Config.Paleta.Violeta else COLOR_PESTANA
+			local borde = pestana:FindFirstChildOfClass("UIStroke")
+			if borde then
+				borde.Enabled = elegida
+			end
 		end
 	end
 end
@@ -114,6 +168,7 @@ local function mostrarVista(nombre: string)
 	opciones.Visible = nombre == "Opciones"
 	vistaVender.Visible = nombre == "Vender"
 	vistaComprar.Visible = nombre == "Comprar"
+	barraPestanas.Visible = nombre == "Comprar"
 	botonVolver.Visible = nombre ~= "Opciones"
 	subtitulo.Text = if nombre == "Vender"
 		then "Vender pasos"
@@ -140,18 +195,20 @@ local function cerrar()
 	end
 end
 
--- Filas de la tienda: una por mejora y una por consumible, copiadas de la plantilla.
+-- Filas de la tienda: una por mejora, consumible y cosmético, copiadas de la plantilla.
+-- Cada fila va en su pestaña; solo se ven las de la pestaña elegida.
 local function armarFilas()
 	local orden = 0
-	local function agregar(articulo: string, nombre: string)
+	local function agregar(articulo: string, nombre: string, pestana: string)
 		orden += 1
+		pestanaDe[articulo] = pestana
 		local fila = plantilla:Clone()
 		fila.Name = articulo
 		fila.LayoutOrder = orden
 		fila.Visible = true
 		local etiqueta = fila:FindFirstChild("Nombre")
 		if etiqueta and etiqueta:IsA("TextLabel") then
-			etiqueta.Text = string.upper(nombre)
+			etiqueta.Text = mayusculas(nombre)
 		end
 		local boton = fila:FindFirstChild("Boton")
 		if boton and boton:IsA("TextButton") then
@@ -163,10 +220,25 @@ local function armarFilas()
 		filas[articulo] = fila
 	end
 	for _, articulo in Config.OrdenMejoras do
-		agregar(articulo, Config.Mejoras[articulo].Nombre)
+		agregar(articulo, Config.Mejoras[articulo].Nombre, "Mejoras")
 	end
 	for _, articulo in Config.OrdenConsumibles do
-		agregar(articulo, Config.Consumibles[articulo].Nombre)
+		agregar(articulo, Config.Consumibles[articulo].Nombre, "Consumibles")
+	end
+	for _, articulo in Config.OrdenCosmeticos do
+		agregar(articulo, Config.Cosmeticos[articulo].Nombre, "Cosmeticos")
+	end
+end
+
+for _, datos in Config.Tienda.Pestanas do
+	local pestana = barraPestanas:FindFirstChild(datos.Id)
+	if pestana and pestana:IsA("TextButton") then
+		pestana.Text = datos.Nombre
+		pestana.Activated:Connect(function()
+			pestanaActual = datos.Id
+			vistaComprar.CanvasPosition = Vector2.zero
+			actualizar()
+		end)
 	end
 end
 

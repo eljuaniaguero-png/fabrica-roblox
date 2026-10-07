@@ -19,6 +19,14 @@ export type Mejora = {
 	BonusPorNivel: number,
 }
 
+export type Cosmetico = {
+	Nombre: string,
+	Descripcion: string,
+	Tipo: string, -- "Estela" (detrás del personaje) o "Pisada" (efecto al pisar una baldosa)
+	Precio: number,
+	Colores: { Color3 },
+}
+
 local consumibles: { [string]: Consumible } = {
 	DoblePaso = {
 		Nombre = "Doble paso",
@@ -33,6 +41,19 @@ local consumibles: { [string]: Consumible } = {
 		Precio = 50,
 		Descripcion = "Te perdona una caída",
 		Usable = false,
+	},
+	Iman = {
+		Nombre = "Imán",
+		Precio = 80,
+		Descripcion = "Prende las baldosas cercanas por 15 s",
+		Usable = true,
+		Duracion = 15,
+	},
+	Reinicio = {
+		Nombre = "Reinicio",
+		Precio = 40,
+		Descripcion = "Apaga todas tus baldosas de la zona",
+		Usable = true, -- se usa al instante (no tiene Duracion)
 	},
 }
 
@@ -52,6 +73,90 @@ local mejoras: { [string]: Mejora } = {
 		FactorPrecio = 1.7,
 		NivelMaximo = 10,
 		BonusPorNivel = 0.2,
+	},
+	PasosExtra = {
+		Nombre = "Pisada firme",
+		Descripcion = "+1 paso por baldosa",
+		PrecioBase = 120,
+		FactorPrecio = 1.8,
+		NivelMaximo = 5,
+		BonusPorNivel = 1, -- pasos extra por baldosa en cada nivel
+	},
+	TopeVelocidad = {
+		Nombre = "Turbo",
+		Descripcion = "+4 al tope de velocidad",
+		PrecioBase = 150,
+		FactorPrecio = 1.7,
+		NivelMaximo = 5,
+		BonusPorNivel = 4, -- WalkSpeed extra de tope en cada nivel
+	},
+	ComboFirme = {
+		Nombre = "Combo firme",
+		Descripcion = "El combo aguanta 1 error más",
+		PrecioBase = 200,
+		FactorPrecio = 2.5,
+		NivelMaximo = 3,
+		BonusPorNivel = 1, -- errores que aguanta el combo en cada nivel
+	},
+	ApagadoRapido = {
+		Nombre = "Apagado rápido",
+		Descripcion = "Las baldosas se apagan antes",
+		PrecioBase = 180,
+		FactorPrecio = 1.9,
+		NivelMaximo = 4,
+		BonusPorNivel = 1, -- cuánto resta lo dicen Config.Baldosas.MenosBaldosasPorNivel y MenosSegundosPorNivel
+	},
+}
+
+-- Cosméticos: solo se ven, no dan ninguna ventaja. Se compran una vez; tocarlos de nuevo los
+-- pone o los saca. Uno de cada tipo a la vez.
+local cosmeticos: { [string]: Cosmetico } = {
+	EstelaFuego = {
+		Nombre = "Estela fuego",
+		Descripcion = "Estela rosa y amarilla",
+		Tipo = "Estela",
+		Precio = 100,
+		Colores = { Color3.fromRGB(255, 60, 172), Color3.fromRGB(255, 228, 94) },
+	},
+	EstelaHielo = {
+		Nombre = "Estela hielo",
+		Descripcion = "Estela cian y blanca",
+		Tipo = "Estela",
+		Precio = 100,
+		Colores = { Color3.fromRGB(43, 210, 255), Color3.fromRGB(235, 250, 255) },
+	},
+	EstelaArcoiris = {
+		Nombre = "Estela arcoíris",
+		Descripcion = "Estela con todos los colores",
+		Tipo = "Estela",
+		Precio = 250,
+		Colores = {
+			Color3.fromRGB(255, 60, 172),
+			Color3.fromRGB(255, 228, 94),
+			Color3.fromRGB(43, 210, 255),
+			Color3.fromRGB(123, 47, 247),
+		},
+	},
+	PisadaChispas = {
+		Nombre = "Chispas",
+		Descripcion = "Saltan chispas al pisar",
+		Tipo = "Pisada",
+		Precio = 80,
+		Colores = { Color3.fromRGB(255, 228, 94) },
+	},
+	PisadaAnillo = {
+		Nombre = "Anillo",
+		Descripcion = "Un anillo de luz al pisar",
+		Tipo = "Pisada",
+		Precio = 150,
+		Colores = { Color3.fromRGB(43, 210, 255) },
+	},
+	PisadaColumna = {
+		Nombre = "Columna",
+		Descripcion = "Una columna de luz al pisar",
+		Tipo = "Pisada",
+		Precio = 220,
+		Colores = { Color3.fromRGB(255, 60, 172) },
 	},
 }
 
@@ -154,11 +259,51 @@ local Config = {
 
 	-- Zonas: cada baldosa del mapa tiene un atributo Zona (1, 2, 3). La zona n+1 se abre con la
 	-- puerta n (NivelPuertas). Cada zona tiene su canción; al entrar a otra zona arranca de cero.
+	-- Cada zona tiene su paleta (sale de la guía Neón nocturno, con un color que manda) y su cielo.
+	-- Las baldosas y la decoración del mapa ya están pintadas con Principal y Secundario; el cielo
+	-- lo cambia el cliente al entrar a la zona (AmbienteZona.client.luau).
 	Zonas = {
-		{ Nombre = "Zona 1", Cancion = canciones[1] },
-		{ Nombre = "Zona 2", Cancion = canciones[2] },
-		{ Nombre = "Zona 3", Cancion = canciones[3] },
+		{
+			Nombre = "Zona 1",
+			Cancion = canciones[1],
+			Principal = paleta.Cian,
+			Secundario = paleta.Violeta,
+			Cielo = {
+				Atmosfera = Color3.fromRGB(25, 40, 90), -- color de la bruma
+				Decaimiento = Color3.fromRGB(10, 20, 55), -- color del horizonte
+				Densidad = 0.3,
+				LuzAmbiente = Color3.fromRGB(50, 70, 115),
+				Estrellas = 3000,
+			},
+		},
+		{
+			Nombre = "Zona 2",
+			Cancion = canciones[2],
+			Principal = paleta.Rosa,
+			Secundario = paleta.Violeta,
+			Cielo = {
+				Atmosfera = Color3.fromRGB(80, 20, 70),
+				Decaimiento = Color3.fromRGB(45, 10, 45),
+				Densidad = 0.34,
+				LuzAmbiente = Color3.fromRGB(100, 50, 95),
+				Estrellas = 1500,
+			},
+		},
+		{
+			Nombre = "Zona 3",
+			Cancion = canciones[3],
+			Principal = paleta.Amarillo,
+			Secundario = paleta.Rosa,
+			Cielo = {
+				Atmosfera = Color3.fromRGB(90, 55, 25),
+				Decaimiento = Color3.fromRGB(50, 25, 40),
+				Densidad = 0.3,
+				LuzAmbiente = Color3.fromRGB(105, 80, 70),
+				Estrellas = 500,
+			},
+		},
 	},
+	DuracionCambioCielo = 2, -- segundos que tarda el cielo en pasar de una zona a otra
 
 	-- Puertas: nivel mínimo para pasar cada una, en orden. Detrás de cada una hay un checkpoint.
 	-- Los checkpoints con número más alto que la cantidad de puertas (los del parkour) no piden nivel.
@@ -186,6 +331,7 @@ local Config = {
 	-- Sensación de velocidad (solo visual). La rapidez es la del personaje en studs/s.
 	Sensacion = {
 		RapidezSinEfecto = 16, -- por debajo no cambia nada (es el WalkSpeed base)
+		RapidezEstelaCosmetica = 8, -- con una estela cosmética puesta, se ve desde esta rapidez
 		RapidezMaxima = 50, -- efecto a pleno (el tope de WalkSpeed)
 		AnimacionExtra = 0.4, -- a rapidez máxima, la animación de correr va 40% más rápida que la normal
 		FovBase = 70, -- campo de visión de la cámara parado
@@ -236,11 +382,53 @@ local Config = {
 	DistanciaVendedor = 14, -- studs: más lejos, el servidor no acepta compras ni ventas (y se cierra el menú)
 	NombreVendedor = "Don Compás",
 	Consumibles = consumibles,
-	OrdenConsumibles = { "DoblePaso", "Escudo" },
+	OrdenConsumibles = { "DoblePaso", "Escudo", "Iman", "Reinicio" },
 	InventarioMaximo = 9,
 	ReaparicionConsumible = 30, -- segundos hasta que reaparece un consumible del mapa
 	Mejoras = mejoras,
-	OrdenMejoras = { "Zapatillas", "Bolsillo" },
+	OrdenMejoras = {
+		"Zapatillas",
+		"PasosExtra",
+		"TopeVelocidad",
+		"ComboFirme",
+		"ApagadoRapido",
+		"Bolsillo",
+	},
+	Cosmeticos = cosmeticos,
+	OrdenCosmeticos = {
+		"EstelaFuego",
+		"EstelaHielo",
+		"EstelaArcoiris",
+		"PisadaChispas",
+		"PisadaAnillo",
+		"PisadaColumna",
+	},
+
+	-- Menú de compras: tres pestañas. Lo que no te alcanza se ve en gris con el precio.
+	Tienda = {
+		Pestanas = {
+			{ Id = "Mejoras", Nombre = "MEJORAS" },
+			{ Id = "Consumibles", Nombre = "CONSUMIBLES" },
+			{ Id = "Cosmeticos", Nombre = "COSMÉTICOS" },
+		},
+		ColorNoAlcanza = Color3.fromRGB(78, 76, 92), -- gris
+		TextoNoAlcanza = Color3.fromRGB(170, 168, 182),
+	},
+
+	-- Imán (consumible): prende solo las baldosas apagadas cercanas, de a una.
+	Iman = {
+		Radio = 24, -- studs alrededor del personaje
+		Intervalo = 0.2, -- segundos entre una baldosa y la siguiente
+	},
+
+	-- Combo: pisadas válidas seguidas sin errores. Cada pisada del combo suma un poco más de
+	-- velocidad. Error = pisar una baldosa prendida (usada) o caerte sin Escudo.
+	-- Combo firme hace que aguante errores (uno por nivel) antes de cortarse.
+	Combo = {
+		BonusPorPisada = 0.01, -- +1% de velocidad por cada pisada del combo
+		BonusMaximo = 0.5, -- tope del bonus (+50%)
+		GraciaError = 1.5, -- segundos: volver a la baldosa que acabás de prender no es error
+	},
 
 	-- Parkour (lo mueve cada cliente; la lógica que importa sigue en el servidor)
 	Parkour = {
@@ -272,6 +460,9 @@ local Config = {
 		FundidoApagado = 1.5, -- segundos del fundido al apagarse
 		BaldosasParaApagar = 10, -- se apaga después de pisar esta cantidad de baldosas nuevas
 		SegundosParaApagar = 60, -- o cuando pasaron estos segundos desde que la pisaste
+		MenosBaldosasPorNivel = 1, -- Apagado rápido: cada nivel le resta esto a BaldosasParaApagar
+		MenosSegundosPorNivel = 8, -- y esto a SegundosParaApagar
+		ReintentoPisada = 0.3, -- segundos: si el servidor no tomó la pisada (demora de red), se avisa de nuevo
 		EsperaMinimaPisada = 0.08, -- segundos mínimos entre dos pisadas válidas (más rápido no cuenta)
 		ToleranciaDistancia = 6, -- studs de margen para aceptar que estás encima de la baldosa
 	},
