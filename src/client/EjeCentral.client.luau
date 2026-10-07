@@ -30,7 +30,7 @@ local function pintar(tramo: BasePart)
 	tramo.Material = Enum.Material.Neon
 	TweenService:Create(tramo, TweenInfo.new(1.5, Enum.EasingStyle.Sine), {
 		Color = datos.Principal,
-		Transparency = 0,
+		Transparency = 0.35, -- prendido pero sin encandilar
 	}):Play()
 end
 

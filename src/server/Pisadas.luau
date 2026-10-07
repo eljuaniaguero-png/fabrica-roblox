@@ -34,10 +34,13 @@ type Estado = {
 	combo: number, -- pisadas válidas seguidas
 	aguante: number, -- errores que todavía le aguanta el combo
 	proximoIman: number,
+	dorada: BasePart?, -- baldosa dorada que tiene adelante (da monedas)
 }
 
 local estados: { [Player]: Estado } = {}
 local todasLasBaldosas: { BasePart } = {}
+local porZona: { [number]: { [number]: BasePart } } = {} -- zona -> nota -> baldosa
+local azar = Random.new()
 
 local function nivelMejora(jugador: Player, nombre: string): number
 	local perfil = Datos.obtener(jugador)
@@ -123,6 +126,32 @@ local function estaEncima(raiz: BasePart, parte: BasePart): boolean
 	return horizontal <= margen and diferencia.Y > -2 and diferencia.Y < 12
 end
 
+-- Elige la próxima baldosa dorada de la zona, unas cuantas baldosas más adelante de `desde`.
+local function elegirDorada(jugador: Player, estado: Estado, zona: number, desde: number)
+	local baldosas = porZona[zona]
+	local cantidad = #Config.Zonas[zona].Cancion.Notas
+	if not baldosas then
+		return
+	end
+	local rango = Config.Recompensas.DoradaAdelante
+	local nota = (desde + azar:NextInteger(rango[1], rango[2]) - 1) % cantidad + 1
+	local parte = baldosas[nota]
+	estado.dorada = parte
+	if parte then
+		Remotos.Baldosa:FireClient(jugador, "dorada", clave(parte))
+	end
+end
+
+-- Hitos de combo (10, 25, 50, 100): monedas y festejo.
+local function revisarHito(jugador: Player, combo: number)
+	local premios = Config.Recompensas
+	if table.find(premios.HitosCombo, combo) then
+		local monedas = premios.MonedasHito * math.max(combo // 10, 1)
+		Velocidad.premiar(jugador, monedas)
+		Remotos.Celebrar:FireClient(jugador, "hito", combo, monedas)
+	end
+end
+
 -- Pisada válida de una baldosa apagada (ya validada): paso, velocidad, nota, combo y apagados.
 local function prender(jugador: Player, estado: Estado, parte: BasePart)
 	local ahora = os.clock()
@@ -167,12 +196,24 @@ local function prender(jugador: Player, estado: Estado, parte: BasePart)
 		estado.racha = 0
 		Velocidad.completarCancion(jugador, zona)
 	end
+	jugador:SetAttribute("Racha", estado.racha) -- el HUD muestra cuánto de la canción llevás
+
+	-- Baldosa dorada: monedas y la próxima aparece más adelante.
+	if parte == estado.dorada then
+		local monedas = Config.Recompensas.MonedasDorada * zona
+		Velocidad.premiar(jugador, monedas)
+		Remotos.Celebrar:FireClient(jugador, "dorada", monedas)
+		elegirDorada(jugador, estado, zona, nota)
+	elseif not estado.dorada or zonaDe(estado.dorada) ~= zona then
+		elegirDorada(jugador, estado, zona, nota)
+	end
 
 	if estado.combo == 0 then
 		estado.aguante = aguanteMaximo(jugador) -- combo nuevo: aguante lleno (con las mejoras al día)
 	end
 	estado.combo += 1
 	publicarCombo(jugador, estado)
+	revisarHito(jugador, estado.combo)
 	local bonus = math.min(estado.combo * Config.Combo.BonusPorPisada, Config.Combo.BonusMaximo)
 	if Velocidad.sumarPisada(jugador, bonus) then
 		Puertas.actualizarNivel(jugador)
@@ -254,6 +295,11 @@ function Pisadas.iniciar()
 	for _, parte in workspace:GetDescendants() do
 		if parte:IsA("BasePart") and parte:GetAttribute("Baldosa") == true then
 			table.insert(todasLasBaldosas, parte)
+			local zona, nota = parte:GetAttribute("Zona"), parte:GetAttribute("Nota")
+			if typeof(zona) == "number" and typeof(nota) == "number" then
+				porZona[zona] = porZona[zona] or {}
+				porZona[zona][nota] = parte
+			end
 		end
 	end
 	Remotos.Pisada.OnServerEvent:Connect(alPisar)

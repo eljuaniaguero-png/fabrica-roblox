@@ -209,11 +209,244 @@ decoraciones.Ensayo = function(padre, cf, cual)
 	end
 end
 
--- Material y color de la base de las baldosas y la baranda según el tema.
-local bases: { [string]: { Material: Enum.Material, Color: Color3, Baranda: Color3? } } = {
-	Ensayo = { Material = Enum.Material.WoodPlanks, Color = MADERA, Baranda = MADERA_OSCURA },
-	Ciudad = { Material = Enum.Material.Concrete, Color = Color3.fromRGB(46, 46, 58) },
-	Nubes = { Material = Enum.Material.SmoothPlastic, Color = Color3.fromRGB(232, 230, 245) },
+local CONCRETO = Color3.fromRGB(46, 46, 58)
+local NUBE_BLANCA = Color3.fromRGB(232, 230, 245)
+local VIOLETA = Color3.fromRGB(123, 47, 247)
+local AMARILLO = Color3.fromRGB(255, 228, 94)
+
+-- Ciudad de noche: terrazas de edificios (la pista pasa por arriba), antenas y carteles de neón.
+decoraciones.Ciudad = function(padre, cf, cual)
+	local alto = 14 + (cual % 3) * 3
+	parte(padre, "Edificio", {
+		Size = Vector3.new(11, alto, 11),
+		CFrame = cf * CFrame.new(0, -0.4 - alto / 2, 0),
+		Color = CONCRETO,
+		Material = Enum.Material.Concrete,
+		CanCollide = true,
+		CanQuery = true,
+	})
+	-- Ventanas: franjas de luz en la cara de afuera
+	for k = -1, 1 do
+		parte(padre, "Ventanas", {
+			Size = Vector3.new(1, alto - 4, 0.3),
+			CFrame = cf * CFrame.new(k * 3, -alto / 2 - 1, 5.6),
+			Color = if k == 0 then CIAN else Color3.fromRGB(255, 214, 140),
+			Material = Enum.Material.Neon,
+			Transparency = 0.35,
+		})
+	end
+	local tipo = cual % 2
+	if tipo == 0 then
+		-- Antena con luz roja que titila (Parpadeo.client.luau)
+		parte(padre, "Antena", {
+			Size = Vector3.new(0.3, 9, 0.3),
+			CFrame = cf * CFrame.new(2, 4.1, 2),
+			Color = METAL,
+			Material = Enum.Material.Metal,
+		})
+		local foco = parte(padre, "LuzAntena", {
+			Forma = Enum.PartType.Ball,
+			Size = Vector3.one * 0.9,
+			CFrame = cf * CFrame.new(2, 8.8, 2),
+			Color = Color3.fromRGB(255, 40, 60),
+			Material = Enum.Material.Neon,
+		})
+		foco:SetAttribute("Parpadeo", 1.2)
+	else
+		-- Cartel de neón sobre la terraza, mirando a la pista
+		local color = if (cual // 2) % 2 == 0 then ROSA else CIAN
+		local cartel = cf * CFrame.new(0, 5, 2.5)
+		for _, lado in { -1, 1 } do
+			parte(padre, "PosteCartel", {
+				Size = Vector3.new(0.3, 5, 0.3),
+				CFrame = cf * CFrame.new(lado * 3, 2.3, 2.5),
+				Color = NEGRO,
+			})
+			parte(padre, "Marco", {
+				Size = Vector3.new(0.3, 3, 0.3),
+				CFrame = cartel * CFrame.new(lado * 3.5, 0, 0),
+				Color = color,
+				Material = Enum.Material.Neon,
+			})
+			parte(padre, "Marco", {
+				Size = Vector3.new(7.3, 0.3, 0.3),
+				CFrame = cartel * CFrame.new(0, lado * 1.5, 0),
+				Color = color,
+				Material = Enum.Material.Neon,
+			})
+		end
+		parte(padre, "Fondo", {
+			Size = Vector3.new(7, 3, 0.2),
+			CFrame = cartel * CFrame.new(0, 0, 0.2),
+			Color = NEGRO,
+		})
+		parte(padre, "Letras", {
+			Size = Vector3.new(4.5, 0.5, 0.25),
+			CFrame = cartel,
+			Color = VIOLETA,
+			Material = Enum.Material.Neon,
+		})
+	end
+end
+
+-- Sobre las nubes: nubes chatas, plataformas pastel flotando y farolitos.
+decoraciones.Nubes = function(padre, cf, cual)
+	local tipo = cual % 3
+	if tipo == 0 or tipo == 2 then
+		for k = 1, 3 do
+			local d = 8 + k * 2.5
+			disco(
+				padre,
+				"Nube",
+				(cf * CFrame.new((k - 2) * 4, -3 - k * 0.6, k * 1.5)).Position,
+				d,
+				2.5,
+				{
+					Color = NUBE_BLANCA,
+					Transparency = 0.05,
+				}
+			)
+		end
+	end
+	if tipo == 1 then
+		local plataforma = cf
+			* CFrame.new(0, 4 + (cual % 4), 10)
+			* CFrame.Angles(0, math.rad(cual * 23), 0)
+		parte(padre, "Plataforma", {
+			Size = Vector3.new(7, 0.8, 7),
+			CFrame = plataforma,
+			Color = Color3.fromRGB(255, 200, 221),
+		})
+		parte(padre, "Borde", {
+			Size = Vector3.new(7.4, 0.2, 7.4),
+			CFrame = plataforma * CFrame.new(0, -0.5, 0),
+			Color = Color3.fromRGB(160, 231, 255),
+			Material = Enum.Material.Neon,
+		})
+	end
+	if tipo == 2 then
+		local farol = parte(padre, "Farolito", {
+			Forma = Enum.PartType.Ball,
+			Size = Vector3.one * 1.4,
+			CFrame = cf * CFrame.new(0, 3, 0),
+			Color = Color3.fromRGB(200, 182, 255),
+			Material = Enum.Material.Neon,
+		})
+		farol:SetAttribute("Parpadeo", 2.5)
+	end
+end
+
+-- Espacio: planetas con anillo y estrellas sueltas.
+decoraciones.Espacio = function(padre, cf, cual)
+	local azar = Random.new(cual * 7 + 3)
+	if cual % 2 == 0 then
+		local planeta = cf
+			* CFrame.new(azar:NextNumber(-6, 6), azar:NextNumber(4, 16), azar:NextNumber(18, 34))
+		local colores = {
+			Color3.fromRGB(255, 122, 89),
+			Color3.fromRGB(43, 210, 255),
+			Color3.fromRGB(200, 182, 255),
+			AMARILLO,
+		}
+		local tam = azar:NextNumber(5, 10)
+		parte(padre, "Planeta", {
+			Forma = Enum.PartType.Ball,
+			Size = Vector3.one * tam,
+			CFrame = planeta,
+			Color = colores[cual % #colores + 1],
+		})
+		parte(padre, "AnilloPlaneta", {
+			Forma = Enum.PartType.Cylinder,
+			Size = Vector3.new(0.2, tam * 1.9, tam * 1.9),
+			CFrame = planeta * CFrame.Angles(math.rad(70), 0, math.rad(20)),
+			Color = Color3.new(1, 1, 1),
+			Material = Enum.Material.Neon,
+			Transparency = 0.5,
+		})
+	end
+	for _ = 1, 3 do
+		local estrella = parte(padre, "Estrella", {
+			Forma = Enum.PartType.Ball,
+			Size = Vector3.one * azar:NextNumber(0.5, 1.1),
+			CFrame = cf * CFrame.new(
+				azar:NextNumber(-12, 12),
+				azar:NextNumber(-10, 18),
+				azar:NextNumber(8, 40)
+			),
+			Color = Color3.new(1, 1, 1),
+			Material = Enum.Material.Neon,
+		})
+		estrella:SetAttribute("Parpadeo", azar:NextNumber(1.5, 3.5))
+	end
+end
+
+-- Piezas grandes que van una sola vez por zona (luna, anillos de luz).
+local ambientes: { [string]: (padre: Instance, centro: number, t: any) -> () } = {}
+
+ambientes.Nubes = function(padre, centro, t)
+	parte(padre, "Luna", {
+		Forma = Enum.PartType.Ball,
+		Size = Vector3.one * 34,
+		CFrame = CFrame.new(polar(math.rad(40), t.Radio + 170, centro + 55)),
+		Color = Color3.fromRGB(245, 243, 255),
+		Material = Enum.Material.Neon,
+		Transparency = 0.05,
+	})
+end
+
+ambientes.Espacio = function(padre, centro, t)
+	-- Dos anillos de luz inclinados alrededor de la torre, hechos de tramos rectos
+	for k, datos in { { 30, CIAN, 12 }, { 42, VIOLETA, -9 } } do
+		local radio, color, inclinacion = t.Radio + datos[1], datos[2], math.rad(datos[3])
+		local segmentos = 32
+		local giro = CFrame.new(0, centro + (k - 1.5) * 6, 0)
+			* CFrame.Angles(inclinacion, 0, inclinacion / 2)
+		for s = 1, segmentos do
+			local angulo = (s - 0.5) / segmentos * math.pi * 2
+			local largo = 2 * math.pi * radio / segmentos + 0.4
+			local punto = giro * CFrame.new(polar(angulo, radio, 0))
+			parte(padre, "AnilloLuz", {
+				Size = Vector3.new(0.5, 0.5, largo),
+				CFrame = CFrame.lookAt(
+					punto.Position,
+					punto.Position + (giro.Rotation * tangente(angulo))
+				),
+				Color = color,
+				Material = Enum.Material.Neon,
+				Transparency = 0.2,
+			})
+		end
+	end
+end
+
+-- Material y color de la base de las baldosas y de la baranda según el tema
+-- (sin Baranda = pista abierta: te podés caer a la vuelta de abajo).
+type Estilo = {
+	Material: Enum.Material,
+	Color: Color3,
+	Baranda: Color3?,
+	MaterialBaranda: Enum.Material?,
+	Pasamanos: Color3?,
+	MaterialPasamanos: Enum.Material?,
+}
+local bases: { [string]: Estilo } = {
+	Ensayo = {
+		Material = Enum.Material.WoodPlanks,
+		Color = MADERA,
+		Baranda = MADERA_OSCURA,
+		MaterialBaranda = Enum.Material.WoodPlanks,
+		Pasamanos = BRONCE,
+		MaterialPasamanos = Enum.Material.Metal,
+	},
+	Ciudad = {
+		Material = Enum.Material.Concrete,
+		Color = CONCRETO,
+		Baranda = Color3.fromRGB(62, 62, 76),
+		MaterialBaranda = Enum.Material.Concrete,
+		Pasamanos = ROSA,
+		MaterialPasamanos = Enum.Material.Neon,
+	},
+	Nubes = { Material = Enum.Material.SmoothPlastic, Color = NUBE_BLANCA },
 	Espacio = { Material = Enum.Material.Glass, Color = Color3.fromRGB(20, 18, 40) },
 }
 
@@ -235,12 +468,16 @@ local function construirZona(Config: any, tramo: Tramo, destino: Instance, plant
 	local pendiente = math.atan2(subida, largo)
 	local afuera = t.Radio + t.AnchoPista / 2
 
+	local saltos = zona.Saltos
 	for i = 1, n do
 		local angulo = tramo.anguloInicio + (i - 0.5) * paso
 		local y = tramo.alturaInicio + subida * (i - 0.5)
 		local cf = enPista(angulo, t.Radio, y - 0.5, pendiente)
+		-- Salto: esta baldosa se acorta por delante y deja un hueco hasta la siguiente.
+		local recorte = if saltos and i % saltos.Cada == 0 and i < n then saltos.Hueco else 0
+		cf *= CFrame.new(0, 0, recorte / 2)
 		local baldosa = parte(baldosas, `Baldosa{tramo.indice}_{i}`, {
-			Size = Vector3.new(t.AnchoPista, 1, largo - t.Hueco),
+			Size = Vector3.new(t.AnchoPista, 1, largo - t.Hueco - recorte),
 			CFrame = cf,
 			Color = if i % 2 == 1 then zona.Principal else zona.Secundario,
 			Material = Enum.Material.Neon,
@@ -251,7 +488,7 @@ local function construirZona(Config: any, tramo: Tramo, destino: Instance, plant
 		baldosa:SetAttribute("Zona", tramo.indice)
 		baldosa:SetAttribute("Nota", i)
 		parte(apoyos, "Base", {
-			Size = Vector3.new(t.AnchoPista + 1.2, 0.8, largo + 0.05),
+			Size = Vector3.new(t.AnchoPista + 1.2, 0.8, largo + 0.05 - recorte),
 			CFrame = cf * CFrame.new(0, -0.85, 0),
 			Color = estilo.Color,
 			Material = estilo.Material,
@@ -268,15 +505,15 @@ local function construirZona(Config: any, tramo: Tramo, destino: Instance, plant
 				Size = Vector3.new(0.5, 2.5, largo * 2),
 				CFrame = cfBaranda,
 				Color = estilo.Baranda,
-				Material = Enum.Material.WoodPlanks,
+				Material = estilo.MaterialBaranda or Enum.Material.SmoothPlastic,
 				CanCollide = true,
 				CanQuery = true,
 			})
 			parte(deco, "Pasamanos", {
 				Size = Vector3.new(0.7, 0.3, largo * 2),
 				CFrame = cfBaranda * CFrame.new(0, 1.35, 0),
-				Color = BRONCE,
-				Material = Enum.Material.Metal,
+				Color = estilo.Pasamanos or BRONCE,
+				Material = estilo.MaterialPasamanos or Enum.Material.Metal,
 			})
 		end
 
@@ -286,6 +523,11 @@ local function construirZona(Config: any, tramo: Tramo, destino: Instance, plant
 			local pos = polar(angulo, afuera + 4.5, y)
 			decorar(deco, mirandoAlCentro(pos), i // t.DecoracionCada)
 		end
+	end
+
+	local ambiente = ambientes[zona.Tema]
+	if ambiente then
+		ambiente(deco, tramo.alturaInicio + t.SubidaPorVuelta / 2, t)
 	end
 
 	-- Consumibles del mapa sobre la pista (a un tercio y a dos tercios de la vuelta)
@@ -445,6 +687,48 @@ local function construirTransicion(
 		candado:PivotTo(haciaAtras * CFrame.new(0, t.AltoPuerta / 2 + 4.6, -0.6))
 		candado.Parent = bloqueo
 	end
+end
+
+-- Cima: después de la última zona, un descanso con checkpoint, tubo para bajar y una estrella.
+local function construirCima(Config: any, tramo: Tramo, destino: Instance, plantillas: Instance)
+	local t = Config.Torre
+	local R = t.Radio
+	local modelo = Instance.new("Model")
+	modelo.Name = "Cima"
+	modelo.Parent = destino
+	local angulo = tramo.anguloFin + (t.LargoDescanso / 2) / R
+	local y = tramo.alturaFin
+	local plantilla = plantillas:FindFirstChild("Checkpoint")
+	if plantilla and plantilla:IsA("BasePart") then
+		local checkpoint = plantilla:Clone()
+		checkpoint.Name = `Checkpoint{tramo.indice}`
+		checkpoint.Size = Vector3.new(t.AnchoPista + 8, 1, t.LargoDescanso)
+		checkpoint.CFrame = enPista(angulo, R - 4, y - 0.5)
+		checkpoint.Material = Enum.Material.SmoothPlastic
+		checkpoint.Color = Color3.fromRGB(60, 50, 20)
+		checkpoint:SetAttribute("CheckpointIndice", tramo.indice)
+		checkpoint.Parent = modelo
+	end
+	GeneradorTorre.tubo(modelo, polar(angulo, R - 9.5, y), "Bajar")
+	-- Estrella: dos cruces de neón amarillo que giran (Parpadeo hace que brille)
+	local centro = CFrame.new(polar(angulo, R - 1, y + 9))
+	for k = 0, 3 do
+		parte(modelo, "Estrella", {
+			Size = Vector3.new(1, 9, 1),
+			CFrame = centro * CFrame.Angles(0, math.rad(90) * (k % 2), math.rad(45) * k),
+			Color = AMARILLO,
+			Material = Enum.Material.Neon,
+		})
+	end
+	local nucleo = parte(modelo, "NucleoEstrella", {
+		Forma = Enum.PartType.Ball,
+		Size = Vector3.one * 3,
+		CFrame = centro,
+		Color = Color3.new(1, 1, 1),
+		Material = Enum.Material.Neon,
+	})
+	nucleo:SetAttribute("Parpadeo", 0.8)
+	luz(nucleo, AMARILLO, 24, 2)
 end
 
 -- Tubo de luz: "Bajar" (en cada checkpoint, te lleva a la plaza) o "Subir" (en la plaza, te
@@ -673,6 +957,8 @@ function GeneradorTorre.construir(Config: any, plantillas: Instance): string
 		construirZona(Config, tramos[indice], torre, plantillas)
 		if indice < #tramos then
 			construirTransicion(Config, tramos[indice], torre, plantillas)
+		else
+			construirCima(Config, tramos[indice], torre, plantillas)
 		end
 	end
 	construirEje(Config, tramos, torre)

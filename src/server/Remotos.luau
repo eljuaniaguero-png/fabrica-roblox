@@ -20,7 +20,8 @@ local Remotos = {
 	Comprar = crear("Comprar"), -- cliente -> servidor: (artículo) en el menú del vendedor
 	VenderPasos = crear("VenderPasos"), -- cliente -> servidor: vende todos los pasos disponibles
 	Pisada = crear("Pisada"), -- cliente -> servidor: (baldosa) que acaba de pisar
-	Baldosa = crear("Baldosa"), -- servidor -> cliente: ("encender", clave, nota) o ("apagar", clave)
+	Baldosa = crear("Baldosa"), -- servidor -> cliente: ("encender", clave, nota), ("apagar", clave) o ("dorada", clave)
+	Celebrar = crear("Celebrar"), -- servidor -> cliente: ("hito", combo, monedas), ("cancion", título, monedas) o ("dorada", monedas)
 }
 
 carpeta.Parent = ReplicatedStorage

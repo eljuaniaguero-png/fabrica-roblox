@@ -6,6 +6,7 @@
 --                             > RebirthListo (TextLabel debajo: solo cuando podés hacer rebirth)
 -- HUD > Inventario > DoblePaso, Escudo, Iman, Reinicio (TextButton)
 -- HUD > Combo (TextLabel arriba del inventario: combo y errores que aguanta)
+-- HUD > Cancion (arriba al centro) > Titulo, Cuenta (TextLabel), Barra > Relleno, Escala (UIScale)
 -- HUD > Aviso (TextLabel)
 -- La tienda está en el vendedor (Vendedor.client.luau) y el rebirth en el portal.
 
@@ -34,6 +35,11 @@ local rebirthListo = tarjeta:WaitForChild("RebirthListo") :: TextLabel
 local inventario = hud:WaitForChild("Inventario")
 local aviso = hud:WaitForChild("Aviso") :: TextLabel
 local etiquetaCombo = hud:WaitForChild("Combo") :: TextLabel
+local cancion = hud:WaitForChild("Cancion") :: Frame
+local tituloCancion = cancion:WaitForChild("Titulo") :: TextLabel
+local cuentaCancion = cancion:WaitForChild("Cuenta") :: TextLabel
+local rellenoCancion = cancion:WaitForChild("Barra"):WaitForChild("Relleno") :: Frame
+local escalaCancion = cancion:WaitForChild("Escala") :: UIScale
 
 local remotos = ReplicatedStorage:WaitForChild("Remotos")
 local usarConsumible = remotos:WaitForChild("UsarConsumible") :: RemoteEvent
@@ -135,6 +141,26 @@ local function actualizarCombo()
 		.. if aguante > 0 then ` · aguanta {aguante}` else ""
 end
 
+-- Canción de la zona: cuántas baldosas seguidas en orden llevás (al completarla, festejo).
+local function actualizarCancion()
+	local zona = jugador:GetAttribute("Zona")
+	local datos = if typeof(zona) == "number" then Config.Zonas[zona] else nil
+	cancion.Visible = datos ~= nil
+	if not datos then
+		return
+	end
+	local total = #datos.Cancion.Notas
+	local racha = math.clamp(atributoNumero("Racha"), 0, total)
+	tituloCancion.Text = string.upper(datos.Cancion.Titulo)
+	cuentaCancion.Text = `{racha}/{total}`
+	TweenService:Create(
+		rellenoCancion,
+		TweenInfo.new(Config.Hud.DuracionBarra, Enum.EasingStyle.Quad),
+		{ Size = UDim2.fromScale(racha / total, 1) }
+	):Play()
+	rellenoCancion.BackgroundColor3 = datos.Principal
+end
+
 local function actualizarInventario()
 	local ahora = workspace:GetServerTimeNow()
 	for _, nombre in Config.OrdenConsumibles do
@@ -167,6 +193,7 @@ local function ajustarEscala()
 		ajustes.EscalaMinima,
 		ajustes.EscalaMaxima
 	)
+	escalaCancion.Scale = escala.Scale
 end
 
 for _, nombre in Config.OrdenConsumibles do
@@ -211,6 +238,7 @@ jugador.AttributeChanged:Connect(function(nombre)
 	actualizarTarjeta()
 	actualizarInventario()
 	actualizarCombo()
+	actualizarCancion()
 end)
 
 local camara = workspace.CurrentCamera
@@ -220,6 +248,7 @@ end
 ajustarEscala()
 actualizarTarjeta()
 actualizarInventario()
+actualizarCancion()
 
 -- Cuenta regresiva de los efectos activos.
 while true do

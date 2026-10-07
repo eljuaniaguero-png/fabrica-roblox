@@ -124,6 +124,18 @@ function Velocidad.sumarPisada(jugador: Player, bonusCombo: number): boolean
 end
 
 -- Completó la canción de una zona (todas sus baldosas en orden): se guarda y prende su tramo del eje.
+-- Suma monedas de premio (hitos de combo, canciones, baldosa dorada).
+function Velocidad.premiar(jugador: Player, monedas: number)
+	local perfil = Datos.obtener(jugador)
+	if not perfil or monedas <= 0 then
+		return
+	end
+	perfil.Monedas += monedas
+	Velocidad.aplicar(jugador)
+end
+
+-- Completó la canción de una zona (todas sus baldosas en orden): monedas, festejo y su tramo del
+-- eje (la primera vez queda guardado y el premio es mayor).
 function Velocidad.completarCancion(jugador: Player, zona: number)
 	local perfil = Datos.obtener(jugador)
 	if not perfil then
@@ -132,17 +144,14 @@ function Velocidad.completarCancion(jugador: Player, zona: number)
 	local nueva = not table.find(perfil.Canciones, zona)
 	if nueva then
 		table.insert(perfil.Canciones, zona)
-		Velocidad.aplicar(jugador)
 	end
-	local cancion = Config.Zonas[zona].Cancion
-	-- SONIDO: canción completa (Config.Efectos.SubirNivel)
-	Remotos.avisar(
-		jugador,
-		if nueva
-			then `¡Completaste {cancion.Titulo}! Se prende el eje`
-			else `¡{cancion.Titulo} otra vez!`,
-		"SubirNivel"
-	)
+	local premios = Config.Recompensas
+	local monedas = premios.MonedasCancion
+		* zona
+		* (if nueva then premios.MultiplicadorPrimeraVez else 1)
+	Velocidad.premiar(jugador, monedas)
+	-- SONIDO: canción completa (Config.Efectos.Fanfarria, lo toca el cliente al festejar)
+	Remotos.Celebrar:FireClient(jugador, "cancion", Config.Zonas[zona].Cancion.Titulo, monedas)
 end
 
 return Velocidad

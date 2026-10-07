@@ -205,6 +205,17 @@ local canciones: { Cancion } = {
 			11, 9, 7, 6, 4,
 		},
 	},
+	{
+		-- Muy difícil: sube y sube, cada vez más rápido.
+		Titulo = "En la gruta del rey de la montaña",
+		Autor = "Grieg",
+		Notas = {
+			-1, 1, 2, 4, 6, 2, 6,
+			5, 1, 5,
+			4, 0, 4,
+			-1, 1, 2, 4, 6, 2, 6, 11, 9, 6, 2, 6, 9,
+		},
+	},
 }
 
 -- Efectos de sonido: todos con el mismo sample de piano. Cada uno es una lista de notas
@@ -225,6 +236,9 @@ local efectos = {
 	Hablar = { Notas = { 4, 7, 12 }, Separacion = 0.06 },
 	Vender = { Notas = { 19, 24, 28 }, Separacion = 0.05 },
 	Desbloquear = { Notas = { 0, 7, 12, 19, 24 }, Separacion = 0.07 },
+	Hito = { Notas = { 12, 16, 19, 24, 28 }, Separacion = 0.045 }, -- combo 10, 25, 50, 100
+	Fanfarria = { Notas = { 0, 4, 7, 12, 7, 12, 16, 19, 24 }, Separacion = 0.09 }, -- canción completa
+	Dorada = { Notas = { 19, 24, 28, 31 }, Separacion = 0.05 }, -- baldosa dorada
 }
 
 -- Paleta de la guía de estilo (Neón nocturno), para lo que pinta el código.
@@ -296,6 +310,8 @@ local Config = {
 			Nombre = "Sobre las nubes",
 			Tema = "Nubes",
 			Cancion = canciones[3],
+			-- Saltos: cada `Cada` baldosas, la baldosa se acorta y deja un hueco de `Hueco` studs.
+			Saltos = { Cada = 5, Hueco = 2.5 },
 			Principal = Color3.fromRGB(200, 182, 255), -- lila
 			Secundario = Color3.fromRGB(160, 231, 255), -- celeste
 			Cielo = {
@@ -306,13 +322,28 @@ local Config = {
 				Estrellas = 3000,
 			},
 		},
+		{
+			Nombre = "Espacio",
+			Tema = "Espacio",
+			Cancion = canciones[4],
+			Saltos = { Cada = 2, Hueco = 5 }, -- los saltos más difíciles
+			Principal = Color3.fromRGB(255, 255, 255),
+			Secundario = paleta.Amarillo,
+			Cielo = {
+				Atmosfera = Color3.fromRGB(8, 6, 20),
+				Decaimiento = Color3.fromRGB(5, 4, 13),
+				Densidad = 0.2,
+				LuzAmbiente = Color3.fromRGB(70, 65, 100),
+				Estrellas = 5000,
+			},
+		},
 	},
 	DuracionCambioCielo = 2, -- segundos que tarda el cielo en pasar de una zona a otra
 
 	-- La Espiral: la torre se genera con estos números y las canciones de Config.Zonas
 	-- (GeneradorTorre.luau, se corre en Studio). Medidas en studs; el centro de la torre es (0, 0).
 	Torre = {
-		ZonasConstruidas = 1, -- cuántas vueltas arma el generador (las demás esperan el OK)
+		ZonasConstruidas = 4, -- cuántas vueltas arma el generador
 		AlturaPlaza = 50, -- altura del piso de la plaza (donde se camina)
 		RadioPlaza = 45,
 		Radio = 50, -- radio del centro de la pista
@@ -342,7 +373,7 @@ local Config = {
 
 	-- Puertas: nivel mínimo para pasar cada una, en orden. Detrás de cada una hay un checkpoint.
 	-- Los checkpoints con número más alto que la cantidad de puertas (los del parkour) no piden nivel.
-	NivelPuertas = { 3, 5 },
+	NivelPuertas = { 3, 5, 7 },
 
 	-- Zonas bloqueadas (solo visual, por jugador): niebla opaca y candado hasta tener el nivel.
 	Bloqueos = {
@@ -465,6 +496,20 @@ local Config = {
 		GraciaError = 1.5, -- segundos: volver a la baldosa que acabás de prender no es error
 	},
 
+	-- Recompensas y festejos (que den ganas de seguir).
+	Recompensas = {
+		HitosCombo = { 10, 25, 50, 100 }, -- combos que se festejan con cartel, sonido y confeti
+		MonedasHito = 10, -- monedas por llegar a un hito de combo (por cada 10 de combo)
+		MonedasCancion = 60, -- monedas por completar una canción (por número de zona)
+		MultiplicadorPrimeraVez = 2, -- la primera vez que completás una canción, x2
+		MonedasDorada = 15, -- monedas por pisar la baldosa dorada (por número de zona)
+		DoradaAdelante = { 8, 16 }, -- la próxima dorada aparece entre 8 y 16 baldosas más adelante
+		DuracionCartel = 1.6, -- segundos que se ve el cartel de festejo
+		ConfetiHito = 40, -- partículas de confeti en un hito de combo
+		ConfetiCancion = 120, -- y al completar una canción
+		NumerosFlotantes = true, -- "+1" que salta sobre el personaje al sumar pasos
+	},
+
 	-- Parkour (lo mueve cada cliente; la lógica que importa sigue en el servidor)
 	Parkour = {
 		TiempoAntesDeDesaparecer = 0.5, -- segundos desde que la pisás hasta que se va
@@ -493,6 +538,8 @@ local Config = {
 		BrilloEncendida = 0.9,
 		FundidoEncendido = 0.5, -- segundos del fundido al encenderse
 		FundidoApagado = 1.5, -- segundos del fundido al apagarse
+		Destello = 0.35, -- al prenderse arranca casi blanco (0 = blanco, 1 = sin destello) y baja a su color
+		ColorDorada = Color3.fromRGB(255, 200, 40), -- baldosa dorada (da monedas)
 		BaldosasParaApagar = 10, -- se apaga después de pisar esta cantidad de baldosas nuevas
 		SegundosParaApagar = 60, -- o cuando pasaron estos segundos desde que la pisaste
 		MenosBaldosasPorNivel = 1, -- Apagado rápido: cada nivel le resta esto a BaldosasParaApagar

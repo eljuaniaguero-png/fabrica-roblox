@@ -32,6 +32,8 @@ type Baldosa = {
 -- por nombre completo (la clave), no por parte, así sobrevive a que la parte se vaya y vuelva.
 local baldosas: { [string]: Baldosa } = {}
 local prendidas: { [string]: boolean } = {}
+local doradaClave: string? = nil -- baldosa dorada actual
+local pintarDorada: (baldosa: Baldosa) -> ()
 local ultimaBaldosa: BasePart? = nil
 local ultimoAviso = 0 -- os.clock() del último aviso al servidor
 
@@ -48,6 +50,10 @@ local function fundir(baldosa: Baldosa, encendida: boolean)
 	end
 	baldosa.encendida = encendida
 	local brillo = if encendida then ajustes.BrilloEncendida else ajustes.BrilloApagada
+	if encendida then
+		-- Destello: arranca casi blanco y baja a su color (se siente el golpe de la pisada)
+		baldosa.parte.Color = Color3.new(1, 1, 1):Lerp(baldosa.base, ajustes.Destello)
+	end
 	local duracion = if encendida then ajustes.FundidoEncendido else ajustes.FundidoApagado
 	local fundido = TweenService:Create(
 		baldosa.parte,
@@ -70,6 +76,9 @@ local function registrar(parte: Instance)
 	baldosas[clave] = { parte = parte, base = parte.Color, encendida = encendida }
 	parte.Color =
 		atenuar(parte.Color, if encendida then ajustes.BrilloEncendida else ajustes.BrilloApagada)
+	if clave == doradaClave then
+		pintarDorada(baldosas[clave])
+	end
 end
 
 for _, parte in workspace:GetDescendants() do
@@ -85,7 +94,46 @@ workspace.DescendantRemoving:Connect(function(objeto)
 	end
 end)
 
+-- Baldosa dorada: late en dorado hasta que la pisás (da monedas; lo decide el servidor).
+pintarDorada = function(baldosa: Baldosa)
+	if baldosa.fundido then
+		baldosa.fundido:Cancel()
+	end
+	baldosa.parte.Color = ajustes.ColorDorada
+	local latido = TweenService:Create(
+		baldosa.parte,
+		TweenInfo.new(0.45, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut, -1, true),
+		{ Color = atenuar(ajustes.ColorDorada, 0.55) }
+	)
+	baldosa.fundido = latido
+	latido:Play()
+end
+
+local function soltarDorada()
+	local anterior = if doradaClave then baldosas[doradaClave] else nil
+	doradaClave = nil
+	if anterior then
+		if anterior.fundido then
+			anterior.fundido:Cancel()
+		end
+		local brillo = if anterior.encendida then ajustes.BrilloEncendida else ajustes.BrilloApagada
+		anterior.parte.Color = atenuar(anterior.base, brillo)
+	end
+end
+
 remotoBaldosa.OnClientEvent:Connect(function(accion: string, clave: string, nota: number?)
+	if accion == "dorada" then
+		soltarDorada()
+		doradaClave = clave
+		local baldosa = baldosas[clave]
+		if baldosa then
+			pintarDorada(baldosa)
+		end
+		return
+	end
+	if clave == doradaClave then
+		soltarDorada()
+	end
 	local encender = accion == "encender"
 	prendidas[clave] = if encender then true else nil
 	if encender and nota then

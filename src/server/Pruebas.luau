@@ -3,6 +3,7 @@
 -- dar monedas o pasos a un jugador. Los clientes no lo ven y en el juego publicado no existe.
 --   ServerStorage.Pruebas:Invoke("monedas", jugador, cantidad)
 --   ServerStorage.Pruebas:Invoke("pasos", jugador, cantidad)
+--   ServerStorage.Pruebas:Invoke("checkpoint", jugador, número)
 
 local RunService = game:GetService("RunService")
 local ServerStorage = game:GetService("ServerStorage")
@@ -29,6 +30,8 @@ function Pruebas.iniciar()
 		elseif accion == "pasos" then
 			perfil.PasosTotales += cantidad
 			Puertas.actualizarNivel(jugador)
+		elseif accion == "checkpoint" then
+			perfil.Checkpoint = cantidad
 		end
 		Velocidad.aplicar(jugador)
 		return "ok"
