@@ -7,7 +7,47 @@ Versión 4 (2026-10-06): Etapa 2 con los cambios del usuario: el rebirth da mone
 Versión 5 (2026-10-06): Etapa 3 con los cambios del usuario: arreglo de la música, piso que se ilumina, niveles por pasos, sensación de velocidad, vendedor y HUD nuevo.
 Versión 6 (2026-10-07): Etapa 4, bloques 1 y 2 (pedido del usuario): una canción por zona que sube de dificultad, pasos solo por baldosa apagada, baldosas usadas y zonas bloqueadas.
 Versión 7 (2026-10-07): Etapa 4, bloques 3 (tienda con tres pestañas) y 4 (mapa con paleta y cielo por zona).
-Próximo punto de control: **prototipo jugable terminado** (Etapas 1 a 4).
+Versión 8 (2026-10-07): **mapa nuevo, La Espiral** (pedido del usuario). Reemplaza el trazado anterior. Se construye primero la plaza y la zona 1; las zonas 2 a 4 esperan el OK del usuario.
+Próximo punto de control: **capturas de la plaza y la zona 1** (desde abajo, desde la pista y desde arriba).
+
+## La Espiral (versión 8, 2026-10-07)
+
+**Concepto**
+1. El mapa es una torre. La pista de baldosas sube en espiral alrededor de un eje central. Cada vuelta completa es una zona con su canción.
+2. Abajo de todo, una plaza central con el inicio, el vendedor, el portal de rebirth y un **tambor gigante** que es la base de la torre (el eje sale de su centro).
+3. Es de noche en todo el mapa: fondo oscuro para que las baldosas prendidas sean lo que más se ve.
+
+**Zonas, de abajo hacia arriba** (cada una con paleta, cielo y decoración propios, y **una baldosa por nota, en orden**)
+4. Zona 1 · Sala de ensayo — *Oda a la Alegría* (62 notas = 62 baldosas): madera, lámparas cálidas, parlantes y atriles.
+5. Zona 2 · Ciudad de noche — *Para Elisa* (35): terrazas de edificios, carteles de neón, antenas.
+6. Zona 3 · Sobre las nubes — *Marcha turca* (38): colores pastel, plataformas flotantes, luz de luna.
+7. Zona 4 · Espacio — canción a elegir (dominio público), con los saltos más difíciles: estrellas y anillos de luz.
+
+**Bloqueo**
+8. Una capa de nubes densa tapa todo lo que está por encima de la última zona desbloqueada. Al abrir la puerta, las nubes de esa zona se disuelven.
+9. El candado y el nivel van sobre la puerta, como antes.
+
+**Comodidad**
+10. Si te caés, caés a la vuelta de abajo y reaparecés en el último checkpoint.
+11. En cada checkpoint, un tubo de luz que te baja a la plaza; en la plaza, otro que te devuelve a tu checkpoint.
+12. El eje central es una columna que se enciende por tramos (uno por zona) a medida que completás canciones. Se ve desde cualquier zona.
+
+**Reglas**
+13. El mapa se genera desde los datos de las canciones (`Config.Torre` + `Config.Zonas`), no a mano: sumar una zona = sumar una canción y su estilo.
+14. Probar que los saltos salen con la velocidad máxima de cada nivel y que la cámara no se traba contra la torre al girar.
+15. Fluido en celular: piezas simples y pocas luces dinámicas.
+
+### Decisiones de La Espiral (eran ambiguas, elegí la más simple)
+
+- **Geometría**: todas las vueltas tienen el mismo radio (la torre es un cilindro). El largo de cada baldosa sale de repartir la vuelta entre las notas de la canción: más notas = baldosas más cortas = ritmo más rápido. Cada vuelta sube un poco, y entre zona y zona hay una **escalera** corta que atraviesa la capa de nubes. Así las nubes separan bien una zona de la otra (si no, el principio de la zona de arriba quedaría a la vista).
+- **Puerta**: al pie de la escalera, debajo de las nubes, con su candado. El checkpoint de la zona nueva está arriba de la escalera.
+- **Nota de cada baldosa**: cada baldosa toca *su* nota (la nota N de la canción es la baldosa N). Caminando la espiral en orden suena la melodía entera.
+- **Canción completa**: pisar seguidas todas las baldosas de la zona, de la 1 a la última, sin saltear ninguna. Al completarla se prende su tramo de la columna (queda guardado) y aparece un aviso.
+- **Caída**: es caída si aterrizás más de `Config.Torre.CaidaMinima` studs más abajo de donde estabas parado (o si caés al vacío). Bajar caminando por la espiral no cuenta.
+- **Tubos**: se usan con "Bajar a la plaza" / "Volver al checkpoint" (ProximityPrompt), con un destello en pantalla.
+- **Zona 4**: la canción se elige cuando se construya (por ejemplo *En la gruta del rey de la montaña*, Grieg, 1876).
+- **Mapa viejo**: se guarda en `ServerStorage.Retirado_MapaViejo` (no se borra). Puerta, candado, niebla y checkpoint se usan como plantillas (`ServerStorage.Plantillas`).
+- **Cómo se construye**: `src/server/GeneradorTorre.luau` arma la torre desde Config. Se corre en Studio por MCP (el mapa queda guardado en el lugar) y se puede volver a correr para regenerar.
 
 ## Etapa 4, bloques 3 y 4 (2026-10-07)
 
@@ -195,7 +235,7 @@ Obby incremental: cada paso te da velocidad y pasos, cada baldosa que pisás se 
 - Inventario: máximo 9 de cada consumible.
 - Comprar y agarrar consumibles es determinista: nada de cajas ni azar.
 
-## Mundo
+## Mundo (mapa viejo, hasta la versión 7 — reemplazado por La Espiral)
 
 - Anillo 1 (36 baldosas) con el spawn al sur.
 - Camino → Puerta 1 (nivel 3) → Checkpoint 1.
@@ -228,14 +268,24 @@ Obby incremental: cada paso te da velocidad y pasos, cada baldosa que pisás se 
 
 ## Guía de estilo
 
-**Elegida: A — Neón nocturno.** Respetarla en todo el juego:
+**Versión La Espiral (2026-10-07).** Base: Neón nocturno. Cada zona cambia de paleta y de materiales, pero todas comparten estas reglas:
 
-- Paleta: #FF3CAC rosa, #2BD2FF cian, #7B2FF7 violeta, #FFE45E amarillo, #14112B fondo.
-- Baldosas: cuadradas y finas, material Neon sobre base de vidrio oscuro.
-- Puertas y checkpoints: marcos de neón (puertas rosa, checkpoints cian, meta amarilla).
-- Luz: noche (ClockTime 0), bruma violeta, mucho bloom.
+- **Noche siempre** (ClockTime 0). El fondo es oscuro y poco saturado; lo que más brilla son las **baldosas prendidas**. Las apagadas se leen, pero bajas.
+- Baldosas: material Neon, finas, sobre una base oscura un poco más ancha (se lee el camino aunque esté apagado). Bordes del camino: línea fina y tenue del color secundario de la zona.
+- La decoración usa materiales mate (madera, concreto, plástico liso). El neón de la decoración es poco y chico: carteles, lámparas, filos.
+- Pocas luces dinámicas: como mucho 1 cada ~8 baldosas, sin sombras.
+- Puertas: marco de neón rosa con candado; checkpoints: aro cian; tubos de luz: cilindro cian translúcido.
 - Fuente de la UI: Michroma.
-- Cada zona usa dos colores de la paleta (zona 1 cian + violeta, zona 2 rosa + violeta, zona 3 amarillo + rosa) y su propio cielo.
+
+| Zona | Baldosas (principal / secundario) | Decoración | Cielo y luz |
+|---|---|---|---|
+| Plaza | — (piso de piedra oscura #2A2433, filo ámbar) | Tambor gigante (cuero crema #E9D8B4, aros dorados #D9A441, cuerpo bordó #7A1F3D) | Noche cálida, bruma marrón violácea |
+| 1 · Sala de ensayo | Ámbar #FFB347 / coral #FF7A59 | Madera #6B4226 (WoodPlanks), lámparas cálidas #FFD8A0, parlantes negros #1B1B1F, atriles de metal #8A8A96 | Bruma marrón #3A2418, luz ambiente cálida baja |
+| 2 · Ciudad de noche | Rosa #FF3CAC / cian #2BD2FF | Concreto #2E2E3A, carteles de neón rosa/cian/violeta, antenas con luz roja | Bruma violeta #2A1840 |
+| 3 · Sobre las nubes | Lila #C8B6FF / celeste #A0E7FF | Nubes #E8E6F5, plataformas blancas, luna #F5F3FF | Azul noche #1C2340, luz de luna fría |
+| 4 · Espacio | Blanco #FFFFFF / amarillo #FFE45E | Anillos de luz cian #2BD2FF y violeta #7B2FF7, planetas | Negro #05040D, muchas estrellas |
+
+Anterior (hasta la versión 7): Neón nocturno puro (#FF3CAC rosa, #2BD2FF cian, #7B2FF7 violeta, #FFE45E amarillo, #14112B fondo).
 
 Las muestras quedaron guardadas en `ServerStorage.MuestrasEstilo` (fuera del mapa). Puertas: rosa si te falta velocidad, cian si ya pasás. Bases de vidrio oscuro debajo de cada baldosa en `Pista.Bases`.
 

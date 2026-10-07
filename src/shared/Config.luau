@@ -271,7 +271,7 @@ local Config = {
 			Cielo = {
 				Atmosfera = Color3.fromRGB(90, 130, 210), -- color de la bruma
 				Decaimiento = Color3.fromRGB(70, 90, 190), -- color del horizonte
-				Densidad = 0.25,
+				Densidad = 0.18,
 				LuzAmbiente = Color3.fromRGB(150, 180, 230),
 				Estrellas = 3000,
 			},
@@ -284,7 +284,7 @@ local Config = {
 			Cielo = {
 				Atmosfera = Color3.fromRGB(190, 90, 175),
 				Decaimiento = Color3.fromRGB(140, 60, 160),
-				Densidad = 0.25,
+				Densidad = 0.18,
 				LuzAmbiente = Color3.fromRGB(215, 160, 210),
 				Estrellas = 1500,
 			},
@@ -297,7 +297,7 @@ local Config = {
 			Cielo = {
 				Atmosfera = Color3.fromRGB(210, 150, 90),
 				Decaimiento = Color3.fromRGB(160, 90, 120),
-				Densidad = 0.25,
+				Densidad = 0.18,
 				LuzAmbiente = Color3.fromRGB(225, 195, 165),
 				Estrellas = 500,
 			},
