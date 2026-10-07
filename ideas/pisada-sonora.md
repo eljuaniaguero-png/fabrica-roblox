@@ -126,7 +126,7 @@ Obby incremental: cada paso te da velocidad y pasos, cada baldosa que pisás se 
 - Camino → Puerta 1 (nivel 3) → Checkpoint 1.
 - Tramo de saltos (5 plataformas).
 - Anillo 2 (28 baldosas).
-- Plaza del inicio (al sur del spawn): vendedor Don Compás con su mostrador (bajo el cartel "TIENDA") y portal de rebirth. Los 4 puestos viejos están en `ServerStorage.Retirado_PuestosTienda`.
+- Plaza del inicio (al sur del spawn): vendedor Don Compás con su mostrador (bajo el cartel "TIENDA"), una luz suave encima (`LuzVendedor`, para que se vea de noche) y portal de rebirth. Los 4 puestos viejos están en `ServerStorage.Retirado_PuestosTienda`.
 - Tramo de saltos: la plataforma 2 se mueve de costado y la 4 desaparece al pisarla.
 - Camino → Puerta 2 (nivel 5) → Checkpoint 2.
 - Tramo 3 (parkour): cinta → trampolín → Checkpoint 3 (arriba) → 4 baldosas que desaparecen → plaza con barra giratoria → 2 plataformas móviles → viga angosta → Meta.
