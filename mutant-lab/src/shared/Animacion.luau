@@ -22,6 +22,8 @@ export type Estado = {
 	Rasgo: number,
 	Transparencias: { [BasePart]: number },
 	Colores: { [BasePart]: Color3 }?, -- solo mutantes: colores originales para hacerlos cambiar
+	Anillo: BasePart?, -- el anillo de luz queda en el piso aunque la criatura salte
+	AnilloRel: CFrame,
 	Paseo: Paseo?, -- solo criaturas de un corral
 }
 
@@ -74,7 +76,9 @@ local VELOCIDAD_TORNASOL = 0.12
 
 function Animacion.preparar(modelo: Model): Estado
 	local transparencias = {}
-	local colores: { [BasePart]: Color3 }? = if modelo:GetAttribute("Mutante") then {} else nil
+	local colores: { [BasePart]: Color3 }? = if A.Tornasol and modelo:GetAttribute("Mutante")
+		then {}
+		else nil
 	for _, d in modelo:GetDescendants() do
 		if d:IsA("BasePart") and d.Name ~= "Raiz" then
 			transparencias[d] = d.Transparency
@@ -85,6 +89,8 @@ function Animacion.preparar(modelo: Model): Estado
 			end
 		end
 	end
+	local base = modelo:GetPivot()
+	local anillo = modelo:FindFirstChild("Anillo") :: BasePart?
 	local zona = modelo:GetAttribute("ZonaCFrame") :: CFrame?
 	local tamano = modelo:GetAttribute("ZonaTamano") :: Vector3?
 	local paseo: Paseo? = nil
@@ -99,11 +105,13 @@ function Animacion.preparar(modelo: Model): Estado
 	end
 	return {
 		Modelo = modelo,
-		Base = modelo:GetPivot(),
+		Base = base,
 		Fase = math.random() * 10,
 		Rasgo = (modelo:GetAttribute("Rasgo") :: number?) or 0,
 		Transparencias = transparencias,
 		Colores = colores,
+		Anillo = anillo,
+		AnilloRel = if anillo then base:ToObjectSpace(anillo.CFrame) else CFrame.identity,
 		Paseo = paseo,
 	}
 end
@@ -140,6 +148,10 @@ function Animacion.paso(e: Estado, reloj: number, dt: number)
 
 	local bamboleo = math.sin(fase) * A.Bamboleo
 	e.Modelo:PivotTo(e.Base * CFrame.new(0, alto, 0) * CFrame.Angles(0, giroY, bamboleo))
+	local anillo = e.Anillo
+	if anillo then
+		anillo.CFrame = e.Base * e.AnilloRel
+	end
 
 	if e.Rasgo == RASGO_TRANSPARENTE then
 		local nivel = pulso(t, 4, 2) * 0.65

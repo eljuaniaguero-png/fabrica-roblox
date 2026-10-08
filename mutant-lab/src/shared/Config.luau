@@ -103,9 +103,25 @@ local Config = {
 		ProfundidadEntierro = 1.6,
 		VelocidadPaseo = 3.5, -- studs por segundo cuando caminan por el corral
 		PausaPaseo = { 0.6, 3 }, -- segundos que se quedan quietas entre paseo y paseo (mínimo, máximo)
+		Tornasol = false, -- mutantes con colores que cambian (la guía de estilo los quiere dorados)
 	},
 
-	-- Guía de estilo: Laboratorio caramelo (versión saturada)
+	-- Forma de las criaturas (guía de estilo, punto 5): estilo chibi, la cabeza ocupa la
+	-- mitad de la altura. Las piezas se arman como siempre y después el generador achica
+	-- el cuerpo desde el piso y agranda la cabeza alrededor de su centro.
+	Criaturas = {
+		EscalaCuerpo = 0.78, -- cuerpo, patas, cola y alas
+		EscalaCabeza = 1.45,
+		CentroCabeza = Vector3.new(0, 3.45, -1.05), -- adónde va el centro de la cabeza agrandada
+		Escala = 0.85, -- escala final de toda la criatura (mediana: unos 4,5 studs)
+		Gema = 0.75, -- diámetro de la gema de Neon con el color del elemento
+		GemaMutante = 1.15,
+		Anillo = 3.8, -- diámetro del anillo de luz bajo los pies
+		DistanciaIcono = 20, -- el ícono de personalidad se ve a menos de esto
+	},
+
+	-- Estilo anterior (Laboratorio caramelo). Los colores nuevos están en Paleta.luau;
+	-- esto se va cuando la guía nueva esté aplicada a todo el juego.
 	Estilo = {
 		Piso = Color3.fromHex("FFF4E0"),
 		Menta = Color3.fromHex("3EE6B5"),

@@ -7,11 +7,14 @@
 --   cola: sale de (0, 2.8, 1.55)
 --   alas: a los costados del lomo
 
+local Paleta = require(script.Parent.Paleta)
+
 export type Ctx = {
 	Modelo: Model,
 	Origen: CFrame,
 	Color: Color3,
 	Manchas: Color3,
+	Personalidad: string?, -- cambia los ojos (ver `ojo`)
 }
 
 type Constructor = (ctx: Ctx) -> ()
@@ -85,18 +88,54 @@ local function neon(p: BasePart): BasePart
 	return p
 end
 
--- Ojos grandes y brillantes: lo que más hace "tierna" a una criatura.
--- El borde oscuro hace que el ojo se lea también sobre cabezas blancas o claras.
-local function ojo(ctx: Ctx, pos: Vector3, tam: number)
-	bola(ctx, pos + Vector3.new(0, 0, 0.12), tam * 1.14, NEGRO)
-	bola(ctx, pos, tam, BLANCO)
-	bola(ctx, pos + Vector3.new(0, 0, -tam * 0.32), tam * 0.55, NEGRO)
-	neon(bola(ctx, pos + Vector3.new(tam * 0.12, tam * 0.14, -tam * 0.5), tam * 0.18, BLANCO))
+-- Las partes de los ojos llevan nombre para que el generador no las pinte ni las apague.
+local function nombrar(p: BasePart, nombre: string): BasePart
+	p.Name = nombre
+	return p
+end
+
+-- Ojos grandes: lo que más hace "tierna" a una criatura. Esfera blanca, pupila negra y un
+-- punto de brillo; el borde oscuro hace que se lean también sobre cabezas blancas.
+-- La personalidad los cambia (guía, punto 5): Alegre, arqueados de felicidad; Vaga, párpados
+-- a media altura; Peleadora, cejas en ángulo; Miedosa, pupilas chiquitas; Curiosa, un ojo
+-- más grande que el otro. `lado` es -1 o 1 (izquierdo o derecho) y 0 para un ojo del medio.
+local function ojo(ctx: Ctx, pos: Vector3, tam: number, lado: number)
+	local personalidad = ctx.Personalidad
+	if personalidad == "Curiosa" and lado ~= 0 then
+		tam *= if lado < 0 then 1.25 else 0.85
+	end
+	local pupila = if personalidad == "Miedosa" then 0.26 else 0.55
+	nombrar(bola(ctx, pos + Vector3.new(0, 0, 0.12), tam * 1.14, NEGRO), "Ojo")
+	nombrar(bola(ctx, pos, tam, BLANCO), "Ojo")
+	nombrar(bola(ctx, pos + Vector3.new(0, 0, -tam * 0.32), tam * pupila, NEGRO), "Ojo")
+	nombrar(
+		neon(bola(ctx, pos + Vector3.new(tam * 0.12, tam * 0.14, -tam * 0.5), tam * 0.18, BLANCO)),
+		"Brillo"
+	)
+	if personalidad == "Vaga" then
+		-- Párpado del color de la cabeza que tapa la mitad de arriba.
+		bola(ctx, pos + Vector3.new(0, tam * 0.5, -tam * 0.08), tam * 1.2)
+	elseif personalidad == "Alegre" then
+		-- Cachete que sube y deja el ojo como un arco.
+		bola(ctx, pos + Vector3.new(0, -tam * 0.62, -tam * 0.1), tam * 1.12)
+	elseif personalidad == "Peleadora" and lado ~= 0 then
+		-- Ceja inclinada hacia el centro de la cara.
+		nombrar(
+			bloque(
+				ctx,
+				CFrame.new(pos + Vector3.new(0, tam * 0.66, -tam * 0.4))
+					* CFrame.Angles(0, 0, math.rad(lado * 28)),
+				Vector3.new(tam * 1.05, tam * 0.24, tam * 0.3),
+				NEGRO
+			),
+			"Ceja"
+		)
+	end
 end
 
 local function ojos(ctx: Ctx, centro: Vector3, radio: number, separacion: number, tam: number)
 	for _, s in { -1, 1 } do
-		ojo(ctx, centro + Vector3.new(s * separacion, 0.1, -radio * 0.8), tam)
+		ojo(ctx, centro + Vector3.new(s * separacion, 0.1, -radio * 0.8), tam, s)
 	end
 end
 
@@ -259,9 +298,9 @@ cabezas[10] = function(ctx)
 	for _, s in { -1, 1 } do
 		cunia(ctx, CFrame.new(c + Vector3.new(s * 0.55, 0.95, 0.1)), Vector3.new(0.28, 0.85, 0.6))
 	end
-	ojo(ctx, c + Vector3.new(-0.38, 0.05, -0.68), 0.4)
-	ojo(ctx, c + Vector3.new(0.38, 0.05, -0.68), 0.4)
-	ojo(ctx, c + Vector3.new(0, 0.45, -0.7), 0.4)
+	ojo(ctx, c + Vector3.new(-0.38, 0.05, -0.68), 0.4, -1)
+	ojo(ctx, c + Vector3.new(0.38, 0.05, -0.68), 0.4, 1)
+	ojo(ctx, c + Vector3.new(0, 0.45, -0.7), 0.4, 0)
 end
 
 ---------------------------------------------------------------------------
@@ -768,9 +807,9 @@ end
 
 rasgos[10] = function() end -- semitransparente: lo hace la animación
 
--- Estrellitas doradas de la versión mutante.
+-- Brillo dorado de la versión mutante.
 function Piezas.estrellas(raiz: BasePart)
-	particulas(raiz, Vector3.new(0, 3, 0), Color3.fromHex("FFE680"), {
+	particulas(raiz, Vector3.new(0, 3, 0), Paleta.Mutante, {
 		LightEmission = 1,
 		Size = NumberSequence.new({
 			NumberSequenceKeypoint.new(0, 0),
