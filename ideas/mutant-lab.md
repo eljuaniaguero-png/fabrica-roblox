@@ -6,7 +6,8 @@ Estado: versión 1 (2026-10-07), aprobada con el pedido de la Parte 1.
 Versión 2 (2026-10-07): **Parte 1 hecha.** Estilo elegido por el usuario: "el que más le gusta a los nenes y el más dopamínico" → **A, Laboratorio caramelo, en versión saturada** (ver "Guía de estilo"). Cambió la regla de colores de la fusión (ver "Ajustes de la Parte 1").
 Versión 3 (2026-10-07): **Parte 2 hecha** (máquina de fusión). Ver "Notas de la Parte 2".
 Versión 4 (2026-10-07): **Parte 3 hecha** (Mutadex). Ver "Notas de la Parte 3".
-Próximo punto de control: **Parte 4, laboratorio y economía** (esperando el OK del usuario).
+Versión 5 (2026-10-08): **Parte 4 hecha** (laboratorio y economía). Ver "Notas de la Parte 4".
+Próximo punto de control: **Parte 5, guardado, balance y pulido** (esperando el OK del usuario).
 
 ## Guía de estilo (elegida: A, Laboratorio caramelo saturado)
 
@@ -49,6 +50,36 @@ Próximo punto de control: **Parte 4, laboratorio y economía** (esperando el OK
 - **Celular**: se probó simulando una pantalla de 844×390 apaisada. Las tarjetas (86×106), los nombres y el botón de pista se leen bien, y la lista se desplaza.
 - **Herramienta de prueba**: en modo prueba existe `ServerStorage.Prueba.DarEspecies` para darle especies a un jugador sin fusionar. Sirvió para probar la Mutadex con muchas especies y desaparece al apagar el modo prueba.
 - **Probado en playtest**: con pocas especies (11 y 12 de 50) y con muchas (47 de 50). Se completó la gen 2 con una fusión real (premio de 10.000 y cartel) y después la gen 3, hasta el cartel de Mutadex completa en 50 / 50.
+
+## Notas de la Parte 4 (laboratorio y economía)
+
+- **Mapa**: una calle con 4 laboratorios en fila (`Laboratorios > Lab1..Lab4`) sobre un suelo lavanda. Cada laboratorio tiene la máquina en el centro, 4 corrales (2 a cada lado), una tienda con toldo a rayas, el lugar donde aparecés y un arco en la entrada con el cartel "Laboratorio de (tu nombre)". La vitrina y la máquina sueltas de las partes anteriores quedaron guardadas en `ServerStorage > Archivo`.
+- **Un laboratorio por jugador**: el servidor le da al que entra el primer laboratorio libre, lo lleva a la entrada y pone su nombre en el cartel. Cuando se va, el laboratorio queda libre. Cada jugador solo puede usar su máquina y su tienda. El servidor debería ser de **4 jugadores como máximo**: eso lo cambia el usuario en la configuración del juego.
+- **Corrales**: las criaturas que trabajan caminan por su corral (van a un punto al azar, paran un rato y siguen). Hay un **tope**: 4 criaturas por corral y arrancás con 1 corral abierto. Trabajan las de mayor generación; las demás quedan en la colección (Mutadex y panel). Los corrales cerrados se ven grises con un cartel "🔒 Se abre en la tienda".
+- **ADN por segundo**: 1 por base, 2 por gen 2 y 6 por gen 3, solo de las que trabajan. Se ve en el HUD ("+9/s") y con un "+N" que sube sobre cada criatura cada 3 segundos.
+- **Tienda** (mostrador con la E): pestaña **Especies base**, donde elegís cuál comprar (sin azar) y el precio sube con cada una: 50, 120, 300, 800, 2.000, 5.000, 12.000 y 30.000. Pestaña **Mejoras**: *Más corrales* (150 / 1.500 / 8.000), *Fusión rápida* (250 / 1.500 / 6.000, la máquina dura 80 %, 65 % y 50 %) y *Nutrientes* (+25 % de ADN por nivel: 200 / 800 / 3.000 / 10.000 / 30.000). Todo está en `Config.luau`.
+- **Arranque nuevo**: se apagó el modo prueba. El jugador nuevo empieza con **2 bases (Glupona y Rámulo) y 30 ADN**. El premio mínimo por descubrir bajó a 10, para que la primera fusión no deje ganancia.
+- **Arreglo**: las criaturas que crea el servidor a veces avisaban que llegaron antes que sus piezas y arrancaban a caminar desde el centro del mapa. Ahora el cliente espera la pieza raíz antes de animarlas.
+
+### Prueba de 5 minutos como jugador nuevo (2026-10-08)
+
+La jugó un jugador automático que **no conoce la regla**: prueba al azar parejas que todavía no probó (solo mezclas de generaciones que pueden reaccionar), compra la base vecina cuando le alcanza, abre un corral cuando se llena y tarda 3 segundos en elegir cada fusión, además de mirar la animación entera. Arrancó con unos 20 ADN extra, porque el juego ya corría unos segundos antes de que empezara.
+
+| Minuto | Especies | ADN | ADN/s | Trabajan |
+|---|---|---|---|---|
+| 1 | 6 | 203 | 9 | 6 de 8 |
+| 2 | 10 | 625 | 22 | 8 de 8 |
+| 3 | 13 | 1.628 | 24 | 8 de 8 |
+| 4 | 16 | 1.854 | 35 | 12 de 12 |
+| 5 | **17** | 2.739 | 35 | 12 de 12 |
+
+- **17 especies a los 5 minutos**: 6 bases compradas o iniciales, 8 de gen 2 y 3 de gen 3 (la 18.ª salió a los 5:00,3).
+- Hizo 42 intentos de fusión: 12 especies nuevas, 3 repetidas y 27 que no reaccionaron. Compró 6 cosas: 4 bases y 2 corrales.
+- **Lo que mostró**:
+  - Al jugador nuevo no lo frena el ADN, lo frena saber qué combinar: le sobraron unos 2.700 ADN. Eso es bueno para la pregunta del prototipo, pero entonces las pistas tienen que ser la salida natural de ese ADN. Revisar en la Parte 5 si conviene subir precios o hacer más visible el botón de pistas.
+  - Dos de cada tres intentos no reaccionaron, sobre todo los de gen 2 + base. Leer la nota de la rueda en la Mutadex ayuda mucho.
+  - Pagó 3 veces por una gen 3 que ya tenía, llegando por otro camino (por ejemplo Ratomi + Glupona después de Glumulo + Sutomi). Idea para la Parte 5: que el panel avise "ya la tenés" antes de fusionar.
+  - El piso crema del laboratorio se ve casi blanco con esta luz: revisar en el pulido.
 
 ## La idea en una línea
 
@@ -255,7 +286,7 @@ Cómo lo vamos a mirar en el playtest:
 - [x] **Parte 1 - Criaturas por piezas** (hecha el 2026-10-07): carpeta del juego, módulo de especies (tabla de las 10 bases y regla de herencia), armado de una criatura a partir de sus piezas, las 50 generadas y revisadas en una captura.
 - [x] **Parte 2 - Máquina de fusión** (hecha el 2026-10-07): dos cápsulas, validación en el servidor (reacciona / no reacciona), animación de suspenso, aparición de la especie y tirada del mutante.
 - [x] **Parte 3 - Mutadex** (hecha el 2026-10-07): UI con las 50 siluetas alrededor de la rueda, generación, casilla mutante, cuaderno de parejas tachadas y escáner.
-- [ ] **Parte 4 - Laboratorio y economía**: el mapa del laboratorio, criaturas paseando, ADN por segundo, terminal para comprar bases y mejoras.
+- [x] **Parte 4 - Laboratorio y economía** (hecha el 2026-10-08): el mapa del laboratorio, criaturas paseando, ADN por segundo, terminal para comprar bases y mejoras.
 - [ ] **Parte 5 - Guardado, balance y pulido**: DataStore, ajuste de números con playtest de 10 minutos, sonidos (`-- SONIDO:`), legibilidad en celular.
 - [ ] **Parte 6 - Compras con Robux**: solo cosas que no son azar. Ideas: pase "Doble ADN", pase "Segunda máquina" (dos fusiones a la vez), colores del laboratorio. Nada de cajas sorpresa ni subir la chance de mutante. Es punto de control: los pases los crea y les pone precio el usuario.
 
