@@ -7,14 +7,16 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Fusion = require(ReplicatedStorage.Shared.Fusion)
 local Celebracion = require(script.Parent.Celebracion)
 local EfectosMaquina = require(script.Parent.EfectosMaquina)
+local MiLab = require(script.Parent.MiLab)
 local PanelFusion = require(script.Parent.PanelFusion)
 
 local remotos = ReplicatedStorage:WaitForChild("Remotos")
 local pedirFusion = remotos:WaitForChild("PedirFusion") :: RemoteEvent
 local resultadoFusion = remotos:WaitForChild("ResultadoFusion") :: RemoteEvent
 local celebracionEvento = remotos:WaitForChild("Celebracion") :: RemoteEvent
-local prompt = workspace
-	:WaitForChild("Laboratorio")
+-- Solo se usa la máquina de tu laboratorio; los botones de los demás se apagan.
+MiLab.apagarAjenos()
+local prompt = MiLab.obtener()
 	:WaitForChild("Maquina")
 	:WaitForChild("Consola")
 	:WaitForChild("Prompt") :: ProximityPrompt

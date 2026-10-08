@@ -9,6 +9,7 @@ local ServerStorage = game:GetService("ServerStorage")
 local Players = game:GetService("Players")
 
 local Config = require(ReplicatedStorage.Shared.Config)
+local Corrales = require(script.Parent.Corrales)
 local Jugadores = require(script.Parent.Jugadores)
 
 if Config.Prueba.Activo then
@@ -26,6 +27,7 @@ if Config.Prueba.Activo then
 			d.Especies[clave] = true
 		end
 		Jugadores.publicar(jugador)
+		Corrales.actualizar(jugador)
 		return Jugadores.cantidadEspecies(d)
 	end
 	dar.Parent = carpeta

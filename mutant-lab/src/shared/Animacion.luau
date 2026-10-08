@@ -2,6 +2,8 @@
 -- Una sola animación para todas las criaturas: saltitos con bamboleo.
 -- Algunos rasgos la cambian: flota (sin saltos), rueda (da una vuelta) y
 -- se entierra (baja al piso y vuelve). Se mueve todo el modelo con PivotTo.
+-- Si el modelo tiene los atributos ZonaCFrame y ZonaTamano (criaturas de un corral),
+-- además camina: va a un punto al azar de la zona, se queda un rato y elige otro.
 
 local Config = require(script.Parent.Config)
 
@@ -20,9 +22,52 @@ export type Estado = {
 	Rasgo: number,
 	Transparencias: { [BasePart]: number },
 	Colores: { [BasePart]: Color3 }?, -- solo mutantes: colores originales para hacerlos cambiar
+	Paseo: Paseo?, -- solo criaturas de un corral
+}
+
+type Paseo = {
+	Zona: CFrame, -- centro de la zona, a la altura del piso
+	Tamano: Vector3,
+	Pos: Vector3,
+	Destino: Vector3?,
+	Espera: number,
 }
 
 local Animacion = {}
+
+local azar = Random.new()
+
+local function puntoAlAzar(p: Paseo): Vector3
+	local x = (azar:NextNumber() - 0.5) * p.Tamano.X
+	local z = (azar:NextNumber() - 0.5) * p.Tamano.Z
+	return (p.Zona * CFrame.new(x, 0, z)).Position
+end
+
+-- Camina hacia el destino. Devuelve el nuevo "Base" (posición + hacia dónde mira).
+local function caminar(e: Estado, p: Paseo, dt: number): CFrame
+	if p.Espera > 0 then
+		p.Espera -= dt
+		return e.Base
+	end
+	local destino = p.Destino
+	if not destino then
+		destino = puntoAlAzar(p)
+		p.Destino = destino
+	end
+	local delta = (destino :: Vector3) - p.Pos
+	delta = Vector3.new(delta.X, 0, delta.Z)
+	if delta.Magnitude < 0.3 then
+		p.Destino = nil
+		p.Espera = azar:NextNumber(A.PausaPaseo[1], A.PausaPaseo[2])
+		return e.Base
+	end
+	local direccion = delta.Unit
+	p.Pos += direccion * math.min(delta.Magnitude, A.VelocidadPaseo * dt)
+	-- El frente de la criatura es -Z: lookAt la deja mirando hacia donde camina. Gira suave.
+	local mirando = CFrame.lookAt(p.Pos, p.Pos + direccion)
+	local giro = e.Base.Rotation:Lerp(mirando.Rotation, math.min(1, dt * 6))
+	return CFrame.new(p.Pos) * giro
+end
 
 -- Velocidad del cambio de colores de los mutantes (vueltas a la rueda de colores por segundo).
 local VELOCIDAD_TORNASOL = 0.12
@@ -40,6 +85,18 @@ function Animacion.preparar(modelo: Model): Estado
 			end
 		end
 	end
+	local zona = modelo:GetAttribute("ZonaCFrame") :: CFrame?
+	local tamano = modelo:GetAttribute("ZonaTamano") :: Vector3?
+	local paseo: Paseo? = nil
+	if zona and tamano then
+		paseo = {
+			Zona = zona,
+			Tamano = tamano,
+			Pos = modelo:GetPivot().Position,
+			Destino = nil,
+			Espera = azar:NextNumber(0, 2),
+		}
+	end
 	return {
 		Modelo = modelo,
 		Base = modelo:GetPivot(),
@@ -47,6 +104,7 @@ function Animacion.preparar(modelo: Model): Estado
 		Rasgo = (modelo:GetAttribute("Rasgo") :: number?) or 0,
 		Transparencias = transparencias,
 		Colores = colores,
+		Paseo = paseo,
 	}
 end
 
@@ -59,7 +117,10 @@ local function pulso(t: number, cada: number, duracion: number): number
 	return math.sin(x / duracion * math.pi)
 end
 
-function Animacion.paso(e: Estado, reloj: number)
+function Animacion.paso(e: Estado, reloj: number, dt: number)
+	if e.Paseo then
+		e.Base = caminar(e, e.Paseo, dt)
+	end
 	local t = reloj + e.Fase
 	local fase = t / A.PeriodoSalto * math.pi
 	local alto = math.abs(math.sin(fase)) * A.AlturaSalto

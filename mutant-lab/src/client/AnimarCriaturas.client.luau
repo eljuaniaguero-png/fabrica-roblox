@@ -10,24 +10,40 @@ local Animacion = require(ReplicatedStorage.Shared.Animacion)
 local estados: { [Model]: Animacion.Estado } = {}
 
 local function agregar(inst: Instance)
-	if inst:IsA("Model") and inst:IsDescendantOf(workspace) then
-		estados[inst] = Animacion.preparar(inst)
+	if not inst:IsA("Model") or not inst:IsDescendantOf(workspace) then
+		return
 	end
+	-- Las criaturas que crea el servidor pueden avisar que llegaron antes que sus piezas:
+	-- sin la raíz, el pivote da el centro del mapa. Se espera a la raíz y un ratito más
+	-- para que lleguen las demás piezas (las usan los rasgos y los mutantes).
+	if not inst.PrimaryPart then
+		local inicio = os.clock()
+		repeat
+			task.wait()
+		until inst.PrimaryPart or not inst.Parent or os.clock() - inicio > 5
+		if not inst.PrimaryPart or not inst.Parent then
+			return
+		end
+		task.wait(0.1)
+	end
+	estados[inst] = Animacion.preparar(inst)
 end
 
-CollectionService:GetInstanceAddedSignal("Criatura"):Connect(agregar)
+CollectionService:GetInstanceAddedSignal("Criatura"):Connect(function(inst)
+	task.spawn(agregar, inst)
+end)
 CollectionService:GetInstanceRemovedSignal("Criatura"):Connect(function(inst)
 	estados[inst :: Model] = nil
 end)
 for _, inst in CollectionService:GetTagged("Criatura") do
-	agregar(inst)
+	task.spawn(agregar, inst)
 end
 
-RunService.RenderStepped:Connect(function()
+RunService.RenderStepped:Connect(function(dt: number)
 	local reloj = os.clock()
 	for modelo, estado in estados do
 		if modelo.Parent then
-			Animacion.paso(estado, reloj)
+			Animacion.paso(estado, reloj, dt)
 		else
 			estados[modelo] = nil
 		end

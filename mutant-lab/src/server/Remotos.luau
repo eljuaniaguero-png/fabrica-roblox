@@ -19,6 +19,7 @@ local Remotos = {
 	Celebracion = evento("Celebracion"), -- servidor -> cliente: Fusion.Celebracion
 	ComprarPista = evento("ComprarPista"), -- cliente -> servidor: (clave)
 	Aviso = evento("Aviso"), -- servidor -> cliente: texto corto para mostrar
+	Comprar = evento("Comprar"), -- cliente -> servidor: ("Base", número) o ("Mejora", nombre)
 }
 
 carpeta.Parent = ReplicatedStorage

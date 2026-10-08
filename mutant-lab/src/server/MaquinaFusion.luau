@@ -7,7 +7,9 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Config = require(ReplicatedStorage.Shared.Config)
 local Costos = require(ReplicatedStorage.Shared.Costos)
 local Fusion = require(ReplicatedStorage.Shared.Fusion)
+local Mejoras = require(ReplicatedStorage.Shared.Mejoras)
 local Coleccion = require(script.Parent.Coleccion)
+local Corrales = require(script.Parent.Corrales)
 local Jugadores = require(script.Parent.Jugadores)
 local Remotos = require(script.Parent.Remotos)
 
@@ -73,7 +75,8 @@ local function pedir(jugador: Player, a: unknown, b: unknown)
 	local hijo = Fusion.fusionar(ca, cb)
 	if not hijo or not costo then
 		-- No reaccionan: no se cobra.
-		d.OcupadoHasta = ahora + Config.Maquina.EsperaNoReacciona
+		d.OcupadoHasta = ahora
+			+ Config.Maquina.EsperaNoReacciona * Mejoras.factorRapidez(d.Mejoras.Rapida)
 		base.Motivo = "NoReaccionan"
 		responder(jugador, base)
 		return
@@ -98,7 +101,7 @@ local function pedir(jugador: Player, a: unknown, b: unknown)
 		d.Mutantes[hijo.Clave] = true
 	end
 	local celebraciones = Coleccion.revisarGeneraciones(d)
-	d.OcupadoHasta = ahora + Config.Maquina.Espera
+	d.OcupadoHasta = ahora + Config.Maquina.Espera * Mejoras.factorRapidez(d.Mejoras.Rapida)
 	Jugadores.publicar(jugador)
 
 	responder(jugador, {
@@ -115,6 +118,12 @@ local function pedir(jugador: Player, a: unknown, b: unknown)
 	for _, celebracion in celebraciones do
 		Remotos.Celebracion:FireClient(jugador, celebracion)
 	end
+	-- La criatura nueva llega al corral después de la revelación (para no adelantar la sorpresa).
+	task.delay(
+		Config.Maquina.Espera * Mejoras.factorRapidez(d.Mejoras.Rapida),
+		Corrales.actualizar,
+		jugador
+	)
 end
 
 Remotos.PedirFusion.OnServerEvent:Connect(pedir)

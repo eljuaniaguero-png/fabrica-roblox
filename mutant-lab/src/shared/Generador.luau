@@ -20,6 +20,8 @@ function Generador.crear(
 ): Model
 	local modelo = Instance.new("Model")
 	modelo.Name = c.Nombre
+	-- Que llegue entera a cada jugador (si no, la animación puede arrancar sin sus piezas).
+	modelo.ModelStreamingMode = Enum.ModelStreamingMode.Atomic
 
 	-- Raíz invisible: es el pivote y lleva las partículas y luces.
 	local raiz = Instance.new("Part")

@@ -16,12 +16,13 @@ local Config = require(ReplicatedStorage.Shared.Config)
 local Formato = require(ReplicatedStorage.Shared.Formato)
 local Fusion = require(ReplicatedStorage.Shared.Fusion)
 local Generador = require(ReplicatedStorage.Shared.Generador)
+local MiLab = require(script.Parent.MiLab)
 local Sonidos = require(script.Parent.Sonidos)
 
 local E = Config.Estilo
 local M = Config.Maquina
 
-local maquina = workspace:WaitForChild("Laboratorio"):WaitForChild("Maquina") :: Model
+local maquina = MiLab.obtener():WaitForChild("Maquina") :: Model
 local cuerpo = maquina:WaitForChild("Cuerpo") :: Model
 local salida = maquina:WaitForChild("Salida") :: BasePart
 local puntoCamara = maquina:WaitForChild("PuntoCamara") :: BasePart
@@ -311,22 +312,22 @@ end
 -- Secuencias completas
 ---------------------------------------------------------------------------
 
-local function noReaccionan(ca: Fusion.Criatura, cb: Fusion.Criatura)
+local function noReaccionan(ca: Fusion.Criatura, cb: Fusion.Criatura, f: number)
 	-- SONIDO: no reaccionan (dos notas graves que chocan)
 	Sonidos.acorde({ -12, -11 }, 0.45)
-	llenar(capsulas.A, ca.Color, 0.4, 0.35)
-	llenar(capsulas.B, cb.Color, 0.4, 0.35)
-	task.wait(0.35)
+	llenar(capsulas.A, ca.Color, 0.4, 0.35 * f)
+	llenar(capsulas.B, cb.Color, 0.4, 0.35 * f)
+	task.wait(0.35 * f)
 	largarHumo(false, 12)
-	temblar(0.5, 0.15)
+	temblar(0.5 * f, 0.15)
 	mostrarCartel("No reaccionan", "¡Probá otra pareja!", "No se gastó ADN", false)
-	llenar(capsulas.A, ca.Color, 0, 0.4)
-	llenar(capsulas.B, cb.Color, 0, 0.4)
-	task.wait(1.4)
+	llenar(capsulas.A, ca.Color, 0, 0.4 * f)
+	llenar(capsulas.B, cb.Color, 0, 0.4 * f)
+	task.wait(1.4 * f)
 	ocultarCartel()
 end
 
--- Anima una fusión de unos 3,3 segundos y deja el cartel unos segundos más.
+-- Anima una fusión de unos 3,3 segundos y deja el cartel unos segundos más (menos con "Fusión rápida").
 -- Frena al que la llama hasta que termina.
 function Efectos.jugar(r: Fusion.Resultado)
 	local ca, cb = Fusion.porClave(r.A), Fusion.porClave(r.B)
@@ -345,38 +346,40 @@ function Efectos.jugar(r: Fusion.Resultado)
 		criaturaSalida = nil
 	end
 	enfocar()
+	-- Con la mejora "Fusión rápida" todo dura menos (f = 1 normal, 0.5 la mitad).
+	local f = (Players.LocalPlayer:GetAttribute("FactorFusion") :: number?) or 1
 
 	local c = if r.Clave then Fusion.porClave(r.Clave) else nil
 	if not r.Ok or not c then
-		noReaccionan(ca, cb)
+		noReaccionan(ca, cb, f)
 		soltar()
 		return
 	end
 
 	-- 1) Las cápsulas se llenan del color de cada padre (0,8 s).
 	-- SONIDO: burbujeo (notas que suben rápido)
-	Sonidos.secuencia({ 0, 4, 7, 9, 12, 16 }, 0.12, 0.3)
-	llenar(capsulas.A, ca.Color, 1, 0.8)
-	llenar(capsulas.B, cb.Color, 1, 0.8)
-	task.wait(0.8)
+	Sonidos.secuencia({ 0, 4, 7, 9, 12, 16 }, 0.12 * f, 0.3)
+	llenar(capsulas.A, ca.Color, 1, 0.8 * f)
+	llenar(capsulas.B, cb.Color, 1, 0.8 * f)
+	task.wait(0.8 * f)
 
 	-- 2) La máquina tiembla, las luces parpadean y sale humo (1,4 s).
 	-- SONIDO: zumbido de la máquina (nota grave repetida)
-	Sonidos.secuencia({ -12, -12, -10, -12, -12, -10, -9 }, 0.2, 0.4)
+	Sonidos.secuencia({ -12, -12, -10, -12, -12, -10, -9 }, 0.2 * f, 0.4)
 	tubos({ A = ca.Color, B = cb.Color })
-	task.spawn(temblar, 1.4, 0.35)
-	task.spawn(parpadear, 1.4)
+	task.spawn(temblar, 1.4 * f, 0.35)
+	task.spawn(parpadear, 1.4 * f)
 	largarHumo(true, 10)
-	task.wait(0.7)
+	task.wait(0.7 * f)
 
 	-- 3) Aparece la silueta negra dentro de la cúpula.
 	-- SONIDO: suspenso (escalera que sube)
-	Sonidos.secuencia({ 0, 1, 2, 3, 4, 5, 6, 7 }, 0.1, 0.35)
+	Sonidos.secuencia({ 0, 1, 2, 3, 4, 5, 6, 7 }, 0.1 * f, 0.35)
 	local silueta = crearEnSalida(c, true)
 	mostrarCartel("¿Qué será?", "???", string.rep("●", c.Gen), false)
-	task.wait(0.7)
+	task.wait(0.7 * f)
 	largarHumo(false)
-	task.wait(0.8)
+	task.wait(0.8 * f)
 
 	-- 4) Revelación: destello, la criatura de verdad y el cartel con nombre y generación.
 	-- SONIDO: revelación (acorde mayor + nota aguda)
@@ -386,8 +389,8 @@ function Efectos.jugar(r: Fusion.Resultado)
 	silueta:Destroy()
 	criaturaSalida = crearEnSalida(c, false, r.Mutante)
 	tubos(nil)
-	llenar(capsulas.A, ca.Color, 0, 0.6)
-	llenar(capsulas.B, cb.Color, 0, 0.6)
+	llenar(capsulas.A, ca.Color, 0, 0.6 * f)
+	llenar(capsulas.B, cb.Color, 0, 0.6 * f)
 	local mutante = r.Mutante == true
 	mostrarCartel(
 		if r.Nueva then "¡ESPECIE NUEVA!" else "Ya la tenías",
@@ -402,7 +405,7 @@ function Efectos.jugar(r: Fusion.Resultado)
 		efectoMutante()
 	end
 
-	task.wait(M.TiempoRevelacion)
+	task.wait(M.TiempoRevelacion * f)
 	ocultarCartel()
 	soltar()
 end

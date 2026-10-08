@@ -1,6 +1,6 @@
 --!strict
 -- HUD siempre visible: ADN, progreso de la Mutadex (12 / 50) y avisos cortos del servidor.
--- HUD (ScreenGui armado en Studio) > ADN (Frame con UIScale "Escala") > Valor (TextLabel)
+-- HUD (ScreenGui armado en Studio) > ADN (Frame con UIScale "Escala") > Valor, PorSegundo (TextLabel)
 --                                 > Progreso (TextButton con UIScale "Escala") > Texto, Barra > Relleno
 --                                 > Aviso (TextLabel)
 -- Tocar Progreso abre la Mutadex (lo maneja Mutadex.client.luau).
@@ -17,6 +17,7 @@ local hud = jugador:WaitForChild("PlayerGui"):WaitForChild("HUD")
 local caja = hud:WaitForChild("ADN") :: Frame
 local valor = caja:WaitForChild("Valor") :: TextLabel
 local escala = caja:WaitForChild("Escala") :: UIScale
+local porSegundo = caja:WaitForChild("PorSegundo") :: TextLabel
 local progreso = hud:WaitForChild("Progreso") :: TextButton
 local textoProgreso = progreso:WaitForChild("Texto") :: TextLabel
 local relleno = progreso:WaitForChild("Barra"):WaitForChild("Relleno") :: Frame
@@ -73,8 +74,17 @@ local function mostrarAviso(texto: string)
 end
 
 jugador:GetAttributeChangedSignal("ADN"):Connect(actualizarADN)
+local function actualizarPorSegundo()
+	local n = (jugador:GetAttribute("ADNPorSegundo") :: number?) or 0
+	-- Con Nutrientes puede tener decimales: se muestra con uno solo.
+	porSegundo.Text = "+"
+		.. (if n == math.floor(n) then tostring(n) else string.format("%.1f", n))
+		.. "/s"
+end
+jugador:GetAttributeChangedSignal("ADNPorSegundo"):Connect(actualizarPorSegundo)
 jugador:GetAttributeChangedSignal("Especies"):Connect(actualizarProgreso)
 local eventoAviso = remotos:WaitForChild("Aviso") :: RemoteEvent
 eventoAviso.OnClientEvent:Connect(mostrarAviso)
 actualizarADN()
+actualizarPorSegundo()
 actualizarProgreso()
