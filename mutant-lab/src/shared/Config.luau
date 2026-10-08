@@ -5,7 +5,38 @@ local Config = {
 	-- Fusión
 	TamanioRueda = 10, -- cantidad de especies base en la rueda
 	DistanciaMaxima = 3, -- base + base reaccionan si están a 1, 2 o 3 lugares
-	ProbabilidadMutante = 1 / 40, -- solo estética (se usa en la Parte 2)
+	ProbabilidadMutante = 1 / 40, -- solo estética
+
+	-- Economía (ficha, punto 6)
+	Economia = {
+		ADNInicial = 50,
+		BasesIniciales = { 1, 2, 3 },
+		CostoGen2 = 20,
+		SubaPorEspecie = 1.1, -- el costo sube un 10 % por cada especie que ya tenés...
+		EspeciesSinSuba = 3, -- ...a partir de las 3 del arranque
+		MultiplicadorGen3 = 5,
+	},
+
+	-- Máquina de fusión
+	Maquina = {
+		Espera = 4, -- segundos que la máquina queda ocupada después de una fusión (servidor)
+		EsperaNoReacciona = 1.5,
+		TiempoRevelacion = 2.5, -- cuánto queda el cartel de la especie en pantalla
+		EscalaEnCapsula = 0.5, -- tamaño de las criaturas dentro de las cápsulas
+	},
+
+	-- Modo prueba (Parte 2): todas las bases, ADN de sobra y más mutantes para verlos.
+	-- Apagarlo (Activo = false) antes de la Parte 5.
+	Prueba = {
+		Activo = true,
+		ADN = 100000,
+		ProbabilidadMutante = 1 / 4,
+	},
+
+	-- Sonido: un solo sample de piano, el tono cambia con PlaybackSpeed.
+	-- Reemplazá el ID por tu sample (formato "rbxassetid://123456").
+	SonidoNotaId = "rbxassetid://96243649310055", -- "Piano Note C4", gratis en la Creator Store
+	VolumenEfectos = 0.5,
 
 	-- Animación de las criaturas (la misma para todas)
 	Animacion = {

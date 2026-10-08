@@ -8,8 +8,16 @@ local Piezas = require(script.Parent.Piezas)
 
 local Generador = {}
 
+local COLOR_SILUETA = Color3.fromHex("1B1030")
+
 -- Crea el modelo parado en `donde` (el pivote queda en el piso, mirando a -Z).
-function Generador.crear(c: Fusion.Criatura, donde: CFrame, padre: Instance?): Model
+-- La versión mutante tiene las mismas piezas: solo suma estrellitas y colores que cambian.
+function Generador.crear(
+	c: Fusion.Criatura,
+	donde: CFrame,
+	padre: Instance?,
+	mutante: boolean?
+): Model
 	local modelo = Instance.new("Model")
 	modelo.Name = c.Nombre
 
@@ -44,6 +52,10 @@ function Generador.crear(c: Fusion.Criatura, donde: CFrame, padre: Instance?): M
 	if c.Gen >= 3 then
 		Piezas.aura(raiz)
 	end
+	if mutante then
+		Piezas.estrellas(raiz)
+		modelo:SetAttribute("Mutante", true)
+	end
 
 	modelo:SetAttribute("Clave", c.Clave)
 	modelo:SetAttribute("Gen", c.Gen)
@@ -52,6 +64,22 @@ function Generador.crear(c: Fusion.Criatura, donde: CFrame, padre: Instance?): M
 
 	modelo.Parent = padre
 	return modelo
+end
+
+-- Deja el modelo como una silueta negra: sin colores, brillos ni partículas.
+-- Conviene llamarla antes de ponerle Parent, así la animación guarda la versión negra.
+function Generador.silueta(modelo: Model)
+	for _, d in modelo:GetDescendants() do
+		if d:IsA("BasePart") and d.Name ~= "Raiz" then
+			d.Color = COLOR_SILUETA
+			d.Material = Enum.Material.SmoothPlastic
+			d.Transparency = 0
+		elseif d:IsA("ParticleEmitter") or d:IsA("Light") then
+			d:Destroy()
+		end
+	end
+	modelo:SetAttribute("Rasgo", 0)
+	modelo:SetAttribute("Mutante", nil)
 end
 
 return Generador

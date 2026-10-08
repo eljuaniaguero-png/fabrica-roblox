@@ -19,15 +19,25 @@ export type Estado = {
 	Fase: number,
 	Rasgo: number,
 	Transparencias: { [BasePart]: number },
+	Colores: { [BasePart]: Color3 }?, -- solo mutantes: colores originales para hacerlos cambiar
 }
 
 local Animacion = {}
 
+-- Velocidad del cambio de colores de los mutantes (vueltas a la rueda de colores por segundo).
+local VELOCIDAD_TORNASOL = 0.12
+
 function Animacion.preparar(modelo: Model): Estado
 	local transparencias = {}
+	local colores: { [BasePart]: Color3 }? = if modelo:GetAttribute("Mutante") then {} else nil
 	for _, d in modelo:GetDescendants() do
 		if d:IsA("BasePart") and d.Name ~= "Raiz" then
 			transparencias[d] = d.Transparency
+			local _, saturacion = d.Color:ToHSV()
+			-- Los ojos (blanco y negro) no cambian de color.
+			if colores and saturacion > 0.15 then
+				colores[d] = d.Color
+			end
 		end
 	end
 	return {
@@ -36,6 +46,7 @@ function Animacion.preparar(modelo: Model): Estado
 		Fase = math.random() * 10,
 		Rasgo = (modelo:GetAttribute("Rasgo") :: number?) or 0,
 		Transparencias = transparencias,
+		Colores = colores,
 	}
 end
 
@@ -73,6 +84,15 @@ function Animacion.paso(e: Estado, reloj: number)
 		local nivel = pulso(t, 4, 2) * 0.65
 		for parte, original in e.Transparencias do
 			parte.Transparency = original + (1 - original) * nivel
+		end
+	end
+
+	-- Mutantes: colores tornasolados que giran lento por la rueda de colores.
+	if e.Colores then
+		local corrimiento = (t * VELOCIDAD_TORNASOL) % 1
+		for parte, original in e.Colores do
+			local h, s, v = original:ToHSV()
+			parte.Color = Color3.fromHSV((h + corrimiento) % 1, s, v)
 		end
 	end
 end

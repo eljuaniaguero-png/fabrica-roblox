@@ -4,7 +4,8 @@ Origen: idea del usuario (2026-10-07). Mecánica de colección + fusión; el con
 Carpeta del juego: `mutant-lab/`.
 Estado: versión 1 (2026-10-07), aprobada con el pedido de la Parte 1.
 Versión 2 (2026-10-07): **Parte 1 hecha.** Estilo elegido por el usuario: "el que más le gusta a los nenes y el más dopamínico" → **A, Laboratorio caramelo, en versión saturada** (ver "Guía de estilo"). Cambió la regla de colores de la fusión (ver "Ajustes de la Parte 1").
-Próximo punto de control: **Parte 2, máquina de fusión** (esperando el OK del usuario).
+Versión 3 (2026-10-07): **Parte 2 hecha** (máquina de fusión). Ver "Notas de la Parte 2".
+Próximo punto de control: **Parte 3, Mutadex** (esperando el OK del usuario).
 
 ## Guía de estilo (elegida: A, Laboratorio caramelo saturado)
 
@@ -22,6 +23,17 @@ Próximo punto de control: **Parte 2, máquina de fusión** (esperando el OK del
 4. **Raíces y patas de insecto inclinadas hacia adentro.** Antes se abrían desde arriba y parecían palitos sueltos.
 5. **Alas de membrana en abanico de frente.** Las alas de Nerulo quedaban de canto y desde adelante solo se veía un palito; ahora son tres "dedos" abiertos hacia los costados. Las alas transparentes (Fotina) también se abrían hacia adentro y se cruzaban; se dieron vuelta y se hicieron menos transparentes.
 6. **Proyecto aparte.** Mutant Lab tiene su propio proyecto de Rojo en `mutant-lab/` (puerto **34873**), para no pisar Pisada Sonora (34872). El lugar de Studio es `mutant-lab/MutantLab.rbxlx` y no se sube a git.
+
+## Notas de la Parte 2 (máquina de fusión)
+
+- **Cómo se usa**: la máquina está frente al punto de aparición. Te acercás a la consola (a la derecha), apretás **E** y se abre el panel. Tocás dos tarjetas (la primera va a la ranura menta y la segunda a la rosa), ves el precio y apretás **¡FUSIONAR!**. Tocar una ranura o una tarjeta elegida la saca.
+- **Servidor**: el cliente solo manda las dos claves. El servidor revisa que tengas las dos criaturas y el ADN, que la máquina no esté ocupada, calcula la especie con la regla fija, cobra, tira el mutante y responde. Si no reaccionan, no cobra.
+- **Animación (unos 3,3 s + 2,5 s de cartel)**: la cámara va a la máquina y tu personaje se esconde (solo para vos). Las cápsulas se llenan del color de cada padre; después la máquina tiembla, las luces parpadean, salen humo de colores y los tubos brillan. Aparece la silueta negra con el cartel "¿Qué será?" y llega la revelación: destello, la criatura real en la cúpula y el cartel con "¡ESPECIE NUEVA!" o "Ya la tenías", el nombre y la generación. La criatura queda en la cúpula hasta la próxima fusión y el panel vuelve a abrirse.
+- **Mutante**: papelitos de colores, un segundo destello dorado, cartel "⭐ ¡MUTANTE! ⭐" con arcoíris que gira y una escalera de notas agudas. La criatura mutante tiene estrellitas y colores que cambian lento. En el nombre se usa **⭐** en lugar de ✦, porque la fuente del juego no tiene ese símbolo.
+- **Sonidos**: todos salen del mismo sample de piano (`Config.SonidoNotaId`) cambiando el tono. Están marcados con `-- SONIDO:` en `EfectosMaquina.luau` y `PanelFusion.luau`: elegir, burbujeo, zumbido, suspenso, revelación, mutante y no reaccionan.
+- **Precio en el botón**: si la mezcla de generaciones nunca reacciona (gen 2 + gen 2, o cualquier cosa con gen 3), el botón dice "gratis", porque no se cobra.
+- **Modo prueba** (`Config.Prueba`, **hay que apagarlo antes de la Parte 5**): al entrar tenés las 10 bases y 100.000 de ADN, y el mutante sale 1 de cada 4 veces (en el juego real es 1 de cada 40).
+- **Probado en playtest**: 10 fusiones, entre ellas Glupona + Rámulo y Rámulo + Glupona (las dos dan Glumulo; la segunda dice "Ya la tenías"), la gen 3 por los dos órdenes (Glumulo + Sutomi y Sutomi + Glumulo dan Glumumi) y una pareja que no reacciona (no cobró ADN). También se probó que el servidor rechaza una criatura que no tenés y un pedido con la máquina ocupada.
 
 ## La idea en una línea
 
@@ -162,7 +174,7 @@ Lista completa:
 ## 5. Versión mutante
 
 - En **cada fusión que reacciona** hay **1 en 40 (2,5 %)** de que salga la versión mutante. También vale volver a fusionar una pareja que ya conocés: es la forma de buscar mutantes.
-- El resultado mutante es **la misma especie**: mismas piezas, mismo nombre (con una ✦ adelante).
+- El resultado mutante es **la misma especie**: mismas piezas, mismo nombre (con una ⭐ adelante).
 - Solo cambia la estética: colores tornasolados (cambian de tono lento), partículas de estrellitas y borde dorado en la Mutadex.
 - **No** genera más ADN, **no** cuenta para las 50 y **no** se puede comprar ni subir su probabilidad con Robux.
 - Si ya tenés la especie y te sale mutante, tu criatura pasa a ser mutante (podés volver a la versión normal con un botón).
@@ -226,7 +238,7 @@ Cómo lo vamos a mirar en el playtest:
 ## 9. Plan de construcción
 
 - [x] **Parte 1 - Criaturas por piezas** (hecha el 2026-10-07): carpeta del juego, módulo de especies (tabla de las 10 bases y regla de herencia), armado de una criatura a partir de sus piezas, las 50 generadas y revisadas en una captura.
-- [ ] **Parte 2 - Máquina de fusión**: dos cápsulas, validación en el servidor (reacciona / no reacciona), animación de suspenso, aparición de la especie y tirada del mutante.
+- [x] **Parte 2 - Máquina de fusión** (hecha el 2026-10-07): dos cápsulas, validación en el servidor (reacciona / no reacciona), animación de suspenso, aparición de la especie y tirada del mutante.
 - [ ] **Parte 3 - Mutadex**: UI con las 50 siluetas alrededor de la rueda, generación, casilla mutante, cuaderno de parejas tachadas y escáner.
 - [ ] **Parte 4 - Laboratorio y economía**: el mapa del laboratorio, criaturas paseando, ADN por segundo, terminal para comprar bases y mejoras.
 - [ ] **Parte 5 - Guardado, balance y pulido**: DataStore, ajuste de números con playtest de 10 minutos, sonidos (`-- SONIDO:`), legibilidad en celular.

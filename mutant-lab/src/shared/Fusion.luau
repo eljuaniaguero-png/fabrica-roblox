@@ -19,6 +19,18 @@ export type Criatura = {
 	Color: Color3, -- color de la cabeza (para la UI)
 }
 
+-- Lo que el servidor le contesta al cliente después de pedir una fusión.
+export type Resultado = {
+	Ok: boolean,
+	Motivo: string?, -- "NoReaccionan", "FaltaADN", "NoTenes", "Ocupada"
+	A: string, -- claves de los padres, tal como las mandó el cliente
+	B: string,
+	Clave: string?, -- especie que salió
+	Nueva: boolean?, -- primera vez que la conseguís
+	Mutante: boolean?,
+	Costo: number?,
+}
+
 local N = Config.TamanioRueda
 
 local Fusion = {}
@@ -170,6 +182,20 @@ function Fusion.pintura(c: Criatura, base: number): (Color3, Color3)
 	local i = table.find(c.Bases, base) or 1
 	local otra = c.Bases[i % #c.Bases + 1]
 	return Especies[base].Color, Especies[otra].Color
+end
+
+local indice: { [string]: Criatura }? = nil
+
+-- Busca una especie por su clave ("1", "1-2", "1-2-3").
+function Fusion.porClave(buscada: string): Criatura?
+	if not indice then
+		local nuevo = {}
+		for _, c in Fusion.todas() do
+			nuevo[c.Clave] = c
+		end
+		indice = nuevo
+	end
+	return (indice :: { [string]: Criatura })[buscada]
 end
 
 -- Busca una especie por nombre (útil para pruebas y para la vitrina).

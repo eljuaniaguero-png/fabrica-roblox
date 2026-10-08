@@ -768,6 +768,23 @@ end
 
 rasgos[10] = function() end -- semitransparente: lo hace la animación
 
+-- Estrellitas doradas de la versión mutante.
+function Piezas.estrellas(raiz: BasePart)
+	particulas(raiz, Vector3.new(0, 3, 0), Color3.fromHex("FFE680"), {
+		LightEmission = 1,
+		Size = NumberSequence.new({
+			NumberSequenceKeypoint.new(0, 0),
+			NumberSequenceKeypoint.new(0.4, 0.55),
+			NumberSequenceKeypoint.new(1, 0),
+		}),
+		Speed = NumberRange.new(1, 2.5),
+		SpreadAngle = Vector2.new(180, 180),
+		Lifetime = NumberRange.new(0.8, 1.4),
+		Rate = 16,
+		RotSpeed = NumberRange.new(-90, 90),
+	})
+end
+
 -- Aura de la generación 3.
 function Piezas.aura(raiz: BasePart)
 	particulas(raiz, Vector3.new(0, 2.6, 0), Color3.fromHex("FFF3B0"), {
