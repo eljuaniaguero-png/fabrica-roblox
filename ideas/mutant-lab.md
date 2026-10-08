@@ -7,15 +7,198 @@ Versión 2 (2026-10-07): **Parte 1 hecha.** Estilo elegido por el usuario: "el q
 Versión 3 (2026-10-07): **Parte 2 hecha** (máquina de fusión). Ver "Notas de la Parte 2".
 Versión 4 (2026-10-07): **Parte 3 hecha** (Mutadex). Ver "Notas de la Parte 3".
 Versión 5 (2026-10-08): **Parte 4 hecha** (laboratorio y economía). Ver "Notas de la Parte 4".
-Próximo punto de control: **Parte 5, guardado, balance y pulido** (esperando el OK del usuario).
+Versión 6 (2026-10-08): **guía visual nueva** (laboratorio de caricatura de noche, ver "Guía de estilo") y **mapa nuevo**: plaza en el centro y 6 laboratorios alrededor (pedido del usuario, ver "Notas del mapa nuevo"). Ya tienen el estilo nuevo el mapa, la máquina y las criaturas. **Falta el HUD y los menús**, que siguen con el estilo caramelo.
+Próximo punto de control: el usuario mira el mapa nuevo; después, HUD y menús con la guía y la **Parte 5**.
 
-## Guía de estilo (elegida: A, Laboratorio caramelo saturado)
+## Guía de estilo: laboratorio de caricatura de noche (versión 6)
 
-- **Paleta**: piso crema `#FFF4E0`, menta `#3EE6B5`, rosa chicle `#FF5FA2`, amarillo `#FFD23F`, violeta oscuro `#4B2C83`. Están en `mutant-lab/src/shared/Config.luau` (`Config.Estilo`).
-- **Materiales**: SmoothPlastic en todo; Glass solo para cosas de agua o hielo; Neon solo para chispas, luces y brasas.
-- **Iluminación**: de día (ClockTime 14), Brightness 2,2 con exposición −0,35, Atmosphere rosada suave, ColorCorrection con +20 % de saturación y un Bloom leve.
-- **Formas**: redondeadas y gordas, ojos grandes con borde oscuro. Las criaturas se muestran sobre pedestales violeta con un borde amarillo para que resalten (sobre todo las blancas).
-- **Textos**: fuente FredokaOne en blanco con borde violeta.
+Copiada de la guía visual del usuario (`ideas/mutant-lab-visual.md`, 2026-10-08). Reemplaza el estilo A (Laboratorio caramelo), que quedó guardado en Studio por si hace falta volver: el mapa viejo en `ServerStorage > Archivo > MapaCaramelo` y la luz vieja en `ServerStorage > Archivo > LuzCaramelo`.
+
+### 1. Dirección de arte
+
+Concepto: "laboratorio de caricatura de noche". Un laboratorio oscuro y acogedor, lleno de tubos con líquidos que brillan, donde viven criaturas redondas y tiernas. Lo oscuro es el fondo; lo que brilla es lo importante: el ADN, la máquina, las criaturas.
+
+Tres reglas que mandan sobre todo lo demás:
+1. Lo jugable brilla, lo decorativo no. Si algo se puede tocar o juntar, tiene un color de acento o luz. La decoración usa colores apagados.
+2. Formas redondas y gruesas. Nada filoso ni realista. Bordes redondeados, proporciones exageradas.
+3. Se entiende en una pantalla de celular. Si algo no se lee en un teléfono, se agranda o se saca.
+
+### 2. Paleta
+
+| Uso | Color | Hex |
+|---|---|---|
+| Fondo, paredes y piso del laboratorio | Azul petróleo oscuro | #1B2A3A |
+| Sombras y cielo | Violeta noche | #2A1F3D |
+| Metal, máquinas y estructuras | Gris azulado | #5C6B7A |
+| Acento principal: ADN, slime, botón de fusionar | Verde ácido | #7CFF4F |
+| Acento secundario: novedades, alertas | Magenta | #FF4FA3 |
+| Premios, raro, dorado | Amarillo dorado | #FFC93C |
+| Texto de interfaz | Blanco frío | #F5F7FA |
+| Contorno de interfaz y sombra de texto | Casi negro | #10141C |
+
+Colores por elemento (se usan en criaturas, íconos y pistas):
+
+| Elemento | Hex |
+|---|---|
+| Fuego | #FF6A3D |
+| Agua | #3DB8FF |
+| Planta | #5DDB6A |
+| Eléctrico | #FFE14A |
+| Sombra | #8E6BFF |
+Los elementos combinados mezclan los dos colores de sus padres.
+
+Colores por generación (borde de tarjetas y anillo bajo la criatura):
+- Generación 1: blanco #F5F7FA
+- Generación 2: azul #3DB8FF
+- Generación 3: violeta #B07CFF
+- Mutante: dorado #FFC93C con brillo
+
+### 3. Iluminación y ambiente
+
+- Hora fija de noche, con una luna grande y visible desde el laboratorio.
+- Luz ambiente baja y azulada. La luz fuerte sale de los objetos: tubos, máquina, pantallas.
+- Atmosphere con un poco de niebla violeta a lo lejos, para que el fondo se pierda y el laboratorio resalte.
+- Bloom suave, para que las partes de material Neon brillen. Sin exagerar: el texto tiene que seguir leyéndose.
+- ColorCorrection con un poco más de saturación y contraste.
+- Para que algo brille, usá primero material Neon. Las luces reales (PointLight, SurfaceLight) solo en la máquina de fusión y en pocos lugares clave: como máximo 12 en todo el laboratorio.
+
+### 4. Mapa
+
+#### Plaza central
+- Una plaza circular en el centro del mundo, rodeada por los laboratorios de los jugadores, uno por jugador, como porciones alrededor.
+- En el medio, la máquina de fusión en equipo (Parte 9): más grande que las demás, con un tubo de luz que sube al cielo.
+- Tablero gigante con el experimento del día (Parte 8) y la tabla de posiciones.
+- Faroles verdes, bancos, carteles de neón con flechas hacia cada laboratorio.
+
+#### Laboratorio de cada jugador
+Una sala redonda, de unos 80 studs de diámetro, abierta hacia la plaza por un arco con el nombre del jugador en neón.
+- Centro: la máquina de fusión. Una cápsula de vidrio alta con dos ranuras de entrada a los lados (una por padre) y una tercera arriba para el catalizador. Tubos que conectan las ranuras con la cápsula. Cuando funciona, el líquido de los tubos se mueve hacia la cápsula.
+- Alrededor de la máquina: 4 corrales al principio, hasta 8 con mejoras. Cada corral es una plataforma hexagonal con cúpula de vidrio, borde de neón verde y un cartel con la cantidad de ADN por segundo. Los corrales bloqueados se ven con la cúpula opaca y un candado.
+- Pared del fondo: el Mutadex como pantalla gigante, que muestra la cantidad descubierta y la última especie nueva.
+- Un costado: mostrador de la tienda con un robot vendedor simpático.
+- Otro costado: estante de trofeos (Parte 8), que se va llenando.
+- Decoración que llena los huecos: tubos que suben por las paredes con burbujas, frascos de colores en estantes, cables gruesos por el piso, pantallas con gráficos simples, franjas amarillas y negras en el borde de las plataformas, carteles de "¡PELIGRO: TIERNO!".
+- Sin espacios vacíos: desde cualquier punto de la sala tiene que verse algo interesante a menos de 15 studs.
+
+#### Reglas del mapa
+- Generá el laboratorio por código desde un molde, así cada jugador recibe uno igual y se puede cambiar el diseño en un solo lugar.
+- Materiales: SmoothPlastic para casi todo, Metal para máquinas, Glass para cúpulas y cápsulas, Neon para lo que brilla. Nada de texturas realistas.
+- Cámara: el jugador tiene que poder ver la máquina y al menos 3 corrales a la vez desde el centro.
+
+### 5. Criaturas
+
+#### Proporciones
+- Estilo chibi: la cabeza ocupa la mitad de la altura total.
+- Altura de 3 a 5 studs según el tamaño (chico, mediano, grande).
+- Patas cortas y gruesas, cuerpo redondo.
+- Todas las partes con formas redondeadas: esferas, cilindros y bloques con esquinas suaves.
+
+#### Ojos (lo más importante)
+- Todas las criaturas tienen ojos grandes: dos esferas blancas con pupila negra y un punto blanco de brillo.
+- Los ojos ocupan cerca de un tercio de la cara.
+- La personalidad cambia los ojos: Alegre, ojos arqueados de felicidad; Vaga, párpados a media altura; Peleadora, cejas en ángulo; Miedosa, pupilas chiquitas; Curiosa, un ojo más grande que el otro.
+
+#### Color y materiales
+- Dos tonos por criatura: color principal en el cuerpo y color de detalle en panza, orejas o patas.
+- Una pieza de material Neon con el color de su elemento: una antena, una cola, una mancha en la espalda o los cuernos.
+- SmoothPlastic en todo lo demás.
+
+#### Generación, mutante y tamaño
+- Anillo de luz bajo los pies con el color de su generación.
+- Mutante: el color principal cambia a una versión brillante, la pieza de elemento pasa a ser más grande, y tiene partículas de brillo dorado alrededor.
+- Las de generación 3 tienen una pieza extra: corona, aura o un segundo par de alas.
+
+#### Animación
+- Movimiento de rebote con estirar y aplastar: al caer se aplastan un poco, al saltar se estiran.
+- Cada personalidad se mueve distinto: la Alegre salta seguido, la Vaga camina lento y se duerme, la Peleadora empuja a las vecinas, la Miedosa se esconde detrás de otras, la Curiosa se acerca al jugador.
+- Al tocarla: salta, hace su sonido y muestra un cartelito con nombre, generación, elemento y personalidad.
+
+#### Ícono de personalidad
+- Arriba de la cabeza, chico y semitransparente, solo visible a menos de 20 studs.
+- Ícono simple dibujado con formas o texto: corazón para Alegre, "Zzz" para Vaga, rayo para Peleadora, gota para Miedosa, signo de pregunta para Curiosa, estrella para Líder, martillo para Trabajadora, cubierto para Glotona.
+- Borde verde para personalidades positivas, borde magenta para negativas.
+
+#### Reglas
+- Ninguna criatura se parece a personajes, mascotas o memes existentes.
+- Máximo 12 partes por criatura.
+- Si al combinar piezas algo queda roto o tapado (ojos dentro del cuerpo, patas flotando), el generador lo corrige con reglas de posición, no a mano.
+
+### 6. Interfaz (HUD y menús)
+
+#### Estilo general
+- Look de caricatura: tarjetas con esquinas redondeadas (UICorner de 12), contorno grueso casi negro (UIStroke de 3) y fondo azul petróleo semitransparente.
+- Botones gruesos con una franja más oscura abajo que simula profundidad. Al apretarlos se hunden un poco.
+- Tipografía: Fredoka One para títulos, números y botones; Builder Sans o Gotham para textos chicos. Todo texto blanco con contorno oscuro.
+- Íconos simples, de un color, sin degradados.
+- Todo con tamaños relativos a la pantalla. Botones de al menos 44 píxeles en celular. Respetá la zona segura de la pantalla.
+
+#### Distribución en pantalla
+| Lugar | Qué va |
+|---|---|
+| Arriba a la izquierda | Contador de ADN: pastilla con un ícono de hélice verde y el número grande |
+| Arriba al centro | Progreso del Mutadex: barra con "12 / 50" |
+| Arriba a la derecha | Botones redondos: Mutadex, Misiones, Tienda y Ajustes |
+| Lado derecho | Notificaciones que entran deslizándose y se van solas |
+| Abajo al centro | Acción del momento (por ejemplo "Fusionar" al estar cerca de la máquina) |
+| Centro | Libre siempre, salvo en la revelación de una especie nueva |
+
+#### Menú de fusión
+- Se abre al acercarse a la máquina.
+- Dos casilleros grandes para los padres con un "+" en el medio, y un casillero más chico arriba para el catalizador (con candado hasta desbloquearlo).
+- Abajo, la vista previa: si la combinación ya se conoce, muestra el resultado; si no, una silueta con "?".
+- Costo en ADN a la vista. Botón grande verde ácido "¡FUSIONAR!". Si no alcanza el ADN, el botón se ve gris y dice cuánto falta.
+- Lista de criaturas del jugador abajo, en tarjetas con su color de generación, filtrables por elemento.
+
+#### Mutadex
+- Grilla de tarjetas, 4 por fila en computadora y 3 en celular.
+- Especie descubierta: la criatura de cuerpo entero, nombre, elemento y borde con el color de su generación.
+- No descubierta: silueta negra con un "?" grande y el botón de pista.
+- Pestañas por generación, y una pestaña "Extras" para las especies exclusivas.
+- Al abrir una especie: vista grande que gira, casilleros de variantes por catalizador y sellos de personalidades conseguidas.
+
+#### Tienda
+- Pestañas: Especies, Mejoras, Catalizadores y Premium.
+- Cada artículo en una tarjeta con su ilustración, nombre, efecto en una línea y precio.
+- Lo que no alcanza se ve en gris con el precio. Lo que es Premium tiene borde dorado.
+
+#### Carteles grandes
+- Especie nueva, nivel completado y premios: cartel en el centro con el título en Fredoka One, entrada con rebote y salida automática a los 3 segundos o al tocar.
+- Nunca más de un cartel grande a la vez: si hay varios, se encolan.
+
+### 7. Efectos visuales
+
+- Fusión (tres niveles, según la Parte 7): conocida, corta; nueva, completa con silueta y revelación; mutante o generación 3, la más grande, con la cámara temblando un poco y luces de todo el laboratorio.
+- Partículas de ADN: pequeñas hélices verdes que salen de las criaturas y vuelan hacia el contador.
+- Número que salta y se desvanece cada vez que se suma ADN.
+- Destello al comprar o mejorar algo, sobre el objeto que cambió.
+- Burbujas constantes en los tubos y la cápsula.
+- Todos los efectos del lado del cliente. Con 20 criaturas en pantalla, el juego tiene que seguir fluido en celular.
+
+### 8. Sonido (puntos a marcar)
+
+Marcá con -- SONIDO: cada uno de estos lugares, aunque por ahora no tengan audio: burbujas del laboratorio, máquina arrancando, suspenso de la fusión, revelación normal, revelación de especie nueva, revelación mutante, sonido propio de cada especie, juntar ADN, comprar, abrir menú, cerrar menú, botón apretado, misión completada, música de fondo del laboratorio.
+
+### 9. Cómo aplicarla
+
+1. Antes de construir todo, armá una sala de muestra: un corral con 3 criaturas (una común, una generación 2 y una mutante), la máquina de fusión y el HUD con valores de ejemplo. Sacá capturas desde lejos, de cerca y del HUD en tamaño celular. Esperá el OK.
+2. Con el OK, aplicá la guía al laboratorio completo, a todas las criaturas y a todos los menús.
+3. Recorré todo con capturas y comprobá: que lo jugable brilla y lo decorativo no, que no hay espacios vacíos, que todo se lee en celular y que el juego sigue fluido.
+4. Guardá los colores de la paleta en un módulo en mutant-lab/src/shared, para que cambiar un color sea cambiar una línea.
+
+### Decisiones al aplicar la guía (versión 6)
+
+Cosas que la guía no definía o que chocaban con el juego actual. Elegí lo más simple; se pueden cambiar.
+
+- **Elemento de cada especie base** (provisorio, 2 por elemento, hasta diseñar las Variantes): Agua: Glupona y Brinoza. Planta: Rámulo y Sutomi. Fuego: Chisparo y Dunaqui. Eléctrico: Zoplito y Fotina. Sombra: Rocote y Nerulo. Las fusiones mezclan los colores de sus bases promediando el tono, así la mezcla sigue siendo un color vivo y no un gris.
+- **Pieza de Neon del elemento**: es una gema redonda sobre el lomo, igual para todas. Las otras piezas que antes brillaban (cuernos de brasa, antenas, alas) pasaron a plástico, para que lo único que brille sea la gema.
+- **Personalidades** (provisorio): positivas Alegre, Curiosa, Líder y Trabajadora; negativas Vaga, Peleadora, Miedosa y Glotona. Por ahora solo cambian los ojos y el ícono; todavía no las tiene ninguna criatura del juego.
+- **Mutantes**: dorados, como pide la guía. Se apagó el cambio de colores tornasolado (`Config.Animacion.Tornasol`).
+- **Vidrio**: cúpulas, cápsulas y tubos son plástico transparente con un poco de brillo, no material Glass. En Roblox, Glass no deja ver lo transparente que tiene detrás, y escondía los anillos de las criaturas, los carteles y las burbujas.
+- **Franjas amarillas y negras**: un solo cuadro con degradado a escalones por cara. Es liviano para celular.
+- **Fuente**: Fredoka One siempre sin negrita (con negrita no carga y el texto no aparece).
+- **Corrales**: 4 por laboratorio y arrancás con 1 abierto, como en la economía de la Parte 4 (la guía dice de 4 a 8).
+- **Tamaño del laboratorio**: 68 studs de diámetro (la guía dice unos 80). Con 4 corrales, 80 dejaba huecos.
+- **Pendiente: máximo 12 partes por criatura.** Hoy tienen entre 25 y 40, porque solo los ojos ya son 8 partes. Hay que simplificar patas y colas sin cambiar las siluetas.
 
 ## Ajustes de la Parte 1 (después de mirar las capturas)
 
@@ -53,7 +236,7 @@ Próximo punto de control: **Parte 5, guardado, balance y pulido** (esperando el
 
 ## Notas de la Parte 4 (laboratorio y economía)
 
-- **Mapa**: una calle con 4 laboratorios en fila (`Laboratorios > Lab1..Lab4`) sobre un suelo lavanda. Cada laboratorio tiene la máquina en el centro, 4 corrales (2 a cada lado), una tienda con toldo a rayas, el lugar donde aparecés y un arco en la entrada con el cartel "Laboratorio de (tu nombre)". La vitrina y la máquina sueltas de las partes anteriores quedaron guardadas en `ServerStorage > Archivo`.
+- **Mapa** (reemplazado en la versión 6 por la plaza con 6 laboratorios): una calle con 4 laboratorios en fila (`Laboratorios > Lab1..Lab4`) sobre un suelo lavanda. Cada laboratorio tiene la máquina en el centro, 4 corrales (2 a cada lado), una tienda con toldo a rayas, el lugar donde aparecés y un arco en la entrada con el cartel "Laboratorio de (tu nombre)". La vitrina y la máquina sueltas de las partes anteriores quedaron guardadas en `ServerStorage > Archivo`.
 - **Un laboratorio por jugador**: el servidor le da al que entra el primer laboratorio libre, lo lleva a la entrada y pone su nombre en el cartel. Cuando se va, el laboratorio queda libre. Cada jugador solo puede usar su máquina y su tienda. El servidor debería ser de **4 jugadores como máximo**: eso lo cambia el usuario en la configuración del juego.
 - **Corrales**: las criaturas que trabajan caminan por su corral (van a un punto al azar, paran un rato y siguen). Hay un **tope**: 4 criaturas por corral y arrancás con 1 corral abierto. Trabajan las de mayor generación; las demás quedan en la colección (Mutadex y panel). Los corrales cerrados se ven grises con un cartel "🔒 Se abre en la tienda".
 - **ADN por segundo**: 1 por base, 2 por gen 2 y 6 por gen 3, solo de las que trabajan. Se ve en el HUD ("+9/s") y con un "+N" que sube sobre cada criatura cada 3 segundos.
@@ -80,6 +263,21 @@ La jugó un jugador automático que **no conoce la regla**: prueba al azar parej
   - Dos de cada tres intentos no reaccionaron, sobre todo los de gen 2 + base. Leer la nota de la rueda en la Mutadex ayuda mucho.
   - Pagó 3 veces por una gen 3 que ya tenía, llegando por otro camino (por ejemplo Ratomi + Glupona después de Glumulo + Sutomi). Idea para la Parte 5: que el panel avise "ya la tenés" antes de fusionar.
   - El piso crema del laboratorio se ve casi blanco con esta luz: revisar en el pulido.
+
+## Notas del mapa nuevo (versión 6)
+
+Reemplaza la calle con 4 laboratorios de la Parte 4.
+
+- **Plaza** (`Workspace > Plaza`, armada en Studio): un círculo en el centro del mundo con la **máquina de fusión en equipo**, más grande que las demás y con un tubo de luz que sube al cielo. Hay dos tableros gigantes (**experimento del día** y **tabla de posiciones**), 12 faroles verdes, 4 bancos, una flecha de neón por laboratorio con el nombre del dueño (o "Libre") y cristales apagados entre los laboratorios para que afuera no quede vacío. Los jugadores aparecen en la plaza (`Llegada`) y el servidor los lleva a su laboratorio.
+  - La máquina en equipo y los dos tableros **todavía no funcionan** (son de las Partes 8 y 9). Por eso dicen "¡Muy pronto!".
+- **6 laboratorios** alrededor de la plaza, a 80 studs del centro, con la entrada mirando a la plaza. **No están armados en Studio**: el servidor los genera al arrancar clonando el molde `ServerStorage > Moldes > Laboratorio`, como pide la guía. Para cambiar el diseño se cambia el molde y salen todos iguales. Las posiciones están en `Config.Mapa` y la cantidad en `Config.CantidadLaboratorios` (6).
+- **Cada laboratorio** (68 studs de diámetro): pared alta atrás y baranda baja adelante, con el arco y el nombre del dueño en neón. Adentro están la máquina en el centro, 4 corrales hexagonales con cúpula, la Mutadex como pantalla gigante en la pared del fondo, la tienda con el robot a la izquierda, el estante de trofeos a la derecha (vacío hasta la Parte 8), tubos con burbujas, estantes con frascos, pantallas, carteles graciosos, cables y cajas.
+- **La máquina nueva**: una cápsula de vidrio alta en el medio, dos ranuras a los costados (una por padre) con tubos de líquido verde hacia la cápsula, y arriba la ranura del catalizador con candado. La animación de la Parte 2 sigue igual: se llenan las ranuras con el color de cada padre, los tubos toman ese color, tiembla, sale humo, aparece la silueta y la criatura nueva se revela adentro de la cápsula.
+- **Corrales**: el abierto tiene cúpula de vidrio, borde de neón verde, luz y un cartel con su ADN por segundo. El cerrado tiene cúpula opaca, borde de metal, candado y el cartel "Se abre en la tienda". Los laboratorios libres se ven como uno nuevo: solo el primer corral abierto.
+- **Pantalla de la Mutadex**: muestra cuántas especies descubriste y la última especie nueva, con el borde del color de su generación. Se actualiza después de la revelación, para no adelantar la sorpresa.
+- **Luces**: 7 por laboratorio (la guía permite hasta 12) y 7 en la plaza. Cada laboratorio tiene unas 460 partes, sin contar las criaturas.
+- **El servidor debería ser de 6 jugadores como máximo.** Eso lo cambia el usuario en la configuración del juego (hoy está en 60).
+- **Probado en playtest** (2026-10-08): se generan los 6 laboratorios, el jugador recibe el Lab1 con su nombre en el arco y en la flecha de la plaza, y hay 2 criaturas en el corral 1. Se probó una fusión real (Glupona + Rámulo = Glumulo): se ve la animación entera con la máquina nueva, la Mutadex de la pared pasa a 3 / 50 con la tarjeta de Glumulo y el corral pasa a +4 ADN/s. La consola quedó sin errores.
 
 ## La idea en una línea
 
@@ -295,6 +493,8 @@ Puntos de control: esta ficha → estilo visual → prototipo jugable (Partes 1 
 ---
 
 ## Propuestas de estilo visual (para elegir antes de construir)
+
+> Historial. Se eligió A en la versión 2 y la versión 6 la reemplazó por la guía visual del usuario (ver "Guía de estilo").
 
 ### A — Laboratorio caramelo
 - **Paleta**: crema #F4EFE6 (piso), menta #7FD8BE (máquinas), rosa chicle #FF8FB1 (detalles), amarillo #FFD25A (luces y botones), violeta oscuro #3B2A5C (paredes y contornos).

@@ -16,10 +16,10 @@ local Config = require(ReplicatedStorage.Shared.Config)
 local Formato = require(ReplicatedStorage.Shared.Formato)
 local Fusion = require(ReplicatedStorage.Shared.Fusion)
 local Generador = require(ReplicatedStorage.Shared.Generador)
+local Paleta = require(ReplicatedStorage.Shared.Paleta)
 local MiLab = require(script.Parent.MiLab)
 local Sonidos = require(script.Parent.Sonidos)
 
-local E = Config.Estilo
 local M = Config.Maquina
 
 local maquina = MiLab.obtener():WaitForChild("Maquina") :: Model
@@ -48,8 +48,9 @@ carpeta.Parent = workspace
 type Capsula = {
 	Punto: BasePart,
 	Liquido: BasePart,
-	Tubo: BasePart,
+	Tubo: { BasePart }, -- tramos del líquido del tubo que va a la cápsula del medio
 	ColorTubo: Color3,
+	MaterialTubo: Enum.Material,
 	Fondo: Vector3, -- centro de la base del líquido
 	AltoLleno: number,
 	Diametro: number,
@@ -60,13 +61,24 @@ local GIRO_VERTICAL = CFrame.Angles(0, 0, math.rad(90)) -- cilindro parado
 
 local function armarCapsula(lado: string): Capsula
 	local liquido = cuerpo:WaitForChild("Liquido" .. lado) :: BasePart
-	local tubo = cuerpo:WaitForChild("Tubo" .. lado) :: BasePart
+	-- El tubo puede ser una sola parte o un modelo con varios tramos.
+	local tubo = cuerpo:WaitForChild("Tubo" .. lado)
+	local tramos: { BasePart } = {}
+	if tubo:IsA("BasePart") then
+		table.insert(tramos, tubo)
+	end
+	for _, d in tubo:GetDescendants() do
+		if d:IsA("BasePart") then
+			table.insert(tramos, d)
+		end
+	end
 	local alto = liquido.Size.X
 	local c: Capsula = {
 		Punto = maquina:WaitForChild("Punto" .. lado) :: BasePart,
 		Liquido = liquido,
-		Tubo = tubo,
-		ColorTubo = tubo.Color,
+		Tubo = tramos,
+		ColorTubo = tramos[1].Color,
+		MaterialTubo = tramos[1].Material,
 		Fondo = liquido.Position - Vector3.new(0, alto / 2, 0),
 		AltoLleno = alto,
 		Diametro = liquido.Size.Y,
@@ -121,12 +133,9 @@ end
 
 local function tubos(colores: { [string]: Color3 }?)
 	for lado, cap in capsulas do
-		if colores then
-			cap.Tubo.Color = colores[lado]
-			cap.Tubo.Material = Enum.Material.Neon
-		else
-			cap.Tubo.Color = cap.ColorTubo
-			cap.Tubo.Material = Enum.Material.SmoothPlastic
+		for _, tramo in cap.Tubo do
+			tramo.Color = if colores then colores[lado] else cap.ColorTubo
+			tramo.Material = if colores then Enum.Material.Neon else cap.MaterialTubo
 		end
 	end
 end
@@ -144,7 +153,7 @@ local function temblar(duracion: number, fuerza: number)
 	cuerpo:PivotTo(original)
 end
 
-local PALETA_LUCES = { E.Menta, E.Rosa, E.Amarillo, Color3.fromHex("38C8FF") }
+local PALETA_LUCES = { Paleta.Acento, Paleta.Alerta, Paleta.Dorado, Paleta.Elementos.Agua }
 
 local function parpadear(duracion: number)
 	local fin = os.clock() + duracion
@@ -246,10 +255,10 @@ local function efectoMutante()
 	local p = Instance.new("ParticleEmitter")
 	p.Color = ColorSequence.new({
 		ColorSequenceKeypoint.new(0, Color3.fromHex("FF3B30")),
-		ColorSequenceKeypoint.new(0.25, E.Amarillo),
-		ColorSequenceKeypoint.new(0.5, E.Menta),
+		ColorSequenceKeypoint.new(0.25, Paleta.Dorado),
+		ColorSequenceKeypoint.new(0.5, Paleta.Acento),
 		ColorSequenceKeypoint.new(0.75, Color3.fromHex("38C8FF")),
-		ColorSequenceKeypoint.new(1, E.Rosa),
+		ColorSequenceKeypoint.new(1, Paleta.Alerta),
 	})
 	p.LightEmission = 0.4
 	p.Size = NumberSequence.new(0.45)
@@ -266,7 +275,7 @@ local function efectoMutante()
 	task.delay(3, function()
 		a:Destroy()
 	end)
-	task.delay(0.35, destello, E.Amarillo)
+	task.delay(0.35, destello, Paleta.Dorado)
 	-- SONIDO: mutante (escalera muy aguda y rápida)
 	Sonidos.secuencia({ 12, 16, 19, 24, 28, 31, 36 }, 0.05, 0.4)
 end

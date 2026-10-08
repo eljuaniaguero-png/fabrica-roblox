@@ -55,9 +55,15 @@ local Config = {
 		},
 	},
 
-	-- Laboratorios: uno por jugador (Laboratorios > Lab1, Lab2, ... armados en Studio).
-	-- El servidor debería ser de 4 jugadores como máximo (se cambia en la configuración del juego).
-	CantidadLaboratorios = 4,
+	-- Laboratorios: uno por jugador. El servidor los genera al arrancar, clonando el molde
+	-- ServerStorage > Moldes > Laboratorio alrededor de la plaza.
+	-- El servidor debería ser de 6 jugadores como máximo (se cambia en la configuración del juego).
+	CantidadLaboratorios = 6,
+	Mapa = {
+		CentroPlaza = Vector3.new(0, 0, 0),
+		DistanciaLaboratorios = 80, -- del centro de la plaza al centro de cada laboratorio
+		AnguloInicial = 0, -- el Lab1 queda hacia +Z; los demás siguen cada 60 grados
+	},
 
 	-- Premios de la Mutadex (ficha, Parte 3)
 	Premios = {

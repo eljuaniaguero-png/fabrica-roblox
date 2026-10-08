@@ -84,7 +84,20 @@ function Corrales.actualizar(jugador: Player)
 		end
 	end
 
-	Laboratorios.actualizarCorrales(jugador, d.Mejoras.Corrales)
+	-- ADN por segundo de cada corral, para su cartel.
+	local grupos: { [number]: { Fusion.Criatura } } = {}
+	for i, c in activas do
+		local k = math.ceil(i / Config.Corrales.PorCorral)
+		grupos[k] = grupos[k] or {}
+		table.insert(grupos[k], c)
+	end
+	local porCorral = {}
+	for k = 1, Config.Corrales.Maximo do
+		porCorral[k] = Mejoras.porSegundo(grupos[k] or {}, d.Mejoras.Nutrientes)
+	end
+
+	Laboratorios.actualizarCorrales(jugador, d.Mejoras.Corrales, porCorral)
+	Laboratorios.actualizarMutadex(jugador, Jugadores.cantidadEspecies(d))
 	jugador:SetAttribute("Activas", #activas)
 end
 

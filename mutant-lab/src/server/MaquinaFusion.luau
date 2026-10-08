@@ -11,6 +11,7 @@ local Mejoras = require(ReplicatedStorage.Shared.Mejoras)
 local Coleccion = require(script.Parent.Coleccion)
 local Corrales = require(script.Parent.Corrales)
 local Jugadores = require(script.Parent.Jugadores)
+local Laboratorios = require(script.Parent.Laboratorios)
 local Remotos = require(script.Parent.Remotos)
 
 local azar = Random.new()
@@ -118,12 +119,14 @@ local function pedir(jugador: Player, a: unknown, b: unknown)
 	for _, celebracion in celebraciones do
 		Remotos.Celebracion:FireClient(jugador, celebracion)
 	end
-	-- La criatura nueva llega al corral después de la revelación (para no adelantar la sorpresa).
-	task.delay(
-		Config.Maquina.Espera * Mejoras.factorRapidez(d.Mejoras.Rapida),
-		Corrales.actualizar,
-		jugador
-	)
+	-- La criatura nueva llega al corral (y a la pantalla de la Mutadex) después de la
+	-- revelación, para no adelantar la sorpresa.
+	task.delay(Config.Maquina.Espera * Mejoras.factorRapidez(d.Mejoras.Rapida), function()
+		if nueva then
+			Laboratorios.mostrarNueva(jugador, hijo.Clave, mutante)
+		end
+		Corrales.actualizar(jugador)
+	end)
 end
 
 Remotos.PedirFusion.OnServerEvent:Connect(pedir)
