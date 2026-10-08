@@ -13,6 +13,7 @@ local RunService = game:GetService("RunService")
 local TweenService = game:GetService("TweenService")
 
 local Config = require(ReplicatedStorage.Shared.Config)
+local Formato = require(ReplicatedStorage.Shared.Formato)
 local Fusion = require(ReplicatedStorage.Shared.Fusion)
 local Generador = require(ReplicatedStorage.Shared.Generador)
 local Sonidos = require(script.Parent.Sonidos)
@@ -391,7 +392,10 @@ function Efectos.jugar(r: Fusion.Resultado)
 	mostrarCartel(
 		if r.Nueva then "¡ESPECIE NUEVA!" else "Ya la tenías",
 		(if mutante then "⭐ " else "") .. c.Nombre,
-		string.rep("●", c.Gen) .. "  Generación " .. c.Gen,
+		string.rep("●", c.Gen)
+			.. "  Generación "
+			.. c.Gen
+			.. (if r.Premio then "   +" .. Formato.numero(r.Premio) .. " ADN" else ""),
 		mutante
 	)
 	if mutante then

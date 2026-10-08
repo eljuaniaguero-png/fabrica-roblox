@@ -5,12 +5,14 @@
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local Fusion = require(ReplicatedStorage.Shared.Fusion)
+local Celebracion = require(script.Parent.Celebracion)
 local EfectosMaquina = require(script.Parent.EfectosMaquina)
 local PanelFusion = require(script.Parent.PanelFusion)
 
 local remotos = ReplicatedStorage:WaitForChild("Remotos")
 local pedirFusion = remotos:WaitForChild("PedirFusion") :: RemoteEvent
 local resultadoFusion = remotos:WaitForChild("ResultadoFusion") :: RemoteEvent
+local celebracionEvento = remotos:WaitForChild("Celebracion") :: RemoteEvent
 local prompt = workspace
 	:WaitForChild("Laboratorio")
 	:WaitForChild("Maquina")
@@ -44,6 +46,29 @@ prompt.Triggered:Connect(function()
 	end
 end)
 
+-- Las celebraciones (generación completa) esperan a que termine la animación de fusión.
+local pendientes: { Fusion.Celebracion } = {}
+local celebrando = false
+
+local function mostrarPendientes()
+	if celebrando then
+		return
+	end
+	celebrando = true
+	while #pendientes > 0 do
+		Celebracion.mostrar(table.remove(pendientes, 1) :: Fusion.Celebracion)
+	end
+	celebrando = false
+end
+
+celebracionEvento.OnClientEvent:Connect(function(c: Fusion.Celebracion)
+	table.insert(pendientes, c)
+	task.wait(0.3)
+	if not animando then
+		mostrarPendientes()
+	end
+end)
+
 resultadoFusion.OnClientEvent:Connect(function(r: Fusion.Resultado)
 	if r.Ok or r.Motivo == "NoReaccionan" then
 		animando = true
@@ -51,6 +76,7 @@ resultadoFusion.OnClientEvent:Connect(function(r: Fusion.Resultado)
 		PanelFusion.cerrar()
 		EfectosMaquina.jugar(r)
 		animando = false
+		mostrarPendientes()
 		if r.Ok then
 			PanelFusion.limpiar()
 		else

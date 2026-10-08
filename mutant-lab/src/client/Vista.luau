@@ -1,5 +1,5 @@
 --!strict
--- Muestra una criatura dentro de un ViewportFrame (tarjetas y ranuras del panel).
+-- Muestra una criatura dentro de un ViewportFrame (tarjetas, ranuras y Mutadex).
 
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
@@ -8,7 +8,8 @@ local Generador = require(ReplicatedStorage.Shared.Generador)
 
 local Vista = {}
 
-function Vista.mostrar(vista: ViewportFrame, clave: string?, mutante: boolean?)
+-- `silueta` = true la muestra toda negra (especies que todavía no descubriste).
+function Vista.mostrar(vista: ViewportFrame, clave: string?, mutante: boolean?, silueta: boolean?)
 	for _, d in vista:GetChildren() do
 		if d:IsA("Model") or d:IsA("Camera") then
 			d:Destroy()
@@ -19,7 +20,11 @@ function Vista.mostrar(vista: ViewportFrame, clave: string?, mutante: boolean?)
 		return
 	end
 	-- Fuera del workspace la criatura no se anima: queda quieta como una foto.
-	Generador.crear(c, CFrame.new(), vista, mutante)
+	local modelo = Generador.crear(c, CFrame.new(), nil, mutante and not silueta)
+	if silueta then
+		Generador.silueta(modelo)
+	end
+	modelo.Parent = vista
 	local camara = Instance.new("Camera")
 	camara.FieldOfView = 38
 	camara.CFrame = CFrame.lookAt(Vector3.new(-5, 5.5, -10.5), Vector3.new(0, 2.7, 0))

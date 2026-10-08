@@ -5,7 +5,8 @@ Carpeta del juego: `mutant-lab/`.
 Estado: versión 1 (2026-10-07), aprobada con el pedido de la Parte 1.
 Versión 2 (2026-10-07): **Parte 1 hecha.** Estilo elegido por el usuario: "el que más le gusta a los nenes y el más dopamínico" → **A, Laboratorio caramelo, en versión saturada** (ver "Guía de estilo"). Cambió la regla de colores de la fusión (ver "Ajustes de la Parte 1").
 Versión 3 (2026-10-07): **Parte 2 hecha** (máquina de fusión). Ver "Notas de la Parte 2".
-Próximo punto de control: **Parte 3, Mutadex** (esperando el OK del usuario).
+Versión 4 (2026-10-07): **Parte 3 hecha** (Mutadex). Ver "Notas de la Parte 3".
+Próximo punto de control: **Parte 4, laboratorio y economía** (esperando el OK del usuario).
 
 ## Guía de estilo (elegida: A, Laboratorio caramelo saturado)
 
@@ -34,6 +35,20 @@ Próximo punto de control: **Parte 3, Mutadex** (esperando el OK del usuario).
 - **Precio en el botón**: si la mezcla de generaciones nunca reacciona (gen 2 + gen 2, o cualquier cosa con gen 3), el botón dice "gratis", porque no se cobra.
 - **Modo prueba** (`Config.Prueba`, **hay que apagarlo antes de la Parte 5**): al entrar tenés las 10 bases y 100.000 de ADN, y el mutante sale 1 de cada 4 veces (en el juego real es 1 de cada 40).
 - **Probado en playtest**: 10 fusiones, entre ellas Glupona + Rámulo y Rámulo + Glupona (las dos dan Glumulo; la segunda dice "Ya la tenías"), la gen 3 por los dos órdenes (Glumulo + Sutomi y Sutomi + Glumulo dan Glumumi) y una pareja que no reacciona (no cobró ADN). También se probó que el servidor rechaza una criatura que no tenés y un pedido con la máquina ocupada.
+
+## Notas de la Parte 3 (Mutadex)
+
+- **Dónde está**: arriba al centro, debajo del ADN, hay un botón siempre visible con "📖 12 / 50" y una barrita. Al tocarlo se abre la Mutadex; si estaba abierto el panel de la máquina, se cierra.
+- **Cómo se ve**: a la izquierda, las 50 tarjetas en tres secciones (gen 1 en el orden de la rueda, gen 2 y gen 3), cada una con una nota corta de la regla. Las descubiertas se ven en 3D con su nombre. Las que faltan son una **silueta negra sobre lila con un "?" chiquito en la esquina**: el signo no tapa la forma, porque la forma es la pista. Arriba se repiten el contador, la barra y el ADN. Las mutantes llevan ⭐.
+- **Ficha**: a la derecha. Si la especie es tuya, dice con qué bases se hace. Si es una silueta, muestra las pistas compradas y el botón para comprar la siguiente.
+- **Cambio frente al plan original**: en lugar de las 50 siluetas alrededor de una rueda, van en una grilla por generación, que se lee mejor en el celular. El "Escáner" pasó a ser **pistas por silueta** (pedido del usuario).
+- **Pistas**: cada pista cuenta algo de una de las bases que la forman, sin decir el nombre ("Viene de una criatura que tiene pico y vuela"). Una gen 2 tiene 2 pistas y una gen 3 tiene 3. Cuestan 100 × (pistas que ya compraste + 1). El servidor valida que no la tengas, que queden pistas y que te alcance el ADN. Las frases están en `Especies.luau` (campo `Pista`).
+- **Premios** (en `Config.Premios`):
+  - Descubrir una especie nueva devuelve **la mitad de lo que costó la fusión** (mínimo 25 ADN), y se ve en el cartel de la revelación. Se probó primero con el doble, pero sobraba tanto ADN que las pistas y el precio dejaban de importar. Se revisa en la Parte 5.
+  - Completar una generación paga un premio grande: **1.000 / 10.000 / 25.000 ADN** por la gen 1, 2 y 3, con un cartel amarillo, lluvia de papelitos y una fanfarria. Al completar las 50 dice "¡MUTADEX COMPLETA!". En modo prueba la gen 1 no paga, porque viene regalada.
+- **Celular**: se probó simulando una pantalla de 844×390 apaisada. Las tarjetas (86×106), los nombres y el botón de pista se leen bien, y la lista se desplaza.
+- **Herramienta de prueba**: en modo prueba existe `ServerStorage.Prueba.DarEspecies` para darle especies a un jugador sin fusionar. Sirvió para probar la Mutadex con muchas especies y desaparece al apagar el modo prueba.
+- **Probado en playtest**: con pocas especies (11 y 12 de 50) y con muchas (47 de 50). Se completó la gen 2 con una fusión real (premio de 10.000 y cartel) y después la gen 3, hasta el cartel de Mutadex completa en 50 / 50.
 
 ## La idea en una línea
 
@@ -239,7 +254,7 @@ Cómo lo vamos a mirar en el playtest:
 
 - [x] **Parte 1 - Criaturas por piezas** (hecha el 2026-10-07): carpeta del juego, módulo de especies (tabla de las 10 bases y regla de herencia), armado de una criatura a partir de sus piezas, las 50 generadas y revisadas en una captura.
 - [x] **Parte 2 - Máquina de fusión** (hecha el 2026-10-07): dos cápsulas, validación en el servidor (reacciona / no reacciona), animación de suspenso, aparición de la especie y tirada del mutante.
-- [ ] **Parte 3 - Mutadex**: UI con las 50 siluetas alrededor de la rueda, generación, casilla mutante, cuaderno de parejas tachadas y escáner.
+- [x] **Parte 3 - Mutadex** (hecha el 2026-10-07): UI con las 50 siluetas alrededor de la rueda, generación, casilla mutante, cuaderno de parejas tachadas y escáner.
 - [ ] **Parte 4 - Laboratorio y economía**: el mapa del laboratorio, criaturas paseando, ADN por segundo, terminal para comprar bases y mejoras.
 - [ ] **Parte 5 - Guardado, balance y pulido**: DataStore, ajuste de números con playtest de 10 minutos, sonidos (`-- SONIDO:`), legibilidad en celular.
 - [ ] **Parte 6 - Compras con Robux**: solo cosas que no son azar. Ideas: pase "Doble ADN", pase "Segunda máquina" (dos fusiones a la vez), colores del laboratorio. Nada de cajas sorpresa ni subir la chance de mutante. Es punto de control: los pases los crea y les pone precio el usuario.

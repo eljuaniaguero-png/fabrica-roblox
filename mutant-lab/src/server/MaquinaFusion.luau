@@ -7,6 +7,7 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Config = require(ReplicatedStorage.Shared.Config)
 local Costos = require(ReplicatedStorage.Shared.Costos)
 local Fusion = require(ReplicatedStorage.Shared.Fusion)
+local Coleccion = require(script.Parent.Coleccion)
 local Jugadores = require(script.Parent.Jugadores)
 local Remotos = require(script.Parent.Remotos)
 
@@ -25,7 +26,7 @@ local function responder(jugador: Player, r: Fusion.Resultado)
 		local d = Jugadores.obtener(jugador)
 		local hijo = if r.Clave then Fusion.porClave(r.Clave) else nil
 		print(
-			("[Fusion] %s: %s + %s -> %s%s%s | costo %s | ADN %s"):format(
+			("[Fusion] %s: %s + %s -> %s%s%s | costo %s | premio %s | ADN %s"):format(
 				jugador.Name,
 				r.A,
 				r.B,
@@ -33,6 +34,7 @@ local function responder(jugador: Player, r: Fusion.Resultado)
 				if r.Mutante then " MUTANTE" else "",
 				if r.Nueva == false then " (repetida)" else "",
 				tostring(r.Costo or 0),
+				tostring(r.Premio or 0),
 				tostring(d and d.ADN)
 			)
 		)
@@ -85,12 +87,17 @@ local function pedir(jugador: Player, a: unknown, b: unknown)
 
 	-- Fusionar cobra ADN y no destruye a los padres.
 	d.ADN -= costo
-	local nueva = not d.Especies[hijo.Clave]
-	d.Especies[hijo.Clave] = true
+	local nueva = Coleccion.agregar(d, hijo.Clave)
+	-- Premio por descubrirla (solo la primera vez).
+	local premio = if nueva then Coleccion.premioDescubrir(costo) else nil
+	if premio then
+		d.ADN += premio
+	end
 	local mutante = azar:NextNumber() < probabilidadMutante()
 	if mutante then
 		d.Mutantes[hijo.Clave] = true
 	end
+	local celebraciones = Coleccion.revisarGeneraciones(d)
 	d.OcupadoHasta = ahora + Config.Maquina.Espera
 	Jugadores.publicar(jugador)
 
@@ -102,7 +109,12 @@ local function pedir(jugador: Player, a: unknown, b: unknown)
 		Nueva = nueva,
 		Mutante = mutante,
 		Costo = costo,
+		Premio = premio,
 	})
+	-- El cliente las muestra cuando termina la animación de la fusión.
+	for _, celebracion in celebraciones do
+		Remotos.Celebracion:FireClient(jugador, celebracion)
+	end
 end
 
 Remotos.PedirFusion.OnServerEvent:Connect(pedir)

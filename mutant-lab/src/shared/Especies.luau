@@ -11,6 +11,7 @@ export type Base = {
 	Color: Color3,
 	Manchas: Color3, -- color secundario propio (solo se ve en la base pura)
 	Rasgo: string,
+	Pista: string, -- cómo la describe una pista ("Viene de una criatura que ...")
 }
 
 local bases: { Base } = {
@@ -22,6 +23,7 @@ local bases: { Base } = {
 		Color = Color3.fromHex("38C8FF"),
 		Manchas = Color3.fromHex("E8FAFF"),
 		Rasgo = "Burbujas",
+		Pista = "vive en el agua",
 	},
 	{
 		Numero = 2,
@@ -31,6 +33,7 @@ local bases: { Base } = {
 		Color = Color3.fromHex("4CCB4A"),
 		Manchas = Color3.fromHex("2E8A3A"),
 		Rasgo = "Flores",
+		Pista = "tiene hojas en la cabeza",
 	},
 	{
 		Numero = 3,
@@ -40,6 +43,7 @@ local bases: { Base } = {
 		Color = Color3.fromHex("F23DB8"),
 		Manchas = Color3.fromHex("FFFFFF"),
 		Rasgo = "Esporas",
+		Pista = "es un hongo",
 	},
 	{
 		Numero = 4,
@@ -49,6 +53,7 @@ local bases: { Base } = {
 		Color = Color3.fromHex("7D8A9C"),
 		Manchas = Color3.fromHex("4E5866"),
 		Rasgo = "Rueda",
+		Pista = "es de piedra",
 	},
 	{
 		Numero = 5,
@@ -58,6 +63,7 @@ local bases: { Base } = {
 		Color = Color3.fromHex("FF3B30"),
 		Manchas = Color3.fromHex("FFB020"),
 		Rasgo = "Chispas",
+		Pista = "echa chispas de fuego",
 	},
 	{
 		Numero = 6,
@@ -67,6 +73,7 @@ local bases: { Base } = {
 		Color = Color3.fromHex("E0A040"),
 		Manchas = Color3.fromHex("A86A22"),
 		Rasgo = "SeEntierra",
+		Pista = "vive en la arena",
 	},
 	{
 		Numero = 7,
@@ -76,6 +83,7 @@ local bases: { Base } = {
 		Color = Color3.fromHex("B07CFF"),
 		Manchas = Color3.fromHex("FFFFFF"),
 		Rasgo = "Flota",
+		Pista = "tiene pico y vuela",
 	},
 	{
 		Numero = 8,
@@ -85,6 +93,7 @@ local bases: { Base } = {
 		Color = Color3.fromHex("F2FBFF"),
 		Manchas = Color3.fromHex("8FE3FF"),
 		Rasgo = "Escarcha",
+		Pista = "es de hielo",
 	},
 	{
 		Numero = 9,
@@ -94,6 +103,7 @@ local bases: { Base } = {
 		Color = Color3.fromHex("FFE21F"),
 		Manchas = Color3.fromHex("FF8A00"),
 		Rasgo = "Brilla",
+		Pista = "brilla y vuela",
 	},
 	{
 		Numero = 10,
@@ -103,6 +113,7 @@ local bases: { Base } = {
 		Color = Color3.fromHex("2F4BD8"),
 		Manchas = Color3.fromHex("8EF0FF"),
 		Rasgo = "Transparente",
+		Pista = "tiene tres ojos y vuela",
 	},
 }
 

@@ -16,6 +16,9 @@ end
 local Remotos = {
 	PedirFusion = evento("PedirFusion"), -- cliente -> servidor: (claveA, claveB)
 	ResultadoFusion = evento("ResultadoFusion"), -- servidor -> cliente: Fusion.Resultado
+	Celebracion = evento("Celebracion"), -- servidor -> cliente: Fusion.Celebracion
+	ComprarPista = evento("ComprarPista"), -- cliente -> servidor: (clave)
+	Aviso = evento("Aviso"), -- servidor -> cliente: texto corto para mostrar
 }
 
 carpeta.Parent = ReplicatedStorage

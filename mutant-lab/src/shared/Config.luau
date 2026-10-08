@@ -17,6 +17,18 @@ local Config = {
 		MultiplicadorGen3 = 5,
 	},
 
+	-- Premios de la Mutadex (ficha, Parte 3)
+	Premios = {
+		MultiplicadorDescubrir = 0.5, -- descubrir una especie nueva devuelve la mitad de lo que costó la fusión...
+		MinimoDescubrir = 25, -- ...y como mínimo esto
+		PorGeneracion = { 1000, 10000, 25000 }, -- premio grande por completar la gen 1, 2 y 3
+	},
+
+	-- Pistas de las siluetas
+	Pistas = {
+		CostoBase = 100, -- cada pista cuesta CostoBase x (pistas que ya compraste + 1)
+	},
+
 	-- Máquina de fusión
 	Maquina = {
 		Espera = 4, -- segundos que la máquina queda ocupada después de una fusión (servidor)

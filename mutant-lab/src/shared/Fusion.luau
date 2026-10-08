@@ -29,6 +29,14 @@ export type Resultado = {
 	Nueva: boolean?, -- primera vez que la conseguís
 	Mutante: boolean?,
 	Costo: number?,
+	Premio: number?, -- ADN de premio por descubrirla
+}
+
+-- Premio grande por completar una generación de la Mutadex.
+export type Celebracion = {
+	Gen: number,
+	Premio: number,
+	Completo: boolean, -- true si con esto completaste las 50
 }
 
 local N = Config.TamanioRueda
