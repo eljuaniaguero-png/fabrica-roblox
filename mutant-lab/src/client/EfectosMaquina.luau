@@ -4,8 +4,8 @@
 --   Cuerpo (Model que tiembla) > CapsulaA/B, LiquidoA/B, TuboA/B, Cupula, Luces (Folder), Humo (Folder)
 --   PuntoA, PuntoB (dónde va la criatura dentro de cada cápsula), Salida (centro de la cúpula),
 --   PuntoCamara (desde dónde se mira la animación), Consola > Prompt
--- Revelacion (ScreenGui) > Cartel > Escala (UIScale), Titulo, Nombre, Gen, Mutante > Arcoiris (UIGradient)
---                        > Flash (Frame blanco de pantalla completa)
+-- Los carteles son los grandes de UI/Carteles (arriba, para no tapar la cúpula) y el destello
+-- de pantalla va en su misma capa.
 
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
@@ -19,6 +19,7 @@ local Generador = require(ReplicatedStorage.Shared.Generador)
 local Paleta = require(ReplicatedStorage.Shared.Paleta)
 local MiLab = require(script.Parent.MiLab)
 local Sonidos = require(script.Parent.Sonidos)
+local Carteles = require(script.Parent.UI.Carteles)
 
 local M = Config.Maquina
 
@@ -29,16 +30,15 @@ local puntoCamara = maquina:WaitForChild("PuntoCamara") :: BasePart
 local luces = (cuerpo:WaitForChild("Luces") :: Folder):GetChildren()
 local humo = cuerpo:WaitForChild("Humo") :: Folder
 
-local revelacion =
-	Players.LocalPlayer:WaitForChild("PlayerGui"):WaitForChild("Revelacion") :: ScreenGui
-local cartel = revelacion:WaitForChild("Cartel") :: Frame
-local escalaCartel = cartel:WaitForChild("Escala") :: UIScale
-local titulo = cartel:WaitForChild("Titulo") :: TextLabel
-local nombre = cartel:WaitForChild("Nombre") :: TextLabel
-local gen = cartel:WaitForChild("Gen") :: TextLabel
-local etiquetaMutante = cartel:WaitForChild("Mutante") :: TextLabel
-local arcoiris = etiquetaMutante:WaitForChild("Arcoiris") :: UIGradient
-local flash = revelacion:WaitForChild("Flash") :: Frame
+-- Destello de pantalla completa (debajo del cartel).
+local flash = Instance.new("Frame")
+flash.Name = "Destello"
+flash.Size = UDim2.fromScale(1, 1)
+flash.BackgroundColor3 = Paleta.Texto
+flash.BackgroundTransparency = 1
+flash.BorderSizePixel = 0
+flash.ZIndex = 0
+flash.Parent = Carteles.Capa.Raiz
 
 -- Lo que crea la animación vive en una carpeta local (los demás jugadores no lo ven).
 local carpeta = Instance.new("Folder")
@@ -254,10 +254,10 @@ local function efectoMutante()
 	a.Parent = workspace.Terrain
 	local p = Instance.new("ParticleEmitter")
 	p.Color = ColorSequence.new({
-		ColorSequenceKeypoint.new(0, Color3.fromHex("FF3B30")),
+		ColorSequenceKeypoint.new(0, Paleta.Elementos.Fuego),
 		ColorSequenceKeypoint.new(0.25, Paleta.Dorado),
 		ColorSequenceKeypoint.new(0.5, Paleta.Acento),
-		ColorSequenceKeypoint.new(0.75, Color3.fromHex("38C8FF")),
+		ColorSequenceKeypoint.new(0.75, Paleta.Elementos.Agua),
 		ColorSequenceKeypoint.new(1, Paleta.Alerta),
 	})
 	p.LightEmission = 0.4
@@ -280,41 +280,26 @@ local function efectoMutante()
 	Sonidos.secuencia({ 12, 16, 19, 24, 28, 31, 36 }, 0.05, 0.4)
 end
 
+-- El cartel grande queda fijo arriba mientras dura la animación (la cola de carteles espera).
 local function mostrarCartel(
 	textoTitulo: string,
 	textoNombre: string,
 	textoGen: string,
-	mutante: boolean
+	mutante: boolean,
+	color: Color3?
 )
-	titulo.Text = textoTitulo
-	nombre.Text = textoNombre
-	gen.Text = textoGen
-	etiquetaMutante.Visible = mutante
-	cartel.Size =
-		UDim2.new(cartel.Size.X.Scale, cartel.Size.X.Offset, 0, if mutante then 196 else 160)
-	escalaCartel.Scale = 0.3
-	cartel.Visible = true
-	TweenService
-		:Create(
-			escalaCartel,
-			TweenInfo.new(0.45, Enum.EasingStyle.Back, Enum.EasingDirection.Out),
-			{
-				Scale = 1,
-			}
-		)
-		:Play()
-	if mutante then
-		task.spawn(function()
-			while cartel.Visible and etiquetaMutante.Visible do
-				arcoiris.Rotation = (arcoiris.Rotation + 6) % 360
-				task.wait()
-			end
-		end)
-	end
+	Carteles.fijar({
+		Titulo = textoTitulo,
+		Texto = textoNombre,
+		Detalle = textoGen,
+		Mutante = mutante,
+		Color = color,
+		Arriba = true,
+	})
 end
 
 local function ocultarCartel()
-	cartel.Visible = false
+	Carteles.soltar()
 end
 
 ---------------------------------------------------------------------------
@@ -329,7 +314,7 @@ local function noReaccionan(ca: Fusion.Criatura, cb: Fusion.Criatura, f: number)
 	task.wait(0.35 * f)
 	largarHumo(false, 12)
 	temblar(0.5 * f, 0.15)
-	mostrarCartel("No reaccionan", "¡Probá otra pareja!", "No se gastó ADN", false)
+	mostrarCartel("No reaccionan", "¡Probá otra pareja!", "No se gastó ADN", false, Paleta.Error)
 	llenar(capsulas.A, ca.Color, 0, 0.4 * f)
 	llenar(capsulas.B, cb.Color, 0, 0.4 * f)
 	task.wait(1.4 * f)
@@ -385,7 +370,7 @@ function Efectos.jugar(r: Fusion.Resultado)
 	-- SONIDO: suspenso (escalera que sube)
 	Sonidos.secuencia({ 0, 1, 2, 3, 4, 5, 6, 7 }, 0.1 * f, 0.35)
 	local silueta = crearEnSalida(c, true)
-	mostrarCartel("¿Qué será?", "???", string.rep("●", c.Gen), false)
+	mostrarCartel("¿Qué será?", "???", "Generación " .. c.Gen, false, Paleta.Alerta)
 	task.wait(0.7 * f)
 	largarHumo(false)
 	task.wait(0.8 * f)
@@ -394,7 +379,7 @@ function Efectos.jugar(r: Fusion.Resultado)
 	-- SONIDO: revelación (acorde mayor + nota aguda)
 	Sonidos.acorde({ 0, 4, 7 }, 0.45)
 	Sonidos.secuencia({ 12, 16, 19, 24 }, 0.08, 0.35)
-	destello(Color3.new(1, 1, 1))
+	destello(Paleta.Texto)
 	silueta:Destroy()
 	criaturaSalida = crearEnSalida(c, false, r.Mutante)
 	tubos(nil)
@@ -403,12 +388,12 @@ function Efectos.jugar(r: Fusion.Resultado)
 	local mutante = r.Mutante == true
 	mostrarCartel(
 		if r.Nueva then "¡ESPECIE NUEVA!" else "Ya la tenías",
-		(if mutante then "⭐ " else "") .. c.Nombre,
-		string.rep("●", c.Gen)
-			.. "  Generación "
+		c.Nombre,
+		"Generación "
 			.. c.Gen
-			.. (if r.Premio then "   +" .. Formato.numero(r.Premio) .. " ADN" else ""),
-		mutante
+			.. (if r.Premio then " · +" .. Formato.numero(r.Premio) .. " ADN" else ""),
+		mutante,
+		if mutante then Paleta.Dorado elseif r.Nueva then Paleta.Acento else Paleta.Texto
 	)
 	if mutante then
 		efectoMutante()

@@ -148,6 +148,8 @@ local Config = {
 		DuracionNotificacion = 3.5, -- segundos que queda cada notificación
 		MaximoNotificaciones = 3, -- se apilan hasta esta cantidad
 		DuracionCartel = 3, -- el cartel grande se va solo a los 3 segundos (o al tocarlo)
+		DuracionFestejo = 4, -- el de generación completa queda un poco más
+		Papelitos = { 90, 60 }, -- papelitos de cada tanda del festejo (la segunda sale después)
 	},
 
 	-- Guardado en el servidor (DataStore). Cambiar el nombre empieza todo de cero.
