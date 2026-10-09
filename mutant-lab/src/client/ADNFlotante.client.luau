@@ -9,10 +9,10 @@ local TweenService = game:GetService("TweenService")
 
 local Config = require(ReplicatedStorage.Shared.Config)
 local Mejoras = require(ReplicatedStorage.Shared.Mejoras)
+local Paleta = require(ReplicatedStorage.Shared.Paleta)
 local MiLab = require(script.Parent.MiLab)
 
 local CADA = 3 -- segundos entre "+N"
-local E = Config.Estilo
 
 local jugador = Players.LocalPlayer
 local corrales = MiLab.obtener():WaitForChild("Corrales")
@@ -32,9 +32,9 @@ local function flotar(modelo: Model, cantidad: number)
 	texto.Font = Enum.Font.FredokaOne
 	texto.TextScaled = true
 	texto.Text = "+" .. cantidad
-	texto.TextColor3 = E.Amarillo
+	texto.TextColor3 = Paleta.Acento
 	local borde = Instance.new("UIStroke")
-	borde.Color = E.Violeta
+	borde.Color = Paleta.Contorno
 	borde.Thickness = 2
 	borde.Parent = texto
 	texto.Parent = cartel

@@ -126,14 +126,76 @@ local Config = {
 		DistanciaIcono = 20, -- el ícono de personalidad se ve a menos de esto
 	},
 
-	-- Estilo anterior (Laboratorio caramelo). Los colores nuevos están en Paleta.luau;
-	-- esto se va cuando la guía nueva esté aplicada a todo el juego.
+	-- TEMPORAL: colores del estilo viejo. Los usan los menús viejos hasta que se rehagan con los
+	-- componentes nuevos (Bloques 3 a 6 del rediseño); después se borra.
 	Estilo = {
 		Piso = Color3.fromHex("FFF4E0"),
 		Menta = Color3.fromHex("3EE6B5"),
 		Rosa = Color3.fromHex("FF5FA2"),
 		Amarillo = Color3.fromHex("FFD23F"),
 		Violeta = Color3.fromHex("4B2C83"),
+	},
+
+	-- Interfaz: tiempos de los avisos y carteles (los colores están en Paleta.luau,
+	-- las medidas en client/UI/Tema.luau).
+	Interfaz = {
+		DuracionNotificacion = 3.5, -- segundos que queda cada notificación
+		MaximoNotificaciones = 3, -- se apilan hasta esta cantidad
+		DuracionCartel = 3, -- el cartel grande se va solo a los 3 segundos (o al tocarlo)
+	},
+
+	-- Premium (ficha de monetización, "Mutant Lab"). Los IDs van vacíos: los crea el usuario en el
+	-- panel de Roblox. Sin ID, el botón dice "Próximamente" y no hace nada.
+	Premium = {
+		{
+			Clave = "ADNx2",
+			Nombre = "ADN x2",
+			Efecto = "Doble de ADN por segundo",
+			Robux = 149,
+			Id = 0,
+		},
+		{
+			Clave = "Instantanea",
+			Nombre = "Fusión instantánea",
+			Efecto = "Sin espera entre fusiones",
+			Robux = 99,
+			Id = 0,
+		},
+		{
+			Clave = "CorralesExtra",
+			Nombre = "Corrales extra",
+			Efecto = "+5 criaturas trabajando",
+			Robux = 149,
+			Id = 0,
+		},
+		{
+			Clave = "Recoleccion",
+			Nombre = "Recolección automática",
+			Efecto = "Junta el ADN de los corrales solo",
+			Robux = 99,
+			Id = 0,
+		},
+		{
+			Clave = "PistasDia",
+			Nombre = "Pistas del día",
+			Efecto = "3 pistas gratis por día",
+			Robux = 99,
+			Id = 0,
+		},
+		{
+			Clave = "VIP",
+			Nombre = "VIP",
+			Efecto = "Aura, etiqueta y +10 % de ADN",
+			Robux = 399,
+			Id = 0,
+		},
+		{
+			Clave = "Todo",
+			Nombre = "Bundle Todo",
+			Efecto = "Todos los pases juntos",
+			Robux = 799,
+			Id = 0,
+		},
 	},
 }
 

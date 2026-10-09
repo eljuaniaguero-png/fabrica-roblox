@@ -1,0 +1,52 @@
+--!strict
+-- Medidas y tipografía de toda la interfaz (ficha, "Guía de estilo", punto 6).
+-- Todo se mide en "puntos de diseño": la pantalla se escala entera con un UIScale
+-- (ver Pantalla.luau), así una medida vale lo mismo en computadora y en celular.
+
+local Tema = {
+	-- Escala de la pantalla: la altura de referencia es ALTO_REFERENCIA puntos.
+	-- En celular la escala no baja de EscalaMinima, así 80 puntos siempre dan 44 píxeles o más.
+	AltoReferencia = 760,
+	AnchoReferencia = 1300,
+	EscalaMinima = 0.55,
+	EscalaMaxima = 1,
+
+	Toque = 80, -- tamaño mínimo de todo lo que se toca (80 × 0,55 = 44 píxeles)
+	Margen = 18, -- separación desde los bordes de la pantalla
+	Separacion = 12, -- entre piezas dentro de una ventana
+	Relleno = 18, -- borde interno de ventanas y tarjetas
+
+	Radio = 14, -- esquinas de todo (ventanas, tarjetas, botones)
+	RadioChico = 10,
+	Contorno = 3, -- grosor del contorno casi negro
+	Profundidad = 6, -- franja oscura de abajo de los botones
+	Sombra = 6, -- cuánto baja la sombra de ventanas y tarjetas
+	TransparenciaVentana = 0.04,
+	TransparenciaFondo = 0.45, -- oscurece el juego detrás de un menú abierto
+
+	-- Tipografía: Fredoka One para títulos, números y botones (siempre sin negrita: con
+	-- negrita no carga); Builder Sans para los textos chicos.
+	Fuentes = {
+		Titulo = Font.fromEnum(Enum.Font.FredokaOne),
+		Texto = Font.new("rbxasset://fonts/families/BuilderSans.json", Enum.FontWeight.SemiBold),
+		TextoFuerte = Font.new("rbxasset://fonts/families/BuilderSans.json", Enum.FontWeight.Bold),
+	},
+	Letra = {
+		Gigante = 64, -- carteles grandes
+		Titulo = 44, -- títulos de ventanas
+		Numero = 40, -- contadores
+		Boton = 32,
+		Subtitulo = 30,
+		Normal = 26,
+		Chica = 22, -- lo más chico que se usa (12 píxeles en celular)
+	},
+	ContornoTexto = 2.5, -- contorno oscuro de los textos blancos
+
+	-- Animaciones
+	Abrir = TweenInfo.new(0.22, Enum.EasingStyle.Back, Enum.EasingDirection.Out),
+	Cerrar = TweenInfo.new(0.12, Enum.EasingStyle.Quad, Enum.EasingDirection.In),
+	Rapida = TweenInfo.new(0.12, Enum.EasingStyle.Quad, Enum.EasingDirection.Out),
+	Rebote = TweenInfo.new(0.35, Enum.EasingStyle.Back, Enum.EasingDirection.Out),
+}
+
+return Tema
