@@ -9,7 +9,7 @@ Versión 4 (2026-10-07): **Parte 3 hecha** (Mutadex). Ver "Notas de la Parte 3".
 Versión 5 (2026-10-08): **Parte 4 hecha** (laboratorio y economía). Ver "Notas de la Parte 4".
 Versión 6 (2026-10-08): **guía visual nueva** (laboratorio de caricatura de noche, ver "Guía de estilo") y **mapa nuevo**: plaza en el centro y 6 laboratorios alrededor (pedido del usuario, ver "Notas del mapa nuevo"). Ya tienen el estilo nuevo el mapa, la máquina y las criaturas. **Falta el HUD y los menús**, que siguen con el estilo caramelo.
 Versión 7 (2026-10-08): **Parte 5 hecha** (guardado, balance y pulido), sobre la rama de la interfaz nueva (HUD nuevo; la Mutadex, la tienda y el panel de fusión siguen con el estilo viejo hasta los Bloques 3 a 6 del rediseño). Ver "Notas de la Parte 5".
-Próximo punto de control: **prototipo jugable** (Partes 1 a 5). Falta que el usuario active el acceso de Studio al DataStore para probar el guardado de punta a punta.
+Próximo punto de control: **prototipo jugable** (Partes 1 a 5).
 
 ## Guía de estilo: laboratorio de caricatura de noche (versión 6)
 
@@ -288,7 +288,10 @@ Reemplaza la calle con 4 laboratorios de la Parte 4.
 - Lo que viene guardado se revisa antes de usarlo: solo pasan especies que existen y niveles válidos.
 - **Si la carga falla, se juega igual pero no se guarda nada**, para no pisar los datos buenos con un laboratorio vacío.
 - Falta (decisión mía, lo más simple): bloqueo de sesión (si alguien entra a dos servidores a la vez, gana el último que guarda) y ADN ganado sin estar conectado.
-- **Probado**: sin acceso de Studio al DataStore, el juego avisa una vez en la consola y sigue andando sin guardar. **Falta probar guardar y volver a entrar**: necesita que el usuario active Home > Game Settings > Security > "Enable Studio Access to API Services" (es un ajuste de seguridad, lo cambia el usuario). Para probarlo: `ServerStorage.Prueba.Guardar` guarda en el momento.
+- **Probado sin acceso**: si Studio no tiene acceso al DataStore, el juego avisa una vez en la consola y sigue andando sin guardar.
+- **Probado con acceso** (2026-10-08, el usuario activó Game Settings > Security > "Enable Studio Access to API Services"): se le cargaron a un jugador 8 especies, 4.321 de ADN y mejoras (corrales 2, rapidez 1, nutrientes 3), se guardó, se salió y se volvió a entrar. Volvió todo: especies, mejoras, las 8 criaturas en los corrales, la guía apagada y el ADN en 4.685 (más de lo guardado a mano, así que también guardó al salir). Una pista comprada también volvió después de salir y entrar. Los mutantes van por el mismo camino que las especies, pero no se probaron aparte. Consola sin errores.
+- Ojo: en Studio, con el acceso prendido, se usa el DataStore real del juego. El jugador de prueba (la cuenta del usuario) quedó con esos datos de prueba guardados.
+- Para probar a mano: `ServerStorage.Prueba.Guardar` guarda en el momento.
 
 ### Balance (los números están en `Config.luau`)
 | Qué | Antes | Ahora |
