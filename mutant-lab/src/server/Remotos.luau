@@ -20,6 +20,7 @@ local Remotos = {
 	ComprarPista = evento("ComprarPista"), -- cliente -> servidor: (clave)
 	Aviso = evento("Aviso"), -- servidor -> cliente: texto corto para mostrar
 	Comprar = evento("Comprar"), -- cliente -> servidor: ("Base", número) o ("Mejora", nombre)
+	Compra = evento("Compra"), -- servidor -> cliente: ("Base", número), ("Mejora", nombre, nivel) o ("Pista", clave) si salió bien
 }
 
 carpeta.Parent = ReplicatedStorage

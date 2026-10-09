@@ -8,7 +8,8 @@ Versión 3 (2026-10-07): **Parte 2 hecha** (máquina de fusión). Ver "Notas de 
 Versión 4 (2026-10-07): **Parte 3 hecha** (Mutadex). Ver "Notas de la Parte 3".
 Versión 5 (2026-10-08): **Parte 4 hecha** (laboratorio y economía). Ver "Notas de la Parte 4".
 Versión 6 (2026-10-08): **guía visual nueva** (laboratorio de caricatura de noche, ver "Guía de estilo") y **mapa nuevo**: plaza en el centro y 6 laboratorios alrededor (pedido del usuario, ver "Notas del mapa nuevo"). Ya tienen el estilo nuevo el mapa, la máquina y las criaturas. **Falta el HUD y los menús**, que siguen con el estilo caramelo.
-Próximo punto de control: el usuario mira el mapa nuevo; después, HUD y menús con la guía y la **Parte 5**.
+Versión 7 (2026-10-08): **Parte 5 hecha** (guardado, balance y pulido), sobre la rama de la interfaz nueva (HUD nuevo; la Mutadex, la tienda y el panel de fusión siguen con el estilo viejo hasta los Bloques 3 a 6 del rediseño). Ver "Notas de la Parte 5".
+Próximo punto de control: **prototipo jugable** (Partes 1 a 5). Falta que el usuario active el acceso de Studio al DataStore para probar el guardado de punta a punta.
 
 ## Guía de estilo: laboratorio de caricatura de noche (versión 6)
 
@@ -279,6 +280,58 @@ Reemplaza la calle con 4 laboratorios de la Parte 4.
 - **El servidor debería ser de 6 jugadores como máximo.** Eso lo cambia el usuario en la configuración del juego (hoy está en 60).
 - **Probado en playtest** (2026-10-08): se generan los 6 laboratorios, el jugador recibe el Lab1 con su nombre en el arco y en la flecha de la plaza, y hay 2 criaturas en el corral 1. Se probó una fusión real (Glupona + Rámulo = Glumulo): se ve la animación entera con la máquina nueva, la Mutadex de la pared pasa a 3 / 50 con la tarjeta de Glumulo y el corral pasa a +4 ADN/s. La consola quedó sin errores.
 
+## Notas de la Parte 5 (guardado, balance y pulido)
+
+### Guardado
+- `server/Guardado.luau` guarda en el DataStore `MutantLab_v1` (nombre en `Config.Guardado`): ADN, especies descubiertas (son las criaturas: hay una de cada especie), mutantes, pistas compradas, premios de generación ya cobrados y niveles de las mejoras. Al volver, los corrales se arman solos con esas especies.
+- Se guarda al salir, cada 60 segundos y al cerrar el servidor. Si Roblox no responde, reintenta 3 veces.
+- Lo que viene guardado se revisa antes de usarlo: solo pasan especies que existen y niveles válidos.
+- **Si la carga falla, se juega igual pero no se guarda nada**, para no pisar los datos buenos con un laboratorio vacío.
+- Falta (decisión mía, lo más simple): bloqueo de sesión (si alguien entra a dos servidores a la vez, gana el último que guarda) y ADN ganado sin estar conectado.
+- **Probado**: sin acceso de Studio al DataStore, el juego avisa una vez en la consola y sigue andando sin guardar. **Falta probar guardar y volver a entrar**: necesita que el usuario active Home > Game Settings > Security > "Enable Studio Access to API Services" (es un ajuste de seguridad, lo cambia el usuario). Para probarlo: `ServerStorage.Prueba.Guardar` guarda en el momento.
+
+### Balance (los números están en `Config.luau`)
+| Qué | Antes | Ahora |
+|---|---|---|
+| ADN inicial | 30 | 100 (justo la primera fusión) |
+| Fusión gen 2 | 20, +10 % por especie | 100, +30 % por especie |
+| Fusión gen 3 | ×5 | ×3 |
+| Bases (3.ª a 10.ª) | 50, 120, 300, 800, 2.000… | 450, 1.350, 3.200, 6.800, 16.000, 36.000, 80.000, 180.000 |
+| Más corrales | 150 / 1.500 / 8.000 | 300 / 5.000 / 25.000 |
+| Fusión rápida | 250 / 1.500 / 6.000 | 500 / 3.000 / 12.000 |
+| Nutrientes | 200 / 800 / 3.000 / 10.000 / 30.000 | 600 / 2.500 / 8.000 / 25.000 / 70.000 |
+
+- Por qué: con los números viejos un jugador llegaba a 17 especies en 5 minutos y le sobraba ADN. Cada base nueva abre de golpe 3 a 5 fusiones; ahora cada fusión cuesta más o menos lo que se junta en medio minuto, así las especies salen de a una y no en ráfagas.
+- Primero se ajustó con un simulador (usa los módulos reales del juego, 20 partidas por variante) y después se midió en Studio con un jugador automático que juega 10 minutos reales: tarda 3 s en elegir cada fusión, mira la animación entera, prueba parejas al azar (incluso las que no reaccionan), compra la base vecina cuando le alcanza y abre un corral cuando se llena.
+- **Tiempos medidos (playtest real de 10 minutos)**:
+  - Primera fusión: a los **15 segundos** (Glupona + Rámulo, con los 100 ADN del arranque).
+  - Especies por minuto: 3 · 3 · 5 · 6 · 7 · 8 · **10** (minuto 7) · 11 · 12 · **12** (minuto 10).
+  - Especies nuevas en: 0:15, 2:18, 2:47, 3:05, 4:51, 5:58, 6:24, 6:42, 7:04 y 8:58.
+  - **Hueco más largo sin especie nueva: 2:18** (entre la primera fusión y la 3.ª base). Nunca pasó de 3 minutos.
+  - Hizo 6 intentos que no reaccionaron (gratis) y le quedaban 2.785 ADN al minuto 10 (la 5.ª base cuesta 3.200).
+- El simulador da lo mismo (unas 13 especies a los 10 minutos, hueco máximo de 2:30). Un jugador de verdad va un poco más lento que el automático, así que debería andar por **10 a 12 especies a los 10 minutos**.
+- **Panel de fusión**: si la pareja da una especie que ya tenés, avisa "Ya tenés a (nombre): solo sirve para buscar el mutante" antes de cobrar (la idea de la Parte 4). Solo lo dice de las que ya tenés, así no adelanta especies nuevas. Sin este aviso, el jugador automático gastaba en repetidas y los huecos llegaban a 4 minutos.
+
+### Guía de los primeros segundos
+- Si el jugador todavía no fusionó nunca (atributo `Guia` que pone el servidor), aparecen: una **flecha magenta que salta sobre la máquina**, un **camino de luz verde** desde los pies del personaje hasta la consola y un cartel abajo al centro: "¡Seguí la flecha hasta la máquina y fusioná 2 criaturas!" (texto en `Config.Guia`).
+- Todo se va la primera vez que abre la máquina. Al que vuelve con datos guardados ya no le aparece.
+- La flecha es magenta (el color de "novedades" de la guía) porque verde sobre la cápsula verde no se veía. El cartel va abajo porque arriba tapaba la flecha.
+
+### Efectos
+- **Número que salta**: cada vez que cambia el ADN, al lado del contador sale "+N" verde (o dorado y más grande desde 50, por ejemplo premios) que sube y se desvanece; al gastar sale "-N" en rojo.
+- **Rebote del contador**: un saltito con el ADN de cada segundo y un rebote fuerte con los premios (ya venía en el HUD nuevo).
+- **Destello al comprar**: esfera de luz que crece, chispas y un acorde. Va sobre lo que cambió: la criatura nueva (bases), el corral que se abrió (Más corrales) o el mostrador de la tienda (otras mejoras y pistas). El servidor avisa con el remoto `Compra` solo si la compra salió bien. Marcado con `-- SONIDO:`.
+
+### Rendimiento (20 criaturas)
+- En Studio, con 20 criaturas caminando en el laboratorio: animarlas cuesta **1,1 ms por cuadro**; dibujar todo, unos **5 ms de CPU y 4 ms de placa de video**. Sobra para 60 cuadros por segundo en computadora.
+- El riesgo en celular era otro: con 6 laboratorios llenos hay casi **100 criaturas** y cada celular animaba todas (4,3 ms por cuadro). Ahora solo se animan las que están a menos de 80 studs de la cámara (`Config.Animacion.DistanciaAnimar`): con 100 en el mapa se animan unas 44 y cuesta 1,8 ms.
+- Ojo: cada criatura tiene entre 26 y 39 partes (la guía pide 12 como máximo). Hoy no es un problema, pero si en celular anda lento, juntar piezas es lo primero para mirar.
+- No se pudo probar en un celular de verdad: eso lo tiene que hacer el usuario.
+
+### Otros arreglos
+- La interfaz nueva había dejado colgada la Mutadex vieja (esperaba el botón de progreso del HUD viejo) y los botones Mutadex y Tienda del HUD no abrían nada. Ahora abren la Mutadex y la tienda viejas (puente **temporal** en `UI/Menus.luau`, hasta rehacerlas). Abrir una cierra las otras, y abrir la máquina o el mostrador también.
+- `HerramientasPrueba` ahora también existe jugando en Studio (en el juego publicado no): `DarEspecies`, `PonerDatos` (ADN y mejoras) y `Guardar`.
+
 ## La idea en una línea
 
 Un laboratorio donde combinás criaturas para descubrir especies nuevas y llenar las siluetas de tu Mutadex.
@@ -427,7 +480,7 @@ Lista completa:
 
 ## 6. Economía
 
-Moneda única: **ADN**. Todos los números van a `Config.luau` y se ajustan en la Parte 5.
+Moneda única: **ADN**. Todos los números van a `Config.luau`. **Los de abajo son los del plan original: los actuales están en "Notas de la Parte 5".**
 
 **Arranque**: 3 bases seguidas en la rueda (Glupona, Rámulo, Sutomi) y 50 ADN. Así la primera fusión se puede hacer en el segundo 1 y hay una gen 3 al alcance en el primer minuto.
 
@@ -485,7 +538,7 @@ Cómo lo vamos a mirar en el playtest:
 - [x] **Parte 2 - Máquina de fusión** (hecha el 2026-10-07): dos cápsulas, validación en el servidor (reacciona / no reacciona), animación de suspenso, aparición de la especie y tirada del mutante.
 - [x] **Parte 3 - Mutadex** (hecha el 2026-10-07): UI con las 50 siluetas alrededor de la rueda, generación, casilla mutante, cuaderno de parejas tachadas y escáner.
 - [x] **Parte 4 - Laboratorio y economía** (hecha el 2026-10-08): el mapa del laboratorio, criaturas paseando, ADN por segundo, terminal para comprar bases y mejoras.
-- [ ] **Parte 5 - Guardado, balance y pulido**: DataStore, ajuste de números con playtest de 10 minutos, sonidos (`-- SONIDO:`), legibilidad en celular.
+- [x] **Parte 5 - Guardado, balance y pulido** (hecha el 2026-10-08): DataStore, balance medido con un playtest de 10 minutos, guía de los primeros segundos, efectos (número de ADN, rebote, destello al comprar), prueba con 20 criaturas y consola limpia. Ver "Notas de la Parte 5".
 - [ ] **Parte 6 - Compras con Robux**: solo cosas que no son azar. Ideas: pase "Doble ADN", pase "Segunda máquina" (dos fusiones a la vez), colores del laboratorio. Nada de cajas sorpresa ni subir la chance de mutante. Es punto de control: los pases los crea y les pone precio el usuario.
 
 Puntos de control: esta ficha → estilo visual → prototipo jugable (Partes 1 a 5) → Parte 6.

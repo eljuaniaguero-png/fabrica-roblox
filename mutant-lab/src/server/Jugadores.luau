@@ -1,5 +1,5 @@
 --!strict
--- Datos de cada jugador mientras está en el servidor (el guardado llega en la Parte 5).
+-- Datos de cada jugador mientras está en el servidor (se guardan con Guardado.luau).
 -- Se publican como atributos del Player para que el cliente los lea:
 --   ADN (número entero), Especies y Mutantes (claves separadas por ";"),
 --   Pistas ("clave:cantidad;...") y PistasCompradas (número),
@@ -20,6 +20,18 @@ export type Datos = {
 	GeneracionesPremiadas: { [number]: boolean },
 	Mejoras: Mejoras.Niveles,
 	OcupadoHasta: number, -- la máquina está trabajando hasta este os.clock()
+}
+
+-- Lo que se guarda en el DataStore (Guardado.luau): solo tablas, textos y números.
+export type Guardados = {
+	Version: number,
+	ADN: number,
+	Especies: { string },
+	Mutantes: { string },
+	Pistas: { [string]: number },
+	PistasCompradas: number,
+	GeneracionesPremiadas: { number },
+	Mejoras: Mejoras.Niveles,
 }
 
 local datos: { [Player]: Datos } = {}
@@ -78,8 +90,8 @@ function Jugadores.publicar(jugador: Player)
 	jugador:SetAttribute("Tope", Mejoras.tope(d.Mejoras.Corrales))
 end
 
--- Crea los datos de un jugador que entra.
-function Jugadores.crear(jugador: Player)
+-- Crea los datos de un jugador que entra: los guardados, si tiene, o los de un jugador nuevo.
+function Jugadores.crear(jugador: Player, guardados: Guardados?)
 	local d: Datos = {
 		ADN = Config.Economia.ADNInicial,
 		Especies = {},
@@ -100,8 +112,25 @@ function Jugadores.crear(jugador: Player)
 			d.Especies[tostring(n)] = true
 		end
 		d.GeneracionesPremiadas[1] = true
+	elseif guardados and #guardados.Especies > 0 then
+		d.ADN = guardados.ADN
+		d.Especies = {}
+		for _, k in guardados.Especies do
+			d.Especies[k] = true
+		end
+		for _, k in guardados.Mutantes do
+			d.Mutantes[k] = true
+		end
+		d.Pistas = table.clone(guardados.Pistas)
+		d.PistasCompradas = guardados.PistasCompradas
+		for _, g in guardados.GeneracionesPremiadas do
+			d.GeneracionesPremiadas[g] = true
+		end
+		d.Mejoras = table.clone(guardados.Mejoras)
 	end
 	datos[jugador] = d
+	-- Si todavía no fusionó nunca, el cliente le muestra la flecha hasta la máquina.
+	jugador:SetAttribute("Guia", Jugadores.cantidadEspecies(d) <= #Config.Economia.BasesIniciales)
 	Jugadores.publicar(jugador)
 end
 

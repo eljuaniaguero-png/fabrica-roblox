@@ -16,6 +16,7 @@ local Config = require(ReplicatedStorage.Shared.Config)
 local Especies = require(ReplicatedStorage.Shared.Especies)
 local Formato = require(ReplicatedStorage.Shared.Formato)
 local Mejoras = require(ReplicatedStorage.Shared.Mejoras)
+local Menus = require(script.Parent.UI.Menus)
 local MiLab = require(script.Parent.MiLab)
 local Sonidos = require(script.Parent.Sonidos)
 local Vista = require(script.Parent.Vista)
@@ -196,7 +197,18 @@ local prompt = MiLab.obtener()
 	:WaitForChild("Mostrador")
 	:WaitForChild("Prompt") :: ProximityPrompt
 prompt.Triggered:Connect(function()
+	Menus.cerrarViejos()
 	ventana.Visible = true
+	actualizar()
+end)
+-- El botón Tienda del HUD también la abre y la cierra (puente temporal en UI/Menus.luau).
+Menus.puenteViejo("Tienda", ventana, function()
+	-- Si estaba abierto el panel de la máquina, se cierra para no tapar.
+	local panel = jugador.PlayerGui:FindFirstChild("Fusion")
+	panel = panel and panel:FindFirstChild("Panel")
+	if panel and panel:IsA("GuiObject") then
+		panel.Visible = false
+	end
 	actualizar()
 end)
 

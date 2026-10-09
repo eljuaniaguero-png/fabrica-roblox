@@ -6,6 +6,7 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService = game:GetService("RunService")
 
 local Animacion = require(ReplicatedStorage.Shared.Animacion)
+local Config = require(ReplicatedStorage.Shared.Config)
 
 local estados: { [Model]: Animacion.Estado } = {}
 
@@ -39,11 +40,17 @@ for _, inst in CollectionService:GetTagged("Criatura") do
 	task.spawn(agregar, inst)
 end
 
+local DISTANCIA = Config.Animacion.DistanciaAnimar
+
 RunService.RenderStepped:Connect(function(dt: number)
 	local reloj = os.clock()
+	local camara = workspace.CurrentCamera.CFrame.Position
 	for modelo, estado in estados do
 		if modelo.Parent then
-			Animacion.paso(estado, reloj, dt)
+			-- Las lejanas no se animan (rendimiento en celular); siguen donde quedaron.
+			if (estado.Base.Position - camara).Magnitude < DISTANCIA then
+				Animacion.paso(estado, reloj, dt)
+			end
 		else
 			estados[modelo] = nil
 		end

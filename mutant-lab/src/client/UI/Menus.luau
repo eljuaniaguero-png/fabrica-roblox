@@ -123,7 +123,37 @@ function Menus.cerrar(nombre: string?)
 	cambio:Fire(nil)
 end
 
+-- TEMPORAL (hasta rehacer la Mutadex y la tienda con los componentes nuevos): menús viejos
+-- que se abren y cierran con los botones del HUD. Abrir uno cierra los demás viejos.
+type Viejo = { Ventana: GuiObject, AlAbrir: () -> () }
+local viejos: { [string]: Viejo } = {}
+
+function Menus.puenteViejo(nombre: string, ventana: GuiObject, alAbrir: () -> ())
+	viejos[nombre] = { Ventana = ventana, AlAbrir = alAbrir }
+end
+
+-- Cierra la Mutadex y la tienda viejas (al abrir la máquina, por ejemplo).
+function Menus.cerrarViejos()
+	for _, v in viejos do
+		v.Ventana.Visible = false
+	end
+end
+
 function Menus.alternar(nombre: string)
+	local viejo = viejos[nombre]
+	if viejo and not registros[nombre] then
+		Menus.cerrar()
+		local abrir = not viejo.Ventana.Visible
+		for _, otro in viejos do
+			otro.Ventana.Visible = false
+		end
+		if abrir then
+			viejo.Ventana.Visible = true
+			Sonidos.abrirMenu()
+			viejo.AlAbrir()
+		end
+		return
+	end
 	if abierto == nombre then
 		Menus.cerrar(nombre)
 	else

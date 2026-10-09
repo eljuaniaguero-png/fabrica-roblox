@@ -40,6 +40,7 @@ local function comprarBase(jugador: Player, d: Jugadores.Datos, n: number)
 	Jugadores.publicar(jugador)
 	Corrales.actualizar(jugador)
 	aviso(jugador, "¡" .. Especies[n].Nombre .. " llegó a tu laboratorio!")
+	Remotos.Compra:FireClient(jugador, "Base", n)
 	for _, c in celebraciones do
 		Remotos.Celebracion:FireClient(jugador, c)
 	end
@@ -68,6 +69,7 @@ local function comprarMejora(jugador: Player, d: Jugadores.Datos, nombre: string
 		Corrales.actualizar(jugador)
 	end
 	aviso(jugador, "¡" .. def.Nombre .. " nivel " .. (nivel + 1) .. "!")
+	Remotos.Compra:FireClient(jugador, "Mejora", nombre, nivel + 1)
 end
 
 Remotos.Comprar.OnServerEvent:Connect(function(jugador: Player, tipo: unknown, id: unknown)

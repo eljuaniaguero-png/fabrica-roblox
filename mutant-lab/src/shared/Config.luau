@@ -7,21 +7,24 @@ local Config = {
 	DistanciaMaxima = 3, -- base + base reaccionan si están a 1, 2 o 3 lugares
 	ProbabilidadMutante = 1 / 40, -- solo estética
 
-	-- Economía (ficha, punto 6)
+	-- Economía (ficha, punto 6). Balance de la Parte 5: una especie nueva por minuto más o
+	-- menos, unas 10 a los 10 minutos y nunca más de 3 minutos sin una fusión nueva posible.
+	-- Los tiempos medidos están en la ficha ("Notas de la Parte 5").
 	Economia = {
-		ADNInicial = 30, -- el jugador nuevo arranca con poco ADN...
-		BasesIniciales = { 1, 2 }, -- ...y dos bases vecinas (Glupona y Rámulo), así la primera fusión sale enseguida
-		CostoGen2 = 20,
-		SubaPorEspecie = 1.1, -- el costo sube un 10 % por cada especie que ya tenés...
+		ADNInicial = 100, -- justo lo que cuesta la primera fusión...
+		BasesIniciales = { 1, 2 }, -- ...con dos bases vecinas (Glupona y Rámulo): sale en el segundo 1
+		CostoGen2 = 100,
+		SubaPorEspecie = 1.3, -- el costo sube un 30 % por cada especie que ya tenés...
 		EspeciesSinSuba = 3, -- ...a partir de la tercera
-		MultiplicadorGen3 = 5,
+		MultiplicadorGen3 = 3,
 		ADNPorGen = { 1, 2, 6 }, -- ADN por segundo de cada criatura activa en un corral, según su generación
 	},
 
 	-- Tienda de especies base: el precio depende de cuántas bases ya tenés.
 	-- PreciosBases[1] es lo que cuesta la primera que comprás (la 3.ª base), y así.
+	-- Cada base nueva abre de 3 a 5 fusiones: estos precios son los que marcan el ritmo.
 	Tienda = {
-		PreciosBases = { 50, 120, 300, 800, 2000, 5000, 12000, 30000 },
+		PreciosBases = { 450, 1350, 3200, 6800, 16000, 36000, 80000, 180000 },
 	},
 
 	-- Corrales: solo las criaturas que están en un corral generan ADN.
@@ -37,20 +40,20 @@ local Config = {
 			Nombre = "Más corrales",
 			Descripcion = "Abre un corral: +4 criaturas trabajando",
 			Inicial = 1,
-			Precios = { 150, 1500, 8000 },
+			Precios = { 300, 5000, 25000 }, -- el primero es barato: si no, frena la 4.ª base
 		},
 		Rapida = {
 			Nombre = "Fusión rápida",
 			Descripcion = "La máquina trabaja más rápido",
 			Inicial = 0,
-			Precios = { 250, 1500, 6000 },
+			Precios = { 500, 3000, 12000 },
 			Factores = { 1, 0.8, 0.65, 0.5 }, -- duración de la fusión en cada nivel (0 a 3)
 		},
 		Nutrientes = {
 			Nombre = "Nutrientes",
 			Descripcion = "+25 % de ADN por segundo",
 			Inicial = 0,
-			Precios = { 200, 800, 3000, 10000, 30000 },
+			Precios = { 600, 2500, 8000, 25000, 70000 },
 			Bonus = 0.25, -- por nivel
 		},
 	},
@@ -110,6 +113,9 @@ local Config = {
 		VelocidadPaseo = 3.5, -- studs por segundo cuando caminan por el corral
 		PausaPaseo = { 0.6, 3 }, -- segundos que se quedan quietas entre paseo y paseo (mínimo, máximo)
 		Tornasol = false, -- mutantes con colores que cambian (la guía de estilo los quiere dorados)
+		-- Rendimiento: solo se animan las criaturas a menos de esto de la cámara. Con 6
+		-- laboratorios llenos hay casi 100 criaturas; las de los demás quedan quietas de lejos.
+		DistanciaAnimar = 80,
 	},
 
 	-- Forma de las criaturas (guía de estilo, punto 5): estilo chibi, la cabeza ocupa la
@@ -142,6 +148,25 @@ local Config = {
 		DuracionNotificacion = 3.5, -- segundos que queda cada notificación
 		MaximoNotificaciones = 3, -- se apilan hasta esta cantidad
 		DuracionCartel = 3, -- el cartel grande se va solo a los 3 segundos (o al tocarlo)
+	},
+
+	-- Guardado en el servidor (DataStore). Cambiar el nombre empieza todo de cero.
+	Guardado = {
+		Almacen = "MutantLab_v1",
+		CadaCuanto = 60, -- segundos entre guardados automáticos
+		Intentos = 3, -- reintentos si Roblox no responde
+	},
+
+	-- Guía del jugador nuevo: flecha y cartel hasta la máquina, hasta que la usa por primera vez.
+	Guia = {
+		Texto = "¡Seguí la flecha hasta la máquina y fusioná 2 criaturas!",
+		AlturaFlecha = 9, -- studs sobre la consola de la máquina
+	},
+
+	-- Efectos de la interfaz (Parte 5)
+	Efectos = {
+		NumeroADNMinimo = 1, -- el "+N" junto al contador sale cuando sumás al menos esto
+		NumeroADNGrande = 50, -- desde acá el "+N" sale más grande y dorado (premios, ventas)
 	},
 
 	-- Premium (ficha de monetización, "Mutant Lab"). Los IDs van vacíos: los crea el usuario en el

@@ -5,9 +5,11 @@
 --   arriba a la derecha, los botones redondos de Mutadex, Tienda, Misiones y Ajustes;
 --   a la derecha, las notificaciones (Notificaciones.luau). El centro queda siempre libre.
 
+local Debris = game:GetService("Debris")
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
+local Config = require(ReplicatedStorage.Shared.Config)
 local Formato = require(ReplicatedStorage.Shared.Formato)
 local Fusion = require(ReplicatedStorage.Shared.Fusion)
 local Paleta = require(ReplicatedStorage.Shared.Paleta)
@@ -46,13 +48,55 @@ local function porSegundo(): number
 	return (jugador:GetAttribute("ADNPorSegundo") :: number?) or 0
 end
 
+-- "+N" (o "-N" al gastar) que salta al lado del contador y se desvanece subiendo.
+local SALTO = TweenInfo.new(0.9, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
+local DESVANECER = TweenInfo.new(0.5, Enum.EasingStyle.Quad, Enum.EasingDirection.In)
+local alturaSalto = 0
+
+local function numeroQueSalta(cambio: number)
+	local grande = math.abs(cambio) >= Config.Efectos.NumeroADNGrande
+	local color = if cambio < 0 then Paleta.Error elseif grande then Paleta.Dorado else Paleta.Acento
+	local t = UI.texto({
+		Nombre = "NumeroADN",
+		Texto = (if cambio > 0 then "+" else "-") .. Formato.numero(math.abs(cambio)),
+		Letra = if grande then Tema.Letra.Titulo else Tema.Letra.Subtitulo,
+		Color = color,
+		AlineacionX = Enum.TextXAlignment.Left,
+		Medida = UDim2.fromOffset(240, 56),
+	})
+	t.TextWrapped = false
+	-- Los seguidos se escalonan un poco, para que no se pisen.
+	alturaSalto = (alturaSalto + 1) % 3
+	local inicio = UDim2.fromOffset(M + 290 + 10, M + 20 + alturaSalto * 8)
+	t.Position = inicio
+	local escala = Instance.new("UIScale")
+	escala.Scale = 0.3
+	escala.Parent = t
+	t.Parent = capa.Raiz
+	UI.animar(escala, Tema.Rebote, { Scale = 1 })
+	UI.animar(t, SALTO, { Position = inicio - UDim2.fromOffset(0, if cambio > 0 then 46 else -46) })
+	task.delay(0.45, function()
+		UI.animar(t, DESVANECER, { TextTransparency = 1 })
+		local borde = t:FindFirstChildOfClass("UIStroke")
+		if borde then
+			UI.animar(borde, DESVANECER, { Transparency = 1 })
+		end
+	end)
+	Debris:AddItem(t, 1.1)
+end
+
 local function actualizarADN()
 	local valor = (jugador:GetAttribute("ADN") :: number?) or 0
 	adn.Valor.Text = Formato.numero(valor)
-	if adnAnterior and valor > adnAnterior then
-		-- Lo de cada segundo es un saltito; un premio o algo grande, un rebote fuerte.
-		local subida = valor - adnAnterior
-		adn.rebotar(if subida > porSegundo() * 2 + 1 then 0.18 else 0.06)
+	if adnAnterior and valor ~= adnAnterior then
+		local cambio = valor - adnAnterior
+		if cambio > 0 then
+			-- Lo de cada segundo es un saltito; un premio o algo grande, un rebote fuerte.
+			adn.rebotar(if cambio > porSegundo() * 2 + 1 then 0.18 else 0.06)
+		end
+		if math.abs(cambio) >= Config.Efectos.NumeroADNMinimo then
+			numeroQueSalta(cambio)
+		end
 	end
 	adnAnterior = valor
 end

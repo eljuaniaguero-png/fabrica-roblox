@@ -7,7 +7,7 @@
 --   Ficha > Vista (ViewportFrame), Pregunta, Nombre, Gen, Detalle (TextLabel), Ayuda (TextLabel),
 --           BotonPista (TextButton > Texto, Costo)
 --   Plantilla (TextButton oculto) > Vista, Pregunta, Nombre, Gen, Estrella, Borde (UIStroke)
--- Se abre tocando HUD > Progreso.
+-- Se abre con el progreso o el botón Mutadex del HUD (puente temporal en UI/Menus.luau).
 
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
@@ -18,6 +18,7 @@ local Formato = require(ReplicatedStorage.Shared.Formato)
 local Fusion = require(ReplicatedStorage.Shared.Fusion)
 local Pistas = require(ReplicatedStorage.Shared.Pistas)
 local Sonidos = require(script.Parent.Sonidos)
+local Menus = require(script.Parent.UI.Menus)
 local Vista = require(script.Parent.Vista)
 
 local E = Config.Estilo
@@ -46,7 +47,6 @@ local fichaAyuda = ficha:WaitForChild("Ayuda") :: TextLabel
 local botonPista = ficha:WaitForChild("BotonPista") :: TextButton
 local textoPista = botonPista:WaitForChild("Texto") :: TextLabel
 local costoPista = botonPista:WaitForChild("Costo") :: TextLabel
-local botonProgreso = gui:WaitForChild("HUD"):WaitForChild("Progreso") :: TextButton
 local comprarPista =
 	ReplicatedStorage:WaitForChild("Remotos"):WaitForChild("ComprarPista") :: RemoteEvent
 
@@ -222,17 +222,14 @@ botonPista.Activated:Connect(function()
 	end
 end)
 
-botonProgreso.Activated:Connect(function()
-	ventana.Visible = not ventana.Visible
-	if ventana.Visible then
-		-- Si estaba abierto el panel de la máquina, se cierra para no tapar.
-		local panelFusion = gui:FindFirstChild("Fusion")
-		local panel = panelFusion and panelFusion:FindFirstChild("Panel")
-		if panel and panel:IsA("GuiObject") then
-			panel.Visible = false
-		end
-		actualizarTodo()
+Menus.puenteViejo("Mutadex", ventana, function()
+	-- Si estaba abierto el panel de la máquina, se cierra para no tapar.
+	local panelFusion = gui:FindFirstChild("Fusion")
+	local panel = panelFusion and panelFusion:FindFirstChild("Panel")
+	if panel and panel:IsA("GuiObject") then
+		panel.Visible = false
 	end
+	actualizarTodo()
 end)
 
 cerrar.Activated:Connect(function()

@@ -36,6 +36,7 @@ local function comprar(jugador: Player, clave: unknown)
 	d.Pistas[c.Clave] = ya + 1
 	d.PistasCompradas += 1
 	Jugadores.publicar(jugador)
+	Remotos.Compra:FireClient(jugador, "Pista", c.Clave)
 end
 
 Remotos.ComprarPista.OnServerEvent:Connect(comprar)

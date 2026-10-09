@@ -72,6 +72,12 @@ local function actualizarBoton()
 	if ca and cb then
 		local costo = Costos.fusion(ca.Gen, cb.Gen, cantidadEspecies())
 		local adn = (jugador:GetAttribute("ADN") :: number?) or 0
+		-- Si sale una especie que ya tenés, se avisa antes de cobrar (solo sirve para buscar
+		-- el mutante). Solo se dice para las que ya tenés: no adelanta especies nuevas.
+		local hijo = if costo then Fusion.fusionar(ca, cb) else nil
+		if hijo and conjunto("Especies")[hijo.Clave] then
+			aviso.Text = "Ya tenés a " .. hijo.Nombre .. ": solo sirve para buscar el mutante."
+		end
 		if costo then
 			textoCosto.Text = costo .. " ADN"
 			textoCosto.TextColor3 = if adn >= costo then E.Violeta else ROJO
@@ -123,8 +129,8 @@ local function poner(lado: string, clave: string?)
 	seleccion[lado] = clave
 	actualizarRanura(lado)
 	pintarTarjetas()
-	actualizarBoton()
 	aviso.Text = ""
+	actualizarBoton()
 	if eventos then
 		eventos.AlElegir(lado, clave)
 	end
