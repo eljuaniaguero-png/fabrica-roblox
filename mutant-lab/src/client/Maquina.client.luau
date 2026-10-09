@@ -7,7 +7,6 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Fusion = require(ReplicatedStorage.Shared.Fusion)
 local Celebracion = require(script.Parent.Celebracion)
 local EfectosMaquina = require(script.Parent.EfectosMaquina)
-local Menus = require(script.Parent.UI.Menus)
 local MiLab = require(script.Parent.MiLab)
 local PanelFusion = require(script.Parent.PanelFusion)
 
@@ -45,7 +44,6 @@ PanelFusion.iniciar({
 
 prompt.Triggered:Connect(function()
 	if not animando then
-		Menus.cerrarViejos()
 		PanelFusion.abrir()
 	end
 end)

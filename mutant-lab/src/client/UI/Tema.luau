@@ -91,9 +91,14 @@ local Tema = {
 	Tienda = {
 		Columnas = 4,
 		ColumnasCelular = 3,
-		AltoTarjeta = 330,
-		AltoMedia = 130, -- vista 3D o ícono de arriba de cada tarjeta
+		AltoTarjeta = 372,
+		AltoMedia = 120, -- vista 3D o ícono de arriba de cada tarjeta
+		AltoNombre = 38,
+		AltoEfecto = 78, -- tres renglones de letra chica
+		AltoNivel = 26,
+		AltoInfo = 44, -- renglón de ayuda arriba de la grilla
 		Insignia = 104, -- círculo con el ícono de las mejoras y lo Premium
+		PuntoNivel = 18,
 	},
 }
 

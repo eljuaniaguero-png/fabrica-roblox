@@ -4,6 +4,7 @@
 -- No existen en el juego publicado. Uso desde la consola del servidor:
 --   game.ServerStorage.Prueba.DarEspecies:Invoke("NombreDelJugador", { "1-2", "3-4" })
 --   game.ServerStorage.Prueba.DarMutantes:Invoke("NombreDelJugador", { "1-2" })
+--   game.ServerStorage.Prueba.Reiniciar:Invoke("NombreDelJugador") -> vuelve a jugador nuevo
 --   game.ServerStorage.Prueba.PonerDatos:Invoke("NombreDelJugador", 5000, { Corrales = 4 })
 --   game.ServerStorage.Prueba.Guardar:Invoke("NombreDelJugador") -> true si guardó
 
@@ -63,6 +64,17 @@ if Config.Prueba.Activo or RunService:IsStudio() then
 		Jugadores.publicar(jugador)
 		Corrales.actualizar(jugador)
 		return n
+	end)
+
+	-- Deja al jugador como uno nuevo (para probar el arranque). Se guarda como cualquier partida.
+	funcion(carpeta, "Reiniciar", function(nombre: string): boolean
+		local jugador = buscar(nombre)
+		if not jugador then
+			return false
+		end
+		Jugadores.crear(jugador :: Player, nil)
+		Corrales.actualizar(jugador :: Player)
+		return true
 	end)
 
 	-- ADN y niveles de mejoras (los que no se pasan quedan como están).

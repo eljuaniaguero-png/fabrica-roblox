@@ -35,7 +35,8 @@ local Notificaciones = {}
 -- Si el que avisa no dice el tipo, se adivina por el texto.
 local function adivinar(texto: string): string
 	local t = texto:lower()
-	if texto:sub(1, 1) == "¡" then
+	-- "¡" ocupa dos bytes: se compara el principio entero.
+	if texto:sub(1, #"¡") == "¡" then
 		return "exito"
 	elseif t:find("falta") or t:find("^no ") or t:find("todavía") then
 		return "error"
