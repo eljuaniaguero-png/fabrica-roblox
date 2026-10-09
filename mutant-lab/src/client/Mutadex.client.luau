@@ -1,58 +1,53 @@
 --!strict
--- La Mutadex: las 50 especies. Las descubiertas se ven completas; las otras, como silueta
--- negra con "?". Tocar una tarjeta muestra su ficha a la derecha; las siluetas venden pistas.
--- Mutadex (ScreenGui armado en Studio) > Ventana >
---   Encabezado > Titulo, Contador, ADN (TextLabel), Barra > Relleno, Cerrar (TextButton)
---   Lista (ScrollingFrame) > Gen1, Gen2, Gen3 (Frame) > Titulo, Nota, Grilla (Frame con UIGridLayout)
---   Ficha > Vista (ViewportFrame), Pregunta, Nombre, Gen, Detalle (TextLabel), Ayuda (TextLabel),
---           BotonPista (TextButton > Texto, Costo)
---   Plantilla (TextButton oculto) > Vista, Pregunta, Nombre, Gen, Estrella, Borde (UIStroke)
--- Se abre con el progreso o el botón Mutadex del HUD (puente temporal en UI/Menus.luau).
+-- La Mutadex (ficha, "Guía de estilo", 6, "Mutadex"), armada por código con los componentes de UI:
+--   encabezado con el título, "12 / 50", la barra de progreso y el ADN;
+--   pestañas Gen 1, Gen 2, Gen 3 y Extras (vacía por ahora);
+--   grilla de tarjetas (4 por fila en computadora, 3 en celular): las descubiertas con la
+--   criatura, el nombre, el punto de elemento y el borde de su generación (estrella dorada si
+--   la tenés mutante); las demás, silueta negra con "?" en una esquina (la forma es la pista);
+--   ficha de la especie tocada (al costado en computadora, encima en celular): la criatura
+--   grande girando, nombre, generación, elemento, personalidad, receta si ya la descubriste y
+--   el botón de pista para las siluetas.
+-- Se abre con el progreso o el botón Mutadex del HUD, a través de UI/Menus.
 
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local RunService = game:GetService("RunService")
 
-local Config = require(ReplicatedStorage.Shared.Config)
+local Elementos = require(ReplicatedStorage.Shared.Elementos)
 local Especies = require(ReplicatedStorage.Shared.Especies)
 local Formato = require(ReplicatedStorage.Shared.Formato)
 local Fusion = require(ReplicatedStorage.Shared.Fusion)
+local Generador = require(ReplicatedStorage.Shared.Generador)
+local Paleta = require(ReplicatedStorage.Shared.Paleta)
+local Personalidades = require(ReplicatedStorage.Shared.Personalidades)
 local Pistas = require(ReplicatedStorage.Shared.Pistas)
 local Sonidos = require(script.Parent.Sonidos)
+local UI = require(script.Parent.UI)
 local Menus = require(script.Parent.UI.Menus)
+local VistasVisibles = require(script.Parent.UI.VistasVisibles)
 local Vista = require(script.Parent.Vista)
 
-local E = Config.Estilo
-local BLANCO = Color3.new(1, 1, 1)
-local LILA = Color3.fromHex("E6DDFF") -- fondo de las siluetas
-local GRIS = Color3.fromHex("D9D2C5")
-local ROJO = Color3.fromHex("E8254D")
-
+local Tema = UI.Tema
+local T = Tema.Mutadex
+local V = Tema.Ventana
 local jugador = Players.LocalPlayer
-local gui = jugador:WaitForChild("PlayerGui")
-local ventana = gui:WaitForChild("Mutadex"):WaitForChild("Ventana") :: Frame
-local encabezado = ventana:WaitForChild("Encabezado") :: Frame
-local contador = encabezado:WaitForChild("Contador") :: TextLabel
-local etiquetaADN = encabezado:WaitForChild("ADN") :: TextLabel
-local rellenoBarra = encabezado:WaitForChild("Barra"):WaitForChild("Relleno") :: Frame
-local cerrar = encabezado:WaitForChild("Cerrar") :: TextButton
-local lista = ventana:WaitForChild("Lista") :: ScrollingFrame
-local plantilla = ventana:WaitForChild("Plantilla") :: TextButton
-local ficha = ventana:WaitForChild("Ficha") :: Frame
-local fichaVista = ficha:WaitForChild("Vista") :: ViewportFrame
-local fichaPregunta = ficha:WaitForChild("Pregunta") :: TextLabel
-local fichaNombre = ficha:WaitForChild("Nombre") :: TextLabel
-local fichaGen = ficha:WaitForChild("Gen") :: TextLabel
-local fichaDetalle = ficha:WaitForChild("Detalle") :: TextLabel
-local fichaAyuda = ficha:WaitForChild("Ayuda") :: TextLabel
-local botonPista = ficha:WaitForChild("BotonPista") :: TextButton
-local textoPista = botonPista:WaitForChild("Texto") :: TextLabel
-local costoPista = botonPista:WaitForChild("Costo") :: TextLabel
-local comprarPista =
-	ReplicatedStorage:WaitForChild("Remotos"):WaitForChild("ComprarPista") :: RemoteEvent
+local remotos = ReplicatedStorage:WaitForChild("Remotos")
+local comprarPista = remotos:WaitForChild("ComprarPista") :: RemoteEvent
+local compra = remotos:WaitForChild("Compra") :: RemoteEvent
 
 local TODAS = Fusion.todas()
-local tarjetas: { [string]: TextButton } = {}
-local seleccionada: string? = nil
+
+-- La regla de cada generación, arriba de su grilla (ayuda mucho a saber qué combinar).
+local NOTAS = {
+	"La rueda: las bases están en ronda (después de la 10 vuelve la 1). Las vecinas, hasta 3 lugares, se fusionan.",
+	"Base + base: dos bases cercanas en la rueda.",
+	"Gen 2 + base: las tres bases tienen que quedar seguidas en la rueda.",
+}
+
+local AYUDA = "Tocá una especie para ver su ficha.\n\n"
+	.. "Las siluetas negras son las que te faltan: su forma es una pista.\n\n"
+	.. "Si te trabás, comprá una pista con ADN."
 
 type Estado = {
 	Tengo: { [string]: boolean },
@@ -60,6 +55,18 @@ type Estado = {
 	Pistas: { [string]: number },
 	Compradas: number,
 	ADN: number,
+}
+
+type Tarjeta = {
+	Cas: UI.Casillero,
+	Criatura: Fusion.Criatura,
+	Marca: string?, -- lo último que mostró ("D", "DM" o "S"); la vista se rearma solo si cambia
+}
+
+type Pagina = {
+	Marco: Frame,
+	Grilla: UIGridLayout?,
+	Grupo: VistasVisibles.Grupo?,
 }
 
 local function estado(): Estado
@@ -72,9 +79,235 @@ local function estado(): Estado
 	}
 end
 
-local function hijo<T>(padre: Instance, nombre: string): T
-	return padre:WaitForChild(nombre) :: any
+local tarjetas: { [string]: Tarjeta } = {}
+local paginas: { [string]: Pagina } = {}
+local seleccionada: string? = nil
+local paginaActual = "1"
+local celular = false
+
+---------------------------------------------------------------------------
+-- Ventana y encabezado
+---------------------------------------------------------------------------
+
+local ventana = UI.ventana({
+	Titulo = "Mutadex",
+	Icono = "libro",
+	ColorIcono = Paleta.Generaciones[3],
+	Ancho = V.Ancho,
+	Alto = V.Alto,
+	MaxAncho = V.MaxAncho,
+	MaxAlto = V.MaxAlto,
+})
+
+local contadorADN = UI.contador({
+	Icono = "adn",
+	Color = Paleta.Acento,
+	Texto = "0",
+	Ancho = Tema.ContadorVentana.X,
+	Alto = Tema.ContadorVentana.Y,
+})
+contadorADN.Marco.AnchorPoint = Vector2.new(1, 0.5)
+contadorADN.Marco.Position = UDim2.new(1, -(Tema.Relleno + Tema.Toque + Tema.Separacion), 0.5, 0)
+contadorADN.Marco.Parent = ventana.Encabezado
+
+local progreso = UI.hueco(
+	"Progreso",
+	UDim2.fromOffset(T.AnchoProgreso, Tema.ContadorVentana.Y),
+	ventana.Encabezado
+)
+progreso.AnchorPoint = Vector2.new(1, 0.5)
+progreso.Position = UDim2.new(
+	1,
+	-(Tema.Relleno + Tema.Toque + Tema.Separacion * 2 + Tema.ContadorVentana.X),
+	0.5,
+	0
+)
+local textoProgreso = UI.texto({
+	Nombre = "Contador",
+	Texto = "0 / " .. #TODAS,
+	Letra = Tema.Letra.Numero,
+	Medida = UDim2.new(1, 0, 1, -Tema.Separacion * 2),
+})
+textoProgreso.Parent = progreso
+local barra = UI.barra(Paleta.Acento)
+barra.Marco.AnchorPoint = Vector2.new(0, 1)
+barra.Marco.Position = UDim2.fromScale(0, 1)
+barra.Marco.Parent = progreso
+
+---------------------------------------------------------------------------
+-- Pestañas y páginas
+---------------------------------------------------------------------------
+
+local mostrarPagina: (clave: string) -> ()
+
+local pestanas = UI.pestanas({
+	{ Clave = "1", Texto = "Gen 1" },
+	{ Clave = "2", Texto = "Gen 2" },
+	{ Clave = "3", Texto = "Gen 3" },
+	{ Clave = "Extras", Texto = "Extras", Icono = "rombo", ColorIcono = Paleta.Dorado },
+}, function(clave: string)
+	mostrarPagina(clave)
+end)
+pestanas.Marco.Parent = ventana.Cuerpo
+
+local arriba = Tema.Toque + Tema.Separacion
+local contenido = UI.hueco("Contenido", UDim2.new(1, 0, 1, -arriba), ventana.Cuerpo)
+contenido.Position = UDim2.fromOffset(0, arriba)
+local paginasMarco = UI.hueco("Paginas", UDim2.fromScale(1, 1), contenido)
+
+for gen = 1, 3 do
+	local marco = UI.hueco("Gen" .. gen, UDim2.fromScale(1, 1), paginasMarco)
+	marco.Visible = false
+	local nota = UI.texto({
+		Nombre = "Nota",
+		Texto = NOTAS[gen],
+		Fuente = "fuerte",
+		Letra = Tema.Letra.Chica,
+		Color = Paleta.Generaciones[gen],
+		AlineacionX = Enum.TextXAlignment.Left,
+		Medida = UDim2.new(1, 0, 0, T.AltoNota),
+	})
+	nota.Parent = marco
+	local scroll = UI.desplazable("Lista", marco)
+	scroll.Position = UDim2.fromOffset(0, T.AltoNota)
+	scroll.Size = UDim2.new(1, 0, 1, -T.AltoNota)
+	paginas[tostring(gen)] = {
+		Marco = marco,
+		Grilla = UI.grilla(scroll, Vector2.new(T.AltoTarjeta.Minimo, T.AltoTarjeta.Minimo)),
+		Grupo = VistasVisibles.nueva(scroll),
+	}
 end
+
+-- Extras: las especies especiales (Parte 6) todavía no existen.
+local extras = UI.hueco("Extras", UDim2.fromScale(1, 1), paginasMarco)
+extras.Visible = false
+local insigniaExtras = UI.insignia("rombo", Paleta.Dorado, T.InsigniaExtras)
+insigniaExtras.AnchorPoint = Vector2.new(0.5, 1)
+insigniaExtras.Position = UDim2.fromScale(0.5, 0.45)
+insigniaExtras.Parent = extras
+local textoExtras = UI.texto({
+	Texto = "Las especies especiales llegan pronto.",
+	Letra = Tema.Letra.Subtitulo,
+	Medida = UDim2.new(1, 0, 0, Tema.Toque),
+})
+textoExtras.Position = UDim2.new(0, 0, 0.45, Tema.Separacion)
+textoExtras.Parent = extras
+paginas.Extras = { Marco = extras }
+
+---------------------------------------------------------------------------
+-- Ficha de la especie
+---------------------------------------------------------------------------
+
+local ficha = UI.tarjeta({ Nombre = "Ficha" })
+ficha.Marco.Parent = contenido
+local fichaLista = UI.desplazable("Datos", ficha.Fondo)
+local listaFicha = UI.lista(fichaLista, false, Tema.Separacion)
+listaFicha.HorizontalAlignment = Enum.HorizontalAlignment.Center
+
+local function fila(nombre: string, orden: number): (Frame, Frame, TextLabel)
+	local f = UI.hueco(nombre, UDim2.new(1, 0, 0, T.FilaFicha), fichaLista)
+	f.LayoutOrder = orden
+	local l = UI.lista(f, true, Tema.Separacion)
+	l.VerticalAlignment = Enum.VerticalAlignment.Center
+	local icono = UI.hueco("Icono", UDim2.fromOffset(0, T.FilaFicha), f)
+	icono.AutomaticSize = Enum.AutomaticSize.X
+	icono.LayoutOrder = 1
+	UI.lista(icono, true, 4).VerticalAlignment = Enum.VerticalAlignment.Center
+	local t = UI.texto({
+		Nombre = "Texto",
+		Fuente = "fuerte",
+		Letra = Tema.Letra.Normal,
+		AlineacionX = Enum.TextXAlignment.Left,
+		Medida = UDim2.new(1, -T.FilaFicha * 2, 1, 0),
+	})
+	t.TextWrapped = false
+	t.LayoutOrder = 2
+	t.Parent = f
+	return f, icono, t
+end
+
+local function vaciar(contenedor: Instance)
+	for _, h in contenedor:GetChildren() do
+		if h:IsA("GuiObject") then
+			h:Destroy()
+		end
+	end
+end
+
+-- La criatura grande va arriba en computadora y a la izquierda en celular (ver el acomodo).
+local vistaHueco = UI.hueco("Criatura", UDim2.new(1, 0, 0, T.VistaFicha), ficha.Fondo)
+local fichaVista = Instance.new("ViewportFrame")
+fichaVista.Name = "Vista"
+fichaVista.BackgroundTransparency = 1
+fichaVista.Size = UDim2.fromScale(1, 1)
+fichaVista.Parent = vistaHueco
+local signoFicha = UI.Iconos.crear("pregunta", Tema.MarcaChica + Tema.Separacion, Paleta.Texto)
+signoFicha.AnchorPoint = Vector2.new(1, 0)
+signoFicha.Position = UDim2.fromScale(1, 0)
+signoFicha.Parent = vistaHueco
+local estrellaFicha = UI.Iconos.crear("estrella", Tema.MarcaChica + Tema.Separacion, Paleta.Mutante)
+estrellaFicha.AnchorPoint = Vector2.new(1, 0)
+estrellaFicha.Position = UDim2.fromScale(1, 0)
+estrellaFicha.Parent = vistaHueco
+
+local fichaNombre = UI.texto({
+	Nombre = "Nombre",
+	Letra = Tema.Letra.Titulo,
+	Medida = UDim2.new(1, 0, 0, Tema.Letra.Titulo + Tema.Separacion),
+})
+fichaNombre.LayoutOrder = 2
+fichaNombre.Parent = fichaLista
+
+local filaGen, iconoGen, textoGen = fila("Generacion", 3)
+local filaElemento, iconoElemento, textoElemento = fila("Elemento", 4)
+local filaPersonalidad, iconoPersonalidad, textoPersonalidad = fila("Personalidad", 5)
+
+local fichaDetalle = UI.texto({
+	Nombre = "Detalle",
+	Fuente = "fuerte",
+	Letra = Tema.Letra.Chica,
+	AlineacionX = Enum.TextXAlignment.Left,
+	Medida = UDim2.fromScale(1, 0),
+})
+fichaDetalle.AutomaticSize = Enum.AutomaticSize.Y
+fichaDetalle.LayoutOrder = 6
+fichaDetalle.Parent = fichaLista
+
+local botonPista = UI.boton({
+	Nombre = "Pista",
+	Texto = "Comprar pista",
+	Sub = "",
+	Icono = "lupa",
+	Tipo = "principal",
+	Letra = Tema.Letra.Subtitulo,
+	Medida = UDim2.new(1, 0, 0, Tema.Toque + Tema.Profundidad),
+})
+botonPista.Marco.LayoutOrder = 7
+botonPista.Marco.Parent = fichaLista
+
+local ayuda = UI.texto({
+	Nombre = "Ayuda",
+	Texto = AYUDA,
+	Fuente = "fuerte",
+	Letra = Tema.Letra.Normal,
+	Color = Paleta.Texto,
+	Medida = UDim2.fromScale(1, 0),
+})
+ayuda.AutomaticSize = Enum.AutomaticSize.Y
+ayuda.LayoutOrder = 8
+ayuda.Parent = fichaLista
+
+-- En celular la ficha tapa la grilla: se cierra con su propia X.
+local cerrarFicha = UI.botonCerrar()
+cerrarFicha.Marco.AnchorPoint = Vector2.new(1, 0)
+cerrarFicha.Marco.Position = UDim2.new(1, -Tema.Separacion, 0, Tema.Separacion)
+cerrarFicha.Marco.ZIndex = 5
+cerrarFicha.Marco.Parent = ficha.Fondo
+
+local modeloFicha: Model? = nil
+local marcaFicha: string? = nil
+local angulo = 0
+local giro: RBXScriptConnection? = nil
 
 -- Con qué bases se arma, en palabras.
 local function receta(c: Fusion.Criatura): string
@@ -83,114 +316,171 @@ local function receta(c: Fusion.Criatura): string
 		table.insert(nombres, Especies[b].Nombre)
 	end
 	if c.Gen == 1 then
-		return "Especie base de la rueda.\nTema: " .. Especies[c.Bases[1]].Tema .. "."
+		return "Especie base n.º "
+			.. c.Bases[1]
+			.. " de la rueda ("
+			.. Especies[c.Bases[1]].Tema
+			.. ")."
 	elseif c.Gen == 2 then
-		return "Se hace con:\n" .. nombres[1] .. " + " .. nombres[2]
+		return "Receta: " .. nombres[1] .. " + " .. nombres[2] .. "."
 	end
-	return "Mezcla de:\n" .. nombres[1] .. ", " .. nombres[2] .. " y " .. nombres[3]
-end
-
-local function pintarTarjeta(t: TextButton, c: Fusion.Criatura, e: Estado)
-	local descubierta = e.Tengo[c.Clave] == true
-	local mutante = e.Mutantes[c.Clave] == true
-	local marca = (if descubierta then "D" else "S") .. (if mutante then "M" else "")
-	-- La vista 3D se rearma solo si cambió (es lo más pesado).
-	if t:GetAttribute("Estado") ~= marca then
-		Vista.mostrar(hijo(t, "Vista"), c.Clave, mutante, not descubierta)
-		t:SetAttribute("Estado", marca)
-	end
-	local n = e.Pistas[c.Clave] or 0
-	hijo(t, "Nombre").Text = if descubierta then c.Nombre else "???"
-	hijo(t, "Pregunta").Visible = not descubierta
-	hijo(t, "Estrella").Visible = mutante
-	hijo(t, "Gen").Text = string.rep("●", c.Gen)
-		.. (if not descubierta and n > 0 then "  🔍" .. n else "")
-	t.BackgroundColor3 = if descubierta then BLANCO else LILA
-	local borde: UIStroke = hijo(t, "Borde")
-	if seleccionada == c.Clave then
-		borde.Color, borde.Thickness = E.Rosa, 4
-	else
-		borde.Color, borde.Thickness = E.Violeta, 2
-	end
+	return "Receta: mezcla de " .. nombres[1] .. ", " .. nombres[2] .. " y " .. nombres[3] .. "."
 end
 
 local function actualizarFicha(e: Estado)
 	local c = if seleccionada then Fusion.porClave(seleccionada) else nil
-	local hay = c ~= nil
-	fichaAyuda.Visible = not hay
-	for _, x in { fichaVista, fichaNombre, fichaGen, fichaDetalle } :: { GuiObject } do
-		x.Visible = hay
+	ficha.Marco.Visible = c ~= nil or not celular
+	ayuda.Visible = c == nil
+	if not celular then
+		-- Sin especie elegida, la ayuda sube al lugar de la criatura.
+		local alto = if c then T.VistaFicha else 0
+		fichaLista.Position = UDim2.fromOffset(0, alto)
+		fichaLista.Size = UDim2.new(1, 0, 1, -alto)
 	end
+	for _, x in
+		{ vistaHueco, fichaNombre, filaGen, filaElemento, filaPersonalidad, fichaDetalle } :: { GuiObject }
+	do
+		x.Visible = c ~= nil
+	end
+	botonPista.Marco.Visible = false
 	if not c then
-		fichaPregunta.Visible = false
-		botonPista.Visible = false
-		Vista.mostrar(fichaVista, nil)
+		marcaFicha = nil
+		modeloFicha = Vista.mostrar(fichaVista, nil)
 		return
 	end
+
 	local descubierta = e.Tengo[c.Clave] == true
-	local mutante = e.Mutantes[c.Clave] == true
-	Vista.mostrar(fichaVista, c.Clave, mutante, not descubierta)
-	fichaPregunta.Visible = not descubierta
-	fichaGen.Text = string.rep("●", c.Gen) .. "  Generación " .. c.Gen
+	local mutante = descubierta and e.Mutantes[c.Clave] == true
+	local marca = c.Clave .. (if descubierta then "D" else "S") .. (if mutante then "M" else "")
+	if marcaFicha ~= marca then
+		marcaFicha = marca
+		angulo = 0
+		modeloFicha = Vista.mostrar(fichaVista, c.Clave, mutante, not descubierta)
+		fichaLista.CanvasPosition = Vector2.zero
+	end
+	signoFicha.Visible = not descubierta
+	estrellaFicha.Visible = mutante
+	fichaNombre.Text = if descubierta then c.Nombre else "???"
+
+	vaciar(iconoGen)
+	UI.puntosGen(c.Gen, 20).Parent = iconoGen
+	textoGen.Text = "Generación " .. c.Gen
+
+	vaciar(iconoElemento)
+	vaciar(iconoPersonalidad)
+	if descubierta then
+		UI.puntoElemento(Generador.colorElemento(c), 24).Parent = iconoElemento
+		textoElemento.Text = Elementos.texto(c)
+		local p = Personalidades.Datos[Personalidades.deEspecie(c.Bases)]
+		UI.Iconos.crear(p.Dibujo, T.FilaFicha, if p.Positiva then Paleta.Acento else Paleta.Alerta).Parent =
+			iconoPersonalidad
+		textoPersonalidad.Text = p.Nombre
+	else
+		UI.Iconos.crear("pregunta", T.FilaFicha, Paleta.Metal).Parent = iconoElemento
+		textoElemento.Text = "Elemento: ???"
+		UI.Iconos.crear("pregunta", T.FilaFicha, Paleta.Metal).Parent = iconoPersonalidad
+		textoPersonalidad.Text = "Personalidad: ???"
+	end
 
 	if descubierta then
-		fichaNombre.Text = (if mutante then "⭐ " else "") .. c.Nombre
-		fichaDetalle.Text = receta(c) .. (if mutante then "\n⭐ ¡La tenés mutante!" else "")
-		botonPista.Visible = false
+		fichaDetalle.Text = receta(c) .. (if mutante then "\n¡La tenés mutante!" else "")
+		fichaDetalle.TextColor3 = if mutante then Paleta.Dorado else Paleta.Texto
+		return
+	end
+	fichaDetalle.TextColor3 = Paleta.Texto
+	if c.Gen == 1 then
+		fichaDetalle.Text = "Todavía no la tenés. Las especies base se compran en la tienda."
 		return
 	end
 
-	fichaNombre.Text = "???"
-	if c.Gen == 1 then
-		fichaDetalle.Text = "Todavía no la tenés.\nLas especies base se compran con ADN."
-		botonPista.Visible = false
-		return
-	end
+	-- Silueta: las pistas compradas y el botón para la siguiente.
 	local n = e.Pistas[c.Clave] or 0
 	local maximo = Pistas.maximo(c)
 	local lineas = {}
 	for i = 1, n do
-		table.insert(lineas, "🔍 " .. Pistas.texto(c, i))
+		table.insert(lineas, "Pista " .. i .. ": " .. Pistas.texto(c, i))
 	end
 	if n == 0 then
 		table.insert(
 			lineas,
-			"Todavía no la descubriste.\nMirá la forma de la silueta o comprá una pista."
+			"Todavía no la descubriste. Mirá la forma de la silueta o comprá una pista."
 		)
 	end
 	fichaDetalle.Text = table.concat(lineas, "\n")
-	botonPista.Visible = true
+	botonPista.Marco.Visible = true
 	if n >= maximo then
-		textoPista.Text = "Sin más pistas"
-		costoPista.Text = n .. " de " .. maximo
-		costoPista.TextColor3 = E.Violeta
-		botonPista.BackgroundColor3 = GRIS
-		botonPista.AutoButtonColor = false
+		botonPista.poner("Sin más pistas", n .. " de " .. maximo)
+		botonPista.colorSub(Paleta.Texto)
+		botonPista.habilitar(false)
 	else
 		local costo = Pistas.costo(e.Compradas)
-		textoPista.Text = "🔍 Comprar pista " .. (n + 1) .. " de " .. maximo
-		costoPista.Text = Formato.numero(costo) .. " ADN"
-		costoPista.TextColor3 = if e.ADN >= costo then E.Violeta else ROJO
-		botonPista.BackgroundColor3 = if e.ADN >= costo then E.Amarillo else GRIS
-		botonPista.AutoButtonColor = e.ADN >= costo
+		local alcanza = e.ADN >= costo
+		botonPista.poner("Pista " .. (n + 1) .. " de " .. maximo, Formato.numero(costo) .. " ADN")
+		botonPista.colorSub(if alcanza then Paleta.Texto else Paleta.Error)
+		botonPista.habilitar(alcanza)
+	end
+end
+
+---------------------------------------------------------------------------
+-- Tarjetas
+---------------------------------------------------------------------------
+
+local function pintarTarjeta(t: Tarjeta, e: Estado)
+	local c = t.Criatura
+	local descubierta = e.Tengo[c.Clave] == true
+	local mutante = descubierta and e.Mutantes[c.Clave] == true
+	local marca = (if descubierta then "D" else "S") .. (if mutante then "M" else "")
+	local pagina = paginas[tostring(c.Gen)]
+	local grupo = pagina.Grupo :: VistasVisibles.Grupo
+	if t.Marca ~= marca then
+		local datos = { Clave = c.Clave, Mutante = mutante, Silueta = not descubierta }
+		if t.Marca == nil then
+			grupo.agregar(t.Cas.Marco, t.Cas.Hueco, datos)
+		else
+			grupo.cambiar(t.Cas.Marco, datos)
+		end
+		t.Marca = marca
+		t.Cas.elemento(if descubierta then Generador.colorElemento(c) else nil)
+	end
+	local nombre = c.Nombre
+	if not descubierta then
+		local n = e.Pistas[c.Clave] or 0
+		nombre = if n == 1
+			then "??? · 1 pista"
+			elseif n > 1 then "??? · " .. n .. " pistas"
+			else "???"
+	end
+	t.Cas.poner(c.Clave, nombre, mutante, not descubierta)
+	if seleccionada == c.Clave then
+		t.Cas.Borde.Color = Paleta.Acento
+		t.Cas.Borde.Thickness = Tema.Contorno + 3
+	else
+		t.Cas.Borde.Color = if descubierta then Paleta.Generaciones[c.Gen] else Paleta.Metal
+		t.Cas.Borde.Thickness = Tema.Contorno + 1
 	end
 end
 
 local function actualizarTodo()
 	local e = estado()
-	local n = 0
+	local total = 0
+	local porGen = { 0, 0, 0 }
+	local deGen = { 0, 0, 0 }
 	for _, c in TODAS do
+		deGen[c.Gen] += 1
 		if e.Tengo[c.Clave] then
-			n += 1
+			total += 1
+			porGen[c.Gen] += 1
 		end
-		local t = tarjetas[c.Clave]
-		if t then
-			pintarTarjeta(t, c, e)
-		end
+		pintarTarjeta(tarjetas[c.Clave], e)
 	end
-	contador.Text = n .. " / " .. #TODAS
-	etiquetaADN.Text = Formato.numero(e.ADN) .. " ADN"
-	rellenoBarra.Size = UDim2.fromScale(n / #TODAS, 1)
+	for gen = 1, 3 do
+		pestanas.Botones[tostring(gen)].poner(
+			"Gen " .. gen .. " · " .. porGen[gen] .. "/" .. deGen[gen]
+		)
+	end
+	textoProgreso.Text = total .. " / " .. #TODAS
+	barra.poner(total / #TODAS)
+	contadorADN.Valor.Text = Formato.numero(e.ADN)
 	actualizarFicha(e)
 end
 
@@ -201,40 +491,135 @@ local function elegir(clave: string)
 	actualizarTodo()
 end
 
--- Una tarjeta por especie, en la grilla de su generación y en el orden de la rueda.
 for orden, c in TODAS do
-	local t = plantilla:Clone()
-	t.Name = c.Clave
-	t.LayoutOrder = orden
-	t.Visible = true
-	t.Activated:Connect(function()
+	local cas = UI.casillero({
+		Nombre = c.Clave,
+		Medida = UDim2.fromOffset(T.AltoTarjeta.Minimo, T.AltoTarjeta.Minimo),
+		Borde = Paleta.Metal,
+		Signo = "?",
+		Prestada = true,
+	})
+	cas.Signo.TextColor3 = Paleta.Texto
+	cas.Marco.LayoutOrder = orden
+	local pagina = paginas[tostring(c.Gen)]
+	cas.Marco.Parent = pagina.Marco:FindFirstChild("Lista")
+	UI.tocable(cas.Fondo, function()
 		elegir(c.Clave)
-	end)
-	t.Parent = lista:WaitForChild("Gen" .. c.Gen):WaitForChild("Grilla")
-	tarjetas[c.Clave] = t
+	end, cas.Marco)
+	tarjetas[c.Clave] = { Cas = cas, Criatura = c, Marca = nil }
 end
 
-botonPista.Activated:Connect(function()
-	if seleccionada and botonPista.AutoButtonColor then
-		-- SONIDO: comprar una pista (dos notas que suben)
-		Sonidos.secuencia({ 4, 11 }, 0.08, 0.35)
-		comprarPista:FireServer(seleccionada)
+function mostrarPagina(clave: string)
+	paginaActual = clave
+	for k, p in paginas do
+		p.Marco.Visible = k == clave
+	end
+	local p = paginas[clave]
+	if p and p.Grupo then
+		p.Grupo.actualizar()
+	end
+end
+
+---------------------------------------------------------------------------
+-- Acomodo (computadora o celular)
+---------------------------------------------------------------------------
+
+ventana.alAcomodar(function(tam: Vector2)
+	celular = UI.Pantalla.esCelular()
+	local anchoCuerpo = tam.X - Tema.Relleno * 2
+	local anchoPaginas = if celular
+		then anchoCuerpo
+		else anchoCuerpo - T.AnchoFicha - Tema.Separacion
+	paginasMarco.Size = UDim2.new(0, anchoPaginas, 1, 0)
+	if celular then
+		ficha.Marco.Position = UDim2.new()
+		ficha.Marco.Size = UDim2.fromScale(1, 1)
+		ficha.Marco.ZIndex = 10
+	else
+		ficha.Marco.Position = UDim2.fromOffset(anchoPaginas + Tema.Separacion, 0)
+		ficha.Marco.Size = UDim2.new(0, T.AnchoFicha, 1, 0)
+		ficha.Marco.ZIndex = 1
+	end
+	cerrarFicha.Marco.Visible = celular
+	if celular then
+		-- Dos columnas: la criatura a la izquierda y los datos a la derecha (con la X).
+		vistaHueco.Position = UDim2.fromOffset(0, 0)
+		vistaHueco.Size = UDim2.fromScale(0.42, 1)
+		fichaLista.Position = UDim2.fromScale(0.42, 0)
+		fichaLista.Size = UDim2.new(0.58, -(Tema.Toque + Tema.Separacion), 1, 0)
+	else
+		vistaHueco.Position = UDim2.fromOffset(0, 0)
+		vistaHueco.Size = UDim2.new(1, 0, 0, T.VistaFicha)
+		fichaLista.Position = UDim2.fromOffset(0, T.VistaFicha)
+		fichaLista.Size = UDim2.new(1, 0, 1, -T.VistaFicha)
+	end
+	local columnas = if celular then T.ColumnasCelular else T.Columnas
+	local ancho = UI.anchoCelda(UI.anchoUtil(anchoPaginas), columnas)
+	local alto = math.clamp(
+		math.floor(ancho * T.AltoTarjeta.Proporcion),
+		T.AltoTarjeta.Minimo,
+		T.AltoTarjeta.Maximo
+	)
+	for _, p in paginas do
+		if p.Grilla then
+			p.Grilla.CellSize = UDim2.fromOffset(ancho, alto)
+		end
+	end
+	if ventana.Marco.Visible then
+		actualizarTodo()
 	end
 end)
 
-Menus.puenteViejo("Mutadex", ventana, function()
+---------------------------------------------------------------------------
+-- Conexiones
+---------------------------------------------------------------------------
+
+cerrarFicha.AlTocar = function()
+	seleccionada = nil
 	actualizarTodo()
+end
+
+botonPista.AlTocar = function()
+	if seleccionada then
+		comprarPista:FireServer(seleccionada)
+	end
+end
+
+compra.OnClientEvent:Connect(function(tipo: string)
+	if tipo == "Pista" and ventana.Marco.Visible then
+		-- SONIDO: pista comprada (dos notas que suben)
+		Sonidos.secuencia({ 4, 11 }, 0.08, 0.35)
+		UI.destello(ficha.Fondo, Paleta.Acento, ficha.Marco)
+		contadorADN.rebotar(0.15)
+	end
 end)
 
-cerrar.Activated:Connect(function()
-	ventana.Visible = false
+Menus.registrar("Mutadex", ventana, function()
+	actualizarTodo()
+	mostrarPagina(paginaActual)
+	if not giro then
+		giro = RunService.RenderStepped:Connect(function(dt: number)
+			local m = modeloFicha
+			if m and m.Parent then
+				angulo += dt * T.Giro
+				m:PivotTo(CFrame.Angles(0, angulo, 0))
+			end
+		end)
+	end
+end, function()
+	if giro then
+		giro:Disconnect()
+		giro = nil
+	end
 end)
 
 for _, atributo in { "Especies", "Mutantes", "Pistas", "PistasCompradas", "ADN" } do
 	jugador:GetAttributeChangedSignal(atributo):Connect(function()
-		if ventana.Visible then
+		if ventana.Marco.Visible then
 			actualizarTodo()
 		end
 	end)
 end
+
+pestanas.elegir("1")
 actualizarTodo()

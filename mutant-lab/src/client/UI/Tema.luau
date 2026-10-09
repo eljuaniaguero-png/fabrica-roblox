@@ -77,11 +77,14 @@ local Tema = {
 	Mutadex = {
 		Columnas = 4,
 		ColumnasCelular = 3,
-		AltoTarjeta = { Minimo = 190, Maximo = 270, Proporcion = 1.15 },
+		AltoTarjeta = { Minimo = 190, Maximo = 230, Proporcion = 1.15 },
 		AnchoFicha = 400,
 		VistaFicha = 230,
 		Giro = 0.9, -- radianes por segundo de la criatura grande de la ficha
 		AnchoProgreso = 260,
+		AltoNota = 56, -- nota de la regla arriba de cada generación
+		FilaFicha = 36, -- filas de generación, elemento y personalidad de la ficha
+		InsigniaExtras = 120,
 	},
 
 	-- Tienda

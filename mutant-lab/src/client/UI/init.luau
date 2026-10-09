@@ -333,7 +333,8 @@ function UI.boton(op: OpcionesBoton): Boton
 
 	local icono: Frame? = nil
 	if op.Icono then
-		local alto = (marco.Size.Y.Offset - prof)
+		-- Si el alto es relativo (pestañas), el ícono se mide con el alto de toque.
+		local alto = (if marco.Size.Y.Offset > 0 then marco.Size.Y.Offset else Tema.Toque) - prof
 		local tam = if op.Texto then math.floor(alto * 0.5) else math.floor(alto * 0.56)
 		local i = Iconos.crear(op.Icono, tam, op.ColorIcono or Paleta.Texto)
 		i.LayoutOrder = 1

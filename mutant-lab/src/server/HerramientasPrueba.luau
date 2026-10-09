@@ -3,6 +3,7 @@
 -- jugar (probar la Mutadex con muchas especies, el laboratorio lleno, el guardado).
 -- No existen en el juego publicado. Uso desde la consola del servidor:
 --   game.ServerStorage.Prueba.DarEspecies:Invoke("NombreDelJugador", { "1-2", "3-4" })
+--   game.ServerStorage.Prueba.DarMutantes:Invoke("NombreDelJugador", { "1-2" })
 --   game.ServerStorage.Prueba.PonerDatos:Invoke("NombreDelJugador", 5000, { Corrales = 4 })
 --   game.ServerStorage.Prueba.Guardar:Invoke("NombreDelJugador") -> true si guardó
 
@@ -44,6 +45,24 @@ if Config.Prueba.Activo or RunService:IsStudio() then
 		Jugadores.publicar(jugador)
 		Corrales.actualizar(jugador)
 		return Jugadores.cantidadEspecies(d)
+	end)
+
+	-- Marca como mutantes especies que el jugador ya tiene (para ver la estrella dorada).
+	funcion(carpeta, "DarMutantes", function(nombre: string, claves: { string }): number
+		local jugador, d = buscar(nombre)
+		if not jugador or not d then
+			return 0
+		end
+		local n = 0
+		for _, clave in claves do
+			if d.Especies[clave] then
+				d.Mutantes[clave] = true
+				n += 1
+			end
+		end
+		Jugadores.publicar(jugador)
+		Corrales.actualizar(jugador)
+		return n
 	end)
 
 	-- ADN y niveles de mejoras (los que no se pasan quedan como están).
