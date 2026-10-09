@@ -12,6 +12,7 @@ Versión 7 (2026-10-08): **Parte 5 hecha** (guardado, balance y pulido), sobre l
 Versión 8 (2026-10-09): **interfaz terminada**: el panel de fusión, la Mutadex, la tienda y los festejos ya usan los componentes de `client/UI` (pedido 1 de `ORDEN-PEDIDOS.md`). Ver "Notas de la interfaz terminada".
 Versión 9 (2026-10-09): **Pedidos** (pedido 2 de `ORDEN-PEDIDOS.md`): clientes que piden criaturas, inventario de criaturas y balance nuevo del ADN. Ver "Pedidos".
 Versión 10 (2026-10-09): **fracasos útiles, personalidades y catalizadores** (pedido 3 de `ORDEN-PEDIDOS.md`): residuos, personalidades con herencia y efectos en el corral, ranura de catalizador con variantes, y pedidos de personalidad y de variante. Ver "Fracasos útiles, personalidades y catalizadores".
+Versión 11 (2026-10-09): **Parte 5 revisada** (pedido 4 de `ORDEN-PEDIDOS.md`): se guarda todo lo nuevo, balance medido hasta completar la Mutadex (suba tardía del 12 % y premios de pedidos más chicos), guía y rendimiento probados. Ver "Revisión de la Parte 5 con pedidos, personalidades y catalizadores".
 Próximo punto de control: **prototipo jugable** (Partes 1 a 5).
 
 ## Guía de estilo: laboratorio de caricatura de noche (versión 6)
@@ -337,6 +338,49 @@ Reemplaza la calle con 4 laboratorios de la Parte 4.
 ### Otros arreglos
 - La interfaz nueva había dejado colgada la Mutadex vieja (esperaba el botón de progreso del HUD viejo) y los botones Mutadex y Tienda del HUD no abrían nada. Ahora abren la Mutadex y la tienda viejas (puente **temporal** en `UI/Menus.luau`, hasta rehacerlas). Abrir una cierra las otras, y abrir la máquina o el mostrador también.
 - `HerramientasPrueba` ahora también existe jugando en Studio (en el juego publicado no): `DarEspecies`, `PonerDatos` (ADN y mejoras) y `Guardar`.
+
+### Revisión de la Parte 5 con pedidos, personalidades y catalizadores (versión 11)
+Pedido 4 de `ORDEN-PEDIDOS.md`. Se revisó lo de arriba en vez de rehacerlo.
+
+**Guardado** (`server/Guardado.luau`, versión 2 del guardado; los de la versión 1 se convierten solos)
+- Se guarda todo lo del jugador: ADN, especies descubiertas, mutantes, **cada criatura con su personalidad y su variante**, las variantes conseguidas y los sellos de personalidades (Mutadex), residuos, catalizadores (los que tenés y los que conocés), los pedidos del tablero (con su premio de pista o catalizador) y cuántos entregaste, niveles de las mejoras, pistas compradas y gratis, y premios de generación cobrados.
+- Todo lo que vuelve del DataStore se revisa: especies, personalidades, variantes y catalizadores que no existen se descartan; a las criaturas de guardados viejos les toca la personalidad de su especie.
+- **Probado** (2026-10-09): un jugador con 10 especies, un "Glumulo de Rayo" (variante, Peleadora), 11 sellos, un residuo, 2 catalizadores de Hielo, 3 pedidos (dos con catalizador de premio), 2 corrales y Nutrientes 1. Se guardó, se salió y se volvió a entrar: volvió todo igual, la variante apareció en su corral con su color y sus cejas, y el ADN un poco más alto (también guardó al salir).
+- Sigue afuera (decisión de antes): el bloqueo de sesión. El ADN ganado sin estar conectado llega en el pedido 6.
+
+**Balance** (números en `Config.luau`)
+
+| Qué | Antes | Ahora | Por qué |
+|---|---|---|---|
+| Suba del costo de fusión | 40 % por especie, siempre | 40 % hasta las 12 especies, **12 %** después (`EspeciesSubaTardia`, `SubaTardia`) | Con 40 % siempre, a las 25 especies una fusión costaba 250.000 ADN y en 6 horas no pasaba de 26 especies. |
+| Premio de pedido medio | 1,2 fusiones | 1,1 | Con los premios grandes el ADN pasaba del triple de la próxima fusión justo después de cobrar. |
+| Premio de pedido difícil | 2 | 1,5 | (ídem) |
+| Premio de "Cualquier mutante" | 4 | 3 | (ídem) |
+| Premio cada 10 pedidos | 2 | 1 | (ídem: coincidía con el cobro de un pedido) |
+
+Los primeros 10 minutos no cambiaron: la suba nueva empieza a las 12 especies.
+
+**Medido** con el simulador (`ServerStorage.Prueba.Simular`, el jugador automático con las reglas de verdad, tiempo simulado) y en Studio en tiempo real:
+
+| Meta del pedido | Medido |
+|---|---|
+| Primera fusión en el primer minuto | A los 3 segundos (jugador automático). A mano, como jugador nuevo: a los ~30 segundos de entrar, siguiendo la flecha. |
+| Unas 10 especies en los primeros 10 minutos | 11 (simulador, 30 partidas: entre 11 y 13). En Studio, en tiempo real: **11**, nuevas en 0:03, 0:45, 1:27, 2:05, 4:30, 6:23, 7:01, 7:33 y 8:12 (más dos bases compradas); el hueco más largo sin especie nueva fue de 2:25. Entregó 16 pedidos, el ADN llegó a 2.243 y **nunca pasó del triple** de la próxima fusión, y hasta sacó una variante de Hielo. |
+| El ADN, como máximo el triple de la próxima fusión | Primeros 10 minutos: 3,0 en promedio como máximo (la peor partida 3,6, unos 2 segundos justo después de cobrar). Hasta completar la Mutadex: 3,6 (peor 4,6), unos 15 segundos en 4 horas. Nunca se acumula: lo gasta enseguida. |
+| Nunca más de 3 minutos sin algo útil | El rato más largo sin fusionar, comprar, entregar ni hacer un residuo: 107 segundos en promedio (peor 111). |
+| Completar la Mutadex principal en 3 a 5 horas | El jugador automático la completa en **2,4 a 4,3 horas** (8 partidas de 7 horas). Una persona juega más lento (mira, piensa, camina), así que debería caer entre 3 y 5 horas. |
+
+- **Arreglos del jugador automático** que salieron de medir partidas largas: descartaba pedidos imposibles solo si no tenía nada más que hacer, pero un residuo siempre se puede hacer, así que nunca descartaba y a las 4 horas dejaba de entregar (ahora descarta antes de hacer residuos). Y al hacer una copia para un pedido, si tiene un catalizador, aprovecha para probar una variante nueva.
+- En 7 horas el jugador automático hace unas 290 fusiones con catalizador, consigue 165 variantes, entrega 37 pedidos de personalidad y 125 de variante.
+
+**Guía de los primeros 30 segundos**: probada con un jugador nuevo de verdad (datos guardados de jugador nuevo, saliendo y entrando): flecha magenta sobre la máquina y el cartel "¡Seguí la flecha hasta la máquina y fusioná 2 criaturas!". Caminando hasta la consola y fusionando Glupona + Rámulo, la primera especie salió a los ~30 segundos y la guía se fue sola. Si se reinicia un jugador sin salir del juego la guía no vuelve a aparecer (solo pasa con la herramienta de prueba).
+
+**Rendimiento**: los 4 corrales llenos (16 criaturas, varias de generación 3 con aura y dos mutantes) más las 2 de las cápsulas, con 15 emisores de partículas: **60 cuadros por segundo** en Studio, el peor cuadro de 18 ms. Las variantes suman un emisor de partículas por criatura (como el aura). Sigue sin probarse en un celular de verdad.
+
+**Consola** sin errores; `stylua` y `selene` sin avisos.
+
+**Qué se puede jugar hoy**: fusionar las 50 especies con la regla de la rueda, residuos y catalizadores cuando no reaccionan, personalidades que se heredan y cambian el ADN del corral, variantes con la ranura de catalizador, la Mutadex con sellos y variantes, pistas, tienda de bases, copias y mejoras, 4 corrales, pedidos de 7 tipos con clientes, premios cada 10 pedidos, guía de inicio y guardado de todo.
+**Qué falta** (pedidos que vienen): el espectáculo de la fusión y la vida en el corral (pedido 5), ADN sin conexión, premio diario y misiones (pedido 6), la plaza y el juego con otros (pedido 7), y lo que cuesta Robux (pedido 8, después de publicar). La pestaña Extras de la Mutadex sigue vacía.
 
 ## Notas de la interfaz terminada (versión 8)
 
@@ -706,7 +750,7 @@ Cómo lo vamos a mirar en el playtest:
 - [x] **Parte 2 - Máquina de fusión** (hecha el 2026-10-07): dos cápsulas, validación en el servidor (reacciona / no reacciona), animación de suspenso, aparición de la especie y tirada del mutante.
 - [x] **Parte 3 - Mutadex** (hecha el 2026-10-07): UI con las 50 siluetas alrededor de la rueda, generación, casilla mutante, cuaderno de parejas tachadas y escáner.
 - [x] **Parte 4 - Laboratorio y economía** (hecha el 2026-10-08): el mapa del laboratorio, criaturas paseando, ADN por segundo, terminal para comprar bases y mejoras.
-- [x] **Parte 5 - Guardado, balance y pulido** (hecha el 2026-10-08): DataStore, balance medido con un playtest de 10 minutos, guía de los primeros segundos, efectos (número de ADN, rebote, destello al comprar), prueba con 20 criaturas y consola limpia. Ver "Notas de la Parte 5".
+- [x] **Parte 5 - Guardado, balance y pulido** (hecha el 2026-10-08): DataStore, balance medido con un playtest de 10 minutos, guía de los primeros segundos, efectos (número de ADN, rebote, destello al comprar), prueba con 20 criaturas y consola limpia. Ver "Notas de la Parte 5". **Revisada el 2026-10-09** con pedidos, residuos, personalidades y catalizadores: guardado de todo, balance medido hasta completar la Mutadex, guía y rendimiento (versión 11).
 - [ ] **Parte 6 - Compras con Robux**: solo cosas que no son azar. Ideas: pase "Doble ADN", pase "Segunda máquina" (dos fusiones a la vez), colores del laboratorio. Nada de cajas sorpresa ni subir la chance de mutante. Es punto de control: los pases los crea y les pone precio el usuario.
 
 Puntos de control: esta ficha → estilo visual → prototipo jugable (Partes 1 a 5) → Parte 6.

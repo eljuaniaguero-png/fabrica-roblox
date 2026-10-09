@@ -9,6 +9,7 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local Config = require(ReplicatedStorage.Shared.Config)
 local Costos = require(ReplicatedStorage.Shared.Costos)
+local Fusion = require(ReplicatedStorage.Shared.Fusion)
 local Mejoras = require(ReplicatedStorage.Shared.Mejoras)
 local Pedidos = require(ReplicatedStorage.Shared.Pedidos)
 local Jugadores = require(script.Parent.Jugadores)
@@ -18,6 +19,7 @@ local Tablero = require(script.Parent.Tablero)
 local Tienda = require(script.Parent.Tienda)
 
 local R = Config.Prueba.Robot
+local TOTAL = #Fusion.todas()
 
 export type Minuto = {
 	Especies: number,
@@ -42,6 +44,10 @@ export type Informe = {
 	Variantes: number, -- variantes distintas conseguidas
 	PedidosPersonalidad: number,
 	PedidosVariante: number,
+	HuecoMaximo: number, -- segundos, el rato más largo entre dos cosas útiles
+	RazonMaxima10: number, -- como RazonMaxima, en los primeros 10 minutos
+	ArribaDelTriple10: number,
+	Completo: number?, -- segundo en que llegó a las 50 especies
 	PrimeraFusion: number?,
 }
 
@@ -107,12 +113,23 @@ function Simulador.jugar(segundos: number, semilla: number, registro: { string }
 		Variantes = 0,
 		PedidosPersonalidad = 0,
 		PedidosVariante = 0,
+		HuecoMaximo = 0,
+		RazonMaxima10 = 0,
+		ArribaDelTriple10 = 0,
+		Completo = nil,
 		PrimeraFusion = nil,
 	}
 	local quieto = 0 -- segundos seguidos sin nada útil
+	local ultimaUtil = 0 -- cuándo hizo algo útil por última vez
 	local contado = false
+	local pausa = os.clock()
 
 	while t < segundos do
+		-- Las partidas largas tardan: cada tanto deja respirar al servidor (si no, Roblox corta).
+		if os.clock() - pausa > 0.2 then
+			task.wait()
+			pausa = os.clock()
+		end
 		local accion = Robot.turno(mundo, mem)
 		if registro and accion and accion ~= "Mirar" then
 			table.insert(
@@ -134,6 +151,16 @@ function Simulador.jugar(segundos: number, semilla: number, registro: { string }
 			informe.Compras += 1
 		elseif accion == "Descarte" then
 			informe.Descartes += 1
+		end
+		-- Útil: fusionar, comprar, entregar o hacer un residuo (mirar el panel o descartar no).
+		if
+			accion == "Fusion"
+			or accion == "Compra"
+			or accion == "Entrega"
+			or accion == "Residuo"
+		then
+			informe.HuecoMaximo = math.max(informe.HuecoMaximo, t - ultimaUtil)
+			ultimaUtil = t
 		end
 		-- Sin nada útil: no hizo nada y tampoco estaba juntando ADN para algo.
 		if accion == nil and not mem.Esperando then
@@ -157,10 +184,22 @@ function Simulador.jugar(segundos: number, semilla: number, registro: { string }
 			Tablero.llenar(d, t)
 			local costo = Costos.fusion(1, 1, Jugadores.cantidadEspecies(d)) or 1
 			local razon = d.ADN / costo
-			informe.ADNMaximo = math.max(informe.ADNMaximo, d.ADN)
-			informe.RazonMaxima = math.max(informe.RazonMaxima, razon)
-			if razon > 3 then
-				informe.SegundosArribaDelTriple += 1
+			-- Con la Mutadex completa ya no hay en qué gastar: eso no cuenta.
+			if not informe.Completo then
+				informe.ADNMaximo = math.max(informe.ADNMaximo, d.ADN)
+				informe.RazonMaxima = math.max(informe.RazonMaxima, razon)
+				if razon > 3 then
+					informe.SegundosArribaDelTriple += 1
+				end
+			end
+			if t <= 600 then
+				informe.RazonMaxima10 = math.max(informe.RazonMaxima10, razon)
+				if razon > 3 then
+					informe.ArribaDelTriple10 += 1
+				end
+			end
+			if not informe.Completo and Jugadores.cantidadEspecies(d) >= TOTAL then
+				informe.Completo = t
 			end
 			if t % 60 == 0 then
 				table.insert(informe.Minutos, {
@@ -173,6 +212,7 @@ function Simulador.jugar(segundos: number, semilla: number, registro: { string }
 			end
 		end
 	end
+	informe.HuecoMaximo = math.max(informe.HuecoMaximo, t - ultimaUtil)
 	informe.Especies = Jugadores.cantidadEspecies(d)
 	informe.Entregados = d.Entregados
 	informe.Variantes = #Jugadores.aLista(d.Variantes)
@@ -222,8 +262,13 @@ function Simulador.resumen(segundos: number, partidas: number): string
 		Variantes = 0,
 		PedidosPersonalidad = 0,
 		PedidosVariante = 0,
+		Hueco = 0,
+		Razon10 = 0,
+		Arriba10 = 0,
 	}
 	local peorRazon, minimoEspecies, maximoEspecies = 0, math.huge, 0
+	local peorHueco, peorRazon10 = 0, 0
+	local completas: { number } = {}
 	local porMinuto: { { number } } = {}
 	for p = 1, partidas do
 		local inf = Simulador.jugar(segundos, p)
@@ -238,6 +283,14 @@ function Simulador.resumen(segundos: number, partidas: number): string
 		suma.Variantes += inf.Variantes
 		suma.PedidosPersonalidad += inf.PedidosPersonalidad
 		suma.PedidosVariante += inf.PedidosVariante
+		suma.Hueco += inf.HuecoMaximo
+		suma.Razon10 += inf.RazonMaxima10
+		suma.Arriba10 += inf.ArribaDelTriple10
+		peorHueco = math.max(peorHueco, inf.HuecoMaximo)
+		peorRazon10 = math.max(peorRazon10, inf.RazonMaxima10)
+		if inf.Completo then
+			table.insert(completas, inf.Completo)
+		end
 		peorRazon = math.max(peorRazon, inf.RazonMaxima)
 		minimoEspecies = math.min(minimoEspecies, inf.Especies)
 		maximoEspecies = math.max(maximoEspecies, inf.Especies)
@@ -272,10 +325,36 @@ function Simulador.resumen(segundos: number, partidas: number): string
 			.. prom(suma.PedidosPersonalidad)
 			.. " | con variante: "
 			.. prom(suma.PedidosVariante),
-		"Minuto a minuto (especies / entregados / ADN):",
+		("Primeros 10 minutos: ADN / próxima fusión, máximo %s (peor %.1f); %s s arriba del triple"):format(
+			prom(suma.Razon10),
+			peorRazon10,
+			prom(suma.Arriba10)
+		),
+		("Rato más largo sin nada útil: %s s (peor %d s)"):format(prom(suma.Hueco), peorHueco),
 	}
+	if #completas > 0 then
+		table.sort(completas)
+		table.insert(
+			lineas,
+			("Completaron la Mutadex: %d de %d (entre %.1f y %.1f horas)"):format(
+				#completas,
+				partidas,
+				completas[1] / 3600,
+				completas[#completas] / 3600
+			)
+		)
+	else
+		table.insert(lineas, "Completaron la Mutadex: ninguna")
+	end
+	-- Minuto a minuto los primeros 10; después, cada media hora.
+	table.insert(lineas, "Por minuto (especies / entregados / ADN):")
 	for m, v in porMinuto do
-		table.insert(lineas, ("  %d: %s / %s / %s"):format(m, prom(v[1]), prom(v[2]), prom(v[3])))
+		if m <= 10 or m % 30 == 0 then
+			table.insert(
+				lineas,
+				("  %d: %s / %s / %s"):format(m, prom(v[1]), prom(v[2]), prom(v[3]))
+			)
+		end
 	end
 	return table.concat(lineas, "\n")
 end

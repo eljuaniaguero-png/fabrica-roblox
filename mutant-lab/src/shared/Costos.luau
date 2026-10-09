@@ -24,7 +24,14 @@ function Costos.fusion(genA: number, genB: number, cantidadEspecies: number): nu
 	if not gen then
 		return nil
 	end
-	local costo = E.CostoGen2 * E.SubaPorEspecie ^ math.max(0, cantidadEspecies - E.EspeciesSinSuba)
+	-- Sube fuerte al principio (las primeras especies salen rápido) y suave después.
+	local fuerte = math.clamp(
+		cantidadEspecies - E.EspeciesSinSuba,
+		0,
+		E.EspeciesSubaTardia - E.EspeciesSinSuba
+	)
+	local suave = math.max(0, cantidadEspecies - E.EspeciesSubaTardia)
+	local costo = E.CostoGen2 * E.SubaPorEspecie ^ fuerte * E.SubaTardia ^ suave
 	if gen == 3 then
 		costo *= E.MultiplicadorGen3
 	end

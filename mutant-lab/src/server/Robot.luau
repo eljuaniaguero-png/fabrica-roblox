@@ -10,12 +10,12 @@
 --   4. Abrir un corral si los suyos están llenos.
 --   5. Mirar en el panel una pareja que todavía no miró (el panel dice si reacciona y si es nueva).
 --   6. Fusionar otra copia de una especie que ya conoce y que le pide un cliente (si pide una
---      variante, con su catalizador).
+--      variante, con su catalizador; si no, de paso prueba una variante nueva si tiene uno).
 --   7. Comprar otra copia de una base: para un pedido o porque entregó la suya.
 --   8. Con la ranura abierta, un catalizador y ADN de sobra, probar una variante nueva.
 --   8b. Con ADN de sobra, comprar una mejora (Nutrientes o Fusión rápida).
---   9. Probar una pareja que no reacciona, para juntar residuos (salen gratis).
---  10. Descartar un pedido imposible (mutante sin mutantes) o trabado hace mucho.
+--   9. Descartar un pedido imposible (mutante sin mutantes) o trabado hace mucho.
+--  10. Probar una pareja que no reacciona, para juntar residuos (salen gratis).
 -- Si no puede hacer nada, espera (y eso puede contar como "sin saber qué hacer").
 
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
@@ -169,6 +169,20 @@ local function parejasPosibles(mias: { [string]: boolean }): { { string } }
 	return lista
 end
 
+-- Un catalizador que tenga para probar, de paso, una variante de `c` que todavía no consiguió.
+local function variantePrueba(d: Jugadores.Datos, c: Fusion.Criatura, ranura: boolean): string?
+	if not ranura then
+		return nil
+	end
+	local vistas = d.Variantes[c.Clave]
+	for clave, n in d.Catalizadores do
+		if n > 0 and not (vistas and vistas[clave]) then
+			return clave
+		end
+	end
+	return nil
+end
+
 -- Hace una cosa y devuelve cuál ("Entrega", "Fusion", "Compra", "Mirar", "Descarte") o nil.
 function Robot.turno(m: Mundo, mem: Memoria): string?
 	local d = m.datos()
@@ -278,7 +292,12 @@ function Robot.turno(m: Mundo, mem: Memoria): string?
 				then
 					local a, b = receta(c, mias)
 					if a and b then
-						if libre and d.ADN >= costoDe(d, c) and m.fusionar(a, b :: string, cat) then
+						local usar = cat or variantePrueba(d, c, ranura)
+						if
+							libre
+							and d.ADN >= costoDe(d, c)
+							and m.fusionar(a, b :: string, usar)
+						then
 							return "Fusion"
 						end
 						mem.Esperando = true
@@ -351,20 +370,8 @@ function Robot.turno(m: Mundo, mem: Memoria): string?
 		end
 	end
 
-	-- 9. Una pareja que ya sabe que no reacciona: igual sale un residuo (gratis).
-	if libre then
-		for _, par in posibles do
-			if mem.Vistas[pareja(par[1], par[2])] then
-				local x = Fusion.porClave(par[1]) :: Fusion.Criatura
-				local y = Fusion.porClave(par[2]) :: Fusion.Criatura
-				if not Fusion.fusionar(x, y) and m.fusionar(par[1], par[2]) then
-					return "Residuo"
-				end
-			end
-		end
-	end
-
-	-- 10. Descartar lo imposible o lo trabado hace mucho.
+	-- 9. Descartar lo imposible o lo trabado hace mucho (antes que los residuos: si no, nunca
+	-- descarta, porque un residuo siempre se puede hacer).
 	local mutantes = 0
 	for _, u in d.Criaturas do
 		if u.Mutante then
@@ -380,6 +387,20 @@ function Robot.turno(m: Mundo, mem: Memoria): string?
 			end
 		end
 	end
+
+	-- 10. Una pareja que ya sabe que no reacciona: igual sale un residuo (gratis).
+	if libre then
+		for _, par in posibles do
+			if mem.Vistas[pareja(par[1], par[2])] then
+				local x = Fusion.porClave(par[1]) :: Fusion.Criatura
+				local y = Fusion.porClave(par[2]) :: Fusion.Criatura
+				if not Fusion.fusionar(x, y) and m.fusionar(par[1], par[2]) then
+					return "Residuo"
+				end
+			end
+		end
+	end
+
 	return nil
 end
 

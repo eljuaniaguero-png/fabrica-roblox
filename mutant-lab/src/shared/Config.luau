@@ -17,7 +17,9 @@ local Config = {
 		BasesIniciales = { 1, 2 }, -- ...con dos bases vecinas (Glupona y Rámulo): sale en el segundo 1
 		CostoGen2 = 150,
 		SubaPorEspecie = 1.4, -- el costo sube un 40 % por cada especie que ya tenés...
-		EspeciesSinSuba = 3, -- ...a partir de la tercera
+		EspeciesSinSuba = 3, -- ...a partir de la tercera...
+		EspeciesSubaTardia = 12, -- ...y desde esta cantidad sube menos (si no, la Mutadex no se completa)
+		SubaTardia = 1.12, -- con esto el jugador automático completa la Mutadex en 2,4 a 4,3 horas
 		MultiplicadorGen3 = 2,
 		ADNPorGen = { 1, 2, 6 }, -- ADN por segundo de cada criatura activa en un corral, según su generación
 	},
@@ -89,9 +91,9 @@ local Config = {
 		-- Premio en ADN = lo que cuesta ahora una fusión de gen 2 x este factor.
 		Premio = {
 			Facil = 0.9, -- especies base
-			Media = 1.2, -- generación 2, dos criaturas, o una base que todavía no descubriste
-			Dificil = 2, -- generación 3, o una gen 2 nueva
-			Mutante = 4,
+			Media = 1.1, -- generación 2, dos criaturas, o una base que todavía no descubriste
+			Dificil = 1.5, -- generación 3, una gen 2 nueva o una variante
+			Mutante = 3,
 		},
 		ExtraPorCantidad = 1.2, -- los que piden dos criaturas pagan un poco más
 		PremioMinimo = 40,
@@ -103,7 +105,7 @@ local Config = {
 		ProbabilidadPersonalidad = 0.3, -- un pedido común puede pedir personalidad
 		ProbabilidadVariante = 0.25, -- ...o una variante que ya conocés (catalizadores)
 		Hito = 10, -- cada 10 pedidos entregados, un premio extra...
-		PremioHito = 2, -- ...de esto x el costo de una fusión de gen 2
+		PremioHito = 1, -- ...de esto x el costo de una fusión de gen 2
 		-- Clientes: nombres inventados (el color del muñequito sale de Paleta.Papelitos).
 		Clientes = {
 			"Doña Burbuja",

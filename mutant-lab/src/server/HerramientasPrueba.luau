@@ -8,6 +8,7 @@
 --   game.ServerStorage.Prueba.PonerDatos:Invoke("NombreDelJugador", 5000, { Corrales = 4 })
 --   game.ServerStorage.Prueba.Guardar:Invoke("NombreDelJugador") -> true si guardó
 --   game.ServerStorage.Prueba.NuevosPedidos:Invoke("NombreDelJugador") -> otros 3 pedidos
+--   game.ServerStorage.Prueba.DarCatalizadores:Invoke("NombreDelJugador", { Hielo = 2 })
 
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService = game:GetService("RunService")
@@ -101,6 +102,24 @@ if Config.Prueba.Activo or RunService:IsStudio() then
 		Corrales.actualizar(jugador :: Player)
 		return true
 	end)
+
+	-- Suma catalizadores (por ejemplo { Hielo = 2 }) y los da por conocidos.
+	funcion(
+		carpeta,
+		"DarCatalizadores",
+		function(nombre: string, cuantos: { [string]: number }): boolean
+			local jugador, d = buscar(nombre)
+			if not jugador or not d then
+				return false
+			end
+			for clave, n in cuantos do
+				d.Catalizadores[clave] = (d.Catalizadores[clave] or 0) + n
+				d.CatalizadoresVistos[clave] = true
+			end
+			Jugadores.publicar(jugador)
+			return true
+		end
+	)
 
 	-- Cambia los pedidos del tablero por otros nuevos (para ver cómo se ven).
 	funcion(carpeta, "NuevosPedidos", function(nombre: string): boolean
