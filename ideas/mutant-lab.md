@@ -14,6 +14,7 @@ Versión 9 (2026-10-09): **Pedidos** (pedido 2 de `ORDEN-PEDIDOS.md`): clientes 
 Versión 10 (2026-10-09): **fracasos útiles, personalidades y catalizadores** (pedido 3 de `ORDEN-PEDIDOS.md`): residuos, personalidades con herencia y efectos en el corral, ranura de catalizador con variantes, y pedidos de personalidad y de variante. Ver "Fracasos útiles, personalidades y catalizadores".
 Versión 11 (2026-10-09): **Parte 5 revisada** (pedido 4 de `ORDEN-PEDIDOS.md`): se guarda todo lo nuevo, balance medido hasta completar la Mutadex (suba tardía del 12 % y premios de pedidos más chicos), guía y rendimiento probados. Ver "Revisión de la Parte 5 con pedidos, personalidades y catalizadores".
 Versión 12 (2026-10-09): **Parte 7 hecha** (pedido 5 de `ORDEN-PEDIDOS.md`): tres niveles de fusión, "¡NUEVA ESPECIE!" letra por letra, botón Saltear, criaturas que reaccionan al tocarlas y viven según su personalidad, ADN que vuela al contador y destellos de mejoras. Ver "Notas de la Parte 7".
+Versión 13 (2026-10-09): **Parte 8 hecha** (pedido 6 de `ORDEN-PEDIDOS.md`): ADN mientras no estás, premio diario de 7 días con la especie especial Estrellín, experimento del día, tres misiones diarias y metas largas con trofeos; las fechas las decide el servidor. Ver "Notas de la Parte 8".
 Próximo punto de control: **prototipo jugable** (Partes 1 a 5).
 
 ## Guía de estilo: laboratorio de caricatura de noche (versión 6)
@@ -575,6 +576,44 @@ Todos los nuevos están marcados con `-- SONIDO:` (fusión corta, fanfarria del 
 - Tocar a Chisparo en el corral: salto, vuelta y su cartelito.
 - **Rendimiento**: 16 criaturas con su vida, los números que vuelan y las partículas: **60 cuadros por segundo** en Studio (peor cuadro 18 ms). Consola sin errores.
 - Capturas en `capturas/pedido-5/`.
+
+## Notas de la Parte 8: razones para volver mañana (versión 13)
+
+Pedido 6 de `ORDEN-PEDIDOS.md`. Todos los números están en `Config.luau` (`Regreso`, `Diario`, `Experimento`, `Misiones`, `Metas`). Nada se paga con Robux ni tiene contadores falsos.
+
+### Las fechas las decide el servidor
+- `server/Reloj.luau`: la hora es la del servidor en **UTC**; el día cambia a las 0:00 UTC (las 21:00 en Argentina). El reloj del jugador no se usa para nada que importe; el cliente solo muestra cuánto falta ("cambian en 2 h 39 min").
+- Cada 15 segundos el servidor se fija si cambió el día: misiones nuevas, otro experimento y el premio diario disponible, con un aviso.
+
+### 1. ADN mientras no estás
+- Al guardar se anota la hora del servidor. Al volver, un cartel "**¡VOLVISTE!** +24.385 ADN · Tus criaturas trabajaron 3 h 0 min mientras no estabas".
+- **Decisión de balance:** cuenta hasta **8 horas**, a **un cuarto** de lo que producen los corrales jugando, y como mucho **5 fusiones** de ADN. Si no, 8 horas afuera valían más que todo el juego activo (a 50 ADN por segundo son 1,4 millones) y el ADN dejaba de ser el límite.
+
+### 2. Premio diario de 7 días
+- Día 1: 1 fusión de ADN · día 2: 1,5 · día 3: un catalizador · día 4: 2 fusiones · día 5: dos catalizadores · día 6: 3 fusiones · **día 7: la especie especial Estrellín** y 2 fusiones. Los catalizadores son de los que conocés.
+- Si cobrás todos los días, la racha sube; **si faltás un día, vuelve al día 1**; después del 7 vuelve a empezar.
+- Se cobra con el botón "¡Cobrar el día N!" del menú Misiones, que **se abre solo al entrar** si hay premio para cobrar.
+- **La especie especial (Estrellín)**: no está en la rueda ni entre las 50, no se fusiona y no se compra; la única forma de tenerla es el día 7. Está hecha con piezas de las bases (cabeza de Fotina, cuerpo de Glupona, patas de Zoplito, cola de Brinoza), toda dorada y con aura. En el corral rinde como una de generación 3 y tiene prioridad para entrar. Está en la pestaña **Extras** de la Mutadex (silueta hasta que la tenés).
+
+### 3. Experimento del día
+- `shared/Experimento.luau`: una especie de generación 2 o 3 sale del número de día (mezclado), así es **la misma para todos los jugadores** y se arma sola.
+- En el menú Misiones, pestaña Experimento: su silueta y **tres pistas** (el elemento, un rasgo de su forma y algo de una de sus bases).
+- Quien la fusiona ese día gana **3 fusiones de ADN y un catalizador** ("¡EXPERIMENTO DEL DÍA!"). Si ya la conocías, se ve con colores y vale hacer otra.
+
+### 4. Misiones del día
+- **Tres por día**, siempre las mismas para un jugador ese día. Tipos: descubrí 1 o 2 especies nuevas, hacé 4 a 8 fusiones, entregá 2 a 4 pedidos, hacé 3 a 5 residuos, usá un catalizador de (uno que conocés, con la ranura abierta) y conseguí una criatura (una personalidad que puede salir de juntar las que tenés).
+- Premio chico por cada una (media fusión de ADN, con aviso "¡Misión cumplida!") y uno grande por las tres (2 fusiones y un catalizador, con cartel).
+
+### 5. Metas largas con trofeos
+- Nueve metas siempre a la vista (pestaña Metas): las 10 bases, las 30 de generación 2, las 10 de generación 3, 100 fusiones, 100 pedidos, las 5 variantes de una especie, las 8 personalidades, 10 especies mutantes y la especie especial.
+- Cada una paga 5 fusiones (las de generación ya pagan su festejo) y deja un **trofeo** en el estante "Trofeos" del laboratorio: una copa del color de la meta en su lugar (Hueco1 a Hueco9), con su nombre de cerca.
+
+### Probado (2026-10-09, en Studio, como jugador)
+- **Siete días simulados** (`ServerStorage.Prueba.PasarDias`): el menú se abrió solo, se cobró cada día con el botón y en el día 7 llegó "¡ESPECIE ESPECIAL! Estrellín", la meta "Especial" se cumplió y apareció su trofeo en el estante. Con un día salteado la racha volvió al día 1. Las misiones cambiaron cada día.
+- **Regreso** (`Prueba.Volver`, 3 horas afuera): cartel con +24.385 ADN (el tope de 5 fusiones).
+- **Experimento**: fusionando Dunaqui + Fotina con un catalizador de Lava salió Dutina (la de ese día): "¡EXPERIMENTO DEL DÍA!" y, de paso, "¡Misión cumplida! Usá un catalizador de Lava".
+- Consola sin errores. Capturas en `capturas/pedido-6/`.
+- Herramientas de prueba nuevas: `PasarDias`, `Volver`, `Experimento`.
 
 ## La idea en una línea
 

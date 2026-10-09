@@ -1,6 +1,6 @@
 --!strict
--- Ventanas chicas de los botones Misiones y Ajustes del HUD, hasta que existan esos menús
--- (las misiones llegan en la Parte 8). Ajustes ya trae el interruptor del sonido.
+-- Ventana chica del botón Ajustes del HUD (el sonido se prende y se apaga; lo demás llega más
+-- adelante). Las misiones tienen su menú en Misiones.client.luau.
 -- Se abren y se cierran con UI/Menus, como el resto.
 
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
@@ -47,13 +47,6 @@ local function proximamente(
 	t.Position = UDim2.new(0, 0, alto, Tema.Separacion)
 	t.Parent = v.Cuerpo
 end
-
----------------------------------------------------------------------------
--- Misiones
----------------------------------------------------------------------------
-
-local misiones = ventana("Misiones", "Misiones", "misiones", Paleta.Elementos.Agua)
-proximamente(misiones, "misiones", Paleta.Elementos.Agua, "Las misiones llegan pronto.", 0.55)
 
 ---------------------------------------------------------------------------
 -- Ajustes: el sonido se prende y se apaga; lo demás llega más adelante.

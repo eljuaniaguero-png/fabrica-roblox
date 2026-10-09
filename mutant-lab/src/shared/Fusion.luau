@@ -5,6 +5,7 @@
 
 local Config = require(script.Parent.Config)
 local Especies = require(script.Parent.Especies)
+local Paleta = require(script.Parent.Paleta)
 
 export type Criatura = {
 	Clave: string, -- bases ordenadas, ej. "1-2-3"
@@ -17,6 +18,7 @@ export type Criatura = {
 	Extremidad: number, -- cola o alas
 	Rasgo: number,
 	Color: Color3, -- color de la cabeza (para la UI)
+	Especial: boolean?, -- especie especial: no está en la rueda, no se fusiona ni se compra
 }
 
 -- Lo que el servidor le contesta al cliente después de pedir una fusión.
@@ -51,6 +53,11 @@ export type Celebracion = {
 	Pedidos: number?,
 	-- Algo nuevo que se abre (sin premio): "Ranura" = la ranura de catalizador.
 	Novedad: string?,
+	-- Cartel de un logro de "volver mañana" (premio diario, misiones, experimento, metas):
+	-- si viene Titulo, se muestra este texto en vez del de generación completa.
+	Titulo: string?,
+	Texto: string?,
+	Detalle: string?,
 }
 
 local N = Config.TamanioRueda
@@ -150,6 +157,9 @@ end
 
 -- Devuelve la especie que sale de fusionar x con y, o nil si no reaccionan.
 function Fusion.fusionar(x: Criatura, y: Criatura): Criatura?
+	if x.Especial or y.Especial then
+		return nil
+	end
 	if x.Gen == 1 and y.Gen == 1 then
 		if x.Bases[1] == y.Bases[1] then
 			return nil
@@ -176,7 +186,9 @@ function Fusion.motivo(x: Criatura, y: Criatura): string?
 	if Fusion.fusionar(x, y) then
 		return nil
 	end
-	if x.Clave == y.Clave then
+	if x.Especial or y.Especial then
+		return "Las especies especiales no se fusionan: trabajan en el corral y sirven para pedidos."
+	elseif x.Clave == y.Clave then
 		return "Son la misma especie: hacen falta dos distintas."
 	elseif x.Gen == 3 or y.Gen == 3 then
 		return "Las de generación 3 ya no se fusionan."
@@ -218,6 +230,9 @@ end
 -- Colores de una pieza: cada pieza conserva el color del padre que la trae,
 -- y sus manchas llevan el color del padre siguiente (así se nota la mezcla).
 function Fusion.pintura(c: Criatura, base: number): (Color3, Color3)
+	if c.Especial then
+		return c.Color, Paleta.Texto
+	end
 	if c.Gen == 1 then
 		local e = Especies[base]
 		return e.Color, e.Manchas
@@ -227,6 +242,30 @@ function Fusion.pintura(c: Criatura, base: number): (Color3, Color3)
 	return Especies[base].Color, Especies[otra].Color
 end
 
+-- Especies especiales (ficha, "Parte 8"): no están en la rueda ni en las 50, no se fusionan
+-- y no se compran. La única forma de conseguirlas es el día 7 del premio diario. Se arman
+-- con piezas de las bases (cabeza de Fotina, cuerpo de Glupona, patas de Zoplito, cola de
+-- Brinoza) y van doradas.
+local ESPECIALES: { Criatura } = {
+	{
+		Clave = "E1",
+		Nombre = "Estrellín",
+		Gen = 1,
+		Bases = { 9 },
+		Cabeza = 9,
+		Cuerpo = 1,
+		Patas = 7,
+		Extremidad = 8,
+		Rasgo = 9,
+		Color = Paleta.Dorado,
+		Especial = true,
+	},
+}
+
+function Fusion.especiales(): { Criatura }
+	return ESPECIALES
+end
+
 local indice: { [string]: Criatura }? = nil
 
 -- Busca una especie por su clave ("1", "1-2", "1-2-3").
@@ -234,6 +273,9 @@ function Fusion.porClave(buscada: string): Criatura?
 	if not indice then
 		local nuevo = {}
 		for _, c in Fusion.todas() do
+			nuevo[c.Clave] = c
+		end
+		for _, c in ESPECIALES do
 			nuevo[c.Clave] = c
 		end
 		indice = nuevo

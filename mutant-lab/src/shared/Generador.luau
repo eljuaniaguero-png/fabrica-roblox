@@ -240,7 +240,8 @@ function Generador.crear(
 
 	anillo(modelo, donde, if mutante then Paleta.Mutante else Paleta.Generaciones[c.Gen])
 
-	if c.Gen >= 3 then
+	-- Aura: las de generación 3 y las especiales.
+	if c.Gen >= 3 or c.Especial then
 		Piezas.aura(raiz)
 	end
 	if mutante then

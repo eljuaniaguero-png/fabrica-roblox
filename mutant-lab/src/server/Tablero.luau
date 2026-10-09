@@ -17,6 +17,8 @@ local Corrales = require(script.Parent.Corrales)
 local Jugadores = require(script.Parent.Jugadores)
 local Laboratorios = require(script.Parent.Laboratorios)
 local MaquinaFusion = require(script.Parent.MaquinaFusion)
+local Metas = require(script.Parent.Metas)
+local Misiones = require(script.Parent.Misiones)
 local Remotos = require(script.Parent.Remotos)
 
 local P = Config.Pedidos
@@ -266,6 +268,8 @@ function Tablero.entregar(jugador: Player, lugar: unknown, crudo: unknown): bool
 
 	-- El cliente hace la despedida y, cada tantos pedidos, el festejo.
 	Remotos.Entrega:FireClient(jugador, i, p, unidades)
+	Misiones.avisar(jugador, "Entregar")
+	Metas.revisar(jugador)
 	if hito then
 		Remotos.Celebracion:FireClient(jugador, {
 			Gen = 0,

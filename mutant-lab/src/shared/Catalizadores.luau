@@ -5,6 +5,8 @@
 -- Algunos además cambian la personalidad de la criatura que nace.
 -- Para sumar un catalizador alcanza con agregarlo acá (y su color en Paleta.Catalizadores).
 
+local Elementos = require(script.Parent.Elementos)
+local Fusion = require(script.Parent.Fusion)
 local Paleta = require(script.Parent.Paleta)
 
 export type Catalizador = {
@@ -78,6 +80,28 @@ end
 
 function Catalizadores.porClave(clave: string?): Catalizador?
 	return if clave then porClave[clave] else nil
+end
+
+-- Los catalizadores que conoce un jugador: el de cada elemento del que ya descubrió una
+-- especie (Hielo = agua, Slime = planta...) y los que ya tuvo alguna vez.
+function Catalizadores.conocidos(
+	especies: { [string]: boolean },
+	vistos: { [string]: boolean }
+): { string }
+	local elementos = {}
+	for clave in especies do
+		local c = Fusion.porClave(clave)
+		for _, e in if c then Elementos.de(c) else {} do
+			elementos[e] = true
+		end
+	end
+	local conocidos = {}
+	for _, c in Catalizadores.Lista do
+		if elementos[c.Elemento] or vistos[c.Clave] then
+			table.insert(conocidos, c.Clave)
+		end
+	end
+	return conocidos
 end
 
 -- "Glumulo de Hielo" (o solo "Glumulo" sin variante).

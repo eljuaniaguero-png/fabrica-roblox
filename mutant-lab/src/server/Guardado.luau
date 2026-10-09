@@ -18,6 +18,7 @@ local Fusion = require(ReplicatedStorage.Shared.Fusion)
 local Mejoras = require(ReplicatedStorage.Shared.Mejoras)
 local Personalidades = require(ReplicatedStorage.Shared.Personalidades)
 local Jugadores = require(script.Parent.Jugadores)
+local Reloj = require(script.Parent.Reloj)
 
 local G = Config.Guardado
 local VERSION = 2
@@ -112,6 +113,17 @@ local function aGuardados(d: Jugadores.Datos): Guardados
 		CatalizadoresVistos = lista(d.CatalizadoresVistos),
 		Variantes = Jugadores.aLista(d.Variantes),
 		Sellos = Jugadores.aLista(d.Sellos),
+		UltimaVez = Reloj.ahora(),
+		Fusiones = d.Fusiones,
+		Diario = table.clone(d.Diario),
+		Misiones = {
+			Dia = d.Misiones.Dia,
+			Lista = table.clone(d.Misiones.Lista),
+			Bono = d.Misiones.Bono,
+		},
+		ExperimentoGanado = d.ExperimentoGanado,
+		Metas = lista(d.Metas),
+		Especiales = lista(d.Especiales),
 	}
 end
 
@@ -260,9 +272,64 @@ local function limpiar(crudo: any): Guardados?
 			table.insert(vistos, c.Clave)
 		end
 	end
+	-- Volver mañana (Parte 8): racha, misiones del día, metas y especies especiales.
+	local diario = nil
+	if typeof(crudo.Diario) == "table" then
+		diario = {
+			Racha = numero(crudo.Diario.Racha, 0, #Config.Diario.Premios),
+			UltimoDia = numero(crudo.Diario.UltimoDia, -1, 1e9),
+		}
+	end
+	local misiones = nil
+	if typeof(crudo.Misiones) == "table" and typeof(crudo.Misiones.Lista) == "table" then
+		local leidas = {}
+		for _, mision in crudo.Misiones.Lista do
+			if
+				#leidas < Config.Misiones.PorDia
+				and typeof(mision) == "table"
+				and typeof(mision.Tipo) == "string"
+				and typeof(mision.Meta) == "number"
+				and typeof(mision.Progreso) == "number"
+			then
+				table.insert(leidas, {
+					Tipo = mision.Tipo,
+					Meta = numero(mision.Meta, 1, 1000),
+					Progreso = numero(mision.Progreso, 0, 1000),
+					Dato = if typeof(mision.Dato) == "string" then mision.Dato else nil,
+					Hecha = mision.Hecha == true,
+				})
+			end
+		end
+		misiones = {
+			Dia = numero(crudo.Misiones.Dia, -1, 1e9),
+			Lista = leidas,
+			Bono = crudo.Misiones.Bono == true,
+		}
+	end
+	local metas = {}
+	for _, k in if typeof(crudo.Metas) == "table" then crudo.Metas else {} do
+		if typeof(k) == "string" then
+			table.insert(metas, k)
+		end
+	end
+	local especiales = {}
+	for _, k in if typeof(crudo.Especiales) == "table" then crudo.Especiales else {} do
+		local c = if typeof(k) == "string" then Fusion.porClave(k) else nil
+		if c and c.Especial then
+			table.insert(especiales, k)
+		end
+	end
+
 	return {
 		Version = VERSION,
 		ADN = numero(crudo.ADN, 0, 1e15),
+		UltimaVez = if typeof(crudo.UltimaVez) == "number" then crudo.UltimaVez else nil,
+		Fusiones = numero(crudo.Fusiones, 0, 1e9),
+		Diario = diario,
+		Misiones = misiones,
+		ExperimentoGanado = numero(crudo.ExperimentoGanado, -1, 1e9),
+		Metas = metas,
+		Especiales = especiales,
 		Residuos = residuos,
 		Catalizadores = catalizadores,
 		CatalizadoresVistos = vistos,

@@ -242,6 +242,92 @@ function Laboratorios.mostrarNueva(jugador: Player, clave: string, mutante: bool
 	end
 end
 
+-- Estante de trofeos (Trofeos > Hueco1..9): un trofeo por cada meta cumplida (Metas.luau),
+-- una copa del color de la meta sobre una base dorada, con su nombre de cerca.
+export type Trofeo = { Lugar: number, Color: Color3, Texto: string }
+
+local function parteTrofeo(
+	nombre: string,
+	forma: Enum.PartType,
+	tamano: Vector3,
+	color: Color3
+): Part
+	local p = Instance.new("Part")
+	p.Name = nombre
+	p.Shape = forma
+	p.Anchored = true
+	p.CanCollide = false
+	p.CanQuery = false
+	p.CanTouch = false
+	p.Size = tamano
+	p.Color = color
+	p.Material = Enum.Material.SmoothPlastic
+	return p
+end
+
+local function ponerTrofeos(lab: Model, trofeos: { Trofeo }?)
+	local estante = lab:FindFirstChild("Trofeos")
+	if not estante then
+		return
+	end
+	for _, viejo in estante:GetChildren() do
+		if viejo.Name == "Trofeo" then
+			viejo:Destroy()
+		end
+	end
+	for _, t in trofeos or {} do
+		local hueco = estante:FindFirstChild("Hueco" .. t.Lugar)
+		if hueco and hueco:IsA("BasePart") then
+			local abajo = hueco.Position + Vector3.new(0, hueco.Size.Y / 2, 0)
+			local modelo = Instance.new("Model")
+			modelo.Name = "Trofeo"
+			local base =
+				parteTrofeo("Base", Enum.PartType.Block, Vector3.new(0.9, 0.25, 0.9), Paleta.Dorado)
+			base.Position = abajo + Vector3.new(0, 0.125, 0)
+			base.Parent = modelo
+			local pie = parteTrofeo(
+				"Pie",
+				Enum.PartType.Cylinder,
+				Vector3.new(0.5, 0.25, 0.25),
+				Paleta.Dorado
+			)
+			pie.CFrame = CFrame.new(abajo + Vector3.new(0, 0.5, 0))
+				* CFrame.Angles(0, 0, math.rad(90))
+			pie.Parent = modelo
+			local copa = parteTrofeo("Copa", Enum.PartType.Ball, Vector3.one * 0.85, t.Color)
+			copa.Material = Enum.Material.Neon
+			copa.Position = abajo + Vector3.new(0, 1.05, 0)
+			copa.Parent = modelo
+			local cartel = Instance.new("BillboardGui")
+			cartel.Size = UDim2.fromScale(3.2, 0.7)
+			cartel.StudsOffsetWorldSpace = Vector3.new(0, 0.8, 0)
+			cartel.MaxDistance = 18
+			cartel.LightInfluence = 0
+			local texto = Instance.new("TextLabel")
+			texto.Size = UDim2.fromScale(1, 1)
+			texto.BackgroundTransparency = 1
+			texto.FontFace = Font.fromEnum(Enum.Font.FredokaOne)
+			texto.TextScaled = true
+			texto.Text = t.Texto
+			texto.TextColor3 = Paleta.Texto
+			local borde = Instance.new("UIStroke")
+			borde.Color = Paleta.Contorno
+			borde.Thickness = 2
+			borde.Parent = texto
+			texto.Parent = cartel
+			cartel.Parent = copa
+			modelo.Parent = estante
+		end
+	end
+end
+
+function Laboratorios.actualizarTrofeos(jugador: Player, trofeos: { Trofeo })
+	local lab = labDe[jugador]
+	if lab then
+		ponerTrofeos(lab, trofeos)
+	end
+end
+
 function Laboratorios.asignar(jugador: Player)
 	for i = 1, Config.CantidadLaboratorios do
 		local lab = carpeta:FindFirstChild("Lab" .. i)
@@ -275,6 +361,7 @@ function Laboratorios.liberar(jugador: Player)
 	pintarCorrales(lab, Config.Mejoras.Corrales.Inicial, {})
 	ponerUltima(lab, nil)
 	pintarTablero(lab, nil)
+	ponerTrofeos(lab, nil)
 	textos(fondoMutadex(lab), "Contador", "0 / " .. TOTAL_ESPECIES)
 	local relleno = buscar(fondoMutadex(lab), "Barra", "Relleno")
 	if relleno and relleno:IsA("Frame") then

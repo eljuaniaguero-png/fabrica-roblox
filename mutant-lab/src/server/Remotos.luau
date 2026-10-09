@@ -24,6 +24,8 @@ local Remotos = {
 	EntregarPedido = evento("EntregarPedido"), -- cliente -> servidor: (lugar, { { Clave, Mutante } })
 	DescartarPedido = evento("DescartarPedido"), -- cliente -> servidor: (lugar)
 	Entrega = evento("Entrega"), -- servidor -> cliente: (lugar, pedido, criaturas) si se entregó
+	CobrarDiario = evento("CobrarDiario"), -- cliente -> servidor: cobrar el premio diario
+	Regreso = evento("Regreso"), -- servidor -> cliente: (ADN ganado sin estar, segundos afuera)
 }
 
 carpeta.Parent = ReplicatedStorage

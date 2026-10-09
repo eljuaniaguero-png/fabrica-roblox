@@ -9,6 +9,8 @@
 --   game.ServerStorage.Prueba.Guardar:Invoke("NombreDelJugador") -> true si guardó
 --   game.ServerStorage.Prueba.NuevosPedidos:Invoke("NombreDelJugador") -> otros 3 pedidos
 --   game.ServerStorage.Prueba.DarCatalizadores:Invoke("NombreDelJugador", { Hielo = 2 })
+--   game.ServerStorage.Prueba.PasarDias:Invoke("NombreDelJugador", 1) -> simula que pasó un día
+--   game.ServerStorage.Prueba.Volver:Invoke("NombreDelJugador", 3) -> como si volviera en 3 horas
 
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService = game:GetService("RunService")
@@ -18,8 +20,12 @@ local Players = game:GetService("Players")
 local Config = require(ReplicatedStorage.Shared.Config)
 local Mejoras = require(ReplicatedStorage.Shared.Mejoras)
 local Corrales = require(script.Parent.Corrales)
+local Diario = require(script.Parent.Diario)
 local Guardado = require(script.Parent.Guardado)
 local Jugadores = require(script.Parent.Jugadores)
+local Metas = require(script.Parent.Metas)
+local Misiones = require(script.Parent.Misiones)
+local Reloj = require(script.Parent.Reloj)
 local Tablero = require(script.Parent.Tablero)
 
 local function buscar(nombre: string): (Player?, Jugadores.Datos?)
@@ -100,7 +106,40 @@ if Config.Prueba.Activo or RunService:IsStudio() then
 		end
 		Jugadores.crear(jugador :: Player, nil)
 		Corrales.actualizar(jugador :: Player)
+		Diario.publicar(jugador :: Player)
+		Misiones.alDia(jugador :: Player)
+		Metas.publicar(jugador :: Player)
 		return true
+	end)
+
+	-- Adelanta el reloj del servidor `dias` días (para probar el premio diario, las misiones y
+	-- el experimento). Devuelve el número de día nuevo.
+	funcion(carpeta, "PasarDias", function(nombre: string, dias: number): number
+		Reloj.Desfase += dias * 86400
+		local jugador = buscar(nombre)
+		if jugador then
+			Misiones.alDia(jugador)
+			Diario.publicar(jugador)
+		end
+		return Reloj.dia()
+	end)
+
+	-- Hace de cuenta que el jugador estuvo `horas` afuera: cartel de regreso con su ADN.
+	funcion(carpeta, "Volver", function(nombre: string, horas: number): number
+		local jugador, d = buscar(nombre)
+		if not jugador or not d then
+			return 0
+		end
+		local antes = d.ADN
+		d.UltimaVez = Reloj.ahora() - horas * 3600
+		Diario.alEntrar(jugador)
+		return math.floor(d.ADN - antes)
+	end)
+
+	-- La especie del experimento de hoy.
+	funcion(carpeta, "Experimento", function(): string
+		local c = Misiones.especieDeHoy()
+		return c.Nombre .. " (" .. c.Clave .. ")"
 	end)
 
 	-- Suma catalizadores (por ejemplo { Hielo = 2 }) y los da por conocidos.

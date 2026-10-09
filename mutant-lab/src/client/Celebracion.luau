@@ -19,6 +19,22 @@ local Celebracion = {}
 
 -- Encola el festejo y espera a que el cartel se vaya (la máquina los muestra de a uno).
 function Celebracion.mostrar(c: Fusion.Celebracion)
+	if c.Titulo then
+		-- Logro de "volver mañana" (premio diario, misiones, experimento, metas).
+		Carteles.mostrarYEsperar({
+			Titulo = c.Titulo,
+			Texto = c.Texto,
+			Detalle = c.Detalle,
+			Color = Paleta.Dorado,
+			Duracion = C.DuracionFestejo,
+			AlMostrar = function()
+				-- SONIDO: logro (arpegio corto hacia arriba)
+				Sonidos.secuencia({ 0, 4, 7, 12, 16 }, 0.09, 0.4)
+				UI.papelitos(Carteles.Capa.Raiz, C.Papelitos[2])
+			end,
+		})
+		return
+	end
 	if c.Novedad == "Ranura" then
 		-- Se abrió la ranura de catalizador (Config.Residuos.RanuraDesde especies).
 		Carteles.mostrarYEsperar({

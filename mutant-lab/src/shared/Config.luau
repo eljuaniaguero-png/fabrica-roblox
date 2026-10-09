@@ -22,6 +22,7 @@ local Config = {
 		SubaTardia = 1.12, -- con esto el jugador automático completa la Mutadex en 2,4 a 4,3 horas
 		MultiplicadorGen3 = 2,
 		ADNPorGen = { 1, 2, 6 }, -- ADN por segundo de cada criatura activa en un corral, según su generación
+		ADNEspecial = 6, -- las especies especiales (día 7 del premio diario) rinden como una gen 3
 	},
 
 	-- Todo lo que se compra con ADN cuesta "fusiones": un número x lo que cuesta ahora una
@@ -266,6 +267,53 @@ local Config = {
 		DuracionSube = 0.6,
 		DuracionVuelo = 0.55,
 		MaximoVolando = 10,
+	},
+
+	-- Razones para volver mañana (Parte 8). Las fechas las decide el servidor en hora UTC: el
+	-- día cambia a las 0:00 UTC (las 21:00 en Argentina). Nada de esto se paga con Robux.
+	Regreso = {
+		TopeHoras = 8, -- el ADN mientras no estás se cuenta hasta 8 horas...
+		Rinde = 0.25, -- ...a esta parte de lo que producen tus corrales jugando...
+		TopeFusiones = 5, -- ...y como mucho esto x lo que cuesta una fusión de gen 2
+		Minimo = 120, -- segundos afuera para que haya cartel de regreso
+	},
+	Diario = {
+		-- Premio de cada día de la racha (ADN en fusiones de gen 2; catalizadores de los que
+		-- conocés). Si un día no venís, la racha vuelve al día 1. El día 7 trae la especie
+		-- especial, que no se consigue de otra forma.
+		Premios = {
+			{ ADN = 1 },
+			{ ADN = 1.5 },
+			{ Catalizadores = 1 },
+			{ ADN = 2 },
+			{ Catalizadores = 2 },
+			{ ADN = 3 },
+			{ ADN = 2, Especial = "E1" },
+		},
+	},
+	Experimento = {
+		Premio = 3, -- fusiones de gen 2 por hacer hoy la especie misteriosa...
+		Catalizadores = 1, -- ...más catalizadores
+	},
+	Misiones = {
+		PorDia = 3,
+		Premio = 0.5, -- fusiones de gen 2 por cada misión...
+		PremioTodas = 2, -- ...y por completar las tres...
+		CatalizadoresTodas = 1, -- ...más un catalizador
+		-- Cuánto pide cada tipo (mínimo, máximo).
+		Rangos = {
+			Descubrir = { 1, 2 },
+			Fusionar = { 4, 8 },
+			Entregar = { 2, 4 },
+			Residuos = { 3, 5 },
+		},
+	},
+	-- Metas largas: cada una deja un trofeo en el estante del laboratorio (9 lugares).
+	Metas = {
+		Fusiones = 100,
+		Pedidos = 100,
+		Mutantes = 10,
+		Premio = 5, -- fusiones de gen 2 (las de completar una generación ya pagan su festejo)
 	},
 
 	-- Premium (ficha de monetización, "Mutant Lab"). Los IDs van vacíos: los crea el usuario en el

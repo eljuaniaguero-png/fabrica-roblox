@@ -7,7 +7,6 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Catalizadores = require(ReplicatedStorage.Shared.Catalizadores)
 local Config = require(ReplicatedStorage.Shared.Config)
 local Costos = require(ReplicatedStorage.Shared.Costos)
-local Elementos = require(ReplicatedStorage.Shared.Elementos)
 local Fusion = require(ReplicatedStorage.Shared.Fusion)
 local Mejoras = require(ReplicatedStorage.Shared.Mejoras)
 local Personalidades = require(ReplicatedStorage.Shared.Personalidades)
@@ -15,6 +14,8 @@ local Coleccion = require(script.Parent.Coleccion)
 local Corrales = require(script.Parent.Corrales)
 local Jugadores = require(script.Parent.Jugadores)
 local Laboratorios = require(script.Parent.Laboratorios)
+local Metas = require(script.Parent.Metas)
+local Misiones = require(script.Parent.Misiones)
 local Remotos = require(script.Parent.Remotos)
 
 local azar = Random.new()
@@ -52,20 +53,7 @@ local MaquinaFusion = {}
 -- Los catalizadores que conocés: el de cada elemento del que ya descubriste una especie (y los
 -- que ya tuviste alguna vez).
 function MaquinaFusion.conocidos(d: Jugadores.Datos): { string }
-	local elementos = {}
-	for clave in d.Especies do
-		local c = Fusion.porClave(clave)
-		for _, e in if c then Elementos.de(c) else {} do
-			elementos[e] = true
-		end
-	end
-	local conocidos = {}
-	for _, c in Catalizadores.Lista do
-		if elementos[c.Elemento] or d.CatalizadoresVistos[c.Clave] then
-			table.insert(conocidos, c.Clave)
-		end
-	end
-	return conocidos
+	return Catalizadores.conocidos(d.Especies, d.CatalizadoresVistos)
 end
 
 -- Si hay residuos suficientes, los gasta y arma un catalizador al azar entre los que conocés
@@ -190,6 +178,7 @@ function MaquinaFusion.aplicar(
 		d.Variantes[hijo.Clave] = vistas
 	end
 	Jugadores.agregarCriatura(d, hijo.Clave, mutante, personalidad, variante)
+	d.Fusiones += 1
 	local celebraciones = Coleccion.revisarGeneraciones(d)
 	d.OcupadoHasta = ahora + Config.Maquina.Espera * Mejoras.factorRapidez(d.Mejoras.Rapida)
 	return {
@@ -257,6 +246,9 @@ function MaquinaFusion.pedir(
 		Jugadores.publicar(jugador)
 	end
 	responder(jugador, resultado)
+	if resultado.Motivo == "NoReaccionan" then
+		Misiones.avisar(jugador, "Residuos")
+	end
 	if not resultado.Ok then
 		return resultado
 	end
@@ -273,6 +265,17 @@ function MaquinaFusion.pedir(
 			Laboratorios.mostrarNueva(jugador, hijo.Clave, mutante)
 		end
 		Corrales.actualizar(jugador)
+		-- Misiones, experimento del día y metas (después de la revelación, para no adelantarla).
+		Misiones.avisar(jugador, "Fusionar")
+		if nueva then
+			Misiones.avisar(jugador, "Descubrir")
+		end
+		if resultado.Variante then
+			Misiones.avisar(jugador, "Catalizador", resultado.Variante)
+		end
+		Misiones.avisar(jugador, "Personalidad", resultado.Personalidad)
+		Misiones.experimento(jugador, hijo.Clave)
+		Metas.revisar(jugador)
 	end)
 	return resultado
 end

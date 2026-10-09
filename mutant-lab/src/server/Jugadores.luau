@@ -62,8 +62,30 @@ export type Datos = {
 	CatalizadoresVistos: { [string]: boolean }, -- los que conocés (tuviste alguna vez)
 	Variantes: { [string]: { [string]: boolean } }, -- especie -> variantes conseguidas (Mutadex)
 	Sellos: { [string]: { [string]: boolean } }, -- especie -> personalidades conseguidas (Mutadex)
+	-- Volver mañana (Parte 8). Los días son los del servidor (Reloj.luau).
+	UltimaVez: number?, -- hora del servidor de la última vez que se guardó (nil: jugador nuevo)
+	Fusiones: number, -- fusiones que salieron bien, en total (meta de las 100)
+	Diario: Diario,
+	Misiones: MisionesDelDia,
+	ExperimentoGanado: number, -- día en que ganó el experimento del día por última vez
+	Metas: { [string]: boolean }, -- metas cumplidas (cada una deja un trofeo)
+	Especiales: { [string]: boolean }, -- especies especiales que consiguió (Mutadex, Extras)
 	OcupadoHasta: number, -- la máquina está trabajando hasta este os.clock()
 }
+
+-- Premio diario: hasta qué día de la racha cobró (1 a 7) y qué día (del servidor) fue.
+export type Diario = { Racha: number, UltimoDia: number }
+
+-- Una misión del día (Misiones.luau).
+export type Mision = {
+	Tipo: string, -- "Descubrir", "Fusionar", "Entregar", "Residuos", "Catalizador" o "Personalidad"
+	Meta: number,
+	Progreso: number,
+	Dato: string?, -- el catalizador o la personalidad que pide
+	Hecha: boolean,
+}
+
+export type MisionesDelDia = { Dia: number, Lista: { Mision }, Bono: boolean }
 
 -- Lo que se guarda en el DataStore (Guardado.luau): solo tablas, textos y números.
 export type Guardados = {
@@ -84,6 +106,13 @@ export type Guardados = {
 	CatalizadoresVistos: { string }?,
 	Variantes: { string }?, -- "especie|variante"
 	Sellos: { string }?, -- "especie|personalidad"
+	UltimaVez: number?,
+	Fusiones: number?,
+	Diario: Diario?,
+	Misiones: MisionesDelDia?,
+	ExperimentoGanado: number?,
+	Metas: { string }?,
+	Especiales: { string }?,
 }
 
 local datos: { [Player]: Datos } = {}
@@ -309,6 +338,9 @@ function Jugadores.publicar(jugador: Player)
 	jugador:SetAttribute("Catalizadores", Catalizadores.escribir(d.Catalizadores))
 	jugador:SetAttribute("Variantes", table.concat(Jugadores.aLista(d.Variantes), ";"))
 	jugador:SetAttribute("Sellos", table.concat(Jugadores.aLista(d.Sellos), ";"))
+	jugador:SetAttribute("Fusiones", d.Fusiones)
+	jugador:SetAttribute("Especiales", unir(d.Especiales))
+	jugador:SetAttribute("ExperimentoGanado", d.ExperimentoGanado)
 	Jugadores.publicarPedidos(jugador)
 end
 
@@ -334,6 +366,13 @@ function Jugadores.nuevos(): Datos
 		CatalizadoresVistos = {},
 		Variantes = {},
 		Sellos = {},
+		UltimaVez = nil,
+		Fusiones = 0,
+		Diario = { Racha = 0, UltimoDia = -1 },
+		Misiones = { Dia = -1, Lista = {}, Bono = false },
+		ExperimentoGanado = -1,
+		Metas = {},
+		Especiales = {},
 		OcupadoHasta = 0,
 	}
 	for _, n in Config.Economia.BasesIniciales do
@@ -384,6 +423,21 @@ function Jugadores.crear(jugador: Player, guardados: Guardados?)
 		end
 		d.Mejoras = table.clone(guardados.Mejoras)
 		d.Entregados = guardados.Entregados or 0
+		d.UltimaVez = guardados.UltimaVez
+		d.Fusiones = guardados.Fusiones or 0
+		if guardados.Diario then
+			d.Diario = table.clone(guardados.Diario)
+		end
+		if guardados.Misiones then
+			d.Misiones = guardados.Misiones
+		end
+		d.ExperimentoGanado = guardados.ExperimentoGanado or -1
+		for _, k in guardados.Metas or {} do
+			d.Metas[k] = true
+		end
+		for _, k in guardados.Especiales or {} do
+			d.Especiales[k] = true
+		end
 		d.Residuos = table.clone(guardados.Residuos or {})
 		d.Catalizadores = table.clone(guardados.Catalizadores or {})
 		for _, k in guardados.CatalizadoresVistos or {} do

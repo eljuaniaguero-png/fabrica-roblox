@@ -94,7 +94,11 @@ local function produccion(lista: { Activa }): { number }
 		end
 		local mult = Personalidades.multiplicadores(personalidades)
 		for k = inicio, fin do
-			r[k] = Config.Economia.ADNPorGen[lista[k].Criatura.Gen] * mult[k - inicio + 1]
+			local c = lista[k].Criatura
+			local base = if c.Especial
+				then Config.Economia.ADNEspecial
+				else Config.Economia.ADNPorGen[c.Gen]
+			r[k] = base * mult[k - inicio + 1]
 		end
 	end
 	return r
@@ -108,8 +112,8 @@ local function suma(t: { number }): number
 	return s
 end
 
--- Las criaturas que trabajan en los corrales: las de mayor generación, hasta el tope (a igual
--- generación, las que llegaron primero). Después se acomodan en los corrales para que rindan
+-- Las criaturas que trabajan en los corrales: las especiales y después las de mayor generación,
+-- hasta el tope (a igual generación, las que llegaron primero). Después se acomodan en los corrales para que rindan
 -- más: se prueban cambios de lugar entre corrales mientras el ADN total suba. El orden de la
 -- lista es el lugar: las primeras Config.Corrales.PorCorral van al corral 1, y así.
 function Mejoras.activas(criaturas: { UnidadCualquiera }, nivelCorrales: number): { Activa }
@@ -127,6 +131,10 @@ function Mejoras.activas(criaturas: { UnidadCualquiera }, nivelCorrales: number)
 		end
 	end
 	table.sort(lista, function(a, b)
+		-- Las especiales primero (son pocas y se lucen en el corral).
+		if (a.Criatura.Especial == true) ~= (b.Criatura.Especial == true) then
+			return a.Criatura.Especial == true
+		end
 		if a.Criatura.Gen ~= b.Criatura.Gen then
 			return a.Criatura.Gen > b.Criatura.Gen
 		end

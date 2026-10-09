@@ -1,7 +1,7 @@
 --!strict
 -- La Mutadex (ficha, "Guía de estilo", 6, "Mutadex"), armada por código con los componentes de UI:
 --   encabezado con el título, "12 / 50", la barra de progreso y el ADN;
---   pestañas Gen 1, Gen 2, Gen 3 y Extras (vacía por ahora);
+--   pestañas Gen 1, Gen 2, Gen 3 y Extras (las especies especiales);
 --   grilla de tarjetas (4 por fila en computadora, 3 en celular): las descubiertas con la
 --   criatura, el nombre, el punto de elemento y el borde de su generación (estrella dorada si
 --   la tenés mutante); las demás, silueta negra con "?" en una esquina (la forma es la pista);
@@ -179,21 +179,44 @@ for gen = 1, 3 do
 	}
 end
 
--- Extras: las especies especiales (Parte 6) todavía no existen.
+-- Extras: las especies especiales (no cuentan en las 50 y no se compran: se consiguen el día 7
+-- del premio diario). Silueta dorada hasta que la tenés.
 local extras = UI.hueco("Extras", UDim2.fromScale(1, 1), paginasMarco)
 extras.Visible = false
-local insigniaExtras = UI.insignia("rombo", Paleta.Dorado, T.InsigniaExtras)
-insigniaExtras.AnchorPoint = Vector2.new(0.5, 1)
-insigniaExtras.Position = UDim2.fromScale(0.5, 0.45)
-insigniaExtras.Parent = extras
+local cajaExtras =
+	UI.tarjeta({ Nombre = "Especial", Borde = Paleta.Dorado, Grosor = Tema.Contorno + 1 })
+cajaExtras.Marco.AnchorPoint = Vector2.new(0.5, 0)
+cajaExtras.Marco.Position = UDim2.new(0.5, 0, 0, Tema.Separacion)
+cajaExtras.Marco.Size = UDim2.fromScale(0.6, 0.62)
+cajaExtras.Marco.Parent = extras
+local vistaExtras = Instance.new("ViewportFrame")
+vistaExtras.BackgroundTransparency = 1
+vistaExtras.Size = UDim2.fromScale(1, 1)
+vistaExtras.Parent = cajaExtras.Fondo
 local textoExtras = UI.texto({
-	Texto = "Las especies especiales llegan pronto.",
+	Texto = "",
 	Letra = Tema.Letra.Subtitulo,
-	Medida = UDim2.new(1, 0, 0, Tema.Toque),
+	Medida = UDim2.new(1, 0, 0, Tema.Toque * 1.6),
 })
-textoExtras.Position = UDim2.new(0, 0, 0.45, Tema.Separacion)
+textoExtras.Position = UDim2.new(0, 0, 0.62, Tema.Separacion * 2)
 textoExtras.Parent = extras
 paginas.Extras = { Marco = extras }
+local marcaExtras: string? = nil
+
+local function pintarExtras()
+	local especial = Fusion.especiales()[1]
+	local tengo = Formato.conjunto(jugador:GetAttribute("Especiales") :: string?)[especial.Clave]
+		== true
+	local marca = especial.Clave .. tostring(tengo)
+	if marca ~= marcaExtras then
+		marcaExtras = marca
+		Vista.mostrar(vistaExtras, especial.Clave, nil, not tengo)
+	end
+	textoExtras.Text = if tengo
+		then especial.Nombre .. ": especie especial. ¡La tenés! No se fusiona, trabaja en el corral."
+		else "??? · Especie especial: solo se consigue el día 7 del premio diario (menú Misiones)."
+	textoExtras.TextColor3 = if tengo then Paleta.Dorado else Paleta.Texto
+end
 
 ---------------------------------------------------------------------------
 -- Ficha de la especie
@@ -530,6 +553,7 @@ end
 
 local function actualizarTodo()
 	local e = estado()
+	pintarExtras()
 	local total = 0
 	local porGen = { 0, 0, 0 }
 	local deGen = { 0, 0, 0 }
@@ -688,6 +712,7 @@ for _, atributo in
 		"Criaturas",
 		"Sellos",
 		"Variantes",
+		"Especiales",
 		"Pistas",
 		"PistasCompradas",
 		"PistasGratis",
