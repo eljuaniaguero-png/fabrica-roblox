@@ -813,7 +813,7 @@ function UI.casillero(op: OpcionesCasillero): Casillero
 	local signo = UI.texto({
 		Nombre = "Signo",
 		Texto = op.Signo or "+",
-		Letra = Tema.Letra.Gigante,
+		Letra = Tema.Letra.Gigante + 32,
 		Color = Paleta.Metal,
 		Medida = UDim2.new(1, 0, 1, -altoNombre),
 	})

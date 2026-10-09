@@ -23,6 +23,7 @@ local playerGui = Players.LocalPlayer:WaitForChild("PlayerGui")
 local capas: { Capa } = {}
 local simulada: Vector2? = nil -- tamaño de pantalla simulado (para probar el celular en Studio)
 local celularForzado: boolean? = nil
+local escalaForzada: number? = nil -- para ver el celular más grande en las capturas
 local marcoSimulado: Frame? = nil
 local avisoPendiente = false
 local cambio = Instance.new("BindableEvent")
@@ -48,6 +49,9 @@ local function tamanoReal(c: Capa): Vector2
 end
 
 function Pantalla.escalaPara(real: Vector2): number
+	if simulada and escalaForzada then
+		return escalaForzada
+	end
 	local s = math.min(real.Y / Tema.AltoReferencia, real.X / Tema.AnchoReferencia)
 	return math.clamp(s, Tema.EscalaMinima, Tema.EscalaMaxima)
 end
@@ -127,9 +131,11 @@ end
 
 -- Para probar en Studio: simula una pantalla de `tamano` píxeles (por ejemplo un celular
 -- apaisado de 844 × 390) en el medio de la pantalla real. Sin argumentos vuelve a la normal.
-function Pantalla.simular(tamano: Vector2?, celular: boolean?)
+-- `escala` fija la escala: sirve para ver un celular al doble de tamaño (pantalla y escala × 2).
+function Pantalla.simular(tamano: Vector2?, celular: boolean?, escala: number?)
 	simulada = tamano
 	celularForzado = celular
+	escalaForzada = escala
 	if marcoSimulado then
 		marcoSimulado:Destroy()
 		marcoSimulado = nil

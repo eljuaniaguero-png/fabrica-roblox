@@ -4,6 +4,8 @@
 --   MuestraUI = true          abre la pantalla de muestra con todos los componentes.
 --   SimularPantalla = Vector2 simula una pantalla de ese tamaño (por ejemplo 844 × 390, un
 --                             celular apaisado). Vector2.zero vuelve a la pantalla normal.
+--   SimularEscala = número    fija la escala de la simulación (por ejemplo, el doble de la
+--                             de un celular para verlo más grande en una captura).
 
 local Players = game:GetService("Players")
 
@@ -20,7 +22,7 @@ end)
 jugador:GetAttributeChangedSignal("SimularPantalla"):Connect(function()
 	local tam = jugador:GetAttribute("SimularPantalla") :: Vector2?
 	if tam and tam.X > 0 then
-		UI.Pantalla.simular(tam, tam.Y < 500)
+		UI.Pantalla.simular(tam, true, jugador:GetAttribute("SimularEscala") :: number?)
 	else
 		UI.Pantalla.simular(nil, nil)
 	end

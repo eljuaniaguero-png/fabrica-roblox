@@ -20,7 +20,7 @@ local columna = UI.hueco(
 	capa.Raiz
 )
 columna.AnchorPoint = Vector2.new(1, 0)
-columna.Position = UDim2.new(1, -Tema.Margen, 0, Tema.Margen + Tema.Toque + 52)
+columna.Position = UDim2.new(1, -Tema.Margen, 0, Tema.Margen + Tema.Toque + 96)
 local lista = UI.lista(columna, false, 10)
 lista.HorizontalAlignment = Enum.HorizontalAlignment.Right
 

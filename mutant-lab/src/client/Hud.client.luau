@@ -132,7 +132,7 @@ end
 local LADO = Tema.Toque + 4
 local BOTONES = {
 	{ Menu = "Mutadex", Texto = "Mutadex", Icono = "libro", Color = Paleta.Generaciones[3] },
-	{ Menu = "Tienda", Texto = "Tienda", Icono = "bolsa", Color = Paleta.Dorado },
+	{ Menu = "Tienda", Texto = "Tienda", Icono = "carrito", Color = Paleta.Dorado },
 	{ Menu = "Misiones", Texto = "Misiones", Icono = "misiones", Color = Paleta.Elementos.Agua },
 	{ Menu = "Ajustes", Texto = "Ajustes", Icono = "engranaje", Color = Paleta.Metal },
 }

@@ -85,11 +85,17 @@ local DIBUJOS: { [string]: Dibujo } = {
 		end
 	end,
 
-	-- Tienda: una bolsa con manija.
-	bolsa = function(l, c, t)
-		aro(l, 0.5, 0.33, 0.42, 0.42, math.max(2, t * 0.08), c)
-		forma(l, 0.5, 0.64, 0.76, 0.58, c, 0.2, 0, 2)
-		forma(l, 0.5, 0.56, 0.18, 0.18, Paleta.oscuro(c), 0.5, 0, 3)
+	-- Tienda: un carrito (una bolsa con manija se confundía con el candado).
+	carrito = function(l, c)
+		forma(l, 0.14, 0.22, 0.2, 0.1, c, 0.5, 15)
+		forma(l, 0.27, 0.4, 0.09, 0.36, c, 0.5, -18)
+		forma(l, 0.58, 0.47, 0.62, 0.36, c, 0.2)
+		forma(l, 0.55, 0.7, 0.54, 0.08, c, 0.5)
+		forma(l, 0.38, 0.85, 0.17, 0.17, c, 0.5)
+		forma(l, 0.72, 0.85, 0.17, 0.17, c, 0.5)
+		for _, x in { 0.46, 0.6, 0.74 } do
+			forma(l, x, 0.47, 0.05, 0.24, Paleta.oscuro(c, 0.5), 0.5, 0, 2)
+		end
 	end,
 
 	-- Misiones: una tabla con tres renglones.

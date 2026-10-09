@@ -107,7 +107,7 @@ local function armar()
 	for i, d in
 		{
 			{ "libro", Paleta.Elementos.Sombra },
-			{ "bolsa", Paleta.Dorado },
+			{ "carrito", Paleta.Dorado },
 			{ "misiones", Paleta.Elementos.Agua },
 			{ "engranaje", Paleta.Metal },
 		}
@@ -198,7 +198,7 @@ local function armar()
 	local nombres = {
 		"adn",
 		"libro",
-		"bolsa",
+		"carrito",
 		"misiones",
 		"engranaje",
 		"cerrar",
