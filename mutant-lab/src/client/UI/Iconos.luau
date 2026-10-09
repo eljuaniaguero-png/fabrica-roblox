@@ -59,6 +59,25 @@ local function aro(
 	return f
 end
 
+-- Una letra o signo grande con la tipografía de títulos (por ejemplo "?" o "★"). Solo signos
+-- que la fuente dibuja de un color: los emojis no se usan.
+local function letra(padre: Instance, texto: string, color: Color3): TextLabel
+	local t = Instance.new("TextLabel")
+	t.Name = "Letra"
+	t.BackgroundTransparency = 1
+	t.Size = UDim2.fromScale(1, 1)
+	t.FontFace = Tema.Fuentes.Titulo
+	t.TextScaled = true
+	t.Text = texto
+	t.TextColor3 = color
+	local trazo = Instance.new("UIStroke")
+	trazo.Color = Paleta.Contorno
+	trazo.Thickness = Tema.ContornoTexto
+	trazo.Parent = t
+	t.Parent = padre
+	return t
+end
+
 local DIBUJOS: { [string]: Dibujo } = {
 	-- Hélice de ADN: escalones que giran, con una bolita en cada punta.
 	adn = function(l, c)
@@ -214,6 +233,53 @@ local DIBUJOS: { [string]: Dibujo } = {
 	punto = function(l, c)
 		forma(l, 0.5, 0.5, 1, 1, c, 0.5)
 	end,
+
+	-- "=" entre los padres y el resultado.
+	igual = function(l, c)
+		forma(l, 0.5, 0.34, 0.86, 0.2, c, 0.5)
+		forma(l, 0.5, 0.66, 0.86, 0.2, c, 0.5)
+	end,
+
+	-- Mutante y Líder: la estrella de la fuente (de un solo color).
+	estrella = function(l, c)
+		letra(l, "★", c)
+	end,
+
+	pregunta = function(l, c)
+		letra(l, "?", c)
+	end,
+
+	-- Personalidades (ficha, "Ícono de personalidad").
+	corazon = function(l, c)
+		forma(l, 0.5, 0.58, 0.5, 0.5, c, 0.08, 45)
+		forma(l, 0.323, 0.403, 0.5, 0.5, c, 0.5)
+		forma(l, 0.677, 0.403, 0.5, 0.5, c, 0.5)
+		forma(l, 0.32, 0.36, 0.14, 0.14, Paleta.claro(c, 0.6), 0.5, 0, 2)
+	end,
+
+	zzz = function(l, c)
+		letra(l, "Zzz", c)
+	end,
+
+	martillo = function(l, c)
+		l.Rotation = -35
+		forma(l, 0.5, 0.64, 0.16, 0.66, Paleta.oscuro(c, 0.25), 0.4)
+		forma(l, 0.5, 0.24, 0.66, 0.28, c, 0.2, 0, 2)
+	end,
+
+	rayo = function(l, c)
+		forma(l, 0.56, 0.27, 0.2, 0.5, c, 0.2, 28)
+		forma(l, 0.5, 0.5, 0.5, 0.16, c, 0.3, -12)
+		forma(l, 0.44, 0.73, 0.2, 0.5, c, 0.2, 28)
+	end,
+
+	cubierto = function(l, c)
+		forma(l, 0.5, 0.7, 0.16, 0.56, c, 0.5)
+		forma(l, 0.5, 0.4, 0.5, 0.14, c, 0.4)
+		for _, x in { 0.3, 0.5, 0.7 } do
+			forma(l, x, 0.22, 0.11, 0.36, c, 0.5)
+		end
+	end,
 }
 
 local Iconos = {}
@@ -230,28 +296,12 @@ function Iconos.crear(nombre: string, tamano: number, color: Color3): Frame
 	if dibujo then
 		dibujo(lienzo, color, tamano)
 	else
-		Iconos.letra(lienzo, nombre:sub(1, 1):upper(), color)
+		letra(lienzo, nombre:sub(1, 1):upper(), color)
 	end
 	return lienzo
 end
 
--- Una letra o signo grande con la tipografía de títulos (por ejemplo "?").
-function Iconos.letra(padre: Instance, texto: string, color: Color3): TextLabel
-	local t = Instance.new("TextLabel")
-	t.Name = "Letra"
-	t.BackgroundTransparency = 1
-	t.Size = UDim2.fromScale(1, 1)
-	t.FontFace = Tema.Fuentes.Titulo
-	t.TextScaled = true
-	t.Text = texto
-	t.TextColor3 = color
-	local trazo = Instance.new("UIStroke")
-	trazo.Color = Paleta.Contorno
-	trazo.Thickness = Tema.ContornoTexto
-	trazo.Parent = t
-	t.Parent = padre
-	return t
-end
+Iconos.letra = letra
 
 function Iconos.existe(nombre: string): boolean
 	return DIBUJOS[nombre] ~= nil

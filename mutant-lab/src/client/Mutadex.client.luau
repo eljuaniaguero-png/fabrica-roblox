@@ -223,12 +223,6 @@ botonPista.Activated:Connect(function()
 end)
 
 Menus.puenteViejo("Mutadex", ventana, function()
-	-- Si estaba abierto el panel de la máquina, se cierra para no tapar.
-	local panelFusion = gui:FindFirstChild("Fusion")
-	local panel = panelFusion and panelFusion:FindFirstChild("Panel")
-	if panel and panel:IsA("GuiObject") then
-		panel.Visible = false
-	end
 	actualizarTodo()
 end)
 

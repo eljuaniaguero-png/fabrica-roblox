@@ -20,6 +20,8 @@ export type Opciones = {
 	Color: Color3?, -- color del título (verde ácido por defecto)
 	Mutante: boolean?, -- etiqueta "¡MUTANTE!" con colores que giran y borde dorado
 	Duracion: number?,
+	Arriba: boolean?, -- arriba de la pantalla (la máquina deja libre el centro para la criatura)
+	AlMostrar: (() -> ())?, -- se llama cuando el cartel entra (papelitos, fanfarria)
 }
 
 local capa = UI.Pantalla.crear("Carteles", 30)
@@ -52,6 +54,13 @@ local function pintar(op: Opciones)
 		+ (if op.Detalle then 44 else 0)
 		+ (if mutante then 40 else 0)
 	cartel.Marco.Size = UDim2.fromOffset(660, alto)
+	if op.Arriba then
+		cartel.Marco.AnchorPoint = Vector2.new(0.5, 0)
+		cartel.Marco.Position = UDim2.new(0.5, 0, 0, Tema.Margen)
+	else
+		cartel.Marco.AnchorPoint = Vector2.new(0.5, 0.5)
+		cartel.Marco.Position = UDim2.fromScale(0.5, 0.42)
+	end
 	if mutante and not girando then
 		girando = RunService.RenderStepped:Connect(function(dt: number)
 			cartel.Arcoiris.Rotation = (cartel.Arcoiris.Rotation + dt * 240) % 360
@@ -99,6 +108,9 @@ local function trabajar()
 		local op = table.remove(cola, 1) :: Opciones
 		pintar(op)
 		entrar()
+		if op.AlMostrar then
+			task.spawn(op.AlMostrar)
+		end
 		tocado = false
 		local fin = os.clock() + (op.Duracion or Config.Interfaz.DuracionCartel)
 		while os.clock() < fin and not tocado and not fijo do
@@ -130,7 +142,13 @@ function Carteles.fijar(op: Opciones)
 	fijo = true
 	pintar(op)
 	entrar()
+	if op.AlMostrar then
+		task.spawn(op.AlMostrar)
+	end
 end
+
+-- Capa de pantalla completa sobre el juego, para papelitos y destellos de pantalla.
+Carteles.Capa = capa
 
 function Carteles.soltar()
 	salir()

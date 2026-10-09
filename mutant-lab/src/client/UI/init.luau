@@ -5,8 +5,10 @@
 --
 -- Piezas: ventana, tarjeta, botón (principal, secundario, peligro, dorado), botón de cerrar,
 -- pestañas, contador con ícono, barra de progreso, casillero de criatura, notificación y
--- cartel grande. Más chicas: texto, puntos de generación y punto de elemento.
+-- cartel grande. Más chicas: texto, puntos de generación, punto de elemento, puntos de nivel,
+-- insignia (círculo con ícono), lista que se desplaza, grilla, destello y papelitos.
 
+local Debris = game:GetService("Debris")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local TweenService = game:GetService("TweenService")
 
@@ -214,17 +216,28 @@ function UI.tarjeta(op: OpcionesCaja?): Tarjeta
 	})
 end
 
+-- El UIScale "Presion" de un objeto (lo comparten UI.tocable y UI.rebotar).
+function UI.escalaDe(objeto: GuiObject): UIScale
+	local escala = objeto:FindFirstChild("Presion") :: UIScale?
+	if escala then
+		return escala
+	end
+	local nueva = Instance.new("UIScale")
+	nueva.Name = "Presion"
+	nueva.Parent = objeto
+	return nueva
+end
+
+-- Un saltito: crece un poco y vuelve con rebote.
+function UI.rebotar(objeto: GuiObject, fuerza: number?)
+	local e = UI.escalaDe(objeto)
+	e.Scale = 1 + (fuerza or 0.12)
+	animar(e, Tema.Rebote, { Scale = 1 })
+end
+
 -- Respuesta al tocar algo que no es un botón (tarjetas, casilleros): se hunde un poco y suena.
 function UI.tocable(boton: GuiButton, alTocar: () -> (), achicar: GuiObject?)
-	local quien = achicar or boton
-	local escala = quien:FindFirstChild("Presion") :: UIScale?
-	if not escala then
-		local nueva = Instance.new("UIScale")
-		nueva.Name = "Presion"
-		nueva.Parent = quien
-		escala = nueva
-	end
-	local e = escala :: UIScale
+	local e = UI.escalaDe(achicar or boton)
 	boton.MouseButton1Down:Connect(function()
 		animar(e, Tema.Rapida, { Scale = 0.94 })
 	end)
@@ -270,7 +283,9 @@ export type Boton = {
 	habilitar: (si: boolean) -> (),
 	poner: (texto: string?, sub: string?) -> (),
 	pintar: (color: Color3) -> (),
+	colorTexto: (color: Color3) -> (),
 	colorSub: (color: Color3) -> (),
+	resaltar: (si: boolean) -> (), -- contorno blanco y grueso (filtro o pestaña elegida)
 }
 
 local COLOR_TIPO: { [string]: Color3 } = {
@@ -308,7 +323,7 @@ function UI.boton(op: OpcionesBoton): Boton
 		UI.esquina(cara)
 	end
 	UI.contorno(base)
-	UI.contorno(cara)
+	local bordeCara = UI.contorno(cara)
 
 	-- Contenido: ícono a la izquierda y una o dos líneas de texto.
 	local contenido = UI.hueco("Contenido", UDim2.new(1, -12, 1, -6), cara)
@@ -396,10 +411,19 @@ function UI.boton(op: OpcionesBoton): Boton
 			color = c
 			pintarCara()
 		end,
+		colorTexto = function(c: Color3)
+			if texto then
+				texto.TextColor3 = c
+			end
+		end,
 		colorSub = function(c: Color3)
 			if sub then
 				sub.TextColor3 = c
 			end
+		end,
+		resaltar = function(si: boolean)
+			bordeCara.Color = if si then Paleta.Texto else Paleta.Contorno
+			bordeCara.Thickness = if si then Tema.Contorno + 2 else Tema.Contorno
 		end,
 	}
 	pintarCara()
@@ -763,6 +787,151 @@ function UI.puntoElemento(color: Color3, tam: number?): Frame
 	return p
 end
 
+-- Nivel de una mejora con puntos: llenos (verde ácido) hasta el nivel actual, apagados el resto.
+export type Nivel = {
+	Marco: Frame,
+	poner: (actual: number, maximo: number) -> (),
+}
+
+function UI.nivel(tam: number?): Nivel
+	local t = tam or 18
+	local marco = UI.hueco("Nivel", UDim2.fromOffset(0, t))
+	marco.AutomaticSize = Enum.AutomaticSize.X
+	UI.lista(marco, true, math.floor(t / 3))
+	local puntos: { Frame } = {}
+	return {
+		Marco = marco,
+		poner = function(actual: number, maximo: number)
+			for i = 1, math.max(maximo, #puntos) do
+				local p = puntos[i]
+				if i <= maximo and not p then
+					p = Iconos.crear("punto", t, Paleta.Acento)
+					p.LayoutOrder = i
+					UI.contorno(p:FindFirstChildOfClass("Frame") :: Frame, Paleta.Contorno, 1.5)
+					p.Parent = marco
+					puntos[i] = p
+				end
+				if p then
+					p.Visible = i <= maximo
+					local f = p:FindFirstChildOfClass("Frame") :: Frame
+					f.BackgroundColor3 = if i <= actual then Paleta.Acento else Paleta.Deshabilitado
+				end
+			end
+		end,
+	}
+end
+
+-- Círculo oscuro con un ícono de color (mejoras, Premium, encabezados).
+function UI.insignia(icono: string, color: Color3, lado: number): Frame
+	local circulo = Instance.new("Frame")
+	circulo.Name = "Insignia"
+	circulo.Size = UDim2.fromOffset(lado, lado)
+	circulo.BackgroundColor3 = Paleta.oscuro(color, 0.55)
+	UI.redondo(circulo)
+	UI.contorno(circulo, Paleta.Contorno, 2)
+	Iconos.crear(icono, math.floor(lado * 0.62), color).Parent = circulo
+	return circulo
+end
+
+---------------------------------------------------------------------------
+-- Listas que se desplazan y grillas
+---------------------------------------------------------------------------
+
+-- Lo que la lista deja de margen alrededor del contenido (contornos, sombras y la barra).
+UI.MargenLista = {
+	Arriba = Tema.Contorno + 4,
+	Izquierda = Tema.Contorno + 4,
+	Abajo = Tema.Sombra + Tema.Contorno + 4,
+	Derecha = Tema.BarraDesplazar + Tema.Contorno + 6,
+}
+
+-- Lista vertical que se desplaza, del color de la paleta y con margen para que no se corten
+-- los contornos ni las sombras de lo que tiene adentro.
+function UI.desplazable(nombre: string?, padre: Instance?): ScrollingFrame
+	local s = Instance.new("ScrollingFrame")
+	s.Name = nombre or "Lista"
+	s.Size = UDim2.fromScale(1, 1)
+	s.BackgroundTransparency = 1
+	s.BorderSizePixel = 0
+	s.ScrollBarThickness = Tema.BarraDesplazar
+	s.ScrollBarImageColor3 = Paleta.Metal
+	s.ScrollingDirection = Enum.ScrollingDirection.Y
+	s.AutomaticCanvasSize = Enum.AutomaticSize.Y
+	s.CanvasSize = UDim2.new()
+	local m = UI.MargenLista
+	local p = Instance.new("UIPadding")
+	p.PaddingTop = UDim.new(0, m.Arriba)
+	p.PaddingLeft = UDim.new(0, m.Izquierda)
+	p.PaddingBottom = UDim.new(0, m.Abajo)
+	p.PaddingRight = UDim.new(0, m.Derecha)
+	p.Parent = s
+	s.Parent = padre
+	return s
+end
+
+-- Ancho útil de una lista de `ancho` puntos hecha con UI.desplazable.
+function UI.anchoUtil(ancho: number): number
+	return ancho - UI.MargenLista.Izquierda - UI.MargenLista.Derecha
+end
+
+-- Ancho de cada celda para que entren `columnas` en `ancho` puntos.
+function UI.anchoCelda(ancho: number, columnas: number, separacion: number?): number
+	local s = separacion or Tema.Separacion
+	return math.floor((ancho - s * (columnas - 1)) / columnas)
+end
+
+function UI.grilla(padre: Instance, celda: Vector2, separacion: number?): UIGridLayout
+	local s = separacion or Tema.Separacion
+	local g = Instance.new("UIGridLayout")
+	g.CellSize = UDim2.fromOffset(celda.X, celda.Y)
+	g.CellPadding = UDim2.fromOffset(s, s)
+	g.SortOrder = Enum.SortOrder.LayoutOrder
+	g.Parent = padre
+	return g
+end
+
+---------------------------------------------------------------------------
+-- Efectos: destello sobre una tarjeta y papelitos
+---------------------------------------------------------------------------
+
+-- Una capa de luz sobre `sobre` (el fondo de una tarjeta) que se apaga, con un saltito.
+function UI.destello(sobre: GuiObject, color: Color3?, saltar: GuiObject?)
+	local f = Instance.new("Frame")
+	f.Name = "Destello"
+	f.Size = UDim2.fromScale(1, 1)
+	f.BackgroundColor3 = color or Paleta.Texto
+	f.BackgroundTransparency = 0.15
+	f.BorderSizePixel = 0
+	f.ZIndex = 20
+	UI.esquina(f)
+	f.Parent = sobre
+	animar(f, Tema.Destello, { BackgroundTransparency = 1 })
+	Debris:AddItem(f, 0.6)
+	UI.rebotar(saltar or sobre, 0.1)
+end
+
+-- Papelitos de los colores de la paleta que caen por `padre` (de pantalla completa).
+function UI.papelitos(padre: GuiObject, cantidad: number)
+	local colores = Paleta.Papelitos
+	for _ = 1, cantidad do
+		local p = Instance.new("Frame")
+		p.Name = "Papelito"
+		p.BorderSizePixel = 0
+		p.BackgroundColor3 = colores[math.random(#colores)]
+		p.Size = UDim2.fromOffset(math.random(10, 18), math.random(18, 28))
+		p.Position = UDim2.new(math.random(), 0, 0, -math.random(20, 240))
+		p.Rotation = math.random(0, 360)
+		UI.esquina(p, 3)
+		p.Parent = padre
+		local duracion = 1.6 + math.random() * 1.4
+		animar(p, TweenInfo.new(duracion, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {
+			Position = UDim2.fromScale(p.Position.X.Scale + (math.random() - 0.5) * 0.2, 1.1),
+			Rotation = p.Rotation + math.random(-540, 540),
+		})
+		Debris:AddItem(p, duracion + 0.1)
+	end
+end
+
 ---------------------------------------------------------------------------
 -- Casillero de criatura (ranuras de la máquina, tarjetas de criaturas)
 ---------------------------------------------------------------------------
@@ -774,6 +943,7 @@ export type OpcionesCasillero = {
 	Titulo: string?, -- texto chico de abajo cuando está vacío
 	Candado: boolean?,
 	ConNombre: boolean?, -- franja con el nombre abajo (por defecto sí)
+	Prestada: boolean?, -- sin vista 3D propia: se la presta UI/VistasVisibles (listas largas)
 	Nombre: string?,
 }
 
@@ -781,13 +951,17 @@ export type Casillero = {
 	Marco: Frame,
 	Fondo: TextButton,
 	Borde: UIStroke,
-	Vista: ViewportFrame,
+	Hueco: Frame, -- donde va la vista 3D (la propia o la prestada)
+	Vista: ViewportFrame?, -- la propia (nil si es prestada)
 	Signo: TextLabel,
 	Nombre: TextLabel?,
 	Candado: Frame?,
 	Clave: string?,
+	-- Con `silueta`, el signo pasa a una esquina para no tapar la forma (la forma es la pista).
 	poner: (clave: string?, nombre: string?, mutante: boolean?, silueta: boolean?) -> (),
 	bloquear: (si: boolean) -> (),
+	elemento: (color: Color3?) -> (), -- punto de elemento arriba a la izquierda (nil lo saca)
+	rebotar: (fuerza: number?) -> (),
 }
 
 function UI.casillero(op: OpcionesCasillero): Casillero
@@ -799,16 +973,22 @@ function UI.casillero(op: OpcionesCasillero): Casillero
 		Boton = true,
 	})
 	c.Marco.Size = op.Medida
+	UI.escalaDe(c.Marco)
 	local fondo = c.Fondo :: TextButton
 	local conNombre = op.ConNombre ~= false
 	local altoNombre = if conNombre then 40 else 0
 
-	local vista = Instance.new("ViewportFrame")
-	vista.Name = "Vista"
-	vista.BackgroundTransparency = 1
-	vista.Size = UDim2.new(1, -8, 1, -altoNombre - 8)
-	vista.Position = UDim2.fromOffset(4, 4)
-	vista.Parent = fondo
+	local hueco = UI.hueco("Hueco", UDim2.new(1, -8, 1, -altoNombre - 8), fondo)
+	hueco.Position = UDim2.fromOffset(4, 4)
+	local vista: ViewportFrame? = nil
+	if not op.Prestada then
+		local v = Instance.new("ViewportFrame")
+		v.Name = "Vista"
+		v.BackgroundTransparency = 1
+		v.Size = UDim2.fromScale(1, 1)
+		v.Parent = hueco
+		vista = v
+	end
 
 	local signo = UI.texto({
 		Nombre = "Signo",
@@ -817,7 +997,25 @@ function UI.casillero(op: OpcionesCasillero): Casillero
 		Color = Paleta.Metal,
 		Medida = UDim2.new(1, 0, 1, -altoNombre),
 	})
+	signo.ZIndex = 2
 	signo.Parent = fondo
+
+	-- El signo grande en el medio (vacío) o chico en una esquina (silueta).
+	local function signoChico(si: boolean)
+		if si then
+			signo.AnchorPoint = Vector2.new(1, 0)
+			signo.Position = UDim2.new(1, -6, 0, 6)
+			signo.Size = UDim2.fromOffset(Tema.MarcaChica, Tema.MarcaChica)
+			signo.TextScaled = true
+		else
+			signo.AnchorPoint = Vector2.zero
+			signo.Position = UDim2.new()
+			signo.Size = UDim2.new(1, 0, 1, -altoNombre)
+			signo.TextScaled = false
+		end
+	end
+	local estrella: Frame? = nil
+	local punto: Frame? = nil
 
 	local nombre: TextLabel? = nil
 	if conNombre then
@@ -840,6 +1038,7 @@ function UI.casillero(op: OpcionesCasillero): Casillero
 		Marco = c.Marco,
 		Fondo = fondo,
 		Borde = c.Borde,
+		Hueco = hueco,
 		Vista = vista,
 		Signo = signo,
 		Nombre = nombre,
@@ -847,11 +1046,47 @@ function UI.casillero(op: OpcionesCasillero): Casillero
 		Clave = nil,
 		poner = function(clave: string?, texto: string?, mutante: boolean?, silueta: boolean?)
 			cas.Clave = clave
-			Vista.mostrar(vista, clave, mutante, silueta)
+			if vista then
+				Vista.mostrar(vista, clave, mutante, silueta)
+			end
 			signo.Visible = clave == nil or silueta == true
+			signoChico(clave ~= nil and silueta == true)
+			local conEstrella = clave ~= nil and mutante == true and not silueta
+			if conEstrella and not estrella then
+				local e = Iconos.crear("estrella", Tema.MarcaChica, Paleta.Mutante)
+				e.Name = "Estrella"
+				e.AnchorPoint = Vector2.new(1, 0)
+				e.Position = UDim2.new(1, -4, 0, 4)
+				e.ZIndex = 3
+				e.Parent = fondo
+				estrella = e
+			end
+			if estrella then
+				estrella.Visible = conEstrella
+			end
 			if nombre then
 				nombre.Text = texto or (if clave then "" else op.Titulo or "")
 			end
+		end,
+		elemento = function(color: Color3?)
+			if color and not punto then
+				local p = UI.puntoElemento(color, math.floor(Tema.MarcaChica / 2))
+				p.AnchorPoint = Vector2.zero
+				p.Position = UDim2.fromOffset(Tema.RadioChico, Tema.RadioChico)
+				p.ZIndex = 3
+				p.Parent = fondo
+				punto = p
+			end
+			if punto then
+				punto.Visible = color ~= nil
+				local f = punto:FindFirstChildOfClass("Frame")
+				if color and f then
+					f.BackgroundColor3 = color
+				end
+			end
+		end,
+		rebotar = function(fuerza: number?)
+			UI.rebotar(c.Marco, fuerza)
 		end,
 		bloquear = function(si: boolean)
 			if si and not candado then

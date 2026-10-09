@@ -1,17 +1,28 @@
 --!strict
--- Panel para elegir dos criaturas tuyas y confirmar la fusión.
--- Fusion (ScreenGui armado en Studio) > Panel > Titulo, Cerrar, Aviso, Plantilla (tarjeta oculta),
---   Ranuras > RanuraA, RanuraB (TextButton > Vista, Nombre, Mas), Fusionar (TextButton > Texto, Costo)
---   Lista (ScrollingFrame con UIGridLayout): una tarjeta por especie que tenés.
--- Tarjeta (TextButton) > Vista (ViewportFrame), Nombre, Gen (TextLabel), Borde (UIStroke)
+-- Panel de la máquina de fusión (ficha, "Guía de estilo", 6, "Menú de fusión"), armado por
+-- código con los componentes de UI:
+--   arriba, los casilleros de los padres (izquierda verde ácido, derecha magenta) con un "+"
+--   entre ellos y, sobre el "+", el del catalizador (con candado hasta que se desbloquee);
+--   después del "=", la vista previa: el resultado si ya lo tenés, "?" si no;
+--   a la derecha, qué va a pasar y el botón "¡FUSIONAR!" con el costo;
+--   abajo, tus criaturas en casilleros con el borde de su generación, filtrables por elemento.
+-- Tocar una criatura la hace saltar al casillero libre; tocar un casillero lleno lo vacía.
+-- Se abre con la consola de la máquina (Maquina.client) y se abre y cierra con UI/Menus.
 
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
-local Config = require(ReplicatedStorage.Shared.Config)
 local Costos = require(ReplicatedStorage.Shared.Costos)
+local Elementos = require(ReplicatedStorage.Shared.Elementos)
+local Formato = require(ReplicatedStorage.Shared.Formato)
 local Fusion = require(ReplicatedStorage.Shared.Fusion)
+local Generador = require(ReplicatedStorage.Shared.Generador)
+local Paleta = require(ReplicatedStorage.Shared.Paleta)
 local Sonidos = require(script.Parent.Sonidos)
+local UI = require(script.Parent.UI)
+local Menus = require(script.Parent.UI.Menus)
+local Notificaciones = require(script.Parent.UI.Notificaciones)
+local VistasVisibles = require(script.Parent.UI.VistasVisibles)
 local Vista = require(script.Parent.Vista)
 
 export type Eventos = {
@@ -19,214 +30,509 @@ export type Eventos = {
 	AlConfirmar: (a: string, b: string) -> (),
 }
 
-local E = Config.Estilo
-local ROJO = Color3.fromHex("E8254D")
-
-local jugador = Players.LocalPlayer
-local gui = jugador:WaitForChild("PlayerGui"):WaitForChild("Fusion") :: ScreenGui
-local panel = gui:WaitForChild("Panel") :: Frame
-local cerrar = panel:WaitForChild("Cerrar") :: TextButton
-local aviso = panel:WaitForChild("Aviso") :: TextLabel
-local plantilla = panel:WaitForChild("Plantilla") :: TextButton
-local lista = panel:WaitForChild("Lista") :: ScrollingFrame
-local ranuras = panel:WaitForChild("Ranuras") :: Frame
-local botonFusionar = ranuras:WaitForChild("Fusionar") :: TextButton
-local textoFusionar = botonFusionar:WaitForChild("Texto") :: TextLabel
-local textoCosto = botonFusionar:WaitForChild("Costo") :: TextLabel
-
-local ranura: { [string]: TextButton } = {
-	A = ranuras:WaitForChild("RanuraA") :: TextButton,
-	B = ranuras:WaitForChild("RanuraB") :: TextButton,
+type Item = {
+	Cas: UI.Casillero,
+	Criatura: Fusion.Criatura,
+	Mutante: boolean,
 }
-local COLOR_RANURA = { A = E.Menta, B = E.Rosa }
+
+local Tema = UI.Tema
+local T = Tema.Fusion
+local jugador = Players.LocalPlayer
+
+local COLOR_LADO: { [string]: Color3 } = { A = Paleta.Acento, B = Paleta.Alerta }
+local ALTO_BOTON_FILTRO = T.Filtro + Tema.Profundidad
 
 local seleccion: { [string]: string } = {}
-local tarjetas: { [string]: TextButton } = {}
+local items: { [string]: Item } = {}
 local eventos: Eventos? = nil
 local ocupada = false
-
-local Panel = {}
+local avisoServidor: string? = nil
+local filtro: string? = nil -- elemento elegido (nil = todos)
 
 local function conjunto(atributo: string): { [string]: boolean }
-	local texto = (jugador:GetAttribute(atributo) :: string?) or ""
-	local r = {}
-	for clave in texto:gmatch("[^;]+") do
-		r[clave] = true
-	end
-	return r
+	return Formato.conjunto(jugador:GetAttribute(atributo) :: string?)
 end
 
-local function cantidadEspecies(): number
+local function adn(): number
+	return (jugador:GetAttribute("ADN") :: number?) or 0
+end
+
+local function cantidad(t: { [string]: boolean }): number
 	local n = 0
-	for _ in conjunto("Especies") do
+	for _ in t do
 		n += 1
 	end
 	return n
 end
 
-local function actualizarBoton()
+---------------------------------------------------------------------------
+-- Ventana y encabezado
+---------------------------------------------------------------------------
+
+local V = Tema.Ventana
+local ventana = UI.ventana({
+	Titulo = "Máquina de fusión",
+	Icono = "adn",
+	ColorIcono = Paleta.Acento,
+	Ancho = V.Ancho,
+	Alto = V.Alto,
+	MaxAncho = V.MaxAncho,
+	MaxAlto = V.MaxAlto,
+})
+
+local contadorADN = UI.contador({
+	Icono = "adn",
+	Color = Paleta.Acento,
+	Texto = "0",
+	Ancho = Tema.ContadorVentana.X,
+	Alto = Tema.ContadorVentana.Y,
+})
+contadorADN.Marco.AnchorPoint = Vector2.new(1, 0.5)
+contadorADN.Marco.Position = UDim2.new(1, -(Tema.Relleno + Tema.Toque + Tema.Separacion), 0.5, 0)
+contadorADN.Marco.Parent = ventana.Encabezado
+
+local cuerpo = ventana.Cuerpo
+
+---------------------------------------------------------------------------
+-- La máquina: padres, catalizador, vista previa, estado y botón
+---------------------------------------------------------------------------
+
+local maquina = UI.hueco("Maquina", UDim2.new(1, 0, 0, T.AltoMaquina), cuerpo)
+
+local function casilleroPadre(lado: string): UI.Casillero
+	local c = UI.casillero({
+		Nombre = "Padre" .. lado,
+		Medida = UDim2.fromOffset(T.Padre.X, T.Padre.Y),
+		Borde = COLOR_LADO[lado],
+		Signo = "+",
+		Titulo = "Elegí una",
+	})
+	c.Signo.TextColor3 = COLOR_LADO[lado]
+	c.Marco.AnchorPoint = Vector2.new(0, 1)
+	c.Marco.Parent = maquina
+	return c
+end
+
+local padres: { [string]: UI.Casillero } = { A = casilleroPadre("A"), B = casilleroPadre("B") }
+
+local catalizador = UI.casillero({
+	Nombre = "Catalizador",
+	Medida = UDim2.fromOffset(T.Catalizador.X, T.Catalizador.Y),
+	Borde = Paleta.Metal,
+	Titulo = "Catalizador",
+	Candado = true,
+})
+catalizador.Marco.AnchorPoint = Vector2.new(0.5, 0)
+catalizador.Marco.Parent = maquina
+
+local mas = UI.Iconos.crear("mas", T.Signo, Paleta.Texto)
+mas.Parent = maquina
+local igual = UI.Iconos.crear("igual", T.Signo, Paleta.Texto)
+igual.Parent = maquina
+
+local previa = UI.casillero({
+	Nombre = "Previa",
+	Medida = UDim2.fromOffset(T.Padre.X, T.Padre.Y),
+	Borde = Paleta.Metal,
+	Signo = "?",
+	Titulo = "Resultado",
+})
+previa.Marco.AnchorPoint = Vector2.new(0, 1)
+previa.Marco.Parent = maquina
+
+-- Columna de la derecha: qué va a pasar y el botón.
+local derecha = UI.hueco("Derecha", UDim2.new(), maquina)
+local estado = UI.texto({
+	Nombre = "Estado",
+	Fuente = "fuerte",
+	Letra = Tema.Letra.Normal,
+	AlineacionX = Enum.TextXAlignment.Left,
+	Medida = UDim2.new(1, 0, 1, -T.AltoBoton - Tema.Separacion - (T.AltoMaquina - T.Padre.Y)),
+})
+estado.TextYAlignment = Enum.TextYAlignment.Top
+estado.Position = UDim2.fromOffset(0, T.AltoMaquina - T.Padre.Y)
+estado.Parent = derecha
+
+local boton = UI.boton({
+	Nombre = "Fusionar",
+	Texto = "¡FUSIONAR!",
+	Sub = "Elegí 2 criaturas",
+	Tipo = "principal",
+	Letra = Tema.Letra.Titulo,
+	LetraSub = Tema.Letra.Chica,
+	Medida = UDim2.fromOffset(T.AnchoBoton, T.AltoBoton),
+})
+boton.Marco.AnchorPoint = Vector2.new(0, 1)
+boton.Marco.Position = UDim2.fromScale(0, 1)
+boton.Marco.Parent = derecha
+
+-- Todo en una fila, medido desde la izquierda.
+do
+	local x = 0
+	padres.A.Marco.Position = UDim2.new(0, x, 1, 0)
+	x += T.Padre.X + Tema.Separacion
+	catalizador.Marco.Position = UDim2.fromOffset(x + T.Columna / 2, 0)
+	mas.Position = UDim2.new(0, x + T.Columna / 2, 1, -T.Padre.Y / 2)
+	x += T.Columna + Tema.Separacion
+	padres.B.Marco.Position = UDim2.new(0, x, 1, 0)
+	x += T.Padre.X + Tema.Separacion
+	igual.Position = UDim2.new(0, x + T.Signo / 2, 1, -T.Padre.Y / 2)
+	x += T.Signo + Tema.Separacion
+	previa.Marco.Position = UDim2.new(0, x, 1, 0)
+	x += T.Padre.X + Tema.Relleno
+	derecha.Position = UDim2.fromOffset(x, 0)
+	derecha.Size = UDim2.new(1, -x, 1, 0)
+end
+
+---------------------------------------------------------------------------
+-- Tus criaturas: filtros por elemento y lista
+---------------------------------------------------------------------------
+
+local filaFiltros = UI.hueco("Filtros", UDim2.new(1, 0, 0, ALTO_BOTON_FILTRO), cuerpo)
+filaFiltros.Position = UDim2.fromOffset(0, T.AltoMaquina + Tema.Separacion)
+local listaFiltros = UI.lista(filaFiltros, true, Tema.Separacion)
+listaFiltros.VerticalAlignment = Enum.VerticalAlignment.Center
+
+local tituloLista = UI.texto({
+	Nombre = "Titulo",
+	Texto = "Tus criaturas",
+	Letra = Tema.Letra.Subtitulo,
+	AlineacionX = Enum.TextXAlignment.Left,
+	Medida = UDim2.new(0, T.Padre.X * 2, 1, 0),
+})
+tituloLista.TextWrapped = false
+tituloLista.LayoutOrder = 0
+tituloLista.Parent = filaFiltros
+
+local arribaLista = T.AltoMaquina + Tema.Separacion * 2 + ALTO_BOTON_FILTRO
+local lista = UI.desplazable("Criaturas", cuerpo)
+lista.Position = UDim2.fromOffset(0, arribaLista)
+lista.Size = UDim2.new(1, 0, 1, -arribaLista)
+UI.grilla(lista, T.Criatura)
+local grupo = VistasVisibles.nueva(lista)
+
+local vacio = UI.texto({
+	Nombre = "Vacio",
+	Texto = "No tenés criaturas de este elemento todavía.",
+	Fuente = "fuerte",
+	Letra = Tema.Letra.Normal,
+	Color = Paleta.Metal,
+	Medida = UDim2.new(1, 0, 0, T.Criatura.Y),
+})
+vacio.Position = UDim2.fromOffset(0, arribaLista)
+vacio.Visible = false
+vacio.Parent = cuerpo
+
+local botonesFiltro: { [string]: UI.Boton } = {}
+
+local function aplicarFiltro()
+	local hay = 0
+	for _, it in items do
+		local ve = filtro == nil or Elementos.tiene(it.Criatura, filtro :: string)
+		it.Cas.Marco.Visible = ve
+		if ve then
+			hay += 1
+		end
+	end
+	vacio.Visible = hay == 0
+	for clave, b in botonesFiltro do
+		b.resaltar(clave == (filtro or "Todos"))
+	end
+	grupo.actualizar()
+end
+
+local function botonFiltro(clave: string?, orden: number)
+	local b = UI.boton({
+		Nombre = clave or "Todos",
+		Texto = if clave then nil else "Todos",
+		Color = if clave then Paleta.Elementos[clave] else Paleta.Metal,
+		Redondo = clave ~= nil,
+		Letra = Tema.Letra.Chica,
+		Medida = UDim2.fromOffset(if clave then T.Filtro else T.AnchoTodos, ALTO_BOTON_FILTRO),
+		AlTocar = function()
+			filtro = clave
+			aplicarFiltro()
+		end,
+	})
+	b.Marco.LayoutOrder = orden
+	b.Marco.Parent = filaFiltros
+	botonesFiltro[clave or "Todos"] = b
+end
+
+botonFiltro(nil, 1)
+for i, e in Elementos.Orden do
+	botonFiltro(e, i + 1)
+end
+
+---------------------------------------------------------------------------
+-- Estado: vista previa, texto y botón
+---------------------------------------------------------------------------
+
+local function actualizar()
+	contadorADN.Valor.Text = Formato.numero(adn())
 	local a, b = seleccion.A, seleccion.B
 	local ca = if a then Fusion.porClave(a) else nil
 	local cb = if b then Fusion.porClave(b) else nil
+	local texto = ""
+	local color = Paleta.Texto
 	local listo = false
-	if ca and cb then
-		local costo = Costos.fusion(ca.Gen, cb.Gen, cantidadEspecies())
-		local adn = (jugador:GetAttribute("ADN") :: number?) or 0
-		-- Si sale una especie que ya tenés, se avisa antes de cobrar (solo sirve para buscar
-		-- el mutante). Solo se dice para las que ya tenés: no adelanta especies nuevas.
-		local hijo = if costo then Fusion.fusionar(ca, cb) else nil
-		if hijo and conjunto("Especies")[hijo.Clave] then
-			aviso.Text = "Ya tenés a " .. hijo.Nombre .. ": solo sirve para buscar el mutante."
-		end
-		if costo then
-			textoCosto.Text = costo .. " ADN"
-			textoCosto.TextColor3 = if adn >= costo then E.Violeta else ROJO
-			listo = adn >= costo
-		else
-			-- Esa mezcla de generaciones nunca reacciona (y no se cobra).
-			textoCosto.Text = "gratis"
-			textoCosto.TextColor3 = E.Violeta
-			listo = true
-		end
-	else
-		textoCosto.Text = "elegí 2"
-		textoCosto.TextColor3 = E.Violeta
-	end
-	listo = listo and not ocupada
-	botonFusionar.AutoButtonColor = listo
-	botonFusionar.BackgroundColor3 = if listo then E.Amarillo else Color3.fromHex("D9D2C5")
-	textoFusionar.TextTransparency = if listo then 0 else 0.4
-end
 
-local function pintarTarjetas()
-	for clave, t in tarjetas do
-		local borde = t:FindFirstChild("Borde") :: UIStroke?
-		if borde then
-			if seleccion.A == clave then
-				borde.Color, borde.Thickness = COLOR_RANURA.A, 5
-			elseif seleccion.B == clave then
-				borde.Color, borde.Thickness = COLOR_RANURA.B, 5
+	previa.elemento(nil)
+	if not ca or not cb then
+		previa.poner(nil, "Resultado")
+		previa.Signo.Text = "?"
+		previa.Signo.TextColor3 = Paleta.Metal
+		previa.Borde.Color = Paleta.Metal
+		texto = if ca or cb
+			then "Elegí una criatura más."
+			else "Tocá dos criaturas de abajo para ponerlas en la máquina."
+		boton.poner("¡FUSIONAR!", "Elegí 2 criaturas")
+		boton.colorSub(Paleta.Texto)
+	else
+		local hijo = Fusion.fusionar(ca, cb)
+		if not hijo then
+			-- Se avisa antes de apretar: esa pareja nunca reacciona.
+			previa.poner(nil, "No reaccionan")
+			previa.Signo.Text = "×"
+			previa.Signo.TextColor3 = Paleta.Error
+			previa.Borde.Color = Paleta.Error
+			texto = "Estas dos no reaccionan. Probá con otra pareja."
+			color = Paleta.Error
+			boton.poner("¡FUSIONAR!", "No reaccionan")
+			boton.colorSub(Paleta.Error)
+		else
+			local tengo = conjunto("Especies")
+			local costo = Costos.fusion(ca.Gen, cb.Gen, cantidad(tengo)) or 0
+			if tengo[hijo.Clave] then
+				-- Conocida: se muestra el resultado (no adelanta especies nuevas).
+				previa.poner(hijo.Clave, hijo.Nombre, conjunto("Mutantes")[hijo.Clave])
+				previa.elemento(Generador.colorElemento(hijo))
+				previa.Borde.Color = Paleta.Generaciones[hijo.Gen]
+				texto = "Ya tenés a " .. hijo.Nombre .. ": solo sirve para buscar el mutante."
+				color = Paleta.Alerta
 			else
-				borde.Color, borde.Thickness = E.Violeta, 2
+				previa.poner(nil, "¡Nueva!")
+				previa.Signo.Text = "?"
+				previa.Signo.TextColor3 = Paleta.Acento
+				previa.Borde.Color = Paleta.Acento
+				texto = "¡Reaccionan! Va a salir una especie que todavía no tenés."
+				color = Paleta.Acento
+			end
+			local falta = costo - adn()
+			if falta > 0 then
+				boton.poner("¡FUSIONAR!", "Te faltan " .. Formato.numero(falta) .. " ADN")
+				boton.colorSub(Paleta.Error)
+			else
+				boton.poner("¡FUSIONAR!", Formato.numero(costo) .. " ADN")
+				boton.colorSub(Paleta.Texto)
+				listo = true
 			end
 		end
 	end
+	if ocupada then
+		boton.poner("¡FUSIONAR!", "Trabajando...")
+		boton.colorSub(Paleta.Texto)
+		listo = false
+	end
+	if avisoServidor then
+		texto = avisoServidor :: string
+		color = Paleta.Error
+	end
+	boton.habilitar(listo)
+	estado.Text = texto
+	estado.TextColor3 = color
 end
 
-local function actualizarRanura(lado: string)
-	local boton = ranura[lado]
+---------------------------------------------------------------------------
+-- Elegir criaturas
+---------------------------------------------------------------------------
+
+local function pintarItems()
+	for clave, it in items do
+		local lado = if seleccion.A == clave then "A" elseif seleccion.B == clave then "B" else nil
+		it.Cas.Borde.Color = if lado then COLOR_LADO[lado] else Paleta.Generaciones[it.Criatura.Gen]
+		it.Cas.Borde.Thickness = if lado then Tema.Contorno + 3 else Tema.Contorno + 1
+	end
+end
+
+local function mostrarPadre(lado: string)
 	local clave = seleccion[lado]
 	local c = if clave then Fusion.porClave(clave) else nil
-	local mutante = if clave then conjunto("Mutantes")[clave] == true else false
-	Vista.mostrar(boton:WaitForChild("Vista") :: ViewportFrame, clave, mutante)
-	local nombre = boton:WaitForChild("Nombre") :: TextLabel
-	nombre.Text = if c then c.Nombre else "Elegí una"
-	local mas = boton:WaitForChild("Mas") :: TextLabel
-	mas.Visible = c == nil
+	local cas = padres[lado]
+	cas.poner(
+		if c then c.Clave else nil,
+		if c then c.Nombre else nil,
+		if c then conjunto("Mutantes")[c.Clave] else nil
+	)
+	cas.elemento(if c then Generador.colorElemento(c) else nil)
 end
 
-local function poner(lado: string, clave: string?)
+-- La criatura salta desde su casillero de la lista hasta el de la máquina.
+local function saltar(desde: GuiObject, lado: string, clave: string)
+	local marco = ventana.Marco
+	local hacia = padres[lado]
+	if marco.Size.X.Offset <= 0 or marco.AbsoluteSize.X <= 0 then
+		mostrarPadre(lado)
+		return
+	end
+	local factor = marco.AbsoluteSize.X / marco.Size.X.Offset
+	local inicio = (desde.AbsolutePosition - marco.AbsolutePosition) / factor
+	local tamInicio = desde.AbsoluteSize / factor
+	local fin = (hacia.Hueco.AbsolutePosition - marco.AbsolutePosition) / factor
+	local tamFin = hacia.Hueco.AbsoluteSize / factor
+
+	hacia.poner(nil, "")
+	hacia.Signo.Visible = false
+	local vuelo = Instance.new("ViewportFrame")
+	vuelo.Name = "Vuelo"
+	vuelo.BackgroundTransparency = 1
+	vuelo.Position = UDim2.fromOffset(inicio.X, inicio.Y)
+	vuelo.Size = UDim2.fromOffset(tamInicio.X, tamInicio.Y)
+	vuelo.ZIndex = 30
+	vuelo.Parent = ventana.Fondo
+	Vista.mostrar(vuelo, clave, conjunto("Mutantes")[clave])
+	local t = UI.animar(vuelo, T.Salto, {
+		Position = UDim2.fromOffset(fin.X, fin.Y),
+		Size = UDim2.fromOffset(tamFin.X, tamFin.Y),
+	})
+	t.Completed:Once(function()
+		vuelo:Destroy()
+		if seleccion[lado] == clave then
+			mostrarPadre(lado)
+			hacia.rebotar(0.12)
+			-- SONIDO: la criatura cae en el casillero (nota corta)
+			Sonidos.nota(if lado == "A" then 4 else 7, 0.35)
+		end
+	end)
+end
+
+local function poner(lado: string, clave: string?, desde: GuiObject?)
 	seleccion[lado] = clave
-	actualizarRanura(lado)
-	pintarTarjetas()
-	aviso.Text = ""
-	actualizarBoton()
+	avisoServidor = nil
+	if clave and desde then
+		saltar(desde, lado, clave)
+	else
+		mostrarPadre(lado)
+	end
+	pintarItems()
+	actualizar()
 	if eventos then
 		eventos.AlElegir(lado, clave)
 	end
 end
 
-local function elegir(clave: string)
-	-- SONIDO: elegir una criatura (nota corta)
-	Sonidos.nota(if seleccion.A then 7 else 4, 0.35)
+local function elegir(clave: string, desde: GuiObject)
+	if ocupada then
+		return
+	end
 	if seleccion.A == clave then
 		poner("A", nil)
 	elseif seleccion.B == clave then
 		poner("B", nil)
 	elseif not seleccion.A then
-		poner("A", clave)
+		poner("A", clave, desde)
 	else
-		poner("B", clave)
+		poner("B", clave, desde)
 	end
 end
 
--- Arma una tarjeta por cada especie que tenés, en el orden de la Mutadex.
+for lado, cas in padres do
+	UI.tocable(cas.Fondo, function()
+		if seleccion[lado] and not ocupada then
+			poner(lado, nil)
+			cas.rebotar(-0.08)
+		end
+	end, cas.Marco)
+end
+
+UI.tocable(catalizador.Fondo, function()
+	Notificaciones.mostrar("Los catalizadores llegan muy pronto.", "info")
+end, catalizador.Marco)
+
+-- Una tarjeta por especie que tenés, en el orden de la Mutadex.
 local function armarLista()
 	local tengo = conjunto("Especies")
 	local mutantes = conjunto("Mutantes")
-	for clave, t in tarjetas do
+	for clave, it in items do
 		if not tengo[clave] then
-			t:Destroy()
-			tarjetas[clave] = nil
+			grupo.quitar(it.Cas.Marco)
+			it.Cas.Marco:Destroy()
+			items[clave] = nil
 		end
 	end
 	for orden, c in Fusion.todas() do
 		if tengo[c.Clave] then
-			local t = tarjetas[c.Clave]
-			if not t then
-				local nueva = plantilla:Clone()
-				nueva.Name = c.Clave
-				nueva.Visible = true
-				nueva.LayoutOrder = orden
-				nueva.Activated:Connect(function()
-					elegir(c.Clave)
-				end)
-				nueva.Parent = lista
-				tarjetas[c.Clave] = nueva
-				t = nueva
-			end
-			local tarjeta = t :: TextButton
 			local mutante = mutantes[c.Clave] == true
-			if
-				tarjeta:GetAttribute("Mutante") ~= mutante
-				or tarjeta:GetAttribute("Lista") == nil
-			then
-				Vista.mostrar(tarjeta:WaitForChild("Vista") :: ViewportFrame, c.Clave, mutante)
-				tarjeta:SetAttribute("Mutante", mutante)
-				tarjeta:SetAttribute("Lista", true)
+			local it = items[c.Clave]
+			if not it then
+				local cas = UI.casillero({
+					Nombre = c.Clave,
+					Medida = UDim2.fromOffset(T.Criatura.X, T.Criatura.Y),
+					Borde = Paleta.Generaciones[c.Gen],
+					Prestada = true,
+				})
+				cas.Marco.LayoutOrder = orden
+				cas.poner(c.Clave, c.Nombre, mutante)
+				cas.elemento(Generador.colorElemento(c))
+				cas.Marco.Parent = lista
+				UI.tocable(cas.Fondo, function()
+					elegir(c.Clave, cas.Marco)
+				end, cas.Marco)
+				grupo.agregar(cas.Marco, cas.Hueco, { Clave = c.Clave, Mutante = mutante })
+				items[c.Clave] = { Cas = cas, Criatura = c, Mutante = mutante }
+			elseif it.Mutante ~= mutante then
+				it.Mutante = mutante
+				it.Cas.poner(c.Clave, c.Nombre, mutante)
+				grupo.cambiar(it.Cas.Marco, { Clave = c.Clave, Mutante = mutante })
 			end
-			(tarjeta:WaitForChild("Nombre") :: TextLabel).Text = (if mutante then "⭐ " else "")
-				.. c.Nombre;
-			(tarjeta:WaitForChild("Gen") :: TextLabel).Text = string.rep("●", c.Gen)
 		end
 	end
-	pintarTarjetas()
-	actualizarBoton()
+	tituloLista.Text = "Tus criaturas (" .. cantidad(tengo) .. ")"
+	aplicarFiltro()
+	pintarItems()
 end
+
+boton.AlTocar = function()
+	local a, b = seleccion.A, seleccion.B
+	if ocupada or not a or not b or not eventos then
+		return
+	end
+	(eventos :: Eventos).AlConfirmar(a, b)
+end
+
+Menus.registrar("Fusion", ventana, function()
+	armarLista()
+	actualizar()
+	grupo.actualizar()
+end)
+
+---------------------------------------------------------------------------
+-- Lo que usa Maquina.client
+---------------------------------------------------------------------------
+
+local Panel = {}
 
 function Panel.iniciar(e: Eventos)
 	eventos = e
-	for lado, boton in ranura do
-		boton.Activated:Connect(function()
-			if seleccion[lado] then
-				poner(lado, nil)
-			end
-		end)
-	end
-	botonFusionar.Activated:Connect(function()
-		local a, b = seleccion.A, seleccion.B
-		if ocupada or not a or not b or not botonFusionar.AutoButtonColor then
-			return
-		end
-		e.AlConfirmar(a, b)
+	jugador:GetAttributeChangedSignal("Especies"):Connect(function()
+		armarLista()
+		actualizar()
 	end)
-	cerrar.Activated:Connect(function()
-		Panel.cerrar()
-	end)
-	jugador:GetAttributeChangedSignal("Especies"):Connect(armarLista)
 	jugador:GetAttributeChangedSignal("Mutantes"):Connect(armarLista)
-	jugador:GetAttributeChangedSignal("ADN"):Connect(actualizarBoton)
+	jugador:GetAttributeChangedSignal("ADN"):Connect(actualizar)
 	armarLista()
-	actualizarRanura("A")
-	actualizarRanura("B")
+	mostrarPadre("A")
+	mostrarPadre("B")
+	actualizar()
 end
 
 function Panel.abrir()
-	panel.Visible = true
+	Menus.abrir("Fusion")
 end
 
 function Panel.cerrar()
-	panel.Visible = false
+	Menus.cerrar("Fusion")
 end
 
 function Panel.limpiar()
@@ -234,13 +540,15 @@ function Panel.limpiar()
 	poner("B", nil)
 end
 
+-- Aviso del servidor (por ejemplo "Te falta ADN"): queda hasta que cambie la elección.
 function Panel.aviso(texto: string)
-	aviso.Text = texto
+	avisoServidor = if texto ~= "" then texto else nil
+	actualizar()
 end
 
 function Panel.ocupada(valor: boolean)
 	ocupada = valor
-	actualizarBoton()
+	actualizar()
 end
 
 return Panel

@@ -104,7 +104,7 @@ end
 -- Ícono chico y semitransparente sobre la cabeza. Borde verde si la personalidad es
 -- positiva y magenta si es negativa. Solo se ve de cerca.
 local function icono(raiz: BasePart, personalidad: string, alto: number)
-	local datos = Personalidades[personalidad]
+	local datos = Personalidades.Datos[personalidad]
 	if not datos then
 		return
 	end

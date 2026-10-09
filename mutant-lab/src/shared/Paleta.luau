@@ -44,13 +44,15 @@ local Paleta = {
 	Silueta = Color3.fromHex("0B0E14"), -- criaturas sin descubrir
 	LuzVista = Color3.fromHex("BEB4C8"), -- luz ambiente de las vistas 3D de la interfaz
 
-	-- Colores de los papelitos de las celebraciones.
+	-- Colores de los papelitos de las celebraciones: verde ácido, magenta, dorado y los elementos.
 	Papelitos = {
 		Color3.fromHex("7CFF4F"),
 		Color3.fromHex("FF4FA3"),
 		Color3.fromHex("FFC93C"),
-		ELEMENTOS.Agua,
 		ELEMENTOS.Fuego,
+		ELEMENTOS.Agua,
+		ELEMENTOS.Planta,
+		ELEMENTOS.Electrico,
 		ELEMENTOS.Sombra,
 	},
 

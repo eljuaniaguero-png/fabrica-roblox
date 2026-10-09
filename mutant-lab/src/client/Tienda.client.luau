@@ -197,18 +197,13 @@ local prompt = MiLab.obtener()
 	:WaitForChild("Mostrador")
 	:WaitForChild("Prompt") :: ProximityPrompt
 prompt.Triggered:Connect(function()
+	Menus.cerrar()
 	Menus.cerrarViejos()
 	ventana.Visible = true
 	actualizar()
 end)
 -- El botón Tienda del HUD también la abre y la cierra (puente temporal en UI/Menus.luau).
 Menus.puenteViejo("Tienda", ventana, function()
-	-- Si estaba abierto el panel de la máquina, se cierra para no tapar.
-	local panel = jugador.PlayerGui:FindFirstChild("Fusion")
-	panel = panel and panel:FindFirstChild("Panel")
-	if panel and panel:IsA("GuiObject") then
-		panel.Visible = false
-	end
 	actualizar()
 end)
 
