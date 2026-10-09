@@ -10,12 +10,14 @@ local HttpService = game:GetService("HttpService")
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
+local Catalizadores = require(ReplicatedStorage.Shared.Catalizadores)
 local Config = require(ReplicatedStorage.Shared.Config)
 local Formato = require(ReplicatedStorage.Shared.Formato)
 local Fusion = require(ReplicatedStorage.Shared.Fusion)
 local Generador = require(ReplicatedStorage.Shared.Generador)
 local Paleta = require(ReplicatedStorage.Shared.Paleta)
 local Pedidos = require(ReplicatedStorage.Shared.Pedidos)
+local Personalidades = require(ReplicatedStorage.Shared.Personalidades)
 local MiLab = require(script.Parent.MiLab)
 local Sonidos = require(script.Parent.Sonidos)
 local UI = require(script.Parent.UI)
@@ -35,8 +37,14 @@ local entregaRemoto = remotos:WaitForChild("Entrega") :: RemoteEvent
 
 type Lugar = { Pedido: Pedidos.Pedido?, Espera: number? }
 
--- Una opción para entregar: una especie, normal o mutante, y cuántas tenés.
-type Opcion = { Clave: string, Mutante: boolean, Disponibles: number }
+-- Una clase de criatura tuya que sirve (especie, tipo, personalidad y variante) y cuántas hay.
+type Opcion = {
+	Clave: string,
+	Mutante: boolean,
+	Personalidad: string?,
+	Variante: string?,
+	Disponibles: number,
+}
 
 type Tarjeta = {
 	Caja: UI.Tarjeta,
@@ -48,6 +56,9 @@ type Tarjeta = {
 	Texto: TextLabel,
 	Premio: TextLabel,
 	Pista: Frame,
+	Catalizador: Frame, -- "+1 Hielo" (algunos pedidos pagan un catalizador)
+	IconoCatalizador: Frame,
+	TextoCatalizador: TextLabel,
 	Sirven: TextLabel,
 	Entregar: UI.Boton,
 	Descartar: UI.Boton,
@@ -72,30 +83,43 @@ local function lugares(): { Lugar }
 	return if ok and typeof(datos) == "table" then datos else {}
 end
 
-local function inventario(): { [string]: Formato.Cuenta }
-	return Formato.inventario(jugador:GetAttribute("Criaturas") :: string?)
+local function inventario(): { Formato.Grupo }
+	return Formato.grupos(jugador:GetAttribute("Grupos") :: string?)
 end
 
--- Las criaturas tuyas que sirven para el pedido (normales y mutantes por separado).
-local function opciones(r: Pedidos.Requisito, inv: { [string]: Formato.Cuenta }): { Opcion }
-	local lista = {}
-	for _, c in Fusion.todas() do
-		local cuenta = inv[c.Clave]
-		if cuenta then
-			if cuenta.Normales > 0 and Pedidos.sirve(r, { Clave = c.Clave, Mutante = false }) then
-				table.insert(
-					lista,
-					{ Clave = c.Clave, Mutante = false, Disponibles = cuenta.Normales }
-				)
-			end
-			if cuenta.Mutantes > 0 and Pedidos.sirve(r, { Clave = c.Clave, Mutante = true }) then
-				table.insert(
-					lista,
-					{ Clave = c.Clave, Mutante = true, Disponibles = cuenta.Mutantes }
-				)
-			end
+-- Las criaturas tuyas que sirven para el pedido, separadas por tipo, personalidad y variante,
+-- en el orden de la Mutadex.
+local function opciones(r: Pedidos.Requisito, inv: { Formato.Grupo }): { Opcion }
+	local lista: { Opcion } = {}
+	for _, g in inv do
+		if g.Cantidad > 0 and Pedidos.sirve(r, g) then
+			table.insert(lista, {
+				Clave = g.Clave,
+				Mutante = g.Mutante,
+				Personalidad = g.Personalidad,
+				Variante = g.Variante,
+				Disponibles = g.Cantidad,
+			})
 		end
 	end
+	local orden = {}
+	for i, c in Fusion.todas() do
+		orden[c.Clave] = i
+	end
+	table.sort(lista, function(x, y)
+		if x.Clave ~= y.Clave then
+			return (orden[x.Clave] or 0) < (orden[y.Clave] or 0)
+		end
+		local px = table.find(Personalidades.Orden, x.Personalidad or "") or 0
+		local py = table.find(Personalidades.Orden, y.Personalidad or "") or 0
+		if px ~= py then
+			return px < py
+		end
+		if x.Mutante ~= y.Mutante then
+			return not x.Mutante
+		end
+		return (x.Variante or "") < (y.Variante or "")
+	end)
 	return lista
 end
 
@@ -217,7 +241,7 @@ local function crearTarjeta(i: number): Tarjeta
 	texto.Parent = globo
 	y += T.AltoGlobo + Tema.Separacion
 
-	-- Premio: ADN y, a veces, una pista gratis.
+	-- Premio: ADN y, a veces, una pista gratis o un catalizador.
 	local filaPremio = UI.hueco("Premio", UDim2.new(1, 0, 0, T.AltoPremio), contenido)
 	filaPremio.Position = UDim2.fromOffset(0, y)
 	local l = UI.lista(filaPremio, true, Tema.Separacion / 2)
@@ -255,6 +279,25 @@ local function crearTarjeta(i: number): Tarjeta
 	textoPista.TextWrapped = false
 	textoPista.LayoutOrder = 2
 	textoPista.Parent = pista
+	-- O un catalizador (en vez de la pista).
+	local premioCatalizador = UI.hueco("Catalizador", UDim2.fromOffset(0, T.AltoPremio), filaPremio)
+	premioCatalizador.AutomaticSize = Enum.AutomaticSize.X
+	premioCatalizador.LayoutOrder = 4
+	UI.lista(premioCatalizador, true, 4).VerticalAlignment = Enum.VerticalAlignment.Center
+	local separaCatalizador =
+		UI.hueco("Separa", UDim2.fromOffset(Tema.Separacion, 1), premioCatalizador)
+	separaCatalizador.LayoutOrder = 0
+	local iconoCatalizador =
+		UI.hueco("Icono", UDim2.fromOffset(T.AltoPremio - 8, T.AltoPremio - 8), premioCatalizador)
+	iconoCatalizador.LayoutOrder = 1
+	local textoCatalizador = UI.texto({
+		Letra = Tema.Letra.Normal,
+		Medida = UDim2.fromOffset(0, T.AltoPremio),
+	})
+	textoCatalizador.AutomaticSize = Enum.AutomaticSize.X
+	textoCatalizador.TextWrapped = false
+	textoCatalizador.LayoutOrder = 2
+	textoCatalizador.Parent = premioCatalizador
 	y += T.AltoPremio + Tema.Separacion
 
 	-- Cuántas criaturas tuyas sirven.
@@ -322,6 +365,9 @@ local function crearTarjeta(i: number): Tarjeta
 		Texto = texto,
 		Premio = premio,
 		Pista = pista,
+		Catalizador = premioCatalizador,
+		IconoCatalizador = iconoCatalizador,
+		TextoCatalizador = textoCatalizador,
 		Sirven = sirven,
 		Entregar = entregar,
 		Descartar = descartar,
@@ -338,7 +384,7 @@ local function segundos(n: number): string
 	return string.format("%d:%02d", s // 60, s % 60)
 end
 
-local function pintarTarjeta(i: number, lugar: Lugar?, inv: { [string]: Formato.Cuenta })
+local function pintarTarjeta(i: number, lugar: Lugar?, inv: { Formato.Grupo })
 	local t = tarjetas[i]
 	local p = lugar and lugar.Pedido
 	t.Contenido.Visible = p ~= nil
@@ -361,6 +407,16 @@ local function pintarTarjeta(i: number, lugar: Lugar?, inv: { [string]: Formato.
 	t.Texto.Text = p.Texto .. (if Pedidos.cantidad(p.Requisito) > 1 then "" else "")
 	t.Premio.Text = "+" .. Formato.numero(p.Premio)
 	t.Pista.Visible = p.Pista == true
+	local premioCat = Catalizadores.porClave(p.Catalizador)
+	t.Catalizador.Visible = premioCat ~= nil
+	if premioCat and t.Catalizador:GetAttribute("Clave") ~= premioCat.Clave then
+		t.IconoCatalizador:ClearAllChildren()
+		UI.Iconos.crear(premioCat.Icono, T.AltoPremio - 8, premioCat.Color).Parent =
+			t.IconoCatalizador
+		t.TextoCatalizador.Text = "+1 " .. premioCat.Nombre
+		t.TextoCatalizador.TextColor3 = premioCat.Color
+		t.Catalizador:SetAttribute("Clave", premioCat.Clave)
+	end
 	t.Caja.Borde.Color = if p.Dificultad == "Mutante" then Paleta.Dorado else Paleta.Contorno
 
 	local ops = opciones(p.Requisito, inv)
@@ -371,6 +427,12 @@ local function pintarTarjeta(i: number, lugar: Lugar?, inv: { [string]: Formato.
 		t.Sirven.TextColor3 = Paleta.Acento
 	elseif p.Nuevo then
 		t.Sirven.Text = "Para cumplirlo tenés que descubrir una especie nueva."
+		t.Sirven.TextColor3 = Paleta.Alerta
+	elseif p.Requisito.Variante then
+		local cat = Catalizadores.porClave(p.Requisito.Variante)
+		t.Sirven.Text = "Fusionalo con un catalizador de "
+			.. (if cat then cat.Nombre else "?")
+			.. "."
 		t.Sirven.TextColor3 = Paleta.Alerta
 	elseif n > 0 then
 		t.Sirven.Text = "Tenés " .. n .. " de " .. hacen .. ". Fusioná otra."
@@ -487,7 +549,7 @@ local function pintarSelector()
 		cas.Borde.Thickness = if n > 0 then Tema.Contorno + 3 else Tema.Contorno + 1
 		local c = Fusion.porClave(o.Clave) :: Fusion.Criatura
 		local nombre = if n == 0
-			then c.Nombre .. " ×" .. o.Disponibles
+			then Catalizadores.nombre(c.Nombre, o.Variante) .. " ×" .. o.Disponibles
 			elseif n == 1 then "Elegido"
 			else "Elegidos: " .. n
 		cas.poner(o.Clave, nombre, o.Mutante)
@@ -496,9 +558,18 @@ local function pintarSelector()
 	local aviso = ""
 	local inv = inventario()
 	for o in casillas do
-		local n = cuantasElegidas(o)
-		local cuenta = inv[o.Clave]
-		local total = if cuenta then cuenta.Normales + cuenta.Mutantes else 0
+		local n = 0
+		for _, e in elegidas do
+			if e.Clave == o.Clave then
+				n += 1
+			end
+		end
+		local total = 0
+		for _, g in inv do
+			if g.Clave == o.Clave then
+				total += g.Cantidad
+			end
+		end
 		if n > 0 and n >= total then
 			aviso = "Te quedás sin "
 				.. (Fusion.porClave(o.Clave) :: Fusion.Criatura).Nombre
@@ -540,15 +611,24 @@ function abrirSelector(i: number)
 	for orden, o in opciones(p.Requisito, inventario()) do
 		local c = Fusion.porClave(o.Clave) :: Fusion.Criatura
 		local cas = UI.casillero({
-			Nombre = o.Clave .. (if o.Mutante then "M" else ""),
+			Nombre = o.Clave
+				.. (if o.Mutante then "M" else "")
+				.. (o.Personalidad or "")
+				.. (o.Variante or ""),
 			Medida = UDim2.fromOffset(T.Opcion.X, T.Opcion.Y),
 			Borde = Paleta.Generaciones[c.Gen],
 			Prestada = true,
 		})
 		cas.Marco.LayoutOrder = orden
 		cas.elemento(Generador.colorElemento(c))
+		cas.personalidad(o.Personalidad)
 		cas.Marco.Parent = listaOpciones
-		grupoOpciones.agregar(cas.Marco, cas.Hueco, { Clave = o.Clave, Mutante = o.Mutante })
+		grupoOpciones.agregar(cas.Marco, cas.Hueco, {
+			Clave = o.Clave,
+			Mutante = o.Mutante,
+			Personalidad = o.Personalidad,
+			Variante = o.Variante,
+		})
 		UI.tocable(cas.Fondo, function()
 			local n = cuantasElegidas(o)
 			if #elegidas < hacen and n < o.Disponibles then
@@ -581,7 +661,12 @@ confirmar.AlTocar = function()
 	end
 	local envio = {}
 	for _, o in elegidas do
-		table.insert(envio, { Clave = o.Clave, Mutante = o.Mutante })
+		table.insert(envio, {
+			Clave = o.Clave,
+			Mutante = o.Mutante,
+			Personalidad = o.Personalidad,
+			Variante = o.Variante,
+		})
 	end
 	entregando[i] = true
 	entregarRemoto:FireServer(i, envio)
@@ -627,7 +712,7 @@ local function despedida(i: number, unidades: { Pedidos.Unidad }, premio: number
 		vista.Position = inicio
 		vista.ZIndex = 5
 		vista.Parent = t.Globo
-		Vista.mostrar(vista, u.Clave, u.Mutante)
+		Vista.mostrar(vista, u.Clave, u.Mutante, nil, u.Personalidad, u.Variante)
 		task.spawn(function()
 			for _ = 1, 2 do
 				UI.animar(
@@ -709,11 +794,11 @@ end, function()
 	cerrarElSelector()
 end)
 
-for _, atributo in { "Pedidos", "Criaturas", "ADN", "Entregados" } do
+for _, atributo in { "Pedidos", "Grupos", "ADN", "Entregados" } do
 	jugador:GetAttributeChangedSignal(atributo):Connect(function()
 		if abierto then
 			pintar()
-			if pedidoElegido and selector.Marco.Visible and atributo == "Criaturas" then
+			if pedidoElegido and selector.Marco.Visible and atributo == "Grupos" then
 				abrirSelector(lugarElegido :: number)
 			end
 		end

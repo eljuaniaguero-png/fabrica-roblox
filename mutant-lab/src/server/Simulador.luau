@@ -38,6 +38,10 @@ export type Informe = {
 	Fusiones: number,
 	Compras: number,
 	Descartes: number,
+	ConCatalizador: number, -- fusiones que salieron con catalizador (variantes hechas)
+	Variantes: number, -- variantes distintas conseguidas
+	PedidosPersonalidad: number,
+	PedidosVariante: number,
 	PrimeraFusion: number?,
 }
 
@@ -49,6 +53,8 @@ function Simulador.jugar(segundos: number, semilla: number, registro: { string }
 	local rng = Random.new(semilla)
 	local t = 0
 	Tablero.llenar(d, t)
+	-- Lo que cuentan las funciones del mundo (el informe se arma más abajo).
+	local especiales = { ConCatalizador = 0, PedidosPersonalidad = 0, PedidosVariante = 0 }
 	local mundo: Robot.Mundo = {
 		datos = function()
 			return d
@@ -56,15 +62,24 @@ function Simulador.jugar(segundos: number, semilla: number, registro: { string }
 		ahora = function()
 			return t
 		end,
-		fusionar = function(a: string, b: string): boolean
-			local r = MaquinaFusion.aplicar(d, a, b, t, rng)
+		fusionar = function(a: string, b: string, catalizador: string?): boolean
+			local r = MaquinaFusion.aplicar(d, a, b, t, rng, nil, nil, catalizador)
+			if r.Ok and r.Variante then
+				especiales.ConCatalizador += 1
+			end
 			return r.Ok or r.Motivo == "NoReaccionan"
 		end,
 		comprar = function(tipo: string, id: any): boolean
 			return Tienda.aplicar(d, tipo, id).Ok
 		end,
 		entregar = function(lugar: number, unidades: { Pedidos.Unidad }): boolean
+			local p = d.Pedidos[lugar]
 			local ok = Tablero.aplicarEntrega(d, lugar, unidades)
+			if ok and p and p.Requisito.Personalidad then
+				especiales.PedidosPersonalidad += 1
+			elseif ok and p and p.Requisito.Variante then
+				especiales.PedidosVariante += 1
+			end
 			if ok then
 				Tablero.llenar(d, t)
 			end
@@ -88,6 +103,10 @@ function Simulador.jugar(segundos: number, semilla: number, registro: { string }
 		Fusiones = 0,
 		Compras = 0,
 		Descartes = 0,
+		ConCatalizador = 0,
+		Variantes = 0,
+		PedidosPersonalidad = 0,
+		PedidosVariante = 0,
 		PrimeraFusion = nil,
 	}
 	local quieto = 0 -- segundos seguidos sin nada útil
@@ -127,10 +146,14 @@ function Simulador.jugar(segundos: number, semilla: number, registro: { string }
 			quieto = 0
 			contado = false
 		end
+		-- Mientras dura la acción las criaturas no cambian: se calcula una vez.
+		local porSegundo = Mejoras.porSegundo(
+			Mejoras.activas(d.Criaturas, d.Mejoras.Corrales),
+			d.Mejoras.Nutrientes
+		)
 		for _ = 1, Robot.duracion(accion) do
 			t += 1
-			local activas = Mejoras.activas(d.Criaturas, d.Mejoras.Corrales)
-			d.ADN += Mejoras.porSegundo(activas, d.Mejoras.Nutrientes)
+			d.ADN += porSegundo
 			Tablero.llenar(d, t)
 			local costo = Costos.fusion(1, 1, Jugadores.cantidadEspecies(d)) or 1
 			local razon = d.ADN / costo
@@ -143,7 +166,7 @@ function Simulador.jugar(segundos: number, semilla: number, registro: { string }
 				table.insert(informe.Minutos, {
 					Especies = Jugadores.cantidadEspecies(d),
 					ADN = math.floor(d.ADN),
-					PorSegundo = Mejoras.porSegundo(activas, d.Mejoras.Nutrientes),
+					PorSegundo = porSegundo,
 					Entregados = d.Entregados,
 					Costo = costo,
 				})
@@ -152,6 +175,10 @@ function Simulador.jugar(segundos: number, semilla: number, registro: { string }
 	end
 	informe.Especies = Jugadores.cantidadEspecies(d)
 	informe.Entregados = d.Entregados
+	informe.Variantes = #Jugadores.aLista(d.Variantes)
+	informe.ConCatalizador = especiales.ConCatalizador
+	informe.PedidosPersonalidad = especiales.PedidosPersonalidad
+	informe.PedidosVariante = especiales.PedidosVariante
 	return informe
 end
 
@@ -191,6 +218,10 @@ function Simulador.resumen(segundos: number, partidas: number): string
 		Arriba = 0,
 		SinSaber = 0,
 		Fusiones = 0,
+		ConCatalizador = 0,
+		Variantes = 0,
+		PedidosPersonalidad = 0,
+		PedidosVariante = 0,
 	}
 	local peorRazon, minimoEspecies, maximoEspecies = 0, math.huge, 0
 	local porMinuto: { { number } } = {}
@@ -203,6 +234,10 @@ function Simulador.resumen(segundos: number, partidas: number): string
 		suma.Arriba += inf.SegundosArribaDelTriple
 		suma.SinSaber += inf.SinSaber
 		suma.Fusiones += inf.Fusiones
+		suma.ConCatalizador += inf.ConCatalizador
+		suma.Variantes += inf.Variantes
+		suma.PedidosPersonalidad += inf.PedidosPersonalidad
+		suma.PedidosVariante += inf.PedidosVariante
 		peorRazon = math.max(peorRazon, inf.RazonMaxima)
 		minimoEspecies = math.min(minimoEspecies, inf.Especies)
 		maximoEspecies = math.max(maximoEspecies, inf.Especies)
@@ -229,6 +264,14 @@ function Simulador.resumen(segundos: number, partidas: number): string
 		("ADN / próxima fusión, máximo: %s (peor %.1f)"):format(prom(suma.Razon), peorRazon),
 		"Segundos con más del triple: " .. prom(suma.Arriba),
 		"Veces sin saber qué hacer: " .. prom(suma.SinSaber),
+		"Fusiones con catalizador: "
+			.. prom(suma.ConCatalizador)
+			.. " | variantes distintas: "
+			.. prom(suma.Variantes),
+		"Pedidos con personalidad: "
+			.. prom(suma.PedidosPersonalidad)
+			.. " | con variante: "
+			.. prom(suma.PedidosVariante),
 		"Minuto a minuto (especies / entregados / ADN):",
 	}
 	for m, v in porMinuto do

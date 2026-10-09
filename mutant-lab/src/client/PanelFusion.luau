@@ -2,7 +2,8 @@
 -- Panel de la máquina de fusión (ficha, "Guía de estilo", 6, "Menú de fusión"), armado por
 -- código con los componentes de UI:
 --   arriba, los casilleros de los padres (izquierda verde ácido, derecha magenta) con un "+"
---   entre ellos y, sobre el "+", el del catalizador (con candado hasta que se desbloquee);
+--   entre ellos y, sobre el "+", el del catalizador (con candado hasta Config.Residuos.RanuraDesde
+--   especies; tocarlo pasa por los catalizadores que tenés);
 --   después del "=", la vista previa: el resultado si ya lo tenés, "?" si no;
 --   a la derecha, qué va a pasar y el botón "¡FUSIONAR!" con el costo;
 --   abajo, tus criaturas en casilleros con el borde de su generación, filtrables por elemento.
@@ -12,6 +13,7 @@
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
+local Catalizadores = require(ReplicatedStorage.Shared.Catalizadores)
 local Config = require(ReplicatedStorage.Shared.Config)
 local Costos = require(ReplicatedStorage.Shared.Costos)
 local Elementos = require(ReplicatedStorage.Shared.Elementos)
@@ -19,6 +21,7 @@ local Formato = require(ReplicatedStorage.Shared.Formato)
 local Fusion = require(ReplicatedStorage.Shared.Fusion)
 local Generador = require(ReplicatedStorage.Shared.Generador)
 local Paleta = require(ReplicatedStorage.Shared.Paleta)
+local Personalidades = require(ReplicatedStorage.Shared.Personalidades)
 local Sonidos = require(script.Parent.Sonidos)
 local UI = require(script.Parent.UI)
 local Menus = require(script.Parent.UI.Menus)
@@ -26,14 +29,19 @@ local Notificaciones = require(script.Parent.UI.Notificaciones)
 local VistasVisibles = require(script.Parent.UI.VistasVisibles)
 local Vista = require(script.Parent.Vista)
 
+-- Una criatura elegida: su especie y su personalidad (la cría hereda la personalidad).
+export type Eleccion = { Clave: string, Personalidad: string? }
+
 export type Eventos = {
-	AlElegir: (lado: string, clave: string?) -> (),
-	AlConfirmar: (a: string, b: string) -> (),
+	AlElegir: (lado: string, eleccion: Eleccion?) -> (),
+	AlCatalizador: (clave: string?) -> (),
+	AlConfirmar: (a: Eleccion, b: Eleccion, catalizador: string?) -> (),
 }
 
 type Item = {
 	Cas: UI.Casillero,
 	Criatura: Fusion.Criatura,
+	Personalidad: string?,
 	Mutante: boolean,
 }
 
@@ -44,12 +52,13 @@ local jugador = Players.LocalPlayer
 local COLOR_LADO: { [string]: Color3 } = { A = Paleta.Acento, B = Paleta.Alerta }
 local ALTO_BOTON_FILTRO = T.Filtro + Tema.Profundidad
 
-local seleccion: { [string]: string } = {}
-local items: { [string]: Item } = {}
+local seleccion: { [string]: Eleccion } = {}
+local items: { [string]: Item } = {} -- "especie|personalidad" -> tarjeta
 local eventos: Eventos? = nil
 local ocupada = false
 local avisoServidor: string? = nil
 local filtro: string? = nil -- elemento elegido (nil = todos)
+local catElegido: string? = nil -- catalizador puesto en la ranura (nil = ninguno)
 
 local function conjunto(atributo: string): { [string]: boolean }
 	return Formato.conjunto(jugador:GetAttribute(atributo) :: string?)
@@ -65,6 +74,10 @@ local function cantidad(t: { [string]: boolean }): number
 		n += 1
 	end
 	return n
+end
+
+local function llave(e: Eleccion): string
+	return e.Clave .. "|" .. (e.Personalidad or "")
 end
 
 ---------------------------------------------------------------------------
@@ -278,25 +291,73 @@ for i, e in Elementos.Orden do
 end
 
 ---------------------------------------------------------------------------
+-- La ranura de catalizador
+---------------------------------------------------------------------------
+
+local function ranuraAbierta(): boolean
+	return cantidad(conjunto("Especies")) >= Config.Residuos.RanuraDesde
+end
+
+local function tusCatalizadores(): { [string]: number }
+	return Catalizadores.leer(jugador:GetAttribute("Catalizadores") :: string?)
+end
+
+local iconoCatalizador: Frame? = nil
+
+-- Con candado hasta Config.Residuos.RanuraDesde especies; después, el catalizador elegido (o
+-- un "+") y cuántos tenés. Sin catalizador elegido, cuántos residuos llevás para el próximo.
+local function pintarRanura()
+	local abierta = ranuraAbierta()
+	local tus = tusCatalizadores()
+	if catElegido and (not abierta or (tus[catElegido] or 0) < 1) then
+		catElegido = nil
+		if eventos then
+			eventos.AlCatalizador(nil)
+		end
+	end
+	catalizador.bloquear(not abierta)
+	local cat = Catalizadores.porClave(catElegido)
+	if iconoCatalizador and iconoCatalizador.Name ~= (catElegido or "") then
+		iconoCatalizador:Destroy()
+		iconoCatalizador = nil
+	end
+	if cat and not iconoCatalizador then
+		local i = UI.Iconos.crear(cat.Icono, math.floor(T.Catalizador.Y * 0.42), cat.Color)
+		i.Name = cat.Clave
+		i.Parent = catalizador.Hueco
+		iconoCatalizador = i
+	end
+	catalizador.Signo.Visible = abierta and cat == nil
+	catalizador.Borde.Color = if cat
+		then cat.Color
+		elseif abierta then Paleta.Acento
+		else Paleta.Metal
+	local residuos = jugador:GetAttribute("Residuos") :: string?
+	local cuantos = if residuos and residuos ~= "" then #string.split(residuos, ";") else 0
+	if catalizador.Nombre then
+		catalizador.Nombre.Text = if cat
+			then cat.Nombre .. " ×" .. (tus[cat.Clave] or 0)
+			else "Residuos " .. cuantos .. "/" .. Config.Residuos.ParaCatalizador
+	end
+end
+
+---------------------------------------------------------------------------
 -- Estado: vista previa, texto y botón
 ---------------------------------------------------------------------------
 
 local function actualizar()
-	-- Cuántos residuos juntaste (con Config.Residuos.ParaCatalizador se arma un catalizador).
-	local residuos = jugador:GetAttribute("Residuos") :: string?
-	local cuantos = if residuos and residuos ~= "" then #string.split(residuos, ";") else 0
-	if catalizador.Nombre then
-		catalizador.Nombre.Text = "Residuos " .. cuantos .. "/" .. Config.Residuos.ParaCatalizador
-	end
+	pintarRanura()
+	local cat = Catalizadores.porClave(catElegido)
 	contadorADN.Valor.Text = Formato.numero(adn())
 	local a, b = seleccion.A, seleccion.B
-	local ca = if a then Fusion.porClave(a) else nil
-	local cb = if b then Fusion.porClave(b) else nil
+	local ca = if a then Fusion.porClave(a.Clave) else nil
+	local cb = if b then Fusion.porClave(b.Clave) else nil
 	local texto = ""
 	local color = Paleta.Texto
 	local listo = false
 
 	previa.elemento(nil)
+	previa.personalidad(nil)
 	gotaResiduo.Visible = false
 	if not ca or not cb then
 		previa.poner(nil, "Resultado")
@@ -327,6 +388,7 @@ local function actualizar()
 				.. " Igual sale un residuo: con "
 				.. Config.Residuos.ParaCatalizador
 				.. " se arma un catalizador."
+				.. (if cat then " El catalizador no se gasta." else "")
 			color = Paleta.Alerta
 			boton.poner("¡FUSIONAR!", "Sale un residuo (gratis)")
 			boton.colorSub(Paleta.Texto)
@@ -334,22 +396,51 @@ local function actualizar()
 		else
 			local tengo = conjunto("Especies")
 			local costo = Costos.fusion(ca.Gen, cb.Gen, cantidad(tengo)) or 0
+			-- La personalidad de la cría sale de la de los padres (tabla fija de la ficha);
+			-- algunos catalizadores la cambian.
+			local clavePersonalidad = (cat and cat.Personalidad)
+				or Personalidades.heredar(a and a.Personalidad, b and b.Personalidad)
+			local hereda = Personalidades.Datos[clavePersonalidad or ""]
 			if tengo[hijo.Clave] then
-				-- Conocida: se muestra el resultado (no adelanta especies nuevas).
-				previa.poner(hijo.Clave, hijo.Nombre, conjunto("Mutantes")[hijo.Clave])
+				-- Conocida: se muestra el resultado (no adelanta especies nuevas), con su
+				-- personalidad y, si hay catalizador, como variante.
+				local mutante = conjunto("Mutantes")[hijo.Clave]
+				local nombre = Catalizadores.nombre(hijo.Nombre, catElegido)
+				previa.poner(hijo.Clave, nombre, mutante)
+				if previa.Vista and (cat or clavePersonalidad) then
+					Vista.mostrar(
+						previa.Vista,
+						hijo.Clave,
+						mutante,
+						nil,
+						clavePersonalidad,
+						catElegido
+					)
+				end
 				previa.elemento(Generador.colorElemento(hijo))
-				previa.Borde.Color = Paleta.Generaciones[hijo.Gen]
-				texto = "Ya la tenés: sale otro "
-					.. hijo.Nombre
-					.. " para tus pedidos (y quizás sale mutante)."
-				color = Paleta.Alerta
+				previa.personalidad(clavePersonalidad)
+				previa.Borde.Color = if cat then cat.Color else Paleta.Generaciones[hijo.Gen]
+				local variantes = conjunto("Variantes")
+				if cat and not variantes[hijo.Clave .. "|" .. cat.Clave] then
+					texto = "¡Variante nueva! Sale el primer " .. nombre .. "."
+					color = Paleta.Acento
+				else
+					texto = "Ya la tenés: sale otro " .. nombre .. " (quizás mutante)."
+					color = Paleta.Alerta
+				end
 			else
 				previa.poner(nil, "¡Nueva!")
 				previa.Signo.Text = "?"
 				previa.Signo.TextColor3 = Paleta.Acento
 				previa.Borde.Color = Paleta.Acento
-				texto = "¡Reaccionan! Va a salir una especie que todavía no tenés."
+				texto = "¡Reaccionan! Va a salir una especie que todavía no tenés"
+					.. (if cat then " (variante " .. cat.Apellido .. ")." else ".")
 				color = Paleta.Acento
+			end
+			if hereda then
+				-- "Las demás..." pasa a "las demás..." (solo la primera letra: "Líder" queda igual).
+				local efecto = hereda.Efecto:sub(1, 1):lower() .. hereda.Efecto:sub(2)
+				texto ..= "\nVa a ser " .. hereda.Nombre .. ": " .. efecto .. "."
 			end
 			local falta = costo - adn()
 			if falta > 0 then
@@ -381,16 +472,19 @@ end
 ---------------------------------------------------------------------------
 
 local function pintarItems()
-	for clave, it in items do
-		local lado = if seleccion.A == clave then "A" elseif seleccion.B == clave then "B" else nil
+	for k, it in items do
+		local lado = if seleccion.A and llave(seleccion.A) == k
+			then "A"
+			elseif seleccion.B and llave(seleccion.B) == k then "B"
+			else nil
 		it.Cas.Borde.Color = if lado then COLOR_LADO[lado] else Paleta.Generaciones[it.Criatura.Gen]
 		it.Cas.Borde.Thickness = if lado then Tema.Contorno + 3 else Tema.Contorno + 1
 	end
 end
 
 local function mostrarPadre(lado: string)
-	local clave = seleccion[lado]
-	local c = if clave then Fusion.porClave(clave) else nil
+	local e = seleccion[lado]
+	local c = if e then Fusion.porClave(e.Clave) else nil
 	local cas = padres[lado]
 	cas.poner(
 		if c then c.Clave else nil,
@@ -398,10 +492,11 @@ local function mostrarPadre(lado: string)
 		if c then conjunto("Mutantes")[c.Clave] else nil
 	)
 	cas.elemento(if c then Generador.colorElemento(c) else nil)
+	cas.personalidad(if c and e then e.Personalidad else nil)
 end
 
 -- La criatura salta desde su casillero de la lista hasta el de la máquina.
-local function saltar(desde: GuiObject, lado: string, clave: string)
+local function saltar(desde: GuiObject, lado: string, e: Eleccion)
 	local marco = ventana.Marco
 	local hacia = padres[lado]
 	if marco.Size.X.Offset <= 0 or marco.AbsoluteSize.X <= 0 then
@@ -416,6 +511,7 @@ local function saltar(desde: GuiObject, lado: string, clave: string)
 
 	hacia.poner(nil, "")
 	hacia.Signo.Visible = false
+	hacia.personalidad(nil)
 	local vuelo = Instance.new("ViewportFrame")
 	vuelo.Name = "Vuelo"
 	vuelo.BackgroundTransparency = 1
@@ -423,14 +519,14 @@ local function saltar(desde: GuiObject, lado: string, clave: string)
 	vuelo.Size = UDim2.fromOffset(tamInicio.X, tamInicio.Y)
 	vuelo.ZIndex = 30
 	vuelo.Parent = ventana.Fondo
-	Vista.mostrar(vuelo, clave, conjunto("Mutantes")[clave])
+	Vista.mostrar(vuelo, e.Clave, conjunto("Mutantes")[e.Clave], nil, e.Personalidad)
 	local t = UI.animar(vuelo, T.Salto, {
 		Position = UDim2.fromOffset(fin.X, fin.Y),
 		Size = UDim2.fromOffset(tamFin.X, tamFin.Y),
 	})
 	t.Completed:Once(function()
 		vuelo:Destroy()
-		if seleccion[lado] == clave then
+		if seleccion[lado] == e then
 			mostrarPadre(lado)
 			hacia.rebotar(0.12)
 			-- SONIDO: la criatura cae en el casillero (nota corta)
@@ -439,33 +535,34 @@ local function saltar(desde: GuiObject, lado: string, clave: string)
 	end)
 end
 
-local function poner(lado: string, clave: string?, desde: GuiObject?)
-	seleccion[lado] = clave
+local function poner(lado: string, e: Eleccion?, desde: GuiObject?)
+	seleccion[lado] = e
 	avisoServidor = nil
-	if clave and desde then
-		saltar(desde, lado, clave)
+	if e and desde then
+		saltar(desde, lado, e)
 	else
 		mostrarPadre(lado)
 	end
 	pintarItems()
 	actualizar()
 	if eventos then
-		eventos.AlElegir(lado, clave)
+		eventos.AlElegir(lado, e)
 	end
 end
 
-local function elegir(clave: string, desde: GuiObject)
+local function elegir(e: Eleccion, desde: GuiObject)
 	if ocupada then
 		return
 	end
-	if seleccion.A == clave then
+	local k = llave(e)
+	if seleccion.A and llave(seleccion.A) == k then
 		poner("A", nil)
-	elseif seleccion.B == clave then
+	elseif seleccion.B and llave(seleccion.B) == k then
 		poner("B", nil)
 	elseif not seleccion.A then
-		poner("A", clave, desde)
+		poner("A", e, desde)
 	else
-		poner("B", clave, desde)
+		poner("B", e, desde)
 	end
 end
 
@@ -478,25 +575,72 @@ for lado, cas in padres do
 	end, cas.Marco)
 end
 
+-- Cada toque en la ranura pone el siguiente catalizador que tenés; después del último, queda
+-- vacía.
 UI.tocable(catalizador.Fondo, function()
-	Notificaciones.mostrar("Los catalizadores llegan muy pronto.", "info")
+	if ocupada then
+		return
+	end
+	if not ranuraAbierta() then
+		Notificaciones.mostrar(
+			"La ranura de catalizador se abre con "
+				.. Config.Residuos.RanuraDesde
+				.. " especies descubiertas.",
+			"info"
+		)
+		return
+	end
+	local tus = tusCatalizadores()
+	local tenes = {}
+	for _, c in Catalizadores.Lista do
+		if (tus[c.Clave] or 0) > 0 then
+			table.insert(tenes, c.Clave)
+		end
+	end
+	if #tenes == 0 then
+		Notificaciones.mostrar(
+			"No tenés catalizadores: se arman con "
+				.. Config.Residuos.ParaCatalizador
+				.. " residuos (las fusiones que no reaccionan).",
+			"info"
+		)
+		return
+	end
+	local i = if catElegido then table.find(tenes, catElegido) else nil
+	catElegido = if i then tenes[i + 1] else tenes[1]
+	avisoServidor = nil
+	catalizador.rebotar(0.1)
+	-- SONIDO: el catalizador entra en la ranura (nota corta aguda)
+	Sonidos.nota(if catElegido then 9 else 2, 0.35)
+	actualizar()
+	if eventos then
+		eventos.AlCatalizador(catElegido)
+	end
 end, catalizador.Marco)
 
--- Una tarjeta por especie de la que tenés criaturas, en el orden de la Mutadex, con cuántas
--- tenés ("×2") y la estrella si alguna es mutante.
+-- Una tarjeta por especie y personalidad de las criaturas que tenés, en el orden de la
+-- Mutadex, con cuántas hay ("×2"), su sello de personalidad y la estrella si alguna es
+-- mutante (para fusionar da igual la variante: no se hereda).
 local function armarLista()
-	local inventario = Formato.inventario(jugador:GetAttribute("Criaturas") :: string?)
-	for clave, it in items do
-		if not inventario[clave] then
+	local cuentas: { [string]: { N: number, Mutante: boolean } } = {}
+	for _, g in Formato.grupos(jugador:GetAttribute("Grupos") :: string?) do
+		local k = llave({ Clave = g.Clave, Personalidad = g.Personalidad })
+		local cuenta = cuentas[k] or { N = 0, Mutante = false }
+		cuenta.N += g.Cantidad
+		cuenta.Mutante = cuenta.Mutante or g.Mutante
+		cuentas[k] = cuenta
+	end
+	for k, it in items do
+		if not cuentas[k] then
 			grupo.quitar(it.Cas.Marco)
 			it.Cas.Marco:Destroy()
-			items[clave] = nil
+			items[k] = nil
 		end
 	end
 	-- Si ya no tenés la criatura de un casillero (la entregaste), el casillero se vacía.
 	local sinCriatura = {}
-	for lado, clave in seleccion do
-		if not inventario[clave] then
+	for lado, e in seleccion do
+		if not cuentas[llave(e)] then
 			table.insert(sinCriatura, lado)
 		end
 	end
@@ -505,35 +649,40 @@ local function armarLista()
 	end
 	local total = 0
 	for orden, c in Fusion.todas() do
-		local cuenta = inventario[c.Clave]
-		if cuenta then
-			local n = cuenta.Normales + cuenta.Mutantes
-			total += n
-			local mutante = cuenta.Mutantes > 0
-			local nombre = if n > 1 then c.Nombre .. " ×" .. n else c.Nombre
-			local it = items[c.Clave]
-			if not it then
-				local cas = UI.casillero({
-					Nombre = c.Clave,
-					Medida = UDim2.fromOffset(T.Criatura.X, T.Criatura.Y),
-					Borde = Paleta.Generaciones[c.Gen],
-					Prestada = true,
-				})
-				cas.Marco.LayoutOrder = orden
-				cas.elemento(Generador.colorElemento(c))
-				cas.Marco.Parent = lista
-				UI.tocable(cas.Fondo, function()
-					elegir(c.Clave, cas.Marco)
-				end, cas.Marco)
-				grupo.agregar(cas.Marco, cas.Hueco, { Clave = c.Clave, Mutante = mutante })
-				it = { Cas = cas, Criatura = c, Mutante = mutante }
-				items[c.Clave] = it
-			elseif it.Mutante ~= mutante then
-				it.Mutante = mutante
-				grupo.cambiar(it.Cas.Marco, { Clave = c.Clave, Mutante = mutante })
+		for orden2, p in Personalidades.Orden do
+			local e: Eleccion = { Clave = c.Clave, Personalidad = p }
+			local k = llave(e)
+			local cuenta = cuentas[k]
+			if cuenta then
+				total += cuenta.N
+				local mutante = cuenta.Mutante
+				local nombre = if cuenta.N > 1 then c.Nombre .. " ×" .. cuenta.N else c.Nombre
+				local datos = { Clave = c.Clave, Mutante = mutante, Personalidad = p }
+				local it = items[k]
+				if not it then
+					local cas = UI.casillero({
+						Nombre = k,
+						Medida = UDim2.fromOffset(T.Criatura.X, T.Criatura.Y),
+						Borde = Paleta.Generaciones[c.Gen],
+						Prestada = true,
+					})
+					cas.Marco.LayoutOrder = orden * 10 + orden2
+					cas.elemento(Generador.colorElemento(c))
+					cas.personalidad(p)
+					cas.Marco.Parent = lista
+					UI.tocable(cas.Fondo, function()
+						elegir(e, cas.Marco)
+					end, cas.Marco)
+					grupo.agregar(cas.Marco, cas.Hueco, datos)
+					it = { Cas = cas, Criatura = c, Personalidad = p, Mutante = mutante }
+					items[k] = it
+				elseif it.Mutante ~= mutante then
+					it.Mutante = mutante
+					grupo.cambiar(it.Cas.Marco, datos)
+				end
+				local item = it :: Item
+				item.Cas.poner(c.Clave, nombre, mutante)
 			end
-			local item = it :: Item
-			item.Cas.poner(c.Clave, nombre, mutante)
 		end
 	end
 	tituloLista.Text = "Tus criaturas (" .. total .. ")"
@@ -546,7 +695,7 @@ boton.AlTocar = function()
 	if ocupada or not a or not b or not eventos then
 		return
 	end
-	(eventos :: Eventos).AlConfirmar(a, b)
+	(eventos :: Eventos).AlConfirmar(a, b, catElegido)
 end
 
 Menus.registrar("Fusion", ventana, function()
@@ -563,13 +712,15 @@ local Panel = {}
 
 function Panel.iniciar(e: Eventos)
 	eventos = e
-	jugador:GetAttributeChangedSignal("Criaturas"):Connect(function()
+	jugador:GetAttributeChangedSignal("Grupos"):Connect(function()
 		armarLista()
 		actualizar()
 	end)
 	jugador:GetAttributeChangedSignal("Especies"):Connect(actualizar)
 	jugador:GetAttributeChangedSignal("ADN"):Connect(actualizar)
-	jugador:GetAttributeChangedSignal("Residuos"):Connect(actualizar)
+	for _, atributo in { "Residuos", "Catalizadores", "Variantes" } do
+		jugador:GetAttributeChangedSignal(atributo):Connect(actualizar)
+	end
 	armarLista()
 	mostrarPadre("A")
 	mostrarPadre("B")
@@ -587,6 +738,14 @@ end
 function Panel.limpiar()
 	poner("A", nil)
 	poner("B", nil)
+	-- El catalizador no queda puesto para la próxima (así no se gasta sin querer).
+	if catElegido then
+		catElegido = nil
+		actualizar()
+		if eventos then
+			eventos.AlCatalizador(nil)
+		end
+	end
 end
 
 -- Aviso del servidor (por ejemplo "Te falta ADN"): queda hasta que cambie la elección.

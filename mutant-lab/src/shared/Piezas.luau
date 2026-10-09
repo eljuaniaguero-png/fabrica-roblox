@@ -841,6 +841,87 @@ function Piezas.aura(raiz: BasePart)
 	})
 end
 
+-- Rasgo de las variantes (shared/Catalizadores.luau): partículas del color del catalizador.
+-- Solo texturas que trae Roblox.
+local CHISPA = "rbxasset://textures/particles/sparkles_main.dds"
+local FUEGO = "rbxasset://textures/particles/fire_main.dds"
+local HUMO = "rbxasset://textures/particles/smoke_main.dds"
+
+local VARIANTES: { [string]: { Pos: Vector3, Props: { [string]: any } } } = {
+	Chispas = {
+		Pos = Vector3.new(0, 2.4, 0),
+		Props = {
+			Texture = CHISPA,
+			LightEmission = 1,
+			Size = NumberSequence.new(0.35, 0),
+			Speed = NumberRange.new(5, 8),
+			Drag = 5,
+			SpreadAngle = Vector2.new(180, 180),
+			Lifetime = NumberRange.new(0.25, 0.45),
+			Rate = 14,
+		},
+	},
+	Escarcha = {
+		Pos = Vector3.new(0, 3, 0),
+		Props = {
+			Texture = CHISPA,
+			LightEmission = 0.8,
+			Size = NumberSequence.new(0.3),
+			Speed = NumberRange.new(0.2, 0.6),
+			Acceleration = Vector3.new(0, -1.5, 0),
+			Shape = Enum.ParticleEmitterShape.Sphere,
+			SpreadAngle = Vector2.new(180, 180),
+			Lifetime = NumberRange.new(1.5, 2.2),
+			Rate = 8,
+			RotSpeed = NumberRange.new(-60, 60),
+		},
+	},
+	Goteo = {
+		Pos = Vector3.new(0, 1.6, 0),
+		Props = {
+			Size = NumberSequence.new(0.25),
+			Speed = NumberRange.new(0, 0.3),
+			Acceleration = Vector3.new(0, -18, 0),
+			Shape = Enum.ParticleEmitterShape.Sphere,
+			Transparency = NumberSequence.new(0.1, 0.6),
+			Lifetime = NumberRange.new(0.5, 0.7),
+			Rate = 6,
+		},
+	},
+	Brasas = {
+		Pos = Vector3.new(0, 2.2, 0),
+		Props = {
+			Texture = FUEGO,
+			LightEmission = 1,
+			Size = NumberSequence.new(0.5, 0),
+			Speed = NumberRange.new(1.5, 3),
+			SpreadAngle = Vector2.new(25, 25),
+			Lifetime = NumberRange.new(0.6, 1),
+			Rate = 10,
+		},
+	},
+	Humo = {
+		Pos = Vector3.new(0, 2, 0),
+		Props = {
+			Texture = HUMO,
+			LightEmission = 0,
+			Size = NumberSequence.new(0.6, 1.6),
+			Transparency = NumberSequence.new(0.45, 1),
+			Speed = NumberRange.new(0.3, 0.8),
+			SpreadAngle = Vector2.new(180, 180),
+			Lifetime = NumberRange.new(1.5, 2.5),
+			Rate = 5,
+		},
+	},
+}
+
+function Piezas.variante(raiz: BasePart, rasgo: string, color: Color3)
+	local v = VARIANTES[rasgo]
+	if v then
+		particulas(raiz, v.Pos, color, v.Props)
+	end
+end
+
 Piezas.Cabezas = cabezas
 Piezas.Cuerpos = cuerpos
 Piezas.Patas = patas

@@ -13,6 +13,7 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local TweenService = game:GetService("TweenService")
 
 local Paleta = require(ReplicatedStorage.Shared.Paleta)
+local Personalidades = require(ReplicatedStorage.Shared.Personalidades)
 local Sonidos = require(script.Parent.Sonidos)
 local Vista = require(script.Parent.Vista)
 local Iconos = require(script.Iconos)
@@ -794,6 +795,28 @@ function UI.puntoElemento(color: Color3, tam: number?): Frame
 	return p
 end
 
+-- Sello de personalidad: el dibujo en un círculo oscuro, con borde verde ácido si es positiva
+-- y magenta si es negativa (igual que el ícono sobre la cabeza de las criaturas).
+function UI.selloPersonalidad(nombre: string, tam: number): Frame?
+	local datos = Personalidades.Datos[nombre]
+	if not datos then
+		return nil
+	end
+	local color = if datos.Positiva then Paleta.Acento else Paleta.Alerta
+	local sello = Instance.new("Frame")
+	sello.Name = "Personalidad"
+	sello.Size = UDim2.fromOffset(tam, tam)
+	sello.BackgroundColor3 = Paleta.Fondo
+	sello.BackgroundTransparency = 0.15
+	local esquina = Instance.new("UICorner")
+	esquina.CornerRadius = UDim.new(0.5, 0)
+	esquina.Parent = sello
+	UI.contorno(sello, color, 2.5)
+	local dibujo = Iconos.crear(datos.Dibujo, math.floor(tam * 0.66), color)
+	dibujo.Parent = sello
+	return sello
+end
+
 -- Nivel de una mejora con puntos: llenos (verde ácido) hasta el nivel actual, apagados el resto.
 export type Nivel = {
 	Marco: Frame,
@@ -968,6 +991,7 @@ export type Casillero = {
 	poner: (clave: string?, nombre: string?, mutante: boolean?, silueta: boolean?) -> (),
 	bloquear: (si: boolean) -> (),
 	elemento: (color: Color3?) -> (), -- punto de elemento arriba a la izquierda (nil lo saca)
+	personalidad: (nombre: string?) -> (), -- sello abajo a la derecha de la vista (nil lo saca)
 	rebotar: (fuerza: number?) -> (),
 }
 
@@ -1023,6 +1047,7 @@ function UI.casillero(op: OpcionesCasillero): Casillero
 	end
 	local estrella: Frame? = nil
 	local punto: Frame? = nil
+	local sello: Frame? = nil
 
 	local nombre: TextLabel? = nil
 	if conNombre then
@@ -1090,6 +1115,31 @@ function UI.casillero(op: OpcionesCasillero): Casillero
 				if color and f then
 					f.BackgroundColor3 = color
 				end
+			end
+		end,
+		personalidad = function(nombrePersonalidad: string?)
+			if sello and sello.Name == (nombrePersonalidad or "") then
+				return
+			end
+			if sello then
+				sello:Destroy()
+				sello = nil
+			end
+			local s = if nombrePersonalidad
+				then UI.selloPersonalidad(nombrePersonalidad, Tema.MarcaChica)
+				else nil
+			if s then
+				s.Name = nombrePersonalidad :: string
+				s.AnchorPoint = Vector2.new(1, 1)
+				s.Position = UDim2.new(1, -4, 1, -altoNombre - 2)
+				s.ZIndex = 3
+				for _, d in s:GetDescendants() do
+					if d:IsA("GuiObject") then
+						d.ZIndex = 3
+					end
+				end
+				s.Parent = fondo
+				sello = s
 			end
 		end,
 		rebotar = function(fuerza: number?)

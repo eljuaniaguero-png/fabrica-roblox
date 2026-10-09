@@ -11,6 +11,8 @@ export type Datos = {
 	Clave: string,
 	Mutante: boolean?,
 	Silueta: boolean?,
+	Personalidad: string?,
+	Variante: string?,
 }
 
 type Entrada = {
@@ -31,7 +33,11 @@ export type Grupo = {
 local VistasVisibles = {}
 
 local function marca(d: Datos): string
-	return d.Clave .. (if d.Mutante then "M" else "") .. (if d.Silueta then "S" else "")
+	return d.Clave
+		.. (if d.Mutante then "M" else "")
+		.. (if d.Silueta then "S" else "")
+		.. (d.Personalidad or "")
+		.. (d.Variante or "")
 end
 
 -- true si el objeto y todos los que lo contienen están visibles.
@@ -76,7 +82,14 @@ function VistasVisibles.nueva(scroll: ScrollingFrame): Grupo
 		local v = e.Vista or tomar(m)
 		e.Vista = v
 		if v:GetAttribute("Marca") ~= m then
-			Vista.mostrar(v, e.Datos.Clave, e.Datos.Mutante, e.Datos.Silueta)
+			Vista.mostrar(
+				v,
+				e.Datos.Clave,
+				e.Datos.Mutante,
+				e.Datos.Silueta,
+				e.Datos.Personalidad,
+				e.Datos.Variante
+			)
 			v:SetAttribute("Marca", m)
 		end
 		v.Parent = e.Hueco

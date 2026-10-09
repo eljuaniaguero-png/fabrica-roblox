@@ -14,7 +14,7 @@ export type Catalizador = {
 	Elemento: string, -- clave de Paleta.Elementos: el de la variante
 	Color: Color3,
 	Rasgo: string, -- efecto especial de la variante (Piezas.variante)
-	Icono: string, -- dibujo de client/UI/Iconos.luau
+	Icono: string, -- dibujo de shared/Dibujos.luau
 	Personalidad: string?, -- si la cambia
 }
 

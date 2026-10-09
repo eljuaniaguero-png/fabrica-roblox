@@ -9,9 +9,11 @@
 --   3. Comprar una base nueva vecina, cuando ya miró todas sus parejas y no queda nada nuevo.
 --   4. Abrir un corral si los suyos están llenos.
 --   5. Mirar en el panel una pareja que todavía no miró (el panel dice si reacciona y si es nueva).
---   6. Fusionar otra copia de una especie que ya conoce y que le pide un cliente.
+--   6. Fusionar otra copia de una especie que ya conoce y que le pide un cliente (si pide una
+--      variante, con su catalizador).
 --   7. Comprar otra copia de una base: para un pedido o porque entregó la suya.
---   8. Con ADN de sobra, comprar una mejora (Nutrientes o Fusión rápida).
+--   8. Con la ranura abierta, un catalizador y ADN de sobra, probar una variante nueva.
+--   8b. Con ADN de sobra, comprar una mejora (Nutrientes o Fusión rápida).
 --   9. Probar una pareja que no reacciona, para juntar residuos (salen gratis).
 --  10. Descartar un pedido imposible (mutante sin mutantes) o trabado hace mucho.
 -- Si no puede hacer nada, espera (y eso puede contar como "sin saber qué hacer").
@@ -32,7 +34,7 @@ local TODAS = Fusion.todas()
 export type Mundo = {
 	datos: () -> Jugadores.Datos,
 	ahora: () -> number,
-	fusionar: (a: string, b: string) -> boolean,
+	fusionar: (a: string, b: string, catalizador: string?) -> boolean,
 	comprar: (tipo: string, id: any) -> boolean,
 	entregar: (lugar: number, unidades: { Pedidos.Unidad }) -> boolean,
 	descartar: (lugar: number) -> boolean,
@@ -131,7 +133,12 @@ local function unidadesPara(d: Jugadores.Datos, r: Pedidos.Requisito): { Pedidos
 		if #elegidas >= hacen then
 			break
 		end
-		local unidad = { Clave = u.Clave, Mutante = u.Mutante }
+		local unidad = {
+			Clave = u.Clave,
+			Mutante = u.Mutante,
+			Personalidad = u.Personalidad,
+			Variante = u.Variante,
+		}
 		if Pedidos.sirve(r, unidad) then
 			local quedan = Jugadores.contar(d, u.Clave) - (usadas[u.Clave] or 0)
 			if quedan > 1 then
@@ -254,18 +261,24 @@ function Robot.turno(m: Mundo, mem: Memoria): string?
 		return "Mirar"
 	end
 
-	-- 6. Otra copia de una especie conocida que le piden.
+	-- 6. Otra copia de una especie conocida que le piden (una variante, con su catalizador).
+	local ranura = nEspecies >= Config.Residuos.RanuraDesde
 	for _, p in d.Pedidos do
-		if not unidadesPara(d, p.Requisito) and p.Requisito.Tipo ~= "Mutante" then
+		local cat = p.Requisito.Variante
+		local puede = cat == nil or (ranura and (d.Catalizadores[cat] or 0) > 0)
+		if not unidadesPara(d, p.Requisito) and p.Requisito.Tipo ~= "Mutante" and puede then
 			for _, c in TODAS do
 				if
 					c.Gen >= 2
 					and d.Especies[c.Clave]
-					and Pedidos.sirve(p.Requisito, { Clave = c.Clave, Mutante = false })
+					and Pedidos.sirve(
+						p.Requisito,
+						{ Clave = c.Clave, Mutante = false, Variante = cat }
+					)
 				then
 					local a, b = receta(c, mias)
 					if a and b then
-						if libre and d.ADN >= costoDe(d, c) and m.fusionar(a, b :: string) then
+						if libre and d.ADN >= costoDe(d, c) and m.fusionar(a, b :: string, cat) then
 							return "Fusion"
 						end
 						mem.Esperando = true
@@ -300,7 +313,30 @@ function Robot.turno(m: Mundo, mem: Memoria): string?
 		end
 	end
 
-	-- 8. Con ADN de sobra (más de dos fusiones) y nada mejor, una mejora (la más barata).
+	-- 8. Con la ranura abierta, un catalizador y ADN de sobra (más de dos fusiones), una
+	-- variante que todavía no tiene de una especie de gen 2 que sabe hacer.
+	if ranura and libre and d.ADN >= 2 * Mejoras.fusion(nEspecies) then
+		for clave, n in d.Catalizadores do
+			if n > 0 then
+				for _, c in TODAS do
+					local vistas = d.Variantes[c.Clave]
+					if c.Gen == 2 and d.Especies[c.Clave] and not (vistas and vistas[clave]) then
+						local a, b = receta(c, mias)
+						if
+							a
+							and b
+							and d.ADN >= costoDe(d, c)
+							and m.fusionar(a, b :: string, clave)
+						then
+							return "Fusion"
+						end
+					end
+				end
+			end
+		end
+	end
+
+	-- 8b. Con ADN de sobra (más de dos fusiones) y nada mejor, una mejora (la más barata).
 	if d.ADN >= 2 * Mejoras.fusion(nEspecies) then
 		local mejor: string? = nil
 		local barata = math.huge

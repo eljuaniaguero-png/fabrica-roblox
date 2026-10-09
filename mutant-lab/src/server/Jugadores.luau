@@ -4,9 +4,12 @@
 --   Especies: lo que descubriste (la Mutadex). Nunca se pierde.
 --   Criaturas: las que tenés en el laboratorio, una por una. Cada fusión y cada compra suma
 --   una; entregar un pedido la saca. Con ellas se fusiona y trabajan en los corrales.
+-- Cada criatura tiene su personalidad (shared/Personalidades.luau) y, si nació con un
+-- catalizador, su variante (shared/Catalizadores.luau).
 -- Se publican como atributos del Player para que el cliente los lea:
 --   ADN (número entero), Especies y Mutantes (claves separadas por ";"),
---   Criaturas ("clave:normales:mutantes;..."), Pistas ("clave:cantidad;...") y
+--   Criaturas ("clave:normales:mutantes;..."), Grupos (JSON: las criaturas agrupadas por
+--   especie, personalidad, tipo y variante; ver Formato.grupos), Pistas ("clave:cantidad;...") y
 --   PistasCompradas, PistasGratis, MejoraCorrales, MejoraRapida, MejoraNutrientes (niveles),
 --   FactorFusion, Tope, Entregados y Pedidos (texto JSON con los pedidos del tablero).
 
@@ -15,8 +18,11 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local Catalizadores = require(ReplicatedStorage.Shared.Catalizadores)
 local Config = require(ReplicatedStorage.Shared.Config)
+local Formato = require(ReplicatedStorage.Shared.Formato)
+local Fusion = require(ReplicatedStorage.Shared.Fusion)
 local Mejoras = require(ReplicatedStorage.Shared.Mejoras)
 local Pedidos = require(ReplicatedStorage.Shared.Pedidos)
+local Personalidades = require(ReplicatedStorage.Shared.Personalidades)
 local Pistas = require(ReplicatedStorage.Shared.Pistas)
 
 -- Una criatura del laboratorio.
@@ -24,6 +30,16 @@ export type Unidad = {
 	Id: number,
 	Clave: string,
 	Mutante: boolean,
+	Personalidad: string,
+	Variante: string?, -- catalizador con el que nació
+}
+
+-- Una criatura como se guarda en el DataStore.
+export type CriaturaGuardada = {
+	Clave: string,
+	Mutante: boolean,
+	Personalidad: string?, -- nil en los guardados de antes de las personalidades
+	Variante: string?,
 }
 
 export type Datos = {
@@ -44,6 +60,8 @@ export type Datos = {
 	Residuos: { { A: string, B: string } }, -- de las parejas que no reaccionaron (su color)
 	Catalizadores: { [string]: number }, -- cuántos tenés de cada uno
 	CatalizadoresVistos: { [string]: boolean }, -- los que conocés (tuviste alguna vez)
+	Variantes: { [string]: { [string]: boolean } }, -- especie -> variantes conseguidas (Mutadex)
+	Sellos: { [string]: { [string]: boolean } }, -- especie -> personalidades conseguidas (Mutadex)
 	OcupadoHasta: number, -- la máquina está trabajando hasta este os.clock()
 }
 
@@ -53,7 +71,7 @@ export type Guardados = {
 	ADN: number,
 	Especies: { string },
 	Mutantes: { string },
-	Criaturas: { { Clave: string, Mutante: boolean } }?, -- nil en los guardados viejos
+	Criaturas: { CriaturaGuardada }?, -- nil en los guardados viejos
 	Pistas: { [string]: number },
 	PistasCompradas: number,
 	PistasGratis: number?,
@@ -64,6 +82,8 @@ export type Guardados = {
 	Residuos: { { A: string, B: string } }?,
 	Catalizadores: { [string]: number }?,
 	CatalizadoresVistos: { string }?,
+	Variantes: { string }?, -- "especie|variante"
+	Sellos: { string }?, -- "especie|personalidad"
 }
 
 local datos: { [Player]: Datos } = {}
@@ -109,10 +129,29 @@ end
 -- Criaturas del laboratorio
 ---------------------------------------------------------------------------
 
-function Jugadores.agregarCriatura(d: Datos, clave: string, mutante: boolean): Unidad
-	local u = { Id = d.SiguienteId, Clave = clave, Mutante = mutante }
+-- Suma una criatura. Sin personalidad (una base que se compra, un guardado viejo), sale la
+-- de su especie.
+function Jugadores.agregarCriatura(
+	d: Datos,
+	clave: string,
+	mutante: boolean,
+	personalidad: string?,
+	variante: string?
+): Unidad
+	local c = Fusion.porClave(clave)
+	local u: Unidad = {
+		Id = d.SiguienteId,
+		Clave = clave,
+		Mutante = mutante,
+		Personalidad = personalidad or Personalidades.deEspecie(if c then c.Bases else {}),
+		Variante = variante,
+	}
 	d.SiguienteId += 1
 	table.insert(d.Criaturas, u)
+	-- Sello de la Mutadex: esa personalidad ya la conseguiste en esa especie.
+	local sellos = d.Sellos[clave] or {}
+	sellos[u.Personalidad] = true
+	d.Sellos[clave] = sellos
 	return u
 end
 
@@ -127,15 +166,62 @@ function Jugadores.contar(d: Datos, clave: string, mutante: boolean?): number
 	return n
 end
 
--- Saca una criatura de esa especie y tipo. Devuelve false si no tenías.
-function Jugadores.quitarCriatura(d: Datos, clave: string, mutante: boolean): boolean
+-- Cuántas criaturas tenés iguales a `f` (especie, tipo, personalidad y variante).
+function Jugadores.contarIguales(d: Datos, f: Pedidos.Unidad): number
+	local n = 0
+	for _, u in d.Criaturas do
+		if Pedidos.igual(u, f) then
+			n += 1
+		end
+	end
+	return n
+end
+
+-- ¿Tenés alguna de esa especie con esa personalidad? (para elegir los padres de una fusión)
+function Jugadores.tiene(d: Datos, clave: string, personalidad: string): boolean
+	for _, u in d.Criaturas do
+		if u.Clave == clave and u.Personalidad == personalidad then
+			return true
+		end
+	end
+	return false
+end
+
+-- Saca una criatura igual a `f`. Devuelve false si no tenías.
+function Jugadores.quitarCriatura(d: Datos, f: Pedidos.Unidad): boolean
 	for i, u in d.Criaturas do
-		if u.Clave == clave and u.Mutante == mutante then
+		if Pedidos.igual(u, f) then
 			table.remove(d.Criaturas, i)
 			return true
 		end
 	end
 	return false
+end
+
+-- Las criaturas agrupadas (las iguales juntas), en el orden en que llegaron.
+function Jugadores.grupos(d: Datos): { Formato.Grupo }
+	local lista: { Formato.Grupo } = {}
+	for _, u in d.Criaturas do
+		local g: Formato.Grupo? = nil
+		for _, otro in lista do
+			if Pedidos.igual(otro, u) then
+				g = otro
+				break
+			end
+		end
+		if g then
+			g.Cantidad += 1
+		else
+			table.insert(lista, {
+				Clave = u.Clave,
+				Mutante = u.Mutante,
+				Personalidad = u.Personalidad,
+				Variante = u.Variante,
+				Cantidad = 1,
+			})
+		end
+	end
+	return lista
 end
 
 -- "1:2:0;1-2:1:1" (especie, normales, mutantes), ordenado por especie.
@@ -171,6 +257,32 @@ function Jugadores.publicarPedidos(jugador: Player)
 	jugador:SetAttribute("Entregados", d.Entregados)
 end
 
+-- { especie = { x = true } } -> { "especie|x" } ordenada (variantes y sellos, para guardar
+-- y publicar), y al revés.
+function Jugadores.aLista(t: { [string]: { [string]: boolean } }): { string }
+	local lista = {}
+	for clave, vistas in t do
+		for x in vistas do
+			table.insert(lista, clave .. "|" .. x)
+		end
+	end
+	table.sort(lista)
+	return lista
+end
+
+function Jugadores.deLista(lista: { string }?): { [string]: { [string]: boolean } }
+	local t = {}
+	for _, texto in lista or {} do
+		local clave, x = string.match(texto, "^([^|]+)|(.+)$")
+		if clave and x then
+			local vistas = t[clave] or {}
+			vistas[x] = true
+			t[clave] = vistas
+		end
+	end
+	return t
+end
+
 function Jugadores.publicar(jugador: Player)
 	local d = datos[jugador]
 	if not d then
@@ -180,6 +292,7 @@ function Jugadores.publicar(jugador: Player)
 	jugador:SetAttribute("Especies", unir(d.Especies))
 	jugador:SetAttribute("Mutantes", unir(d.Mutantes))
 	jugador:SetAttribute("Criaturas", resumen(d))
+	jugador:SetAttribute("Grupos", HttpService:JSONEncode(Jugadores.grupos(d)))
 	jugador:SetAttribute("Pistas", Pistas.escribir(d.Pistas))
 	jugador:SetAttribute("PistasCompradas", d.PistasCompradas)
 	jugador:SetAttribute("PistasGratis", d.PistasGratis)
@@ -194,6 +307,8 @@ function Jugadores.publicar(jugador: Player)
 	end
 	jugador:SetAttribute("Residuos", table.concat(residuos, ";"))
 	jugador:SetAttribute("Catalizadores", Catalizadores.escribir(d.Catalizadores))
+	jugador:SetAttribute("Variantes", table.concat(Jugadores.aLista(d.Variantes), ";"))
+	jugador:SetAttribute("Sellos", table.concat(Jugadores.aLista(d.Sellos), ";"))
 	Jugadores.publicarPedidos(jugador)
 end
 
@@ -217,6 +332,8 @@ function Jugadores.nuevos(): Datos
 		Residuos = {},
 		Catalizadores = {},
 		CatalizadoresVistos = {},
+		Variantes = {},
+		Sellos = {},
 		OcupadoHasta = 0,
 	}
 	for _, n in Config.Economia.BasesIniciales do
@@ -251,7 +368,7 @@ function Jugadores.crear(jugador: Player, guardados: Guardados?)
 		d.Criaturas = {}
 		if guardados.Criaturas then
 			for _, c in guardados.Criaturas do
-				Jugadores.agregarCriatura(d, c.Clave, c.Mutante)
+				Jugadores.agregarCriatura(d, c.Clave, c.Mutante, c.Personalidad, c.Variante)
 			end
 		else
 			-- Guardado de antes de los pedidos: una criatura por especie descubierta.
@@ -271,6 +388,14 @@ function Jugadores.crear(jugador: Player, guardados: Guardados?)
 		d.Catalizadores = table.clone(guardados.Catalizadores or {})
 		for _, k in guardados.CatalizadoresVistos or {} do
 			d.CatalizadoresVistos[k] = true
+		end
+		d.Variantes = Jugadores.deLista(guardados.Variantes)
+		for k, vistas in Jugadores.deLista(guardados.Sellos) do
+			local sellos = d.Sellos[k] or {}
+			for p in vistas do
+				sellos[p] = true
+			end
+			d.Sellos[k] = sellos
 		end
 		for _, g in guardados.Pedidos or {} do
 			if g.Lugar >= 1 and g.Lugar <= Config.Pedidos.Activos then

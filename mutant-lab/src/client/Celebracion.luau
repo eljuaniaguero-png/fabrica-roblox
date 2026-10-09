@@ -19,6 +19,24 @@ local Celebracion = {}
 
 -- Encola el festejo y espera a que el cartel se vaya (la máquina los muestra de a uno).
 function Celebracion.mostrar(c: Fusion.Celebracion)
+	if c.Novedad == "Ranura" then
+		-- Se abrió la ranura de catalizador (Config.Residuos.RanuraDesde especies).
+		Carteles.mostrarYEsperar({
+			Titulo = "¡RANURA DE CATALIZADOR!",
+			-- El cartel tiene lugar para una línea grande corta y dos chicas.
+			Texto = "Arriba de la máquina",
+			Detalle = "Poné un catalizador al fusionar y la cría sale como variante. Se arman con "
+				.. Config.Residuos.ParaCatalizador
+				.. " residuos.",
+			Color = Paleta.Acento,
+			Duracion = C.DuracionFestejo + 2,
+			AlMostrar = function()
+				-- SONIDO: se abre algo nuevo (tres notas que suben)
+				Sonidos.secuencia({ 0, 7, 12 }, 0.12, 0.4)
+			end,
+		})
+		return
+	end
 	local titulo, detalle
 	if c.Pedidos then
 		titulo = "¡" .. c.Pedidos .. " PEDIDOS ENTREGADOS!"

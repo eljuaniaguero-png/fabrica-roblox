@@ -14,7 +14,7 @@ local function evento(nombre: string): RemoteEvent
 end
 
 local Remotos = {
-	PedirFusion = evento("PedirFusion"), -- cliente -> servidor: (claveA, claveB)
+	PedirFusion = evento("PedirFusion"), -- cliente -> servidor: (claveA, claveB, personalidadA, personalidadB, catalizador?)
 	ResultadoFusion = evento("ResultadoFusion"), -- servidor -> cliente: Fusion.Resultado
 	Celebracion = evento("Celebracion"), -- servidor -> cliente: Fusion.Celebracion
 	ComprarPista = evento("ComprarPista"), -- cliente -> servidor: (clave)

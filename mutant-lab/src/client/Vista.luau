@@ -10,12 +10,15 @@ local Paleta = require(ReplicatedStorage.Shared.Paleta)
 local Vista = {}
 
 -- `silueta` = true la muestra toda negra (especies que todavía no descubriste).
+-- `personalidad` le cambia los ojos y `variante` la pinta con su catalizador.
 -- Devuelve el modelo (o nil si no hay criatura), por si hay que girarlo.
 function Vista.mostrar(
 	vista: ViewportFrame,
 	clave: string?,
 	mutante: boolean?,
-	silueta: boolean?
+	silueta: boolean?,
+	personalidad: string?,
+	variante: string?
 ): Model?
 	for _, d in vista:GetChildren() do
 		if d:IsA("Model") or d:IsA("Camera") then
@@ -27,7 +30,14 @@ function Vista.mostrar(
 		return nil
 	end
 	-- Fuera del workspace la criatura no se anima: queda quieta como una foto.
-	local modelo = Generador.crear(c, CFrame.new(), nil, mutante and not silueta)
+	local modelo = Generador.crear(
+		c,
+		CFrame.new(),
+		nil,
+		mutante and not silueta,
+		if silueta then nil else personalidad,
+		if silueta then nil else variante
+	)
 	if silueta then
 		Generador.silueta(modelo)
 	end

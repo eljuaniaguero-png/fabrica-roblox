@@ -2,14 +2,19 @@
 -- Une el panel, la máquina del mundo y el servidor.
 -- El cliente solo pide la fusión; el servidor valida, cobra y decide el resultado.
 
+local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
+local Catalizadores = require(ReplicatedStorage.Shared.Catalizadores)
+local Config = require(ReplicatedStorage.Shared.Config)
+local Formato = require(ReplicatedStorage.Shared.Formato)
 local Fusion = require(ReplicatedStorage.Shared.Fusion)
 local Celebracion = require(script.Parent.Celebracion)
 local EfectosMaquina = require(script.Parent.EfectosMaquina)
 local MiLab = require(script.Parent.MiLab)
 local PanelFusion = require(script.Parent.PanelFusion)
 
+local jugador = Players.LocalPlayer
 local remotos = ReplicatedStorage:WaitForChild("Remotos")
 local pedirFusion = remotos:WaitForChild("PedirFusion") :: RemoteEvent
 local resultadoFusion = remotos:WaitForChild("ResultadoFusion") :: RemoteEvent
@@ -25,20 +30,37 @@ local MENSAJES = {
 	FaltaADN = "Te falta ADN para esta fusión.",
 	NoTenes = "Esa criatura no es tuya.",
 	Ocupada = "La máquina todavía está trabajando.",
+	SinCatalizador = "No tenés ese catalizador.",
 }
 
 local animando = false
 
+local function cantidadEspecies(): number
+	local n = 0
+	for _ in Formato.conjunto(jugador:GetAttribute("Especies") :: string?) do
+		n += 1
+	end
+	return n
+end
+
+local function ranuraAbierta(): boolean
+	return cantidadEspecies() >= Config.Residuos.RanuraDesde
+end
+
 PanelFusion.iniciar({
-	AlElegir = function(lado, clave)
-		EfectosMaquina.mostrarEnCapsula(lado, clave)
+	AlElegir = function(lado, e)
+		EfectosMaquina.mostrarEnCapsula(lado, e and e.Clave, e and e.Personalidad)
 	end,
-	AlConfirmar = function(a, b)
+	AlCatalizador = function(clave)
+		local cat = Catalizadores.porClave(clave)
+		EfectosMaquina.ranura(ranuraAbierta(), if cat then cat.Color else nil)
+	end,
+	AlConfirmar = function(a, b, catalizador)
 		if animando then
 			return
 		end
 		PanelFusion.ocupada(true)
-		pedirFusion:FireServer(a, b)
+		pedirFusion:FireServer(a.Clave, b.Clave, a.Personalidad, b.Personalidad, catalizador)
 	end,
 })
 
@@ -63,11 +85,28 @@ local function mostrarPendientes()
 	celebrando = false
 end
 
-celebracionEvento.OnClientEvent:Connect(function(c: Fusion.Celebracion)
+local function encolar(c: Fusion.Celebracion)
 	table.insert(pendientes, c)
 	task.wait(0.3)
 	if not animando then
 		mostrarPendientes()
+	end
+end
+
+celebracionEvento.OnClientEvent:Connect(encolar)
+
+-- Al llegar a Config.Residuos.RanuraDesde especies (fusionando o comprando) se abre la ranura
+-- de catalizador: un cartel la explica (después de la animación, si hay una).
+local especiesAntes = cantidadEspecies()
+EfectosMaquina.ranura(ranuraAbierta())
+jugador:GetAttributeChangedSignal("Especies"):Connect(function()
+	local ahora = cantidadEspecies()
+	local abre = especiesAntes < Config.Residuos.RanuraDesde
+		and ahora >= Config.Residuos.RanuraDesde
+	especiesAntes = ahora
+	EfectosMaquina.ranura(ranuraAbierta())
+	if abre then
+		encolar({ Gen = 0, Premio = 0, Completo = false, Novedad = "Ranura" })
 	end
 end)
 

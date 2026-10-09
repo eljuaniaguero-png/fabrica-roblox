@@ -14,6 +14,7 @@ local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService = game:GetService("RunService")
 
+local Catalizadores = require(ReplicatedStorage.Shared.Catalizadores)
 local Elementos = require(ReplicatedStorage.Shared.Elementos)
 local Especies = require(ReplicatedStorage.Shared.Especies)
 local Formato = require(ReplicatedStorage.Shared.Formato)
@@ -261,6 +262,13 @@ fichaNombre.Parent = fichaLista
 local filaGen, iconoGen, textoGen = fila("Generacion", 3)
 local filaElemento, iconoElemento, textoElemento = fila("Elemento", 4)
 local filaPersonalidad, iconoPersonalidad, textoPersonalidad = fila("Personalidad", 5)
+-- Los sellos ocupan el ancho: el texto es solo "3/8".
+textoPersonalidad.Size = UDim2.new(0, T.FilaFicha * 2, 1, 0)
+local personalidadesFicha = ""
+-- Variantes: un ícono por catalizador, de su color si ya la conseguiste.
+local filaVariantes, iconoVariantes, textoVariantes = fila("Variantes", 6)
+textoVariantes.Size = UDim2.new(0, T.FilaFicha * 2, 1, 0)
+local variantesFicha = ""
 
 local fichaDetalle = UI.texto({
 	Nombre = "Detalle",
@@ -270,7 +278,7 @@ local fichaDetalle = UI.texto({
 	Medida = UDim2.fromScale(1, 0),
 })
 fichaDetalle.AutomaticSize = Enum.AutomaticSize.Y
-fichaDetalle.LayoutOrder = 6
+fichaDetalle.LayoutOrder = 7
 fichaDetalle.Parent = fichaLista
 
 local botonPista = UI.boton({
@@ -282,7 +290,7 @@ local botonPista = UI.boton({
 	Letra = Tema.Letra.Subtitulo,
 	Medida = UDim2.new(1, 0, 0, Tema.Toque + Tema.Profundidad),
 })
-botonPista.Marco.LayoutOrder = 7
+botonPista.Marco.LayoutOrder = 8
 botonPista.Marco.Parent = fichaLista
 
 local ayuda = UI.texto({
@@ -294,7 +302,7 @@ local ayuda = UI.texto({
 	Medida = UDim2.fromScale(1, 0),
 })
 ayuda.AutomaticSize = Enum.AutomaticSize.Y
-ayuda.LayoutOrder = 8
+ayuda.LayoutOrder = 9
 ayuda.Parent = fichaLista
 
 -- En celular la ficha tapa la grilla: se cierra con su propia X.
@@ -338,7 +346,15 @@ local function actualizarFicha(e: Estado)
 		fichaLista.Size = UDim2.new(1, 0, 1, -alto)
 	end
 	for _, x in
-		{ vistaHueco, fichaNombre, filaGen, filaElemento, filaPersonalidad, fichaDetalle } :: { GuiObject }
+		{
+			vistaHueco,
+			fichaNombre,
+			filaGen,
+			filaElemento,
+			filaPersonalidad,
+			filaVariantes,
+			fichaDetalle,
+		} :: { GuiObject }
 	do
 		x.Visible = c ~= nil
 	end
@@ -371,15 +387,55 @@ local function actualizarFicha(e: Estado)
 	if descubierta then
 		UI.puntoElemento(Generador.colorElemento(c), 24).Parent = iconoElemento
 		textoElemento.Text = Elementos.texto(c)
-		local p = Personalidades.Datos[Personalidades.deEspecie(c.Bases)]
-		UI.Iconos.crear(p.Dibujo, T.FilaFicha, if p.Positiva then Paleta.Acento else Paleta.Alerta).Parent =
-			iconoPersonalidad
-		textoPersonalidad.Text = p.Nombre
+		-- Sellos: las personalidades que ya conseguiste de esta especie.
+		local sellos = Formato.conjunto(jugador:GetAttribute("Sellos") :: string?)
+		local nombres = {}
+		for _, p in Personalidades.Orden do
+			if sellos[c.Clave .. "|" .. p] then
+				table.insert(nombres, Personalidades.Datos[p].Nombre)
+				local s = UI.selloPersonalidad(p, T.FilaFicha - 4)
+				if s then
+					s.LayoutOrder = #nombres
+					s.Parent = iconoPersonalidad
+				end
+			end
+		end
+		textoPersonalidad.Text = #nombres .. "/" .. #Personalidades.Orden
+		personalidadesFicha = if #nombres > 0
+			then "\nPersonalidades: " .. table.concat(nombres, ", ") .. "."
+			else ""
 	else
 		UI.Iconos.crear("pregunta", T.FilaFicha, Paleta.Metal).Parent = iconoElemento
 		textoElemento.Text = "Elemento: ???"
 		UI.Iconos.crear("pregunta", T.FilaFicha, Paleta.Metal).Parent = iconoPersonalidad
-		textoPersonalidad.Text = "Personalidad: ???"
+		textoPersonalidad.Text = "???"
+	end
+
+	vaciar(iconoVariantes)
+	variantesFicha = ""
+	if descubierta then
+		local conseguidas = Formato.conjunto(jugador:GetAttribute("Variantes") :: string?)
+		local nombres = {}
+		for orden, cat in Catalizadores.Lista do
+			local tiene = conseguidas[c.Clave .. "|" .. cat.Clave] == true
+			if tiene then
+				table.insert(nombres, Catalizadores.nombre(c.Nombre, cat.Clave))
+			end
+			local i = UI.Iconos.crear(
+				cat.Icono,
+				T.FilaFicha - 6,
+				if tiene then cat.Color else Paleta.Metal
+			)
+			i.LayoutOrder = orden
+			i.Parent = iconoVariantes
+		end
+		textoVariantes.Text = #nombres .. "/" .. #Catalizadores.Lista
+		if #nombres > 0 then
+			variantesFicha = "\nVariantes: " .. table.concat(nombres, ", ") .. "."
+		end
+	else
+		UI.Iconos.crear("pregunta", T.FilaFicha, Paleta.Metal).Parent = iconoVariantes
+		textoVariantes.Text = "???"
 	end
 
 	if descubierta then
@@ -388,6 +444,8 @@ local function actualizarFicha(e: Estado)
 		fichaDetalle.Text = receta(c)
 			.. "\nEn tu laboratorio: "
 			.. cuantas
+			.. personalidadesFicha
+			.. variantesFicha
 			.. (if mutante then "\n¡La tenés mutante!" else "")
 		fichaDetalle.TextColor3 = if mutante then Paleta.Dorado else Paleta.Texto
 		return
@@ -624,7 +682,17 @@ end, function()
 end)
 
 for _, atributo in
-	{ "Especies", "Mutantes", "Criaturas", "Pistas", "PistasCompradas", "PistasGratis", "ADN" }
+	{
+		"Especies",
+		"Mutantes",
+		"Criaturas",
+		"Sellos",
+		"Variantes",
+		"Pistas",
+		"PistasCompradas",
+		"PistasGratis",
+		"ADN",
+	}
 do
 	jugador:GetAttributeChangedSignal(atributo):Connect(function()
 		if ventana.Marco.Visible then

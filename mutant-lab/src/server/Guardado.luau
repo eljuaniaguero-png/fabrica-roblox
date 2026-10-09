@@ -1,6 +1,7 @@
 --!strict
 -- Guardado de cada jugador en un DataStore (Config.Guardado).
--- Se guarda: ADN, especies descubiertas, mutantes, las criaturas del laboratorio, pistas
+-- Se guarda: ADN, especies descubiertas, mutantes, las criaturas del laboratorio (con su
+-- personalidad y variante), las variantes conseguidas, residuos, catalizadores, pistas
 -- (compradas y gratis), premios de generación ya cobrados, niveles de las mejoras, los
 -- pedidos del tablero y cuántos entregaste. Los guardados de la versión 1 (sin criaturas)
 -- se convierten solos: una criatura por especie descubierta.
@@ -15,6 +16,7 @@ local Catalizadores = require(ReplicatedStorage.Shared.Catalizadores)
 local Config = require(ReplicatedStorage.Shared.Config)
 local Fusion = require(ReplicatedStorage.Shared.Fusion)
 local Mejoras = require(ReplicatedStorage.Shared.Mejoras)
+local Personalidades = require(ReplicatedStorage.Shared.Personalidades)
 local Jugadores = require(script.Parent.Jugadores)
 
 local G = Config.Guardado
@@ -81,7 +83,12 @@ end
 local function aGuardados(d: Jugadores.Datos): Guardados
 	local criaturas = {}
 	for _, u in d.Criaturas do
-		table.insert(criaturas, { Clave = u.Clave, Mutante = u.Mutante })
+		table.insert(criaturas, {
+			Clave = u.Clave,
+			Mutante = u.Mutante,
+			Personalidad = u.Personalidad,
+			Variante = u.Variante,
+		})
 	end
 	local pedidos = {}
 	for lugar, p in d.Pedidos do
@@ -103,6 +110,8 @@ local function aGuardados(d: Jugadores.Datos): Guardados
 		Residuos = table.clone(d.Residuos),
 		Catalizadores = table.clone(d.Catalizadores),
 		CatalizadoresVistos = lista(d.CatalizadoresVistos),
+		Variantes = Jugadores.aLista(d.Variantes),
+		Sellos = Jugadores.aLista(d.Sellos),
 	}
 end
 
@@ -167,7 +176,9 @@ local function limpiar(crudo: any): Guardados?
 		(niveles :: any)[nombre] = numero(m[nombre], inicial, Mejoras.maximo(nombre))
 	end
 	-- Criaturas (versión 2). En la versión 1 no existen: las arma Jugadores.crear.
-	local criaturas: { { Clave: string, Mutante: boolean } }? = nil
+	-- La personalidad y la variante solo pasan si existen (si no, Jugadores pone la de su
+	-- especie y ninguna variante).
+	local criaturas: { Jugadores.CriaturaGuardada }? = nil
 	if crudo.Version == VERSION and typeof(crudo.Criaturas) == "table" then
 		local leidas = {}
 		for _, c in crudo.Criaturas do
@@ -177,10 +188,41 @@ local function limpiar(crudo: any): Guardados?
 				and typeof(c.Clave) == "string"
 				and Fusion.porClave(c.Clave)
 			then
-				table.insert(leidas, { Clave = c.Clave, Mutante = c.Mutante == true })
+				table.insert(leidas, {
+					Clave = c.Clave,
+					Mutante = c.Mutante == true,
+					Personalidad = if typeof(c.Personalidad) == "string"
+							and Personalidades.Datos[c.Personalidad]
+						then c.Personalidad
+						else nil,
+					Variante = if typeof(c.Variante) == "string"
+							and Catalizadores.porClave(c.Variante)
+						then c.Variante
+						else nil,
+				})
 			end
 		end
 		criaturas = leidas
+	end
+	local variantes = {}
+	if typeof(crudo.Variantes) == "table" then
+		for _, texto in crudo.Variantes do
+			local especie, v =
+				string.match(if typeof(texto) == "string" then texto else "", "^([^|]+)|(.+)$")
+			if especie and v and Fusion.porClave(especie) and Catalizadores.porClave(v) then
+				table.insert(variantes, especie .. "|" .. v)
+			end
+		end
+	end
+	local sellos = {}
+	if typeof(crudo.Sellos) == "table" then
+		for _, texto in crudo.Sellos do
+			local especie, p =
+				string.match(if typeof(texto) == "string" then texto else "", "^([^|]+)|(.+)$")
+			if especie and p and Fusion.porClave(especie) and Personalidades.Datos[p] then
+				table.insert(sellos, especie .. "|" .. p)
+			end
+		end
 	end
 	local pedidos = {}
 	if typeof(crudo.Pedidos) == "table" then
@@ -224,6 +266,8 @@ local function limpiar(crudo: any): Guardados?
 		Residuos = residuos,
 		Catalizadores = catalizadores,
 		CatalizadoresVistos = vistos,
+		Variantes = variantes,
+		Sellos = sellos,
 		Especies = claves(crudo.Especies),
 		Mutantes = claves(crudo.Mutantes),
 		Criaturas = criaturas,

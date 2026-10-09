@@ -12,6 +12,7 @@ local Config = require(ReplicatedStorage.Shared.Config)
 local Costos = require(ReplicatedStorage.Shared.Costos)
 local Mejoras = require(ReplicatedStorage.Shared.Mejoras)
 local Pedidos = require(ReplicatedStorage.Shared.Pedidos)
+local Personalidades = require(ReplicatedStorage.Shared.Personalidades)
 local Jugadores = require(script.Parent.Jugadores)
 local MaquinaFusion = require(script.Parent.MaquinaFusion)
 local Robot = require(script.Parent.Robot)
@@ -30,6 +31,21 @@ local function anotar(texto: string)
 	table.insert(lineas, texto)
 end
 
+-- "Alegre 3, Vaga 1, ..." (las personalidades de las criaturas que tiene ahora).
+local function contarPersonalidades(d: Jugadores.Datos): string
+	local cuentas: { [string]: number } = {}
+	for _, u in d.Criaturas do
+		cuentas[u.Personalidad] = (cuentas[u.Personalidad] or 0) + 1
+	end
+	local partes = {}
+	for _, p in Personalidades.Orden do
+		if cuentas[p] then
+			table.insert(partes, p .. " " .. cuentas[p])
+		end
+	end
+	return table.concat(partes, ", ")
+end
+
 function JugadorAutomatico.iniciar(jugador: Player, segundos: number): boolean
 	if corriendo or not Jugadores.obtener(jugador) then
 		return false
@@ -39,20 +55,31 @@ function JugadorAutomatico.iniciar(jugador: Player, segundos: number): boolean
 	resumen = "Jugando..."
 	local inicio = os.clock()
 	local mem = Robot.nuevaMemoria()
+	local conPersonalidad, conVariante = 0, 0
 	local mundo: Robot.Mundo = {
 		datos = function()
 			return Jugadores.obtener(jugador) :: Jugadores.Datos
 		end,
 		ahora = os.clock,
-		fusionar = function(a: string, b: string): boolean
-			local r = MaquinaFusion.pedir(jugador, a, b)
+		fusionar = function(a: string, b: string, catalizador: string?): boolean
+			local r = MaquinaFusion.pedir(jugador, a, b, nil, nil, catalizador)
 			return r ~= nil and (r.Ok or r.Motivo == "NoReaccionan")
 		end,
 		comprar = function(tipo: string, id: any): boolean
 			return Tienda.comprar(jugador, tipo, id)
 		end,
 		entregar = function(lugar: number, unidades: { Pedidos.Unidad }): boolean
-			return Tablero.entregar(jugador, lugar, unidades)
+			local d = Jugadores.obtener(jugador)
+			local p = d and d.Pedidos[lugar]
+			local ok = Tablero.entregar(jugador, lugar, unidades)
+			if ok and p then
+				if p.Requisito.Personalidad then
+					conPersonalidad += 1
+				elseif p.Requisito.Variante then
+					conVariante += 1
+				end
+			end
+			return ok
 		end,
 		descartar = function(lugar: number): boolean
 			return Tablero.descartar(jugador, lugar)
@@ -152,6 +179,10 @@ function JugadorAutomatico.iniciar(jugador: Player, segundos: number): boolean
 				then Catalizadores.escribir(d.Catalizadores)
 				else ""),
 			"Especies nuevas en: " .. table.concat(nuevas, ", "),
+			"Pedidos con personalidad: " .. conPersonalidad .. " | con variante: " .. conVariante,
+			"Personalidades en el laboratorio: " .. (if d then contarPersonalidades(d) else ""),
+			"Variantes conseguidas: "
+				.. (if d then table.concat(Jugadores.aLista(d.Variantes), ", ") else ""),
 		}, "\n")
 	end)
 	return true

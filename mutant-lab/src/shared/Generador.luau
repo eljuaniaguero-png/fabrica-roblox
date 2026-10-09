@@ -3,9 +3,12 @@
 -- Estilo de la guía (ficha, "Guía de estilo", punto 5): chibi, ojos que cambian con la
 -- personalidad, una gema de Neon con el color de su elemento, un anillo de luz con el color
 -- de su generación y, si es mutante, colores más vivos, gema más grande y brillo dorado.
+-- Las variantes (nacen con un catalizador) se tiñen del color del catalizador, llevan su gema,
+-- su rasgo de partículas y el apellido en el nombre ("Glumulo de Hielo").
 
 local CollectionService = game:GetService("CollectionService")
 
+local Catalizadores = require(script.Parent.Catalizadores)
 local Config = require(script.Parent.Config)
 local Dibujos = require(script.Parent.Dibujos)
 local Especies = require(script.Parent.Especies)
@@ -143,10 +146,12 @@ function Generador.crear(
 	donde: CFrame,
 	padre: Instance?,
 	mutante: boolean?,
-	personalidad: string?
+	personalidad: string?,
+	variante: string?
 ): Model
+	local cat = Catalizadores.porClave(variante)
 	local modelo = Instance.new("Model")
-	modelo.Name = c.Nombre
+	modelo.Name = Catalizadores.nombre(c.Nombre, variante)
 	-- Que llegue entera a cada jugador (si no, la animación puede arrancar sin sus piezas).
 	modelo.ModelStreamingMode = Enum.ModelStreamingMode.Atomic
 
@@ -207,6 +212,9 @@ function Generador.crear(
 			if d.Material == Enum.Material.Neon then
 				d.Material = Enum.Material.SmoothPlastic
 			end
+			if cat then
+				d.Color = d.Color:Lerp(cat.Color, C.TinteVariante)
+			end
 			if mutante then
 				local h, s, v = d.Color:ToHSV()
 				d.Color =
@@ -224,7 +232,7 @@ function Generador.crear(
 	gema.CanCollide = false
 	gema.CanQuery = false
 	gema.Material = Enum.Material.Neon
-	gema.Color = Generador.colorElemento(c)
+	gema.Color = if cat then cat.Color else Generador.colorElemento(c)
 	gema.Size = Vector3.one * (if mutante then C.GemaMutante else C.Gema) * C.Escala
 	gema.CFrame = donde
 		* CFrame.new(Vector3.new(0, Piezas.AlturaLomo[c.Cuerpo], 0.6) * escalaCuerpo)
@@ -238,6 +246,10 @@ function Generador.crear(
 	if mutante then
 		Piezas.estrellas(raiz)
 		modelo:SetAttribute("Mutante", true)
+	end
+	if cat then
+		Piezas.variante(raiz, cat.Rasgo, cat.Color)
+		modelo:SetAttribute("Variante", cat.Clave)
 	end
 	if personalidad then
 		icono(raiz, personalidad, alto)

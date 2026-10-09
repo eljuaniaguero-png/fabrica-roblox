@@ -7,6 +7,7 @@
 --   game.ServerStorage.Prueba.Reiniciar:Invoke("NombreDelJugador") -> vuelve a jugador nuevo
 --   game.ServerStorage.Prueba.PonerDatos:Invoke("NombreDelJugador", 5000, { Corrales = 4 })
 --   game.ServerStorage.Prueba.Guardar:Invoke("NombreDelJugador") -> true si guardó
+--   game.ServerStorage.Prueba.NuevosPedidos:Invoke("NombreDelJugador") -> otros 3 pedidos
 
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService = game:GetService("RunService")
@@ -18,6 +19,7 @@ local Mejoras = require(ReplicatedStorage.Shared.Mejoras)
 local Corrales = require(script.Parent.Corrales)
 local Guardado = require(script.Parent.Guardado)
 local Jugadores = require(script.Parent.Jugadores)
+local Tablero = require(script.Parent.Tablero)
 
 local function buscar(nombre: string): (Player?, Jugadores.Datos?)
 	local jugador = Players:FindFirstChild(nombre) :: Player?
@@ -97,6 +99,21 @@ if Config.Prueba.Activo or RunService:IsStudio() then
 		end
 		Jugadores.crear(jugador :: Player, nil)
 		Corrales.actualizar(jugador :: Player)
+		return true
+	end)
+
+	-- Cambia los pedidos del tablero por otros nuevos (para ver cómo se ven).
+	funcion(carpeta, "NuevosPedidos", function(nombre: string): boolean
+		local jugador, d = buscar(nombre)
+		if not jugador or not d then
+			return false
+		end
+		for i = 1, Config.Pedidos.Activos do
+			d.Pedidos[i] = nil
+			d.EsperaPedido[i] = nil
+		end
+		Tablero.completar(jugador, d)
+		Jugadores.publicarPedidos(jugador)
 		return true
 	end)
 

@@ -1,6 +1,8 @@
 --!strict
 -- Formatos de texto que se repiten en la UI.
 
+local HttpService = game:GetService("HttpService")
+
 local Formato = {}
 
 -- 100000 -> "100.000"
@@ -22,6 +24,29 @@ function Formato.inventario(texto: string?): { [string]: Cuenta }
 		r[clave] = { Normales = tonumber(n) or 0, Mutantes = tonumber(m) or 0 }
 	end
 	return r
+end
+
+-- Criaturas iguales (misma especie, tipo, personalidad y variante) y cuántas hay.
+export type Grupo = {
+	Clave: string,
+	Mutante: boolean,
+	Personalidad: string?,
+	Variante: string?,
+	Cantidad: number,
+}
+
+-- Lee el atributo "Grupos" (JSON, lo arma Jugadores.grupos en el servidor).
+function Formato.grupos(texto: string?): { Grupo }
+	if not texto or texto == "" then
+		return {}
+	end
+	local ok, lista = pcall(function()
+		return HttpService:JSONDecode(texto)
+	end)
+	if not ok or typeof(lista) ~= "table" then
+		return {}
+	end
+	return lista :: { Grupo }
 end
 
 -- Lee un atributo con claves separadas por ";" como conjunto.

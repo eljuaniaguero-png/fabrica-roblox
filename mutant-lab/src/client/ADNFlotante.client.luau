@@ -61,9 +61,11 @@ while true do
 		if criaturas then
 			for i, modelo in criaturas:GetChildren() do
 				local gen = modelo:GetAttribute("Gen") :: number?
-				if modelo:IsA("Model") and gen then
-					local cantidad =
-						math.floor(Config.Economia.ADNPorGen[gen] * CADA * multiplicador)
+				-- "Produce" lo anota el servidor (con personalidades); si falta, la cuenta común.
+				local porSegundo = (modelo:GetAttribute("Produce") :: number?)
+					or (if gen then Config.Economia.ADNPorGen[gen] * multiplicador else nil)
+				local cantidad = if porSegundo then math.floor(porSegundo * CADA) else 0
+				if modelo:IsA("Model") and cantidad > 0 then
 					-- Escalonados, para que no salgan todos juntos.
 					task.delay(i * 0.15, flotar, modelo, cantidad)
 				end

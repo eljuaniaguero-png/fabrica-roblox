@@ -1,6 +1,7 @@
 --!strict
 -- Pone en los corrales del laboratorio a las criaturas que trabajan (las de mayor
--- generación, hasta el tope). Los modelos los crea el servidor, así todos los ven;
+-- generación, hasta el tope), acomodadas para que sus personalidades rindan más
+-- (Mejoras.activas). Los modelos los crea el servidor, así todos los ven;
 -- la caminata la anima cada cliente.
 
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
@@ -27,7 +28,15 @@ local function carpetaCriaturas(corral: Instance): Folder
 	return nueva
 end
 
-type Lugar = { Corral: number, Clave: string, Mutante: boolean, Existe: boolean }
+type Lugar = {
+	Corral: number,
+	Clave: string,
+	Mutante: boolean,
+	Personalidad: string?,
+	Variante: string?,
+	Produce: number, -- ADN por segundo, con personalidades y Nutrientes
+	Existe: boolean,
+}
 
 function Corrales.actualizar(jugador: Player)
 	local d = Jugadores.obtener(jugador)
@@ -37,6 +46,7 @@ function Corrales.actualizar(jugador: Player)
 	end
 	local corrales = lab:WaitForChild("Corrales")
 	local activas = Mejoras.activas(d.Criaturas, d.Mejoras.Corrales)
+	local produce = Mejoras.porCriatura(activas, d.Mejoras.Nutrientes)
 
 	-- Dónde tiene que estar cada criatura activa (por su número: puede haber varias iguales).
 	local deseado: { [number]: Lugar } = {}
@@ -45,11 +55,15 @@ function Corrales.actualizar(jugador: Player)
 			Corral = math.ceil(i / Config.Corrales.PorCorral),
 			Clave = a.Criatura.Clave,
 			Mutante = a.Mutante,
+			Personalidad = a.Personalidad,
+			Variante = a.Variante,
+			Produce = produce[i],
 			Existe = false,
 		}
 	end
 
-	-- Sacar las que sobran o cambiaron de corral.
+	-- Sacar las que sobran o cambiaron de corral. Las que quedan anotan cuánto producen
+	-- (cambia si llega o se va una vecina).
 	for k = 1, Config.Corrales.Maximo do
 		local corral = corrales:FindFirstChild("Corral" .. k)
 		if corral then
@@ -59,6 +73,7 @@ function Corrales.actualizar(jugador: Player)
 					m:Destroy()
 				else
 					lugar.Existe = true
+					m:SetAttribute("Produce", lugar.Produce)
 				end
 			end
 		end
@@ -74,8 +89,10 @@ function Corrales.actualizar(jugador: Player)
 			local z = (azar:NextNumber() - 0.5) * zona.Size.Z
 			local punto = (zona.CFrame * CFrame.new(x, 0, z)).Position
 			local donde = CFrame.new(punto) * CFrame.Angles(0, azar:NextNumber(0, 2 * math.pi), 0)
-			local modelo = Generador.crear(c, donde, nil, lugar.Mutante)
+			local modelo =
+				Generador.crear(c, donde, nil, lugar.Mutante, lugar.Personalidad, lugar.Variante)
 			modelo:SetAttribute("Id", id)
+			modelo:SetAttribute("Produce", lugar.Produce)
 			modelo:SetAttribute("ZonaCFrame", zona.CFrame)
 			modelo:SetAttribute("ZonaTamano", zona.Size)
 			modelo.Parent = carpetaCriaturas(corral)

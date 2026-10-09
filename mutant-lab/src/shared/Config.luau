@@ -95,10 +95,13 @@ local Config = {
 		},
 		ExtraPorCantidad = 1.2, -- los que piden dos criaturas pagan un poco más
 		PremioMinimo = 40,
-		ProbabilidadPista = 0.3, -- los que no son fáciles a veces traen una pista gratis
+		ProbabilidadPista = 0.3, -- los que no son fáciles a veces traen una pista gratis...
+		ProbabilidadCatalizador = 0.25, -- ...o, si no, un catalizador de los que conocés
 		ProbabilidadDescubierta = 0.75, -- los comunes casi siempre piden especies que ya tenés
 		ProbabilidadMutante = 0.08, -- un pedido común puede ser "cualquier mutante"...
 		MutanteDesde = 8, -- ...cuando ya descubriste esta cantidad de especies
+		ProbabilidadPersonalidad = 0.3, -- un pedido común puede pedir personalidad
+		ProbabilidadVariante = 0.25, -- ...o una variante que ya conocés (catalizadores)
 		Hito = 10, -- cada 10 pedidos entregados, un premio extra...
 		PremioHito = 2, -- ...de esto x el costo de una fusión de gen 2
 		-- Clientes: nombres inventados (el color del muñequito sale de Paleta.Papelitos).
@@ -136,6 +139,7 @@ local Config = {
 	-- Fracasos útiles: si una pareja no reacciona, la máquina igual hace un residuo (gratis).
 	Residuos = {
 		ParaCatalizador = 5, -- con esta cantidad se arma un catalizador al azar de los que conocés
+		RanuraDesde = 10, -- especies descubiertas para abrir la ranura de catalizador
 	},
 
 	-- Pistas de las siluetas
@@ -205,6 +209,7 @@ local Config = {
 		GemaMutante = 1.15,
 		Anillo = 3.8, -- diámetro del anillo de luz bajo los pies
 		DistanciaIcono = 20, -- el ícono de personalidad se ve a menos de esto
+		TinteVariante = 0.55, -- cuánto toma una variante el color de su catalizador (0 a 1)
 	},
 
 	-- Interfaz: tiempos de los avisos y carteles (los colores están en Paleta.luau,

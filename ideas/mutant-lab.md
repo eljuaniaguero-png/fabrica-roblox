@@ -11,6 +11,7 @@ Versión 6 (2026-10-08): **guía visual nueva** (laboratorio de caricatura de no
 Versión 7 (2026-10-08): **Parte 5 hecha** (guardado, balance y pulido), sobre la rama de la interfaz nueva (HUD nuevo; la Mutadex, la tienda y el panel de fusión siguen con el estilo viejo hasta los Bloques 3 a 6 del rediseño). Ver "Notas de la Parte 5".
 Versión 8 (2026-10-09): **interfaz terminada**: el panel de fusión, la Mutadex, la tienda y los festejos ya usan los componentes de `client/UI` (pedido 1 de `ORDEN-PEDIDOS.md`). Ver "Notas de la interfaz terminada".
 Versión 9 (2026-10-09): **Pedidos** (pedido 2 de `ORDEN-PEDIDOS.md`): clientes que piden criaturas, inventario de criaturas y balance nuevo del ADN. Ver "Pedidos".
+Versión 10 (2026-10-09): **fracasos útiles, personalidades y catalizadores** (pedido 3 de `ORDEN-PEDIDOS.md`): residuos, personalidades con herencia y efectos en el corral, ranura de catalizador con variantes, y pedidos de personalidad y de variante. Ver "Fracasos útiles, personalidades y catalizadores".
 Próximo punto de control: **prototipo jugable** (Partes 1 a 5).
 
 ## Guía de estilo: laboratorio de caricatura de noche (versión 6)
@@ -194,7 +195,7 @@ Cosas que la guía no definía o que chocaban con el juego actual. Elegí lo má
 
 - **Elemento de cada especie base** (provisorio, 2 por elemento, hasta diseñar las Variantes): Agua: Glupona y Brinoza. Planta: Rámulo y Sutomi. Fuego: Chisparo y Dunaqui. Eléctrico: Zoplito y Fotina. Sombra: Rocote y Nerulo. Las fusiones mezclan los colores de sus bases promediando el tono, así la mezcla sigue siendo un color vivo y no un gris.
 - **Pieza de Neon del elemento**: es una gema redonda sobre el lomo, igual para todas. Las otras piezas que antes brillaban (cuernos de brasa, antenas, alas) pasaron a plástico, para que lo único que brille sea la gema.
-- **Personalidades** (provisorio): positivas Alegre, Curiosa, Líder y Trabajadora; negativas Vaga, Peleadora, Miedosa y Glotona. Por ahora solo cambian los ojos y el ícono; todavía no las tiene ninguna criatura del juego.
+- **Personalidades** (provisorio): positivas Alegre, Curiosa, Líder y Trabajadora; negativas Vaga, Peleadora, Miedosa y Glotona. Desde la versión 10 las tiene cada criatura y cambian el ADN del corral (ver "Fracasos útiles, personalidades y catalizadores").
 - **Mutantes**: dorados, como pide la guía. Se apagó el cambio de colores tornasolado (`Config.Animacion.Tornasol`).
 - **Vidrio**: cúpulas, cápsulas y tubos son plástico transparente con un poco de brillo, no material Glass. En Roblox, Glass no deja ver lo transparente que tiene detrás, y escondía los anillos de las criaturas, los carteles y las burbujas.
 - **Franjas amarillas y negras**: un solo cuadro con degradado a escalones por cara. Es liviano para celular.
@@ -346,7 +347,7 @@ Toda la interfaz se arma por código con las piezas de `client/UI` (colores de `
   - Botón "¡FUSIONAR!" con el costo. Si falta ADN, apagado y "Te faltan X ADN" en rojo. **Decisión**: si la pareja no reacciona, el botón queda apagado y lo dice antes de apretar (hasta ahora te dejaba probar gratis). Cuando existan los residuos (pedido 3) se vuelve a prender.
 - **Mutadex**: encabezado con "12 / 50", barra y ADN; pestañas Gen 1, Gen 2 y Gen 3 con su conteo, y Extras ("llegan pronto"). Arriba de cada grilla queda la nota de la regla. Las siluetas tienen el "?" en una esquina, para no tapar la forma.
   - Ficha: al costado en computadora; en celular tapa la grilla, en dos columnas, y se cierra con su X. Tiene la criatura grande girando, generación, elemento, personalidad, la receta (si ya la descubriste) y las pistas con su botón.
-  - **Decisión: personalidad por especie.** Todavía ninguna criatura tiene personalidad propia, así que cada especie tiene una fija (`Personalidades.deEspecie`, a partir de sus bases). Se muestra con su ícono, verde si es positiva y magenta si es negativa. Sirve como "regla fija por especie" para el pedido 3.
+  - **Decisión: personalidad por especie** (reemplazada en la versión 10 por los sellos de las personalidades conseguidas). Todavía ninguna criatura tenía personalidad propia, así que cada especie tenía una fija (`Personalidades.deEspecie`, a partir de sus bases). Se muestra con su ícono, verde si es positiva y magenta si es negativa. Sirve como "regla fija por especie" para el pedido 3.
 - **Tienda**: pestañas Especies, Mejoras, Catalizadores ("llegan pronto") y Premium. En Premium se ven los 7 pases de `Config.Premium` con borde dorado y el precio en Robux, apagados y con "Próximamente" hasta que tengan ID. Las mejoras muestran "Nivel 2 / 4" con puntos. Al comprar: destello sobre la tarjeta, sonido y el ADN del encabezado rebota.
 - **Festejos**: generación completa y Mutadex completa usan el cartel grande de `UI/Carteles` (uno por vez, en cola) con papelitos verde ácido, magenta, dorado y de los 5 elementos. La revelación de la máquina usa el mismo cartel, fijo arriba para no tapar la cúpula.
 - **Misiones y Ajustes**: ventana chica con "llegan pronto". Ajustes ya trae el interruptor del sonido.
@@ -380,7 +381,7 @@ El jugador descubría especies pero no tenía para qué usarlas, y el ADN le sob
 - **Uno de los tres pide algo nuevo** (cartel "¡Algo nuevo!"): una especie que podés hacer con tus bases pero todavía no descubriste, pedida de forma que ninguna de las tuyas sirva. Los otros dos se arman con lo que ya tenés o podés hacer.
 - **Decisión**: nunca se pide como única opción la base de la que tenés una sola (la necesitás para fusionar); de esas solo se piden "dos de tipo ...".
 - **Entregar**: se elige en una lista de las criaturas que sirven (si hay una sola, ya queda elegida). Avisa si es tu última de esa especie. La criatura **se despide**: salta dos veces en el globo del pedido, vuela hacia el cliente, que dice "¡Gracias!" y le sale un corazón. Después llega otro pedido.
-- **Premio** según la dificultad, medido en fusiones de gen 2 (así crece con el juego): fácil 0,9; media 1,2; difícil 2; mutante 4; los de dos criaturas x1,2. Los que no son fáciles a veces traen **una pista gratis** (la próxima pista no se cobra). Los catalizadores como premio quedan para el pedido 3.
+- **Premio** según la dificultad, medido en fusiones de gen 2 (así crece con el juego): fácil 0,9; media 1,2; difícil 2; mutante 4; los de dos criaturas x1,2. Los que no son fáciles a veces traen **una pista gratis** (la próxima pista no se cobra). Los catalizadores como premio no hicieron falta: en la versión 10 se arman con residuos.
 - **Descartar**: la X de cada pedido. El lugar queda vacío 2 minutos, con cuenta regresiva.
 - **Cada 10 pedidos**, un premio extra de 2 fusiones con su cartel y papelitos.
 - Todo se valida en el servidor (`server/Tablero.luau`): que el pedido exista, que las criaturas cumplan y que las tengas. Los números están en `Config.Pedidos`.
@@ -412,6 +413,92 @@ Con `ServerStorage.Prueba.Jugar` el jugador automático jugó 10 minutos con las
 - **Veces sin saber qué hacer**: 0. Ojo: el jugador automático siempre tiene parejas para mirar en el panel; una persona que no prueba sistemáticamente puede trabarse más.
 - **Para mirar**: el ADN por segundo quedó en 12 desde el minuto 4: gastó todo en copias y pedidos y no abrió el segundo corral. Si en el juego de verdad se siente lento, bajar el precio del 2.º corral.
 - El guardado (versión 2) se probó cerrando y abriendo: volvieron las criaturas (con su mutante), los pedidos, los entregados y las pistas gratis.
+
+## Fracasos útiles, personalidades y catalizadores (versión 10)
+
+Dos de cada tres fusiones daban "No reaccionan" y eso no daba nada. Ahora cada intento suma, cada criatura tiene personalidad y aparece la tercera ranura de la máquina. Pedido 3 de `ORDEN-PEDIDOS.md`, hecho en tres bloques.
+
+### Bloque 1: fracasos útiles
+- Si una pareja no reacciona, la máquina igual produce un **residuo** con el color mezclado de los dos padres: una gota en la cápsula y en la vista previa del panel. No cobra ADN (como antes) y se guarda.
+- **Con 5 residuos se arma un catalizador** al azar entre los que conocés (`Config.Residuos.ParaCatalizador`). El casillero de la ranura muestra "Residuos 3/5".
+- **Decisión: qué catalizadores "conocés".** El de cada elemento del que ya descubriste una especie (Hielo = agua, Slime = planta, Lava = fuego, Rayo = eléctrico, Sombra = sombra), más los que ya tuviste. Arrancás conociendo Hielo y Slime (Glupona es de agua y Rámulo de planta) y se suman al descubrir bases. Antes de esta decisión salía siempre el mismo.
+- **La máquina dice por qué no reaccionaron**, en una frase que enseña la regla (`Fusion.motivo`): "Son la misma especie: hacen falta dos distintas", "Las de generación 3 ya no se fusionan", "Dos de generación 2 no reaccionan: probá una gen 2 con una base", "Están muy lejos en la rueda: tienen que estar a 3 lugares o menos", "Esa base ya está en la mezcla: probá con otra" y "Las tres bases tienen que quedar seguidas en la rueda". Se ve antes de apretar (en el panel) y en el cartel de la máquina.
+
+### Bloque 2: personalidades de verdad
+- **Toda criatura tiene una de las 8 personalidades.** Cambia sus ojos, el ícono sobre su cabeza (borde verde si es positiva, magenta si es negativa) y el ADN que dan ella y las demás de su corral (`Config.Personalidades`). Las negativas pierden algo pero tienen una ventaja.
+
+| Personalidad | Tipo | Efecto en el corral | Ícono |
+|---|---|---|---|
+| Alegre | positiva | las demás de su corral dan +10 % | corazón |
+| Curiosa | positiva | da +20 % | "?" |
+| Líder | positiva | las demás de su corral dan +15 % | estrella |
+| Trabajadora | positiva | da +35 % | martillo |
+| Vaga | negativa | da la mitad, pero las demás dan +10 % (las tranquiliza) | "Zzz" |
+| Peleadora | negativa | da +80 %, pero las demás dan −20 % | rayo |
+| Miedosa | negativa | da −30 %, pero con una Líder en su corral da +50 % | gota |
+| Glotona | negativa | da +60 %, pero las demás dan −10 % | cubierto |
+
+- **Herencia (tabla fija):** la personalidad de la cría sale de la de los dos padres, sin azar. Mismo con mismo da lo mismo, salvo dos Líderes, que se pelean.
+
+| Padres | Alegre | Curiosa | Líder | Trabajadora | Vaga | Peleadora | Miedosa | Glotona |
+|---|---|---|---|---|---|---|---|---|
+| **Alegre** | Alegre | Curiosa | Líder | Alegre | Alegre | Peleadora | Alegre | Glotona |
+| **Curiosa** | Curiosa | Curiosa | Curiosa | Trabajadora | Curiosa | Peleadora | Miedosa | Curiosa |
+| **Líder** | Líder | Curiosa | Peleadora | Líder | Trabajadora | Líder | Miedosa | Líder |
+| **Trabajadora** | Alegre | Trabajadora | Líder | Trabajadora | Vaga | Trabajadora | Trabajadora | Glotona |
+| **Vaga** | Alegre | Curiosa | Trabajadora | Vaga | Vaga | Vaga | Miedosa | Glotona |
+| **Peleadora** | Peleadora | Peleadora | Líder | Trabajadora | Vaga | Peleadora | Peleadora | Glotona |
+| **Miedosa** | Alegre | Miedosa | Miedosa | Trabajadora | Miedosa | Peleadora | Miedosa | Vaga |
+| **Glotona** | Glotona | Curiosa | Líder | Glotona | Glotona | Glotona | Vaga | Glotona |
+
+- **Regla fija por especie** (cuando no hay padres: las bases que se compran y las criaturas de los guardados viejos): suma = cantidad de bases + cada base × (2 × su lugar − 1); sale la personalidad número (suma mod 8) + 1 de la lista de arriba (`Personalidades.deEspecie`). Las bases: Glupona Líder, Rámulo Trabajadora, Sutomi Vaga, Rocote Peleadora, Chisparo Miedosa, Dunaqui Glotona, Zoplito Alegre, Brinoza Curiosa, Fotina Líder y Nerulo Trabajadora.
+- **Elegís con qué criatura fusionar**: el panel muestra una tarjeta por especie y personalidad, con su sello ("Glumulo ×2" con el "?" de Curiosa). Antes de apretar, la máquina dice cómo va a salir la cría ("Va a ser Líder: las demás de su corral dan +15 %."). El cartel de la revelación también la dice ("Generación 2 · Líder").
+- **Los efectos valen dentro de cada corral** (4 criaturas). **Decisión:** el servidor las acomoda solo entre los corrales para que rindan más (prueba cambios de lugar mientras suba el ADN total), así el jugador no tiene que mover criaturas. El cartel del corral y el "+N" que flota sobre cada criatura muestran lo que produce de verdad.
+- **Mutadex:** la ficha de cada especie tiene los **sellos** de las personalidades que ya conseguiste ("3/8") y las nombra.
+- **Pedidos de personalidad:** "Una criatura Alegre de tipo agua". Salen en 3 de cada 10 pedidos comunes, solo con personalidades que tenés en esa especie (de una base, solo si tenés dos), y pagan como dificultad media o más.
+- Los guardados guardan la personalidad de cada criatura y los sellos; los viejos reciben la de su especie.
+
+### Bloque 3: catalizadores
+- **La ranura de catalizador** (arriba de la máquina y en el panel) se abre a las **10 especies descubiertas**, con un cartel que la explica. Hasta entonces tiene candado. En el mundo, el candado se va y la ranura toma el color del catalizador elegido.
+- **Tocar la ranura** pasa por los catalizadores que tenés (y después del último queda vacía). Muestra el ícono y cuántos te quedan ("Hielo ×2").
+- **Cada catalizador crea una variante fija** de la especie que sale: otro color (la criatura toma 55 % del color del catalizador y su gema), otro rasgo (partículas propias) y un apellido. Algunos además cambian la personalidad. La variante es la misma especie: produce lo mismo y sirve para los pedidos de su especie.
+
+| Catalizador | Lo conocés al descubrir | Color | Rasgo | Nombre | Personalidad |
+|---|---|---|---|---|---|
+| Rayo | eléctrico | amarillo | chispas | "Glumulo de Rayo" | la hace Peleadora |
+| Hielo | agua | celeste | escarcha que cae | "Glumulo de Hielo" | la hace Miedosa |
+| Slime | planta | verde ácido | goteo | "Glumulo de Slime" | la de sus padres |
+| Lava | fuego | naranja | brasas | "Glumulo de Lava" | la de sus padres |
+| Sombra | sombra | violeta | humo | "Glumulo de Sombra" | la hace Vaga |
+
+- El catalizador **solo se gasta si la pareja reacciona**. Con una especie que ya tenés, la vista previa muestra la variante; la primera de cada una dice "¡Variante nueva!" y el cartel de la máquina también.
+- **Mutadex:** la ficha de cada especie tiene una fila con los 5 catalizadores (de color los que ya conseguiste, en gris los que faltan, "1/5") y nombra las variantes.
+- **Pedidos de variante:** "Un Glumulo de Hielo". Salen en 1 de cada 4 pedidos comunes, solo de variantes que ya conseguiste y que tenés o podés volver a hacer (tenés el catalizador). Son difíciles (pagan 2 fusiones). Si no tenés una, la tarjeta dice "Fusionalo con un catalizador de Hielo".
+- **Catalizadores como premio** (lo que había quedado del pedido 2): los pedidos que no son fáciles y no traen pista a veces pagan un catalizador de los que conocés (1 de cada 4, `Config.Pedidos.ProbabilidadCatalizador`). La tarjeta lo muestra con su ícono ("+1 Hielo").
+- Nunca hay dos pedidos de "Cualquier mutante" a la vez (en la prueba del bloque 2 quedaron dos sin poder cumplirse).
+- La pestaña Catalizadores de la tienda explica que no se compran: se arman con residuos (o vienen de pedidos).
+
+### Pruebas de 10 minutos (jugador automático, en Studio, tiempo real)
+Al terminar cada bloque, el jugador automático jugó 10 minutos como jugador nuevo, con las funciones de verdad del servidor. Aprendió dos cosas nuevas: probar parejas que no reaccionan para juntar residuos y, con la ranura abierta, usar catalizadores (para pedidos de variante o para probar una variante nueva si le sobra ADN).
+
+| | Antes (versión 9) | Bloque 1 | Bloque 2 | Bloque 3 |
+|---|---|---|---|---|
+| Especies | 11 | 11 | 11 | 12 |
+| Pedidos entregados | 14 | 15 | 18 | 17 |
+| ADN por segundo al minuto 9 | 12 | 12 | 16,3 | 16,3 |
+| ADN máximo | 2.129 | 2.434 | 4.145 | 4.710 |
+| ADN / próxima fusión, máximo | 3,7 | 4,2 | 3,8 | 3,9 |
+| Segundos con más del triple | 10 | 10 | 10 | 10 |
+| Veces sin saber qué hacer | 0 | 0 | 0 | 0 |
+| Residuos | — | 44 | 40 | 38 |
+| Catalizadores juntados | — | 8 (todos Slime) | 8 (Hielo, Slime y Sombra) | 7 (Hielo, Slime y Sombra) |
+
+- **Bloque 1**: cada intento suma. Los ratos libres que antes eran espera ahora son residuos (44 en 10 minutos). Todos los catalizadores salieron de Slime porque el primero era al azar y después solo "conocía" ese: de ahí la decisión de conocerlos por elemento.
+- **Bloque 2**: con personalidades el laboratorio rinde más (16,3 ADN por segundo contra 12), porque el corral se acomoda solo y las positivas suman. Entregó 3 pedidos más y el ADN llegó más alto, pero sin pasar el triple de la próxima fusión más que 10 segundos.
+- **Bloque 3**: la ranura se abrió en el minuto 7 (11 especies). En los 3 minutos que quedaban no le alcanzó el ADN para una fusión con catalizador (cuestan unos 2.200). Entregó un pedido de personalidad. Las fusiones con catalizador se probaron a mano (capturas).
+- **Simulador, 20 minutos** (10 partidas, tiempo simulado): 13,5 especies, 19 pedidos, 0,6 fusiones con catalizador por partida, 1 pedido de personalidad y ninguno de variante. Después del minuto 10 el ADN se junta (hasta 4 a 5 veces la próxima fusión). **Para el pedido 4 (balance):** que los catalizadores y las variantes aparezcan más en los primeros 20 minutos y que el ADN no se acumule.
+
+Capturas en `capturas/pedido-3/`: residuo en el panel y en la máquina, corral con personalidades, herencia en el panel, cría Líder, catalizador en el panel, fusión con catalizador, Mutadex con variantes y sellos, el cartel de la ranura y pedidos que pagan un catalizador.
 
 ## La idea en una línea
 

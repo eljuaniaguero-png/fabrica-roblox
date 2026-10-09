@@ -35,6 +35,11 @@ export type Resultado = {
 	Razon: string?,
 	Residuos: number?,
 	Fabricado: string?,
+	-- Si salió: su personalidad, su variante (si llevaba catalizador) y si es la primera vez
+	-- que conseguís esa variante.
+	Personalidad: string?,
+	Variante: string?,
+	NuevaVariante: boolean?,
 }
 
 -- Premio grande por completar una generación de la Mutadex (o por llegar a una cantidad
@@ -44,6 +49,8 @@ export type Celebracion = {
 	Premio: number,
 	Completo: boolean, -- true si con esto completaste las 50
 	Pedidos: number?,
+	-- Algo nuevo que se abre (sin premio): "Ranura" = la ranura de catalizador.
+	Novedad: string?,
 }
 
 local N = Config.TamanioRueda

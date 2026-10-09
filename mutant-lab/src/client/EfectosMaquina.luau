@@ -12,15 +12,16 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService = game:GetService("RunService")
 local TweenService = game:GetService("TweenService")
 
+local Catalizadores = require(ReplicatedStorage.Shared.Catalizadores)
 local Config = require(ReplicatedStorage.Shared.Config)
 local Formato = require(ReplicatedStorage.Shared.Formato)
 local Fusion = require(ReplicatedStorage.Shared.Fusion)
 local Generador = require(ReplicatedStorage.Shared.Generador)
 local Paleta = require(ReplicatedStorage.Shared.Paleta)
+local Personalidades = require(ReplicatedStorage.Shared.Personalidades)
 local MiLab = require(script.Parent.MiLab)
 local Sonidos = require(script.Parent.Sonidos)
 local Carteles = require(script.Parent.UI.Carteles)
-local Catalizadores = require(ReplicatedStorage.Shared.Catalizadores)
 
 local M = Config.Maquina
 
@@ -107,8 +108,23 @@ local Efectos = {}
 -- Piezas de la animación
 ---------------------------------------------------------------------------
 
+-- La ranura de catalizador de arriba: sin candado cuando está abierta y del color del
+-- catalizador elegido (solo la ve el dueño del laboratorio).
+local ranura = cuerpo:FindFirstChild("Catalizador")
+local colorRanura = if ranura and ranura:IsA("BasePart") then ranura.Color else Paleta.Metal
+function Efectos.ranura(abierta: boolean, color: Color3?)
+	if not ranura or not ranura:IsA("BasePart") then
+		return
+	end
+	local candado = ranura:FindFirstChild("Candado")
+	if candado and candado:IsA("BillboardGui") then
+		candado.Enabled = not abierta
+	end
+	ranura.Color = color or colorRanura
+end
+
 -- Pone (o saca) una criatura chiquita dentro de una cápsula.
-function Efectos.mostrarEnCapsula(lado: string, clave: string?)
+function Efectos.mostrarEnCapsula(lado: string, clave: string?, personalidad: string?)
 	local cap = capsulas[lado]
 	if cap.Mini then
 		cap.Mini:Destroy()
@@ -116,7 +132,7 @@ function Efectos.mostrarEnCapsula(lado: string, clave: string?)
 	end
 	local c = if clave then Fusion.porClave(clave) else nil
 	if c then
-		local mini = Generador.crear(c, cap.Punto.CFrame, carpeta)
+		local mini = Generador.crear(c, cap.Punto.CFrame, carpeta, nil, personalidad)
 		mini:ScaleTo(M.EscalaEnCapsula)
 		cap.Mini = mini
 	end
@@ -214,8 +230,14 @@ local function soltar()
 end
 
 -- La criatura que sale de la cúpula (de frente a la cámara).
-local function crearEnSalida(c: Fusion.Criatura, silueta: boolean, mutante: boolean?): Model
-	local m = Generador.crear(c, salida.CFrame, nil, mutante)
+local function crearEnSalida(
+	c: Fusion.Criatura,
+	silueta: boolean,
+	mutante: boolean?,
+	personalidad: string?,
+	variante: string?
+): Model
+	local m = Generador.crear(c, salida.CFrame, nil, mutante, personalidad, variante)
 	if silueta then
 		Generador.silueta(m)
 	end
@@ -433,19 +455,32 @@ function Efectos.jugar(r: Fusion.Resultado)
 	Sonidos.secuencia({ 12, 16, 19, 24 }, 0.08, 0.35)
 	destello(Paleta.Texto)
 	silueta:Destroy()
-	criaturaSalida = crearEnSalida(c, false, r.Mutante)
+	criaturaSalida = crearEnSalida(c, false, r.Mutante, r.Personalidad, r.Variante)
+	local cat = Catalizadores.porClave(r.Variante)
+	if cat then
+		destello(cat.Color)
+	end
 	tubos(nil)
 	llenar(capsulas.A, ca.Color, 0, 0.6 * f)
 	llenar(capsulas.B, cb.Color, 0, 0.6 * f)
 	local mutante = r.Mutante == true
+	local personalidad = Personalidades.Datos[r.Personalidad or ""]
 	mostrarCartel(
-		if r.Nueva then "¡ESPECIE NUEVA!" else "Ya la tenías",
-		c.Nombre,
+		if r.Nueva
+			then "¡ESPECIE NUEVA!"
+			elseif r.NuevaVariante then "¡VARIANTE NUEVA!"
+			else "Ya la tenías",
+		Catalizadores.nombre(c.Nombre, r.Variante),
 		"Generación "
 			.. c.Gen
+			.. (if personalidad then " · " .. personalidad.Nombre else "")
 			.. (if r.Premio then " · +" .. Formato.numero(r.Premio) .. " ADN" else ""),
 		mutante,
-		if mutante then Paleta.Dorado elseif r.Nueva then Paleta.Acento else Paleta.Texto
+		if mutante
+			then Paleta.Dorado
+			elseif r.Nueva then Paleta.Acento
+			elseif cat then cat.Color
+			else Paleta.Texto
 	)
 	if mutante then
 		efectoMutante()

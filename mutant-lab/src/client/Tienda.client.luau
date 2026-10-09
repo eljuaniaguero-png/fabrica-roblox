@@ -358,10 +358,15 @@ local function ahora(nombre: string, nivel: number): string
 end
 
 ---------------------------------------------------------------------------
--- Catalizadores (Parte 3) y Premium (Parte 6)
+-- Catalizadores (no se venden: se arman con residuos) y Premium (Parte 6)
 ---------------------------------------------------------------------------
 
-proximamente("Catalizadores", "frasco", Paleta.Alerta, "Los catalizadores llegan pronto.")
+proximamente(
+	"Catalizadores",
+	"frasco",
+	Paleta.Alerta,
+	"No se compran: se arman en la máquina con " .. Config.Residuos.ParaCatalizador .. " residuos."
+)
 
 local _, listaPremium = pagina("Premium", "Con Robux. Todavía no están a la venta: muy pronto.")
 for i, p in Config.Premium do

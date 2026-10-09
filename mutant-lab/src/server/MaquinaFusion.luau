@@ -7,8 +7,10 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Catalizadores = require(ReplicatedStorage.Shared.Catalizadores)
 local Config = require(ReplicatedStorage.Shared.Config)
 local Costos = require(ReplicatedStorage.Shared.Costos)
+local Elementos = require(ReplicatedStorage.Shared.Elementos)
 local Fusion = require(ReplicatedStorage.Shared.Fusion)
 local Mejoras = require(ReplicatedStorage.Shared.Mejoras)
+local Personalidades = require(ReplicatedStorage.Shared.Personalidades)
 local Coleccion = require(script.Parent.Coleccion)
 local Corrales = require(script.Parent.Corrales)
 local Jugadores = require(script.Parent.Jugadores)
@@ -47,6 +49,25 @@ end
 
 local MaquinaFusion = {}
 
+-- Los catalizadores que conocés: el de cada elemento del que ya descubriste una especie (y los
+-- que ya tuviste alguna vez).
+function MaquinaFusion.conocidos(d: Jugadores.Datos): { string }
+	local elementos = {}
+	for clave in d.Especies do
+		local c = Fusion.porClave(clave)
+		for _, e in if c then Elementos.de(c) else {} do
+			elementos[e] = true
+		end
+	end
+	local conocidos = {}
+	for _, c in Catalizadores.Lista do
+		if elementos[c.Elemento] or d.CatalizadoresVistos[c.Clave] then
+			table.insert(conocidos, c.Clave)
+		end
+	end
+	return conocidos
+end
+
 -- Si hay residuos suficientes, los gasta y arma un catalizador al azar entre los que conocés
 -- (si todavía no conocés ninguno, uno cualquiera). Devuelve cuál, o nil.
 function MaquinaFusion.fabricar(d: Jugadores.Datos, rng: Random): string?
@@ -57,12 +78,7 @@ function MaquinaFusion.fabricar(d: Jugadores.Datos, rng: Random): string?
 	for _ = 1, hacen do
 		table.remove(d.Residuos, 1)
 	end
-	local conocidos = {}
-	for _, c in Catalizadores.Lista do
-		if d.CatalizadoresVistos[c.Clave] then
-			table.insert(conocidos, c.Clave)
-		end
-	end
+	local conocidos = MaquinaFusion.conocidos(d)
 	if #conocidos == 0 then
 		for _, c in Catalizadores.Lista do
 			table.insert(conocidos, c.Clave)
@@ -74,15 +90,36 @@ function MaquinaFusion.fabricar(d: Jugadores.Datos, rng: Random): string?
 	return clave
 end
 
+-- La personalidad del padre elegido: la que pidió el cliente si tiene una así, o la de la
+-- primera criatura de esa especie si no dijo cuál. nil si no tiene.
+local function personalidadPadre(d: Jugadores.Datos, clave: string, pedida: string?): string?
+	for _, u in d.Criaturas do
+		if u.Clave == clave and (pedida == nil or u.Personalidad == pedida) then
+			return u.Personalidad
+		end
+	end
+	return nil
+end
+
+-- ¿Ya se puede usar la ranura de catalizador?
+function MaquinaFusion.ranuraAbierta(d: Jugadores.Datos): boolean
+	return Jugadores.cantidadEspecies(d) >= Config.Residuos.RanuraDesde
+end
+
 -- Las reglas de la fusión sobre los datos de un jugador, sin avisarle a nadie (también la usa
--- el simulador de balance). `ahora` es os.clock() o la hora simulada. Devuelve el resultado y
--- las celebraciones de generación completa.
+-- el simulador de balance). `ahora` es os.clock() o la hora simulada. `personalidadA` y
+-- `personalidadB` dicen qué criatura de cada especie se usa (nil = cualquiera) y
+-- `catalizador`, el que va en la tercera ranura (nil = ninguno). Devuelve el resultado y las
+-- celebraciones de generación completa.
 function MaquinaFusion.aplicar(
 	d: Jugadores.Datos,
 	claveA: string,
 	claveB: string,
 	ahora: number,
-	rng: Random
+	rng: Random,
+	personalidadA: string?,
+	personalidadB: string?,
+	catalizador: string?
 ): (Fusion.Resultado, { Fusion.Celebracion })
 	local base: Fusion.Resultado = { Ok = false, A = claveA, B = claveB }
 	if ahora < d.OcupadoHasta then
@@ -90,13 +127,20 @@ function MaquinaFusion.aplicar(
 		return base, {}
 	end
 	-- Hace falta tener una criatura de cada una (los padres no se gastan).
-	if Jugadores.contar(d, claveA) < 1 or Jugadores.contar(d, claveB) < 1 then
+	local pa = personalidadPadre(d, claveA, personalidadA)
+	local pb = personalidadPadre(d, claveB, personalidadB)
+	local ca, cb = Fusion.porClave(claveA), Fusion.porClave(claveB)
+	if not ca or not cb or not pa or not pb then
 		base.Motivo = "NoTenes"
 		return base, {}
 	end
-	local ca, cb = Fusion.porClave(claveA), Fusion.porClave(claveB)
-	if not ca or not cb then
-		base.Motivo = "NoTenes"
+	-- El catalizador hay que tenerlo y la ranura tiene que estar abierta.
+	local cat = Catalizadores.porClave(catalizador)
+	if
+		catalizador ~= nil
+		and (not cat or (d.Catalizadores[cat.Clave] or 0) < 1 or not MaquinaFusion.ranuraAbierta(d))
+	then
+		base.Motivo = "SinCatalizador"
 		return base, {}
 	end
 
@@ -132,7 +176,20 @@ function MaquinaFusion.aplicar(
 	if mutante then
 		d.Mutantes[hijo.Clave] = true
 	end
-	Jugadores.agregarCriatura(d, hijo.Clave, mutante)
+	-- La personalidad sale de la tabla de herencia; algunos catalizadores la cambian.
+	local personalidad = Personalidades.heredar(pa, pb) or Personalidades.deEspecie(hijo.Bases)
+	local variante: string? = nil
+	local nuevaVariante: boolean? = nil
+	if cat then
+		d.Catalizadores[cat.Clave] -= 1
+		variante = cat.Clave
+		personalidad = cat.Personalidad or personalidad
+		local vistas = d.Variantes[hijo.Clave] or {}
+		nuevaVariante = not vistas[cat.Clave]
+		vistas[cat.Clave] = true
+		d.Variantes[hijo.Clave] = vistas
+	end
+	Jugadores.agregarCriatura(d, hijo.Clave, mutante, personalidad, variante)
 	local celebraciones = Coleccion.revisarGeneraciones(d)
 	d.OcupadoHasta = ahora + Config.Maquina.Espera * Mejoras.factorRapidez(d.Mejoras.Rapida)
 	return {
@@ -144,23 +201,58 @@ function MaquinaFusion.aplicar(
 		Mutante = mutante,
 		Costo = costo,
 		Premio = premio,
+		Personalidad = personalidad,
+		Variante = variante,
+		NuevaVariante = nuevaVariante,
 	},
 		celebraciones
 end
 
+-- Un texto corto o nil (lo demás no se acepta).
+local function textoOpcional(x: unknown): (boolean, string?)
+	if x == nil then
+		return true, nil
+	end
+	if typeof(x) == "string" and #x <= 16 then
+		return true, x :: string
+	end
+	return false, nil
+end
+
 -- Pide una fusión con una criatura de cada especie (también la usa el jugador automático de
 -- prueba). Devuelve lo que le contestó al cliente.
-function MaquinaFusion.pedir(jugador: Player, a: unknown, b: unknown): Fusion.Resultado?
+function MaquinaFusion.pedir(
+	jugador: Player,
+	a: unknown,
+	b: unknown,
+	pa: unknown?,
+	pb: unknown?,
+	catalizador: unknown?
+): Fusion.Resultado?
 	-- Nunca confiar en lo que manda el cliente.
 	if typeof(a) ~= "string" or typeof(b) ~= "string" or #a > 12 or #b > 12 then
+		return nil
+	end
+	local okA, personalidadA = textoOpcional(pa)
+	local okB, personalidadB = textoOpcional(pb)
+	local okC, cat = textoOpcional(catalizador)
+	if not okA or not okB or not okC then
 		return nil
 	end
 	local d = Jugadores.obtener(jugador)
 	if not d then
 		return nil
 	end
-	local resultado, celebraciones =
-		MaquinaFusion.aplicar(d, a :: string, b :: string, os.clock(), azar)
+	local resultado, celebraciones = MaquinaFusion.aplicar(
+		d,
+		a :: string,
+		b :: string,
+		os.clock(),
+		azar,
+		personalidadA,
+		personalidadB,
+		cat
+	)
 	if resultado.Ok or resultado.Motivo == "NoReaccionan" then
 		Jugadores.publicar(jugador)
 	end
@@ -185,8 +277,10 @@ function MaquinaFusion.pedir(jugador: Player, a: unknown, b: unknown): Fusion.Re
 	return resultado
 end
 
-Remotos.PedirFusion.OnServerEvent:Connect(function(jugador: Player, a: unknown, b: unknown)
-	MaquinaFusion.pedir(jugador, a, b)
-end)
+Remotos.PedirFusion.OnServerEvent:Connect(
+	function(jugador: Player, a: unknown, b: unknown, pa: unknown, pb: unknown, cat: unknown)
+		MaquinaFusion.pedir(jugador, a, b, pa, pb, cat)
+	end
+)
 
 return MaquinaFusion
