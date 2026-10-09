@@ -32,11 +32,13 @@ export type Resultado = {
 	Premio: number?, -- ADN de premio por descubrirla
 }
 
--- Premio grande por completar una generación de la Mutadex.
+-- Premio grande por completar una generación de la Mutadex (o por llegar a una cantidad
+-- de pedidos entregados: entonces viene `Pedidos` y Gen es 0).
 export type Celebracion = {
 	Gen: number,
 	Premio: number,
 	Completo: boolean, -- true si con esto completaste las 50
+	Pedidos: number?,
 }
 
 local N = Config.TamanioRueda

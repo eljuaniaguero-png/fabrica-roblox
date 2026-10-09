@@ -27,7 +27,7 @@ local function carpetaCriaturas(corral: Instance): Folder
 	return nueva
 end
 
-type Lugar = { Corral: number, Mutante: boolean, Existe: boolean }
+type Lugar = { Corral: number, Clave: string, Mutante: boolean, Existe: boolean }
 
 function Corrales.actualizar(jugador: Player)
 	local d = Jugadores.obtener(jugador)
@@ -36,29 +36,26 @@ function Corrales.actualizar(jugador: Player)
 		return
 	end
 	local corrales = lab:WaitForChild("Corrales")
-	local activas = Mejoras.activas(d.Especies, d.Mejoras.Corrales)
+	local activas = Mejoras.activas(d.Criaturas, d.Mejoras.Corrales)
 
-	-- Dónde tiene que estar cada criatura activa.
-	local deseado: { [string]: Lugar } = {}
-	for i, c in activas do
-		deseado[c.Clave] = {
+	-- Dónde tiene que estar cada criatura activa (por su número: puede haber varias iguales).
+	local deseado: { [number]: Lugar } = {}
+	for i, a in activas do
+		deseado[a.Id] = {
 			Corral = math.ceil(i / Config.Corrales.PorCorral),
-			Mutante = d.Mutantes[c.Clave] == true,
+			Clave = a.Criatura.Clave,
+			Mutante = a.Mutante,
 			Existe = false,
 		}
 	end
 
-	-- Sacar las que sobran o cambiaron (de corral o a mutante).
+	-- Sacar las que sobran o cambiaron de corral.
 	for k = 1, Config.Corrales.Maximo do
 		local corral = corrales:FindFirstChild("Corral" .. k)
 		if corral then
 			for _, m in carpetaCriaturas(corral):GetChildren() do
-				local lugar = deseado[m:GetAttribute("Clave") :: string]
-				if
-					not lugar
-					or lugar.Corral ~= k
-					or (m:GetAttribute("Mutante") == true) ~= lugar.Mutante
-				then
+				local lugar = deseado[m:GetAttribute("Id") :: number]
+				if not lugar or lugar.Corral ~= k then
 					m:Destroy()
 				else
 					lugar.Existe = true
@@ -68,16 +65,17 @@ function Corrales.actualizar(jugador: Player)
 	end
 
 	-- Poner las que faltan, en un lugar al azar de la zona del corral.
-	for clave, lugar in deseado do
+	for id, lugar in deseado do
 		local corral = corrales:FindFirstChild("Corral" .. lugar.Corral)
 		local zona = corral and corral:FindFirstChild("Zona")
-		local c = Fusion.porClave(clave)
+		local c = Fusion.porClave(lugar.Clave)
 		if not lugar.Existe and corral and zona and zona:IsA("BasePart") and c then
 			local x = (azar:NextNumber() - 0.5) * zona.Size.X
 			local z = (azar:NextNumber() - 0.5) * zona.Size.Z
 			local punto = (zona.CFrame * CFrame.new(x, 0, z)).Position
 			local donde = CFrame.new(punto) * CFrame.Angles(0, azar:NextNumber(0, 2 * math.pi), 0)
 			local modelo = Generador.crear(c, donde, nil, lugar.Mutante)
+			modelo:SetAttribute("Id", id)
 			modelo:SetAttribute("ZonaCFrame", zona.CFrame)
 			modelo:SetAttribute("ZonaTamano", zona.Size)
 			modelo.Parent = carpetaCriaturas(corral)
@@ -85,11 +83,11 @@ function Corrales.actualizar(jugador: Player)
 	end
 
 	-- ADN por segundo de cada corral, para su cartel.
-	local grupos: { [number]: { Fusion.Criatura } } = {}
-	for i, c in activas do
+	local grupos: { [number]: { Mejoras.Activa } } = {}
+	for i, a in activas do
 		local k = math.ceil(i / Config.Corrales.PorCorral)
 		grupos[k] = grupos[k] or {}
-		table.insert(grupos[k], c)
+		table.insert(grupos[k], a)
 	end
 	local porCorral = {}
 	for k = 1, Config.Corrales.Maximo do

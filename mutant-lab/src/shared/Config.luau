@@ -10,21 +10,25 @@ local Config = {
 	-- Economía (ficha, punto 6). Balance de la Parte 5: una especie nueva por minuto más o
 	-- menos, unas 10 a los 10 minutos y nunca más de 3 minutos sin una fusión nueva posible.
 	-- Los tiempos medidos están en la ficha ("Notas de la Parte 5").
+	-- Pedidos (versión 9): las fusiones cuestan más y los precios de la tienda se miden en
+	-- fusiones, así el ADN no se junta sin uso (simulado con Prueba.Simular, ver la ficha).
 	Economia = {
-		ADNInicial = 100, -- justo lo que cuesta la primera fusión...
+		ADNInicial = 150, -- justo lo que cuesta la primera fusión...
 		BasesIniciales = { 1, 2 }, -- ...con dos bases vecinas (Glupona y Rámulo): sale en el segundo 1
-		CostoGen2 = 100,
-		SubaPorEspecie = 1.3, -- el costo sube un 30 % por cada especie que ya tenés...
+		CostoGen2 = 150,
+		SubaPorEspecie = 1.4, -- el costo sube un 40 % por cada especie que ya tenés...
 		EspeciesSinSuba = 3, -- ...a partir de la tercera
-		MultiplicadorGen3 = 3,
+		MultiplicadorGen3 = 2,
 		ADNPorGen = { 1, 2, 6 }, -- ADN por segundo de cada criatura activa en un corral, según su generación
 	},
 
-	-- Tienda de especies base: el precio depende de cuántas bases ya tenés.
-	-- PreciosBases[1] es lo que cuesta la primera que comprás (la 3.ª base), y así.
-	-- Cada base nueva abre de 3 a 5 fusiones: estos precios son los que marcan el ritmo.
+	-- Todo lo que se compra con ADN cuesta "fusiones": un número x lo que cuesta ahora una
+	-- fusión de gen 2. Así los precios crecen junto con el juego y nunca hace falta juntar más
+	-- del triple de una fusión (pedidos, punto 7: "que el ADN sea el límite").
 	Tienda = {
-		PreciosBases = { 450, 1350, 3200, 6800, 16000, 36000, 80000, 180000 },
+		FactorBase = 2.5, -- una especie base nueva (cada una abre de 3 a 5 fusiones)
+		-- Otra copia de una base que ya descubriste (para pedidos o si entregaste la tuya).
+		FactorCopia = 0.6,
 	},
 
 	-- Corrales: solo las criaturas que están en un corral generan ADN.
@@ -34,26 +38,27 @@ local Config = {
 	},
 
 	-- Mejoras que se compran con ADN en la tienda.
-	-- Precios[i] es lo que cuesta pasar al nivel siguiente; Inicial es el nivel con el que arrancás.
+	-- Precios[i] es lo que cuesta pasar al nivel siguiente, en fusiones de gen 2 (ver Tienda);
+	-- Inicial es el nivel con el que arrancás.
 	Mejoras = {
 		Corrales = {
 			Nombre = "Más corrales",
 			Descripcion = "Abre un corral: +4 criaturas trabajando",
 			Inicial = 1,
-			Precios = { 300, 5000, 25000 }, -- el primero es barato: si no, frena la 4.ª base
+			Precios = { 2, 2.5, 3 },
 		},
 		Rapida = {
 			Nombre = "Fusión rápida",
 			Descripcion = "La máquina trabaja más rápido",
 			Inicial = 0,
-			Precios = { 500, 3000, 12000 },
+			Precios = { 1.5, 2, 2.5 },
 			Factores = { 1, 0.8, 0.65, 0.5 }, -- duración de la fusión en cada nivel (0 a 3)
 		},
 		Nutrientes = {
 			Nombre = "Nutrientes",
 			Descripcion = "+25 % de ADN por segundo",
 			Inicial = 0,
-			Precios = { 600, 2500, 8000, 25000, 70000 },
+			Precios = { 1, 1.5, 2, 2.5, 3 },
 			Bonus = 0.25, -- por nivel
 		},
 	},
@@ -75,6 +80,44 @@ local Config = {
 		PorGeneracion = { 1000, 10000, 25000 }, -- premio grande por completar la gen 1, 2 y 3
 	},
 
+	-- Pedidos de los clientes (ficha, "Pedidos"): 3 a la vez en el tablero del laboratorio.
+	-- Entregar una criatura la saca de tu laboratorio (la Mutadex no se pierde) y paga ADN.
+	Pedidos = {
+		Activos = 3,
+		Nuevos = 1, -- de los activos, cuántos piden una especie que todavía no descubriste
+		EsperaDescarte = 120, -- segundos hasta que llega otro pedido después de descartar uno
+		-- Premio en ADN = lo que cuesta ahora una fusión de gen 2 x este factor.
+		Premio = {
+			Facil = 0.9, -- especies base
+			Media = 1.2, -- generación 2, dos criaturas, o una base que todavía no descubriste
+			Dificil = 2, -- generación 3, o una gen 2 nueva
+			Mutante = 4,
+		},
+		ExtraPorCantidad = 1.2, -- los que piden dos criaturas pagan un poco más
+		PremioMinimo = 40,
+		ProbabilidadPista = 0.3, -- los que no son fáciles a veces traen una pista gratis
+		ProbabilidadDescubierta = 0.75, -- los comunes casi siempre piden especies que ya tenés
+		ProbabilidadMutante = 0.08, -- un pedido común puede ser "cualquier mutante"...
+		MutanteDesde = 8, -- ...cuando ya descubriste esta cantidad de especies
+		Hito = 10, -- cada 10 pedidos entregados, un premio extra...
+		PremioHito = 2, -- ...de esto x el costo de una fusión de gen 2
+		-- Clientes: nombres inventados (el color del muñequito sale de Paleta.Papelitos).
+		Clientes = {
+			"Doña Burbuja",
+			"Profe Tornillo",
+			"Tía Gelatina",
+			"Don Pepino",
+			"Capitana Grumo",
+			"Lola Chispitas",
+			"Tito Pegote",
+			"Señor Calcetín",
+			"Abuela Fideo",
+			"Mister Pompón",
+			"Chef Albóndiga",
+			"Baronesa Merengue",
+		},
+	},
+
 	-- Pistas de las siluetas
 	Pistas = {
 		CostoBase = 100, -- cada pista cuesta CostoBase x (pistas que ya compraste + 1)
@@ -94,6 +137,17 @@ local Config = {
 		Activo = false,
 		ADN = 100000,
 		ProbabilidadMutante = 1 / 4,
+		-- Jugador automático (server/Robot.luau): segundos que tarda en cada cosa, como una
+		-- persona que mira las animaciones y camina hasta la tienda.
+		Robot = {
+			Pensar = 3, -- mirar una pareja en el panel o no hacer nada
+			Fusion = 7, -- animación entera y volver al panel
+			Entrega = 5, -- abrir el tablero, elegir y ver la despedida
+			Compra = 6, -- caminar hasta el mostrador y comprar
+			Descarte = 3,
+			Trabado = 150, -- descarta un pedido que lleva esto sin poder cumplirse
+			SinSaber = 30, -- segundos seguidos sin nada útil para contarlo como "sin saber qué hacer"
+		},
 	},
 
 	-- Sonido: un solo sample de piano, el tono cambia con PlaybackSpeed.

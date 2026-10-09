@@ -40,15 +40,34 @@ if Config.Prueba.Activo or RunService:IsStudio() then
 		if not jugador or not d then
 			return 0
 		end
+		-- Descubre la especie y, si no tenía ninguna, le da una criatura.
 		for _, clave in claves do
 			d.Especies[clave] = true
+			if Jugadores.contar(d, clave) == 0 then
+				Jugadores.agregarCriatura(d, clave, false)
+			end
 		end
 		Jugadores.publicar(jugador)
 		Corrales.actualizar(jugador)
 		return Jugadores.cantidadEspecies(d)
 	end)
 
-	-- Marca como mutantes especies que el jugador ya tiene (para ver la estrella dorada).
+	-- Copias extra de especies (para probar pedidos de dos criaturas).
+	funcion(carpeta, "DarCriaturas", function(nombre: string, claves: { string }): number
+		local jugador, d = buscar(nombre)
+		if not jugador or not d then
+			return 0
+		end
+		for _, clave in claves do
+			d.Especies[clave] = true
+			Jugadores.agregarCriatura(d, clave, false)
+		end
+		Jugadores.publicar(jugador)
+		Corrales.actualizar(jugador)
+		return #d.Criaturas
+	end)
+
+	-- Vuelve mutante una criatura de cada especie que el jugador ya tiene (estrella dorada).
 	funcion(carpeta, "DarMutantes", function(nombre: string, claves: { string }): number
 		local jugador, d = buscar(nombre)
 		if not jugador or not d then
@@ -56,9 +75,13 @@ if Config.Prueba.Activo or RunService:IsStudio() then
 		end
 		local n = 0
 		for _, clave in claves do
-			if d.Especies[clave] then
-				d.Mutantes[clave] = true
-				n += 1
+			for _, u in d.Criaturas do
+				if u.Clave == clave and not u.Mutante then
+					u.Mutante = true
+					d.Mutantes[clave] = true
+					n += 1
+					break
+				end
 			end
 		end
 		Jugadores.publicar(jugador)
@@ -100,6 +123,44 @@ if Config.Prueba.Activo or RunService:IsStudio() then
 			return true
 		end
 	)
+
+	-- Simulador de balance: `partidas` partidas de `segundos` con el jugador automático.
+	-- `cambios` prueba otros números de Config sin tocar el código (ver Simulador.conCambios).
+	funcion(
+		carpeta,
+		"Simular",
+		function(segundos: number?, partidas: number?, cambios: { [string]: any }?): string
+			local Simulador = require(script.Parent.Simulador) :: any
+			return Simulador.conCambios(cambios, function()
+				return Simulador.resumen(segundos or 600, partidas or 20)
+			end)
+		end
+	)
+
+	-- El jugador automático juega de verdad (tiempo real) con este jugador, desde donde esté.
+	funcion(carpeta, "Jugar", function(nombre: string, segundos: number?): boolean
+		local jugador = buscar(nombre)
+		if not jugador then
+			return false
+		end
+		local JugadorAutomatico = require(script.Parent.JugadorAutomatico) :: any
+		return JugadorAutomatico.iniciar(jugador, segundos or 600)
+	end)
+
+	funcion(carpeta, "Informe", function(): string
+		local JugadorAutomatico = require(script.Parent.JugadorAutomatico) :: any
+		return JugadorAutomatico.informe()
+	end)
+
+	-- Una sola partida simulada, paso a paso (para ver qué hace el jugador automático).
+	funcion(carpeta, "Traza", function(segundos: number?, cambios: { [string]: any }?): string
+		local Simulador = require(script.Parent.Simulador) :: any
+		return Simulador.conCambios(cambios, function()
+			local registro = {}
+			Simulador.jugar(segundos or 600, 1, registro)
+			return table.concat(registro, "\n")
+		end)
+	end)
 
 	funcion(carpeta, "Guardar", function(nombre: string): boolean
 		local jugador = buscar(nombre)

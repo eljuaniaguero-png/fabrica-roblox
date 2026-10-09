@@ -111,6 +111,42 @@ local function actualizarPorSegundo()
 end
 
 ---------------------------------------------------------------------------
+-- Pedidos entregados (debajo del ADN): tocarlo abre el tablero
+---------------------------------------------------------------------------
+
+local P = Config.Pedidos
+local TP = Tema.Pedidos
+local pedidos = UI.contador({
+	Icono = "caja",
+	Color = Paleta.Dorado,
+	Texto = "0",
+	Sub = "",
+	Ancho = TP.ContadorHUD.X,
+	Alto = TP.ContadorHUD.Y,
+	Boton = true,
+})
+pedidos.Marco.Name = "Pedidos"
+pedidos.Marco.Position = UDim2.fromOffset(M, M + 96 + Tema.Separacion)
+pedidos.Marco.Parent = capa.Raiz
+UI.tocable(pedidos.Fondo :: TextButton, function()
+	Menus.alternar("Pedidos")
+end, pedidos.Marco)
+
+local entregadosAntes: number? = nil
+
+local function actualizarPedidos()
+	local n = (jugador:GetAttribute("Entregados") :: number?) or 0
+	local faltan = P.Hito - n % P.Hito
+	pedidos.Valor.Text = Formato.numero(n)
+	local sub = pedidos.Sub :: TextLabel
+	sub.Text = "premio en " .. faltan
+	if entregadosAntes and n > entregadosAntes then
+		pedidos.rebotar(0.18)
+	end
+	entregadosAntes = n
+end
+
+---------------------------------------------------------------------------
 -- Progreso de la Mutadex (arriba al centro)
 ---------------------------------------------------------------------------
 
@@ -222,6 +258,7 @@ end
 jugador:GetAttributeChangedSignal("ADN"):Connect(actualizarADN)
 jugador:GetAttributeChangedSignal("ADNPorSegundo"):Connect(actualizarPorSegundo)
 jugador:GetAttributeChangedSignal("Especies"):Connect(actualizarProgreso)
+jugador:GetAttributeChangedSignal("Entregados"):Connect(actualizarPedidos)
 local eventoAviso = remotos:WaitForChild("Aviso") :: RemoteEvent
 eventoAviso.OnClientEvent:Connect(function(texto: string, tipo: string?)
 	Notificaciones.mostrar(texto, tipo)
@@ -229,3 +266,4 @@ end)
 actualizarADN()
 actualizarPorSegundo()
 actualizarProgreso()
+actualizarPedidos()

@@ -13,7 +13,7 @@ function Economia.iniciar()
 		while true do
 			task.wait(1)
 			for jugador, d in Jugadores.todos() do
-				local activas = Mejoras.activas(d.Especies, d.Mejoras.Corrales)
+				local activas = Mejoras.activas(d.Criaturas, d.Mejoras.Corrales)
 				local porSegundo = Mejoras.porSegundo(activas, d.Mejoras.Nutrientes)
 				d.ADN += porSegundo
 				jugador:SetAttribute("ADN", math.floor(d.ADN))

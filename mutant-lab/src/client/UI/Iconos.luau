@@ -234,6 +234,13 @@ local DIBUJOS: { [string]: Dibujo } = {
 		forma(l, 0.5, 0.5, 1, 1, c, 0.5)
 	end,
 
+	-- Pedidos: una caja con cinta.
+	caja = function(l, c)
+		forma(l, 0.5, 0.6, 0.78, 0.6, c, 0.12)
+		forma(l, 0.5, 0.3, 0.9, 0.2, Paleta.claro(c, 0.25), 0.2, 0, 2)
+		forma(l, 0.5, 0.52, 0.14, 0.78, Paleta.oscuro(c, 0.45), 0.2, 0, 3)
+	end,
+
 	-- "=" entre los padres y el resultado.
 	igual = function(l, c)
 		forma(l, 0.5, 0.34, 0.86, 0.2, c, 0.5)

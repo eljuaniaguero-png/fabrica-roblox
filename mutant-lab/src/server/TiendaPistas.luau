@@ -27,14 +27,19 @@ local function comprar(jugador: Player, clave: unknown)
 		Remotos.Aviso:FireClient(jugador, "Ya tenés todas las pistas de esta silueta.")
 		return
 	end
-	local costo = Pistas.costo(d.PistasCompradas)
-	if d.ADN < costo then
-		Remotos.Aviso:FireClient(jugador, "Te falta ADN para la pista.")
-		return
+	-- Las pistas gratis (premios de pedidos) se usan primero y no suben el precio.
+	if d.PistasGratis > 0 then
+		d.PistasGratis -= 1
+	else
+		local costo = Pistas.costo(d.PistasCompradas)
+		if d.ADN < costo then
+			Remotos.Aviso:FireClient(jugador, "Te falta ADN para la pista.")
+			return
+		end
+		d.ADN -= costo
+		d.PistasCompradas += 1
 	end
-	d.ADN -= costo
 	d.Pistas[c.Clave] = ya + 1
-	d.PistasCompradas += 1
 	Jugadores.publicar(jugador)
 	Remotos.Compra:FireClient(jugador, "Pista", c.Clave)
 end

@@ -10,6 +10,7 @@ Versión 5 (2026-10-08): **Parte 4 hecha** (laboratorio y economía). Ver "Notas
 Versión 6 (2026-10-08): **guía visual nueva** (laboratorio de caricatura de noche, ver "Guía de estilo") y **mapa nuevo**: plaza en el centro y 6 laboratorios alrededor (pedido del usuario, ver "Notas del mapa nuevo"). Ya tienen el estilo nuevo el mapa, la máquina y las criaturas. **Falta el HUD y los menús**, que siguen con el estilo caramelo.
 Versión 7 (2026-10-08): **Parte 5 hecha** (guardado, balance y pulido), sobre la rama de la interfaz nueva (HUD nuevo; la Mutadex, la tienda y el panel de fusión siguen con el estilo viejo hasta los Bloques 3 a 6 del rediseño). Ver "Notas de la Parte 5".
 Versión 8 (2026-10-09): **interfaz terminada**: el panel de fusión, la Mutadex, la tienda y los festejos ya usan los componentes de `client/UI` (pedido 1 de `ORDEN-PEDIDOS.md`). Ver "Notas de la interfaz terminada".
+Versión 9 (2026-10-09): **Pedidos** (pedido 2 de `ORDEN-PEDIDOS.md`): clientes que piden criaturas, inventario de criaturas y balance nuevo del ADN. Ver "Pedidos".
 Próximo punto de control: **prototipo jugable** (Partes 1 a 5).
 
 ## Guía de estilo: laboratorio de caricatura de noche (versión 6)
@@ -354,6 +355,63 @@ Toda la interfaz se arma por código con las piezas de `client/UI` (colores de `
 - **Herramientas de prueba nuevas** (solo en Studio): `DarMutantes` y `Reiniciar` (vuelve a jugador nuevo).
 - **Pendiente**: quedan emojis en carteles del mundo (corrales "🧬 +N" y "🔒 Se abre en la tienda", "⭐" en la pantalla de la Mutadex de la pared) y en los íconos de personalidad sobre la cabeza (que todavía no se usan). Con un menú abierto, tocar un botón del HUD primero cierra el menú.
 - **Probado** (2026-10-09) en computadora y en celular simulado (844 × 390): fusión real con las cuatro situaciones del botón, compra de pista, compra de base y de mejora, festejos encolados, Misiones y Ajustes. Consola sin errores. Capturas en `capturas/pedido-1/final`.
+
+## Pedidos (versión 9)
+
+El jugador descubría especies pero no tenía para qué usarlas, y el ADN le sobraba. Ahora las criaturas sirven para cumplir pedidos de clientes, y el ADN es el límite.
+
+### Criaturas y Mutadex (cambio de fondo)
+- **La Mutadex es lo que descubriste y nunca se pierde.** Aparte, tenés **criaturas** en el laboratorio, una por una: la primera de cada especie y cada copia que hagas.
+- Cada fusión que sale bien suma una criatura, **también si la especie ya la tenías** (el panel avisa "Ya la tenés: sale otro ... para tus pedidos", pero deja fusionar).
+- Para fusionar hace falta tener al menos una criatura de cada padre (los padres no se gastan). Las que trabajan en los corrales son las de mayor generación, hasta el tope, y puede haber varias iguales.
+- En la tienda, las bases que ya descubriste se compran como **copias** (0,6 fusiones): sirven para pedidos o para reponer una que entregaste.
+- El panel de fusión muestra cuántas tenés de cada una ("Glumulo ×2") y la ficha de la Mutadex dice "En tu laboratorio: N".
+- Los guardados viejos se convierten solos: una criatura por especie descubierta (guardado versión 2).
+
+### El tablero
+- Un **tablero de pedidos** en cada laboratorio (cerca de la entrada, al costado del camino a la máquina), con pantalla, borde de neón verde y la E para abrirlo. También se abre tocando el **contador de pedidos del HUD** (debajo del ADN), que muestra cuántos entregaste y cuántos faltan para el premio.
+- **3 pedidos activos**, cada uno con un **cliente** inventado (Doña Burbuja, Profe Tornillo, Tía Gelatina, Don Pepino, Capitana Grumo, Lola Chispitas, Tito Pegote, Señor Calcetín, Abuela Fideo, Mister Pompón, Chef Albóndiga y Baronesa Merengue), un muñequito de color, lo que pide, el premio y cuántas criaturas tuyas sirven.
+- **Tipos de pedido** (salen solos de las 50 especies):
+  - Por rasgo: "Algo de tipo fuego con alas", "Algo con cuernos y con cola". Los rasgos salen de las piezas: hojas, hongo, cuernos, orejas enormes, pico, antenas, tres ojos, cola, alas, dos patas y seis patas (`shared/Rasgos.luau`).
+  - Por generación: "Una criatura de generación 2 de tipo agua".
+  - Por cantidad: "Dos criaturas de tipo planta" (se entregan dos).
+  - Especie exacta: "Un Glumulo", solo de especies que ya descubriste.
+  - Mutante: "Cualquier mutante", desde las 8 especies y con premio grande.
+- **Uno de los tres pide algo nuevo** (cartel "¡Algo nuevo!"): una especie que podés hacer con tus bases pero todavía no descubriste, pedida de forma que ninguna de las tuyas sirva. Los otros dos se arman con lo que ya tenés o podés hacer.
+- **Decisión**: nunca se pide como única opción la base de la que tenés una sola (la necesitás para fusionar); de esas solo se piden "dos de tipo ...".
+- **Entregar**: se elige en una lista de las criaturas que sirven (si hay una sola, ya queda elegida). Avisa si es tu última de esa especie. La criatura **se despide**: salta dos veces en el globo del pedido, vuela hacia el cliente, que dice "¡Gracias!" y le sale un corazón. Después llega otro pedido.
+- **Premio** según la dificultad, medido en fusiones de gen 2 (así crece con el juego): fácil 0,9; media 1,2; difícil 2; mutante 4; los de dos criaturas x1,2. Los que no son fáciles a veces traen **una pista gratis** (la próxima pista no se cobra). Los catalizadores como premio quedan para el pedido 3.
+- **Descartar**: la X de cada pedido. El lugar queda vacío 2 minutos, con cuenta regresiva.
+- **Cada 10 pedidos**, un premio extra de 2 fusiones con su cartel y papelitos.
+- Todo se valida en el servidor (`server/Tablero.luau`): que el pedido exista, que las criaturas cumplan y que las tengas. Los números están en `Config.Pedidos`.
+
+### Que el ADN sea el límite
+- **Todo lo que se compra cuesta "fusiones"**: un número x lo que cuesta ahora una fusión de gen 2. Base nueva: 2,5. Copia de base: 0,6. Más corrales: 2 / 2,5 / 3. Fusión rápida: 1,5 / 2 / 2,5. Nutrientes: 1 / 1,5 / 2 / 2,5 / 3. Antes había precios fijos (hasta 180.000) y para comprar una base o un corral había que juntar mucho más que el triple de una fusión.
+- **Fusiones más caras**: 150 (antes 100) y suben 40 % por especie (antes 30 %). La de generación 3 cuesta el doble de una de gen 2 (antes el triple), para que sus pedidos convengan. El ADN inicial pasa a 150, justo la primera fusión.
+- Se ajustó con un **simulador** (`server/Simulador.luau`, `ServerStorage.Prueba.Simular`): juega partidas de 10 minutos con el jugador automático y las reglas de verdad, y prueba variantes de Config sin reiniciar. Con los números elegidos (30 partidas): 11 especies, 14 pedidos entregados, el ADN pasa del triple de la próxima fusión unos 10 segundos por partida (justo después de cobrar un premio) y nunca se queda sin nada útil para hacer.
+- **El jugador automático** (`server/Robot.luau`) juega como uno nuevo que no conoce la regla: mira parejas en el panel (que le dice si reaccionan y si son nuevas), fusiona lo nuevo, entrega pedidos sin dar su última criatura de cada especie, compra copias y bases, abre corrales y, si le sobra ADN, compra mejoras. Tarda 3 s en pensar, 7 s por fusión (mira la animación), 5 s por entrega y 6 s por compra (camina a la tienda).
+
+### Prueba de 10 minutos como jugador nuevo (2026-10-09, en Studio, tiempo real)
+Con `ServerStorage.Prueba.Jugar` el jugador automático jugó 10 minutos con las funciones de verdad del servidor (se ven las animaciones, las despedidas y los festejos):
+
+| Minuto | Especies | ADN | ADN/s | Entregados | Próxima fusión |
+|---|---|---|---|---|---|
+| 1 | 4 | 163 | 5 | 2 | 210 |
+| 2 | 5 | 1 | 6 | 3 | 294 |
+| 3 | 6 | 303 | 7 | 6 | 412 |
+| 4 | 7 | 199 | 12 | 8 | 576 |
+| 5 | 8 | 785 | 12 | 10 | 807 |
+| 6 | 9 | 350 | 12 | 12 | 1.129 |
+| 7 | 10 | 573 | 12 | 13 | 1.581 |
+| 8 | 11 | 1.180 | 12 | 14 | 2.214 |
+| 9 | 11 | 572 | 12 | 14 | 2.214 |
+
+- **Especies**: 11 (9 descubiertas). Nuevas en 0:03, 0:48, 1:29, 2:33, 3:51, 4:53, 5:02, 6:09 y 7:44.
+- **Pedidos entregados**: 14 (y cobró el premio de los 10). Hizo 11 fusiones, 21 compras (casi todas copias de bases para pedidos) y descartó 3 pedidos.
+- **ADN máximo**: 2.129. El ADN pasó el triple de la próxima fusión 10 segundos en total (máximo 3,7 veces, justo después de cobrar un pedido).
+- **Veces sin saber qué hacer**: 0. Ojo: el jugador automático siempre tiene parejas para mirar en el panel; una persona que no prueba sistemáticamente puede trabarse más.
+- **Para mirar**: el ADN por segundo quedó en 12 desde el minuto 4: gastó todo en copias y pedidos y no abrió el segundo corral. Si en el juego de verdad se siente lento, bajar el precio del 2.º corral.
+- El guardado (versión 2) se probó cerrando y abriendo: volvieron las criaturas (con su mutante), los pedidos, los entregados y las pistas gratis.
 
 ## La idea en una línea
 

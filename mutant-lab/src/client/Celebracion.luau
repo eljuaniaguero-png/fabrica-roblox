@@ -19,14 +19,21 @@ local Celebracion = {}
 
 -- Encola el festejo y espera a que el cartel se vaya (la máquina los muestra de a uno).
 function Celebracion.mostrar(c: Fusion.Celebracion)
+	local titulo, detalle
+	if c.Pedidos then
+		titulo = "¡" .. c.Pedidos .. " PEDIDOS ENTREGADOS!"
+		detalle = "Tus clientes están felices"
+	elseif c.Completo then
+		titulo = "¡MUTADEX COMPLETA!"
+		detalle = "¡Descubriste las 50 especies!"
+	else
+		titulo = "¡GENERACIÓN " .. c.Gen .. " COMPLETA!"
+		detalle = "Descubriste todas las especies de la generación " .. c.Gen
+	end
 	Carteles.mostrarYEsperar({
-		Titulo = if c.Completo
-			then "¡MUTADEX COMPLETA!"
-			else "¡GENERACIÓN " .. c.Gen .. " COMPLETA!",
+		Titulo = titulo,
 		Texto = "+" .. Formato.numero(c.Premio) .. " ADN",
-		Detalle = if c.Completo
-			then "¡Descubriste las 50 especies!"
-			else "Descubriste todas las especies de la generación " .. c.Gen,
+		Detalle = detalle,
 		Color = Paleta.Dorado,
 		Duracion = C.DuracionFestejo,
 		AlMostrar = function()

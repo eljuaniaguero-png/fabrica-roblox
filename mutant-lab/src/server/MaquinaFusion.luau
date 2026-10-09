@@ -44,32 +44,32 @@ local function responder(jugador: Player, r: Fusion.Resultado)
 	end
 end
 
-local function pedir(jugador: Player, a: unknown, b: unknown)
-	-- Nunca confiar en lo que manda el cliente.
-	if typeof(a) ~= "string" or typeof(b) ~= "string" or #a > 12 or #b > 12 then
-		return
-	end
-	local d = Jugadores.obtener(jugador)
-	if not d then
-		return
-	end
-	local claveA, claveB = a :: string, b :: string
-	local base: Fusion.Resultado = { Ok = false, A = claveA, B = claveB }
+local MaquinaFusion = {}
 
-	local ahora = os.clock()
+-- Las reglas de la fusión sobre los datos de un jugador, sin avisarle a nadie (también la usa
+-- el simulador de balance). `ahora` es os.clock() o la hora simulada. Devuelve el resultado y
+-- las celebraciones de generación completa.
+function MaquinaFusion.aplicar(
+	d: Jugadores.Datos,
+	claveA: string,
+	claveB: string,
+	ahora: number,
+	rng: Random
+): (Fusion.Resultado, { Fusion.Celebracion })
+	local base: Fusion.Resultado = { Ok = false, A = claveA, B = claveB }
 	if ahora < d.OcupadoHasta then
 		base.Motivo = "Ocupada"
-		responder(jugador, base)
-		return
+		return base, {}
 	end
-	if not d.Especies[claveA] or not d.Especies[claveB] then
+	-- Hace falta tener una criatura de cada una (los padres no se gastan).
+	if Jugadores.contar(d, claveA) < 1 or Jugadores.contar(d, claveB) < 1 then
 		base.Motivo = "NoTenes"
-		responder(jugador, base)
-		return
+		return base, {}
 	end
 	local ca, cb = Fusion.porClave(claveA), Fusion.porClave(claveB)
 	if not ca or not cb then
-		return
+		base.Motivo = "NoTenes"
+		return base, {}
 	end
 
 	local costo = Costos.fusion(ca.Gen, cb.Gen, Jugadores.cantidadEspecies(d))
@@ -79,17 +79,16 @@ local function pedir(jugador: Player, a: unknown, b: unknown)
 		d.OcupadoHasta = ahora
 			+ Config.Maquina.EsperaNoReacciona * Mejoras.factorRapidez(d.Mejoras.Rapida)
 		base.Motivo = "NoReaccionan"
-		responder(jugador, base)
-		return
+		return base, {}
 	end
 	if d.ADN < costo then
 		base.Motivo = "FaltaADN"
 		base.Costo = costo
-		responder(jugador, base)
-		return
+		return base, {}
 	end
 
-	-- Fusionar cobra ADN y no destruye a los padres.
+	-- Fusionar cobra ADN, no destruye a los padres y suma una criatura al laboratorio
+	-- (también si la especie ya la tenías: sirve para los pedidos).
 	d.ADN -= costo
 	local nueva = Coleccion.agregar(d, hijo.Clave)
 	-- Premio por descubrirla (solo la primera vez).
@@ -97,15 +96,14 @@ local function pedir(jugador: Player, a: unknown, b: unknown)
 	if premio then
 		d.ADN += premio
 	end
-	local mutante = azar:NextNumber() < probabilidadMutante()
+	local mutante = rng:NextNumber() < probabilidadMutante()
 	if mutante then
 		d.Mutantes[hijo.Clave] = true
 	end
+	Jugadores.agregarCriatura(d, hijo.Clave, mutante)
 	local celebraciones = Coleccion.revisarGeneraciones(d)
 	d.OcupadoHasta = ahora + Config.Maquina.Espera * Mejoras.factorRapidez(d.Mejoras.Rapida)
-	Jugadores.publicar(jugador)
-
-	responder(jugador, {
+	return {
 		Ok = true,
 		A = claveA,
 		B = claveB,
@@ -114,7 +112,32 @@ local function pedir(jugador: Player, a: unknown, b: unknown)
 		Mutante = mutante,
 		Costo = costo,
 		Premio = premio,
-	})
+	},
+		celebraciones
+end
+
+-- Pide una fusión con una criatura de cada especie (también la usa el jugador automático de
+-- prueba). Devuelve lo que le contestó al cliente.
+function MaquinaFusion.pedir(jugador: Player, a: unknown, b: unknown): Fusion.Resultado?
+	-- Nunca confiar en lo que manda el cliente.
+	if typeof(a) ~= "string" or typeof(b) ~= "string" or #a > 12 or #b > 12 then
+		return nil
+	end
+	local d = Jugadores.obtener(jugador)
+	if not d then
+		return nil
+	end
+	local resultado, celebraciones =
+		MaquinaFusion.aplicar(d, a :: string, b :: string, os.clock(), azar)
+	if resultado.Ok then
+		Jugadores.publicar(jugador)
+	end
+	responder(jugador, resultado)
+	if not resultado.Ok then
+		return resultado
+	end
+	local nueva, mutante = resultado.Nueva == true, resultado.Mutante == true
+	local hijo = Fusion.porClave(resultado.Clave :: string) :: Fusion.Criatura
 	-- El cliente las muestra cuando termina la animación de la fusión.
 	for _, celebracion in celebraciones do
 		Remotos.Celebracion:FireClient(jugador, celebracion)
@@ -127,8 +150,11 @@ local function pedir(jugador: Player, a: unknown, b: unknown)
 		end
 		Corrales.actualizar(jugador)
 	end)
+	return resultado
 end
 
-Remotos.PedirFusion.OnServerEvent:Connect(pedir)
+Remotos.PedirFusion.OnServerEvent:Connect(function(jugador: Player, a: unknown, b: unknown)
+	MaquinaFusion.pedir(jugador, a, b)
+end)
 
-return {}
+return MaquinaFusion

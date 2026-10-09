@@ -9,6 +9,7 @@ local Economia = require(script.Parent.Economia)
 local Guardado = require(script.Parent.Guardado)
 local Jugadores = require(script.Parent.Jugadores)
 local Laboratorios = require(script.Parent.Laboratorios)
+local Tablero = require(script.Parent.Tablero)
 require(script.Parent.MaquinaFusion)
 require(script.Parent.TiendaPistas)
 require(script.Parent.Tienda)
@@ -22,6 +23,12 @@ local function alEntrar(jugador: Player)
 	Jugadores.crear(jugador, guardados)
 	Laboratorios.asignar(jugador)
 	Corrales.actualizar(jugador)
+	local d = Jugadores.obtener(jugador)
+	if d then
+		Tablero.completar(jugador, d)
+		Laboratorios.actualizarTablero(jugador, d.Pedidos)
+		Jugadores.publicarPedidos(jugador)
+	end
 end
 
 Players.PlayerAdded:Connect(alEntrar)
@@ -39,3 +46,4 @@ end)
 
 Economia.iniciar()
 Guardado.iniciar()
+Tablero.iniciar()

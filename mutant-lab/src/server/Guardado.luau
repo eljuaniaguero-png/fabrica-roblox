@@ -1,7 +1,9 @@
 --!strict
 -- Guardado de cada jugador en un DataStore (Config.Guardado).
--- Se guarda: ADN, especies descubiertas (son las criaturas: tenés una de cada especie),
--- mutantes, pistas, premios de generación ya cobrados y niveles de las mejoras.
+-- Se guarda: ADN, especies descubiertas, mutantes, las criaturas del laboratorio, pistas
+-- (compradas y gratis), premios de generación ya cobrados, niveles de las mejoras, los
+-- pedidos del tablero y cuántos entregaste. Los guardados de la versión 1 (sin criaturas)
+-- se convierten solos: una criatura por especie descubierta.
 -- Se guarda al salir, cada Config.Guardado.CadaCuanto segundos y al cerrar el servidor.
 -- Si la carga falla, el jugador juega igual pero NO se guarda nada, para no pisar sus datos.
 
@@ -15,7 +17,8 @@ local Mejoras = require(ReplicatedStorage.Shared.Mejoras)
 local Jugadores = require(script.Parent.Jugadores)
 
 local G = Config.Guardado
-local VERSION = 1
+local VERSION = 2
+local MAXIMO_CRIATURAS = 1000
 
 type Guardados = Jugadores.Guardados
 
@@ -75,21 +78,49 @@ local function lista(conjunto: { [any]: boolean }): { any }
 end
 
 local function aGuardados(d: Jugadores.Datos): Guardados
+	local criaturas = {}
+	for _, u in d.Criaturas do
+		table.insert(criaturas, { Clave = u.Clave, Mutante = u.Mutante })
+	end
+	local pedidos = {}
+	for lugar, p in d.Pedidos do
+		table.insert(pedidos, { Lugar = lugar, Pedido = p })
+	end
 	return {
 		Version = VERSION,
 		ADN = math.floor(d.ADN),
 		Especies = lista(d.Especies),
 		Mutantes = lista(d.Mutantes),
+		Criaturas = criaturas,
 		Pistas = table.clone(d.Pistas),
 		PistasCompradas = d.PistasCompradas,
+		PistasGratis = d.PistasGratis,
 		GeneracionesPremiadas = lista(d.GeneracionesPremiadas),
 		Mejoras = table.clone(d.Mejoras),
+		Pedidos = pedidos,
+		Entregados = d.Entregados,
 	}
+end
+
+-- Un pedido guardado sirve si tiene todas sus partes con el tipo correcto.
+local function pedidoValido(p: any): boolean
+	if typeof(p) ~= "table" or typeof(p.Requisito) ~= "table" then
+		return false
+	end
+	return typeof(p.Id) == "number"
+		and typeof(p.Cliente) == "number"
+		and p.Cliente >= 1
+		and p.Cliente <= #Config.Pedidos.Clientes
+		and typeof(p.Texto) == "string"
+		and typeof(p.Premio) == "number"
+		and p.Premio >= 0
+		and typeof(p.Dificultad) == "string"
+		and typeof(p.Requisito.Tipo) == "string"
 end
 
 -- Revisa lo que vino del DataStore: solo pasan especies que existen y niveles válidos.
 local function limpiar(crudo: any): Guardados?
-	if typeof(crudo) ~= "table" or crudo.Version ~= VERSION then
+	if typeof(crudo) ~= "table" or (crudo.Version ~= 1 and crudo.Version ~= VERSION) then
 		return nil
 	end
 	local function numero(x: any, minimo: number, maximo: number): number
@@ -131,15 +162,43 @@ local function limpiar(crudo: any): Guardados?
 		local inicial = (niveles :: any)[nombre] :: number
 		(niveles :: any)[nombre] = numero(m[nombre], inicial, Mejoras.maximo(nombre))
 	end
+	-- Criaturas (versión 2). En la versión 1 no existen: las arma Jugadores.crear.
+	local criaturas: { { Clave: string, Mutante: boolean } }? = nil
+	if crudo.Version == VERSION and typeof(crudo.Criaturas) == "table" then
+		local leidas = {}
+		for _, c in crudo.Criaturas do
+			if
+				#leidas < MAXIMO_CRIATURAS
+				and typeof(c) == "table"
+				and typeof(c.Clave) == "string"
+				and Fusion.porClave(c.Clave)
+			then
+				table.insert(leidas, { Clave = c.Clave, Mutante = c.Mutante == true })
+			end
+		end
+		criaturas = leidas
+	end
+	local pedidos = {}
+	if typeof(crudo.Pedidos) == "table" then
+		for _, g in crudo.Pedidos do
+			if typeof(g) == "table" and typeof(g.Lugar) == "number" and pedidoValido(g.Pedido) then
+				table.insert(pedidos, { Lugar = math.floor(g.Lugar), Pedido = g.Pedido })
+			end
+		end
+	end
 	return {
 		Version = VERSION,
 		ADN = numero(crudo.ADN, 0, 1e15),
 		Especies = claves(crudo.Especies),
 		Mutantes = claves(crudo.Mutantes),
+		Criaturas = criaturas,
 		Pistas = pistas,
 		PistasCompradas = numero(crudo.PistasCompradas, 0, 1e6),
+		PistasGratis = numero(crudo.PistasGratis, 0, 1e6),
 		GeneracionesPremiadas = gens,
 		Mejoras = niveles,
+		Pedidos = pedidos,
+		Entregados = numero(crudo.Entregados, 0, 1e9),
 	}
 end
 

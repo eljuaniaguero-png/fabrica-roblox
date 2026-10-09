@@ -13,6 +13,17 @@ function Formato.numero(n: number): string
 	return resultado
 end
 
+export type Cuenta = { Normales: number, Mutantes: number }
+
+-- Lee el atributo "Criaturas" ("1:2:0;1-2:1:1"): cuántas normales y mutantes de cada especie.
+function Formato.inventario(texto: string?): { [string]: Cuenta }
+	local r = {}
+	for clave, n, m in (texto or ""):gmatch("([^;:]+):(%d+):(%d+)") do
+		r[clave] = { Normales = tonumber(n) or 0, Mutantes = tonumber(m) or 0 }
+	end
+	return r
+end
+
 -- Lee un atributo con claves separadas por ";" como conjunto.
 function Formato.conjunto(texto: string?): { [string]: boolean }
 	local r = {}

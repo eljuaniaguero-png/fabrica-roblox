@@ -649,6 +649,7 @@ export type OpcionesContador = {
 	Sub: string?,
 	Ancho: number?,
 	Alto: number?,
+	Boton: boolean?, -- el fondo es un TextButton (para abrir algo al tocarlo)
 }
 
 export type Contador = {
@@ -662,7 +663,12 @@ export type Contador = {
 
 function UI.contador(op: OpcionesContador): Contador
 	local alto = op.Alto or 96
-	local c = UI.caja({ Nombre = "Contador", Color = Paleta.Superficie, Transparencia = 0.05 })
+	local c = UI.caja({
+		Nombre = "Contador",
+		Color = Paleta.Superficie,
+		Transparencia = 0.05,
+		Boton = op.Boton,
+	})
 	c.Marco.Size = UDim2.fromOffset(op.Ancho or 300, alto)
 	local escala = Instance.new("UIScale")
 	escala.Parent = c.Marco

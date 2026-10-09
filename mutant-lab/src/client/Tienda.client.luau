@@ -270,9 +270,9 @@ local function articulo(
 end
 
 -- Botón con precio en ADN: apagado y con el precio en rojo si no alcanza.
-local function precioADN(b: UI.Boton, precio: number, adn: number)
+local function precioADN(b: UI.Boton, precio: number, adn: number, sub: string?)
 	local alcanza = adn >= precio
-	b.poner(Formato.numero(precio))
+	b.poner(Formato.numero(precio), sub)
 	b.colorTexto(if alcanza then Paleta.Texto else Paleta.Error)
 	if b.Icono then
 		b.Icono.Visible = true
@@ -297,18 +297,20 @@ end
 local _, listaEspecies, infoEspecies = pagina("Especies", "")
 grupoEspecies = VistasVisibles.nueva(listaEspecies)
 local especies: { Articulo } = {}
+local efectos: { string } = {}
 
 for n, base in Especies do
 	local a = articulo("Base" .. n, n, listaEspecies)
 	local c = Fusion.base(n)
 	a.Nombre.Text = base.Nombre
 	-- Elemento y una frase de cómo es ("Vive en el agua").
-	a.Efecto.Text = "Elemento "
+	efectos[n] = "Elemento "
 		.. (Elementos.Nombres[base.Elemento] or base.Elemento)
 		.. ".\n"
 		.. base.Pista:sub(1, 1):upper()
 		.. base.Pista:sub(2)
 		.. "."
+	a.Efecto.Text = efectos[n]
 	local punto = UI.puntoElemento(Generador.colorElemento(c), math.floor(Tema.MarcaChica / 2))
 	punto.AnchorPoint = Vector2.zero
 	punto.Position = UDim2.new()
@@ -388,24 +390,39 @@ local function actualizar()
 	local tengo = Formato.conjunto(jugador:GetAttribute("Especies") :: string?)
 	contadorADN.Valor.Text = Formato.numero(adn)
 
-	local cantidad = 0
+	local cantidad, descubiertas = 0, 0
 	for n = 1, Config.TamanioRueda do
 		if tengo[tostring(n)] then
 			cantidad += 1
 		end
 	end
-	local precio = Mejoras.precioBase(cantidad)
-	if infoEspecies then
-		infoEspecies.Text = if precio
-			then "La próxima especie cuesta "
-				.. Formato.numero(precio)
-				.. " ADN. Conviene una vecina de las tuyas en la rueda."
-			else "¡Ya tenés las 10 especies base!"
+	for _ in tengo do
+		descubiertas += 1
 	end
+	local precio = Mejoras.precioBase(cantidad, descubiertas)
+	local copia = Mejoras.precioCopia(descubiertas)
+	if infoEspecies then
+		infoEspecies.Text = (
+			if precio
+				then "La próxima especie cuesta "
+					.. Formato.numero(precio)
+					.. " ADN (mejor una vecina de las tuyas)."
+				else "¡Ya tenés las 10 especies base!"
+		)
+			.. " Otra copia de las que tenés: "
+			.. Formato.numero(copia)
+			.. " ADN."
+	end
+	local inventario = Formato.inventario(jugador:GetAttribute("Criaturas") :: string?)
 	for n, a in especies do
+		local cuenta = inventario[tostring(n)]
+		local cuantas = if cuenta then cuenta.Normales + cuenta.Mutantes else 0
 		if tengo[tostring(n)] then
-			sinPrecio(a.Boton, "La tenés")
+			-- Ya la descubriste: se compran copias (para pedidos o si entregaste la tuya).
+			a.Efecto.Text = efectos[n] .. "\nTenés " .. cuantas .. " en tu laboratorio."
+			precioADN(a.Boton, copia, adn, "Otra copia")
 		elseif precio then
+			a.Efecto.Text = efectos[n]
 			precioADN(a.Boton, precio, adn)
 		end
 	end
@@ -419,7 +436,7 @@ local function actualizar()
 			a.TextoNivel.Text = "Nivel " .. nivel .. " / " .. maximo
 			a.Nivel.poner(nivel, maximo)
 		end
-		local p = Mejoras.precio(nombre, nivel)
+		local p = Mejoras.precio(nombre, nivel, descubiertas)
 		if p then
 			precioADN(a.Boton, p, adn)
 		else
@@ -479,7 +496,16 @@ prompt.Triggered:Connect(function()
 end)
 
 for _, atributo in
-	{ "ADN", "Especies", "Activas", "Tope", "MejoraCorrales", "MejoraRapida", "MejoraNutrientes" }
+	{
+		"ADN",
+		"Especies",
+		"Criaturas",
+		"Activas",
+		"Tope",
+		"MejoraCorrales",
+		"MejoraRapida",
+		"MejoraNutrientes",
+	}
 do
 	jugador:GetAttributeChangedSignal(atributo):Connect(function()
 		if ventana.Marco.Visible then

@@ -383,7 +383,12 @@ local function actualizarFicha(e: Estado)
 	end
 
 	if descubierta then
-		fichaDetalle.Text = receta(c) .. (if mutante then "\n¡La tenés mutante!" else "")
+		local cuenta = Formato.inventario(jugador:GetAttribute("Criaturas") :: string?)[c.Clave]
+		local cuantas = if cuenta then cuenta.Normales + cuenta.Mutantes else 0
+		fichaDetalle.Text = receta(c)
+			.. "\nEn tu laboratorio: "
+			.. cuantas
+			.. (if mutante then "\n¡La tenés mutante!" else "")
 		fichaDetalle.TextColor3 = if mutante then Paleta.Dorado else Paleta.Texto
 		return
 	end
@@ -412,6 +417,11 @@ local function actualizarFicha(e: Estado)
 		botonPista.poner("Sin más pistas", n .. " de " .. maximo)
 		botonPista.colorSub(Paleta.Texto)
 		botonPista.habilitar(false)
+	elseif ((jugador:GetAttribute("PistasGratis") :: number?) or 0) > 0 then
+		-- Pistas que ganaste con pedidos: no se cobran.
+		botonPista.poner("Pista " .. (n + 1) .. " de " .. maximo, "Gratis (premio de pedido)")
+		botonPista.colorSub(Paleta.Dorado)
+		botonPista.habilitar(true)
 	else
 		local costo = Pistas.costo(e.Compradas)
 		local alcanza = e.ADN >= costo
@@ -613,7 +623,9 @@ end, function()
 	end
 end)
 
-for _, atributo in { "Especies", "Mutantes", "Pistas", "PistasCompradas", "ADN" } do
+for _, atributo in
+	{ "Especies", "Mutantes", "Criaturas", "Pistas", "PistasCompradas", "PistasGratis", "ADN" }
+do
 	jugador:GetAttributeChangedSignal(atributo):Connect(function()
 		if ventana.Marco.Visible then
 			actualizarTodo()

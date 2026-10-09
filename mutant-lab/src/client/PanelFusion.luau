@@ -309,7 +309,9 @@ local function actualizar()
 				previa.poner(hijo.Clave, hijo.Nombre, conjunto("Mutantes")[hijo.Clave])
 				previa.elemento(Generador.colorElemento(hijo))
 				previa.Borde.Color = Paleta.Generaciones[hijo.Gen]
-				texto = "Ya tenés a " .. hijo.Nombre .. ": solo sirve para buscar el mutante."
+				texto = "Ya la tenés: sale otro "
+					.. hijo.Nombre
+					.. " para tus pedidos (y quizás sale mutante)."
 				color = Paleta.Alerta
 			else
 				previa.poner(nil, "¡Nueva!")
@@ -450,20 +452,35 @@ UI.tocable(catalizador.Fondo, function()
 	Notificaciones.mostrar("Los catalizadores llegan muy pronto.", "info")
 end, catalizador.Marco)
 
--- Una tarjeta por especie que tenés, en el orden de la Mutadex.
+-- Una tarjeta por especie de la que tenés criaturas, en el orden de la Mutadex, con cuántas
+-- tenés ("×2") y la estrella si alguna es mutante.
 local function armarLista()
-	local tengo = conjunto("Especies")
-	local mutantes = conjunto("Mutantes")
+	local inventario = Formato.inventario(jugador:GetAttribute("Criaturas") :: string?)
 	for clave, it in items do
-		if not tengo[clave] then
+		if not inventario[clave] then
 			grupo.quitar(it.Cas.Marco)
 			it.Cas.Marco:Destroy()
 			items[clave] = nil
 		end
 	end
+	-- Si ya no tenés la criatura de un casillero (la entregaste), el casillero se vacía.
+	local sinCriatura = {}
+	for lado, clave in seleccion do
+		if not inventario[clave] then
+			table.insert(sinCriatura, lado)
+		end
+	end
+	for _, lado in sinCriatura do
+		poner(lado, nil)
+	end
+	local total = 0
 	for orden, c in Fusion.todas() do
-		if tengo[c.Clave] then
-			local mutante = mutantes[c.Clave] == true
+		local cuenta = inventario[c.Clave]
+		if cuenta then
+			local n = cuenta.Normales + cuenta.Mutantes
+			total += n
+			local mutante = cuenta.Mutantes > 0
+			local nombre = if n > 1 then c.Nombre .. " ×" .. n else c.Nombre
 			local it = items[c.Clave]
 			if not it then
 				local cas = UI.casillero({
@@ -473,22 +490,23 @@ local function armarLista()
 					Prestada = true,
 				})
 				cas.Marco.LayoutOrder = orden
-				cas.poner(c.Clave, c.Nombre, mutante)
 				cas.elemento(Generador.colorElemento(c))
 				cas.Marco.Parent = lista
 				UI.tocable(cas.Fondo, function()
 					elegir(c.Clave, cas.Marco)
 				end, cas.Marco)
 				grupo.agregar(cas.Marco, cas.Hueco, { Clave = c.Clave, Mutante = mutante })
-				items[c.Clave] = { Cas = cas, Criatura = c, Mutante = mutante }
+				it = { Cas = cas, Criatura = c, Mutante = mutante }
+				items[c.Clave] = it
 			elseif it.Mutante ~= mutante then
 				it.Mutante = mutante
-				it.Cas.poner(c.Clave, c.Nombre, mutante)
 				grupo.cambiar(it.Cas.Marco, { Clave = c.Clave, Mutante = mutante })
 			end
+			local item = it :: Item
+			item.Cas.poner(c.Clave, nombre, mutante)
 		end
 	end
-	tituloLista.Text = "Tus criaturas (" .. cantidad(tengo) .. ")"
+	tituloLista.Text = "Tus criaturas (" .. total .. ")"
 	aplicarFiltro()
 	pintarItems()
 end
@@ -515,11 +533,11 @@ local Panel = {}
 
 function Panel.iniciar(e: Eventos)
 	eventos = e
-	jugador:GetAttributeChangedSignal("Especies"):Connect(function()
+	jugador:GetAttributeChangedSignal("Criaturas"):Connect(function()
 		armarLista()
 		actualizar()
 	end)
-	jugador:GetAttributeChangedSignal("Mutantes"):Connect(armarLista)
+	jugador:GetAttributeChangedSignal("Especies"):Connect(actualizar)
 	jugador:GetAttributeChangedSignal("ADN"):Connect(actualizar)
 	armarLista()
 	mostrarPadre("A")

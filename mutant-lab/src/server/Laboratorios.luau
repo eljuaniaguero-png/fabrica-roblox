@@ -16,6 +16,7 @@ local Config = require(ReplicatedStorage.Shared.Config)
 local Fusion = require(ReplicatedStorage.Shared.Fusion)
 local Generador = require(ReplicatedStorage.Shared.Generador)
 local Paleta = require(ReplicatedStorage.Shared.Paleta)
+local Pedidos = require(ReplicatedStorage.Shared.Pedidos)
 
 local PISO_ABIERTO = Paleta.Laboratorio.PisoAbierto
 local PISO_CERRADO = Paleta.Laboratorio.PisoCerrado
@@ -148,10 +149,8 @@ local function pintarCorrales(lab: Model, abiertos: number, porCorral: { number 
 			local cartel = buscar(corral, "Cartel", "SurfaceGui", "Texto")
 			if cartel and cartel:IsA("TextLabel") then
 				cartel.Text = if abierto
-					then "🧬 +"
-						.. tostring(math.floor((porCorral[k] or 0) * 10 + 0.5) / 10)
-						.. " ADN/s"
-					else "🔒 Se abre en la tienda"
+					then "+" .. tostring(math.floor((porCorral[k] or 0) * 10 + 0.5) / 10) .. " ADN/s"
+					else "Se abre en la tienda"
 				cartel.TextColor3 = if abierto then Paleta.Acento else Paleta.Texto
 			end
 		end
@@ -194,7 +193,7 @@ local function ponerUltima(lab: Model, clave: string?, mutante: boolean?)
 	end
 	vista:ClearAllChildren()
 	local c = if clave then Fusion.porClave(clave) else nil
-	textos(tarjeta, "Nombre", if c then (if mutante then "⭐ " else "") .. c.Nombre else "?")
+	textos(tarjeta, "Nombre", if c then c.Nombre else "?")
 	local borde = tarjeta:FindFirstChild("Borde")
 	if borde and borde:IsA("UIStroke") then
 		borde.Color = if not c
@@ -212,6 +211,28 @@ local function ponerUltima(lab: Model, clave: string?, mutante: boolean?)
 	camara.CFrame = CFrame.lookAt(Vector3.new(-4.5, 4.5, -9.5), Vector3.new(0, 2.3, 0))
 	camara.Parent = vista
 	vista.CurrentCamera = camara
+end
+
+-- Tablero de pedidos del laboratorio (Tablero > Pantalla > SurfaceGui > Pedido1..3, cada uno con
+-- los textos "Cliente" y "Texto"). `pedidos` nil lo deja vacío.
+local function pintarTablero(lab: Model, pedidos: { [number]: Pedidos.Pedido }?)
+	local gui = buscar(lab, "Tablero", "Pantalla", "SurfaceGui")
+	if not gui then
+		return
+	end
+	for i = 1, Config.Pedidos.Activos do
+		local p = pedidos and pedidos[i]
+		local fila = gui:FindFirstChild("Pedido" .. i, true)
+		textos(fila, "Cliente", if p then Config.Pedidos.Clientes[p.Cliente] or "" else "")
+		textos(fila, "Texto", if p then p.Texto else "Llega otro pedido en un ratito...")
+	end
+end
+
+function Laboratorios.actualizarTablero(jugador: Player, pedidos: { [number]: Pedidos.Pedido })
+	local lab = labDe[jugador]
+	if lab then
+		pintarTablero(lab, pedidos)
+	end
 end
 
 function Laboratorios.mostrarNueva(jugador: Player, clave: string, mutante: boolean?)
@@ -253,6 +274,7 @@ function Laboratorios.liberar(jugador: Player)
 	ponerCartel(lab, nil)
 	pintarCorrales(lab, Config.Mejoras.Corrales.Inicial, {})
 	ponerUltima(lab, nil)
+	pintarTablero(lab, nil)
 	textos(fondoMutadex(lab), "Contador", "0 / " .. TOTAL_ESPECIES)
 	local relleno = buscar(fondoMutadex(lab), "Barra", "Relleno")
 	if relleno and relleno:IsA("Frame") then

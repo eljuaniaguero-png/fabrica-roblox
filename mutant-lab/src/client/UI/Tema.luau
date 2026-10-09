@@ -87,6 +87,18 @@ local Tema = {
 		InsigniaExtras = 120,
 	},
 
+	-- Tablero de pedidos
+	Pedidos = {
+		AltoInfo = 40,
+		Cliente = 76, -- muñequito del cliente
+		AltoEncabezado = 84,
+		AltoGlobo = 150, -- globo con lo que pide
+		AltoPremio = 44,
+		Opcion = Vector2.new(150, 176), -- casilleros para elegir qué criatura entregar
+		Despedida = 1.6, -- segundos de la animación de despedida
+		ContadorHUD = Vector2.new(290, 76),
+	},
+
 	-- Tienda
 	Tienda = {
 		Columnas = 4,
