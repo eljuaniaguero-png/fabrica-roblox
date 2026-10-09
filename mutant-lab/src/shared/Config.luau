@@ -132,16 +132,6 @@ local Config = {
 		DistanciaIcono = 20, -- el ícono de personalidad se ve a menos de esto
 	},
 
-	-- TEMPORAL: colores del estilo viejo. Los usan los menús viejos hasta que se rehagan con los
-	-- componentes nuevos (Bloques 3 a 6 del rediseño); después se borra.
-	Estilo = {
-		Piso = Color3.fromHex("FFF4E0"),
-		Menta = Color3.fromHex("3EE6B5"),
-		Rosa = Color3.fromHex("FF5FA2"),
-		Amarillo = Color3.fromHex("FFD23F"),
-		Violeta = Color3.fromHex("4B2C83"),
-	},
-
 	-- Interfaz: tiempos de los avisos y carteles (los colores están en Paleta.luau,
 	-- las medidas en client/UI/Tema.luau).
 	Interfaz = {

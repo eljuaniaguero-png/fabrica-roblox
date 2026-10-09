@@ -17,10 +17,10 @@ local Fusion = require(ReplicatedStorage.Shared.Fusion)
 local Generador = require(ReplicatedStorage.Shared.Generador)
 local Paleta = require(ReplicatedStorage.Shared.Paleta)
 
-local PISO_ABIERTO = Color3.fromHex("2B4763")
-local PISO_CERRADO = Color3.fromHex("26303C")
-local CUPULA_ABIERTA = Color3.fromHex("CFF6FF")
-local CUPULA_CERRADA = Color3.fromHex("3B4654")
+local PISO_ABIERTO = Paleta.Laboratorio.PisoAbierto
+local PISO_CERRADO = Paleta.Laboratorio.PisoCerrado
+local CUPULA_ABIERTA = Paleta.Laboratorio.CupulaAbierta
+local CUPULA_CERRADA = Paleta.Laboratorio.CupulaCerrada
 local TOTAL_ESPECIES = #Fusion.todas()
 
 -- Arma los laboratorios alrededor de la plaza (si ya están, los deja como están).

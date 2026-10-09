@@ -16,7 +16,7 @@ local Piezas = require(script.Parent.Piezas)
 local Generador = {}
 
 local C = Config.Criaturas
-local COLOR_SILUETA = Color3.fromHex("1B1030")
+local COLOR_SILUETA = Paleta.Piezas.Negro
 local CENTRO_CABEZA = Vector3.new(0, 3.9, -1.7) -- donde arma Piezas las cabezas
 local FUENTE = Font.new("rbxasset://fonts/families/FredokaOne.json")
 

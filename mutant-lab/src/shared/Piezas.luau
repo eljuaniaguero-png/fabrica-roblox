@@ -23,9 +23,9 @@ local CENTRO_CUERPO = Vector3.new(0, 2.5, 0)
 local CENTRO_CABEZA = Vector3.new(0, 3.9, -1.7)
 local BASE_COLA = Vector3.new(0, 2.8, 1.55)
 
-local BLANCO = Color3.new(1, 1, 1)
-local NEGRO = Color3.fromHex("1B1030")
-local CREMA = Color3.fromHex("FFE9D2") -- cara del hongo
+local BLANCO = Paleta.Piezas.Blanco
+local NEGRO = Paleta.Piezas.Negro
+local CREMA = Paleta.Piezas.Crema -- cara del hongo
 
 local Piezas = {}
 
@@ -211,7 +211,7 @@ cabezas[5] = function(ctx)
 				ctx,
 				CFrame.new(c + Vector3.new(s * 0.45, 0.85, 0.2)),
 				Vector3.new(0.3, 0.6, 0.5),
-				Color3.fromHex("FFB020")
+				Paleta.Piezas.Naranja
 			)
 		)
 	end
@@ -241,7 +241,7 @@ cabezas[7] = function(ctx)
 		ctx,
 		CFrame.new(c + Vector3.new(0, -0.15, -1.05)),
 		Vector3.new(0.65, 0.45, 0.6),
-		Color3.fromHex("FFB020")
+		Paleta.Piezas.Naranja
 	)
 	for i, x in { -0.18, 0, 0.18 } do
 		bloque(
@@ -506,7 +506,7 @@ end
 
 -- 7 dos patas finas de ave
 patas[7] = function(ctx)
-	local naranja = Color3.fromHex("FFB020")
+	local naranja = Paleta.Piezas.Naranja
 	for _, s in { -1, 1 } do
 		cilindro(ctx, CFrame.new(Vector3.new(s * 0.5, 0.9, 0)), "Y", 1.7, 0.24, naranja)
 		for _, a in { -30, 0, 30 } do
@@ -635,8 +635,8 @@ extremidades[5] = function(ctx)
 	local giro = CFrame.new(BASE_COLA) * CFrame.Angles(math.rad(30), 0, 0)
 	cilindro(ctx, giro * CFrame.new(0, 0, 0.8), "Z", 1.6, 0.5)
 	local punta = (giro * CFrame.new(0, 0, 1.7)).Position
-	neon(bola(ctx, punta, 0.85, Color3.fromHex("FF7A00")))
-	neon(bola(ctx, punta + Vector3.new(0, 0.35, 0.05), 0.5, Color3.fromHex("FFE21F")))
+	neon(bola(ctx, punta, 0.85, Paleta.Piezas.Llama))
+	neon(bola(ctx, punta + Vector3.new(0, 0.35, 0.05), 0.5, Paleta.Piezas.Amarillo))
 end
 
 -- 6 cola en espiral
@@ -749,7 +749,7 @@ end
 local rasgos: { (ctx: Ctx, raiz: BasePart, cuerpo: number) -> () } = {}
 
 rasgos[1] = function(_ctx, raiz)
-	particulas(raiz, Vector3.new(0, 2.5, 0), Color3.fromHex("BDF2FF"), {
+	particulas(raiz, Vector3.new(0, 2.5, 0), Paleta.Piezas.Burbujas, {
 		Size = NumberSequence.new(0.35),
 		Acceleration = Vector3.new(0, 1.5, 0),
 	})
@@ -758,13 +758,13 @@ end
 rasgos[2] = function(ctx, _raiz, cuerpo)
 	local y = Piezas.AlturaLomo[cuerpo]
 	for _, p in { Vector3.new(0.45, 0, 0.5), Vector3.new(-0.5, 0, 0.1), Vector3.new(0.1, 0, -0.4) } do
-		bola(ctx, Vector3.new(p.X, y - 0.05, p.Z), 0.45, Color3.fromHex("FF8FC8"))
-		bola(ctx, Vector3.new(p.X, y + 0.12, p.Z), 0.22, Color3.fromHex("FFE21F"))
+		bola(ctx, Vector3.new(p.X, y - 0.05, p.Z), 0.45, Paleta.Piezas.Flores)
+		bola(ctx, Vector3.new(p.X, y + 0.12, p.Z), 0.22, Paleta.Piezas.Amarillo)
 	end
 end
 
 rasgos[3] = function(_ctx, raiz)
-	particulas(raiz, Vector3.new(0, 3.5, 0), Color3.fromHex("FF7BE0"), {
+	particulas(raiz, Vector3.new(0, 3.5, 0), Paleta.Piezas.Esporas, {
 		LightEmission = 1,
 		Size = NumberSequence.new(0.18),
 		Acceleration = Vector3.new(0, 0.8, 0),
@@ -775,7 +775,7 @@ end
 rasgos[4] = function() end -- rueda: lo hace la animación
 
 rasgos[5] = function(_ctx, raiz)
-	particulas(raiz, Vector3.new(0, 0.3, 0), Color3.fromHex("FFB020"), {
+	particulas(raiz, Vector3.new(0, 0.3, 0), Paleta.Piezas.Naranja, {
 		LightEmission = 1,
 		Size = NumberSequence.new(0.15),
 		Speed = NumberRange.new(2, 4),
@@ -789,7 +789,7 @@ rasgos[6] = function() end -- se entierra: lo hace la animación
 rasgos[7] = function() end -- flota: lo hace la animación
 
 rasgos[8] = function(_ctx, raiz)
-	particulas(raiz, Vector3.new(0, 0.2, 0), Color3.new(1, 1, 1), {
+	particulas(raiz, Vector3.new(0, 0.2, 0), Paleta.Piezas.Nieve, {
 		Size = NumberSequence.new(0.2),
 		Speed = NumberRange.new(0.5, 1.5),
 		SpreadAngle = Vector2.new(80, 80),
@@ -799,7 +799,7 @@ end
 
 rasgos[9] = function(_ctx, raiz)
 	local luz = Instance.new("PointLight")
-	luz.Color = Color3.fromHex("FFE680")
+	luz.Color = Paleta.Piezas.Luz
 	luz.Range = 10
 	luz.Brightness = 2
 	luz.Parent = raiz
@@ -826,7 +826,7 @@ end
 
 -- Aura de la generación 3.
 function Piezas.aura(raiz: BasePart)
-	particulas(raiz, Vector3.new(0, 2.6, 0), Color3.fromHex("FFF3B0"), {
+	particulas(raiz, Vector3.new(0, 2.6, 0), Paleta.Piezas.Aura, {
 		LightEmission = 1,
 		Size = NumberSequence.new({
 			NumberSequenceKeypoint.new(0, 0),

@@ -9,6 +9,7 @@ Versión 4 (2026-10-07): **Parte 3 hecha** (Mutadex). Ver "Notas de la Parte 3".
 Versión 5 (2026-10-08): **Parte 4 hecha** (laboratorio y economía). Ver "Notas de la Parte 4".
 Versión 6 (2026-10-08): **guía visual nueva** (laboratorio de caricatura de noche, ver "Guía de estilo") y **mapa nuevo**: plaza en el centro y 6 laboratorios alrededor (pedido del usuario, ver "Notas del mapa nuevo"). Ya tienen el estilo nuevo el mapa, la máquina y las criaturas. **Falta el HUD y los menús**, que siguen con el estilo caramelo.
 Versión 7 (2026-10-08): **Parte 5 hecha** (guardado, balance y pulido), sobre la rama de la interfaz nueva (HUD nuevo; la Mutadex, la tienda y el panel de fusión siguen con el estilo viejo hasta los Bloques 3 a 6 del rediseño). Ver "Notas de la Parte 5".
+Versión 8 (2026-10-09): **interfaz terminada**: el panel de fusión, la Mutadex, la tienda y los festejos ya usan los componentes de `client/UI` (pedido 1 de `ORDEN-PEDIDOS.md`). Ver "Notas de la interfaz terminada".
 Próximo punto de control: **prototipo jugable** (Partes 1 a 5).
 
 ## Guía de estilo: laboratorio de caricatura de noche (versión 6)
@@ -334,6 +335,25 @@ Reemplaza la calle con 4 laboratorios de la Parte 4.
 ### Otros arreglos
 - La interfaz nueva había dejado colgada la Mutadex vieja (esperaba el botón de progreso del HUD viejo) y los botones Mutadex y Tienda del HUD no abrían nada. Ahora abren la Mutadex y la tienda viejas (puente **temporal** en `UI/Menus.luau`, hasta rehacerlas). Abrir una cierra las otras, y abrir la máquina o el mostrador también.
 - `HerramientasPrueba` ahora también existe jugando en Studio (en el juego publicado no): `DarEspecies`, `PonerDatos` (ADN y mejoras) y `Guardar`.
+
+## Notas de la interfaz terminada (versión 8)
+
+Toda la interfaz se arma por código con las piezas de `client/UI` (colores de `Paleta.luau`, medidas de `UI/Tema.luau`, íconos de `UI/Iconos.luau`) y se abre y cierra con `UI/Menus`. Ya no hay ScreenGui armados a mano en Studio: se borraron `Fusion`, `Mutadex`, `Tienda` y `Revelacion`. No quedan colores con `fromHex` fuera de `Paleta.luau` ni `Config.Estilo`.
+
+- **Panel de fusión**: casilleros de los padres (izquierda verde ácido, derecha magenta) con un "+" entre ellos, el catalizador arriba con candado, "=" y la vista previa. Abajo, tus criaturas con el borde de su generación, el punto de su elemento y la estrella si la tenés mutante, filtrables con botones redondos de cada elemento. Tocar una criatura la hace saltar al casillero; tocar un casillero lleno lo vacía.
+  - Vista previa: si el resultado es una especie que ya tenés, la muestra; si es nueva, "?" verde con "¡Nueva!"; si la pareja no reacciona, "×" rojo.
+  - Botón "¡FUSIONAR!" con el costo. Si falta ADN, apagado y "Te faltan X ADN" en rojo. **Decisión**: si la pareja no reacciona, el botón queda apagado y lo dice antes de apretar (hasta ahora te dejaba probar gratis). Cuando existan los residuos (pedido 3) se vuelve a prender.
+- **Mutadex**: encabezado con "12 / 50", barra y ADN; pestañas Gen 1, Gen 2 y Gen 3 con su conteo, y Extras ("llegan pronto"). Arriba de cada grilla queda la nota de la regla. Las siluetas tienen el "?" en una esquina, para no tapar la forma.
+  - Ficha: al costado en computadora; en celular tapa la grilla, en dos columnas, y se cierra con su X. Tiene la criatura grande girando, generación, elemento, personalidad, la receta (si ya la descubriste) y las pistas con su botón.
+  - **Decisión: personalidad por especie.** Todavía ninguna criatura tiene personalidad propia, así que cada especie tiene una fija (`Personalidades.deEspecie`, a partir de sus bases). Se muestra con su ícono, verde si es positiva y magenta si es negativa. Sirve como "regla fija por especie" para el pedido 3.
+- **Tienda**: pestañas Especies, Mejoras, Catalizadores ("llegan pronto") y Premium. En Premium se ven los 7 pases de `Config.Premium` con borde dorado y el precio en Robux, apagados y con "Próximamente" hasta que tengan ID. Las mejoras muestran "Nivel 2 / 4" con puntos. Al comprar: destello sobre la tarjeta, sonido y el ADN del encabezado rebota.
+- **Festejos**: generación completa y Mutadex completa usan el cartel grande de `UI/Carteles` (uno por vez, en cola) con papelitos verde ácido, magenta, dorado y de los 5 elementos. La revelación de la máquina usa el mismo cartel, fijo arriba para no tapar la cúpula.
+- **Misiones y Ajustes**: ventana chica con "llegan pronto". Ajustes ya trae el interruptor del sonido.
+- **Piezas nuevas en `client/UI`**: casillero con vista prestada (`VistasVisibles`), estrella y punto de elemento; lista que se desplaza; grilla; puntos de nivel; insignia; destello; papelitos. Íconos nuevos: estrella, corazón, martillo, rayo, cubierto, "Zzz", "?" e "=".
+- **Arreglos**: los avisos que empiezan con "¡" ahora salen como éxito (verde) y el ícono de los botones de alto relativo (las pestañas) ya no sale diminuto.
+- **Herramientas de prueba nuevas** (solo en Studio): `DarMutantes` y `Reiniciar` (vuelve a jugador nuevo).
+- **Pendiente**: quedan emojis en carteles del mundo (corrales "🧬 +N" y "🔒 Se abre en la tienda", "⭐" en la pantalla de la Mutadex de la pared) y en los íconos de personalidad sobre la cabeza (que todavía no se usan). Con un menú abierto, tocar un botón del HUD primero cierra el menú.
+- **Probado** (2026-10-09) en computadora y en celular simulado (844 × 390): fusión real con las cuatro situaciones del botón, compra de pista, compra de base y de mejora, festejos encolados, Misiones y Ajustes. Consola sin errores. Capturas en `capturas/pedido-1/final`.
 
 ## La idea en una línea
 

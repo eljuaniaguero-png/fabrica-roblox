@@ -56,6 +56,45 @@ local Paleta = {
 		ELEMENTOS.Sombra,
 	},
 
+	-- Color del cuerpo y de las manchas de cada especie base, en el orden de la rueda
+	-- (shared/Especies.luau). Las fusiones mezclan estos colores pieza por pieza.
+	Especies = {
+		{ Color = Color3.fromHex("38C8FF"), Manchas = Color3.fromHex("E8FAFF") }, -- 1 Glupona
+		{ Color = Color3.fromHex("4CCB4A"), Manchas = Color3.fromHex("2E8A3A") }, -- 2 Rámulo
+		{ Color = Color3.fromHex("F23DB8"), Manchas = Color3.fromHex("FFFFFF") }, -- 3 Sutomi
+		{ Color = Color3.fromHex("7D8A9C"), Manchas = Color3.fromHex("4E5866") }, -- 4 Rocote
+		{ Color = Color3.fromHex("FF3B30"), Manchas = Color3.fromHex("FFB020") }, -- 5 Chisparo
+		{ Color = Color3.fromHex("E0A040"), Manchas = Color3.fromHex("A86A22") }, -- 6 Dunaqui
+		{ Color = Color3.fromHex("B07CFF"), Manchas = Color3.fromHex("FFFFFF") }, -- 7 Zoplito
+		{ Color = Color3.fromHex("F2FBFF"), Manchas = Color3.fromHex("8FE3FF") }, -- 8 Brinoza
+		{ Color = Color3.fromHex("FFE21F"), Manchas = Color3.fromHex("FF8A00") }, -- 9 Fotina
+		{ Color = Color3.fromHex("2F4BD8"), Manchas = Color3.fromHex("8EF0FF") }, -- 10 Nerulo
+	},
+
+	-- Detalles fijos de las piezas de las criaturas (shared/Piezas.luau y Generador.luau).
+	Piezas = {
+		Blanco = Color3.fromHex("FFFFFF"), -- ojos
+		Negro = Color3.fromHex("1B1030"), -- pupilas, narices y siluetas negras en el mundo
+		Crema = Color3.fromHex("FFE9D2"), -- cara del hongo
+		Naranja = Color3.fromHex("FFB020"), -- picos, cuernos de brasa, patas de ave y chispas
+		Llama = Color3.fromHex("FF7A00"), -- llama de la cola
+		Amarillo = Color3.fromHex("FFE21F"), -- punta de la llama y centro de las flores
+		Burbujas = Color3.fromHex("BDF2FF"),
+		Flores = Color3.fromHex("FF8FC8"),
+		Esporas = Color3.fromHex("FF7BE0"),
+		Nieve = Color3.fromHex("FFFFFF"),
+		Luz = Color3.fromHex("FFE680"), -- luz propia de la especie que brilla
+		Aura = Color3.fromHex("FFF3B0"), -- aura de la generación 3
+	},
+
+	-- Laboratorio (server/Laboratorios.luau): corrales abiertos y cerrados.
+	Laboratorio = {
+		PisoAbierto = Color3.fromHex("2B4763"),
+		PisoCerrado = Color3.fromHex("26303C"),
+		CupulaAbierta = Color3.fromHex("CFF6FF"),
+		CupulaCerrada = Color3.fromHex("3B4654"),
+	},
+
 	-- Versión oscura de un color (la franja de abajo de los botones).
 	oscuro = function(color: Color3, cuanto: number?): Color3
 		return color:Lerp(CONTORNO, cuanto or 0.4)
