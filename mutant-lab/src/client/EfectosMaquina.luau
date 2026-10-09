@@ -20,6 +20,7 @@ local Paleta = require(ReplicatedStorage.Shared.Paleta)
 local MiLab = require(script.Parent.MiLab)
 local Sonidos = require(script.Parent.Sonidos)
 local Carteles = require(script.Parent.UI.Carteles)
+local Catalizadores = require(ReplicatedStorage.Shared.Catalizadores)
 
 local M = Config.Maquina
 
@@ -306,7 +307,12 @@ end
 -- Secuencias completas
 ---------------------------------------------------------------------------
 
-local function noReaccionan(ca: Fusion.Criatura, cb: Fusion.Criatura, f: number)
+local function noReaccionan(
+	ca: Fusion.Criatura,
+	cb: Fusion.Criatura,
+	f: number,
+	r: Fusion.Resultado
+)
 	-- SONIDO: no reaccionan (dos notas graves que chocan)
 	Sonidos.acorde({ -12, -11 }, 0.45)
 	llenar(capsulas.A, ca.Color, 0.4, 0.35 * f)
@@ -314,7 +320,53 @@ local function noReaccionan(ca: Fusion.Criatura, cb: Fusion.Criatura, f: number)
 	task.wait(0.35 * f)
 	largarHumo(false, 12)
 	temblar(0.5 * f, 0.15)
-	mostrarCartel("No reaccionan", "¡Probá otra pareja!", "No se gastó ADN", false, Paleta.Error)
+	-- Sale un residuo (o, si se juntaron los suficientes, un catalizador) y la regla en una frase.
+	-- El residuo se ve en la cúpula: una gota de slime del color de los dos mezclados.
+	local gota = Instance.new("Part")
+	gota.Name = "Residuo"
+	gota.Shape = Enum.PartType.Ball
+	gota.Anchored = true
+	gota.CanCollide = false
+	gota.CanQuery = false
+	gota.Material = Enum.Material.SmoothPlastic
+	gota.Color = ca.Color:Lerp(cb.Color, 0.5):Lerp(Paleta.Residuo, 0.35)
+	gota.Size = Vector3.one * 0.2
+	gota.CFrame = salida.CFrame * CFrame.new(0, 1, 0)
+	gota.Parent = carpeta
+	TweenService
+		:Create(gota, TweenInfo.new(0.4 * f, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
+			Size = Vector3.new(2.6, 1.6, 2.6),
+		})
+		:Play()
+	task.delay(2.4 * f, function()
+		local t = TweenService:Create(
+			gota,
+			TweenInfo.new(0.4),
+			{ Size = Vector3.one * 0.2, Transparency = 1 }
+		)
+		t:Play()
+		t.Completed:Wait()
+		gota:Destroy()
+	end)
+	-- SONIDO: residuo (blop)
+	Sonidos.nota(-3, 0.3)
+	local cat = Catalizadores.porClave(r.Fabricado)
+	mostrarCartel(
+		"No reaccionan",
+		if cat then "¡Catalizador de " .. cat.Nombre .. "!" else "Salió un residuo",
+		(r.Razon or "")
+			.. (
+				if cat
+					then ""
+					else " ("
+						.. tostring(r.Residuos or 0)
+						.. "/"
+						.. Config.Residuos.ParaCatalizador
+						.. ")"
+			),
+		false,
+		if cat then Paleta.Dorado else Paleta.Alerta
+	)
 	llenar(capsulas.A, ca.Color, 0, 0.4 * f)
 	llenar(capsulas.B, cb.Color, 0, 0.4 * f)
 	task.wait(1.4 * f)
@@ -345,7 +397,7 @@ function Efectos.jugar(r: Fusion.Resultado)
 
 	local c = if r.Clave then Fusion.porClave(r.Clave) else nil
 	if not r.Ok or not c then
-		noReaccionan(ca, cb, f)
+		noReaccionan(ca, cb, f, r)
 		soltar()
 		return
 	end

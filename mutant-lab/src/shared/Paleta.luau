@@ -56,6 +56,16 @@ local Paleta = {
 		ELEMENTOS.Sombra,
 	},
 
+	-- Catalizadores (shared/Catalizadores.luau): el color que le dan a la variante.
+	Catalizadores = {
+		Rayo = Color3.fromHex("FFE14A"),
+		Hielo = Color3.fromHex("BDF2FF"),
+		Slime = Color3.fromHex("7CFF4F"),
+		Lava = Color3.fromHex("FF6A3D"),
+		Sombra = Color3.fromHex("8E6BFF"),
+	},
+	Residuo = Color3.fromHex("6B5A4A"), -- se mezcla con los colores de los padres
+
 	-- Color del cuerpo y de las manchas de cada especie base, en el orden de la rueda
 	-- (shared/Especies.luau). Las fusiones mezclan estos colores pieza por pieza.
 	Especies = {

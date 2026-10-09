@@ -12,6 +12,7 @@
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
+local Config = require(ReplicatedStorage.Shared.Config)
 local Costos = require(ReplicatedStorage.Shared.Costos)
 local Elementos = require(ReplicatedStorage.Shared.Elementos)
 local Formato = require(ReplicatedStorage.Shared.Formato)
@@ -125,6 +126,13 @@ local catalizador = UI.casillero({
 })
 catalizador.Marco.AnchorPoint = Vector2.new(0.5, 0)
 catalizador.Marco.Parent = maquina
+if catalizador.Nombre then
+	-- "Residuos 3/5" entra en el casillero chico.
+	catalizador.Nombre.TextScaled = true
+	local tope = Instance.new("UITextSizeConstraint")
+	tope.MaxTextSize = Tema.Letra.Chica
+	tope.Parent = catalizador.Nombre
+end
 
 local mas = UI.Iconos.crear("mas", T.Signo, Paleta.Texto)
 mas.Parent = maquina
@@ -140,6 +148,10 @@ local previa = UI.casillero({
 })
 previa.Marco.AnchorPoint = Vector2.new(0, 1)
 previa.Marco.Parent = maquina
+-- La gota del residuo (cuando la pareja no reacciona), del color mezclado de los dos.
+local gotaResiduo = UI.Iconos.crear("gota", T.Padre.X * 0.5, Paleta.Residuo)
+gotaResiduo.Visible = false
+gotaResiduo.Parent = previa.Hueco
 
 -- Columna de la derecha: qué va a pasar y el botón.
 local derecha = UI.hueco("Derecha", UDim2.new(), maquina)
@@ -270,6 +282,12 @@ end
 ---------------------------------------------------------------------------
 
 local function actualizar()
+	-- Cuántos residuos juntaste (con Config.Residuos.ParaCatalizador se arma un catalizador).
+	local residuos = jugador:GetAttribute("Residuos") :: string?
+	local cuantos = if residuos and residuos ~= "" then #string.split(residuos, ";") else 0
+	if catalizador.Nombre then
+		catalizador.Nombre.Text = "Residuos " .. cuantos .. "/" .. Config.Residuos.ParaCatalizador
+	end
 	contadorADN.Valor.Text = Formato.numero(adn())
 	local a, b = seleccion.A, seleccion.B
 	local ca = if a then Fusion.porClave(a) else nil
@@ -279,6 +297,7 @@ local function actualizar()
 	local listo = false
 
 	previa.elemento(nil)
+	gotaResiduo.Visible = false
 	if not ca or not cb then
 		previa.poner(nil, "Resultado")
 		previa.Signo.Text = "?"
@@ -293,14 +312,25 @@ local function actualizar()
 		local hijo = Fusion.fusionar(ca, cb)
 		if not hijo then
 			-- Se avisa antes de apretar: esa pareja nunca reacciona.
-			previa.poner(nil, "No reaccionan")
-			previa.Signo.Text = "×"
-			previa.Signo.TextColor3 = Paleta.Error
+			-- No reaccionan: se dice por qué, y fusionar igual hace un residuo (gratis).
+			previa.poner(nil, "Residuo")
+			previa.Signo.Visible = false
+			gotaResiduo.Visible = true
+			local mezcla = ca.Color:Lerp(cb.Color, 0.5):Lerp(Paleta.Residuo, 0.35)
+			for _, f in gotaResiduo:GetDescendants() do
+				if f:IsA("Frame") and f.ZIndex == 1 then
+					f.BackgroundColor3 = mezcla
+				end
+			end
 			previa.Borde.Color = Paleta.Error
-			texto = "Estas dos no reaccionan. Probá con otra pareja."
-			color = Paleta.Error
-			boton.poner("¡FUSIONAR!", "No reaccionan")
-			boton.colorSub(Paleta.Error)
+			texto = (Fusion.motivo(ca, cb) or "No reaccionan.")
+				.. " Igual sale un residuo: con "
+				.. Config.Residuos.ParaCatalizador
+				.. " se arma un catalizador."
+			color = Paleta.Alerta
+			boton.poner("¡FUSIONAR!", "Sale un residuo (gratis)")
+			boton.colorSub(Paleta.Texto)
+			listo = true
 		else
 			local tengo = conjunto("Especies")
 			local costo = Costos.fusion(ca.Gen, cb.Gen, cantidad(tengo)) or 0
@@ -539,6 +569,7 @@ function Panel.iniciar(e: Eventos)
 	end)
 	jugador:GetAttributeChangedSignal("Especies"):Connect(actualizar)
 	jugador:GetAttributeChangedSignal("ADN"):Connect(actualizar)
+	jugador:GetAttributeChangedSignal("Residuos"):Connect(actualizar)
 	armarLista()
 	mostrarPadre("A")
 	mostrarPadre("B")

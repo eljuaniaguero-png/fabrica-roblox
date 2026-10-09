@@ -4,6 +4,7 @@
 
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
+local Catalizadores = require(ReplicatedStorage.Shared.Catalizadores)
 local Config = require(ReplicatedStorage.Shared.Config)
 local Costos = require(ReplicatedStorage.Shared.Costos)
 local Fusion = require(ReplicatedStorage.Shared.Fusion)
@@ -46,6 +47,33 @@ end
 
 local MaquinaFusion = {}
 
+-- Si hay residuos suficientes, los gasta y arma un catalizador al azar entre los que conocés
+-- (si todavía no conocés ninguno, uno cualquiera). Devuelve cuál, o nil.
+function MaquinaFusion.fabricar(d: Jugadores.Datos, rng: Random): string?
+	local hacen = Config.Residuos.ParaCatalizador
+	if #d.Residuos < hacen then
+		return nil
+	end
+	for _ = 1, hacen do
+		table.remove(d.Residuos, 1)
+	end
+	local conocidos = {}
+	for _, c in Catalizadores.Lista do
+		if d.CatalizadoresVistos[c.Clave] then
+			table.insert(conocidos, c.Clave)
+		end
+	end
+	if #conocidos == 0 then
+		for _, c in Catalizadores.Lista do
+			table.insert(conocidos, c.Clave)
+		end
+	end
+	local clave = conocidos[rng:NextInteger(1, #conocidos)]
+	d.Catalizadores[clave] = (d.Catalizadores[clave] or 0) + 1
+	d.CatalizadoresVistos[clave] = true
+	return clave
+end
+
 -- Las reglas de la fusión sobre los datos de un jugador, sin avisarle a nadie (también la usa
 -- el simulador de balance). `ahora` es os.clock() o la hora simulada. Devuelve el resultado y
 -- las celebraciones de generación completa.
@@ -75,10 +103,14 @@ function MaquinaFusion.aplicar(
 	local costo = Costos.fusion(ca.Gen, cb.Gen, Jugadores.cantidadEspecies(d))
 	local hijo = Fusion.fusionar(ca, cb)
 	if not hijo or not costo then
-		-- No reaccionan: no se cobra.
+		-- No reaccionan: no se cobra, pero sale un residuo y la máquina dice por qué.
 		d.OcupadoHasta = ahora
 			+ Config.Maquina.EsperaNoReacciona * Mejoras.factorRapidez(d.Mejoras.Rapida)
 		base.Motivo = "NoReaccionan"
+		base.Razon = Fusion.motivo(ca, cb)
+		table.insert(d.Residuos, { A = claveA, B = claveB })
+		base.Fabricado = MaquinaFusion.fabricar(d, rng)
+		base.Residuos = #d.Residuos
 		return base, {}
 	end
 	if d.ADN < costo then
@@ -129,7 +161,7 @@ function MaquinaFusion.pedir(jugador: Player, a: unknown, b: unknown): Fusion.Re
 	end
 	local resultado, celebraciones =
 		MaquinaFusion.aplicar(d, a :: string, b :: string, os.clock(), azar)
-	if resultado.Ok then
+	if resultado.Ok or resultado.Motivo == "NoReaccionan" then
 		Jugadores.publicar(jugador)
 	end
 	responder(jugador, resultado)

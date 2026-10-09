@@ -81,8 +81,6 @@ resultadoFusion.OnClientEvent:Connect(function(r: Fusion.Resultado)
 		mostrarPendientes()
 		if r.Ok then
 			PanelFusion.limpiar()
-		else
-			PanelFusion.aviso("No reaccionan: probá con otra pareja.")
 		end
 		PanelFusion.abrir()
 	else

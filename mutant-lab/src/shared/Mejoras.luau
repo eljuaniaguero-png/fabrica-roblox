@@ -4,6 +4,7 @@
 local Config = require(script.Parent.Config)
 local Costos = require(script.Parent.Costos)
 local Fusion = require(script.Parent.Fusion)
+local Personalidades = require(script.Parent.Personalidades)
 
 local M = Config.Mejoras
 
@@ -68,19 +69,61 @@ export type Activa = {
 	Criatura: Fusion.Criatura,
 	Id: number,
 	Mutante: boolean,
+	Personalidad: string?,
+	Variante: string?,
 }
 
--- Las criaturas que trabajan en los corrales: las de mayor generación, hasta el tope
--- (a igual generación, las que llegaron primero).
-function Mejoras.activas(
-	criaturas: { { Id: number, Clave: string, Mutante: boolean } },
-	nivelCorrales: number
-): { Activa }
+type UnidadCualquiera = {
+	Id: number,
+	Clave: string,
+	Mutante: boolean,
+	Personalidad: string?,
+	Variante: string?,
+}
+
+-- ADN por segundo de cada criatura (sin Nutrientes), en el orden de la lista: los corrales son
+-- tramos de Config.Corrales.PorCorral y las personalidades se afectan dentro de cada uno.
+local function produccion(lista: { Activa }): { number }
+	local r = {}
+	local porCorral = Config.Corrales.PorCorral
+	for inicio = 1, #lista, porCorral do
+		local fin = math.min(#lista, inicio + porCorral - 1)
+		local personalidades = {}
+		for k = inicio, fin do
+			table.insert(personalidades, lista[k].Personalidad or "")
+		end
+		local mult = Personalidades.multiplicadores(personalidades)
+		for k = inicio, fin do
+			r[k] = Config.Economia.ADNPorGen[lista[k].Criatura.Gen] * mult[k - inicio + 1]
+		end
+	end
+	return r
+end
+
+local function suma(t: { number }): number
+	local s = 0
+	for _, v in t do
+		s += v
+	end
+	return s
+end
+
+-- Las criaturas que trabajan en los corrales: las de mayor generación, hasta el tope (a igual
+-- generación, las que llegaron primero). Después se acomodan en los corrales para que rindan
+-- más: se prueban cambios de lugar entre corrales mientras el ADN total suba. El orden de la
+-- lista es el lugar: las primeras Config.Corrales.PorCorral van al corral 1, y así.
+function Mejoras.activas(criaturas: { UnidadCualquiera }, nivelCorrales: number): { Activa }
 	local lista: { Activa } = {}
 	for _, u in criaturas do
 		local c = Fusion.porClave(u.Clave)
 		if c then
-			table.insert(lista, { Criatura = c, Id = u.Id, Mutante = u.Mutante })
+			table.insert(lista, {
+				Criatura = c,
+				Id = u.Id,
+				Mutante = u.Mutante,
+				Personalidad = u.Personalidad,
+				Variante = u.Variante,
+			})
 		end
 	end
 	table.sort(lista, function(a, b)
@@ -93,16 +136,44 @@ function Mejoras.activas(
 	while #lista > tope do
 		table.remove(lista)
 	end
+	local porCorral = Config.Corrales.PorCorral
+	local mejor = suma(produccion(lista))
+	for _ = 1, 20 do
+		local mejoro = false
+		for i = 1, #lista do
+			for j = i + 1, #lista do
+				if math.ceil(i / porCorral) ~= math.ceil(j / porCorral) then
+					lista[i], lista[j] = lista[j], lista[i]
+					local total = suma(produccion(lista))
+					if total > mejor + 1e-6 then
+						mejor = total
+						mejoro = true
+					else
+						lista[i], lista[j] = lista[j], lista[i]
+					end
+				end
+			end
+		end
+		if not mejoro then
+			break
+		end
+	end
 	return lista
 end
 
--- ADN por segundo que generan las criaturas activas.
-function Mejoras.porSegundo(activas: { Activa }, nivelNutrientes: number): number
-	local total = 0
-	for _, a in activas do
-		total += Config.Economia.ADNPorGen[a.Criatura.Gen]
+-- ADN por segundo que genera cada criatura activa (con Nutrientes), en el orden de la lista.
+function Mejoras.porCriatura(activas: { Activa }, nivelNutrientes: number): { number }
+	local m = Mejoras.multiplicadorADN(nivelNutrientes)
+	local r = produccion(activas)
+	for i, v in r do
+		r[i] = v * m
 	end
-	return total * Mejoras.multiplicadorADN(nivelNutrientes)
+	return r
+end
+
+-- ADN por segundo que generan las criaturas activas (un corral, si se le pasa solo ese tramo).
+function Mejoras.porSegundo(activas: { Activa }, nivelNutrientes: number): number
+	return suma(Mejoras.porCriatura(activas, nivelNutrientes))
 end
 
 -- Lo que cuesta otra copia de una base que ya descubriste.

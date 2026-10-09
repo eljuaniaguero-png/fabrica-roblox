@@ -11,6 +11,7 @@ local DataStoreService = game:GetService("DataStoreService")
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
+local Catalizadores = require(ReplicatedStorage.Shared.Catalizadores)
 local Config = require(ReplicatedStorage.Shared.Config)
 local Fusion = require(ReplicatedStorage.Shared.Fusion)
 local Mejoras = require(ReplicatedStorage.Shared.Mejoras)
@@ -99,6 +100,9 @@ local function aGuardados(d: Jugadores.Datos): Guardados
 		Mejoras = table.clone(d.Mejoras),
 		Pedidos = pedidos,
 		Entregados = d.Entregados,
+		Residuos = table.clone(d.Residuos),
+		Catalizadores = table.clone(d.Catalizadores),
+		CatalizadoresVistos = lista(d.CatalizadoresVistos),
 	}
 end
 
@@ -186,9 +190,40 @@ local function limpiar(crudo: any): Guardados?
 			end
 		end
 	end
+	-- Residuos (parejas de especies que existen) y catalizadores (de los que existen).
+	local residuos = {}
+	if typeof(crudo.Residuos) == "table" then
+		for _, r in crudo.Residuos do
+			if
+				#residuos < 100
+				and typeof(r) == "table"
+				and typeof(r.A) == "string"
+				and typeof(r.B) == "string"
+				and Fusion.porClave(r.A)
+				and Fusion.porClave(r.B)
+			then
+				table.insert(residuos, { A = r.A, B = r.B })
+			end
+		end
+	end
+	local catalizadores, vistos = {}, {}
+	for _, c in Catalizadores.Lista do
+		if typeof(crudo.Catalizadores) == "table" then
+			catalizadores[c.Clave] = numero(crudo.Catalizadores[c.Clave], 0, 1e6)
+		end
+		if
+			typeof(crudo.CatalizadoresVistos) == "table"
+			and table.find(crudo.CatalizadoresVistos, c.Clave)
+		then
+			table.insert(vistos, c.Clave)
+		end
+	end
 	return {
 		Version = VERSION,
 		ADN = numero(crudo.ADN, 0, 1e15),
+		Residuos = residuos,
+		Catalizadores = catalizadores,
+		CatalizadoresVistos = vistos,
 		Especies = claves(crudo.Especies),
 		Mutantes = claves(crudo.Mutantes),
 		Criaturas = criaturas,

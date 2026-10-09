@@ -13,6 +13,7 @@
 local HttpService = game:GetService("HttpService")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
+local Catalizadores = require(ReplicatedStorage.Shared.Catalizadores)
 local Config = require(ReplicatedStorage.Shared.Config)
 local Mejoras = require(ReplicatedStorage.Shared.Mejoras)
 local Pedidos = require(ReplicatedStorage.Shared.Pedidos)
@@ -40,6 +41,9 @@ export type Datos = {
 	EsperaPedido: { [number]: number }, -- lugar descartado -> hora (del servidor) del próximo
 	Entregados: number,
 	SiguientePedido: number,
+	Residuos: { { A: string, B: string } }, -- de las parejas que no reaccionaron (su color)
+	Catalizadores: { [string]: number }, -- cuántos tenés de cada uno
+	CatalizadoresVistos: { [string]: boolean }, -- los que conocés (tuviste alguna vez)
 	OcupadoHasta: number, -- la máquina está trabajando hasta este os.clock()
 }
 
@@ -57,6 +61,9 @@ export type Guardados = {
 	Mejoras: Mejoras.Niveles,
 	Pedidos: { { Lugar: number, Pedido: Pedidos.Pedido } }?,
 	Entregados: number?,
+	Residuos: { { A: string, B: string } }?,
+	Catalizadores: { [string]: number }?,
+	CatalizadoresVistos: { string }?,
 }
 
 local datos: { [Player]: Datos } = {}
@@ -181,6 +188,12 @@ function Jugadores.publicar(jugador: Player)
 	jugador:SetAttribute("MejoraNutrientes", d.Mejoras.Nutrientes)
 	jugador:SetAttribute("FactorFusion", Mejoras.factorRapidez(d.Mejoras.Rapida))
 	jugador:SetAttribute("Tope", Mejoras.tope(d.Mejoras.Corrales))
+	local residuos = {}
+	for _, r in d.Residuos do
+		table.insert(residuos, r.A .. "|" .. r.B)
+	end
+	jugador:SetAttribute("Residuos", table.concat(residuos, ";"))
+	jugador:SetAttribute("Catalizadores", Catalizadores.escribir(d.Catalizadores))
 	Jugadores.publicarPedidos(jugador)
 end
 
@@ -201,6 +214,9 @@ function Jugadores.nuevos(): Datos
 		EsperaPedido = {},
 		Entregados = 0,
 		SiguientePedido = 1,
+		Residuos = {},
+		Catalizadores = {},
+		CatalizadoresVistos = {},
 		OcupadoHasta = 0,
 	}
 	for _, n in Config.Economia.BasesIniciales do
@@ -251,6 +267,11 @@ function Jugadores.crear(jugador: Player, guardados: Guardados?)
 		end
 		d.Mejoras = table.clone(guardados.Mejoras)
 		d.Entregados = guardados.Entregados or 0
+		d.Residuos = table.clone(guardados.Residuos or {})
+		d.Catalizadores = table.clone(guardados.Catalizadores or {})
+		for _, k in guardados.CatalizadoresVistos or {} do
+			d.CatalizadoresVistos[k] = true
+		end
 		for _, g in guardados.Pedidos or {} do
 			if g.Lugar >= 1 and g.Lugar <= Config.Pedidos.Activos then
 				d.Pedidos[g.Lugar] = g.Pedido

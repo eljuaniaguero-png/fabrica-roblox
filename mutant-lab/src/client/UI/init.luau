@@ -1237,7 +1237,7 @@ function UI.cartelGrande(): Cartel
 		Nombre = "Detalle",
 		Fuente = "fuerte",
 		Letra = Tema.Letra.Normal,
-		Medida = UDim2.new(1, 0, 0, 40),
+		Medida = UDim2.new(1, 0, 0, 64), -- hasta dos renglones
 	})
 	detalle.LayoutOrder = 4
 	detalle.Parent = fondo

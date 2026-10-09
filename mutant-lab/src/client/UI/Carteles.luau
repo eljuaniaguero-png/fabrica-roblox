@@ -51,7 +51,7 @@ local function pintar(op: Opciones)
 	local alto = 32
 		+ 80
 		+ (if op.Texto then 60 else 0)
-		+ (if op.Detalle then 44 else 0)
+		+ (if op.Detalle then 68 else 0)
 		+ (if mutante then 40 else 0)
 	cartel.Marco.Size = UDim2.fromOffset(660, alto)
 	if op.Arriba then

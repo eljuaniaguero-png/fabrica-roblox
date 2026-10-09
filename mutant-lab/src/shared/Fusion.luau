@@ -30,6 +30,11 @@ export type Resultado = {
 	Mutante: boolean?,
 	Costo: number?,
 	Premio: number?, -- ADN de premio por descubrirla
+	-- Si no reaccionan: la frase que explica por qué, cuántos residuos tenés y, si con este
+	-- se juntaron los suficientes, el catalizador que se armó.
+	Razon: string?,
+	Residuos: number?,
+	Fabricado: string?,
 }
 
 -- Premio grande por completar una generación de la Mutadex (o por llegar a una cantidad
@@ -157,6 +162,27 @@ function Fusion.fusionar(x: Criatura, y: Criatura): Criatura?
 		return nil
 	end
 	return gen3({ dos.Bases[1], dos.Bases[2], b })
+end
+
+-- Por qué x e y no reaccionan, en una frase corta que enseña la regla (nil si reaccionan).
+function Fusion.motivo(x: Criatura, y: Criatura): string?
+	if Fusion.fusionar(x, y) then
+		return nil
+	end
+	if x.Clave == y.Clave then
+		return "Son la misma especie: hacen falta dos distintas."
+	elseif x.Gen == 3 or y.Gen == 3 then
+		return "Las de generación 3 ya no se fusionan."
+	elseif x.Gen == 2 and y.Gen == 2 then
+		return "Dos de generación 2 no reaccionan: probá una gen 2 con una base."
+	elseif x.Gen == 1 and y.Gen == 1 then
+		return "Están muy lejos en la rueda: tienen que estar a 3 lugares o menos."
+	end
+	local dos, uno = if x.Gen == 2 then x else y, if x.Gen == 2 then y else x
+	if table.find(dos.Bases, uno.Bases[1]) then
+		return "Esa base ya está en la mezcla: probá con otra."
+	end
+	return "Las tres bases tienen que quedar seguidas en la rueda."
 end
 
 -- Las 50 especies descubribles, en orden: bases, gen 2, gen 3.

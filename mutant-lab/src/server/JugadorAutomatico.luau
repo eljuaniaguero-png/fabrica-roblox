@@ -7,6 +7,7 @@
 
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
+local Catalizadores = require(ReplicatedStorage.Shared.Catalizadores)
 local Config = require(ReplicatedStorage.Shared.Config)
 local Costos = require(ReplicatedStorage.Shared.Costos)
 local Mejoras = require(ReplicatedStorage.Shared.Mejoras)
@@ -45,7 +46,7 @@ function JugadorAutomatico.iniciar(jugador: Player, segundos: number): boolean
 		ahora = os.clock,
 		fusionar = function(a: string, b: string): boolean
 			local r = MaquinaFusion.pedir(jugador, a, b)
-			return r ~= nil and r.Ok
+			return r ~= nil and (r.Ok or r.Motivo == "NoReaccionan")
 		end,
 		comprar = function(tipo: string, id: any): boolean
 			return Tienda.comprar(jugador, tipo, id)
@@ -59,7 +60,7 @@ function JugadorAutomatico.iniciar(jugador: Player, segundos: number): boolean
 	}
 
 	local adnMaximo, razonMaxima, arriba = 0, 0, 0
-	local fusiones, compras, descartes, sinSaber = 0, 0, 0, 0
+	local fusiones, compras, descartes, sinSaber, residuos = 0, 0, 0, 0, 0
 	local especiesAntes = 0
 	local nuevas: { string } = {}
 
@@ -112,6 +113,8 @@ function JugadorAutomatico.iniciar(jugador: Player, segundos: number): boolean
 			end
 			if accion == "Fusion" then
 				fusiones += 1
+			elseif accion == "Residuo" then
+				residuos += 1
 			elseif accion == "Compra" then
 				compras += 1
 			elseif accion == "Descarte" then
@@ -145,6 +148,9 @@ function JugadorAutomatico.iniciar(jugador: Player, segundos: number): boolean
 				arriba
 			),
 			"Veces sin saber qué hacer: " .. sinSaber,
+			"Residuos hechos: " .. residuos .. " | catalizadores: " .. (if d
+				then Catalizadores.escribir(d.Catalizadores)
+				else ""),
 			"Especies nuevas en: " .. table.concat(nuevas, ", "),
 		}, "\n")
 	end)

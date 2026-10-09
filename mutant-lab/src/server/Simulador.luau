@@ -58,7 +58,7 @@ function Simulador.jugar(segundos: number, semilla: number, registro: { string }
 		end,
 		fusionar = function(a: string, b: string): boolean
 			local r = MaquinaFusion.aplicar(d, a, b, t, rng)
-			return r.Ok
+			return r.Ok or r.Motivo == "NoReaccionan"
 		end,
 		comprar = function(tipo: string, id: any): boolean
 			return Tienda.aplicar(d, tipo, id).Ok

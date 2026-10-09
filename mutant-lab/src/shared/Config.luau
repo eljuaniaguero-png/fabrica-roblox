@@ -118,6 +118,26 @@ local Config = {
 		},
 	},
 
+	-- Personalidades (ficha, "Personalidades"): cuánto cambian el ADN por segundo de la criatura
+	-- (Propia) y el de las demás de su corral (Vecinas). 0,1 = 10 %. Las negativas pierden algo
+	-- pero tienen una ventaja: conviene ubicarlas bien (el corral las acomoda solo).
+	Personalidades = {
+		Alegre = { Propia = 0, Vecinas = 0.1 },
+		Curiosa = { Propia = 0.2, Vecinas = 0 },
+		Lider = { Propia = 0, Vecinas = 0.15 },
+		Trabajadora = { Propia = 0.35, Vecinas = 0 },
+		Vaga = { Propia = -0.5, Vecinas = 0.1 }, -- da la mitad, pero tranquiliza a las demás
+		Peleadora = { Propia = 0.8, Vecinas = -0.2 }, -- da mucho más, pero molesta a las demás
+		Miedosa = { Propia = -0.3, Vecinas = 0, ConLider = 0.5 }, -- con una Líder al lado, +50 %
+		Glotona = { Propia = 0.6, Vecinas = -0.1 }, -- se come la comida de las demás
+		AvisoDesde = 5, -- especies descubiertas para el cartel que las explica
+	},
+
+	-- Fracasos útiles: si una pareja no reacciona, la máquina igual hace un residuo (gratis).
+	Residuos = {
+		ParaCatalizador = 5, -- con esta cantidad se arma un catalizador al azar de los que conocés
+	},
+
 	-- Pistas de las siluetas
 	Pistas = {
 		CostoBase = 100, -- cada pista cuesta CostoBase x (pistas que ya compraste + 1)
@@ -142,6 +162,7 @@ local Config = {
 		Robot = {
 			Pensar = 3, -- mirar una pareja en el panel o no hacer nada
 			Fusion = 7, -- animación entera y volver al panel
+			Residuo = 5, -- una pareja que no reacciona (animación corta)
 			Entrega = 5, -- abrir el tablero, elegir y ver la despedida
 			Compra = 6, -- caminar hasta el mostrador y comprar
 			Descarte = 3,

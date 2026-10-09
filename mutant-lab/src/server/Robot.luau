@@ -12,7 +12,8 @@
 --   6. Fusionar otra copia de una especie que ya conoce y que le pide un cliente.
 --   7. Comprar otra copia de una base: para un pedido o porque entregó la suya.
 --   8. Con ADN de sobra, comprar una mejora (Nutrientes o Fusión rápida).
---   9. Descartar un pedido imposible (mutante sin mutantes) o trabado hace mucho.
+--   9. Probar una pareja que no reacciona, para juntar residuos (salen gratis).
+--  10. Descartar un pedido imposible (mutante sin mutantes) o trabado hace mucho.
 -- Si no puede hacer nada, espera (y eso puede contar como "sin saber qué hacer").
 
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
@@ -47,7 +48,9 @@ local Robot = {}
 
 -- Segundos que tarda cada acción (o pensar, si no hizo nada).
 function Robot.duracion(accion: string?): number
-	if accion == "Fusion" then
+	if accion == "Residuo" then
+		return R.Residuo
+	elseif accion == "Fusion" then
 		return R.Fusion
 	elseif accion == "Entrega" then
 		return R.Entrega
@@ -312,7 +315,20 @@ function Robot.turno(m: Mundo, mem: Memoria): string?
 		end
 	end
 
-	-- 9. Descartar lo imposible o lo trabado hace mucho.
+	-- 9. Una pareja que ya sabe que no reacciona: igual sale un residuo (gratis).
+	if libre then
+		for _, par in posibles do
+			if mem.Vistas[pareja(par[1], par[2])] then
+				local x = Fusion.porClave(par[1]) :: Fusion.Criatura
+				local y = Fusion.porClave(par[2]) :: Fusion.Criatura
+				if not Fusion.fusionar(x, y) and m.fusionar(par[1], par[2]) then
+					return "Residuo"
+				end
+			end
+		end
+	end
+
+	-- 10. Descartar lo imposible o lo trabado hace mucho.
 	local mutantes = 0
 	for _, u in d.Criaturas do
 		if u.Mutante then

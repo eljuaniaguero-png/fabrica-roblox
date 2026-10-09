@@ -7,6 +7,7 @@
 local CollectionService = game:GetService("CollectionService")
 
 local Config = require(script.Parent.Config)
+local Dibujos = require(script.Parent.Dibujos)
 local Especies = require(script.Parent.Especies)
 local Fusion = require(script.Parent.Fusion)
 local Paleta = require(script.Parent.Paleta)
@@ -18,7 +19,6 @@ local Generador = {}
 local C = Config.Criaturas
 local COLOR_SILUETA = Paleta.Piezas.Negro
 local CENTRO_CABEZA = Vector3.new(0, 3.9, -1.7) -- donde arma Piezas las cabezas
-local FUENTE = Font.new("rbxasset://fonts/families/FredokaOne.json")
 
 -- Partes que no se repintan ni se apagan: ojos, cejas y las piezas propias del estilo.
 local SIN_PINTAR = {
@@ -130,17 +130,10 @@ local function icono(raiz: BasePart, personalidad: string, alto: number)
 	borde.Transparency = 0.15
 	borde.Parent = fondo
 
-	local texto = Instance.new("TextLabel")
-	texto.Size = UDim2.fromScale(0.72, 0.72)
-	texto.Position = UDim2.fromScale(0.5, 0.5)
-	texto.AnchorPoint = Vector2.new(0.5, 0.5)
-	texto.BackgroundTransparency = 1
-	texto.FontFace = FUENTE
-	texto.Text = datos.Icono
-	texto.TextScaled = true
-	texto.TextColor3 = Paleta.Texto
-	texto.TextTransparency = 0.1
-	texto.Parent = fondo
+	-- El dibujo se arma en proporciones, así que se estira al tamaño del cartel.
+	local dibujo = Dibujos.crear(datos.Dibujo, 32, borde.Color)
+	dibujo.Size = UDim2.fromScale(0.66, 0.66)
+	dibujo.Parent = fondo
 end
 
 -- Crea el modelo parado en `donde` (el pivote queda en el piso, mirando a -Z).
