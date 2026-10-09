@@ -2,10 +2,13 @@
 -- Destello al comprar o mejorar algo, sobre lo que cambió (guía de estilo, punto 7):
 --   especie base -> sobre la criatura nueva, cuando llega al corral;
 --   Más corrales -> sobre el corral que se abrió;
---   las otras mejoras y las pistas -> sobre el mostrador de la tienda.
+--   Fusión rápida -> sobre la máquina;
+--   Nutrientes -> sobre cada corral abierto (uno atrás del otro);
+--   las pistas -> sobre el mostrador de la tienda.
 -- Solo visual: el servidor avisa con el remoto Compra cuando la compra salió bien.
 
 local Debris = game:GetService("Debris")
+local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local TweenService = game:GetService("TweenService")
 
@@ -18,7 +21,7 @@ local compra = ReplicatedStorage:WaitForChild("Remotos"):WaitForChild("Compra") 
 
 local CRECER = TweenInfo.new(0.55, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
 
-local function destello(donde: Vector3, tamano: number, color: Color3)
+local function destello(donde: Vector3, tamano: number, color: Color3, callado: boolean?)
 	-- Una esfera de luz que crece y se apaga, con chispas.
 	local bola = Instance.new("Part")
 	bola.Name = "DestelloCompra"
@@ -52,8 +55,10 @@ local function destello(donde: Vector3, tamano: number, color: Color3)
 	chispas:Emit(30)
 	TweenService:Create(bola, CRECER, { Size = Vector3.one * tamano, Transparency = 1 }):Play()
 	TweenService:Create(luz, CRECER, { Brightness = 0 }):Play()
-	-- SONIDO: destello de compra (acorde brillante)
-	Sonidos.acorde({ 12, 16, 19 }, 0.25)
+	if not callado then
+		-- SONIDO: destello de compra (acorde brillante)
+		Sonidos.acorde({ 12, 16, 19 }, 0.25)
+	end
 	Debris:AddItem(bola, 1.2)
 end
 
@@ -101,6 +106,28 @@ compra.OnClientEvent:Connect(function(tipo: string, id: any, nivel: number?)
 		local donde = posicion(corral and corral:FindFirstChild("Piso")) or posicion(corral)
 		if donde then
 			destello(donde + Vector3.new(0, 3, 0), 18, Paleta.Acento)
+		end
+	elseif tipo == "Mejora" and id == "Rapida" then
+		local donde = posicion(lab:FindFirstChild("Maquina"))
+		if donde then
+			destello(donde + Vector3.new(0, 1, 0), 16, Paleta.Acento)
+		end
+	elseif tipo == "Mejora" and id == "Nutrientes" then
+		-- Todas las criaturas rinden más: un destello en cada corral abierto.
+		local abiertos = (Players.LocalPlayer:GetAttribute("MejoraCorrales") :: number?) or 1
+		for k = 1, abiertos do
+			local corral = lab:WaitForChild("Corrales"):FindFirstChild("Corral" .. k)
+			local donde = posicion(corral and corral:FindFirstChild("Zona")) or posicion(corral)
+			if donde then
+				task.delay(
+					(k - 1) * 0.15,
+					destello,
+					donde + Vector3.new(0, 2, 0),
+					12,
+					Paleta.Acento,
+					k > 1
+				)
+			end
 		end
 	else
 		local donde = posicion(mostrador)

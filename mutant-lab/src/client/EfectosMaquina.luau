@@ -21,6 +21,7 @@ local Paleta = require(ReplicatedStorage.Shared.Paleta)
 local Personalidades = require(ReplicatedStorage.Shared.Personalidades)
 local MiLab = require(script.Parent.MiLab)
 local Sonidos = require(script.Parent.Sonidos)
+local UI = require(script.Parent.UI)
 local Carteles = require(script.Parent.UI.Carteles)
 
 local M = Config.Maquina
@@ -395,61 +396,167 @@ local function noReaccionan(
 	ocultarCartel()
 end
 
--- Anima una fusión de unos 3,3 segundos y deja el cartel unos segundos más (menos con "Fusión rápida").
--- Frena al que la llama hasta que termina.
-function Efectos.jugar(r: Fusion.Resultado)
-	local ca, cb = Fusion.porClave(r.A), Fusion.porClave(r.B)
-	if not ca or not cb then
-		return
+---------------------------------------------------------------------------
+-- El espectáculo más grande (mutante o generación 3 nueva)
+---------------------------------------------------------------------------
+
+-- Luces de todo el laboratorio: las luces y el neón del edificio (sin la máquina ni las
+-- criaturas, que tienen lo suyo).
+local lucesLab: { Instance } = {}
+local coloresLab: { [Instance]: Color3 } = {}
+for _, d in MiLab.obtener():GetDescendants() do
+	if d:IsDescendantOf(maquina) or d:FindFirstAncestor("Criaturas") then
+		continue
 	end
-	-- Las cápsulas muestran a los padres (los padres no se gastan).
-	for lado, clave in { A = r.A, B = r.B } do
-		local mini = capsulas[lado].Mini
-		if not mini or mini:GetAttribute("Clave") ~= clave then
-			Efectos.mostrarEnCapsula(lado, clave)
+	if d:IsA("Light") or (d:IsA("BasePart") and d.Material == Enum.Material.Neon) then
+		table.insert(lucesLab, d)
+		coloresLab[d] = (d :: any).Color
+	end
+end
+
+local function fiestaDeLuces(duracion: number)
+	local fin = os.clock() + duracion
+	local paso = 0
+	while os.clock() < fin do
+		paso += 1
+		for i, l in lucesLab do
+			-- Son luces o partes de neón: las dos tienen Color.
+			(l :: any).Color = PALETA_LUCES[(i + paso) % #PALETA_LUCES + 1]
 		end
+		task.wait(0.12)
 	end
-	if criaturaSalida then
-		criaturaSalida:Destroy()
-		criaturaSalida = nil
+	for l, color in coloresLab do
+		(l :: any).Color = color
 	end
-	enfocar()
-	-- Con la mejora "Fusión rápida" todo dura menos (f = 1 normal, 0.5 la mitad).
-	local f = (Players.LocalPlayer:GetAttribute("FactorFusion") :: number?) or 1
+end
 
-	local c = if r.Clave then Fusion.porClave(r.Clave) else nil
-	if not r.Ok or not c then
-		noReaccionan(ca, cb, f, r)
-		soltar()
-		return
+-- La cámara tiembla un poco (solo mientras mira la máquina).
+local function sacudirCamara(duracion: number, fuerza: number)
+	local camara = workspace.CurrentCamera
+	local fin = os.clock() + duracion
+	while os.clock() < fin and camara.CameraType == Enum.CameraType.Scriptable do
+		local x = (math.random() - 0.5) * fuerza
+		local y = (math.random() - 0.5) * fuerza
+		camara.CFrame = puntoCamara.CFrame * CFrame.new(x, y, 0)
+		RunService.RenderStepped:Wait()
 	end
+	if camara.CameraType == Enum.CameraType.Scriptable then
+		camara.CFrame = puntoCamara.CFrame
+	end
+end
 
+---------------------------------------------------------------------------
+-- Saltear (solo con especies que ya conocías)
+---------------------------------------------------------------------------
+
+local saltar = false
+local botonSaltear = UI.boton({
+	Nombre = "Saltear",
+	Texto = "Saltear",
+	Tipo = "secundario",
+	Letra = UI.Tema.Letra.Normal,
+	Medida = UDim2.fromOffset(220, UI.Tema.Toque),
+	AlTocar = function()
+		saltar = true
+	end,
+})
+botonSaltear.Marco.AnchorPoint = Vector2.new(1, 1)
+botonSaltear.Marco.Position = UDim2.new(1, -UI.Tema.Margen, 1, -UI.Tema.Margen)
+botonSaltear.Marco.Visible = false
+botonSaltear.Marco.Parent = Carteles.Capa.Raiz
+
+-- Espera `segundos`, o menos si tocaron "Saltear".
+local function esperar(segundos: number)
+	local fin = os.clock() + segundos
+	while os.clock() < fin and not saltar do
+		RunService.RenderStepped:Wait()
+	end
+end
+
+-- El contador de la Mutadex del HUD espera a la revelación para subir (ver Hud.client).
+local function soltarContador()
+	Players.LocalPlayer:SetAttribute("RetenerProgreso", nil)
+end
+
+---------------------------------------------------------------------------
+-- Las tres fusiones que reaccionan
+---------------------------------------------------------------------------
+
+local function textoDetalle(r: Fusion.Resultado, c: Fusion.Criatura): string
+	local personalidad = Personalidades.Datos[r.Personalidad or ""]
+	return "Generación "
+		.. c.Gen
+		.. (if personalidad then " · " .. personalidad.Nombre else "")
+		.. (if r.Premio then " · +" .. Formato.numero(r.Premio) .. " ADN" else "")
+end
+
+-- Nivel 1, especie que ya conocías: corta (un segundo). La cría aparece con un destello.
+local function corta(
+	r: Fusion.Resultado,
+	c: Fusion.Criatura,
+	ca: Fusion.Criatura,
+	cb: Fusion.Criatura,
+	f: number
+)
+	-- SONIDO: fusión corta (tres notas rápidas que suben)
+	Sonidos.secuencia({ 0, 7, 12 }, 0.07, 0.35)
+	llenar(capsulas.A, ca.Color, 1, 0.2 * f)
+	llenar(capsulas.B, cb.Color, 1, 0.2 * f)
+	tubos({ A = ca.Color, B = cb.Color })
+	task.spawn(temblar, 0.3 * f, 0.2)
+	esperar(0.3 * f)
+	destello(Paleta.Texto)
+	criaturaSalida = crearEnSalida(c, false, r.Mutante, r.Personalidad, r.Variante)
+	tubos(nil)
+	llenar(capsulas.A, ca.Color, 0, 0.3 * f)
+	llenar(capsulas.B, cb.Color, 0, 0.3 * f)
+	local cat = Catalizadores.porClave(r.Variante)
+	mostrarCartel(
+		"Ya la tenías",
+		Catalizadores.nombre(c.Nombre, r.Variante),
+		textoDetalle(r, c),
+		false,
+		if cat then cat.Color else Paleta.Texto
+	)
+	esperar(0.7 * f)
+end
+
+-- Niveles 2 y 3: la completa, con silueta y revelación. La 3 (mutante o generación 3 nueva)
+-- además sacude la cámara, prende las luces de todo el laboratorio y tira papelitos.
+local function completa(
+	r: Fusion.Resultado,
+	c: Fusion.Criatura,
+	ca: Fusion.Criatura,
+	cb: Fusion.Criatura,
+	f: number,
+	nivel: number
+)
 	-- 1) Las cápsulas se llenan del color de cada padre (0,8 s).
 	-- SONIDO: burbujeo (notas que suben rápido)
 	Sonidos.secuencia({ 0, 4, 7, 9, 12, 16 }, 0.12 * f, 0.3)
 	llenar(capsulas.A, ca.Color, 1, 0.8 * f)
 	llenar(capsulas.B, cb.Color, 1, 0.8 * f)
-	task.wait(0.8 * f)
+	esperar(0.8 * f)
 
 	-- 2) La máquina tiembla, las luces parpadean y sale humo (1,4 s).
 	-- SONIDO: zumbido de la máquina (nota grave repetida)
 	Sonidos.secuencia({ -12, -12, -10, -12, -12, -10, -9 }, 0.2 * f, 0.4)
 	tubos({ A = ca.Color, B = cb.Color })
-	task.spawn(temblar, 1.4 * f, 0.35)
+	task.spawn(temblar, 1.4 * f, if nivel >= 3 then 0.5 else 0.35)
 	task.spawn(parpadear, 1.4 * f)
 	largarHumo(true, 10)
-	task.wait(0.7 * f)
+	esperar(0.7 * f)
 
 	-- 3) Aparece la silueta negra dentro de la cúpula.
 	-- SONIDO: suspenso (escalera que sube)
 	Sonidos.secuencia({ 0, 1, 2, 3, 4, 5, 6, 7 }, 0.1 * f, 0.35)
 	local silueta = crearEnSalida(c, true)
 	mostrarCartel("¿Qué será?", "???", "Generación " .. c.Gen, false, Paleta.Alerta)
-	task.wait(0.7 * f)
+	esperar(0.7 * f)
 	largarHumo(false)
-	task.wait(0.8 * f)
+	esperar(0.8 * f)
 
-	-- 4) Revelación: destello, la criatura de verdad y el cartel con nombre y generación.
+	-- 4) Revelación: destello, la criatura de verdad y el cartel con el nombre letra por letra.
 	-- SONIDO: revelación (acorde mayor + nota aguda)
 	Sonidos.acorde({ 0, 4, 7 }, 0.45)
 	Sonidos.secuencia({ 12, 16, 19, 24 }, 0.08, 0.35)
@@ -464,29 +571,83 @@ function Efectos.jugar(r: Fusion.Resultado)
 	llenar(capsulas.A, ca.Color, 0, 0.6 * f)
 	llenar(capsulas.B, cb.Color, 0, 0.6 * f)
 	local mutante = r.Mutante == true
-	local personalidad = Personalidades.Datos[r.Personalidad or ""]
-	mostrarCartel(
-		if r.Nueva
-			then "¡ESPECIE NUEVA!"
+	Carteles.fijar({
+		Titulo = if r.Nueva
+			then "¡NUEVA ESPECIE!"
 			elseif r.NuevaVariante then "¡VARIANTE NUEVA!"
 			else "Ya la tenías",
-		Catalizadores.nombre(c.Nombre, r.Variante),
-		"Generación "
-			.. c.Gen
-			.. (if personalidad then " · " .. personalidad.Nombre else "")
-			.. (if r.Premio then " · +" .. Formato.numero(r.Premio) .. " ADN" else ""),
-		mutante,
-		if mutante
+		Texto = Catalizadores.nombre(c.Nombre, r.Variante),
+		Detalle = textoDetalle(r, c),
+		Mutante = mutante,
+		Color = if mutante
 			then Paleta.Dorado
 			elseif r.Nueva then Paleta.Acento
 			elseif cat then cat.Color
-			else Paleta.Texto
-	)
+			else Paleta.Texto,
+		Arriba = true,
+		LetraPorLetra = r.Nueva or r.NuevaVariante,
+	})
+	-- El contador de la Mutadex sube ahora, con su rebote.
+	soltarContador()
 	if mutante then
 		efectoMutante()
 	end
+	if nivel >= 3 then
+		-- SONIDO: fanfarria del espectáculo grande (arpegio que sube y baja)
+		Sonidos.secuencia({ 0, 4, 7, 12, 16, 19, 24, 19 }, 0.09, 0.4)
+		task.spawn(sacudirCamara, 0.7, 0.5)
+		task.spawn(fiestaDeLuces, 2.4)
+		UI.papelitos(Carteles.Capa.Raiz, Config.Interfaz.Papelitos[1])
+	end
+	esperar(M.TiempoRevelacion * f)
+end
 
-	task.wait(M.TiempoRevelacion * f)
+-- Anima una fusión y frena al que la llama hasta que termina. Hay tres niveles: corta (especie
+-- que ya conocías), completa (especie o variante nueva) y la más grande (mutante o generación 3
+-- nueva). Con la mejora "Fusión rápida" todo dura menos.
+function Efectos.jugar(r: Fusion.Resultado)
+	local ca, cb = Fusion.porClave(r.A), Fusion.porClave(r.B)
+	if not ca or not cb then
+		soltarContador()
+		return
+	end
+	-- Las cápsulas muestran a los padres (los padres no se gastan).
+	for lado, clave in { A = r.A, B = r.B } do
+		local mini = capsulas[lado].Mini
+		if not mini or mini:GetAttribute("Clave") ~= clave then
+			Efectos.mostrarEnCapsula(lado, clave)
+		end
+	end
+	if criaturaSalida then
+		criaturaSalida:Destroy()
+		criaturaSalida = nil
+	end
+	enfocar()
+	-- f = 1 normal, 0.5 la mitad.
+	local f = (Players.LocalPlayer:GetAttribute("FactorFusion") :: number?) or 1
+
+	local c = if r.Clave then Fusion.porClave(r.Clave) else nil
+	if not r.Ok or not c then
+		noReaccionan(ca, cb, f, r)
+		soltarContador()
+		soltar()
+		return
+	end
+
+	local nivel = if r.Mutante or (r.Nueva and c.Gen >= 3)
+		then 3
+		elseif r.Nueva or r.NuevaVariante then 2
+		else 1
+	saltar = false
+	botonSaltear.Marco.Visible = not r.Nueva
+	if nivel == 1 then
+		corta(r, c, ca, cb, f)
+	else
+		completa(r, c, ca, cb, f, nivel)
+	end
+	botonSaltear.Marco.Visible = false
+	saltar = false
+	soltarContador()
 	ocultarCartel()
 	soltar()
 end

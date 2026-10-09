@@ -197,6 +197,24 @@ local Config = {
 		-- Rendimiento: solo se animan las criaturas a menos de esto de la cámara. Con 6
 		-- laboratorios llenos hay casi 100 criaturas; las de los demás quedan quietas de lejos.
 		DistanciaAnimar = 80,
+		-- Vida en el corral según la personalidad (Parte 7) y la reacción al tocar una criatura.
+		Vida = {
+			DuracionSalto = 0.55, -- salto grande (Alegre, o la que empujaron)
+			AlturaSaltoGrande = 1.8,
+			CadaSaltoAlegre = { 2.5, 5 }, -- segundos entre saltos grandes de una Alegre
+			VelocidadVaga = 0.5, -- la Vaga camina a la mitad...
+			SuenioVaga = { 4, 8 }, -- ...y duerme este rato...
+			DespiertaVaga = { 6, 12 }, -- ...cada tanto
+			CadaEmpujon = { 6, 11 }, -- segundos entre empujones de una Peleadora
+			DistanciaEmpujon = 1.6, -- llega hasta acá de su vecina y la empuja...
+			Empujon = 1.8, -- ...esta distancia
+			MiedosaDistancia = 1.8, -- la Miedosa se queda así de cerca de otra
+			CuriosaDistancia = 30, -- la Curiosa se acerca si el jugador está a menos de esto del corral
+			DuracionToque = 0.7, -- al tocarla: salta y da una vuelta...
+			AlturaToque = 2.4,
+			CartelToque = 3.5, -- ...y muestra su nombre y personalidad este rato
+			DistanciaToque = 120, -- se pueden tocar las criaturas a menos de esto de la cámara
+		},
 	},
 
 	-- Forma de las criaturas (guía de estilo, punto 5): estilo chibi, la cabeza ocupa la
@@ -222,6 +240,7 @@ local Config = {
 		DuracionCartel = 3, -- el cartel grande se va solo a los 3 segundos (o al tocarlo)
 		DuracionFestejo = 4, -- el de generación completa queda un poco más
 		Papelitos = { 90, 60 }, -- papelitos de cada tanda del festejo (la segunda sale después)
+		PausaLetra = 0.07, -- "¡NUEVA ESPECIE!": segundos entre cada letra del nombre
 	},
 
 	-- Guardado en el servidor (DataStore). Cambiar el nombre empieza todo de cero.
@@ -241,6 +260,12 @@ local Config = {
 	Efectos = {
 		NumeroADNMinimo = 1, -- el "+N" junto al contador sale cuando sumás al menos esto
 		NumeroADNGrande = 50, -- desde acá el "+N" sale más grande y dorado (premios, ventas)
+		-- El "+N" que sale de cada criatura del corral: cada cuánto, cuánto sube y cuánto tarda
+		-- en volar al contador. Vuelan pocos a la vez (rendimiento en celular).
+		CadaADNFlotante = 3,
+		DuracionSube = 0.6,
+		DuracionVuelo = 0.55,
+		MaximoVolando = 10,
 	},
 
 	-- Premium (ficha de monetización, "Mutant Lab"). Los IDs van vacíos: los crea el usuario en el

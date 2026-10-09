@@ -191,7 +191,12 @@ end, progreso.Marco)
 
 local cantidadAnterior: number? = nil
 
+-- Mientras la máquina anima una fusión, el contador espera a la revelación para subir (lo
+-- marca Maquina.client con el atributo local "RetenerProgreso" y lo suelta EfectosMaquina).
 local function actualizarProgreso()
+	if jugador:GetAttribute("RetenerProgreso") then
+		return
+	end
 	local n = 0
 	for _ in Formato.conjunto(jugador:GetAttribute("Especies") :: string?) do
 		n += 1
@@ -199,7 +204,7 @@ local function actualizarProgreso()
 	textoProgreso.Text = n .. " / " .. TOTAL
 	barra.poner(n / TOTAL, cantidadAnterior ~= nil)
 	if cantidadAnterior and n ~= cantidadAnterior then
-		escalaProgreso.Scale = 1.15
+		escalaProgreso.Scale = if n > cantidadAnterior then 1.3 else 1.15
 		UI.animar(escalaProgreso, Tema.Rebote, { Scale = 1 })
 	end
 	cantidadAnterior = n
@@ -258,6 +263,7 @@ end
 jugador:GetAttributeChangedSignal("ADN"):Connect(actualizarADN)
 jugador:GetAttributeChangedSignal("ADNPorSegundo"):Connect(actualizarPorSegundo)
 jugador:GetAttributeChangedSignal("Especies"):Connect(actualizarProgreso)
+jugador:GetAttributeChangedSignal("RetenerProgreso"):Connect(actualizarProgreso)
 jugador:GetAttributeChangedSignal("Entregados"):Connect(actualizarPedidos)
 local eventoAviso = remotos:WaitForChild("Aviso") :: RemoteEvent
 eventoAviso.OnClientEvent:Connect(function(texto: string, tipo: string?)

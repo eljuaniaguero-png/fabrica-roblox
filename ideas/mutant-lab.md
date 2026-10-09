@@ -13,6 +13,7 @@ Versión 8 (2026-10-09): **interfaz terminada**: el panel de fusión, la Mutadex
 Versión 9 (2026-10-09): **Pedidos** (pedido 2 de `ORDEN-PEDIDOS.md`): clientes que piden criaturas, inventario de criaturas y balance nuevo del ADN. Ver "Pedidos".
 Versión 10 (2026-10-09): **fracasos útiles, personalidades y catalizadores** (pedido 3 de `ORDEN-PEDIDOS.md`): residuos, personalidades con herencia y efectos en el corral, ranura de catalizador con variantes, y pedidos de personalidad y de variante. Ver "Fracasos útiles, personalidades y catalizadores".
 Versión 11 (2026-10-09): **Parte 5 revisada** (pedido 4 de `ORDEN-PEDIDOS.md`): se guarda todo lo nuevo, balance medido hasta completar la Mutadex (suba tardía del 12 % y premios de pedidos más chicos), guía y rendimiento probados. Ver "Revisión de la Parte 5 con pedidos, personalidades y catalizadores".
+Versión 12 (2026-10-09): **Parte 7 hecha** (pedido 5 de `ORDEN-PEDIDOS.md`): tres niveles de fusión, "¡NUEVA ESPECIE!" letra por letra, botón Saltear, criaturas que reaccionan al tocarlas y viven según su personalidad, ADN que vuela al contador y destellos de mejoras. Ver "Notas de la Parte 7".
 Próximo punto de control: **prototipo jugable** (Partes 1 a 5).
 
 ## Guía de estilo: laboratorio de caricatura de noche (versión 6)
@@ -544,6 +545,37 @@ Al terminar cada bloque, el jugador automático jugó 10 minutos como jugador nu
 
 Capturas en `capturas/pedido-3/`: residuo en el panel y en la máquina, corral con personalidades, herencia en el panel, cría Líder, catalizador en el panel, fusión con catalizador, Mutadex con variantes y sellos, el cartel de la ranura y pedidos que pagan un catalizador.
 
+## Notas de la Parte 7: que la fusión se sienta increíble (versión 12)
+
+Pedido 5 de `ORDEN-PEDIDOS.md`. No hay sistemas nuevos: solo cambia cómo se siente lo que ya existía. Todo es del lado del cliente.
+
+### Tres niveles de fusión (`client/EfectosMaquina.luau`)
+- **Nivel 1, especie que ya tenías** (~1 segundo): las cápsulas se llenan rápido, un temblor corto, destello y la cría ya está afuera con un cartel chico ("Ya la tenías · Glumulo · Generación 2 · Líder").
+- **Nivel 2, especie o variante nueva** (la completa): cápsulas, temblor y humo, la silueta negra con "¿Qué será?" y la revelación.
+- **Nivel 3, mutante o generación 3 nueva** (la más grande): lo mismo más la cámara que tiembla, **las luces de todo el laboratorio** cambiando de color (neón y luces del edificio, sin la máquina ni las criaturas), papelitos y una fanfarria.
+- **"¡NUEVA ESPECIE!"**: el nombre aparece **letra por letra** con un tic que sube (`Carteles` con `LetraPorLetra`, `Config.Interfaz.PausaLetra`).
+- **El contador de la Mutadex del HUD espera a la revelación** para subir, con un rebote más grande (antes subía al apretar "Fusionar" y adelantaba la sorpresa).
+- **Botón "Saltear"** abajo a la derecha mientras se anima una especie que ya conocías: corta las esperas.
+
+### Criaturas con vida (`shared/Animacion.luau`, `client/AnimarCriaturas.client.luau`)
+- **Tocar una criatura** (mouse o dedo): salta alto, da una vuelta, "dice" dos notas (según su primera base; más grave si es de más generación) y muestra un cartelito con su nombre y su personalidad ("Miedosa: da -30 %, pero con una Líder en su corral da +50 %"). **Decisión:** las piezas de las criaturas no frenan rayos (así no molestan a la cámara), así que el toque se busca comparando posiciones en la pantalla.
+- **En el corral, cada personalidad tiene su vida**: cuando están quietas **se miran entre sí**; la **Alegre** pega saltos grandes cada 2,5 a 5 segundos; la **Vaga** camina a la mitad y cada tanto **se duerme con una "Z"** que sube y se desvanece; la **Peleadora** va hasta una vecina y **la empuja** (la otra sale con un saltito); la **Miedosa** se queda pegada a otra; la **Curiosa** se acerca al jugador si está cerca del corral. Los números están en `Config.Animacion.Vida`.
+
+### ADN y compras
+- **El ADN vuela al contador**: el "+N" salta sobre cada criatura del corral y después viaja por la pantalla hasta el contador de ADN (como mucho 10 a la vez, `Config.Efectos`).
+- **Destello al comprar una mejora en lo que mejoró**: Más corrales, en el corral nuevo (ya estaba); **Fusión rápida, en la máquina**; **Nutrientes, en cada corral abierto**, uno atrás del otro; las pistas, en el mostrador.
+
+### Sonidos
+Todos los nuevos están marcados con `-- SONIDO:` (fusión corta, fanfarria del nivel 3, cada letra del nombre, la voz de cada criatura y el destello). Usan el sample de `Sonidos.luau` cambiando el tono.
+
+### Probado (2026-10-09, en Studio, como jugador)
+- Glupona + Rámulo (ya conocida): a los 0,6 segundos ya estaba el Glumulo afuera con el cartel corto y el botón "Saltear".
+- Rocote + Chisparo (gen 2 nueva): la completa, con "¡NUEVA ESPECIE! Roparo" letra por letra.
+- Ratomi + Rocote (gen 3 nueva): papelitos, luces del laboratorio y cámara temblando, "¡NUEVA ESPECIE! Ratote".
+- Tocar a Chisparo en el corral: salto, vuelta y su cartelito.
+- **Rendimiento**: 16 criaturas con su vida, los números que vuelan y las partículas: **60 cuadros por segundo** en Studio (peor cuadro 18 ms). Consola sin errores.
+- Capturas en `capturas/pedido-5/`.
+
 ## La idea en una línea
 
 Un laboratorio donde combinás criaturas para descubrir especies nuevas y llenar las siluetas de tu Mutadex.
@@ -752,6 +784,7 @@ Cómo lo vamos a mirar en el playtest:
 - [x] **Parte 4 - Laboratorio y economía** (hecha el 2026-10-08): el mapa del laboratorio, criaturas paseando, ADN por segundo, terminal para comprar bases y mejoras.
 - [x] **Parte 5 - Guardado, balance y pulido** (hecha el 2026-10-08): DataStore, balance medido con un playtest de 10 minutos, guía de los primeros segundos, efectos (número de ADN, rebote, destello al comprar), prueba con 20 criaturas y consola limpia. Ver "Notas de la Parte 5". **Revisada el 2026-10-09** con pedidos, residuos, personalidades y catalizadores: guardado de todo, balance medido hasta completar la Mutadex, guía y rendimiento (versión 11).
 - [ ] **Parte 6 - Compras con Robux**: solo cosas que no son azar. Ideas: pase "Doble ADN", pase "Segunda máquina" (dos fusiones a la vez), colores del laboratorio. Nada de cajas sorpresa ni subir la chance de mutante. Es punto de control: los pases los crea y les pone precio el usuario.
+- [x] **Parte 7 - Que la fusión se sienta increíble** (hecha el 2026-10-09): tres niveles de espectáculo, nombre letra por letra, saltear, criaturas que reaccionan al tocarlas y viven según su personalidad, ADN que vuela al contador y destellos de mejoras. Ver "Notas de la Parte 7".
 
 Puntos de control: esta ficha → estilo visual → prototipo jugable (Partes 1 a 5) → Parte 6.
 

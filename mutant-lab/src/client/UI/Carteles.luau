@@ -9,6 +9,7 @@ local RunService = game:GetService("RunService")
 
 local Config = require(ReplicatedStorage.Shared.Config)
 local Paleta = require(ReplicatedStorage.Shared.Paleta)
+local Sonidos = require(script.Parent.Parent.Sonidos)
 local UI = require(script.Parent)
 
 local Tema = UI.Tema
@@ -22,6 +23,7 @@ export type Opciones = {
 	Duracion: number?,
 	Arriba: boolean?, -- arriba de la pantalla (la máquina deja libre el centro para la criatura)
 	AlMostrar: (() -> ())?, -- se llama cuando el cartel entra (papelitos, fanfarria)
+	LetraPorLetra: boolean?, -- el texto grande (el nombre) aparece de a una letra
 }
 
 local capa = UI.Pantalla.crear("Carteles", 30)
@@ -38,11 +40,39 @@ local girando: RBXScriptConnection? = nil
 
 local Carteles = {}
 
+local escritura = 0 -- cuál es la escritura letra por letra que vale (las viejas se cortan)
+
+-- El nombre aparece de a una letra, con un tic que sube.
+local function escribir(texto: string)
+	escritura += 1
+	local mia = escritura
+	local total = utf8.len(texto) or #texto
+	cartel.Texto.MaxVisibleGraphemes = 0
+	task.spawn(function()
+		for i = 1, total do
+			if escritura ~= mia then
+				return
+			end
+			cartel.Texto.MaxVisibleGraphemes = i
+			-- SONIDO: cada letra del nombre (tic agudo que sube)
+			Sonidos.nota(12 + i % 8, 0.18)
+			task.wait(Config.Interfaz.PausaLetra)
+		end
+		cartel.Texto.MaxVisibleGraphemes = -1
+	end)
+end
+
 local function pintar(op: Opciones)
 	cartel.Titulo.Text = op.Titulo
 	cartel.Titulo.TextColor3 = op.Color or Paleta.Acento
 	cartel.Texto.Text = op.Texto or ""
 	cartel.Texto.Visible = op.Texto ~= nil
+	if op.LetraPorLetra and op.Texto then
+		escribir(op.Texto)
+	else
+		escritura += 1
+		cartel.Texto.MaxVisibleGraphemes = -1
+	end
 	cartel.Detalle.Text = op.Detalle or ""
 	cartel.Detalle.Visible = op.Detalle ~= nil
 	local mutante = op.Mutante == true

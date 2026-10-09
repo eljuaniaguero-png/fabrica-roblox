@@ -60,6 +60,14 @@ PanelFusion.iniciar({
 			return
 		end
 		PanelFusion.ocupada(true)
+		-- El contador de la Mutadex espera a la revelación (lo suelta EfectosMaquina).
+		jugador:SetAttribute("RetenerProgreso", true)
+		-- Por si el servidor no contesta: el contador no queda trabado.
+		task.delay(12, function()
+			if not animando then
+				jugador:SetAttribute("RetenerProgreso", nil)
+			end
+		end)
 		pedirFusion:FireServer(a.Clave, b.Clave, a.Personalidad, b.Personalidad, catalizador)
 	end,
 })
@@ -123,6 +131,7 @@ resultadoFusion.OnClientEvent:Connect(function(r: Fusion.Resultado)
 		end
 		PanelFusion.abrir()
 	else
+		jugador:SetAttribute("RetenerProgreso", nil)
 		PanelFusion.aviso(MENSAJES[r.Motivo or ""] or "")
 	end
 	if not animando then
