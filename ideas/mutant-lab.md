@@ -824,6 +824,7 @@ Cómo lo vamos a mirar en el playtest:
 - [x] **Parte 5 - Guardado, balance y pulido** (hecha el 2026-10-08): DataStore, balance medido con un playtest de 10 minutos, guía de los primeros segundos, efectos (número de ADN, rebote, destello al comprar), prueba con 20 criaturas y consola limpia. Ver "Notas de la Parte 5". **Revisada el 2026-10-09** con pedidos, residuos, personalidades y catalizadores: guardado de todo, balance medido hasta completar la Mutadex, guía y rendimiento (versión 11).
 - [ ] **Parte 6 - Compras con Robux**: solo cosas que no son azar. Ideas: pase "Doble ADN", pase "Segunda máquina" (dos fusiones a la vez), colores del laboratorio. Nada de cajas sorpresa ni subir la chance de mutante. Es punto de control: los pases los crea y les pone precio el usuario.
 - [x] **Parte 7 - Que la fusión se sienta increíble** (hecha el 2026-10-09): tres niveles de espectáculo, nombre letra por letra, saltear, criaturas que reaccionan al tocarlas y viven según su personalidad, ADN que vuela al contador y destellos de mejoras. Ver "Notas de la Parte 7".
+- [x] **Parte 8 - Razones para volver mañana** (hecha el 2026-10-09): ADN sin conexión (hasta 8 horas), premio diario de 7 días (el 7, la especie especial), experimento del día, misiones diarias y metas con trofeos. Ver "Notas de la Parte 8".
 
 Puntos de control: esta ficha → estilo visual → prototipo jugable (Partes 1 a 5) → Parte 6.
 
