@@ -3,6 +3,10 @@
     "Roblox_Studio": {
       "command": "cmd.exe",
       "args": ["/c", "%LOCALAPPDATA%\\Roblox\\mcp.bat"]
+    },
+    "Blender": {
+      "command": "cmd.exe",
+      "args": ["/c", "%LOCALAPPDATA%\\BlenderMCP\\1.0.3\\.venv\\Scripts\\blender-mcp.exe"]
     }
   }
 }

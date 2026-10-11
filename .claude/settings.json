@@ -2,7 +2,7 @@
   "enabledPlugins": {
     "roblox-dev@anthropic-plugin-directory": true
   },
-  "enabledMcpjsonServers": ["Roblox_Studio"],
+  "enabledMcpjsonServers": ["Roblox_Studio", "Blender"],
   "permissions": {
     "allow": [
       "Bash(rojo *)",

@@ -34,6 +34,8 @@ Hay dos juegos. Cada uno tiene su propio código, su propio archivo de Rojo y su
 
 Herramientas (instaladas con Rokit): `rojo`, `selene`, `stylua`, `lune` (correr Luau fuera de Studio, para tests de lógica pura) y `wally` (paquetes, por ejemplo ProfileStore).
 
+MCP de Blender (opcional, para limpiar modelos según la sección 5 de la GUIA): registrado en `.mcp.json` como `Blender`, con el servidor oficial de Blender Lab 1.0.3 instalado en `%LOCALAPPDATA%\BlenderMCP\1.0.3`. Blender 5.2 ya tiene activado el complemento "MCP" (puerto 9876). Si sus herramientas no aparecen, pedile al usuario que abra Blender y revise Edit → Preferences → Add-ons → MCP → que el servidor esté corriendo.
+
 Un hook de Claude Code (`.claude/hooks/revisar-luau.sh`) corre StyLua y Selene solo cada vez que guardás un `.luau`; si Selene marca algo, arreglalo antes de seguir.
 
 Las skills instaladas (roblox-dev y las de `.claude/skills/`: roblox-*, game-feel, level-design, game-ui-ux) son apoyo: si contradicen GUIA-PARA-CLAUDE.md, manda la GUIA. No usar los comandos setup ni new-system de roblox-dev para reestructurar los juegos existentes.
