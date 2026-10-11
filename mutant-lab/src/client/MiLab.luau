@@ -17,13 +17,17 @@ function MiLab.obtener(): Model
 	return workspace:WaitForChild("Laboratorios"):WaitForChild(nombre :: string) :: Model
 end
 
--- Apaga (solo para vos) los botones de los laboratorios de los demás.
+-- Apaga (solo para vos) los botones de los laboratorios de los demás: de visita se mira, pero
+-- no se toca nada. El único que queda es el "me gusta" (y ese, en el tuyo, se apaga).
 function MiLab.apagarAjenos()
 	local mio = MiLab.obtener()
 	for _, lab in workspace:WaitForChild("Laboratorios"):GetChildren() do
-		if lab ~= mio then
-			for _, d in lab:GetDescendants() do
-				if d:IsA("ProximityPrompt") then
+		for _, d in lab:GetDescendants() do
+			if d:IsA("ProximityPrompt") then
+				local meGusta = d.Name == "MeGusta"
+				if lab ~= mio then
+					d.Enabled = meGusta
+				elseif meGusta then
 					d.Enabled = false
 				end
 			end

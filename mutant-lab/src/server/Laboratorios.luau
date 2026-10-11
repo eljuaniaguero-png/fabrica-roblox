@@ -58,6 +58,22 @@ function Laboratorios.de(jugador: Player): Model?
 	return labDe[jugador]
 end
 
+-- Dueño de un laboratorio (nil si está libre).
+function Laboratorios.duenoDe(lab: Model): Player?
+	return duenoDe[lab]
+end
+
+-- Todos los laboratorios del mapa.
+function Laboratorios.todos(): { Model }
+	local lista = {}
+	for _, lab in carpeta:GetChildren() do
+		if lab:IsA("Model") then
+			table.insert(lista, lab)
+		end
+	end
+	return lista
+end
+
 -- Busca un descendiente siguiendo los nombres (nil si falta alguno).
 local function buscar(raiz: Instance?, ...: string): Instance?
 	local actual = raiz
@@ -321,6 +337,14 @@ local function ponerTrofeos(lab: Model, trofeos: { Trofeo }?)
 	end
 end
 
+-- El contador del cartel "Me gusta" de la entrada.
+function Laboratorios.actualizarMeGusta(jugador: Player, cantidad: number)
+	local lab = labDe[jugador]
+	if lab then
+		textos(lab:FindFirstChild("MeGusta"), "Cantidad", tostring(cantidad))
+	end
+end
+
 function Laboratorios.actualizarTrofeos(jugador: Player, trofeos: { Trofeo })
 	local lab = labDe[jugador]
 	if lab then
@@ -362,6 +386,7 @@ function Laboratorios.liberar(jugador: Player)
 	ponerUltima(lab, nil)
 	pintarTablero(lab, nil)
 	ponerTrofeos(lab, nil)
+	textos(lab:FindFirstChild("MeGusta"), "Cantidad", "0")
 	textos(fondoMutadex(lab), "Contador", "0 / " .. TOTAL_ESPECIES)
 	local relleno = buscar(fondoMutadex(lab), "Barra", "Relleno")
 	if relleno and relleno:IsA("Frame") then

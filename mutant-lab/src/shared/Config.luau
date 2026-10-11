@@ -230,6 +230,7 @@ local Config = {
 		GemaMutante = 1.15,
 		Anillo = 3.8, -- diámetro del anillo de luz bajo los pies
 		DistanciaIcono = 20, -- el ícono de personalidad se ve a menos de esto
+		DistanciaCartel = 60, -- el cartel con el nombre (paseos, máquina de equipo) se ve a menos de esto
 		TinteVariante = 0.55, -- cuánto toma una variante el color de su catalizador (0 a 1)
 	},
 
@@ -314,6 +315,28 @@ local Config = {
 		Pedidos = 100,
 		Mutantes = 10,
 		Premio = 5, -- fusiones de gen 2 (las de completar una generación ya pagan su festejo)
+	},
+
+	-- Jugar con otros (Parte 9).
+	Social = {
+		TablaEspecies = "MutantLab_Especies_v1", -- OrderedDataStore de la tabla global
+		TablaVariantes = "MutantLab_Variantes_v1",
+		Mostrar = 5, -- puestos que muestra cada tabla
+		CadaTablero = 10, -- segundos entre actualizaciones de los tableros de la plaza
+		CadaGlobal = 12, -- cada cuántas actualizaciones se guarda y se lee la tabla global
+		DistanciaFicha = 10, -- studs: a menos de esto de una criatura ajena se ve su ficha
+	},
+	Equipo = {
+		Escala = 0.55, -- tamaño de las criaturas en los pedestales de la máquina de equipo
+		Abandono = 40, -- studs: si un jugador se aleja más que esto, su criatura vuelve
+		Espera = 9, -- segundos que se ve la cría en la cápsula
+		Revelar = 3, -- segundos de cría sola en la cápsula antes del cartel de festejo
+	},
+	Paseo = {
+		Detras = 4, -- studs detrás del jugador
+		Costado = 2.5,
+		Velocidad = 14, -- studs por segundo para alcanzarlo (más rápido si quedó lejos)
+		Salto = 40, -- si queda más lejos que esto, aparece directo detrás del jugador
 	},
 
 	-- Premium (ficha de monetización, "Mutant Lab"). Los IDs van vacíos: los crea el usuario en el

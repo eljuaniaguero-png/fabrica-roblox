@@ -7,11 +7,14 @@ local Remotos = require(script.Parent.Remotos)
 local Corrales = require(script.Parent.Corrales)
 local Diario = require(script.Parent.Diario)
 local Economia = require(script.Parent.Economia)
+local Equipo = require(script.Parent.Equipo)
 local Guardado = require(script.Parent.Guardado)
 local Jugadores = require(script.Parent.Jugadores)
 local Laboratorios = require(script.Parent.Laboratorios)
 local Metas = require(script.Parent.Metas)
 local Misiones = require(script.Parent.Misiones)
+local Paseos = require(script.Parent.Paseos)
+local Social = require(script.Parent.Social)
 local Tablero = require(script.Parent.Tablero)
 require(script.Parent.MaquinaFusion)
 require(script.Parent.TiendaPistas)
@@ -37,6 +40,8 @@ local function alEntrar(jugador: Player)
 	Misiones.alDia(jugador)
 	Metas.publicar(jugador)
 	Metas.revisar(jugador)
+	-- Jugar con otros: "me gusta" y posiciones.
+	Social.publicar(jugador)
 end
 
 Players.PlayerAdded:Connect(alEntrar)
@@ -56,6 +61,9 @@ Economia.iniciar()
 Guardado.iniciar()
 Tablero.iniciar()
 Diario.iniciar()
+Social.iniciar()
+Paseos.iniciar()
+Equipo.iniciar()
 
 -- Cada tanto se fija si cambió el día (lo decide el servidor): misiones nuevas, otro
 -- experimento y el premio diario disponible.

@@ -18,7 +18,8 @@ export type Criatura = {
 	Extremidad: number, -- cola o alas
 	Rasgo: number,
 	Color: Color3, -- color de la cabeza (para la UI)
-	Especial: boolean?, -- especie especial: no está en la rueda, no se fusiona ni se compra
+	Especial: boolean?, -- especie especial: no está en las 50, no se fusiona ni se compra
+	Equipo: boolean?, -- especial que solo sale en la fusión en equipo de la plaza
 }
 
 -- Lo que el servidor le contesta al cliente después de pedir una fusión.
@@ -230,7 +231,7 @@ end
 -- Colores de una pieza: cada pieza conserva el color del padre que la trae,
 -- y sus manchas llevan el color del padre siguiente (así se nota la mezcla).
 function Fusion.pintura(c: Criatura, base: number): (Color3, Color3)
-	if c.Especial then
+	if c.Especial and not c.Equipo then
 		return c.Color, Paleta.Texto
 	end
 	if c.Gen == 1 then
@@ -266,6 +267,49 @@ function Fusion.especiales(): { Criatura }
 	return ESPECIALES
 end
 
+-- Especies de equipo (ficha, "Parte 9"): dos bases a 4 lugares en la rueda no reaccionan en una
+-- máquina común, pero sí en la máquina de equipo de la plaza (una criatura de cada jugador).
+-- Son 10 (una por cada par) y solo salen así. Se arman como las de generación 2.
+local EQUIPO: { Criatura } = {}
+local equipoPorPar: { [string]: Criatura } = {}
+for a = 1, N do
+	local b = siguiente(a, Config.DistanciaMaxima + 1)
+	local p, s = Especies[a], Especies[b]
+	local c: Criatura = {
+		Clave = clave({ a, b }),
+		Nombre = p.Silabas[1] .. s.Silabas[2] .. s.Silabas[3],
+		Gen = 2,
+		Bases = { a, b },
+		Cabeza = a,
+		Cuerpo = b,
+		Patas = a,
+		Extremidad = b,
+		Rasgo = b,
+		Color = p.Color,
+		Especial = true,
+		Equipo = true,
+	}
+	table.insert(EQUIPO, c)
+	equipoPorPar[c.Clave] = c
+end
+
+function Fusion.deEquipo(): { Criatura }
+	return EQUIPO
+end
+
+-- Lo que sale en la máquina de equipo: lo mismo que en una común y, además, las especies de
+-- equipo (dos bases a 4 lugares). nil si ni así reaccionan.
+function Fusion.equipo(x: Criatura, y: Criatura): Criatura?
+	local comun = Fusion.fusionar(x, y)
+	if comun then
+		return comun
+	end
+	if x.Gen == 1 and y.Gen == 1 and not x.Especial and not y.Especial then
+		return equipoPorPar[clave({ x.Bases[1], y.Bases[1] })]
+	end
+	return nil
+end
+
 local indice: { [string]: Criatura }? = nil
 
 -- Busca una especie por su clave ("1", "1-2", "1-2-3").
@@ -276,6 +320,9 @@ function Fusion.porClave(buscada: string): Criatura?
 			nuevo[c.Clave] = c
 		end
 		for _, c in ESPECIALES do
+			nuevo[c.Clave] = c
+		end
+		for _, c in EQUIPO do
 			nuevo[c.Clave] = c
 		end
 		indice = nuevo

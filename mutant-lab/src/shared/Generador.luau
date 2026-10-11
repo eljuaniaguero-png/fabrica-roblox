@@ -266,6 +266,50 @@ function Generador.crear(
 	return modelo
 end
 
+-- Cartel flotante sobre una criatura que se ve de lejos (paseos, máquina de equipo): el nombre
+-- arriba, de `color`, y un renglón chico abajo ("de Juani"). Sin texto propio de nadie.
+function Generador.cartel(
+	modelo: Model,
+	arriba: string,
+	color: Color3,
+	abajo: string,
+	alto: number?
+)
+	local raiz = modelo.PrimaryPart
+	if not raiz then
+		return
+	end
+	local viejo = raiz:FindFirstChild("Cartel")
+	if viejo then
+		viejo:Destroy()
+	end
+	local gui = Instance.new("BillboardGui")
+	gui.Name = "Cartel"
+	gui.Size = UDim2.fromScale(7, 1.8)
+	gui.StudsOffsetWorldSpace = Vector3.new(0, alto or 7.5, 0)
+	gui.MaxDistance = C.DistanciaCartel
+	gui.LightInfluence = 0
+	local function renglon(texto: string, y: number, medida: number, tinta: Color3)
+		local t = Instance.new("TextLabel")
+		t.Name = "Renglon"
+		t.BackgroundTransparency = 1
+		t.Position = UDim2.fromScale(0, y)
+		t.Size = UDim2.fromScale(1, medida)
+		t.FontFace = Font.fromEnum(Enum.Font.FredokaOne)
+		t.TextScaled = true
+		t.Text = texto
+		t.TextColor3 = tinta
+		local s = Instance.new("UIStroke")
+		s.Color = Paleta.Contorno
+		s.Thickness = 2
+		s.Parent = t
+		t.Parent = gui
+	end
+	renglon(arriba, 0, 0.58, color)
+	renglon(abajo, 0.6, 0.4, Paleta.Texto)
+	gui.Parent = raiz
+end
+
 -- Deja el modelo como una silueta negra: sin colores, brillos, partículas ni carteles.
 -- Conviene llamarla antes de ponerle Parent, así la animación guarda la versión negra.
 function Generador.silueta(modelo: Model)
