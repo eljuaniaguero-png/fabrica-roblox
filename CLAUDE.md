@@ -19,6 +19,8 @@ Esto vale para todas las respuestas, también las cortas, las preguntas y los in
 
 Herramientas (instaladas con Rokit): `rojo`, `selene`, `stylua`.
 
+Las skills instaladas (ej. roblox-dev) son apoyo: si contradicen GUIA-PARA-CLAUDE.md, manda la GUIA. No usar los comandos setup ni new-system de roblox-dev para reestructurar los juegos existentes.
+
 ## Regla de oro: quién toca qué
 
 - **Código**: siempre como archivos `.luau` en `src/`. Rojo los sincroniza a Studio. Nunca edites con el MCP un script que vive en `src/` (se pisan los cambios).
