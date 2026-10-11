@@ -23,6 +23,11 @@ Una compra arruina el juego cuando el que no paga se queda sin poder jugar, o cu
 - Todo el juego se termina sin pagar. Pagar acelera, nunca desbloquea contenido obligatorio.
 - Ningún multiplicador pago pasa de x2, y no se acumulan entre sí más allá de x4.
 - Nada con azar se compra con Robux. Los huevos y las mutaciones al azar son solo con moneda del juego.
+- **Decisión del 11 oct 2026: se venden packs de ADN/monedas por Robux, con las reglas de Roblox para ítems aleatorios pagos.** Como esa moneda se compra con Robux, todo lo que se gaste en algo con azar (la fusión con su 1 en 40 de mutante, catalizadores al azar, futuros huevos) cuenta como ítem aleatorio pago. Entonces:
+  - Antes de confirmar cada fusión o compra con azar, mostrar todas las probabilidades en % (que sumen 100 %), con un botón con texto ("Ver probabilidades"), no solo un ícono.
+  - Si algo sube la suerte, explicarlo con números y actualizar las probabilidades mostradas mientras dure.
+  - Al entrar, consultar `PolicyService:GetPolicyInfoForPlayerAsync()`. Si `ArePaidRandomItemsRestricted` es verdadero, a ese jugador no se le venden packs de ADN/monedas (botón "No disponible en tu región") y no puede gastar en azar moneda comprada. Si `IsPaidItemTradingAllowed` es falso, no puede intercambiar nada pagado.
+  - Revisar la política (create.roblox.com/docs/production/monetization/paid-random-items) antes de implementar, por si cambió.
 - Nada de contadores falsos ni "última oportunidad" que vuelve a aparecer. Lo que es por tiempo limitado, lo es de verdad.
 - Las ofertas son un botón chico y fácil de cerrar. Nunca tapan la pantalla ni frenan el juego.
 - Como máximo una oferta cada 3 minutos, y ninguna en los primeros 3 minutos de un jugador nuevo.

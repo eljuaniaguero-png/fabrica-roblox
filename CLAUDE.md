@@ -9,6 +9,21 @@ Empezá SIEMPRE cada respuesta al usuario con la frase "Hola Juani, ahora " segu
 
 Esto vale para todas las respuestas, también las cortas, las preguntas y los informes finales. El usuario usa esta frase para comprobar que seguís leyendo este archivo: si falta, entiende que perdiste las reglas.
 
+## Varios juegos en esta carpeta
+
+Hay dos juegos. Cada uno tiene su propio código, su propio archivo de Rojo y su propio place de Studio. Nunca mezcles archivos de uno con el otro.
+
+| Juego | Código | Proyecto de Rojo | Ficha |
+|---|---|---|---|
+| Pisada Sonora | `src/` (en la raíz) | `default.project.json` | `ideas/pisada-sonora.md` |
+| Mutant Lab | `mutant-lab/src/` | `mutant-lab/default.project.json` | `ideas/mutant-lab.md` |
+
+- El usuario dice al principio de cada pedido en qué juego trabaja. Si no lo dice y no es obvio, preguntá antes de tocar nada.
+- Cuando trabajes en Mutant Lab, todo lo que este archivo dice de `src/` vale para `mutant-lab/src/`: el código va ahí, y los chequeos son `stylua mutant-lab/src` y `selene mutant-lab/src`. No toques el `src/` de la raíz.
+- Para Mutant Lab, Rojo se levanta con `rojo serve mutant-lab`. Solo puede haber un `rojo serve` corriendo a la vez.
+- Antes de construir por MCP, listá los Studios conectados y confirmá que el place abierto es el del juego en el que estás trabajando. Si está abierto el del otro juego, frená y avisá.
+- Todo lo que se pague con Robux sigue las reglas de `ideas/monetizacion.md`.
+
 ## Cómo está armado
 
 - `src/server` -> ServerScriptService.Server (lógica del juego, datos, economía)
@@ -75,3 +90,9 @@ Reglas de diseño: pocos colores, mucho contraste entre piso y fondo, formas sim
 - Para notas musicales: un solo sample corto (por ejemplo una nota de piano gratuita de la Creator Store) y cambiá el tono con `PlaybackSpeed`.
 - Para melodías: solo composiciones de dominio público (por ejemplo clásicas de autores muertos hace más de 100 años) tocadas nota por nota con ese sample, o melodías inventadas.
 - Dejá cada punto de sonido marcado con un comentario `-- SONIDO:` y los IDs en `Config.luau`, para que el usuario pueda cambiarlos por sonidos propios.
+
+## Guía extra
+
+Leé también esta guía antes de cada pedido (si algo choca, manda este archivo):
+
+@GUIA-PARA-CLAUDE.md
