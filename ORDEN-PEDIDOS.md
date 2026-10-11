@@ -205,6 +205,7 @@ Juego: Mutant Lab y Pisada Sonora, uno por vez (primero Mutant Lab). Leé la sec
 2. Autoguardado, guardado al salir, en BindToClose en paralelo (tope 25 s), en game.ServerRestartScheduled y después de cada compra con Robux.
 3. Si falla la carga, que el jugador vea "No pudimos cargar tu progreso, volvé a entrar" en vez de jugar sin guardar. Un error no apaga el guardado de los demás.
 4. Probalo: guardar, salir y volver; dos jugadores; cortar Studio en medio de un guardado.
+5. StreamingEnabled está apagado en el place de Mutant Lab (lo vi el 11 oct). Activalo, ajustá el cliente para que no asuma que todo está cargado y probalo con radio chico (sección 4 de la GUIA).
 
 Commit por juego y mostrame la prueba de salir y volver.
 ```

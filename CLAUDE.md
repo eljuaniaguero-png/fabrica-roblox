@@ -54,7 +54,7 @@ Referencias con fuentes: `docs/investigacion-mejores-practicas-roblox-2026.md` y
 2. Escribí el código en `src/`, después corré `stylua src` y `selene src`. Arreglá todo lo que marque Selene.
 3. Pedile al usuario que tenga `rojo serve` corriendo y el plugin de Rojo conectado en Studio. Si las herramientas MCP no aparecen, avisale que revise Assistant > Manage MCP Servers.
 4. Construí el mundo por MCP, arrancá el playtest, leé la consola y sacá una captura. No digas que algo funciona sin haberlo probado.
-5. Hacé un commit de git por cada avance que funcione, con mensaje en español.
+5. Hacé un commit de git por cada avance que funcione, con mensaje en español, y subilo con `git push origin master` (repositorio privado `eljuaniaguero-png/fabrica-roblox`, es la copia de seguridad).
 6. Si el pedido cambió el mundo, guardá una copia del place en `backups/<juego>-AAAA-MM-DD.rbxl` (está fuera de git). Si no podés guardarla por MCP, pedile al usuario: Studio → File → Save to File As → esa carpeta.
 7. No uses worktrees: trabajá en la carpeta principal, rama `master`. Si la sesión arrancó en un worktree, al terminar pasá los commits a `master` y avisale al usuario.
 
