@@ -14,6 +14,7 @@ local Config = require(ReplicatedStorage.Shared.Config)
 local Fusion = require(ReplicatedStorage.Shared.Fusion)
 local Generador = require(ReplicatedStorage.Shared.Generador)
 local Paleta = require(ReplicatedStorage.Shared.Paleta)
+local Frecuencia = require(script.Parent.Frecuencia)
 local Jugadores = require(script.Parent.Jugadores)
 local Remotos = require(script.Parent.Remotos)
 
@@ -90,7 +91,9 @@ end
 
 function Paseos.iniciar()
 	Remotos.Pasear.OnServerEvent:Connect(function(jugador: Player, clave: unknown)
-		Paseos.pasear(jugador, clave)
+		if Frecuencia.permitir(jugador, "Pasear", 0.5) then
+			Paseos.pasear(jugador, clave)
+		end
 	end)
 	Players.PlayerRemoving:Connect(guardar)
 	-- Si entregó la última de esa especie, la criatura vuelve al laboratorio.

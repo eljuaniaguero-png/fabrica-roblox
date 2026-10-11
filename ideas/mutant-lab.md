@@ -15,6 +15,7 @@ Versión 10 (2026-10-09): **fracasos útiles, personalidades y catalizadores** (
 Versión 11 (2026-10-09): **Parte 5 revisada** (pedido 4 de `ORDEN-PEDIDOS.md`): se guarda todo lo nuevo, balance medido hasta completar la Mutadex (suba tardía del 12 % y premios de pedidos más chicos), guía y rendimiento probados. Ver "Revisión de la Parte 5 con pedidos, personalidades y catalizadores".
 Versión 12 (2026-10-09): **Parte 7 hecha** (pedido 5 de `ORDEN-PEDIDOS.md`): tres niveles de fusión, "¡NUEVA ESPECIE!" letra por letra, botón Saltear, criaturas que reaccionan al tocarlas y viven según su personalidad, ADN que vuela al contador y destellos de mejoras. Ver "Notas de la Parte 7".
 Versión 13 (2026-10-09): **Parte 8 hecha** (pedido 6 de `ORDEN-PEDIDOS.md`): ADN mientras no estás, premio diario de 7 días con la especie especial Estrellín, experimento del día, tres misiones diarias y metas largas con trofeos; las fechas las decide el servidor. Ver "Notas de la Parte 8".
+Versión 14 (2026-10-11): **Parte 9 hecha** (pedido 7 de `ORDEN-PEDIDOS.md`): paseos, visitas, ficha de criaturas ajenas, fusión en equipo con 10 especies que solo salen así, tablas de posiciones y "me gusta". Ver "Notas de la Parte 9".
 Próximo punto de control: **prototipo jugable** (Partes 1 a 5).
 
 ## Guía de estilo: laboratorio de caricatura de noche (versión 6)
@@ -615,6 +616,21 @@ Pedido 6 de `ORDEN-PEDIDOS.md`. Todos los números están en `Config.luau` (`Reg
 - Consola sin errores. Capturas en `capturas/pedido-6/`.
 - Herramientas de prueba nuevas: `PasarDias`, `Volver`, `Experimento`.
 
+## Notas de la Parte 9: jugar con otros (versión 14)
+
+Pedido 7 de `ORDEN-PEDIDOS.md`. Una sesión vieja lo había dejado empezado y sin probar (rama `claude/mutant-lab-ui-consolidate-05bd28`); se revisó, se juntó en master y se probó con dos jugadores (Studio, "Servidor y clientes").
+
+- **Plaza**: los jugadores aparecen en la plaza y desde ahí caminan a su laboratorio; se ven todos.
+- **Paseos** (`server/Paseos.luau`): en la ficha de la Mutadex de una especie que tenés, botón "Sacar a pasear". Una criatura tuya de esa especie (la más vistosa: con variante o mutante) te sigue por todo el mapa con un cartel "Glumulo · Gen 2 / de Juani" que ven todos. Una por jugador. **Decisión**: la criatura no sale del corral (es una copia que te acompaña), así no deja de producir. Si entregás la última de esa especie, vuelve sola.
+- **Visitas**: en un laboratorio ajeno se puede entrar y mirar (criaturas, trofeos, tablero), pero los botones de su máquina, tienda y tablero están apagados para el visitante. Igual, el servidor nunca toca los datos de otro: cada remoto actúa solo sobre los del que lo manda.
+- **Ficha ajena** (`client/FichaAjena.client.luau`): a menos de 10 studs de una criatura de otro jugador (de paseo, en su corral o en la máquina de equipo) aparece abajo su ficha: nombre, generación, elemento, personalidad y de quién es. Si no la descubriste, la ves completa pero dice "¡No la descubriste! La receta es un secreto." y **no se marca en tu Mutadex** (es solo pantalla, no le avisa nada al servidor).
+- **Fusión en equipo** (`server/Equipo.luau`, `client/MaquinaEquipo.client.luau`): la máquina grande de la plaza tiene dos pedestales. Cada jugador aprieta E en uno, elige una criatura suya (va una copia: nadie pierde la suya) y después los dos aprietan E en el cartel. Cada uno paga su fusión, los dos reciben la cría y los dos la descubren. Además de lo que sale en una máquina común, **dos bases a 4 lugares en la rueda** (que en la común no reaccionan) dan una de las **10 especies de equipo**: Gluparo, Ranaqui, Suplito, Ronoza, Chistina, Durulo, Zopona, Brimulo, Fotomi y Necote. Van en la pestaña **Extras** de la Mutadex (no cuentan en las 50). Si un jugador se aleja más de 40 studs, su criatura vuelve.
+- **Tablas de posiciones**: en el tablero de la plaza y en la lista de jugadores de Roblox. "En este servidor" y "En todo el juego" (OrderedDataStore, se actualiza cada 2 minutos): más especies descubiertas (las 50 y las especiales) y más variantes. Los jugadores de prueba de Studio no van a la global.
+- **Me gusta**: cartel con corazón en la entrada de cada laboratorio. Un visitante aprieta E y suma uno (uno por día a cada laboratorio; el dueño no puede darse a sí mismo). El contador se guarda.
+- **Sin intercambio ni regalos**: no existe ninguna forma de pasar criaturas o ADN entre jugadores. Nadie escribe texto propio (los nombres salen de sílabas fijas), así que no hace falta el filtro de texto.
+- **Seguridad**: todo lo valida el servidor (que la criatura sea tuya, que estés cerca, que el lado sea tuyo, que te alcance el ADN) y los remotos nuevos tienen freno contra el spam (`server/Frecuencia.luau`, 0,5 s).
+- **Probado** (2026-10-11, dos jugadores): Player1 sacó a pasear un Glumulo y Player2 lo vio seguirlo, con su ficha ("¡No la descubriste!"); Player2 entró al laboratorio de Player1 (solo el "me gusta" encendido) y le dio me gusta (el segundo del día dice "Ya le diste me gusta hoy"); dos fusiones en equipo (Dunaqui + Rámulo = Ranaqui y Sutomi + Zoplito = Suplito, "¡FUSIÓN EN EQUIPO! … especie de equipo: solo sale así"), cada uno con su cría y su ADN cobrado; la Mutadex de Player2 mostró Extras 3/11. Consola sin errores en el servidor y los dos clientes. Las especies de equipo tienen su chequeo en `Pruebas.server.luau`.
+
 ## La idea en una línea
 
 Un laboratorio donde combinás criaturas para descubrir especies nuevas y llenar las siluetas de tu Mutadex.
@@ -825,6 +841,7 @@ Cómo lo vamos a mirar en el playtest:
 - [ ] **Parte 6 - Compras con Robux**: solo cosas que no son azar. Ideas: pase "Doble ADN", pase "Segunda máquina" (dos fusiones a la vez), colores del laboratorio. Nada de cajas sorpresa ni subir la chance de mutante. Es punto de control: los pases los crea y les pone precio el usuario.
 - [x] **Parte 7 - Que la fusión se sienta increíble** (hecha el 2026-10-09): tres niveles de espectáculo, nombre letra por letra, saltear, criaturas que reaccionan al tocarlas y viven según su personalidad, ADN que vuela al contador y destellos de mejoras. Ver "Notas de la Parte 7".
 - [x] **Parte 8 - Razones para volver mañana** (hecha el 2026-10-09): ADN sin conexión (hasta 8 horas), premio diario de 7 días (el 7, la especie especial), experimento del día, misiones diarias y metas con trofeos. Ver "Notas de la Parte 8".
+- [x] **Parte 9 - Jugar con otros** (hecha el 2026-10-11): plaza, paseos, visitas, ficha ajena, fusión en equipo con 10 especies propias, tablas de posiciones y "me gusta". Ver "Notas de la Parte 9".
 
 Puntos de control: esta ficha → estilo visual → prototipo jugable (Partes 1 a 5) → Parte 6.
 

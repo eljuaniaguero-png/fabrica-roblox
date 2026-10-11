@@ -8,7 +8,7 @@ Si al abrir una sesión aparece la opción de trabajar en una copia aislada (wor
 
 # MUTANT LAB
 
-## [ ] 1. Juntar todo y terminar los menús
+## [x] 1. Juntar todo y terminar los menús
 
 Primero, porque hay trabajo repartido en copias aisladas y si no se junta se puede perder. Además todo lo que sigue usa los componentes nuevos de la interfaz.
 
@@ -62,7 +62,7 @@ AL FINAL
 28. stylua y selene sobre mutant-lab/src, consola sin errores, y commit.
 ```
 
-## [ ] 2. Pedidos
+## [x] 2. Pedidos
 
 Lo que más cambia que el juego sea divertido: les da un uso a las criaturas y al ADN.
 
@@ -88,7 +88,7 @@ Juego: Mutant Lab (carpeta mutant-lab/). Leé ideas/mutant-lab.md y el código a
 Jugá 10 minutos como jugador nuevo y decime: cuántas especies descubrió, cuántos pedidos entregó, cuánto ADN tuvo como máximo, y cuántas veces se quedó sin saber qué hacer. Mostrame capturas del tablero y de una entrega.
 ```
 
-## [ ] 3. Fracasos útiles, personalidades y catalizadores
+## [x] 3. Fracasos útiles, personalidades y catalizadores
 
 Da profundidad y variantes. Va después de pedidos porque los pedidos pasan a pedir personalidades y variantes.
 
@@ -113,7 +113,7 @@ BLOQUE 3 - Catalizadores
 Al terminar cada bloque, jugá 10 minutos y decime qué cambió. Capturas de un residuo, de una criatura con personalidad en el corral y de una fusión con catalizador.
 ```
 
-## [ ] 4. Parte 5: guardado, balance y pulido
+## [x] 4. Parte 5: guardado, balance y pulido
 
 Va acá porque el balance tiene que medirse con pedidos y catalizadores ya andando. Si se hace antes, hay que rehacerlo.
 
@@ -135,7 +135,7 @@ Juego: Mutant Lab (carpeta mutant-lab/). Leé ideas/mutant-lab.md y el código a
 Mostrame capturas del laboratorio completo y un resumen de qué se puede jugar y qué falta. Marcá la Parte 5 y hacé commit.
 ```
 
-## [ ] 5. Parte 7: que la fusión se sienta increíble
+## [x] 5. Parte 7: que la fusión se sienta increíble
 
 Pulido de sensación sobre un juego que ya está completo.
 
@@ -154,7 +154,7 @@ Juego: Mutant Lab (carpeta mutant-lab/). Leé ideas/mutant-lab.md y el código a
 Mostrame capturas de los tres niveles de fusión y del corral con criaturas de distintas personalidades. Marcá la Parte 7 y hacé commit.
 ```
 
-## [ ] 6. Parte 8: razones para volver mañana
+## [x] 6. Parte 8: razones para volver mañana
 
 Retención: recompensa diaria, experimento del día y misiones.
 
@@ -172,7 +172,7 @@ Juego: Mutant Lab (carpeta mutant-lab/). Leé ideas/mutant-lab.md y el código a
 Probá simulando el paso de un día y de siete. Mostrame capturas del cartel de regreso, la recompensa diaria, el experimento del día y las misiones. Marcá la Parte 8 y hacé commit.
 ```
 
-## [ ] 7. Parte 9: jugar con otros
+## [x] 7. Parte 9: jugar con otros
 
 Lo social, cuando el juego individual ya funciona.
 

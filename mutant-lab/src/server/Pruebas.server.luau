@@ -46,4 +46,20 @@ end
 -- 30 parejas de bases + 30 caminos a gen 3, contadas en los dos órdenes.
 chequear(reacciones == 120, "reacciones: " .. reacciones .. ", se esperaban 120")
 
+-- Especies de equipo (Parte 9): 10, con nombre y clave propios, y que solo salen en equipo.
+local equipo = Fusion.deEquipo()
+chequear(#equipo == 10, "hay " .. #equipo .. " especies de equipo, se esperaban 10")
+for _, c in equipo do
+	chequear(not nombres[c.Nombre], "nombre de equipo repetido: " .. c.Nombre)
+	chequear(not claves[c.Clave], "clave de equipo repetida: " .. c.Clave)
+	nombres[c.Nombre] = true
+	claves[c.Clave] = c
+	local x, y = Fusion.porClave(tostring(c.Bases[1])), Fusion.porClave(tostring(c.Bases[2]))
+	if x and y then
+		chequear(Fusion.fusionar(x, y) == nil, c.Nombre .. " sale en una máquina común")
+		local r = Fusion.equipo(x, y)
+		chequear(r ~= nil and r.Clave == c.Clave, c.Nombre .. " no sale en la máquina de equipo")
+	end
+end
+
 print(("[Pruebas] Fusión: %d especies, %d errores"):format(#todas, errores))

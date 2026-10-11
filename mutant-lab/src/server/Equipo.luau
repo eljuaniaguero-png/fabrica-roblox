@@ -22,6 +22,7 @@ local Paleta = require(ReplicatedStorage.Shared.Paleta)
 local Personalidades = require(ReplicatedStorage.Shared.Personalidades)
 local Coleccion = require(script.Parent.Coleccion)
 local Corrales = require(script.Parent.Corrales)
+local Frecuencia = require(script.Parent.Frecuencia)
 local Jugadores = require(script.Parent.Jugadores)
 local Laboratorios = require(script.Parent.Laboratorios)
 local Metas = require(script.Parent.Metas)
@@ -480,7 +481,11 @@ function Equipo.iniciar()
 		end
 		boton(cartel, "¡Fusionar en equipo!", "Máquina de equipo").Triggered:Connect(listo)
 	end
-	Remotos.PonerEquipo.OnServerEvent:Connect(Equipo.poner)
+	Remotos.PonerEquipo.OnServerEvent:Connect(function(jugador: Player, ...: unknown)
+		if Frecuencia.permitir(jugador, "PonerEquipo", 0.5) then
+			Equipo.poner(jugador, ...)
+		end
+	end)
 	-- Si alguno se va o se aleja, su criatura vuelve a su laboratorio.
 	Players.PlayerRemoving:Connect(function(jugador: Player)
 		for _, l in lados do
