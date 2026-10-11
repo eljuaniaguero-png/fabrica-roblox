@@ -22,6 +22,7 @@ local FUENTE = Font.fromEnum(Enum.Font.FredokaOne)
 
 local jugador = Players.LocalPlayer
 local estados: { [Model]: Animacion.Estado } = {}
+local paseantes: { [Model]: boolean } = {} -- las criaturas de paseo (siguen a su dueño)
 
 local function agregar(inst: Instance)
 	if not inst:IsA("Model") or not inst:IsDescendantOf(workspace) then
@@ -41,6 +42,9 @@ local function agregar(inst: Instance)
 		task.wait(0.1)
 	end
 	estados[inst] = Animacion.preparar(inst)
+	if inst:GetAttribute("Paseo") then
+		paseantes[inst] = true
+	end
 end
 
 CollectionService:GetInstanceAddedSignal("Criatura"):Connect(function(inst)
@@ -48,6 +52,7 @@ CollectionService:GetInstanceAddedSignal("Criatura"):Connect(function(inst)
 end)
 CollectionService:GetInstanceRemovedSignal("Criatura"):Connect(function(inst)
 	estados[inst :: Model] = nil
+	paseantes[inst :: Model] = nil
 end)
 for _, inst in CollectionService:GetTagged("Criatura") do
 	task.spawn(agregar, inst)
@@ -175,6 +180,54 @@ UserInputService.InputBegan:Connect(function(entrada: InputObject, procesado: bo
 end)
 
 ---------------------------------------------------------------------------
+-- Criaturas de paseo (Parte 9): siguen a su dueño
+---------------------------------------------------------------------------
+
+local P = Config.Paseo
+local rayos = RaycastParams.new()
+rayos.FilterType = Enum.RaycastFilterType.Exclude
+
+-- Lleva la criatura de paseo detrás de su dueño (un poco al costado), apoyada en el piso.
+-- Si quedó muy lejos (el dueño apareció en otro lado), salta directo.
+local function seguir(estado: Animacion.Estado, dt: number)
+	local modelo = estado.Modelo
+	local dueno = Players:GetPlayerByUserId((modelo:GetAttribute("Dueno") :: number?) or 0)
+	local personaje = dueno and dueno.Character
+	local raiz = personaje and personaje:FindFirstChild("HumanoidRootPart")
+	if not raiz or not raiz:IsA("BasePart") then
+		return
+	end
+	local destino = raiz.CFrame * Vector3.new(P.Costado, 0, P.Detras)
+	local actual = estado.Base.Position
+	local hacia = Vector3.new(destino.X - actual.X, 0, destino.Z - actual.Z)
+	local nueva = actual
+	if hacia.Magnitude > P.Salto then
+		nueva = Vector3.new(destino.X, actual.Y, destino.Z)
+	elseif hacia.Magnitude > 0.2 then
+		local velocidad = math.max(P.Velocidad, hacia.Magnitude * 3)
+		nueva = actual + hacia.Unit * math.min(hacia.Magnitude, velocidad * dt)
+	end
+	-- Apoyada en el piso (sin chocar con los personajes).
+	local ignorar = {}
+	for _, j in Players:GetPlayers() do
+		if j.Character then
+			table.insert(ignorar, j.Character)
+		end
+	end
+	rayos.FilterDescendantsInstances = ignorar
+	local golpe = workspace:Raycast(nueva + Vector3.new(0, 6, 0), Vector3.new(0, -20, 0), rayos)
+	nueva = Vector3.new(nueva.X, if golpe then golpe.Position.Y else raiz.Position.Y - 3, nueva.Z)
+	-- Mira hacia donde camina; quieta, hacia donde mira su dueño.
+	local mirar = if hacia.Magnitude > 0.5 then hacia else raiz.CFrame.LookVector
+	mirar = Vector3.new(mirar.X, 0, mirar.Z)
+	local giro = estado.Base.Rotation
+	if mirar.Magnitude > 0.01 then
+		giro = giro:Lerp(CFrame.lookAt(Vector3.zero, mirar).Rotation, math.min(1, dt * 6))
+	end
+	estado.Base = CFrame.new(nueva) * giro
+end
+
+---------------------------------------------------------------------------
 -- Cada cuadro
 ---------------------------------------------------------------------------
 
@@ -201,12 +254,16 @@ RunService.RenderStepped:Connect(function(dt: number)
 	end
 	for modelo, estado in estados do
 		if modelo.Parent then
+			if paseantes[modelo] then
+				seguir(estado, dt)
+			end
 			-- Las lejanas no se animan (rendimiento en celular); siguen donde quedaron.
 			if (estado.Base.Position - camara).Magnitude < DISTANCIA then
 				Animacion.paso(estado, reloj, dt, grupos[modelo.Parent :: Instance])
 			end
 		else
 			estados[modelo] = nil
+			paseantes[modelo] = nil
 		end
 	end
 end)

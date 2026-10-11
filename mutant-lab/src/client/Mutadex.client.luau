@@ -36,8 +36,29 @@ local jugador = Players.LocalPlayer
 local remotos = ReplicatedStorage:WaitForChild("Remotos")
 local comprarPista = remotos:WaitForChild("ComprarPista") :: RemoteEvent
 local compra = remotos:WaitForChild("Compra") :: RemoteEvent
+local pasear = remotos:WaitForChild("Pasear") :: RemoteEvent
 
 local TODAS = Fusion.todas()
+-- Extras (no cuentan en las 50): la especial del premio diario y las 10 de equipo.
+local EXTRAS = table.clone(Fusion.especiales())
+for _, c in Fusion.deEquipo() do
+	table.insert(EXTRAS, c)
+end
+local NOTA_EXTRAS =
+	"Especiales: Estrellín sale el día 7 del premio diario y las de equipo, solo en la máquina de equipo de la plaza."
+
+-- ¿Ya la conseguiste? (las especiales se anotan aparte)
+local function conocida(
+	e: { Tengo: { [string]: boolean }, Especiales: { [string]: boolean } },
+	c: Fusion.Criatura
+): boolean
+	return if c.Especial then e.Especiales[c.Clave] == true else e.Tengo[c.Clave] == true
+end
+
+-- En qué pestaña va.
+local function paginaDe(c: Fusion.Criatura): string
+	return if c.Especial then "Extras" else tostring(c.Gen)
+end
 
 -- La regla de cada generación, arriba de su grilla (ayuda mucho a saber qué combinar).
 local NOTAS = {
@@ -52,6 +73,7 @@ local AYUDA = "Tocá una especie para ver su ficha.\n\n"
 
 type Estado = {
 	Tengo: { [string]: boolean },
+	Especiales: { [string]: boolean }, -- Extras: la del premio diario y las de equipo
 	Mutantes: { [string]: boolean },
 	Pistas: { [string]: number },
 	Compradas: number,
@@ -73,6 +95,7 @@ type Pagina = {
 local function estado(): Estado
 	return {
 		Tengo = Formato.conjunto(jugador:GetAttribute("Especies") :: string?),
+		Especiales = Formato.conjunto(jugador:GetAttribute("Especiales") :: string?),
 		Mutantes = Formato.conjunto(jugador:GetAttribute("Mutantes") :: string?),
 		Pistas = Pistas.leer(jugador:GetAttribute("Pistas") :: string?),
 		Compradas = (jugador:GetAttribute("PistasCompradas") :: number?) or 0,
@@ -156,15 +179,17 @@ local contenido = UI.hueco("Contenido", UDim2.new(1, 0, 1, -arriba), ventana.Cue
 contenido.Position = UDim2.fromOffset(0, arriba)
 local paginasMarco = UI.hueco("Paginas", UDim2.fromScale(1, 1), contenido)
 
-for gen = 1, 3 do
-	local marco = UI.hueco("Gen" .. gen, UDim2.fromScale(1, 1), paginasMarco)
+-- Una página por generación y Extras (las especiales: no cuentan en las 50 y no se compran).
+for _, clave in { "1", "2", "3", "Extras" } do
+	local gen = tonumber(clave)
+	local marco = UI.hueco(if gen then "Gen" .. gen else clave, UDim2.fromScale(1, 1), paginasMarco)
 	marco.Visible = false
 	local nota = UI.texto({
 		Nombre = "Nota",
-		Texto = NOTAS[gen],
+		Texto = if gen then NOTAS[gen] else NOTA_EXTRAS,
 		Fuente = "fuerte",
 		Letra = Tema.Letra.Chica,
-		Color = Paleta.Generaciones[gen],
+		Color = if gen then Paleta.Generaciones[gen] else Paleta.Dorado,
 		AlineacionX = Enum.TextXAlignment.Left,
 		Medida = UDim2.new(1, 0, 0, T.AltoNota),
 	})
@@ -172,50 +197,11 @@ for gen = 1, 3 do
 	local scroll = UI.desplazable("Lista", marco)
 	scroll.Position = UDim2.fromOffset(0, T.AltoNota)
 	scroll.Size = UDim2.new(1, 0, 1, -T.AltoNota)
-	paginas[tostring(gen)] = {
+	paginas[clave] = {
 		Marco = marco,
 		Grilla = UI.grilla(scroll, Vector2.new(T.AltoTarjeta.Minimo, T.AltoTarjeta.Minimo)),
 		Grupo = VistasVisibles.nueva(scroll),
 	}
-end
-
--- Extras: las especies especiales (no cuentan en las 50 y no se compran: se consiguen el día 7
--- del premio diario). Silueta dorada hasta que la tenés.
-local extras = UI.hueco("Extras", UDim2.fromScale(1, 1), paginasMarco)
-extras.Visible = false
-local cajaExtras =
-	UI.tarjeta({ Nombre = "Especial", Borde = Paleta.Dorado, Grosor = Tema.Contorno + 1 })
-cajaExtras.Marco.AnchorPoint = Vector2.new(0.5, 0)
-cajaExtras.Marco.Position = UDim2.new(0.5, 0, 0, Tema.Separacion)
-cajaExtras.Marco.Size = UDim2.fromScale(0.6, 0.62)
-cajaExtras.Marco.Parent = extras
-local vistaExtras = Instance.new("ViewportFrame")
-vistaExtras.BackgroundTransparency = 1
-vistaExtras.Size = UDim2.fromScale(1, 1)
-vistaExtras.Parent = cajaExtras.Fondo
-local textoExtras = UI.texto({
-	Texto = "",
-	Letra = Tema.Letra.Subtitulo,
-	Medida = UDim2.new(1, 0, 0, Tema.Toque * 1.6),
-})
-textoExtras.Position = UDim2.new(0, 0, 0.62, Tema.Separacion * 2)
-textoExtras.Parent = extras
-paginas.Extras = { Marco = extras }
-local marcaExtras: string? = nil
-
-local function pintarExtras()
-	local especial = Fusion.especiales()[1]
-	local tengo = Formato.conjunto(jugador:GetAttribute("Especiales") :: string?)[especial.Clave]
-		== true
-	local marca = especial.Clave .. tostring(tengo)
-	if marca ~= marcaExtras then
-		marcaExtras = marca
-		Vista.mostrar(vistaExtras, especial.Clave, nil, not tengo)
-	end
-	textoExtras.Text = if tengo
-		then especial.Nombre .. ": especie especial. ¡La tenés! No se fusiona, trabaja en el corral."
-		else "??? · Especie especial: solo se consigue el día 7 del premio diario (menú Misiones)."
-	textoExtras.TextColor3 = if tengo then Paleta.Dorado else Paleta.Texto
 end
 
 ---------------------------------------------------------------------------
@@ -301,7 +287,7 @@ local fichaDetalle = UI.texto({
 	Medida = UDim2.fromScale(1, 0),
 })
 fichaDetalle.AutomaticSize = Enum.AutomaticSize.Y
-fichaDetalle.LayoutOrder = 7
+fichaDetalle.LayoutOrder = 8
 fichaDetalle.Parent = fichaLista
 
 local botonPista = UI.boton({
@@ -313,8 +299,21 @@ local botonPista = UI.boton({
 	Letra = Tema.Letra.Subtitulo,
 	Medida = UDim2.new(1, 0, 0, Tema.Toque + Tema.Profundidad),
 })
-botonPista.Marco.LayoutOrder = 8
+botonPista.Marco.LayoutOrder = 9
 botonPista.Marco.Parent = fichaLista
+
+-- Sacar a pasear (Parte 9): una criatura de esta especie te sigue por el mapa y la ven todos.
+local botonPaseo = UI.boton({
+	Nombre = "Paseo",
+	Texto = "Sacar a pasear",
+	Sub = "Te sigue y la ven todos",
+	Icono = "criatura",
+	Tipo = "secundario",
+	Letra = Tema.Letra.Subtitulo,
+	Medida = UDim2.new(1, 0, 0, Tema.Toque + Tema.Profundidad),
+})
+botonPaseo.Marco.LayoutOrder = 7 -- arriba del detalle (que es largo), así se ve sin desplazar
+botonPaseo.Marco.Parent = fichaLista
 
 local ayuda = UI.texto({
 	Nombre = "Ayuda",
@@ -325,7 +324,7 @@ local ayuda = UI.texto({
 	Medida = UDim2.fromScale(1, 0),
 })
 ayuda.AutomaticSize = Enum.AutomaticSize.Y
-ayuda.LayoutOrder = 9
+ayuda.LayoutOrder = 10
 ayuda.Parent = fichaLista
 
 -- En celular la ficha tapa la grilla: se cierra con su propia X.
@@ -345,6 +344,15 @@ local function receta(c: Fusion.Criatura): string
 	local nombres = {}
 	for _, b in c.Bases do
 		table.insert(nombres, Especies[b].Nombre)
+	end
+	if c.Equipo then
+		return "Receta (en equipo): "
+			.. nombres[1]
+			.. " + "
+			.. nombres[2]
+			.. ", una de cada jugador."
+	elseif c.Especial then
+		return "Premio del día 7 del premio diario. No se fusiona."
 	end
 	if c.Gen == 1 then
 		return "Especie base n.º "
@@ -382,13 +390,14 @@ local function actualizarFicha(e: Estado)
 		x.Visible = c ~= nil
 	end
 	botonPista.Marco.Visible = false
+	botonPaseo.Marco.Visible = false
 	if not c then
 		marcaFicha = nil
 		modeloFicha = Vista.mostrar(fichaVista, nil)
 		return
 	end
 
-	local descubierta = e.Tengo[c.Clave] == true
+	local descubierta = conocida(e, c)
 	local mutante = descubierta and e.Mutantes[c.Clave] == true
 	local marca = c.Clave .. (if descubierta then "D" else "S") .. (if mutante then "M" else "")
 	if marcaFicha ~= marca then
@@ -471,9 +480,25 @@ local function actualizarFicha(e: Estado)
 			.. variantesFicha
 			.. (if mutante then "\n¡La tenés mutante!" else "")
 		fichaDetalle.TextColor3 = if mutante then Paleta.Dorado else Paleta.Texto
+		-- Sacar a pasear una de las tuyas (o guardarla si ya está paseando).
+		botonPaseo.Marco.Visible = cuantas > 0
+		if jugador:GetAttribute("Paseo") == c.Clave then
+			botonPaseo.poner("Guardarla", "Vuelve a tu laboratorio")
+		else
+			botonPaseo.poner("Sacar a pasear", "Te sigue y la ven todos")
+		end
 		return
 	end
 	fichaDetalle.TextColor3 = Paleta.Texto
+	if c.Equipo then
+		fichaDetalle.Text =
+			"Todavía no la descubriste. Especie de equipo: solo sale en la máquina de equipo de la plaza, con una criatura tuya y una de otro jugador."
+		return
+	elseif c.Especial then
+		fichaDetalle.Text =
+			"Todavía no la tenés. Es la especie especial del día 7 del premio diario (menú Misiones)."
+		return
+	end
 	if c.Gen == 1 then
 		fichaDetalle.Text = "Todavía no la tenés. Las especies base se compran en la tienda."
 		return
@@ -518,10 +543,10 @@ end
 
 local function pintarTarjeta(t: Tarjeta, e: Estado)
 	local c = t.Criatura
-	local descubierta = e.Tengo[c.Clave] == true
+	local descubierta = conocida(e, c)
 	local mutante = descubierta and e.Mutantes[c.Clave] == true
 	local marca = (if descubierta then "D" else "S") .. (if mutante then "M" else "")
-	local pagina = paginas[tostring(c.Gen)]
+	local pagina = paginas[paginaDe(c)]
 	local grupo = pagina.Grupo :: VistasVisibles.Grupo
 	if t.Marca ~= marca then
 		local datos = { Clave = c.Clave, Mutante = mutante, Silueta = not descubierta }
@@ -546,14 +571,16 @@ local function pintarTarjeta(t: Tarjeta, e: Estado)
 		t.Cas.Borde.Color = Paleta.Acento
 		t.Cas.Borde.Thickness = Tema.Contorno + 3
 	else
-		t.Cas.Borde.Color = if descubierta then Paleta.Generaciones[c.Gen] else Paleta.Metal
+		t.Cas.Borde.Color = if not descubierta
+			then Paleta.Metal
+			elseif c.Especial then Paleta.Dorado
+			else Paleta.Generaciones[c.Gen]
 		t.Cas.Borde.Thickness = Tema.Contorno + 1
 	end
 end
 
 local function actualizarTodo()
 	local e = estado()
-	pintarExtras()
 	local total = 0
 	local porGen = { 0, 0, 0 }
 	local deGen = { 0, 0, 0 }
@@ -565,11 +592,19 @@ local function actualizarTodo()
 		end
 		pintarTarjeta(tarjetas[c.Clave], e)
 	end
+	local extras = 0
+	for _, c in EXTRAS do
+		if e.Especiales[c.Clave] then
+			extras += 1
+		end
+		pintarTarjeta(tarjetas[c.Clave], e)
+	end
 	for gen = 1, 3 do
 		pestanas.Botones[tostring(gen)].poner(
 			"Gen " .. gen .. " · " .. porGen[gen] .. "/" .. deGen[gen]
 		)
 	end
+	pestanas.Botones.Extras.poner("Extras · " .. extras .. "/" .. #EXTRAS)
 	textoProgreso.Text = total .. " / " .. #TODAS
 	barra.poner(total / #TODAS)
 	contadorADN.Valor.Text = Formato.numero(e.ADN)
@@ -583,7 +618,11 @@ local function elegir(clave: string)
 	actualizarTodo()
 end
 
-for orden, c in TODAS do
+local lista = table.clone(TODAS)
+for _, c in EXTRAS do
+	table.insert(lista, c)
+end
+for orden, c in lista do
 	local cas = UI.casillero({
 		Nombre = c.Clave,
 		Medida = UDim2.fromOffset(T.AltoTarjeta.Minimo, T.AltoTarjeta.Minimo),
@@ -593,7 +632,7 @@ for orden, c in TODAS do
 	})
 	cas.Signo.TextColor3 = Paleta.Texto
 	cas.Marco.LayoutOrder = orden
-	local pagina = paginas[tostring(c.Gen)]
+	local pagina = paginas[paginaDe(c)]
 	cas.Marco.Parent = pagina.Marco:FindFirstChild("Lista")
 	UI.tocable(cas.Fondo, function()
 		elegir(c.Clave)
@@ -677,6 +716,15 @@ botonPista.AlTocar = function()
 	end
 end
 
+botonPaseo.AlTocar = function()
+	if not seleccionada then
+		return
+	end
+	-- SONIDO: sacar a pasear (dos notas que suben) o guardarla
+	Sonidos.secuencia({ 0, 7 }, 0.08, 0.3)
+	pasear:FireServer(if jugador:GetAttribute("Paseo") == seleccionada then nil else seleccionada)
+end
+
 compra.OnClientEvent:Connect(function(tipo: string)
 	if tipo == "Pista" and ventana.Marco.Visible then
 		-- SONIDO: pista comprada (dos notas que suben)
@@ -713,6 +761,7 @@ for _, atributo in
 		"Sellos",
 		"Variantes",
 		"Especiales",
+		"Paseo",
 		"Pistas",
 		"PistasCompradas",
 		"PistasGratis",

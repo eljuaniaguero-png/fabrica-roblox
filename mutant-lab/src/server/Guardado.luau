@@ -81,6 +81,18 @@ local function lista(conjunto: { [any]: boolean }): { any }
 	return r
 end
 
+-- Solo se guardan los "me gusta" que diste hoy o ayer (los viejos ya no importan).
+local function meGustaRecientes(d: Jugadores.Datos): { [string]: number }
+	local hoy = Reloj.dia()
+	local r = {}
+	for k, dia in d.MeGustaDados do
+		if dia >= hoy - 1 then
+			r[k] = dia
+		end
+	end
+	return r
+end
+
 local function aGuardados(d: Jugadores.Datos): Guardados
 	local criaturas = {}
 	for _, u in d.Criaturas do
@@ -124,6 +136,8 @@ local function aGuardados(d: Jugadores.Datos): Guardados
 		ExperimentoGanado = d.ExperimentoGanado,
 		Metas = lista(d.Metas),
 		Especiales = lista(d.Especiales),
+		MeGusta = d.MeGusta,
+		MeGustaDados = meGustaRecientes(d),
 	}
 end
 
@@ -312,6 +326,14 @@ local function limpiar(crudo: any): Guardados?
 			table.insert(metas, k)
 		end
 	end
+	local meGustaDados = {}
+	if typeof(crudo.MeGustaDados) == "table" then
+		for k, dia in crudo.MeGustaDados do
+			if typeof(k) == "string" and typeof(dia) == "number" then
+				meGustaDados[k] = math.floor(dia)
+			end
+		end
+	end
 	local especiales = {}
 	for _, k in if typeof(crudo.Especiales) == "table" then crudo.Especiales else {} do
 		local c = if typeof(k) == "string" then Fusion.porClave(k) else nil
@@ -330,6 +352,8 @@ local function limpiar(crudo: any): Guardados?
 		ExperimentoGanado = numero(crudo.ExperimentoGanado, -1, 1e9),
 		Metas = metas,
 		Especiales = especiales,
+		MeGusta = numero(crudo.MeGusta, 0, 1e9),
+		MeGustaDados = meGustaDados,
 		Residuos = residuos,
 		Catalizadores = catalizadores,
 		CatalizadoresVistos = vistos,

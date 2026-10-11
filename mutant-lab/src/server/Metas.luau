@@ -166,7 +166,15 @@ local METAS: { Meta } = {
 		Premio = C.Premio,
 		Color = Paleta.Elementos.Electrico,
 		progreso = function(d)
-			return cantidad(d.Especiales)
+			-- Las de equipo (Parte 9) no cuentan: esta es la del premio diario.
+			local n = 0
+			for clave in d.Especiales do
+				local c = Fusion.porClave(clave)
+				if c and not c.Equipo then
+					n += 1
+				end
+			end
+			return n
 		end,
 	},
 }

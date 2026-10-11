@@ -87,6 +87,9 @@ local Tema = {
 		InsigniaExtras = 120,
 	},
 
+	-- Ficha de una criatura de otro jugador (abajo al centro)
+	FichaAjena = { Ancho = 640, Alto = 172 },
+
 	-- Tablero de pedidos
 	Pedidos = {
 		AltoInfo = 40,

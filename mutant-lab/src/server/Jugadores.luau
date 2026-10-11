@@ -70,6 +70,9 @@ export type Datos = {
 	ExperimentoGanado: number, -- día en que ganó el experimento del día por última vez
 	Metas: { [string]: boolean }, -- metas cumplidas (cada una deja un trofeo)
 	Especiales: { [string]: boolean }, -- especies especiales que consiguió (Mutadex, Extras)
+	-- Jugar con otros (Parte 9).
+	MeGusta: number, -- "me gusta" que recibió su laboratorio
+	MeGustaDados: { [string]: number }, -- UserId del dueño -> día en que le dio "me gusta"
 	OcupadoHasta: number, -- la máquina está trabajando hasta este os.clock()
 }
 
@@ -113,6 +116,8 @@ export type Guardados = {
 	ExperimentoGanado: number?,
 	Metas: { string }?,
 	Especiales: { string }?,
+	MeGusta: number?,
+	MeGustaDados: { [string]: number }?,
 }
 
 local datos: { [Player]: Datos } = {}
@@ -373,6 +378,8 @@ function Jugadores.nuevos(): Datos
 		ExperimentoGanado = -1,
 		Metas = {},
 		Especiales = {},
+		MeGusta = 0,
+		MeGustaDados = {},
 		OcupadoHasta = 0,
 	}
 	for _, n in Config.Economia.BasesIniciales do
@@ -438,6 +445,8 @@ function Jugadores.crear(jugador: Player, guardados: Guardados?)
 		for _, k in guardados.Especiales or {} do
 			d.Especiales[k] = true
 		end
+		d.MeGusta = guardados.MeGusta or 0
+		d.MeGustaDados = table.clone(guardados.MeGustaDados or {})
 		d.Residuos = table.clone(guardados.Residuos or {})
 		d.Catalizadores = table.clone(guardados.Catalizadores or {})
 		for _, k in guardados.CatalizadoresVistos or {} do

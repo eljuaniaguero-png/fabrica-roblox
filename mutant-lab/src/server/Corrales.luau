@@ -92,6 +92,7 @@ function Corrales.actualizar(jugador: Player)
 			local modelo =
 				Generador.crear(c, donde, nil, lugar.Mutante, lugar.Personalidad, lugar.Variante)
 			modelo:SetAttribute("Id", id)
+			modelo:SetAttribute("Dueno", jugador.UserId)
 			modelo:SetAttribute("Produce", lugar.Produce)
 			modelo:SetAttribute("ZonaCFrame", zona.CFrame)
 			modelo:SetAttribute("ZonaTamano", zona.Size)
