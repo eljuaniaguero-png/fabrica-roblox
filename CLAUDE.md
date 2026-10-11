@@ -32,9 +32,13 @@ Hay dos juegos. Cada uno tiene su propio código, su propio archivo de Rojo y su
 - `ideas/` -> informes de tendencias y fichas de diseño (un .md por idea)
 - `default.project.json` -> mapeo de Rojo
 
-Herramientas (instaladas con Rokit): `rojo`, `selene`, `stylua`.
+Herramientas (instaladas con Rokit): `rojo`, `selene`, `stylua`, `lune` (correr Luau fuera de Studio, para tests de lógica pura) y `wally` (paquetes, por ejemplo ProfileStore).
 
-Las skills instaladas (ej. roblox-dev) son apoyo: si contradicen GUIA-PARA-CLAUDE.md, manda la GUIA. No usar los comandos setup ni new-system de roblox-dev para reestructurar los juegos existentes.
+Un hook de Claude Code (`.claude/hooks/revisar-luau.sh`) corre StyLua y Selene solo cada vez que guardás un `.luau`; si Selene marca algo, arreglalo antes de seguir.
+
+Las skills instaladas (roblox-dev y las de `.claude/skills/`: roblox-*, game-feel, level-design, game-ui-ux) son apoyo: si contradicen GUIA-PARA-CLAUDE.md, manda la GUIA. No usar los comandos setup ni new-system de roblox-dev para reestructurar los juegos existentes.
+
+Referencias con fuentes: `docs/investigacion-mejores-practicas-roblox-2026.md` y `ideas/revision-2026-10-11.md`.
 
 ## Regla de oro: quién toca qué
 
@@ -49,6 +53,8 @@ Las skills instaladas (ej. roblox-dev) son apoyo: si contradicen GUIA-PARA-CLAUD
 3. Pedile al usuario que tenga `rojo serve` corriendo y el plugin de Rojo conectado en Studio. Si las herramientas MCP no aparecen, avisale que revise Assistant > Manage MCP Servers.
 4. Construí el mundo por MCP, arrancá el playtest, leé la consola y sacá una captura. No digas que algo funciona sin haberlo probado.
 5. Hacé un commit de git por cada avance que funcione, con mensaje en español.
+6. Si el pedido cambió el mundo, guardá una copia del place en `backups/<juego>-AAAA-MM-DD.rbxl` (está fuera de git). Si no podés guardarla por MCP, pedile al usuario: Studio → File → Save to File As → esa carpeta.
+7. No uses worktrees: trabajá en la carpeta principal, rama `master`. Si la sesión arrancó en un worktree, al terminar pasá los commits a `master` y avisale al usuario.
 
 ## Estilo de código
 

@@ -1,0 +1,9 @@
+# Todo el texto con finales de línea LF (lo que esperan StyLua y Rojo), también en Windows.
+* text=auto eol=lf
+*.rbxl binary
+*.rbxm binary
+*.blend binary
+*.fbx binary
+*.glb binary
+*.png binary
+*.jpg binary

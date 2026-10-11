@@ -176,6 +176,8 @@ Probá simulando el paso de un día y de siete. Mostrame capturas del cartel de 
 
 Lo social, cuando el juego individual ya funciona.
 
+> **Ojo (11 oct):** una sesión vieja dejó este pedido empezado y sin probar (plaza, paseos, ficha ajena, fusión en equipo). Está guardado en la rama `claude/mutant-lab-ui-consolidate-05bd28`. Al arrancar el pedido, Claude lo revisa y decide si lo aprovecha o empieza de cero.
+
 ```
 Juego: Mutant Lab (carpeta mutant-lab/). Leé ideas/mutant-lab.md y el código actual. Sumá la Parte 9 al plan de la ficha y hacela, con un playtest de dos jugadores al terminar cada punto.
 
@@ -190,6 +192,21 @@ Juego: Mutant Lab (carpeta mutant-lab/). Leé ideas/mutant-lab.md y el código a
 9. Todo lo que hace un jugador sobre otro se valida en el servidor. Los nombres generados pasan por el filtro de texto de Roblox si en algún momento el jugador puede escribir algo propio.
 
 Mostrame capturas de la plaza con dos jugadores, una visita a un laboratorio ajeno y una fusión en equipo. Marcá la Parte 9 y hacé commit.
+```
+
+## [ ] 7b. Guardado seguro para los dos juegos
+
+Antes de publicar cualquiera de los dos (lo pide la revisión del 11 oct, puntos 2 a 5).
+
+```
+Juego: Mutant Lab y Pisada Sonora, uno por vez (primero Mutant Lab). Leé la sección 3 de GUIA-PARA-CLAUDE.md y los puntos 2 a 5 de ideas/revision-2026-10-11.md.
+
+1. Pasá el guardado a ProfileStore (bloqueo de sesión), instalado con Wally o copiado como módulo, sin perder los datos que ya existen (migración con SchemaVersion).
+2. Autoguardado, guardado al salir, en BindToClose en paralelo (tope 25 s), en game.ServerRestartScheduled y después de cada compra con Robux.
+3. Si falla la carga, que el jugador vea "No pudimos cargar tu progreso, volvé a entrar" en vez de jugar sin guardar. Un error no apaga el guardado de los demás.
+4. Probalo: guardar, salir y volver; dos jugadores; cortar Studio en medio de un guardado.
+
+Commit por juego y mostrame la prueba de salir y volver.
 ```
 
 ## [ ] 8. Parte 6: compras con Robux
@@ -216,6 +233,8 @@ Mostrame capturas de la pestaña Premium y de cada oferta contextual. Marcá la 
 ## [ ] 9. Bugs del piso
 
 Antes que cualquier cosa nueva.
+
+> **Ojo (11 oct):** una sesión vieja dejó un arreglo empezado y sin probar (reintento de pisada y cupo anti-trampa en `Baldosas.client.luau`, `Pisadas.luau` y `Config.luau`). Está en la rama `claude/pisada-sonora-baldosas-bugs-ee9942`. Claude lo revisa al arrancar el pedido, pero igual tiene que medir el antes y el después.
 
 ```
 Leé la ficha de Pisada Sonora y el código actual. Hay bugs al pisar el piso: algunas baldosas no suenan y otras no responden bien. No agregues nada nuevo en esta sesión, solo arreglá.

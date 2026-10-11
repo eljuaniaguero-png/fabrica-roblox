@@ -4,3 +4,8 @@ sourcemap.json
 .env
 mutant-lab/*.rbxlx
 capturas/
+# Copias del place (pesan mucho; quedan en disco, fuera de git)
+backups/
+# Blender: copias automáticas y exportaciones
+*.blend1
+modelos/exports/

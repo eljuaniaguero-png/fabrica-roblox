@@ -1,0 +1,1 @@
+Origen: github.com/gamedev-skills/awesome-gamedev-agent-skills @ 0a70cfc (Apache-2.0), copiadas el 2026-10-11. Solo roblox-*, game-feel, level-design y game-ui-ux.
