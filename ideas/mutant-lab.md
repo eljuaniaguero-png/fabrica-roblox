@@ -16,6 +16,7 @@ Versión 11 (2026-10-09): **Parte 5 revisada** (pedido 4 de `ORDEN-PEDIDOS.md`):
 Versión 12 (2026-10-09): **Parte 7 hecha** (pedido 5 de `ORDEN-PEDIDOS.md`): tres niveles de fusión, "¡NUEVA ESPECIE!" letra por letra, botón Saltear, criaturas que reaccionan al tocarlas y viven según su personalidad, ADN que vuela al contador y destellos de mejoras. Ver "Notas de la Parte 7".
 Versión 13 (2026-10-09): **Parte 8 hecha** (pedido 6 de `ORDEN-PEDIDOS.md`): ADN mientras no estás, premio diario de 7 días con la especie especial Estrellín, experimento del día, tres misiones diarias y metas largas con trofeos; las fechas las decide el servidor. Ver "Notas de la Parte 8".
 Versión 14 (2026-10-11): **Parte 9 hecha** (pedido 7 de `ORDEN-PEDIDOS.md`): paseos, visitas, ficha de criaturas ajenas, fusión en equipo con 10 especies que solo salen así, tablas de posiciones y "me gusta". Ver "Notas de la Parte 9".
+Versión 15 (2026-10-11): **guardado seguro** (pedido 7b de `ORDEN-PEDIDOS.md`, la parte de Mutant Lab): ProfileStore con bloqueo de sesión, migración de los guardados viejos, aviso si falla la carga y StreamingEnabled. Ver "Guardado seguro y streaming".
 Próximo punto de control: **prototipo jugable** (Partes 1 a 5).
 
 ## Guía de estilo: laboratorio de caricatura de noche (versión 6)
@@ -630,6 +631,29 @@ Pedido 7 de `ORDEN-PEDIDOS.md`. Una sesión vieja lo había dejado empezado y si
 - **Sin intercambio ni regalos**: no existe ninguna forma de pasar criaturas o ADN entre jugadores. Nadie escribe texto propio (los nombres salen de sílabas fijas), así que no hace falta el filtro de texto.
 - **Seguridad**: todo lo valida el servidor (que la criatura sea tuya, que estés cerca, que el lado sea tuyo, que te alcance el ADN) y los remotos nuevos tienen freno contra el spam (`server/Frecuencia.luau`, 0,5 s).
 - **Probado** (2026-10-11, dos jugadores): Player1 sacó a pasear un Glumulo y Player2 lo vio seguirlo, con su ficha ("¡No la descubriste!"); Player2 entró al laboratorio de Player1 (solo el "me gusta" encendido) y le dio me gusta (el segundo del día dice "Ya le diste me gusta hoy"); dos fusiones en equipo (Dunaqui + Rámulo = Ranaqui y Sutomi + Zoplito = Suplito, "¡FUSIÓN EN EQUIPO! … especie de equipo: solo sale así"), cada uno con su cría y su ADN cobrado; la Mutadex de Player2 mostró Extras 3/11. Consola sin errores en el servidor y los dos clientes. Las especies de equipo tienen su chequeo en `Pruebas.server.luau`.
+
+## Guardado seguro y streaming (versión 15)
+
+Pedido 7b de `ORDEN-PEDIDOS.md` (sección 3 de la GUIA y puntos 2 a 5 de `ideas/revision-2026-10-11.md`).
+
+### Guardado con ProfileStore (`server/Guardado.luau`)
+- **ProfileStore** (el oficial de loleris, `lm-loleris/profilestore@1.0.3`) instalado con Wally en `mutant-lab/ServerPackages/` y mapeado en Rojo a `ServerScriptService.ServerPackages`. Trae el **bloqueo de sesión**: mientras un servidor tiene abierto el laboratorio de un jugador, otro no lo puede pisar; si el jugador entra a otro servidor, el primero guarda y lo suelta ("Tu laboratorio se abrió en otro servidor. Volvé a entrar.").
+- **Almacén nuevo** `MutantLab_v2` (`Config.Guardado.Almacen`). **Migración**: la primera vez que entra cada jugador se lee su guardado viejo de `MutantLab_v1` (versiones 1 y 2), se revisa como siempre y pasa al perfil con `SchemaVersion = 3`. El almacén viejo queda intacto como respaldo.
+- **Cuándo se guarda**: cada 60 s (lo hace ProfileStore), al salir, al cerrar el servidor (todos en paralelo, esperando como mucho 25 s), cuando Roblox avisa que va a reiniciar el servidor (`game.ServerRestartScheduled`, con un aviso al jugador; si el evento no existe no pasa nada) y cuando se pide con `Guardado.guardar` (lo van a usar las compras con Robux).
+- **Si falla la carga**, el jugador sale con "No pudimos cargar tu progreso, volvé a entrar." en vez de jugar sin guardar. Cada perfil es independiente: el error de uno no apaga el guardado de los demás.
+- En Studio sin "Acceso a los servicios de API", ProfileStore usa un almacén de mentira y se juega igual (sin guardar entre partidas).
+
+### StreamingEnabled
+- Activado en el place: radio mínimo 64, objetivo 256 y `StreamOutBehavior` en `Opportunistic` (lo lejano se descarga, mejor para celular). Los radios no se pueden poner por código: se cambian en Propiedades de Workspace.
+- **Tu laboratorio siempre está cargado** (`ModelStreamingMode = PersistentPerPlayer` + `AddPersistentPlayer` al asignarlo); los demás llegan enteros cuando te acercás. Las criaturas ya eran `Atomic`. Antes de llevarte a tu laboratorio, el servidor pide que te llegue esa zona.
+- **Cliente**: los botones de los laboratorios ajenos se apagan también cuando el laboratorio llega o vuelve a llegar (antes se revisaban una sola vez al entrar).
+
+### Probado (2026-10-11)
+- **Migración**: la cuenta del usuario pasó de `MutantLab_v1` a ProfileStore con sus 18 especies, su ADN y la especial; Player1 y Player2 (los de prueba) también, con las especies de equipo del pedido 7.
+- **Guardar, salir y volver**: ADN y una especie nueva cambiados a mano, se cerró y se volvió a abrir el juego: volvió todo.
+- **Dos jugadores**: Player2 salió en medio del juego (quedó guardado y con la sesión liberada) y Player1 guardó al cerrar el servidor. Los dos volvieron con lo suyo.
+- **Cortar Studio en medio de un guardado** (se cerró a la fuerza justo después de pedir un guardado): al volver a abrir, los datos estaban sanos y el laboratorio cargó enseguida.
+- **Streaming con radio chico** (64): lejos de todo solo queda cargado tu laboratorio; al acercarte a uno ajeno llega entero con sus botones apagados (salvo "me gusta"); de vuelta en el tuyo, la fusión anda. Consola sin errores.
 
 ## La idea en una línea
 

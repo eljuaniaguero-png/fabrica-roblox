@@ -22,9 +22,9 @@ require(script.Parent.Tienda)
 require(script.Parent.HerramientasPrueba)
 
 local function alEntrar(jugador: Player)
-	local guardados = Guardado.cargar(jugador)
-	if not jugador.Parent then
-		return -- se fue mientras cargaba
+	local guardados, ok = Guardado.cargar(jugador)
+	if not ok or not jugador.Parent then
+		return -- se fue mientras cargaba, o no se pudo cargar (ya salió con un aviso)
 	end
 	Jugadores.crear(jugador, guardados)
 	Laboratorios.asignar(jugador)
@@ -50,8 +50,8 @@ for _, jugador in Players:GetPlayers() do
 end
 
 Players.PlayerRemoving:Connect(function(jugador)
-	-- Copia los datos en el acto (antes de que se borren abajo) y guarda sin frenar la salida.
-	task.spawn(Guardado.salir, jugador)
+	-- Pasa los datos al perfil en el acto (antes de que se borren abajo) y cierra la sesión.
+	Guardado.salir(jugador)
 	Corrales.limpiar(jugador)
 	Laboratorios.liberar(jugador)
 	Jugadores.quitar(jugador)

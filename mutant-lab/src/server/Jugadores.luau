@@ -92,7 +92,7 @@ export type MisionesDelDia = { Dia: number, Lista: { Mision }, Bono: boolean }
 
 -- Lo que se guarda en el DataStore (Guardado.luau): solo tablas, textos y números.
 export type Guardados = {
-	Version: number,
+	SchemaVersion: number, -- 1 y 2: DataStore propio; 3: ProfileStore (ver Guardado.luau)
 	ADN: number,
 	Especies: { string },
 	Mutantes: { string },

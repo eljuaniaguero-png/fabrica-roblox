@@ -40,6 +40,9 @@ local function generar(): Instance
 			+ Vector3.new(math.sin(angulo), 0, math.cos(angulo)) * M.DistanciaLaboratorios
 		local lab = molde:Clone()
 		lab.Name = "Lab" .. i
+		-- Streaming: el laboratorio llega siempre entero. Al dueño le queda cargado todo el
+		-- tiempo (AddPersistentPlayer en asignar); a los demás les llega cuando se acercan.
+		lab.ModelStreamingMode = Enum.ModelStreamingMode.PersistentPerPlayer
 		-- El -Z mira hacia afuera, así el frente (+Z, el arco) queda mirando a la plaza.
 		lab:PivotTo(CFrame.lookAt(donde, donde + (donde - M.CentroPlaza)))
 		lab.Parent = carpeta
@@ -128,6 +131,10 @@ local function llevarAlLab(jugador: Player, personaje: Model)
 	end
 	personaje:WaitForChild("HumanoidRootPart", 5)
 	task.wait() -- dejar que el personaje termine de aparecer
+	-- Streaming: que al jugador le llegue el piso antes de moverlo (si no, puede caerse).
+	pcall(function()
+		jugador:RequestStreamAroundAsync(aparicion.Position, 5)
+	end)
 	-- Mirando hacia la máquina (-Z del laboratorio).
 	personaje:PivotTo(aparicion.CFrame * CFrame.new(0, 4, 0))
 end
@@ -358,6 +365,7 @@ function Laboratorios.asignar(jugador: Player)
 		if lab and lab:IsA("Model") and not duenoDe[lab] then
 			labDe[jugador] = lab
 			duenoDe[lab] = jugador
+			lab:AddPersistentPlayer(jugador)
 			lab:SetAttribute("Dueno", jugador.UserId)
 			jugador:SetAttribute("Laboratorio", lab.Name)
 			ponerCartel(lab, jugador.DisplayName)
@@ -380,6 +388,7 @@ function Laboratorios.liberar(jugador: Player)
 	end
 	labDe[jugador] = nil
 	duenoDe[lab] = nil
+	lab:RemovePersistentPlayer(jugador)
 	lab:SetAttribute("Dueno", nil)
 	ponerCartel(lab, nil)
 	pintarCorrales(lab, Config.Mejoras.Corrales.Inicial, {})

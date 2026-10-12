@@ -245,11 +245,17 @@ local Config = {
 		PausaLetra = 0.07, -- "¡NUEVA ESPECIE!": segundos entre cada letra del nombre
 	},
 
-	-- Guardado en el servidor (DataStore). Cambiar el nombre empieza todo de cero.
+	-- Guardado en el servidor con ProfileStore (bloqueo de sesión). Cambiar el nombre empieza
+	-- todo de cero. AlmacenViejo es el DataStore de antes (versiones 1 y 2): se lee una sola vez
+	-- por jugador, la primera vez que entra, para pasar sus datos al perfil nuevo.
 	Guardado = {
-		Almacen = "MutantLab_v1",
+		Almacen = "MutantLab_v2",
+		AlmacenViejo = "MutantLab_v1",
 		CadaCuanto = 60, -- segundos entre guardados automáticos
-		Intentos = 3, -- reintentos si Roblox no responde
+		Intentos = 3, -- reintentos al leer el guardado viejo si Roblox no responde
+		AvisoError = "No pudimos cargar tu progreso, volvé a entrar.",
+		AvisoOtroServidor = "Tu laboratorio se abrió en otro servidor. Volvé a entrar.",
+		AvisoReinicio = "El servidor se va a reiniciar en un ratito: tu progreso ya está guardado.",
 	},
 
 	-- Guía del jugador nuevo: flecha y cartel hasta la máquina, hasta que la usa por primera vez.
