@@ -253,3 +253,14 @@ Diferencias encontradas (manda el código, así que se corrigió el documento):
 - Gema del elemento y anillo de generación: los pone Roblox, no se modelan (sección 3).
 - Pendiente: huevos, incubadoras, frutas, Jardín Salvaje y decoración todavía no existen en el juego (pedidos 7c, 7d y 7e). Su arte se puede hacer antes, pero se conecta cuando esos pedidos estén hechos.
 
+### 12 oct 2026 — pedido 0: el camino completo con el Catalizador Slime
+- Blender 5.2.2 LTS en `C:\Program Files\Blender Foundation\Blender 5.2\blender.exe`.
+- Cada objeto es un script en `mutant-lab/arte/scripts/objetos/` que usa `comun.py`. Se corre en segundo plano (unos 10 segundos por objeto):
+  `blender -b --factory-startup --python-exit-code 1 -P mutant-lab/arte/scripts/objetos/catalizador_slime.py`
+- `comun.py` lee los colores de `Paleta.luau` (claves como `Catalizadores.Slime`), arma formas (torno, esferas, metabolas para lo blando), revisa nombres, triángulos, mallas cerradas, transformaciones y origen, exporta el FBX y saca tres imágenes en `renders/<grupo>/`: el render transparente, `_vista` (sobre el fondo del juego) y `_silueta` (negra y chica, como en un celular).
+- Los `.blend` se guardan en `mutant-lab/arte/blend/` (fuera de git: se regeneran con los scripts).
+- Exportación FBX (guía oficial de Roblox para Blender): Apply Scalings = FBX Units Scale, escala 1, Forward = Z, Up = Y, Apply Transform activado. En Blender el frente mira a -Y (vista Front).
+- Vista previa del vidrio: semitransparente (alpha 0,3), como se ve en Roblox, no vidrio realista. El neón con fuerza 1: más fuerte se lava el color.
+- Catalizador Slime: 1.456 triángulos, 1,34 x 1,26 x 1,69 studs. Mallas `CatalizadorSlime_Frasco_Vidrio`, `CatalizadorSlime_Slime_Neon` y `CatalizadorSlime_Tapa`.
+- Falta comprobar en Studio: escala real, orientación y pivote después de importar.
+
