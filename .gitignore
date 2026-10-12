@@ -12,3 +12,4 @@ modelos/exports/
 
 # Blender: los .blend se regeneran con los scripts de mutant-lab/arte/scripts
 mutant-lab/arte/blend/
+__pycache__/
