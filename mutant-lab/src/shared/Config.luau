@@ -398,6 +398,22 @@ local Config = {
 			Id = 0,
 		},
 	},
+
+	-- Arte hecho en Blender (ideas/mutant-lab-arte.md). Los modelos viven en
+	-- ReplicatedStorage > Arte > <grupo>; acá quedan los IDs de las mallas subidas, por si hay
+	-- que rearmarlos, y cómo se pinta cada malla según el sufijo de su nombre.
+	Arte = {
+		Vidrio = { Transparencia = 0.45, Reflejo = 0.1 }, -- mallas _Vidrio (SmoothPlastic)
+		Mallas = {
+			Objetos = {
+				CatalizadorSlime = {
+					Frasco_Vidrio = "rbxassetid://75302169037170",
+					Slime_Neon = "rbxassetid://96135031205128",
+					Tapa = "rbxassetid://112168412519378",
+				},
+			},
+		},
+	},
 }
 
 return Config

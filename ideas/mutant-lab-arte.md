@@ -262,5 +262,21 @@ Diferencias encontradas (manda el código, así que se corrigió el documento):
 - Exportación FBX (guía oficial de Roblox para Blender): Apply Scalings = FBX Units Scale, escala 1, Forward = Z, Up = Y, Apply Transform activado. En Blender el frente mira a -Y (vista Front).
 - Vista previa del vidrio: semitransparente (alpha 0,3), como se ve en Roblox, no vidrio realista. El neón con fuerza 1: más fuerte se lava el color.
 - Catalizador Slime: 1.456 triángulos, 1,34 x 1,26 x 1,69 studs. Mallas `CatalizadorSlime_Frasco_Vidrio`, `CatalizadorSlime_Slime_Neon` y `CatalizadorSlime_Tapa`.
-- Falta comprobar en Studio: escala real, orientación y pivote después de importar.
+- **Comprobado en Studio:**
+  - **Escala:** 1 unidad de Blender = 1 stud, sin ajustes. El importador mostró 1,34 × 1,69 × 1,26, igual que Blender.
+  - **Ejes:** el frente de Blender (-Y) llega a Roblox mirando a -Z, y +X de Blender queda en -X de Roblox (es un giro, no un espejo: la derecha del objeto sigue siendo su derecha).
+  - **Pivote:** queda en el origen de Blender, o sea en la base del objeto, gracias a "Fijar pivote a origen de escena".
+- **Pasos de importación que funcionaron** (Studio en español):
+  1. Abrí el panel "Importar cola" y tocá el ícono de carpeta. Si había algo de antes en la cola, vaciala primero con "Borrar cola".
+  2. Elegí el `.fbx` de `mutant-lab/arte/export/<grupo>/`. Se abre "Importar vista previa".
+  3. Dejá: "Importar Solo como Modelo", "Cargar a Roblox", "Añadir a Workspace" y "Fijar pivote a origen de escena" prendidos. Prendé "Anclado".
+  4. Revisá en Geometría del archivo: "Unidad de escala" en Stud, "Factor de escala" en 1 y "Combinar mallas" apagado. En Transformación: Frontal y Superior.
+  5. Tocá Importar. Después, por MCP: mover el modelo a `ReplicatedStorage/Arte/<grupo>`, `PivotTo(CFrame.new())` y pintar.
+- **Cómo se pinta en Roblox:**
+  - `_Neon`: material Neon con el color de Paleta.
+  - `_Vidrio`: SmoothPlastic, Transparency 0,45 y Reflectance 0,1 (`Config.Arte.Vidrio`). Con el material Glass casi no se veía de noche.
+  - El resto: SmoothPlastic.
+  - En todas las mallas: CanCollide, CanQuery y CanTouch apagados.
+- IDs de las mallas en `Config.Arte.Mallas`. Copia del place en `backups/mutant-lab-2026-10-12.rbxl`.
+- Para guardar la copia del place: Archivo → "Descargar una copia" (no cambia el juego en Roblox).
 
