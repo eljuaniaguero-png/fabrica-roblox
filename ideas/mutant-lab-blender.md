@@ -1,118 +1,107 @@
 # Mutant Lab — pedidos para hacer el arte en Blender
 
-Una sesión nueva por cada pedido, en orden. El pedido 0 es obligatorio: prueba que todo el camino funcione con un solo objeto antes de fabricar cientos.
-Conviene hacerlos después de los pedidos 1 a 3 de ORDEN-PEDIDOS.md (menús, pedidos y profundidad), porque cambian qué objetos hacen falta.
+Una sesión nueva por cada pedido, en orden. Todos leen primero `ideas/mutant-lab-arte.md`, que tiene el diseño completo.
+El pedido 0 es obligatorio: prueba el camino entero con un solo objeto antes de fabricar cientos.
+Conviene hacerlos después de 7b, 7c, 7d y 7e de ORDEN-PEDIDOS.md, porque esos agregan huevos, incubadoras, frutas y decoración al juego.
 
-## Reglas comunes (están repetidas dentro de cada pedido)
-
-- Blender lo maneja Claude con scripts de Python, en segundo plano. Los scripts quedan en mutant-lab/arte/scripts/ y los archivos exportados en mutant-lab/arte/export/.
-- Estilo: la guía visual de ideas/mutant-lab.md. Formas redondas y gruesas, pocos polígonos, nada realista.
-- Una malla por zona de color, sin texturas. El color se pone en Roblox desde shared/Paleta.luau, así se sigue pudiendo cambiar desde el código.
-- Subir los modelos a Roblox lo hace el usuario con el importador 3D de Studio. Claude prepara los archivos, la lista de qué subir y después acomoda y conecta lo importado.
+Lo que hace el usuario: instalar Blender si falta, importar los modelos en Studio con el importador 3D (Claude da la lista y los pasos), y subir los íconos con el importador masivo del Asset Manager.
 
 ## 0 — Preparar y probar el camino completo
 
 ```
-Juego: Mutant Lab (carpeta mutant-lab/). Vamos a hacer el arte en Blender. En esta sesión solo preparamos y probamos el camino con un objeto.
+Juego: Mutant Lab (carpeta mutant-lab/). Vamos a hacer el arte en Blender. Leé ideas/mutant-lab-arte.md entero. En esta sesión solo preparamos y probamos el camino con un objeto.
 
 1. Fijate si Blender está instalado y encontrá su ruta. Si no está, decime que lo instale con: winget install BlenderFoundation.Blender
-2. Creá mutant-lab/arte/scripts/ y mutant-lab/arte/export/. Los scripts .py van a git; los .blend y los exportados también, salvo que pesen mucho.
-3. Armá un script base reutilizable (mutant-lab/arte/scripts/comun.py) que: limpie la escena, cree materiales con los colores de shared/Paleta.luau, aplique bordes redondeados (bevel) y suavizado, ponga el origen de cada pieza donde corresponda, exporte en FBX y saque un render de vista previa en PNG con fondo transparente y luz de tres puntos.
-4. Corré Blender en segundo plano con ese script para hacer UN objeto de prueba: un frasco de laboratorio con líquido verde, en dos mallas (vidrio y líquido).
-5. Mirá el render vos mismo y corregí lo que esté mal. Mostrámelo.
-6. Decime exactamente cómo lo importo en Studio (paso a paso con el importador 3D), con qué escala, y qué nombre ponerle.
-7. Cuando te avise que lo importé, buscalo por MCP, revisá que la escala, el pivote y la colisión estén bien, ponele los colores desde Paleta, y sacá una captura al lado de una criatura para comparar tamaños.
-8. Anotá en la ficha, en una sección "Arte en Blender", la escala, la convención de nombres, el límite de polígonos que usaste y los pasos de importación que funcionaron.
+2. Creá mutant-lab/arte/ con scripts/, export/, renders/ e iconos/.
+3. Armá mutant-lab/arte/scripts/comun.py, reutilizable, que: limpie la escena, cree materiales de vista previa con los colores de shared/Paleta.luau, aplique bisel y sombreado suave, ponga el origen donde corresponde, convierta los ejes para que el frente llegue a Roblox mirando a -Z, exporte cada objeto en FBX y saque un render PNG con fondo transparente y la misma luz siempre.
+4. Corré Blender en segundo plano para hacer UN objeto de prueba: el Catalizador Slime (frasco que gotea), con sus mallas separadas como dice el documento.
+5. Mirá el render vos mismo, corregí lo que esté mal y mostrámelo.
+6. Decime paso a paso cómo lo importo en Studio con el importador 3D, con qué escala y con qué nombre.
+7. Cuando te avise que lo importé, buscalo por MCP, revisá escala, pivote y orientación, pintalo desde Paleta y sacá una captura al lado de una criatura.
+8. Anotá en la sección "Registro" de ideas/mutant-lab-arte.md la escala real, la conversión de ejes y los pasos de importación que funcionaron.
 
-No hagas ningún otro modelo en esta sesión.
+No hagas ningún otro objeto en esta sesión.
 ```
 
-## 1 — Mapa: plaza central y kit de decoración
+## 1 — Mapa: plaza central y Jardín Salvaje
 
 ```
-Juego: Mutant Lab (carpeta mutant-lab/). Leé ideas/mutant-lab.md, sobre todo la guía visual y la sección "Arte en Blender". Hacé el mapa en Blender usando mutant-lab/arte/scripts/comun.py.
+Juego: Mutant Lab (carpeta mutant-lab/). Leé ideas/mutant-lab-arte.md, sobre todo las secciones 2, 7 y 8 y el Registro. Usá mutant-lab/arte/scripts/comun.py.
 
-QUÉ HACER
-1. No un mapa entero de una sola pieza: un kit de piezas que se combinan. Así se puede reacomodar, anda mejor en celular y respeta los límites de Roblox.
-2. Plaza central: piso circular por partes, borde con franjas de seguridad, faroles verdes, bancos, carteles de neón con flecha, la máquina de fusión en equipo grande con su tubo de luz, el tablero del experimento del día y el soporte de la tabla de posiciones.
-3. Kit de decoración: tubos rectos, codos y con burbujas, cables gruesos, frascos y matraces de tres tamaños, estantes, pantallas con marco, barriles con símbolo de peligro, cajas, plantas mutantes en macetas.
-4. Una pieza = un objeto con nombre claro (por ejemplo Deco_Tubo_Codo). Una malla por zona de color.
-5. Poco detalle y formas redondeadas. Respetá el límite de polígonos de la ficha.
-
-PROCESO
-6. Primero hacé 5 piezas representativas, sacá renders y mostrámelos juntos. Esperá mi OK antes de hacer el resto.
-7. Con el OK, hacé todo el kit y armá en Blender una vista de la plaza completa para ver el conjunto. Mostrame ese render.
-8. Exportá cada pieza en FBX y dame la lista de archivos a importar, en orden, con su nombre en Roblox.
-9. Cuando te avise que los importé: guardalos en ReplicatedStorage/Arte/Mapa, armá la plaza en Studio con esas piezas reemplazando las de partes básicas, poné colores desde Paleta y colisiones simples. Capturas desde arriba y a la altura del jugador.
+1. Hacé las piezas de la plaza central (sección 7) y del Jardín Salvaje (sección 8), como kit de módulos, no como una sola malla.
+2. Primero 3 piezas de la plaza y 3 del Jardín. Renders juntos y esperá mi OK.
+3. Con el OK, hacé todo. Armá en Blender una vista de la plaza completa y otra de un tramo del Jardín, y mostrámelas.
+4. Pasá la lista de aprobación (sección 12) para cada objeto.
+5. Exportá y dame la lista de importación en orden, con el nombre de cada uno en Roblox.
+6. Cuando te avise que los importé: guardalos en ReplicatedStorage/Arte/Plaza y ReplicatedStorage/Arte/Jardin, armá la plaza y el Jardín en Studio con estas piezas reemplazando las de partes básicas, pintá desde Paleta y poné colisiones simples. En el Jardín, revisá que los caminos se lean, que los saltos se puedan hacer y que las frutas tengan por dónde escapar.
+7. Capturas desde arriba y a la altura del jugador. Anotá en el Registro qué hiciste.
 ```
 
-## 2 — Personajes: piezas de criaturas
+## 2 — Personajes: criaturas, huevos, frutas y clientes
 
 ```
-Juego: Mutant Lab (carpeta mutant-lab/). Leé ideas/mutant-lab.md (guía visual, especies, piezas y "Arte en Blender") y shared/Piezas.luau y shared/Generador.luau. Hacé las criaturas en Blender usando mutant-lab/arte/scripts/comun.py.
+Juego: Mutant Lab (carpeta mutant-lab/). Leé ideas/mutant-lab-arte.md (secciones 3, 4, 5 y 9, clientes de pedidos), shared/Piezas.luau y shared/Generador.luau. Usá mutant-lab/arte/scripts/comun.py.
 
-MUY IMPORTANTE
-Las criaturas se arman combinando piezas, y eso hace que existan 50 especies (y más con variantes). NO modeles criaturas enteras: modelá las piezas que ya usa el generador, con los mismos puntos de unión, para que el sistema de fusión siga funcionando igual.
+MUY IMPORTANTE: las criaturas se arman por piezas. No modeles criaturas enteras. Respetá los enchufes de la sección 3, para que el sistema de fusión siga funcionando igual.
 
-QUÉ HACER
-1. Leé en Piezas.luau qué piezas tiene cada una de las 10 especies base (cabeza, cuerpo, patas, cola o alas, rasgo especial) y dónde se une cada una.
-2. Modelá cada pieza como malla separada, estilo chibi de la guía: redondeada, gruesa, exagerada. Una malla por zona de color, para que el color lo siga poniendo el código (cada pieza conserva el color de su padre).
-3. Ojos aparte y reutilizables: ojo base, párpado y ceja, con las variantes de cada personalidad de la guía (alegre, vaga, peleadora, miedosa, curiosa y las demás).
-4. Piezas extra de generación 3 (corona, aura, segundo par de alas) y la pieza de elemento brillante.
-5. Cada pieza con su origen en el punto de unión, para que el generador la coloque igual que hoy.
+BLOQUE 1 - Criaturas
+1. Hacé las piezas de 2 especies (por ejemplo Glupona y Chisparo) y el kit de ojos. Armá en Blender las 2 criaturas y una fusión entre ellas. Renders y esperá mi OK.
+2. Con el OK, hacé las 10 especies, los ojos de las 8 personalidades y los extras. Armá una hoja con las 10 bases y 10 fusiones de ejemplo y mostrámela.
+3. Exportá y dame la lista de importación. Cuando te avise: guardalas en ReplicatedStorage/Arte/Criaturas y cambiá Generador.luau para usar las mallas, manteniendo colores por pieza, animación, silueta, personalidad en los ojos, mutantes y respaldo a la versión vieja.
+4. Capturas de 10 bases, 10 fusiones, 3 de generación 3, 2 mutantes y una de nivel 10. Probá 20 criaturas en pantalla en celular.
 
-PROCESO
-6. Primero hacé las piezas de 2 especies, armá en Blender esas 2 criaturas y una fusión entre ellas, y mostrame los renders. Esperá mi OK.
-7. Con el OK, hacé las 10 especies. Armá en Blender una hoja con las 10 bases y 10 fusiones de ejemplo y mostrámela.
-8. Exportá y dame la lista de importación.
-9. Cuando te avise que los importé: guardalos en ReplicatedStorage/Arte/Criaturas y cambiá Generador.luau para que use las mallas en lugar de partes básicas, manteniendo colores, animación, silueta y versión mutante. Si una pieza no está importada, que use la versión vieja en vez de fallar.
-10. Revisá con capturas las 10 bases, 10 fusiones, 3 de generación 3 y 2 mutantes, y que el Mutadex y los paneles las muestren bien. Probá rendimiento con 20 criaturas en pantalla.
+BLOQUE 2 - Huevos y frutas
+5. Huevos de los dos tamaños, con grietas en 3 etapas y fragmentos (sección 4). Las 5 frutas vivas, la Dorada, la Gigante, las semillas y las plantas de huerta (sección 5).
+6. Renders, OK, exportación e importación como en el bloque 1. Conectalos con el código de huevos y del Jardín, manteniendo las animaciones.
+
+BLOQUE 3 - Clientes de pedidos
+7. Los 6 clientes de la sección 9. Renders de los 6 juntos y OK. Importación y conexión con el tablero de pedidos.
+
+Anotá en el Registro qué hiciste en cada bloque.
 ```
 
-## 3 — Menús: íconos y gráficos
+## 3 — Menús: íconos
 
 ```
-Juego: Mutant Lab (carpeta mutant-lab/). Leé ideas/mutant-lab.md y client/UI (Iconos.luau y Tema.luau). Los menús se arman en Roblox con código, así que de Blender solo sacamos imágenes: íconos con aspecto 3D que reemplacen a los dibujados con formas.
+Juego: Mutant Lab (carpeta mutant-lab/). Leé ideas/mutant-lab-arte.md (sección 11) y client/UI/Iconos.luau. Los menús se arman en Roblox con código; de Blender solo salen íconos como imágenes.
 
-QUÉ HACER
-1. Hacé la lista de todos los íconos que usa la interfaz: ADN, pistas, catalizadores (los 5), residuos, mejoras de la tienda, misiones, ajustes, Mutadex, tienda, pedidos, trofeos, candado, monedas premium y los 5 elementos.
-2. Modelá cada uno en Blender en el estilo de la guía, con la misma cámara, luz y contorno oscuro para todos, así se ven como un juego de íconos.
-3. Renderizá cada uno en PNG de 512x512 con fondo transparente, y una versión gris para cuando está bloqueado o no alcanza.
+1. Armá la lista completa de íconos: los de la sección 11 más los que use Iconos.luau.
+2. Modelalos con comun.py en el estilo del juego, con la misma cámara, luz y contorno para todos.
+3. Renderizá cada uno en PNG de 512x512 con fondo transparente, más la versión gris.
 4. Mostrame una hoja con todos juntos y esperá mi OK.
-5. Guardalos en mutant-lab/arte/iconos/ y dame instrucciones para subirlos todos juntos con el importador masivo del Asset Manager de Studio.
-6. Cuando te pase los IDs (o los encuentres por MCP), cargalos en un módulo de datos y cambiá UI/Iconos.luau para usar las imágenes, con los íconos dibujados de hoy como respaldo si falta alguno.
-7. Capturas del HUD, la tienda y el Mutadex en computadora y celular.
+5. Guardalos en mutant-lab/arte/iconos/ y dame los pasos para subirlos juntos con el importador masivo del Asset Manager.
+6. Cuando te pase los IDs, o los encuentres por MCP, cargalos en un módulo de datos y cambiá UI/Iconos.luau para usar las imágenes, con los íconos dibujados de hoy como respaldo.
+7. Capturas del HUD, la tienda, el Mutadex y el inventario de comida en computadora y celular.
 ```
 
 ## 4 — Bases: el laboratorio de cada jugador
 
 ```
-Juego: Mutant Lab (carpeta mutant-lab/). Leé ideas/mutant-lab.md (guía visual, sección del laboratorio y "Arte en Blender") y server/Laboratorios.luau. Hacé el laboratorio de cada jugador en Blender usando mutant-lab/arte/scripts/comun.py y el kit de decoración del pedido 1.
+Juego: Mutant Lab (carpeta mutant-lab/). Leé ideas/mutant-lab-arte.md (sección 6) y server/Laboratorios.luau. Usá comun.py y el estilo de la plaza.
 
-QUÉ HACER
-1. Sala redonda por partes: piso, paredes curvas, arco de entrada con lugar para el nombre del jugador, techo con claraboya.
-2. Máquina de fusión: cápsula de vidrio, dos ranuras laterales para los padres, ranura de catalizador arriba, tubos con líquido. Mallas separadas para lo que se anima (líquido, luces, tapa) y nombres claros, para que EfectosMaquina.luau las pueda mover.
-3. Corrales hexagonales con cúpula de vidrio y borde de neón, en versión abierta y cerrada con candado.
-4. Mostrador de la tienda y el robot vendedor, el tablero de pedidos con lugar para los clientes, la pantalla gigante del Mutadex y el estante de trofeos.
-5. Mismo estilo y escala que el mapa.
-
-PROCESO
-6. Primero la máquina de fusión sola, con renders desde varios ángulos. Esperá mi OK.
-7. Después el resto, y un render del laboratorio completo armado en Blender. Esperá mi OK.
-8. Exportá y dame la lista de importación.
-9. Cuando te avise que los importé: guardalos en ReplicatedStorage/Arte/Laboratorio y cambiá Laboratorios.luau para armar cada laboratorio con estas piezas. Mantené los nombres que usa el código (ranuras, corrales, mostrador, tablero) para que todo siga funcionando.
-10. Probá con 2 jugadores: que cada uno reciba su laboratorio, que la máquina y la animación de fusión anden, y que los corrales se abran. Capturas.
+1. Primero la máquina de fusión sola, con renders desde varios ángulos. Esperá mi OK.
+2. Después el resto de la sección 6: sala, corrales, incubadoras, huerta, nido, mostrador, robot vendedor, tablero de pedidos, pantalla del Mutadex y estante de trofeos. Render del laboratorio completo armado en Blender y esperá mi OK.
+3. Exportá y dame la lista de importación.
+4. Cuando te avise: guardalos en ReplicatedStorage/Arte/Laboratorio y cambiá Laboratorios.luau para armar cada laboratorio con estas piezas. Mantené los nombres que usa el código (ranuras, corrales, incubadoras, macetas, mostrador, tablero) y conectá las partes _Anim con sus animaciones.
+5. Probá con 2 jugadores: cada uno con su laboratorio, fusión con su animación, huevos en incubadoras, huerta y corrales que se abren. Capturas y anotación en el Registro.
 ```
 
-## 5 — Todo lo que falte
+## 5 — Decoración y todo lo que falte
 
 ```
-Juego: Mutant Lab (carpeta mutant-lab/). Leé ideas/mutant-lab.md y revisá el place por MCP. Buscá todo lo que todavía esté hecho con partes básicas y no tenga versión en ReplicatedStorage/Arte.
+Juego: Mutant Lab (carpeta mutant-lab/). Leé ideas/mutant-lab-arte.md (secciones 9 y 10) y revisá el place por MCP.
 
-1. Hacé la lista: por ejemplo los catalizadores como objetos, los residuos, los clientes de los pedidos, los trofeos, los objetos que flotan en las animaciones, carteles y lo que encuentres.
-2. Mostrámela ordenada de lo que más se ve a lo que menos, y esperá mi OK sobre qué hacer.
-3. Hacelos en Blender con comun.py, en el mismo estilo, con renders para aprobar.
-4. Exportá, dame la lista de importación y, cuando te avise, conectalos en el juego con respaldo a la versión vieja si falta alguno.
-5. Revisión final: recorré todo el juego con capturas, buscá cosas que no combinen con el resto, y medí rendimiento en celular con 2 jugadores y 20 criaturas. Si algo baja el rendimiento, simplificalo.
-6. Actualizá la sección "Arte en Blender" de la ficha con la lista de todo lo que existe y cómo se importa.
+BLOQUE 1 - Catálogo de decoración
+1. Hacé el catálogo de la sección 10 con comun.py: módulos de los temas de sala, decoraciones sueltas y aspectos de corral, máquina y arco.
+2. Renders por grupo y esperá mi OK en cada grupo.
+3. Importación y conexión con el modo decorar y el catálogo de la tienda. Probá decorar un laboratorio completo y que otro jugador lo vea al visitarlo.
+
+BLOQUE 2 - Lo que falte
+4. Buscá todo lo que siga hecho con partes básicas y no tenga versión en ReplicatedStorage/Arte (catalizadores, residuo, ADN, pista, trofeos, pedestales y lo que encuentres). Mostrame la lista ordenada de lo que más se ve a lo que menos, y esperá mi OK.
+5. Hacelos, con renders para aprobar, importación y conexión con respaldo.
+
+REVISIÓN FINAL
+6. Recorré todo el juego con capturas y buscá cosas que no combinen con el resto.
+7. Medí rendimiento en celular con 2 jugadores, 20 criaturas y una ronda del Jardín. Si algo lo baja, simplificalo.
+8. Completá el Registro de ideas/mutant-lab-arte.md con la lista de todo lo que existe y cómo se importa.
 ```

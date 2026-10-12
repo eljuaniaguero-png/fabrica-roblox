@@ -194,7 +194,35 @@ Juego: Mutant Lab (carpeta mutant-lab/). Leé ideas/mutant-lab.md y el código a
 Mostrame capturas de la plaza con dos jugadores, una visita a un laboratorio ajeno y una fusión en equipo. Marcá la Parte 9 y hacé commit.
 ```
 
-## [ ] 7b. Guardado seguro para los dos juegos
+## [ ] 7a. Personalidades raras y más suaves
+
+Hoy todas las criaturas tienen personalidad y los efectos están demasiado fuertes. Va antes que los huevos, porque al nacer se decide la personalidad.
+
+```
+Juego: Mutant Lab (carpeta mutant-lab/). Leé ideas/mutant-lab.md, shared/Personalidades.luau y el código que reparte personalidades. Hoy todas las criaturas tienen personalidad y los efectos son demasiado fuertes (por ejemplo Trabajadora +35 %). Cambialo así y actualizá la ficha. Números en Config.luau.
+
+RAREZA
+1. La mayoría de las criaturas no tiene personalidad: son "Normales", sin ícono y con los ojos comunes.
+2. Al nacer, una criatura tiene un 12 % de chance de tener personalidad. Si tiene, se elige con estas probabilidades: comunes (Alegre, Vaga, Curiosa, Glotona) 70 % entre las cuatro, raras (Trabajadora, Miedosa, Peleadora) 25 % entre las tres, y Líder 5 %.
+3. Herencia: si uno de los padres tiene personalidad, la chance de pasarla es del 30 %. Si no la pasa, se tira normal como en el punto 2.
+4. Catalizadores: en vez de forzar una personalidad, la hacen más probable (por ejemplo Rayo sube la chance de Peleadora al 30 %).
+5. Cuando nace una con personalidad, un festejo chico y un cartel con su nombre, para que se sienta especial. Si es Líder, festejo grande.
+6. Esta tirada es al azar pero nunca se paga ni se puede comprar más chance.
+
+EFECTOS MÁS SUAVES
+7. Ningún efecto de personalidad puede pasar de +10 % para la criatura ni de +5 % para sus vecinas del corral. Ajustá todas a ese tope. Ejemplos: Trabajadora +10 %, Curiosa +6 %, Alegre +3 % a las vecinas, Líder +5 % a las vecinas.
+8. Las negativas pierden poco y tienen algo raro y gracioso a cambio, en vez de un número grande. Por ejemplo: Vaga produce 10 % menos pero duerme y ronca; Peleadora quita 3 % a sus vecinas pero a veces encuentra un residuo; Miedosa se esconde y produce 5 % menos, pero encuentra frutas en el Jardín si la llevás de acompañante; Glotona come de a dos pero sube de nivel más rápido.
+9. La personalidad se tiene que notar más en cómo se mueve y en los ojos que en los números.
+
+CONEXIONES
+10. Pedidos: los que piden personalidad pasan a ser raros y pagan más, porque ahora cuesta conseguirla. Nunca más de uno de los tres pedidos activos puede pedir personalidad.
+11. Mutadex: los sellos de personalidad de cada especie quedan como colección para quien quiera completarla, no como requisito.
+12. Criaturas que el jugador ya tiene: no les quites la personalidad que ya tienen, pero aplicales los efectos nuevos.
+
+Jugá 15 minutos y decime: cuántas criaturas nacieron, cuántas con personalidad, y cuánto cambió el ADN por segundo comparado con antes. Capturas de una Normal y de una con personalidad en el mismo corral.
+```
+
+## [ ] 7b. Guardado seguro para los dos juegos (Mutant Lab hecho el 11 oct; falta Pisada Sonora)
 
 Antes de publicar cualquiera de los dos (lo pide la revisión del 11 oct, puntos 2 a 5).
 
@@ -208,6 +236,95 @@ Juego: Mutant Lab y Pisada Sonora, uno por vez (primero Mutant Lab). Leé la sec
 5. StreamingEnabled está apagado en el place de Mutant Lab (lo vi el 11 oct). Activalo, ajustá el cliente para que no asuma que todo está cargado y probalo con radio chico (sección 4 de la GUIA).
 
 Commit por juego y mostrame la prueba de salir y volver.
+```
+
+## [ ] 7c. Huevos e incubadoras
+
+La fusión da un huevo que hay que esperar. Va primero porque cambia lo que pasa al fusionar, y lo demás se apoya en eso.
+
+```
+Juego: Mutant Lab (carpeta mutant-lab/). Leé ideas/mutant-lab.md y el código actual. Sumá a la ficha la sección "Huevos e incubadoras" y hacela. Todo lo nuevo se guarda con el sistema de guardado del juego (si ya está ProfileStore, con un campo nuevo y SchemaVersion). Números en Config.luau.
+
+1. Una fusión que reacciona ya no da la criatura: da un huevo. El huevo tiene los colores mezclados de los padres, manchas del color de su elemento y un tamaño según la generación. Si va a salir mutante, no se nota hasta que nace.
+2. Incubadoras en el laboratorio (pieza nueva, en el estilo de la guía): se empieza con 2 y se compran más con ADN, hasta 6. Los huevos que no entran esperan en un nido con lugar para 10.
+3. Tiempos: generación 2, 2 minutos; generación 3, 8 minutos. Los 3 primeros huevos de un jugador nuevo nacen en 15 segundos, para que entienda la mecánica sin esperar.
+4. La incubación sigue aunque el jugador salga del juego. El servidor guarda la hora de inicio; nunca se usa el reloj del jugador.
+5. Cuenta regresiva sobre cada huevo y un aviso en el HUD cuando uno está por nacer.
+6. Calentar: tocar un huevo le resta un 5% del tiempo que le falta, con una espera de 10 segundos entre toques y un tope de 50% por huevo. Así esperar también es jugar.
+7. Al nacer: en el último 10% el huevo tiembla cada vez más, aparecen grietas, se rompe y sale la criatura con la revelación de la Parte 7 (especie nueva, conocida o mutante). La especie se registra en el Mutadex recién al nacer.
+8. Los pedidos y las misiones pueden pedir huevos: "incubá 3 huevos", "hacé nacer uno de generación 3".
+9. No agregues nada pago todavía. Anotá en ideas/monetizacion.md, sección Mutant Lab, un producto "Incubación instantánea" para la Parte 6.
+
+Jugá 10 minutos como jugador nuevo y decime: en qué momentos se quedó esperando sin nada que hacer y cuánto tiempo. Si pasa de 1 minuto seguido, ajustá tiempos o incubadoras iniciales. Capturas de las incubadoras con huevos, de calentar un huevo y de un nacimiento.
+```
+
+## [ ] 7d. Comida y niveles
+
+Jardín Salvaje con frutas que escapan, alimentar y subir de nivel. Les da un uso a las criaturas que ya tenés.
+
+```
+Juego: Mutant Lab (carpeta mutant-lab/). Leé ideas/mutant-lab.md y el código actual. Sumá a la ficha la sección "Comida y niveles" y hacela por bloques, con un playtest al terminar cada uno. Todo se guarda con el sistema de guardado del juego. Números en Config.luau.
+
+BLOQUE 1 - Jardín Salvaje (cómo se consigue la comida)
+1. Cinco comidas, una por elemento, con nombres inventados y simpáticos (por ejemplo Ají Lava para fuego, Alga Burbuja para agua, Hongo Brote para planta, Chispafruta para eléctrico, Ciruela Sombra para sombra). Las frutas tienen ojos y cara: están vivas.
+2. Un portal en la plaza lleva al Jardín Salvaje: una zona aparte, una selva mutante de noche con plataformas, hongos que rebotan, lianas para cruzar, charcos de slime que frenan y arbustos. En el estilo de la guía visual.
+3. Rondas de 90 segundos. Al entrar arranca tu ronda; si entran amigos juntos, comparten la ronda.
+4. Las frutas brotan del suelo y escapan corriendo cuando te acercás. Cada tipo escapa distinto: unas corren en zigzag, otras saltan entre plataformas, otras se esconden en arbustos y otras desaparecen y reaparecen cerca. Se atrapan tocándolas, con un sonido y un "+1" que salta.
+5. Una vez por ronda aparece la Fruta Dorada: muy rápida, deja una estela, vale por 10 y da un festejo grande al atraparla.
+6. Combo: atrapar frutas seguidas, sin dejar pasar más de 3 segundos, sube un multiplicador de x1 a x3. Caer en slime o al vacío lo corta.
+7. Tu criatura acompañante (la que sacás a pasear) te ayuda con una habilidad según su elemento, con un botón y una recarga:
+   - Fuego: carrera rápida por 3 segundos.
+   - Agua: una burbuja que atrae las frutas cercanas.
+   - Planta: hace brotar 3 frutas extra a tu alrededor.
+   - Eléctrico: un rayo que deja quietas las frutas cercanas por 2 segundos.
+   - Sombra: muestra dónde están las frutas escondidas.
+   Cuanto más nivel tiene la criatura, más fuerte es la habilidad. Sin acompañante se puede jugar igual.
+8. Fruta gigante: a veces aparece una enorme que necesita 2 jugadores tirando de ella a la vez. Da un premio grande a los dos.
+9. Cada jugador ve y atrapa sus propias frutas comunes, así nadie le roba a nadie. La dorada y la gigante son de la ronda: cobran todos los que participan.
+10. Al terminar: pantalla de resultados con lo atrapado, el mejor combo y tu récord, y un botón "Otra ronda". Tabla del servidor con el mejor combo del día.
+11. Una huerta chica en el laboratorio (2 macetas) como fuente tranquila: se plantan semillas que se atrapan en el Jardín y crecen solas, incluso con el jugador afuera. Es un complemento; la fuente principal es el Jardín.
+12. Los pedidos, las misiones y la recompensa diaria también pueden dar comida.
+13. Inventario de comida visible en el HUD, con tope de 50 por tipo.
+14. Controles cómodos en celular: botón grande de habilidad abajo a la derecha. Todo validado en el servidor (que la fruta exista, que estés cerca, que la ronda esté activa) para que no se pueda hacer trampa.
+
+BLOQUE 2 - Alimentar y subir de nivel
+6. Tocar una criatura del corral abre su ficha con un botón "Alimentar" y las comidas que tengo.
+7. Cada comida da experiencia. La comida de su mismo elemento es su favorita y da el doble, con una reacción feliz.
+8. Niveles del 1 al 10, cada uno pide más experiencia que el anterior. Cada nivel sube su producción de ADN un 20%.
+9. Al subir de nivel: efecto, sonido y número de nivel nuevo sobre la cabeza. En nivel 5 crece un 10%; en nivel 10 gana un aura brillante.
+10. Barriga llena: después de comer produce un 25% más durante 10 minutos, con un ícono que lo muestra. No hay hambre como castigo: nunca pierde niveles, nunca se enferma y nunca baja su producción por no comer.
+11. Personalidades: la Glotona come de a dos y sube más rápido; la Trabajadora aprovecha mejor la barriga llena. Sumalo a la tabla de personalidades.
+
+BLOQUE 3 - Conexión con lo que ya existe
+12. Pedidos: entregar una criatura de nivel alto paga más. Algunos pedidos piden "nivel 3 o más". Antes de entregar una criatura de nivel 3 o más, pedí confirmación mostrando su nivel.
+13. El nivel se ve en la ficha del Mutadex, en el panel de fusión y en el cartel sobre la criatura.
+14. Balance: revisá que el ADN siga teniendo uso y no sobre, y que la comida no se acumule sin uso. Medilo jugando 15 minutos y decime los números.
+
+Capturas del Jardín Salvaje, de una fruta escapando, de una habilidad de criatura en uso, de la pantalla de resultados, de alimentar una criatura y de una subida a nivel 5.
+```
+
+## [ ] 7e. Personalización del laboratorio
+
+Un uso nuevo del ADN, que además le da sentido a las visitas y los "me gusta".
+
+```
+Juego: Mutant Lab (carpeta mutant-lab/). Leé ideas/mutant-lab.md y el código actual. Sumá a la ficha la sección "Personalización del laboratorio" y hacela. Es un uso nuevo del ADN, puramente estético: no da ventajas. Todo se guarda con el sistema de guardado del juego. Números y precios en Config.luau.
+
+1. Modo decorar: un botón en el HUD que solo aparece dentro de tu laboratorio. Al activarlo, la cámara se aleja un poco y se ven puntos de colocación en el piso y las paredes.
+2. Colocar, mover, girar y guardar decoraciones en esos puntos, con una vista previa antes de confirmar. El servidor valida que el lugar sea tuyo y que tengas el objeto. Tope de 40 decoraciones por laboratorio, por rendimiento.
+3. Catálogo que se compra con ADN, en una pestaña "Decorar" de la tienda:
+   - Temas de sala (6): cambian piso y paredes juntos, siempre con colores de la paleta.
+   - Color de las luces del laboratorio (5).
+   - Decoraciones sueltas: frascos, plantas mutantes, tubos, carteles de neón, alfombras, peceras, estatuas de tus especies favoritas.
+   - Aspectos de corrales, de la máquina de fusión y del arco de entrada con tu nombre.
+4. Precios en escalones: cosas baratas para empezar y piezas caras para quien juega mucho.
+5. Algunas piezas no se compran: se ganan con trofeos y metas (completar una generación, 100 fusiones, una criatura nivel 10). Mostralas en el catálogo con candado y cómo conseguirlas.
+6. Una estatua de cualquier especie que hayas descubierto, para presumir tu favorita.
+7. Lo social: quienes visitan tu laboratorio ven la decoración, y el laboratorio con más "me gusta" del servidor aparece como "Laboratorio destacado" en un cartel de la plaza.
+8. Usá los componentes de client/UI para el catálogo y los controles del modo decorar, y que funcione bien en celular.
+9. No agregues nada pago. Anotá en ideas/monetizacion.md ideas de temas premium para la Parte 6.
+
+Capturas del modo decorar, de un laboratorio decorado y del cartel de laboratorio destacado.
 ```
 
 ## [ ] 8. Parte 6: compras con Robux
