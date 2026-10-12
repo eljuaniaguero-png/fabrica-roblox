@@ -1,7 +1,7 @@
 # Mutant Lab — documento de arte para Blender
 
 Este documento describe todo lo que se modela en Blender para Mutant Lab: cómo tiene que verse, cómo se arma técnicamente y la lista completa de objetos.
-Lo lee Claude antes de cada pedido de ideas/mutant-lab-blender.md. Si algo de acá choca con el código, manda el código: avisá la diferencia y anotala acá.
+Lo lee Claude antes de cada pedido de ideas/archivo/mutant-lab-blender.md (archivado; hoy los pedidos están en PLAN.md). Si algo de acá choca con el código, manda el código: avisá la diferencia y anotala acá.
 
 ---
 

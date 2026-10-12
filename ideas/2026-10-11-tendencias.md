@@ -1,6 +1,6 @@
 # Radar de tendencias — 2026-10-11
 
-> Actualización del informe del 07/10 ([2026-10-07-tendencias.md](2026-10-07-tendencias.md), tiene menos de 7 días). Solo cambia lo de "Novedades del 11/10" y la lista de las 3 elegidas; la tabla por mecánica y la alerta de reglas siguen valiendo, con los números nuevos sumados.
+> Actualización del informe del 07/10 ([archivo/2026-10-07-tendencias.md](archivo/2026-10-07-tendencias.md), tiene menos de 7 días). Solo cambia lo de "Novedades del 11/10" y la lista de las 3 elegidas; la tabla por mecánica y la alerta de reglas siguen valiendo, con los números nuevos sumados.
 
 ## Novedades del 11/10
 
@@ -97,4 +97,4 @@ Nuevas del 11/10:
 - Bo3.gg, Steal ASMR!: https://bo3.gg/games/articles/steal-asmr-scripts
 - Playnews, juegos de otoño 2026: https://www.playnews.gg/en/guides/roblox-10-third-party-games-highlighted-for-fall-2026-from-september-to-october
 
-Fuentes anteriores: ver [2026-10-07-tendencias.md](2026-10-07-tendencias.md) y [2026-10-06-tendencias.md](2026-10-06-tendencias.md).
+Fuentes anteriores: ver [archivo/2026-10-07-tendencias.md](archivo/2026-10-07-tendencias.md) y [archivo/2026-10-06-tendencias.md](archivo/2026-10-06-tendencias.md).

@@ -194,6 +194,81 @@ Juego: Mutant Lab (carpeta mutant-lab/). Leé ideas/mutant-lab.md y el código a
 Mostrame capturas de la plaza con dos jugadores, una visita a un laboratorio ajeno y una fusión en equipo. Marcá la Parte 9 y hacé commit.
 ```
 
+## [ ] 7-00. Limpieza de carpetas viejas
+
+Antes de seguir, para trabajar sobre una carpeta ordenada. Lista primero y espera el OK antes de borrar nada.
+
+```
+Ordenar la carpeta fabrica-roblox: sacar lo viejo e innecesario sin perder nada que sirva. En esta sesión no se toca código de los juegos.
+
+1. Hacé una lista de candidatos a borrar o archivar, con el tamaño de cada uno y por qué creés que sobra. Revisá al menos:
+   - Las worktrees en .claude/worktrees (hoy: mutant-lab-ui-consolidate-05bd28 y roblox-factory-setup-612625) y las ramas de git que ya no se usan.
+   - La carpeta backups/ y la carpeta capturas/.
+   - Los documentos de ideas/ que quedaron reemplazados: mutant-lab-plan.md (sus partes ya están hechas o pasaron a ORDEN-PEDIDOS.md), mutant-lab-visual.md (reemplazado por estilo-toon.md), pisada-sonora-pendientes.md (repetido en ORDEN-PEDIDOS.md) y los informes de tendencias viejos.
+   - En el place de Studio de cada juego: ScreenGui viejos que ya no usa el código y carpetas "Retirado" en ServerStorage.
+2. Antes de proponer borrar una worktree o una rama, comprobá con git si tiene trabajo que no está en la rama principal. Si tiene, decime qué es y no la borres.
+3. Mostrame la lista y esperá mi OK. No borres nada antes.
+4. Con el OK:
+   - Worktrees y ramas: borralas con los comandos de git correspondientes (git worktree remove, git branch -d), nunca borrando la carpeta a mano.
+   - Documentos de ideas/: no los borres, movelos a ideas/archivo/ y actualizá las referencias que los nombren.
+   - backups/: dejá solo el más reciente de cada juego.
+   - capturas/: dejá solo las de los últimos 3 días y sumá la carpeta al .gitignore si pesa mucho.
+   - En Studio: borrá lo viejo y guardá el place.
+5. Nunca toques: .git, .claude/skills, .claude/settings.local.json, .mcp.json, CLAUDE.md, GUIA-PARA-CLAUDE.md, ORDEN-PEDIDOS.md, src/, mutant-lab/, ideas/mutant-lab.md, ideas/pisada-sonora.md, ideas/estilo-toon.md ni ideas/mutant-lab-arte.md.
+6. Al final, mostrame cómo quedó la carpeta, cuánto espacio se liberó, y hacé commit.
+7. Si existe la carpeta C:\Users\eljua\Downloads\juego (una copia vieja del kit de la primera noche), avisame: está afuera del proyecto y la borro yo.
+```
+
+## [ ] 7-0. Especies nuevas: animales y objetos que se deforman
+
+Cambia el concepto de las criaturas. Va antes que todo, y antes que el arte en Blender: si hay una sesión haciendo las criaturas viejas en Blender, frenala.
+
+```
+Juego: Mutant Lab (carpeta mutant-lab/). Leé ideas/mutant-lab.md, ideas/mutant-lab-arte.md, shared/Especies.luau, shared/Piezas.luau, shared/Generador.luau y shared/Fusion.luau. Cambio de concepto de las criaturas: actualizá la ficha y la sección 3 del documento de arte primero.
+
+CONCEPTO NUEVO
+Las 10 especies base pasan a ser animales y objetos reales y reconocibles. Las fusiones los van deformando: cuanto más alta la generación, más mutados. Es el corazón del nombre "Mutant Lab".
+
+LAS 10 BASES (alternando animal y objeto en la rueda, así la mayoría de las fusiones mezclan los dos)
+1. Gato (Sombra)
+2. Tostadora (Fuego)
+3. Rana (Agua)
+4. Lámpara (Eléctrico)
+5. Caracol (Planta)
+6. Tetera (Fuego)
+7. Pulpo (Agua)
+8. Mouse de computadora (Eléctrico)
+9. Murciélago (Sombra)
+10. Cactus en maceta (Planta)
+Si alguno no funciona bien como piezas, proponeme un reemplazo antes de cambiarlo.
+
+CÓMO SE VEN
+1. Generación 1, normal: el animal u objeto tal cual, fácil de reconocer, en versión tierna y redondeada. Los objetos tienen ojos y boca, y patitas cortas para caminar. El cable de la tostadora, la lámpara y el mouse hace de cola.
+2. Generación 2, mezclado: piezas de los dos padres, más 1 mutación chica (un ojo de más, una parte agrandada, una mancha del color del otro padre).
+3. Generación 3, mutado: piezas de los tres, más 3 mutaciones (partes infladas, una pata grande y otra chica, un apéndice extra como tentáculo o segunda cola, venas que brillan, cantidad rara de ojos).
+4. Variantes de catalizador: la mutación toma el tema del catalizador (cristales de hielo, grietas de lava, goteo de slime, chispas, humo de sombra).
+5. Mutante dorado: la versión más deformada y brillante.
+6. Las mutaciones de cada especie son fijas: se calculan a partir de la clave de la especie, así la misma especie siempre se ve igual, para todos.
+7. Regla de tono: raro y gracioso, nunca asqueroso. Nada de sangre, heridas, órganos, podredumbre ni cosas que den miedo de verdad. Tiene que dar risa, no impresión.
+8. Respetá las reglas de encanto: cabeza grande, ojos grandes hundidos en la cara y mirando al mismo lado, boca simple, patas cortas y gordas, dos tonos, material mate.
+
+NOMBRES
+9. Cada base con un nombre simple y su versión en 3 sílabas para las fusiones. Las fusiones unen pedazos de los nombres, que tienen que sonar graciosos y leerse fácil (por ejemplo Gato + Tostadora = "Gatostadora", Rana + Lámpara = "Ranámpara"). Mostrame la lista completa de las 50 antes de aplicarla, y corregí a mano los que suenen mal.
+
+LO QUE NO CAMBIA
+10. La rueda, las reglas de qué reacciona, las generaciones, los números de cada base y las claves de las especies se mantienen. Así el progreso guardado de los jugadores sigue valiendo.
+11. Revisá todo lo que muestra textos de las especies viejas (pistas, pedidos por rasgo, Mutadex, experimento del día) y pasalo a las nuevas. Las pistas tienen que describir los animales y objetos ("uno de los padres tiene cable").
+
+PROCESO
+12. Primero hacé en Studio, con partes básicas, 3 bases (Gato, Tostadora y Rana), la fusión Gato + Tostadora y una generación 3 con esas tres. Capturas y esperá mi OK sobre cómo se ven y cuánto se deforman.
+13. Con el OK, hacé las 10 y revisá en el Mutadex las 50 en una captura.
+14. Después de esto, el arte en Blender (ideas/mutant-lab-blender.md, pedido 2) se hace sobre estas especies nuevas, con un kit de mutaciones (ojos extra, tentáculos, bultos, venas, púas) que se agrega a las piezas.
+```
+
+## [ ] 7-1. Todo el juego en estilo toon (pedidos T0 a T6)
+
+Siete pedidos separados en ideas/mutant-lab-toon-pedidos.md, con la guía en ideas/estilo-toon.md. Van después del 7-0 y antes del arte en Blender. T0 primero.
+
 ## [ ] 7a. Personalidades raras y más suaves
 
 Hoy todas las criaturas tienen personalidad y los efectos están demasiado fuertes. Va antes que los huevos, porque al nacer se decide la personalidad.
