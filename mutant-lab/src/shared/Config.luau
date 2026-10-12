@@ -414,6 +414,37 @@ local Config = {
 			},
 		},
 	},
+
+	-- Estilo toon (shared/Toon.luau, ideas/estilo-toon.md).
+	Toon = {
+		Grosor = 0.12, -- studs de contorno alrededor de cada pieza (criaturas, comida, objetos)
+		GrosorEscenario = 0.22, -- pisos, paredes y máquinas, que se ven de más lejos
+		Proporcion = 0.08, -- tope del grosor según la pieza: su lado del medio por esto
+		Minimo = 0.3, -- las piezas cuyo lado más largo mide menos que esto no llevan contorno
+		Transparencia = 0.05, -- las piezas más transparentes que esto (vidrio) no llevan contorno
+		MaxHighlights = 25, -- solo si faltan las mallas de casco (Roblox dibuja hasta 31 a la vez)
+		Luz = {
+			Hora = 14.5, -- de día, así el cielo se ve con sus colores
+			Latitud = 20,
+			Brillo = 1,
+			Exposicion = 0,
+			Difusa = 0.2, -- cuánto tiñe el cielo a las piezas
+			Suavidad = 1, -- sombras suaves
+		},
+		Atmosfera = { Densidad = 0.25, Desplazamiento = 0.2, Bruma = 1, Resplandor = 0 },
+		Correccion = { Brillo = 0.02, Contraste = 0.05, Saturacion = 0.12 },
+		Bloom = { Intensidad = 0.4, Tamano = 20, Umbral = 1.6 }, -- solo brilla el Neon
+		-- Plástico sin brillo: textura blanca de RoughnessMap del MaterialVariant "Toon", que
+		-- reemplaza a todo el SmoothPlastic del juego (arte/export/Toon/Rugoso.png).
+		Rugoso = "rbxassetid://94213183549824",
+		-- Imágenes del cielo (arte/export/Cielo, hechas con arte/scripts/toon_base.py).
+		Cielo = {
+			Arriba = "rbxassetid://117773421802373",
+			Abajo = "rbxassetid://72340063180309",
+			Lado = "rbxassetid://112347834959371",
+			Luna = "rbxassetid://76528992664648", -- un costado con la luna de caricatura
+		},
+	},
 }
 
 return Config

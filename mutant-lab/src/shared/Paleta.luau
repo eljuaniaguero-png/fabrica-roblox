@@ -1,73 +1,111 @@
 --!strict
--- Paleta de la guía de estilo (ficha, "Guía de estilo", puntos 2 y 6).
--- Es el único lugar con colores de la interfaz: cambiar un color del juego es cambiar una línea acá.
+-- Paleta del estilo toon (ideas/estilo-toon.md, "Paleta nueva").
+-- Es el único lugar con colores del juego: cambiar un color es cambiar una línea acá.
+-- `Toon` tiene los colores base de la guía; el resto son nombres por uso que apuntan a ellos.
+-- Los nombres por uso no se cambian a la ligera: el código, shared/ArteColores.luau y los scripts
+-- de Blender (arte/scripts/comun.py) los buscan por nombre ("Piezas.Negro", "Elementos.Fuego").
+-- comun.py lee este archivo como texto: cada color va como Color3.fromHex("...") o como el nombre
+-- de un local en mayúsculas; en las listas, siempre Color3.fromHex.
 
-local CONTORNO = Color3.fromHex("10141C")
-local TEXTO = Color3.fromHex("F5F7FA")
+local CONTORNO = Color3.fromHex("241A3A") -- violeta casi negro: contorno de todo
+local PUPILA = Color3.fromHex("2B1B4A") -- violeta oscuro: pupilas, narices y bocas
+local CIELO_ARRIBA = Color3.fromHex("3B3A9E") -- violeta azulado
+local CIELO_ABAJO = Color3.fromHex("7A4FB0") -- violeta rosado
+local HORIZONTE = Color3.fromHex("F2A3C7") -- rosa atardecer: horizonte y niebla
+local CREMA = Color3.fromHex("FFC9A3") -- crema durazno: pisos claros y pedestales
+local ROSA = Color3.fromHex("FF6FA8") -- rosa chicle: anillos y bordes
+local AMARILLO = Color3.fromHex("FFC93A") -- amarillo sol
+local NARANJA = Color3.fromHex("FF7A2E")
+local ROJO = Color3.fromHex("FF3B3B") -- rojo tomate: narices y alertas
+local MENTA = Color3.fromHex("5CF0A0") -- verde menta ácido: lo del laboratorio y el ADN
+local CELESTE = Color3.fromHex("5CC8FF") -- agua y vidrio
+local LILA = Color3.fromHex("9C8FD0") -- lila grisáceo: paredes y metal
+local BLANCO = Color3.fromHex("FFFFFF") -- texto e interfaz claro
 
+local TOON = {
+	Contorno = CONTORNO,
+	Pupila = PUPILA,
+	CieloArriba = CIELO_ARRIBA,
+	CieloAbajo = CIELO_ABAJO,
+	Horizonte = HORIZONTE,
+	Crema = CREMA,
+	Rosa = ROSA,
+	Amarillo = AMARILLO,
+	Naranja = NARANJA,
+	Rojo = ROJO,
+	Menta = MENTA,
+	Celeste = CELESTE,
+	Lila = LILA,
+	Blanco = BLANCO,
+}
+
+-- Un color por elemento, un punto más claros y saturados que antes para que lean sobre el violeta.
 local ELEMENTOS = {
-	Fuego = Color3.fromHex("FF6A3D"),
-	Agua = Color3.fromHex("3DB8FF"),
-	Planta = Color3.fromHex("5DDB6A"),
-	Electrico = Color3.fromHex("FFE14A"),
-	Sombra = Color3.fromHex("8E6BFF"),
+	Fuego = Color3.fromHex("FF6A2A"),
+	Agua = Color3.fromHex("42C4FF"),
+	Planta = Color3.fromHex("52E860"),
+	Electrico = Color3.fromHex("FFE438"),
+	Sombra = Color3.fromHex("A274FF"),
 }
 
 local Paleta = {
-	Fondo = Color3.fromHex("1B2A3A"), -- azul petróleo oscuro: paredes y piso del laboratorio
-	Noche = Color3.fromHex("2A1F3D"), -- violeta noche: sombras y cielo
-	Metal = Color3.fromHex("5C6B7A"), -- gris azulado: máquinas, estructuras y botones secundarios
-	Acento = Color3.fromHex("7CFF4F"), -- verde ácido: ADN, slime, botón de fusionar
-	Alerta = Color3.fromHex("FF4FA3"), -- magenta: novedades y alertas
-	Dorado = Color3.fromHex("FFC93C"), -- premios, raro, Premium
-	Texto = TEXTO, -- blanco frío
-	Contorno = CONTORNO, -- casi negro: contorno de interfaz y sombra de texto
+	Toon = TOON,
+
+	Fondo = CIELO_ARRIBA, -- fondo de sellos e íconos redondos
+	Noche = CIELO_ARRIBA, -- fondo de los renders de Blender (arte/scripts/comun.py)
+	Metal = LILA, -- máquinas, estructuras y botones secundarios
+	Acento = MENTA, -- ADN, slime, botón de fusionar
+	Alerta = ROSA, -- novedades y alertas
+	Dorado = AMARILLO, -- premios, raro, Premium
+	Texto = BLANCO,
+	Contorno = CONTORNO, -- contorno de las piezas, de la interfaz y sombra de texto
 
 	-- Un color por elemento (criaturas, íconos, filtros y pistas).
 	Elementos = ELEMENTOS,
 
 	-- Borde de tarjetas y anillo bajo la criatura, según la generación (1, 2 y 3).
 	Generaciones = {
-		Color3.fromHex("F5F7FA"),
-		Color3.fromHex("3DB8FF"),
-		Color3.fromHex("B07CFF"),
+		Color3.fromHex("FFFFFF"),
+		Color3.fromHex("5CC8FF"),
+		Color3.fromHex("B98CFF"),
 	},
-	Mutante = Color3.fromHex("FFC93C"), -- dorado con brillo
+	Mutante = AMARILLO, -- amarillo sol con brillo
 
-	-- Tonos de interfaz (ventanas, tarjetas y estados).
-	Superficie = Color3.fromHex("1B2A3A"), -- fondo de las ventanas (el mismo azul petróleo)
-	SuperficieElevada = Color3.fromHex("26394D"), -- tarjetas y casilleros dentro de una ventana
-	SuperficieClara = Color3.fromHex("344B63"), -- fondo de las siluetas y de lo resaltado
-	Deshabilitado = Color3.fromHex("4A5664"), -- botones que todavía no se pueden usar
-	Error = Color3.fromHex("FF5A5F"), -- precios que no alcanzan, avisos de error, cerrar
-	Exito = Color3.fromHex("4FE3A0"), -- avisos de que algo salió bien
-	Silueta = Color3.fromHex("0B0E14"), -- criaturas sin descubrir
-	LuzVista = Color3.fromHex("BEB4C8"), -- luz ambiente de las vistas 3D de la interfaz
+	-- Tonos de interfaz (ventanas, tarjetas y estados): violetas del cielo, con texto blanco.
+	Superficie = CIELO_ARRIBA, -- fondo de las ventanas
+	SuperficieElevada = Color3.fromHex("534FAA"), -- tarjetas y casilleros (cielo con 25 % de lila)
+	SuperficieClara = Color3.fromHex("6C64B7"), -- siluetas y lo resaltado (cielo con 50 % de lila)
+	Deshabilitado = Color3.fromHex("72669B"), -- botones que todavía no se pueden usar
+	Error = ROJO, -- precios que no alcanzan, avisos de error, cerrar
+	Exito = MENTA, -- avisos de que algo salió bien
+	Silueta = Color3.fromHex("1A1230"), -- criaturas sin descubrir
+	LuzVista = Color3.fromHex("E6DCF5"), -- luz ambiente de las vistas 3D de la interfaz
 
-	-- Colores de los papelitos de las celebraciones: verde ácido, magenta, dorado y los elementos.
+	-- Colores de los papelitos de las celebraciones: menta, rosa, amarillo y los elementos.
 	Papelitos = {
-		Color3.fromHex("7CFF4F"),
-		Color3.fromHex("FF4FA3"),
-		Color3.fromHex("FFC93C"),
-		ELEMENTOS.Fuego,
-		ELEMENTOS.Agua,
-		ELEMENTOS.Planta,
-		ELEMENTOS.Electrico,
-		ELEMENTOS.Sombra,
+		Color3.fromHex("5CF0A0"),
+		Color3.fromHex("FF6FA8"),
+		Color3.fromHex("FFC93A"),
+		Color3.fromHex("FF6A2A"),
+		Color3.fromHex("42C4FF"),
+		Color3.fromHex("52E860"),
+		Color3.fromHex("FFE438"),
+		Color3.fromHex("A274FF"),
 	},
 
 	-- Catalizadores (shared/Catalizadores.luau): el color que le dan a la variante.
 	Catalizadores = {
-		Rayo = Color3.fromHex("FFE14A"),
-		Hielo = Color3.fromHex("BDF2FF"),
-		Slime = Color3.fromHex("7CFF4F"),
-		Lava = Color3.fromHex("FF6A3D"),
-		Sombra = Color3.fromHex("8E6BFF"),
+		Rayo = Color3.fromHex("FFE438"),
+		Hielo = Color3.fromHex("C4F4FF"),
+		Slime = MENTA,
+		Lava = NARANJA,
+		Sombra = Color3.fromHex("A274FF"),
 	},
-	Residuo = Color3.fromHex("6B5A4A"), -- se mezcla con los colores de los padres
+	Residuo = Color3.fromHex("7A6352"), -- se mezcla con los colores de los padres
 
 	-- Color del cuerpo y de las manchas de cada especie base, en el orden de la rueda
 	-- (shared/Especies.luau). Las fusiones mezclan estos colores pieza por pieza.
+	-- Pendiente del pedido T1 (criaturas toon): revisarlos sobre el piso y el cielo nuevos.
 	Especies = {
 		{ Color = Color3.fromHex("38C8FF"), Manchas = Color3.fromHex("E8FAFF") }, -- 1 Glupona
 		{ Color = Color3.fromHex("4CCB4A"), Manchas = Color3.fromHex("2E8A3A") }, -- 2 Rámulo
@@ -83,26 +121,36 @@ local Paleta = {
 
 	-- Detalles fijos de las piezas de las criaturas (shared/Piezas.luau y Generador.luau).
 	Piezas = {
-		Blanco = Color3.fromHex("FFFFFF"), -- ojos
-		Negro = Color3.fromHex("1B1030"), -- pupilas, narices y siluetas negras en el mundo
-		Crema = Color3.fromHex("FFE9D2"), -- cara del hongo
-		Naranja = Color3.fromHex("FFB020"), -- picos, cuernos de brasa, patas de ave y chispas
-		Llama = Color3.fromHex("FF7A00"), -- llama de la cola
-		Amarillo = Color3.fromHex("FFE21F"), -- punta de la llama y centro de las flores
-		Burbujas = Color3.fromHex("BDF2FF"),
-		Flores = Color3.fromHex("FF8FC8"),
-		Esporas = Color3.fromHex("FF7BE0"),
-		Nieve = Color3.fromHex("FFFFFF"),
+		Blanco = BLANCO, -- ojos
+		Negro = PUPILA, -- pupilas, narices y siluetas oscuras en el mundo
+		Crema = CREMA, -- cara del hongo
+		Naranja = NARANJA, -- picos, cuernos de brasa, patas de ave y chispas
+		Llama = ROJO, -- llama de la cola
+		Amarillo = AMARILLO, -- punta de la llama y centro de las flores
+		Burbujas = Color3.fromHex("C4F0FF"),
+		Flores = ROSA,
+		Esporas = Color3.fromHex("FF9AD0"),
+		Nieve = BLANCO,
 		Luz = Color3.fromHex("FFE680"), -- luz propia de la especie que brilla
 		Aura = Color3.fromHex("FFF3B0"), -- aura de la generación 3
 	},
 
 	-- Laboratorio (server/Laboratorios.luau): corrales abiertos y cerrados.
 	Laboratorio = {
-		PisoAbierto = Color3.fromHex("2B4763"),
-		PisoCerrado = Color3.fromHex("26303C"),
+		PisoAbierto = CREMA,
+		PisoCerrado = Color3.fromHex("786CA3"), -- lila con 30 % de contorno
 		CupulaAbierta = Color3.fromHex("CFF6FF"),
-		CupulaCerrada = Color3.fromHex("3B4654"),
+		CupulaCerrada = Color3.fromHex("665A8C"), -- lila con 45 % de contorno
+	},
+
+	-- Luz del mundo (Toon.iluminar): ambiente lila, sol rosado y niebla del atardecer.
+	-- Los colores del cielo están "horneados" en sus imágenes (arte/scripts/toon_base.py).
+	Luz = {
+		Ambiente = Color3.fromHex("ACA2C8"), -- adentro y a la sombra
+		Exterior = Color3.fromHex("C4BADB"), -- afuera
+		Sol = Color3.fromHex("FFF2F7"), -- tinte de lo que da al sol
+		Niebla = HORIZONTE, -- color de la Atmosphere cerca del horizonte
+		Lejos = CIELO_ABAJO, -- color de la Atmosphere lejos del sol
 	},
 
 	-- Versión oscura de un color (la franja de abajo de los botones).
@@ -112,7 +160,7 @@ local Paleta = {
 
 	-- Versión clara de un color (brillos de los íconos).
 	claro = function(color: Color3, cuanto: number?): Color3
-		return color:Lerp(TEXTO, cuanto or 0.45)
+		return color:Lerp(BLANCO, cuanto or 0.45)
 	end,
 }
 

@@ -2,6 +2,7 @@
 -- Arranque del servidor: carga los sistemas y conecta la entrada y salida de jugadores.
 
 local Players = game:GetService("Players")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local Remotos = require(script.Parent.Remotos)
 local Corrales = require(script.Parent.Corrales)
@@ -20,6 +21,9 @@ require(script.Parent.MaquinaFusion)
 require(script.Parent.TiendaPistas)
 require(script.Parent.Tienda)
 require(script.Parent.HerramientasPrueba)
+
+-- Luz y cielo del estilo toon (ideas/estilo-toon.md).
+require(ReplicatedStorage.Shared.Toon).iluminar()
 
 local function alEntrar(jugador: Player)
 	local guardados, ok = Guardado.cargar(jugador)
