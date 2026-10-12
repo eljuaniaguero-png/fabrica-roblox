@@ -7,7 +7,7 @@
 -- asoma alrededor de la pieza como el borde de un dibujo animado (también entre piezas: la pata
 -- delante del cuerpo lleva su raya). Las copias salen de cuatro mallas (esfera, caja, cilindro y
 -- cuña) que se importan una vez a ReplicatedStorage > Arte > Toon
--- (arte/export/Toon/_PaqueteToon.obj). Mientras falten, se arman por código con EditableMesh
+-- (arte/export/Toon/_PaqueteToon.fbx). Mientras falten, se arman por código con EditableMesh
 -- (anda en Studio; en el juego publicado solo con "Enable Mesh / Image APIs" prendido), y si
 -- tampoco se puede, el modelo lleva un Highlight (borde finito, máximo Config.Toon.MaxHighlights).
 --

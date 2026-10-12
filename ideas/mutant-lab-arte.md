@@ -5,21 +5,22 @@ Lo lee Claude antes de cada pedido de ideas/mutant-lab-blender.md. Si algo de ac
 
 ---
 
-## 1. Dirección de arte
+## 1. Dirección de arte: estilo toon
 
-**Concepto:** laboratorio de caricatura de noche. Lugares oscuros y acogedores, llenos de vidrio y líquidos que brillan, con criaturas redondas y tiernas.
+**La guía es `ideas/estilo-toon.md`** (12 oct 2026): reemplaza al "laboratorio de caricatura de noche" en todo lo que choque. En resumen:
+1. **Contorno grueso** violeta casi negro alrededor de cada forma.
+2. **Colores planos y saturados**, sin reflejos ni texturas; como mucho una sombra de un escalón.
+3. **Brillante y alegre:** un atardecer violeta y rosa, no una noche oscura.
+4. **Formas geométricas simples** combinadas (bolas, triángulos, rectángulos redondeados, óvalos): gracioso por la forma, no por el detalle.
+5. **Todo lo vivo tiene ojos enormes:** blanco, pupila gigante violeta oscura, un puntito de brillo y párpados de color. Criaturas, frutas, huevos a punto de nacer y el robot vendedor tienen cara.
+6. **Lo importante resalta por color y contorno,** no por oscuridad alrededor. El neón queda para detalles chicos que tienen que brillar.
 
-**Cinco reglas**
-1. **Lo jugable brilla, lo decorativo no.** Lo que se toca, se junta o importa (máquina, frutas, huevos, ADN) lleva una pieza de neón o un color de acento. La decoración usa tonos apagados.
-2. **Redondo y grueso.** Todo con bordes biselados y proporciones exageradas: cabezas grandes, patas cortas, objetos rechonchos. Nada filoso ni realista.
-3. **Silueta primero.** Cada objeto importante se tiene que reconocer pintado de negro, a 20 studs, en la pantalla de un celular.
-4. **Pocas piezas, bien hechas.** Mejor 3 formas limpias que 30 detalles.
-5. **Todo tiene cara si está vivo.** Criaturas, frutas, huevos a punto de nacer y el robot vendedor tienen ojos. Los ojos son lo que lo hace tierno.
+Siguen valiendo de antes: **silueta primero** (cada objeto importante se reconoce pintado de un solo color, a 20 studs, en un celular) y **pocas piezas, bien hechas**.
 
 **Colores**
-- Los colores exactos están en `mutant-lab/src/shared/Paleta.luau`. En Blender se usan como vista previa; en Roblox el color lo pone el código.
-- Base del mundo: azul petróleo y violeta noche. Metal gris azulado. Acentos: verde ácido (ADN y lo importante), magenta (novedades), dorado (premios y raro).
-- Un color por elemento: fuego, agua, planta, eléctrico y sombra (ver Paleta.Elementos).
+- Los colores exactos están en `mutant-lab/src/shared/Paleta.luau` (`Paleta.Toon` tiene los de la guía; los nombres por uso, como `Acento` o `Elementos.Fuego`, apuntan a ellos). En Blender se usan como vista previa; en Roblox el color lo pone el código.
+- Base del mundo: crema durazno (pisos y pedestales), lila grisáceo (paredes y metal), cielo violeta y rosa. Acentos: menta (ADN y laboratorio), rosa chicle (anillos y bordes), amarillo sol (premios y raro).
+- Un color por elemento: fuego, agua, planta, eléctrico y sombra (ver `Paleta.Elementos`).
 
 ---
 
@@ -33,10 +34,11 @@ Lo lee Claude antes de cada pedido de ideas/mutant-lab-blender.md. Si algo de ac
 | Mallas por color | Una malla por zona de color, sin texturas. El código pinta cada malla. |
 | Nombres de mallas | `Objeto_Parte` y sufijos especiales: `_Neon` (brilla), `_Vidrio` (transparente), `_Anim` (se mueve por código), `_Ojo` (no se pinta). |
 | Polígonos | Pieza de criatura: hasta 1.500 triángulos. Fruta, huevo, objeto chico: hasta 1.500. Mueble o decoración: hasta 3.000. Pieza grande de escenario: hasta 8.000; si pasa, se parte en módulos. |
-| Terminación | Bisel suave en todos los bordes, sombreado suave, normales hacia afuera, sin caras internas ni duplicadas. |
+| Terminación | Bisel suave en todos los bordes, normales hacia afuera, sin caras internas ni duplicadas. Formas simples: el detalle lo dan el color y el contorno. |
+| Contorno | En Roblox lo pone `shared/Toon.luau` con un casco invertido (copia un poco más grande, del color `Contorno`, con las caras dadas vuelta). Las Part ya lo tienen; las mallas de Blender van a exportar su propio casco (cómo, se define en el pedido de Blender toon). Ver `ideas/estilo-toon.md`, "Decisiones de la base". |
 | Colisión | Se resuelve en Roblox con formas simples. Si un objeto necesita una forma de choque especial, se exporta aparte como `Objeto_Colision`. |
 | Exportación | FBX, un archivo por objeto, en `mutant-lab/arte/export/<grupo>/`. |
-| Vista previa | Cada objeto con un render PNG de fondo transparente en `mutant-lab/arte/renders/`. |
+| Vista previa | Cada objeto con un render PNG de fondo transparente en `mutant-lab/arte/renders/`. En estilo toon: sombreado plano con contorno, para que se vea igual que en el juego. |
 | En Roblox | Todo lo importado vive en `ReplicatedStorage/Arte/<grupo>`. El código siempre tiene un respaldo con la versión vieja si falta una malla. |
 
 ---

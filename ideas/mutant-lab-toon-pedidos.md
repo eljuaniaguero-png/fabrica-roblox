@@ -5,7 +5,7 @@ T0 va primero porque crea la paleta y el sistema de contorno que usan los demás
 Conviene hacerlos después del 7-0 (especies nuevas) y antes del arte en Blender.
 Al abrir la sesión de T0, adjuntale a Claude la imagen de referencia del estilo.
 
-## [ ] T0 — Base del estilo (va primero)
+## [x] T0 — Base del estilo (va primero)
 
 ```
 Juego: Mutant Lab (carpeta mutant-lab/). Leé ideas/estilo-toon.md entero. Vamos a pasar TODO el juego a este estilo toon, más brillante. En esta sesión armamos la base que van a usar todas las demás.

@@ -4,7 +4,8 @@ Genera dos cosas:
 1. El cielo: 4 imágenes PNG para el Sky de Roblox (arriba, abajo, costado y costado con la luna),
    con el degradé violeta a rosa y una luna grande de caricatura con contorno.
 2. Las mallas del contorno por casco invertido: esfera, caja, cilindro y cuña con las caras
-   dadas vuelta, en un solo OBJ para importar en Studio de una vez (shared/Toon.luau las usa).
+   dadas vuelta, en un OBJ (CascosToon.obj); toon_fbx.py lo pasa a _PaqueteToon.fbx, que es lo que se importa
+   en Studio de una vez (shared/Toon.luau las usa).
 
 Se corre con Python común (no necesita Blender ni paquetes):
     python mutant-lab/arte/scripts/toon_base.py
@@ -346,7 +347,7 @@ def cascos():
         base += len(vs)
     carpeta = os.path.join(EXPORT, "Toon")
     os.makedirs(carpeta, exist_ok=True)
-    with open(os.path.join(carpeta, "_PaqueteToon.obj"), "w", encoding="utf-8", newline="\n") as f:
+    with open(os.path.join(carpeta, "CascosToon.obj"), "w", encoding="utf-8", newline="\n") as f:
         f.write("\n".join(lineas) + "\n")
 
 
@@ -359,4 +360,4 @@ if __name__ == "__main__":
     cascos()
     rugoso()
     cielo()
-    print("Listo: export/Cielo y export/Toon/_PaqueteToon.obj")
+    print("Listo: export/Cielo y export/Toon/CascosToon.obj (después: toon_fbx.py)")

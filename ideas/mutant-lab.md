@@ -17,59 +17,16 @@ Versión 12 (2026-10-09): **Parte 7 hecha** (pedido 5 de `ORDEN-PEDIDOS.md`): tr
 Versión 13 (2026-10-09): **Parte 8 hecha** (pedido 6 de `ORDEN-PEDIDOS.md`): ADN mientras no estás, premio diario de 7 días con la especie especial Estrellín, experimento del día, tres misiones diarias y metas largas con trofeos; las fechas las decide el servidor. Ver "Notas de la Parte 8".
 Versión 14 (2026-10-11): **Parte 9 hecha** (pedido 7 de `ORDEN-PEDIDOS.md`): paseos, visitas, ficha de criaturas ajenas, fusión en equipo con 10 especies que solo salen así, tablas de posiciones y "me gusta". Ver "Notas de la Parte 9".
 Versión 15 (2026-10-11): **guardado seguro** (pedido 7b de `ORDEN-PEDIDOS.md`, la parte de Mutant Lab): ProfileStore con bloqueo de sesión, migración de los guardados viejos, aviso si falla la carga y StreamingEnabled. Ver "Guardado seguro y streaming".
+Versión 16 (2026-10-12): **estilo toon, la base** (pedido T0 de `ideas/mutant-lab-toon-pedidos.md`): paleta nueva, módulo `Toon.luau` (material plano y contorno por casco invertido), cielo de atardecer con luna de caricatura y sala de muestra aprobada. Ver "Guía de estilo".
 Próximo punto de control: **prototipo jugable** (Partes 1 a 5).
 
-## Guía de estilo: laboratorio de caricatura de noche (versión 6)
+## Guía de estilo: estilo toon (versión 16)
 
-Copiada de la guía visual del usuario (`ideas/mutant-lab-visual.md`, 2026-10-08). Reemplaza el estilo A (Laboratorio caramelo), que quedó guardado en Studio por si hace falta volver: el mapa viejo en `ServerStorage > Archivo > MapaCaramelo` y la luz vieja en `ServerStorage > Archivo > LuzCaramelo`.
+**La guía de estilo es `ideas/estilo-toon.md`** (elegida por el usuario el 12 oct 2026): contorno grueso violeta casi negro, colores planos y saturados, un atardecer violeta y rosa, formas geométricas simples y ojos enormes. Reemplaza al "laboratorio de caricatura de noche" (versión 6) en todo lo que choque. Las decisiones de la base (contorno por casco invertido, cielo, plástico sin brillo, paleta) están al final de esa guía, en "Decisiones de la base".
 
-### 1. Dirección de arte
-
-Concepto: "laboratorio de caricatura de noche". Un laboratorio oscuro y acogedor, lleno de tubos con líquidos que brillan, donde viven criaturas redondas y tiernas. Lo oscuro es el fondo; lo que brilla es lo importante: el ADN, la máquina, las criaturas.
-
-Tres reglas que mandan sobre todo lo demás:
-1. Lo jugable brilla, lo decorativo no. Si algo se puede tocar o juntar, tiene un color de acento o luz. La decoración usa colores apagados.
-2. Formas redondas y gruesas. Nada filoso ni realista. Bordes redondeados, proporciones exageradas.
-3. Se entiende en una pantalla de celular. Si algo no se lee en un teléfono, se agranda o se saca.
-
-### 2. Paleta
-
-| Uso | Color | Hex |
-|---|---|---|
-| Fondo, paredes y piso del laboratorio | Azul petróleo oscuro | #1B2A3A |
-| Sombras y cielo | Violeta noche | #2A1F3D |
-| Metal, máquinas y estructuras | Gris azulado | #5C6B7A |
-| Acento principal: ADN, slime, botón de fusionar | Verde ácido | #7CFF4F |
-| Acento secundario: novedades, alertas | Magenta | #FF4FA3 |
-| Premios, raro, dorado | Amarillo dorado | #FFC93C |
-| Texto de interfaz | Blanco frío | #F5F7FA |
-| Contorno de interfaz y sombra de texto | Casi negro | #10141C |
-
-Colores por elemento (se usan en criaturas, íconos y pistas):
-
-| Elemento | Hex |
-|---|---|
-| Fuego | #FF6A3D |
-| Agua | #3DB8FF |
-| Planta | #5DDB6A |
-| Eléctrico | #FFE14A |
-| Sombra | #8E6BFF |
-Los elementos combinados mezclan los dos colores de sus padres.
-
-Colores por generación (borde de tarjetas y anillo bajo la criatura):
-- Generación 1: blanco #F5F7FA
-- Generación 2: azul #3DB8FF
-- Generación 3: violeta #B07CFF
-- Mutante: dorado #FFC93C con brillo
-
-### 3. Iluminación y ambiente
-
-- Hora fija de noche, con una luna grande y visible desde el laboratorio.
-- Luz ambiente baja y azulada. La luz fuerte sale de los objetos: tubos, máquina, pantallas.
-- Atmosphere con un poco de niebla violeta a lo lejos, para que el fondo se pierda y el laboratorio resalte.
-- Bloom suave, para que las partes de material Neon brillen. Sin exagerar: el texto tiene que seguir leyéndose.
-- ColorCorrection con un poco más de saturación y contraste.
-- Para que algo brille, usá primero material Neon. Las luces reales (PointLight, SurfaceLight) solo en la máquina de fusión y en pocos lugares clave: como máximo 12 en todo el laboratorio.
+- **Colores:** `mutant-lab/src/shared/Paleta.luau` (`Paleta.Toon` tiene los colores de la guía). **Contorno, material y luz:** `mutant-lab/src/shared/Toon.luau`. Nada de colores ni contornos sueltos en otros archivos.
+- **Sala de muestra** aprobada el 12 oct: guardada en Studio en `ServerStorage > Archivo > SalaMuestraToon` (piso, pared, pedestal, criatura, huevo, fruta y máquina). La luz de noche vieja quedó en `ServerStorage > Archivo > LuzNoche`.
+- **Lo que sigue** (pedidos T1 en adelante de `ideas/mutant-lab-toon-pedidos.md`): criaturas, mapa, máquinas e interfaz pasan al estilo toon de a una. Mientras tanto, las secciones 4 a 9 de abajo (de la versión 6) siguen valiendo para **qué hay y dónde va** (mapa, distribución del HUD, menús, efectos y sonidos); en lo visual (oscuridad, neón, vidrio, colores) manda `ideas/estilo-toon.md`.
 
 ### 4. Mapa
 
