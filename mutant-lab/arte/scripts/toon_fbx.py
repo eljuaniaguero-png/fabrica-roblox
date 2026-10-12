@@ -6,8 +6,8 @@ Corre en Blender sin abrir la ventana, así no toca la escena que esté abierta:
     "C:\\Program Files\\Blender Foundation\\Blender 5.2\\blender.exe" -b --factory-startup ^
         --python mutant-lab/arte/scripts/toon_fbx.py
 
-Los ejes ida y vuelta son los mismos que usa comun.py, así las mallas llegan a Roblox como están
-en el OBJ (el cilindro a lo largo de X y la cuña alta hacia +Z, como las Part de Roblox).
+Las mallas tienen que llegar a Roblox como están en el OBJ: el cilindro a lo largo de X y la cuña
+alta hacia +Z, como las Part de Roblox (probado en Studio el 12 oct).
 """
 
 import os
@@ -21,8 +21,9 @@ FBX = os.path.join(CARPETA, "_PaqueteToon.fbx")
 NOMBRES = {"CascoEsfera", "CascoCaja", "CascoCilindro", "CascoCunia"}
 
 bpy.ops.wm.read_factory_settings(use_empty=True)
-# El OBJ está en ejes de Roblox (Y arriba, frente a -Z): Blender lo pasa a los suyos (Z arriba).
-bpy.ops.wm.obj_import(filepath=OBJ, forward_axis="NEGATIVE_Z", up_axis="Y")
+# El OBJ está en ejes de Roblox (Y arriba). Con "Z" acá y "Z" al exportar, la ida y vuelta no gira
+# nada: con "NEGATIVE_Z" las mallas llegaban a Studio con media vuelta (la cuña al revés).
+bpy.ops.wm.obj_import(filepath=OBJ, forward_axis="Z", up_axis="Y")
 
 objetos = [o for o in bpy.context.scene.objects if o.type == "MESH"]
 nombres = {o.name for o in objetos}

@@ -412,6 +412,13 @@ local Config = {
 					Tapa = "rbxassetid://112168412519378",
 				},
 			},
+			-- Mallas del contorno toon (ReplicatedStorage > Arte > Toon, de _PaqueteToon.fbx).
+			Toon = {
+				CascoEsfera = "rbxassetid://96045262487883",
+				CascoCaja = "rbxassetid://73326951298435",
+				CascoCilindro = "rbxassetid://111901753698075",
+				CascoCunia = "rbxassetid://95326994804916",
+			},
 		},
 	},
 
