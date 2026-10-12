@@ -53,6 +53,10 @@ Lo lee Claude antes de cada pedido de ideas/mutant-lab-blender.md. Si algo de ac
 | Cola | sale de (0; 2,8; 1,55) |
 | Alas | a los costados del lomo (ver AlturaLomo en Piezas.luau) |
 
+**Escala:** las piezas se modelan en estas medidas, sin achicar. El juego después escala el cuerpo, las patas, la cola y las alas (×0,78), agranda la cabeza (×1,45) y achica la criatura entera (×0,85). Esos números están en `Config.luau` (Criaturas: `EscalaCuerpo`, `EscalaCabeza`, `Escala`), así que no hay que aplicarlos en Blender.
+
+**Lo que pone Roblox (no se modela):** la gema de neón con el color del elemento sobre el lomo (más grande si es mutante) y el anillo de luz en el piso con el color de la generación (`Generador.luau`).
+
 **Las 10 especies base** (descripciones tomadas de Piezas.luau; tema y elemento de Especies.luau)
 
 | # | Especie | Tema / elemento | Cabeza | Cuerpo | Patas | Cola o alas |
@@ -121,7 +125,7 @@ Las frutas se animan por código (correr, saltar, temblar), así que las patitas
 
 ## 6. Laboratorio de cada jugador
 
-Sala redonda de unos 80 studs de diámetro, abierta hacia la plaza.
+Sala redonda de 68 studs de diámetro, abierta hacia la plaza (la ficha la achicó de 80 a 68 porque con 4 corrales quedaban huecos). Hoy se arma clonando el molde `ServerStorage > Moldes > Laboratorio`.
 
 | Objeto | Descripción y mallas |
 |---|---|
@@ -190,7 +194,7 @@ Selva mutante de noche, separada del laboratorio. Pensada para correr: caminos c
 | Residuo | Mancha gelatinosa de dos colores, con ojitos confundidos. |
 | ADN | Hélice de ADN chica `_Neon`, para lo que flota y se junta. |
 | Pista | Lupa con un papelito. |
-| Trofeos | 6: copa, medalla, estrella, huevo dorado, frasco dorado y hélice dorada. |
+| Trofeos | 9, uno por meta de `server/Metas.luau` (el estante tiene 9 lugares): bases, generación 2, generación 3, fusiones, pedidos, variantes, personalidades, mutantes y especial. Formas: copa, medalla, estrella, huevo dorado, frasco dorado, hélice dorada, catalizador dorado, máscara de teatro y criatura dorada. |
 | Clientes de pedidos | 6 personajes originales y simpáticos con siluetas bien distintas (por ejemplo un robot cartero, una señora planta, un científico con anteojos enormes, un pulpo en traje, un fantasmita, un caracol con mochila). Partes separadas para saludar. |
 | Pedestal de estatua | Pedestal con placa. La estatua se arma en Roblox con las piezas de la criatura en material de piedra. |
 
@@ -240,4 +244,12 @@ Antes de dar por terminado cualquier objeto, Claude revisa con el render:
 ## 13. Registro
 
 Claude anota acá, al terminar cada pedido: qué se hizo, qué se cambió de este documento y por qué, y cualquier dato técnico descubierto (escala real, pasos de importación que funcionaron).
+
+### 12 oct 2026 — revisión contra el código
+Diferencias encontradas (manda el código, así que se corrigió el documento):
+- Laboratorio: 68 studs de diámetro, no 80 (sección 6).
+- Trofeos: 9, uno por meta, no 6 (sección 9).
+- Escala de criaturas: el juego escala las piezas después de armarlas; se modelan en las medidas de los enchufes (sección 3).
+- Gema del elemento y anillo de generación: los pone Roblox, no se modelan (sección 3).
+- Pendiente: huevos, incubadoras, frutas, Jardín Salvaje y decoración todavía no existen en el juego (pedidos 7c, 7d y 7e). Su arte se puede hacer antes, pero se conecta cuando esos pedidos estén hechos.
 
