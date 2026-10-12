@@ -1,0 +1,207 @@
+{
+ "ArbolMutanteA_Copas": {
+  "Clave": "#2aa58f",
+  "Color": "2aa58f",
+  "Tipo": "Normal"
+ },
+ "ArbolMutanteA_Tronco": {
+  "Clave": "#5a3d2b",
+  "Color": "5a3d2b",
+  "Tipo": "Normal"
+ },
+ "ArbolMutanteB_Copas": {
+  "Clave": "#7a4fd1",
+  "Color": "7a4fd1",
+  "Tipo": "Normal"
+ },
+ "ArbolMutanteB_Lunares": {
+  "Clave": "#b9a2f0",
+  "Color": "b9a2f0",
+  "Tipo": "Normal"
+ },
+ "ArbolMutanteB_Tronco": {
+  "Clave": "#5a3d2b",
+  "Color": "5a3d2b",
+  "Tipo": "Normal"
+ },
+ "Arbusto_Flores_Anim": {
+  "Clave": "Piezas.Flores",
+  "Color": "FF8FC8",
+  "Tipo": "Normal"
+ },
+ "Arbusto_Hojas_Anim": {
+  "Clave": "#2e6b3f",
+  "Color": "2e6b3f",
+  "Tipo": "Normal"
+ },
+ "CartelRecords_Luz_Neon": {
+  "Clave": "Dorado",
+  "Color": "FFC93C",
+  "Tipo": "Neon"
+ },
+ "CartelRecords_Madera": {
+  "Clave": "#7a5235",
+  "Color": "7a5235",
+  "Tipo": "Normal"
+ },
+ "CartelRecords_Pantalla": {
+  "Clave": "Contorno",
+  "Color": "10141C",
+  "Tipo": "Normal"
+ },
+ "CharcoSlime_Burbujas_Vidrio": {
+  "Clave": "Piezas.Burbujas",
+  "Color": "BDF2FF",
+  "Tipo": "Vidrio"
+ },
+ "CharcoSlime_Charco_Neon": {
+  "Clave": "Catalizadores.Slime",
+  "Color": "7CFF4F",
+  "Tipo": "Neon"
+ },
+ "HongoPlataformaAlto_Lunares": {
+  "Clave": "Texto",
+  "Color": "F5F7FA",
+  "Tipo": "Normal"
+ },
+ "HongoPlataformaAlto_Pie": {
+  "Clave": "Piezas.Crema",
+  "Color": "FFE9D2",
+  "Tipo": "Normal"
+ },
+ "HongoPlataformaAlto_Sombrero": {
+  "Clave": "Especies.7.Color",
+  "Color": "B07CFF",
+  "Tipo": "Normal"
+ },
+ "HongoPlataformaChico_Lunares": {
+  "Clave": "Texto",
+  "Color": "F5F7FA",
+  "Tipo": "Normal"
+ },
+ "HongoPlataformaChico_Pie": {
+  "Clave": "Piezas.Crema",
+  "Color": "FFE9D2",
+  "Tipo": "Normal"
+ },
+ "HongoPlataformaChico_Sombrero": {
+  "Clave": "Especies.7.Color",
+  "Color": "B07CFF",
+  "Tipo": "Normal"
+ },
+ "HongoPlataformaMediano_Lunares": {
+  "Clave": "Texto",
+  "Color": "F5F7FA",
+  "Tipo": "Normal"
+ },
+ "HongoPlataformaMediano_Pie": {
+  "Clave": "Piezas.Crema",
+  "Color": "FFE9D2",
+  "Tipo": "Normal"
+ },
+ "HongoPlataformaMediano_Sombrero": {
+  "Clave": "Especies.7.Color",
+  "Color": "B07CFF",
+  "Tipo": "Normal"
+ },
+ "HongoRebote_Lunares_Neon_Anim": {
+  "Clave": "Acento",
+  "Color": "7CFF4F",
+  "Tipo": "Neon"
+ },
+ "HongoRebote_Pie": {
+  "Clave": "Piezas.Crema",
+  "Color": "FFE9D2",
+  "Tipo": "Normal"
+ },
+ "HongoRebote_Sombrero_Anim": {
+  "Clave": "Alerta",
+  "Color": "FF4FA3",
+  "Tipo": "Normal"
+ },
+ "Liana_Agarre_Neon": {
+  "Clave": "Acento",
+  "Color": "7CFF4F",
+  "Tipo": "Neon"
+ },
+ "Liana_Hojas": {
+  "Clave": "#3e8f4a",
+  "Color": "3e8f4a",
+  "Tipo": "Normal"
+ },
+ "Liana_Tallo": {
+  "Clave": "#2f6b3a",
+  "Color": "2f6b3a",
+  "Tipo": "Normal"
+ },
+ "RocaChica_Piedra": {
+  "Clave": "#5d6675",
+  "Color": "5d6675",
+  "Tipo": "Normal"
+ },
+ "RocaGrande_Piedra": {
+  "Clave": "#5d6675",
+  "Color": "5d6675",
+  "Tipo": "Normal"
+ },
+ "RocaMediana_Piedra": {
+  "Clave": "#5d6675",
+  "Color": "5d6675",
+  "Tipo": "Normal"
+ },
+ "SueloCurva_Matas": {
+  "Clave": "#2f5c3c",
+  "Color": "2f5c3c",
+  "Tipo": "Normal"
+ },
+ "SueloCurva_Pasto": {
+  "Clave": "#24452f",
+  "Color": "24452f",
+  "Tipo": "Normal"
+ },
+ "SueloCurva_Tierra": {
+  "Clave": "#4a3326",
+  "Color": "4a3326",
+  "Tipo": "Normal"
+ },
+ "SueloIsla_Pasto": {
+  "Clave": "#24452f",
+  "Color": "24452f",
+  "Tipo": "Normal"
+ },
+ "SueloIsla_Raices": {
+  "Clave": "#5a3d2b",
+  "Color": "5a3d2b",
+  "Tipo": "Normal"
+ },
+ "SueloIsla_Tierra": {
+  "Clave": "#4a3326",
+  "Color": "4a3326",
+  "Tipo": "Normal"
+ },
+ "SueloRampa_Pasto": {
+  "Clave": "#24452f",
+  "Color": "24452f",
+  "Tipo": "Normal"
+ },
+ "SueloRampa_Tierra": {
+  "Clave": "#4a3326",
+  "Color": "4a3326",
+  "Tipo": "Normal"
+ },
+ "SueloRecto_Matas": {
+  "Clave": "#2f5c3c",
+  "Color": "2f5c3c",
+  "Tipo": "Normal"
+ },
+ "SueloRecto_Pasto": {
+  "Clave": "#24452f",
+  "Color": "24452f",
+  "Tipo": "Normal"
+ },
+ "SueloRecto_Tierra": {
+  "Clave": "#4a3326",
+  "Color": "4a3326",
+  "Tipo": "Normal"
+ }
+}

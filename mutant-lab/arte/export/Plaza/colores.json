@@ -1,0 +1,167 @@
+{
+ "Banco_Patas": {
+  "Clave": "Metal",
+  "Color": "5C6B7A",
+  "Tipo": "Normal"
+ },
+ "Banco_Tablas": {
+  "Clave": "SuperficieClara",
+  "Color": "344B63",
+  "Tipo": "Normal"
+ },
+ "Baranda_FranjaClara": {
+  "Clave": "Dorado",
+  "Color": "FFC93C",
+  "Tipo": "Normal"
+ },
+ "Baranda_FranjaOscura": {
+  "Clave": "Contorno",
+  "Color": "10141C",
+  "Tipo": "Normal"
+ },
+ "Baranda_Postes": {
+  "Clave": "Metal",
+  "Color": "5C6B7A",
+  "Tipo": "Normal"
+ },
+ "CartelFlecha_Flecha_Neon": {
+  "Clave": "Acento",
+  "Color": "7CFF4F",
+  "Tipo": "Neon"
+ },
+ "CartelFlecha_Fondo": {
+  "Clave": "Contorno",
+  "Color": "10141C",
+  "Tipo": "Normal"
+ },
+ "CartelFlecha_Marco": {
+  "Clave": "Metal",
+  "Color": "5C6B7A",
+  "Tipo": "Normal"
+ },
+ "Farol_Foco_Neon": {
+  "Clave": "Acento",
+  "Color": "7CFF4F",
+  "Tipo": "Neon"
+ },
+ "Farol_Globo_Vidrio": {
+  "Clave": "Laboratorio.CupulaAbierta",
+  "Color": "CFF6FF",
+  "Tipo": "Vidrio"
+ },
+ "Farol_Poste": {
+  "Clave": "Metal",
+  "Color": "5C6B7A",
+  "Tipo": "Normal"
+ },
+ "MaquinaEquipo_Base": {
+  "Clave": "#404a55",
+  "Color": "404a55",
+  "Tipo": "Normal"
+ },
+ "MaquinaEquipo_Luces_Neon": {
+  "Clave": "Acento",
+  "Color": "7CFF4F",
+  "Tipo": "Neon"
+ },
+ "MaquinaEquipo_Metal": {
+  "Clave": "Metal",
+  "Color": "5C6B7A",
+  "Tipo": "Normal"
+ },
+ "MaquinaEquipo_Tubos_Vidrio": {
+  "Clave": "Laboratorio.CupulaAbierta",
+  "Color": "CFF6FF",
+  "Tipo": "Vidrio"
+ },
+ "MarcoDestacado_Marco": {
+  "Clave": "Dorado",
+  "Color": "FFC93C",
+  "Tipo": "Normal"
+ },
+ "MarcoDestacado_Placa": {
+  "Clave": "Contorno",
+  "Color": "10141C",
+  "Tipo": "Normal"
+ },
+ "MarcoDestacado_Soporte": {
+  "Clave": "Metal",
+  "Color": "5C6B7A",
+  "Tipo": "Normal"
+ },
+ "PlazaCentro_Helice_Neon": {
+  "Clave": "Acento",
+  "Color": "7CFF4F",
+  "Tipo": "Neon"
+ },
+ "PlazaCentro_Piso": {
+  "Clave": "#26405a",
+  "Color": "26405a",
+  "Tipo": "Normal"
+ },
+ "PlazaGajo_Adentro": {
+  "Clave": "#22364a",
+  "Color": "22364a",
+  "Tipo": "Normal"
+ },
+ "PlazaGajo_Afuera": {
+  "Clave": "#1a2636",
+  "Color": "1a2636",
+  "Tipo": "Normal"
+ },
+ "PlazaGajo_Anillo": {
+  "Clave": "#3b454f",
+  "Color": "3b454f",
+  "Tipo": "Normal"
+ },
+ "PlazaGajo_Borde": {
+  "Clave": "Contorno",
+  "Color": "10141C",
+  "Tipo": "Normal"
+ },
+ "PlazaGajo_Franjas": {
+  "Clave": "Dorado",
+  "Color": "FFC93C",
+  "Tipo": "Normal"
+ },
+ "PortalJardin_Lunares_Neon": {
+  "Clave": "Texto",
+  "Color": "F5F7FA",
+  "Tipo": "Neon"
+ },
+ "PortalJardin_Pies": {
+  "Clave": "Piezas.Crema",
+  "Color": "FFE9D2",
+  "Tipo": "Normal"
+ },
+ "PortalJardin_Raices": {
+  "Clave": "#5a3d2b",
+  "Color": "5a3d2b",
+  "Tipo": "Normal"
+ },
+ "PortalJardin_Remolino_Neon_Anim": {
+  "Clave": "Acento",
+  "Color": "7CFF4F",
+  "Tipo": "Neon"
+ },
+ "PortalJardin_Sombreros": {
+  "Clave": "Alerta",
+  "Color": "FF4FA3",
+  "Tipo": "Normal"
+ },
+ "TableroPlaza_Fondo": {
+  "Clave": "Contorno",
+  "Color": "10141C",
+  "Tipo": "Normal"
+ },
+ "TableroPlaza_Luz_Neon": {
+  "Clave": "Acento",
+  "Color": "7CFF4F",
+  "Tipo": "Neon"
+ },
+ "TableroPlaza_Marco": {
+  "Clave": "Metal",
+  "Color": "5C6B7A",
+  "Tipo": "Normal"
+ }
+}
