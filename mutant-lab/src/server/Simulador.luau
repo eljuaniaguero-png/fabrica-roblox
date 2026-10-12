@@ -49,6 +49,9 @@ export type Informe = {
 	ArribaDelTriple10: number,
 	Completo: number?, -- segundo en que llegó a las 50 especies
 	PrimeraFusion: number?,
+	Nacidas: number, -- criaturas que llegaron al laboratorio (fusiones y compras)
+	ConPersonalidad: number, -- de esas, las que no son "Normal"
+	PorSegundoFinal: number, -- ADN por segundo al terminar
 }
 
 local Simulador = {}
@@ -118,6 +121,9 @@ function Simulador.jugar(segundos: number, semilla: number, registro: { string }
 		ArribaDelTriple10 = 0,
 		Completo = nil,
 		PrimeraFusion = nil,
+		Nacidas = 0,
+		ConPersonalidad = 0,
+		PorSegundoFinal = 0,
 	}
 	local quieto = 0 -- segundos seguidos sin nada útil
 	local ultimaUtil = 0 -- cuándo hizo algo útil por última vez
@@ -130,7 +136,17 @@ function Simulador.jugar(segundos: number, semilla: number, registro: { string }
 			task.wait()
 			pausa = os.clock()
 		end
+		local primerId = d.SiguienteId
 		local accion = Robot.turno(mundo, mem)
+		-- Las criaturas que llegaron en esta acción (cada una tiene un Id nuevo).
+		for _, u in d.Criaturas do
+			if u.Id >= primerId then
+				informe.Nacidas += 1
+				if u.Personalidad ~= "Normal" then
+					informe.ConPersonalidad += 1
+				end
+			end
+		end
 		if registro and accion and accion ~= "Mirar" then
 			table.insert(
 				registro,
@@ -219,6 +235,8 @@ function Simulador.jugar(segundos: number, semilla: number, registro: { string }
 	informe.ConCatalizador = especiales.ConCatalizador
 	informe.PedidosPersonalidad = especiales.PedidosPersonalidad
 	informe.PedidosVariante = especiales.PedidosVariante
+	informe.PorSegundoFinal =
+		Mejoras.porSegundo(Mejoras.activas(d.Criaturas, d.Mejoras.Corrales), d.Mejoras.Nutrientes)
 	return informe
 end
 
@@ -265,6 +283,9 @@ function Simulador.resumen(segundos: number, partidas: number): string
 		Hueco = 0,
 		Razon10 = 0,
 		Arriba10 = 0,
+		Nacidas = 0,
+		ConPersonalidad = 0,
+		PorSegundo = 0,
 	}
 	local peorRazon, minimoEspecies, maximoEspecies = 0, math.huge, 0
 	local peorHueco, peorRazon10 = 0, 0
@@ -286,6 +307,9 @@ function Simulador.resumen(segundos: number, partidas: number): string
 		suma.Hueco += inf.HuecoMaximo
 		suma.Razon10 += inf.RazonMaxima10
 		suma.Arriba10 += inf.ArribaDelTriple10
+		suma.Nacidas += inf.Nacidas
+		suma.ConPersonalidad += inf.ConPersonalidad
+		suma.PorSegundo += inf.PorSegundoFinal
 		peorHueco = math.max(peorHueco, inf.HuecoMaximo)
 		peorRazon10 = math.max(peorRazon10, inf.RazonMaxima10)
 		if inf.Completo then
@@ -321,6 +345,11 @@ function Simulador.resumen(segundos: number, partidas: number): string
 			.. prom(suma.ConCatalizador)
 			.. " | variantes distintas: "
 			.. prom(suma.Variantes),
+		("Criaturas nacidas: %s, con personalidad: %s | ADN por segundo al final: %s"):format(
+			prom(suma.Nacidas),
+			prom(suma.ConPersonalidad),
+			prom(suma.PorSegundo)
+		),
 		"Pedidos con personalidad: "
 			.. prom(suma.PedidosPersonalidad)
 			.. " | con variante: "

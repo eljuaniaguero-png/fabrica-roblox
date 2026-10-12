@@ -9,13 +9,14 @@ case "$archivo" in
 esac
 [ -f "$archivo" ] || exit 0
 
-stylua "$archivo" 2>&1 >/dev/null
-
-# Selene lee selene.toml de la carpeta donde corre: Mutant Lab tiene el suyo.
+# StyLua y Selene leen su configuración de la carpeta donde corren: Mutant Lab tiene la suya.
+# (Si StyLua corre en otra carpeta, usa el ancho de línea por defecto y desordena el código.)
 raiz="${CLAUDE_PROJECT_DIR:-.}"
 case "$archivo" in
 *mutant-lab*) raiz="$raiz/mutant-lab" ;;
 esac
+(cd "$raiz" && stylua "$archivo") 2>&1 >/dev/null
+
 salida=$(cd "$raiz" && selene --display-style quiet "$archivo" 2>&1)
 if [ $? -ne 0 ]; then
 	printf 'Selene encontró problemas en %s:\n%s\n' "$archivo" "$salida" >&2
