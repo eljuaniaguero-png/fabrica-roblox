@@ -97,14 +97,14 @@ Pedido: rehacer todo el HUD y los menús con ForgeGUI. Así quedó armado:
 - **Mientras una pieza no esté subida**, el juego la dibuja con degradé, borde oscuro y brillo, como el diseño de Figma. Así todo anda desde ya y cada imagen nueva reemplaza al dibujo sin tocar el código.
 - **HUD** (`Hud.client.luau`):
   - Arriba a la derecha: Monedas, Suerte y Fuerza en píldoras que saltan cuando suben, más los botones "Vender todo" y Ajustes.
-  - A la izquierda: 6 botones grandes (Tienda, Mochila, Índice, Vitrina, Ranking, Eventos) con globitos. La Tienda muestra "!" si te alcanza para algo, la Mochila cuántas gemas tenés, el Índice "!" si hay una gema nueva y Eventos "!" si hay uno en curso.
+  - A la izquierda: 6 botones grandes (Tienda, Mochila, Museo, Vitrina, Ranking, Eventos) con globitos. La Tienda muestra "!" si te alcanza para algo, la Mochila cuántas gemas tenés, el Museo "!" si hay una gema nueva y Eventos "!" si hay uno en curso.
   - Abajo al centro: la barra "Próxima zona".
   - En celular los botones van arriba a la izquierda y todo se achica, para no tapar el joystick ni el salto.
 - **Ventanas** (`Ventanas.luau`): fondo oscurecido, cabecera de color con rayas, título grande con ícono, X roja y un "pop" al abrir. Se abre una por vez y se cierran tocando afuera.
 - **Menús**:
   - Tienda: Fuerza, Amuletos y Picos, con "Destacado".
   - Mochila: la grilla de gemas, el total y "¡Vender todo!".
-  - Índice: las 5 gemas por zona, las exóticas y las probabilidades con tu suerte, que suman 100 %.
+  - Museo (antes Índice): ver Grupo 3.
   - Eventos: el de ahora o el próximo, con cuenta regresiva, y los 6 eventos.
   - Mi Vitrina: los títulos con candado y la gema que se exhibe.
   - Clasificación: podio, del 4 al 10 y tu puesto. Es solo para lucirse.
@@ -113,7 +113,7 @@ Pedido: rehacer todo el HUD y los menús con ForgeGUI. Así quedó armado:
 
 Decisiones v3:
 - **Vender se puede desde cualquier lado** (el botón "Vender todo" o la Mochila). Es lo más simple; un Banco en el mapa queda para cuando se arme el mapa.
-- **Las zonas se abren solas** cuando te alcanza la Fuerza. Las barreras físicas van con el mapa.
+- **Las zonas se abren solas** cuando te alcanza la Fuerza. En el mapa, cada muro tiene una puerta de energía que se abre sola para quien ya tiene la zona.
 - **Las gemas del menú son un rombo dibujado** del color de cada gema: son 25, y un ícono por gema sería mucho para ahora.
 
 Estado de ForgeGUI (14/10/2026):
@@ -125,6 +125,83 @@ Estado de ForgeGUI (14/10/2026):
 - **Íconos:** son los 14 dibujos propios más 8 nuevos (Tienda, Mochila, Libro, Engranaje, Banco, Pico, Candado y Amuleto), todos en una sola hoja (`arte/scripts/iconos`, celdas de 128 px). Cuando haya créditos se pueden cambiar por íconos de ForgeGUI pegándolos en `GameConfig.Iconos`, que tiene prioridad sobre la hoja.
 - **Subidas a Roblox:** las 12 imágenes (11 piezas y la hoja de íconos) están en la cuenta de Juani con la conexión de ForgeGUI, todas aprobadas. Los IDs están en `GameConfig` (tabla `IMAGEN`) y en `arte/gui/listas/roblox.json`.
 - **Siguen dibujados por código:** la X de cerrar (usa el botón rojo con una X), el globito rojo y el marco dorado de "Destacado".
+
+## Grupo 3 — Exploración, secretos y coleccionismo (pedido del 14/10/2026)
+
+La regla: los secretos premian al curioso pero **nunca hacen falta para avanzar**. Las zonas se siguen abriendo solo con Fuerza; ninguna colección ni secreto da Fuerza ni abre zonas.
+
+**Museo de minerales** (reemplaza al Índice: botón "Museo" del HUD y un cartel dorado en la plaza, a la izquierda del spawn):
+- **Minerales**: los 31 (25 de los biomas y 6 secretos), agrupados por bioma. De cada uno muestra rareza, cuántos encontraste, de dónde sale y tu **primer hallazgo** (fecha). Los que no encontraste se ven como una silueta oscura con "???" y una pista de dónde salen.
+- **Colecciones**: completas e incompletas, con barra de progreso, dificultad (Fácil, Media, Difícil, Leyenda) y premio.
+- **Cosméticos**: lo que ganaste, para equiparlo. Lo bloqueado dice qué colección lo da.
+- **Probabilidades**: la tabla con tu suerte actual, que suma 100 % (GUIA, sección 6).
+
+| Colección | Dificultad | Qué pide | Premio |
+|---|---|---|---|
+| Primeros Hallazgos | Fácil | 3 minerales distintos | 50 monedas y el título "Curioso" |
+| Pradera Brillante | Fácil | Cuarzo, Jaspe y Amatista | 150 monedas y la decoración Flores |
+| Colección de la Pradera | Fácil | las 5 de la zona 1 | 500 monedas, +0,1 de suerte y Aura Destellos de Cuarzo |
+| Museo en Marcha | Media | 10 minerales distintos | decoración Cristalitos |
+| Cazarrarezas | Media | una Rara, una Épica y una Legendaria | título "Cazarrarezas" |
+| Explorador | Media | tu primer mineral secreto | Aura Runas Arcanas y título "Explorador" |
+| Colección de las Dunas | Media | las 5 de la zona 2 | 8.000 monedas, +0,1 de suerte y Pico de Ámbar |
+| Colección del Glaciar | Media | las 5 de la zona 3 | 250.000 monedas, +0,15 de suerte y Vitrina de Hielo |
+| Coleccionista Exótico | Media | los 4 modificadores | +0,25 de suerte y decoración Llamitas |
+| Colección del Volcán | Difícil | las 5 de la zona 4 | 4 M de monedas, +0,2 de suerte y Aura Chispas de Magma |
+| Guardián de Secretos | Difícil | los 6 minerales secretos | Vitrina Arcana y título |
+| Colección del Abismo | Leyenda | las 5 de la zona 5 | 60 M de monedas, +0,3 de suerte y Pico Estelar |
+| Maestro de las Combinaciones | Leyenda | las 4 combinaciones | +1 de suerte y Aura Arcoíris |
+| Curador Legendario | Leyenda | los 31 minerales | Vitrina Dorada y título |
+
+- **Cosméticos** (solo se ven, no dan ventaja): auras alrededor del personaje (las ven todos), diseños del pico que llevás en la mano, estilos de vitrina y decoraciones alrededor de tu vitrina. Se equipan desde el Museo.
+
+**Habitaciones secretas** (una por bioma, más la Dimensión Prisma):
+- **Llaves**: al romper geodas de un bioma hay 1 en 35 de encontrar su llave (si todavía no abriste esa puerta).
+- **Puertas secretas**: una pared del color del risco con grietas que brillan apenas, en el risco derecho de cada bioma. Con la llave se abre para siempre (solo para vos). Sin llave dice "Suena hueca...".
+- **Cámaras de tesoro**: un túnel lleva a una sala con cristales y luces del bioma, un **cofre** (se abre una vez: 120 veces el valor de una gema común del bioma) y **dos vetas exclusivas** con Geodas Ocultas.
+- **Geodas Ocultas**: solo nacen en las cámaras, dan 4 gemas con suerte ×2 y 1 en 6 de soltar el **mineral secreto** de su bioma (Cuarzo Lunar, Ámbar Fósil, Zafiro Boreal, Rubí de Magma, Ópalo Estelar).
+- **Altares misteriosos**: uno por bioma. Ofrecés 5 gemas comunes del bioma y te da una bendición de suerte ×1,5 por 3 minutos (una vez cada 10 minutos). Además te susurra una pista de dónde está la puerta secreta.
+- **Portal dimensional**: en las Dunas, escondido detrás de una duna. Lleva a la **Dimensión Prisma**, una isla flotante con 5 Geodas Prismáticas (1 en 8 de soltar la Prismita). Pide tener abierta la zona 2.
+- **Pistas en el mapa** junto a cada puerta: una cascada de cristal (1), la duna más alta (2), picos de hielo (3), un río de lava (4) y un rincón oscuro sin cristales (5).
+
+Decisiones del Grupo 3:
+- **El Museo reemplaza al Índice** (era lo mismo pero con menos datos). El "primer hallazgo" guarda la fecha en que lo encontraste vos. El primero de todo el servidor queda afuera porque necesita guardado global.
+- **Las puertas secretas se abren solo para quien tiene la llave.** Cada jugador ve su puerta abierta o cerrada; nadie entra "colado" detrás de otro.
+- **Los minerales secretos no salen nunca en geodas comunes**, así la tabla de probabilidades de los biomas no cambia.
+
+## Mapa (hecho en Blender, 14/10/2026)
+
+- **Cómo se arma**: el mapa se diseña con cubos de 4 studs en `arte/scripts/mapa.py`. El script junta los cubos en cajas grandes (unas 1.700 partes en total) y escribe `src/server/MapaDatos.luau`. Al arrancar el servidor, `GeneradorMapa.luau` arma las partes y los lugares con su tag. Así el mapa vive en git y no hay que subir mallas. Si en Studio ya hay un `Workspace.Mapa`, no hace nada.
+- **Orden**:
+  - Plaza: spawn, 8 vitrinas, 2 tableros, el Museo a la izquierda y el lugar del Jefe Ancestral.
+  - Arco de entrada y los 5 biomas en fila, de 168 studs de largo cada uno, separados por muros con su puerta de zona.
+  - Cada bioma tiene riscos con escalones a los costados, 15 o 16 puntos de geoda en 4 filas, el Jefe al fondo, el altar, la decoración propia y la cámara secreta en el risco derecho.
+  - Lejos de todo flota la Dimensión Prisma.
+- **Decoración por bioma**:
+  - Pradera: árboles y racimos de cuarzo.
+  - Dunas: dunas, cactus y racimos de ámbar.
+  - Glaciar: picos de hielo y un lago congelado.
+  - Volcán: un volcán, ríos de lava y columnas de basalto.
+  - Abismo: columnas con estrellas e islas flotantes.
+- Fotos: `arte/renders/mapa_*.jpg` (general, plaza, cada bioma, una cámara secreta por dentro y la Dimensión Prisma).
+
+## Rocas por bioma (Blender, 14/10/2026)
+
+Cada bioma tiene su propia geoda (`arte/scripts/rocas.py`, foto en `arte/renders/geodas_biomas.jpg`):
+
+| Bioma | Forma de la roca | Cristales |
+|---|---|---|
+| 1 · Pradera | huevo | puntas de cuarzo |
+| 2 · Dunas | canto ancho con capas | gotas de ámbar |
+| 3 · Glaciar | roca facetada | esquirlas largas de zafiro |
+| 4 · Volcán | columnas de basalto | bloques de rubí |
+| 5 · Abismo | roca con un surco | estrellas que flotan |
+| Oculta | huevo oscuro | una veta que brilla alrededor |
+| Prismática | prisma alto de vidrio | esquirlas de colores |
+
+- **Archivos**: `arte/fbx/Geodas_Zona1.fbx` a `Geodas_Zona5.fbx`, cada uno con los 4 tamaños adentro (Pequena, Mediana, Gigante y Jefe), y `Geodas_Especiales.fbx` con la Oculta y la Prismática. Cada tamaño trae las mallas Roca, Cristales, Base, Grietas y Grietas2, que el juego pinta según el modificador.
+- **Cómo entran al juego**: `ModeloGeoda.luau` busca en `ServerStorage > Modelos > Geodas` la carpeta del bioma (`Zona1`… o `Geodas_Zona1`…) y adentro el tamaño. Las especiales las busca en `Especiales` o `Geodas_Especiales`. Si no las encuentra, usa la geoda general y, si tampoco está, la de bloques simples.
+- **Pendiente para Juani**: importar los 6 FBX en Studio (los pasos están en el informe). Claude no puede subir mallas desde la nube.
 
 ## Números (en `forja-rapida/src/shared/GameConfig.luau`)
 
@@ -217,6 +294,8 @@ Guía de estilo: **pendiente** (punto de control 2: elegir paleta A · Pradera, 
 - Sonidos definitivos (quedan marcados con `-- SONIDO:` y los IDs vacíos en GameConfig: golpe, romper, revelación, revelación rara, logro, anuncio, un aura por modificador y los de eventos: empieza, cristal, trueno y jefe).
 - Subir los íconos de `arte/iconos/` y pegar los IDs en `GameConfig.Iconos`.
 - Guardado con ProfileStore: por ahora los datos viven en memoria (la clasificación semanal sí usa su propio almacén).
+- Importar en Studio las rocas por bioma (`arte/fbx/Geodas_Zona1..5.fbx` y `Geodas_Especiales.fbx`): mientras no estén, el juego usa la geoda general.
+- Récord de "primer descubrimiento del servidor": necesita guardado global, queda para cuando esté ProfileStore.
 - Subir las texturas de `arte/texturas/` y pegar los IDs en `GameConfig.Modificadores[..].Textura`. Mientras tanto, las exóticas se ven con color, material, grietas y aura.
 
 ## Prueba que va a hacer Claude

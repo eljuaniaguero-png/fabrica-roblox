@@ -8,6 +8,7 @@ local CampoPrueba = require(script.Parent.CampoPrueba)
 local Cosmeticos = require(script.Parent.Cosmeticos)
 local Economia = require(script.Parent.Economia)
 local Eventos = require(script.Parent.Eventos)
+local GeneradorMapa = require(script.Parent.GeneradorMapa)
 local GeodeServerService = require(script.Parent.GeodeServerService)
 local Iluminacion = require(script.Parent.Iluminacion)
 local Jugadores = require(script.Parent.Jugadores)
@@ -15,6 +16,7 @@ local Secretos = require(script.Parent.Secretos)
 local Social = require(script.Parent.Social)
 
 Iluminacion.aplicar()
+GeneradorMapa.armar() -- antes que todo lo que busca puntos, vitrinas y puertas del mapa
 
 local function alEntrar(jugador: Player)
 	Jugadores.crear(jugador)
