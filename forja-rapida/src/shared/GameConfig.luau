@@ -12,6 +12,8 @@
 --                             azar < Suerte / UnoEn (con Suerte x2, "1 en 400" pasa a "1 en 200")
 --   Unidades que te llevás  = Unidades del tamaño x Premio del modificador exótico
 --   Monedas al vender       = unidades x Valor de la zona x Valor de la rareza
+--   Grupo 4: la Fuerza y las Monedas al vender se multiplican por los bonos del Renacer, del
+--   árbol de Esencia y de las mascotas (Reglas.bonos); la suerte les suma lo suyo.
 
 export type Rareza = {
 	Id: string,
@@ -60,6 +62,19 @@ export type Zona = {
 	Suerte: number,
 	ColorRoca: string,
 	ColorCristal: string,
+	-- Grupo 4: las 3 rocas del bioma (la primera es la de siempre). Cada geoda nace con una al
+	-- azar; solo cambia cómo se ve (forma, colores y material), no lo que da.
+	Variantes: { Variante },
+}
+
+-- Una roca de un bioma (Grupo 4). En Blender: Geodas_Zona<N>.fbx, con los tamaños "Pequena",
+-- "Mediana"... (la 1) y "Pequena_2", "Mediana_2"... (las otras; el Jefe usa la forma de la 1).
+export type Variante = {
+	Id: string,
+	Nombre: string, -- se ve en el cartel de la geoda ("Geoda Musgosa")
+	ColorRoca: string,
+	ColorCristal: string,
+	MaterialRoca: string?, -- nombre de un Enum.Material (Slate si no dice)
 }
 
 export type Gema = {
@@ -92,12 +107,67 @@ export type Logro = {
 }
 
 -- Grupo 3: cosméticos que se ganan con colecciones del Museo (Premio.Cosmetico).
+-- Grupo 4: también las evoluciones del pico (tipo "Efecto"), con logros de progreso,
+-- colecciones, misiones, eventos y renacer.
 export type Cosmetico = {
 	Id: string,
 	Nombre: string,
 	Colores: { string }, -- aura y decoración: sus colores; pico: { cabeza, mango }; vitrina: { color }
 	Material: string?, -- nombre de un Enum.Material (picos y vitrinas)
-	Forma: string?, -- auras: "Destellos", "Chispas" u "Orbita"
+	-- auras: "Destellos", "Chispas" u "Orbita"; evoluciones del pico: "Metalico", "Cristales",
+	-- "Runas", "Fuego", "Rayos" o "Cosmico"
+	Forma: string?,
+}
+
+-- Grupo 4: una misión posible. Al tocar una, se elige la meta entre Meta[1] y Meta[2] y el
+-- Texto se completa con la meta (%d) y, si hace falta, el nombre de la zona o colección (%s).
+--   Tipo "Geodas"     romper geodas (Tamano: solo de ese tamaño; EnZona: en tu mejor zona)
+--   Tipo "Rareza"     encontrar gemas de esa Rareza o más raras
+--   Tipo "Exotica"    romper geodas exóticas
+--   Tipo "Jefe"       llevarte gema de una Geoda Jefe o Ancestral
+--   Tipo "Accion"     hacer algo en el mapa (Accion: "Altar", "Puerta", "Portal" o "Cofre")
+--   Tipo "Nuevo"      encontrar minerales que todavía no tenías en el Museo
+--   Tipo "Coleccion"  completar la colección del Museo que tenés más avanzada
+-- Necesita: "Secreto" (abriste alguna puerta secreta), "PuertaCerrada" (hay una puerta
+-- secreta sin abrir en tus zonas) o "Zona2" (tenés las Dunas). ZonaMinima: tu mejor zona.
+export type PlantillaMision = {
+	Id: string,
+	Tipo: string,
+	Dificultad: string, -- "Facil", "Media", "Dificil" o "Prestigio" (desde el primer Renacer)
+	Meta: { number },
+	Texto: string,
+	Tamano: string?,
+	Rareza: string?,
+	Accion: string?,
+	EnZona: boolean?,
+	Necesita: string?,
+	ZonaMinima: number?,
+}
+
+-- Grupo 4: una rama del árbol de Esencia (se compra con la Esencia que da cada Renacer).
+--   Bono "Fuerza" / "Monedas": +Valor por nivel (0,05 = +5 %); "Suerte": +Valor a la suerte;
+--   "Llaves": las llaves salen Valor más seguido por nivel; "NivelInicial": empezás cada
+--   renacer con Valor niveles de Fuerza por nivel; "Lugares": Valor lugares más de mascota.
+export type Rama = {
+	Id: string,
+	Nombre: string,
+	Descripcion: string,
+	Bono: string,
+	Valor: number,
+	Costos: { number }, -- Esencia de cada nivel (cuántos hay = cuántos niveles tiene)
+	Renacer: number, -- renaceres que hacen falta para que aparezca
+}
+
+-- Grupo 4: una mascota de la ruleta. Chance en % (todas suman 100). Solo con Monedas.
+export type Mascota = {
+	Id: string,
+	Nombre: string,
+	Rareza: string,
+	Chance: number,
+	Monedas: number?, -- +% de monedas al vender (0,05 = +5 %)
+	Suerte: number?, -- se suma a tu suerte
+	Forma: string, -- cómo se arma: "Topo", "Golem", "Zorro", "Tortuga", "Cristal", "Pinguino", "Dragon" o "Gato"
+	Colores: { string }, -- { cuerpo, detalle }
 }
 
 -- Un evento del mundo (Grupo 6). Lo que no se pone, no cambia.
@@ -166,7 +236,7 @@ local IMAGEN = {
 	BotonGris = "rbxassetid://98527090618301",
 	BotonBlanco = "rbxassetid://81258172353128",
 	PanelOscuro = "rbxassetid://100656619903632",
-	HojaIconos = "rbxassetid://118396607568499",
+	HojaIconos = "rbxassetid://110338265885099", -- v2 (Grupo 4: Mascota, Mision, Renacer y Esencia)
 }
 
 local GameConfig = {
@@ -399,6 +469,19 @@ local GameConfig = {
 			UnoEnSecreta = 8,
 			GemaSecreta = "Prismita",
 		},
+		-- Grupo 4: solo en el Santuario del Renacer (puntos con Renacer = 1). Como la Ancestral,
+		-- la gema sale de la mejor zona de cada uno; su vida sigue al más fuerte de los que ya
+		-- renacieron (GameConfig.Renacer.GolpesRenacida) y a veces suelta Esencia.
+		{
+			Id = "Renacida",
+			Nombre = "Geoda Renacida",
+			Vida = 400, -- mínimo
+			Unidades = 12,
+			Suerte = 2,
+			Escala = 2.3,
+			Peso = 0,
+			Reaparicion = 20,
+		},
 	} :: { Tamano },
 
 	-- Biomas, en orden. La zona 1 está abierta desde el principio.
@@ -415,6 +498,27 @@ local GameConfig = {
 			Suerte = 1,
 			ColorRoca = "#6E7487",
 			ColorCristal = "#C77DFF",
+			Variantes = {
+				{
+					Id = "Cuarzo",
+					Nombre = "Cuarzo",
+					ColorRoca = "#6E7487",
+					ColorCristal = "#C77DFF",
+				},
+				{
+					Id = "Musgosa",
+					Nombre = "Musgosa",
+					ColorRoca = "#5E8C4A",
+					ColorCristal = "#FF8FD8",
+				},
+				{
+					Id = "Caliza",
+					Nombre = "Caliza",
+					ColorRoca = "#D8D2C0",
+					ColorCristal = "#7CF5FF",
+					MaterialRoca = "Limestone",
+				},
+			},
 		},
 		{
 			Numero = 2,
@@ -425,6 +529,29 @@ local GameConfig = {
 			Suerte = 1.5,
 			ColorRoca = "#B07A4A",
 			ColorCristal = "#FFB627",
+			Variantes = {
+				{
+					Id = "Ambar",
+					Nombre = "de Ámbar",
+					ColorRoca = "#B07A4A",
+					ColorCristal = "#FFB627",
+					MaterialRoca = "Sandstone",
+				},
+				{
+					Id = "AreniscaRoja",
+					Nombre = "de Arenisca Roja",
+					ColorRoca = "#C4553A",
+					ColorCristal = "#FFE14D",
+					MaterialRoca = "Sandstone",
+				},
+				{
+					Id = "Desertica",
+					Nombre = "Desértica",
+					ColorRoca = "#E8C98A",
+					ColorCristal = "#FF8C42",
+					MaterialRoca = "Sand",
+				},
+			},
 		},
 		{
 			Numero = 3,
@@ -435,6 +562,27 @@ local GameConfig = {
 			Suerte = 2.5,
 			ColorRoca = "#7FA6C9",
 			ColorCristal = "#3D7BFF",
+			Variantes = {
+				{
+					Id = "Zafiro",
+					Nombre = "de Zafiro",
+					ColorRoca = "#7FA6C9",
+					ColorCristal = "#3D7BFF",
+				},
+				{
+					Id = "Escarcha",
+					Nombre = "de Escarcha",
+					ColorRoca = "#E8F4FF",
+					ColorCristal = "#7CF5FF",
+					MaterialRoca = "Glacier",
+				},
+				{
+					Id = "GlaciarProfundo",
+					Nombre = "de Glaciar Profundo",
+					ColorRoca = "#2F5D8A",
+					ColorCristal = "#B8F3FF",
+				},
+			},
 		},
 		{
 			Numero = 4,
@@ -445,6 +593,28 @@ local GameConfig = {
 			Suerte = 4,
 			ColorRoca = "#4A3338",
 			ColorCristal = "#FF2E4D",
+			Variantes = {
+				{
+					Id = "Rubi",
+					Nombre = "de Rubí",
+					ColorRoca = "#4A3338",
+					ColorCristal = "#FF2E4D",
+					MaterialRoca = "Basalt",
+				},
+				{
+					Id = "Obsidiana",
+					Nombre = "de Obsidiana",
+					ColorRoca = "#1E1A24",
+					ColorCristal = "#FF7A00",
+					MaterialRoca = "Basalt",
+				},
+				{
+					Id = "Azufre",
+					Nombre = "de Azufre",
+					ColorRoca = "#6B5A2E",
+					ColorCristal = "#F5FF4D",
+				},
+			},
 		},
 		{
 			Numero = 5,
@@ -455,6 +625,27 @@ local GameConfig = {
 			Suerte = 7,
 			ColorRoca = "#2E2A5C",
 			ColorCristal = "#7CF5FF",
+			Variantes = {
+				{
+					Id = "Estelar",
+					Nombre = "Estelar",
+					ColorRoca = "#2E2A5C",
+					ColorCristal = "#7CF5FF",
+				},
+				{
+					Id = "Nebulosa",
+					Nombre = "Nebulosa",
+					ColorRoca = "#4B2A6B",
+					ColorCristal = "#FF6FD8",
+				},
+				{
+					Id = "Meteorito",
+					Nombre = "Meteorito",
+					ColorRoca = "#3B3B3B",
+					ColorCristal = "#FFB347",
+					MaterialRoca = "Basalt",
+				},
+			},
 		},
 	} :: { Zona },
 
@@ -678,6 +869,11 @@ local GameConfig = {
 	--   { Tipo = "Geodas", Cuantas = n }         romper n geodas en total
 	--   { Tipo = "Jefes", Cuantos = n }          ayudar a romper n Geodas Ancestrales
 	--   { Tipo = "Eventos", Cuantos = n }        jugar n eventos (romper al menos una geoda durante)
+	-- Grupo 4:
+	--   { Tipo = "Pico", Cuantos = n }           tener el pico número n (3 = Hierro, 5 = Cósmico)
+	--   { Tipo = "Colecciones", Cuantas = n }    completar n colecciones del Museo
+	--   { Tipo = "Misiones", Cuantas = n }       cumplir n misiones
+	--   { Tipo = "Renacer", Cuantos = n }        renacer n veces
 	-- Premio: Monedas (una vez) y/o Suerte (se suma para siempre a la del jugador).
 	Logros = {
 		{
@@ -834,14 +1030,14 @@ local GameConfig = {
 			Nombre = "Leyenda de los Jefes",
 			Descripcion = "Ayudá a romper 10 Geodas Ancestrales",
 			Necesita = { Tipo = "Jefes", Cuantos = 10 },
-			Premio = { Suerte = 0.5 },
+			Premio = { Suerte = 0.5, Cosmetico = { Tipo = "Efecto", Id = "Rayos" } },
 		},
 		{
 			Id = "Eventos5",
 			Nombre = "Cazador de Eventos",
 			Descripcion = "Jugá 5 eventos del mundo",
 			Necesita = { Tipo = "Eventos", Cuantos = 5 },
-			Premio = { Suerte = 0.15 },
+			Premio = { Suerte = 0.15, Cosmetico = { Tipo = "Efecto", Id = "Fuego" } },
 		},
 
 		-- Grupo 3: colecciones del Museo de minerales (de fáciles a difíciles)
@@ -907,6 +1103,77 @@ local GameConfig = {
 			Premio = { Suerte = 0.5, Cosmetico = { Tipo = "Vitrina", Id = "Dorada" } },
 			Museo = true,
 			Dificultad = "Leyenda",
+		},
+		-- Grupo 4: evoluciones del pico, misiones y renacer
+		{
+			Id = "Forjador",
+			Nombre = "Forjador",
+			Descripcion = "Conseguí el Pico de Hierro",
+			Necesita = { Tipo = "Pico", Cuantos = 3 },
+			Premio = { Monedas = 500, Cosmetico = { Tipo = "Efecto", Id = "Metalico" } },
+		},
+		{
+			Id = "ForjaCosmica",
+			Nombre = "Forja Cósmica",
+			Descripcion = "Conseguí el Pico Cósmico",
+			Necesita = { Tipo = "Pico", Cuantos = 5 },
+			Premio = { Suerte = 0.2, Cosmetico = { Tipo = "Efecto", Id = "Cosmico" } },
+		},
+		{
+			Id = "BrilloInterior",
+			Nombre = "Brillo Interior",
+			Descripcion = "Completá 4 colecciones del Museo",
+			Necesita = { Tipo = "Colecciones", Cuantas = 4 },
+			Premio = { Suerte = 0.1, Cosmetico = { Tipo = "Efecto", Id = "Cristales" } },
+		},
+		{
+			Id = "Misiones3",
+			Nombre = "Manos a la Obra",
+			Descripcion = "Cumplí 3 misiones",
+			Necesita = { Tipo = "Misiones", Cuantas = 3 },
+			Premio = { Monedas = 150 },
+		},
+		{
+			Id = "Misiones10",
+			Nombre = "Aprendiz de Runas",
+			Descripcion = "Cumplí 10 misiones",
+			Necesita = { Tipo = "Misiones", Cuantas = 10 },
+			Premio = { Suerte = 0.1, Cosmetico = { Tipo = "Efecto", Id = "Runas" } },
+		},
+		{
+			Id = "Misiones40",
+			Nombre = "Maestro de Misiones",
+			Descripcion = "Cumplí 40 misiones",
+			Necesita = { Tipo = "Misiones", Cuantas = 40 },
+			Premio = { Suerte = 0.25 },
+		},
+		{
+			Id = "Renacer1",
+			Nombre = "Renacido",
+			Descripcion = "Renacé por primera vez",
+			Necesita = { Tipo = "Renacer", Cuantos = 1 },
+			Premio = { Cosmetico = { Tipo = "Aura", Id = "Renacer" } },
+		},
+		{
+			Id = "Renacer2",
+			Nombre = "Ave Fénix",
+			Descripcion = "Renacé 2 veces",
+			Necesita = { Tipo = "Renacer", Cuantos = 2 },
+			Premio = { Cosmetico = { Tipo = "Efecto", Id = "Fenix" } },
+		},
+		{
+			Id = "Renacer3",
+			Nombre = "Leyenda Renacida",
+			Descripcion = "Renacé 3 veces",
+			Necesita = { Tipo = "Renacer", Cuantos = 3 },
+			Premio = { Cosmetico = { Tipo = "Vitrina", Id = "Renacida" } },
+		},
+		{
+			Id = "Renacer5",
+			Nombre = "Eterno",
+			Descripcion = "Renacé 5 veces",
+			Necesita = { Tipo = "Renacer", Cuantos = 5 },
+			Premio = { Cosmetico = { Tipo = "Efecto", Id = "Eclipse" } },
 		},
 	} :: { Logro },
 
@@ -1127,6 +1394,31 @@ local GameConfig = {
 			Colores = { "#FFF3B0", "#FFC83D", "#FF9ED8" },
 			Requiere = "MuseoCompleto",
 		},
+		-- Grupo 4
+		{
+			Id = "MaestroMisiones",
+			Texto = "Maestro de Misiones",
+			Colores = { "#B8FF6A", "#2DBA2D" },
+			Requiere = "Misiones40",
+		},
+		{
+			Id = "Renacido",
+			Texto = "Renacido",
+			Colores = { "#FFF3B0", "#FFD23F", "#FF6A3D" },
+			Requiere = "Renacer1",
+		},
+		{
+			Id = "LeyendaRenacida",
+			Texto = "Leyenda Renacida",
+			Colores = { "#FFD23F", "#FF6A3D", "#C2185B" },
+			Requiere = "Renacer3",
+		},
+		{
+			Id = "Eterno",
+			Texto = "Eterno",
+			Colores = { "#1B1030", "#FF6FD8", "#7CF5FF" },
+			Requiere = "Renacer5",
+		},
 	} :: { Titulo },
 
 	-- Grupo 3: cosméticos que dan las colecciones del Museo. Se eligen en el Museo; los ven todos.
@@ -1156,6 +1448,12 @@ local GameConfig = {
 				Nombre = "Arcoíris",
 				Colores = { "#FF4D5E", "#FFC93C", "#4CD964", "#2EF2FF", "#9B4DFF" },
 				Forma = "Destellos",
+			},
+			{
+				Id = "Renacer",
+				Nombre = "Llamas del Renacer",
+				Colores = { "#FFD23F", "#FF6A3D" },
+				Forma = "Orbita",
 			},
 		} :: { Cosmetico },
 		-- Diseños del pico que se ve en la mano: { cabeza, mango }. El Clásico usa el color del
@@ -1200,11 +1498,69 @@ local GameConfig = {
 				Colores = { "#FFC83D" },
 				Material = "Foil",
 			},
+			{
+				Id = "Renacida",
+				Nombre = "Vitrina Renacida",
+				Colores = { "#FFF3E0" },
+				Material = "Marble",
+			},
 		} :: { Cosmetico },
 		Decoraciones = {
 			{ Id = "Flores", Nombre = "Flores", Colores = { "#FF6FB5", "#FFE14D", "#7ED957" } },
 			{ Id = "Cristalitos", Nombre = "Cristalitos", Colores = { "#C77DFF", "#7CF5FF" } },
 			{ Id = "Llamas", Nombre = "Llamitas", Colores = { "#FFB300", "#FF3B1F" } },
+		} :: { Cosmetico },
+		-- Grupo 4: evoluciones del pico. Solo se ven (partículas, estelas y brillos en la cabeza
+		-- del pico que tenés en la mano): nunca cambian la Fuerza, que sale del pico comprado.
+		Efectos = {
+			{
+				Id = "Metalico",
+				Nombre = "Brillo Metálico",
+				Colores = { "#E8EEF5", "#FFFFFF" },
+				Forma = "Metalico",
+			},
+			{
+				Id = "Cristales",
+				Nombre = "Cristales Luminosos",
+				Colores = { "#C77DFF", "#7CF5FF" },
+				Forma = "Cristales",
+			},
+			{
+				Id = "Runas",
+				Nombre = "Runas Mágicas",
+				Colores = { "#9CFBFF", "#9B4DFF" },
+				Forma = "Runas",
+			},
+			{
+				Id = "Fuego",
+				Nombre = "Estela de Fuego",
+				Colores = { "#FFE14D", "#FF3B1F" },
+				Forma = "Fuego",
+			},
+			{
+				Id = "Rayos",
+				Nombre = "Descargas Eléctricas",
+				Colores = { "#E6FBFF", "#2EC8FF" },
+				Forma = "Rayos",
+			},
+			{
+				Id = "Cosmico",
+				Nombre = "Energía Cósmica",
+				Colores = { "#7CF5FF", "#B04DFF" },
+				Forma = "Cosmico",
+			},
+			{
+				Id = "Fenix",
+				Nombre = "Fénix",
+				Colores = { "#FFD23F", "#FF6A3D" },
+				Forma = "Fuego",
+			},
+			{
+				Id = "Eclipse",
+				Nombre = "Eclipse",
+				Colores = { "#FF6FD8", "#1B1030" },
+				Forma = "Cosmico",
+			},
 		} :: { Cosmetico },
 	},
 
@@ -1227,6 +1583,389 @@ local GameConfig = {
 		},
 		PortalEspera = 3, -- segundos entre dos viajes por un portal
 		Distancia = 14, -- studs: lo más lejos que se puede usar un cofre, altar, puerta o portal
+	},
+
+	-- Grupo 4: misiones dinámicas. Siempre hay una Fácil, una Media y una Difícil; desde el
+	-- primer Renacer, también una de Prestigio. Se siguen solas y se pagan solas al cumplirse.
+	-- Premio en monedas = Monedas de la dificultad x lo que vale una gema común de tu mejor
+	-- zona (así sirve igual en la Pradera que en el Abismo).
+	Misiones = {
+		Lugares = { "Facil", "Media", "Dificil" },
+		LugarPrestigio = "Prestigio",
+		Dificultades = {
+			Facil = { Nombre = "Fácil", Color = "Verde", Monedas = 40, Esencia = 0 },
+			Media = { Nombre = "Media", Color = "Amarillo", Monedas = 150, Esencia = 0 },
+			Dificil = { Nombre = "Difícil", Color = "Rojo", Monedas = 500, Esencia = 0 },
+			Prestigio = { Nombre = "Prestigio", Color = "Naranja", Monedas = 800, Esencia = 1 },
+		} :: {
+			[string]: { Nombre: string, Color: string, Monedas: number, Esencia: number },
+		},
+		Cambiar = 90, -- segundos entre dos cambios de misión (gratis)
+		Espera = 2, -- segundos hasta que aparece la misión nueva
+		Plantillas = {
+			-- Fáciles
+			{
+				Id = "Geodas",
+				Tipo = "Geodas",
+				Dificultad = "Facil",
+				Meta = { 15, 25 },
+				Texto = "Rompé %d geodas",
+			},
+			{
+				Id = "GeodasZona",
+				Tipo = "Geodas",
+				Dificultad = "Facil",
+				Meta = { 10, 15 },
+				EnZona = true,
+				Texto = "Rompé %d geodas en %s",
+			},
+			{
+				Id = "Raras",
+				Tipo = "Rareza",
+				Rareza = "Raro",
+				Dificultad = "Facil",
+				Meta = { 3, 5 },
+				Texto = "Encontrá %d gemas Raras o mejores",
+			},
+			-- Medias
+			{
+				Id = "Medianas",
+				Tipo = "Geodas",
+				Tamano = "Mediana",
+				Dificultad = "Media",
+				Meta = { 8, 12 },
+				Texto = "Rompé %d Geodas Medianas",
+			},
+			{
+				Id = "Epica",
+				Tipo = "Rareza",
+				Rareza = "Epico",
+				Dificultad = "Media",
+				Meta = { 1, 2 },
+				Texto = "Encontrá %d gemas Épicas o mejores",
+			},
+			{
+				Id = "Exotica",
+				Tipo = "Exotica",
+				Dificultad = "Media",
+				Meta = { 1, 1 },
+				Texto = "Rompé %d geoda exótica",
+			},
+			{
+				Id = "Jefe",
+				Tipo = "Jefe",
+				Dificultad = "Media",
+				Meta = { 1, 1 },
+				Texto = "Llevate gema de %d Geoda Jefe",
+			},
+			{
+				Id = "Altar",
+				Tipo = "Accion",
+				Accion = "Altar",
+				Dificultad = "Media",
+				Meta = { 1, 1 },
+				Texto = "Hacé %d ofrenda en un altar",
+			},
+			{
+				Id = "Nuevo",
+				Tipo = "Nuevo",
+				Dificultad = "Media",
+				Meta = { 1, 1 },
+				Texto = "Descubrí %d mineral nuevo para el Museo",
+			},
+			{
+				Id = "Portal",
+				Tipo = "Accion",
+				Accion = "Portal",
+				Dificultad = "Media",
+				Meta = { 1, 1 },
+				Necesita = "Zona2",
+				Texto = "Cruzá %d vez el portal de las Dunas",
+			},
+			-- Difíciles
+			{
+				Id = "Gigantes",
+				Tipo = "Geodas",
+				Tamano = "Gigante",
+				Dificultad = "Dificil",
+				Meta = { 3, 5 },
+				Texto = "Rompé %d Geodas Gigantes",
+			},
+			{
+				Id = "Legendaria",
+				Tipo = "Rareza",
+				Rareza = "Legendario",
+				Dificultad = "Dificil",
+				Meta = { 1, 1 },
+				ZonaMinima = 2,
+				Texto = "Encontrá %d gema Legendaria o mejor",
+			},
+			{
+				Id = "Exoticas",
+				Tipo = "Exotica",
+				Dificultad = "Dificil",
+				Meta = { 3, 4 },
+				Texto = "Rompé %d geodas exóticas",
+			},
+			{
+				Id = "Jefes",
+				Tipo = "Jefe",
+				Dificultad = "Dificil",
+				Meta = { 2, 2 },
+				Texto = "Llevate gema de %d Geodas Jefe",
+			},
+			{
+				Id = "Coleccion",
+				Tipo = "Coleccion",
+				Dificultad = "Dificil",
+				Meta = { 1, 1 },
+				Texto = "Completá la colección %s",
+			},
+			{
+				Id = "Ocultas",
+				Tipo = "Geodas",
+				Tamano = "Oculta",
+				Dificultad = "Dificil",
+				Meta = { 2, 3 },
+				Necesita = "Secreto",
+				Texto = "Rompé %d Geodas Ocultas en una cámara secreta",
+			},
+			{
+				Id = "Puerta",
+				Tipo = "Accion",
+				Accion = "Puerta",
+				Dificultad = "Dificil",
+				Meta = { 1, 1 },
+				Necesita = "PuertaCerrada",
+				Texto = "Encontrá una llave y abrí %d puerta secreta",
+			},
+			-- Prestigio (desde el primer Renacer): más largas, dan Esencia
+			{
+				Id = "PGeodas",
+				Tipo = "Geodas",
+				Dificultad = "Prestigio",
+				Meta = { 200, 300 },
+				Texto = "Rompé %d geodas",
+			},
+			{
+				Id = "PLegendarias",
+				Tipo = "Rareza",
+				Rareza = "Legendario",
+				Dificultad = "Prestigio",
+				Meta = { 2, 3 },
+				Texto = "Encontrá %d gemas Legendarias o mejores",
+			},
+			{
+				Id = "PRenacidas",
+				Tipo = "Geodas",
+				Tamano = "Renacida",
+				Dificultad = "Prestigio",
+				Meta = { 5, 8 },
+				Texto = "Rompé %d Geodas Renacidas en el Santuario",
+			},
+			{
+				Id = "PJefes",
+				Tipo = "Jefe",
+				Dificultad = "Prestigio",
+				Meta = { 3, 3 },
+				Texto = "Llevate gema de %d Geodas Jefe",
+			},
+			{
+				Id = "PExoticas",
+				Tipo = "Exotica",
+				Dificultad = "Prestigio",
+				Meta = { 8, 10 },
+				Texto = "Rompé %d geodas exóticas",
+			},
+		} :: { PlantillaMision },
+	},
+
+	-- Grupo 4: Renacer (prestigio). Reinicia una parte del progreso a cambio de Esencia y bonos
+	-- que no se pierden nunca. Cada renacer desbloquea algo (Desbloqueos y los logros Renacer*).
+	Renacer = {
+		-- Zona que hay que tener abierta para el renacer número n (del 3° en adelante, la última).
+		Requisito = { 3, 4, 5 },
+		-- Esencia que da: tu mejor zona menos 1 (Glaciar = 2, Abismo = 4).
+		EsenciaPorZona = 1,
+		-- Bonos permanentes por cada renacer (cuentan hasta MaximoBonos renaceres).
+		BonoMonedas = 0.1, -- +10 % de monedas al vender
+		BonoFuerza = 0.05, -- +5 % de Fuerza
+		MaximoBonos = 10,
+		-- Geoda Renacida: su vida es la Fuerza del más fuerte que ya renació x esto (~golpes).
+		GolpesRenacida = 20,
+		EsenciaUnoEn = 25, -- chance de que una Geoda Renacida suelte 1 de Esencia
+		Reinicia = {
+			"Monedas",
+			"Niveles de Fuerza",
+			"Picos (volvés al de Madera)",
+			"Amuletos",
+			"Zonas abiertas",
+			"Gemas sin vender",
+		},
+		Conserva = {
+			"Museo, colecciones y logros (con su suerte)",
+			"Títulos, cosméticos y evoluciones del pico",
+			"Mascotas",
+			"Puertas secretas abiertas y llaves",
+			"Esencia y ramas del árbol",
+			"Récords, vitrina y misiones cumplidas",
+		},
+		-- Lo que estrena cada renacer (se muestra en el menú).
+		Desbloqueos = {
+			{
+				"Una cuarta misión: Prestigio (da Esencia)",
+				"El Santuario del Renacer y sus Geodas Renacidas",
+				"El árbol de Esencia: Golpe Firme, Mercader y Buen Ojo",
+				"Aura Llamas del Renacer y el título Renacido",
+			},
+			{ "Evolución del pico: Fénix", "Ramas nuevas: Rastreador e Inicio Rápido" },
+			{ "Vitrina Renacida y el título Leyenda Renacida" },
+			{ "Rama nueva: Domador (más lugares de mascota)" },
+			{ "Evolución del pico: Eclipse y el título Eterno" },
+		},
+		Ramas = {
+			{
+				Id = "Golpe",
+				Nombre = "Golpe Firme",
+				Descripcion = "+5 % de Fuerza por nivel",
+				Bono = "Fuerza",
+				Valor = 0.05,
+				Costos = { 1, 2, 3, 4, 5 },
+				Renacer = 1,
+			},
+			{
+				Id = "Mercader",
+				Nombre = "Mercader",
+				Descripcion = "+8 % de monedas al vender por nivel",
+				Bono = "Monedas",
+				Valor = 0.08,
+				Costos = { 1, 2, 3, 4, 5 },
+				Renacer = 1,
+			},
+			{
+				Id = "Ojo",
+				Nombre = "Buen Ojo",
+				Descripcion = "+0,05 de suerte por nivel",
+				Bono = "Suerte",
+				Valor = 0.05,
+				Costos = { 1, 2, 3, 4, 5 },
+				Renacer = 1,
+			},
+			{
+				Id = "Rastreador",
+				Nombre = "Rastreador",
+				Descripcion = "Las llaves salen 25 % más seguido por nivel",
+				Bono = "Llaves",
+				Valor = 0.25,
+				Costos = { 2, 3, 4 },
+				Renacer = 2,
+			},
+			{
+				Id = "Impulso",
+				Nombre = "Inicio Rápido",
+				Descripcion = "Empezás cada renacer con 5 niveles de Fuerza más por nivel",
+				Bono = "NivelInicial",
+				Valor = 5,
+				Costos = { 1, 2, 3, 4 },
+				Renacer = 2,
+			},
+			{
+				Id = "Domador",
+				Nombre = "Domador",
+				Descripcion = "+1 lugar de mascota por nivel",
+				Bono = "Lugares",
+				Valor = 1,
+				Costos = { 3, 5 },
+				Renacer = 4,
+			},
+		} :: { Rama },
+	},
+
+	-- Grupo 4: mascotas. Salen en la Ruleta de Mascotas de la plaza, que se paga solo con
+	-- Monedas del juego (las Monedas no se venden por Robux: ideas/monetizacion.md). Cada tirada
+	-- da una mascota y las chances se ven siempre en el menú (suman 100 %).
+	Mascotas = {
+		Lugares = 3, -- mascotas que te acompañan a la vez (la rama Domador suma)
+		Ruleta = {
+			Precio = 150, -- x lo que vale una gema común de tu mejor zona
+			Espera = 3, -- segundos entre dos tiradas (lo que dura la ruleta girando)
+		},
+		Lista = {
+			{
+				Id = "Topito",
+				Nombre = "Topito",
+				Rareza = "Comun",
+				Chance = 30,
+				Monedas = 0.05,
+				Forma = "Topo",
+				Colores = { "#8A5A2B", "#FFB3C7" },
+			},
+			{
+				Id = "Piedrin",
+				Nombre = "Piedrín",
+				Rareza = "Comun",
+				Chance = 30,
+				Suerte = 0.05,
+				Forma = "Golem",
+				Colores = { "#8D939C", "#7CF5FF" },
+			},
+			{
+				Id = "Chispa",
+				Nombre = "Chispa",
+				Rareza = "Raro",
+				Chance = 14,
+				Monedas = 0.1,
+				Forma = "Zorro",
+				Colores = { "#FF8C42", "#FFF3E0" },
+			},
+			{
+				Id = "Musgo",
+				Nombre = "Musgo",
+				Rareza = "Raro",
+				Chance = 14,
+				Suerte = 0.1,
+				Forma = "Tortuga",
+				Colores = { "#5E8C4A", "#B07A4A" },
+			},
+			{
+				Id = "Cuarcito",
+				Nombre = "Cuarcito",
+				Rareza = "Epico",
+				Chance = 4.5,
+				Monedas = 0.2,
+				Forma = "Cristal",
+				Colores = { "#C77DFF", "#FFFFFF" },
+			},
+			{
+				Id = "Glaciel",
+				Nombre = "Glaciel",
+				Rareza = "Epico",
+				Chance = 4.5,
+				Suerte = 0.2,
+				Forma = "Pinguino",
+				Colores = { "#2F5D8A", "#E8F4FF" },
+			},
+			{
+				Id = "Magmo",
+				Nombre = "Magmo",
+				Rareza = "Legendario",
+				Chance = 2.6,
+				Monedas = 0.35,
+				Suerte = 0.2,
+				Forma = "Dragon",
+				Colores = { "#FF3B1F", "#FFE14D" },
+			},
+			{
+				Id = "Nebula",
+				Nombre = "Nébula",
+				Rareza = "Mitico",
+				Chance = 0.4,
+				Monedas = 0.6,
+				Suerte = 0.5,
+				Forma = "Gato",
+				Colores = { "#4B2A6B", "#7CF5FF" },
+			},
+		} :: { Mascota },
 	},
 
 	-- Íconos de la UI (imágenes, no emojis), hechos con ForgeGUI (forja-rapida/arte/gui; los
@@ -1256,6 +1995,11 @@ local GameConfig = {
 		Pico = "",
 		Candado = "",
 		Amuleto = "",
+		-- Grupo 4
+		Mascota = "",
+		Mision = "",
+		Renacer = "",
+		Esencia = "",
 	},
 
 	-- Piezas de la interfaz (forja-rapida/arte/gui/listas, armadas por arte/scripts/gui.py a
@@ -1372,7 +2116,7 @@ local GameConfig = {
 		MarcoDestacado = { Imagen = "", Ancho = 1024, Alto = 220, Corte = { 120, 80, 904, 140 } },
 	} :: { [string]: PiezaGui },
 
-	-- Hoja con los 22 íconos (arte/gui/listas/HojaIconos.png, de arte/scripts/iconos): una sola
+	-- Hoja con los 26 íconos (arte/gui/listas/HojaIconos.png, de arte/scripts/iconos): una sola
 	-- imagen para todos, cada uno en su celda. Un ícono puesto en Iconos tiene prioridad.
 	HojaIconos = {
 		Imagen = IMAGEN.HojaIconos,
@@ -1400,6 +2144,10 @@ local GameConfig = {
 			Pico = { 128, 384 },
 			Candado = { 256, 384 },
 			Amuleto = { 384, 384 },
+			Mascota = { 512, 384 },
+			Mision = { 640, 384 },
+			Renacer = { 0, 512 },
+			Esencia = { 128, 512 },
 		} :: { [string]: { number } },
 	},
 
@@ -1435,6 +2183,11 @@ local GameConfig = {
 		Click = "", -- tocar un botón de la interfaz
 		AbrirMenu = "",
 		Secreto = "", -- Grupo 3: abrir una puerta secreta, un cofre, un altar o cruzar un portal
+		-- Grupo 4
+		Mision = "", -- misión cumplida
+		Ruleta = "", -- cada "tic" de la ruleta (se sube el tono al frenar)
+		Mascota = "", -- mascota nueva
+		Renacer = "",
 	},
 
 	-- Modelos de Blender (forja-rapida/arte). Mientras no estén, el servidor arma las geodas con

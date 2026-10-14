@@ -197,6 +197,20 @@ for _, l in GameConfig.Logros do
 		for _, id in n.Ids or {} do
 			chequear(Reglas.rareza(id) ~= nil, l.Id .. ": rareza desconocida " .. id)
 		end
+	elseif n.Tipo == "Pico" then
+		chequear((n.Cuantos or 0) >= 1 and (n.Cuantos or 0) <= #GameConfig.Picos, l.Id .. ": pico fuera de rango")
+	elseif n.Tipo == "Colecciones" then
+		local museo = 0
+		for _, otro in GameConfig.Logros do
+			if otro.Museo then
+				museo += 1
+			end
+		end
+		chequear((n.Cuantas or 0) > 0 and (n.Cuantas or 0) <= museo, l.Id .. ": pide más colecciones de las que hay")
+	elseif n.Tipo == "Misiones" then
+		chequear((n.Cuantas or 0) > 0, l.Id .. ": Cuantas tiene que ser > 0")
+	elseif n.Tipo == "Renacer" then
+		chequear((n.Cuantos or 0) > 0, l.Id .. ": Cuantos tiene que ser > 0")
 	else
 		chequear(false, l.Id .. ": tipo desconocido " .. tostring(n.Tipo))
 	end
@@ -443,6 +457,212 @@ chequear(
 	#col >= 10 and col[1].Dificultad == "Facil" and col[#col].Dificultad == "Leyenda",
 	"colecciones del museo mal ordenadas"
 )
+
+-- 16. Grupo 4: logros nuevos, evoluciones del pico y variantes de roca.
+local g4 = {
+	Indice = {},
+	Exoticas = {},
+	Rarezas = {},
+	GeodasRotas = 0,
+	JefesDerrotados = 0,
+	EventosJugados = 0,
+	Logros = {} :: { [string]: boolean },
+	Pico = 2,
+	MisionesHechas = 2,
+	Renacimientos = 0,
+}
+chequear(#Reglas.logrosNuevos(g4) == 0, "grupo 4: logros sin cumplir nada")
+g4.Pico, g4.MisionesHechas, g4.Renacimientos = 3, 10, 2
+local g4n = ids(Reglas.logrosNuevos(g4))
+chequear(g4n == "Forjador,Misiones3,Misiones10,Renacer1,Renacer2", "grupo 4: salió " .. g4n)
+for _, id in { "Coleccion1", "Coleccion2", "Museo3" } do
+	g4.Logros[id] = true
+end
+chequear(not ids(Reglas.logrosNuevos(g4)):find("BrilloInterior"), "brillo interior con 3 colecciones")
+g4.Logros.PraderaBrillante = true
+chequear(ids(Reglas.logrosNuevos(g4)):find("BrilloInterior") ~= nil, "brillo interior no sale con 4 colecciones")
+local efectos = Reglas.tiposCosmeticos().Efecto
+chequear(efectos ~= nil and #efectos >= 6, "faltan evoluciones del pico")
+for _, z in GameConfig.Zonas do
+	chequear(#z.Variantes >= 3, z.Nombre .. ": menos de 3 rocas")
+	chequear(
+		z.Variantes[1].ColorRoca == z.ColorRoca and z.Variantes[1].ColorCristal == z.ColorCristal,
+		z.Nombre .. ": la roca 1 no es la de siempre"
+	)
+	local colores = {}
+	for _, v in z.Variantes do
+		chequear(not colores[v.ColorRoca], z.Nombre .. ": dos rocas del mismo color")
+		colores[v.ColorRoca] = true
+	end
+end
+chequear(Reglas.fuerza(10, 2, 1.5) == math.floor(Reglas.fuerza(10, 2) * 1.5 + 0.5) or Reglas.fuerza(10, 2, 1.5) >= Reglas.fuerza(10, 2), "bono de fuerza")
+
+-- 17. Grupo 4: bonos, Renacer y árbol de Esencia.
+local b0 = Reglas.bonos({ Renacimientos = 0, Ramas = {}, MascotasEquipadas = {} })
+chequear(b0.Fuerza == 1 and b0.Monedas == 1 and b0.Suerte == 0 and b0.Lugares == GameConfig.Mascotas.Lugares, "bonos de un jugador nuevo")
+local b2 = Reglas.bonos({
+	Renacimientos = 2,
+	Ramas = { Golpe = 2, Mercader = 1, Domador = 1 },
+	MascotasEquipadas = { "Topito", "Piedrin", "Inventada" },
+})
+chequear(cerca(b2.Fuerza, 1 + 2 * GameConfig.Renacer.BonoFuerza + 0.1, 1e-9), "bono de fuerza con renacer y rama")
+chequear(cerca(b2.Monedas, 1 + 2 * GameConfig.Renacer.BonoMonedas + 0.08 + 0.05, 1e-9), "bono de monedas: " .. b2.Monedas)
+chequear(cerca(b2.Suerte, 0.05, 1e-9) and b2.Lugares == GameConfig.Mascotas.Lugares + 1, "suerte y lugares")
+local b99 = Reglas.bonos({ Renacimientos = 99, Ramas = {}, MascotasEquipadas = {} })
+chequear(
+	cerca(b99.Fuerza, 1 + GameConfig.Renacer.MaximoBonos * GameConfig.Renacer.BonoFuerza, 1e-9),
+	"los bonos de renacer no tienen tope"
+)
+local cuatro = Reglas.bonos({ Renacimientos = 0, Ramas = {}, MascotasEquipadas = { "Nebula", "Nebula", "Nebula", "Nebula" } })
+chequear(cerca(cuatro.Suerte, 0.5 * GameConfig.Mascotas.Lugares, 1e-9), "cuentan mascotas de más")
+chequear(Reglas.zonaParaRenacer(0) == 3 and Reglas.zonaParaRenacer(1) == 4 and Reglas.zonaParaRenacer(7) == 5, "zona para renacer")
+chequear(not Reglas.puedeRenacer({ [1] = true, [2] = true }, 0), "renace sin el Glaciar")
+chequear(Reglas.puedeRenacer({ [1] = true, [2] = true, [3] = true }, 0), "no renace con el Glaciar")
+chequear(not Reglas.puedeRenacer({ [1] = true, [2] = true, [3] = true }, 1), "el segundo renacer no pide el Volcán")
+chequear(Reglas.esenciaRenacer({ [1] = true, [2] = true, [3] = true }) == 2, "esencia por renacer en el Glaciar")
+chequear(Reglas.esenciaRenacer({ [1] = true }) >= 1, "renacer da 0 de esencia")
+for _, r in GameConfig.Renacer.Ramas do
+	chequear(#r.Costos > 0 and Reglas.costoRama(r.Id, 0) == r.Costos[1], r.Id .. ": costo del primer nivel")
+	chequear(Reglas.costoRama(r.Id, #r.Costos) == nil, r.Id .. ": se puede pasar del máximo")
+	chequear(r.Renacer >= 1 and r.Renacer <= #GameConfig.Renacer.Desbloqueos, r.Id .. ": renacer fuera de rango")
+end
+chequear(Reglas.ramaDisponible("Golpe", 1) and not Reglas.ramaDisponible("Domador", 3), "ramas por renacer")
+chequear(Reglas.vidaRenacida(0) == 400 and Reglas.vidaRenacida(1000) == 1000 * GameConfig.Renacer.GolpesRenacida, "vida de la renacida")
+
+-- 18. Grupo 4: Ruleta de Mascotas.
+local sumaChances = 0
+for _, m in GameConfig.Mascotas.Lista do
+	sumaChances += m.Chance
+	chequear(Reglas.rareza(m.Rareza) ~= nil, m.Id .. ": rareza desconocida")
+	chequear((m.Monedas or 0) > 0 or (m.Suerte or 0) > 0, m.Id .. ": no da nada")
+	chequear(#m.Colores >= 2, m.Id .. ": faltan colores")
+end
+chequear(cerca(sumaChances, 100, 1e-9), "las chances de la ruleta no suman 100: " .. sumaChances)
+local cuentas: { [string]: number } = {}
+local TIRADAS = 200000
+for _ = 1, TIRADAS do
+	local m = Reglas.tirarRuleta(azarLune)
+	cuentas[m.Id] = (cuentas[m.Id] or 0) + 1
+end
+for _, m in GameConfig.Mascotas.Lista do
+	local real = (cuentas[m.Id] or 0) / TIRADAS * 100
+	chequear(cerca(real, m.Chance, math.max(0.25, m.Chance * 0.06)), ("ruleta %s: %.2f %% en vez de %.2f %%"):format(m.Id, real, m.Chance))
+end
+chequear(Reglas.tirarRuleta(function()
+	return 0.999999
+end).Id == GameConfig.Mascotas.Lista[#GameConfig.Mascotas.Lista].Id, "la última de la ruleta no sale")
+chequear(Reglas.precioRuleta({ [1] = true }) == GameConfig.Mascotas.Ruleta.Precio, "precio de la ruleta en la Pradera")
+chequear(Reglas.precioRuleta({ [1] = true, [2] = true }) > Reglas.precioRuleta({ [1] = true }), "la ruleta no sube con la zona")
+chequear(Reglas.puedeEquipar({}, "Topito", { Topito = 1 }, 3), "no deja equipar una mascota que tiene")
+chequear(not Reglas.puedeEquipar({ "Topito" }, "Topito", { Topito = 1 }, 3), "deja equipar dos veces la misma copia")
+chequear(Reglas.puedeEquipar({ "Topito" }, "Topito", { Topito = 2 }, 3), "no deja equipar la segunda copia")
+chequear(not Reglas.puedeEquipar({ "A", "B", "C" }, "Topito", { Topito = 5 }, 3), "deja equipar sin lugar")
+chequear(not Reglas.puedeEquipar({}, "Inventada", { Inventada = 1 }, 3), "deja equipar una mascota inventada")
+
+-- 19. Grupo 4: misiones.
+local plantillasVistas: { [string]: boolean } = {}
+for _, pl in GameConfig.Misiones.Plantillas do
+	chequear(not plantillasVistas[pl.Id], "misión repetida: " .. pl.Id)
+	plantillasVistas[pl.Id] = true
+	chequear(GameConfig.Misiones.Dificultades[pl.Dificultad] ~= nil, pl.Id .. ": dificultad desconocida")
+	chequear(#pl.Meta >= 1 and pl.Meta[1] >= 1 and (pl.Meta[2] or pl.Meta[1]) >= pl.Meta[1], pl.Id .. ": meta mal")
+	if pl.Tamano then
+		chequear(Reglas.tamano(pl.Tamano) ~= nil, pl.Id .. ": tamaño desconocido")
+	end
+	if pl.Rareza then
+		chequear(Reglas.rareza(pl.Rareza) ~= nil, pl.Id .. ": rareza desconocida")
+	end
+	chequear(pl.Texto:find("%%") ~= nil, pl.Id .. ": el texto no muestra la meta")
+end
+local jm = {
+	Indice = {} :: { [string]: boolean },
+	Exoticas = {},
+	Rarezas = {},
+	GeodasRotas = 0,
+	JefesDerrotados = 0,
+	EventosJugados = 0,
+	Logros = {} :: { [string]: boolean },
+	Zonas = { [1] = true } :: { [number]: boolean },
+	Secretos = {} :: { [number]: boolean },
+	Renacimientos = 0,
+}
+for _, dif in GameConfig.Misiones.Lugares do
+	for _ = 1, 200 do
+		local mi = Reglas.nuevaMision(dif, jm, azarLune)
+		chequear(mi ~= nil, "no hay misión " .. dif .. " para un jugador nuevo")
+		if mi then
+			chequear(mi.Meta >= 1 and mi.Monedas > 0 and mi.Texto ~= "" and not mi.Texto:find("%%"), "misión mal armada: " .. mi.Id)
+			chequear(mi.Id ~= "Ocultas" and mi.Id ~= "Portal" and mi.Id ~= "Legendaria" and mi.Id ~= "Coleccion", "misión imposible para un jugador nuevo: " .. mi.Id)
+		end
+	end
+end
+chequear(Reglas.nuevaMision("Prestigio", jm, azarLune) == nil, "misión de prestigio sin renacer")
+jm.Renacimientos = 1
+chequear(Reglas.nuevaMision("Prestigio", jm, azarLune) ~= nil, "no hay misión de prestigio después de renacer")
+-- evita repetir la plantilla si puede
+local soloFaciles = 0
+for _, pl in GameConfig.Misiones.Plantillas do
+	if pl.Dificultad == "Facil" then
+		soloFaciles += 1
+	end
+end
+local evitar = { Geodas = true }
+for _ = 1, 100 do
+	local mi = Reglas.nuevaMision("Facil", jm, azarLune, evitar) :: any
+	chequear(soloFaciles == 1 or mi.Id ~= "Geodas", "repite la misión que tenía")
+end
+-- avance
+local mg = { Id = "x", Tipo = "Geodas", Dificultad = "Facil", Meta = 3, Progreso = 0, Texto = "", Monedas = 1, Esencia = 0, Tamano = "Mediana" }
+chequear(Reglas.avanceMision(mg, { Tipo = "Geoda", Tamano = "Mediana", Zona = 1, Modificador = "Normal" }) == 1, "misión de medianas no avanza")
+chequear(Reglas.avanceMision(mg, { Tipo = "Geoda", Tamano = "Pequena", Zona = 1, Modificador = "Normal" }) == 0, "misión de medianas avanza con una pequeña")
+local mr = { Id = "x", Tipo = "Rareza", Dificultad = "Facil", Meta = 3, Progreso = 0, Texto = "", Monedas = 1, Esencia = 0, Rareza = "Raro" }
+chequear(Reglas.avanceMision(mr, { Tipo = "Gema", Rareza = "Epico" }) == 1, "una épica no cuenta como rara o mejor")
+chequear(Reglas.avanceMision(mr, { Tipo = "Gema", Rareza = "Comun" }) == 0, "una común cuenta como rara")
+local me = { Id = "x", Tipo = "Exotica", Dificultad = "Media", Meta = 1, Progreso = 0, Texto = "", Monedas = 1, Esencia = 0 }
+chequear(Reglas.avanceMision(me, { Tipo = "Geoda", Modificador = "VacioLava" }) == 1, "una combinación no cuenta como exótica")
+chequear(Reglas.avanceMision(me, { Tipo = "Geoda", Modificador = "Normal" }) == 0, "una normal cuenta como exótica")
+local mj = { Id = "x", Tipo = "Jefe", Dificultad = "Media", Meta = 1, Progreso = 0, Texto = "", Monedas = 1, Esencia = 0 }
+chequear(Reglas.avanceMision(mj, { Tipo = "Geoda", Tamano = "Ancestral" }) == 1, "la ancestral no cuenta como jefe")
+local mz = Reglas.nuevaMision("Facil", { Indice = {}, Exoticas = {}, Rarezas = {}, GeodasRotas = 0, JefesDerrotados = 0, EventosJugados = 0, Logros = {}, Zonas = { [1] = true, [2] = true }, Secretos = {} }, function()
+	return 0.4
+end) :: any
+if mz.Id == "GeodasZona" then
+	chequear(mz.Zona == 2 and Reglas.avanceMision(mz, { Tipo = "Geoda", Zona = 1 }) == 0, "misión de zona cuenta otra zona")
+end
+-- nuevas y colecciones
+jm.Indice.Cuarzo = true
+local mn: any = nil
+for _ = 1, 300 do
+	local mi = Reglas.nuevaMision("Media", jm, azarLune)
+	if mi and mi.Id == "Nuevo" then
+		mn = mi
+		break
+	end
+end
+chequear(mn ~= nil and mn.Base == 1, "misión de mineral nuevo sin base")
+if mn then
+	chequear(Reglas.progresoMision(mn, jm) == 0, "mineral nuevo arranca avanzada")
+	jm.Indice.Jaspe = true
+	chequear(Reglas.progresoMision(mn, jm) == 1, "mineral nuevo no avanza")
+end
+jm.Indice.Amatista = true -- Museo3 (3 distintas) queda a punto; PraderaBrillante completa
+jm.Logros.Museo3 = true
+jm.Indice.Ambar = true
+jm.Zonas[3] = true
+local mc: any = nil
+for _ = 1, 300 do
+	local mi = Reglas.nuevaMision("Dificil", jm, azarLune)
+	if mi and mi.Id == "Coleccion" then
+		mc = mi
+		break
+	end
+end
+chequear(mc ~= nil and mc.Logro ~= nil and not jm.Logros[mc.Logro], "misión de colección sin colección")
+if mc then
+	chequear(Reglas.progresoMision(mc, jm) == 0, "colección arranca hecha")
+	jm.Logros[mc.Logro] = true
+	chequear(Reglas.progresoMision(mc, jm) == 1, "colección no se completa")
+end
 
 if errores > 0 then
 	print(("%d pruebas fallaron"):format(errores))

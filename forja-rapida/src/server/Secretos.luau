@@ -106,7 +106,7 @@ Mundo.alRomper(function(r: Mundo.Rotura)
 			d
 			and not d.Secretos[r.Zona]
 			and not d.Llaves[r.Zona]
-			and rng:NextNumber() < 1 / S.LlaveUnoEn
+			and rng:NextNumber() < Jugadores.bonos(d).Llaves / S.LlaveUnoEn
 		then
 			d.Llaves[r.Zona] = true
 			Jugadores.publicar(jugador)
@@ -152,6 +152,7 @@ local function puerta(parte: BasePart)
 		d.Secretos[zona] = true
 		Jugadores.publicar(jugador)
 		Remotos.Secreto:FireClient(jugador, "Puerta", zona)
+		Mundo.avisarAccion(jugador, "Puerta")
 		hito(
 			jugador,
 			"¡Puerta secreta abierta!",
@@ -187,6 +188,7 @@ local function cofre(parte: BasePart)
 		Jugadores.publicar(jugador)
 		Remotos.Premio:FireClient(jugador, monto)
 		Remotos.Secreto:FireClient(jugador, "Cofre", zona)
+		Mundo.avisarAccion(jugador, "Cofre")
 		hito(
 			jugador,
 			"¡Tesoro!",
@@ -237,6 +239,7 @@ local function altar(parte: BasePart)
 		d.BendicionFin = ahora + A.Duracion
 		Jugadores.publicar(jugador)
 		Remotos.Secreto:FireClient(jugador, "Altar", zona)
+		Mundo.avisarAccion(jugador, "Altar")
 		hito(
 			jugador,
 			"Bendición del altar",
@@ -278,6 +281,7 @@ local function portal(parte: BasePart)
 				ultimoPortal[jugador] = ahora
 				personaje:PivotTo(llegada.CFrame + Vector3.new(0, 4, 0))
 				Remotos.Secreto:FireClient(jugador, "Portal", zona)
+				Mundo.avisarAccion(jugador, "Portal")
 				return
 			end
 		end

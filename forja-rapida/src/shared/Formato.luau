@@ -55,4 +55,14 @@ function Formato.unoEn(n: number): string
 	return "1 en " .. Formato.miles(math.max(1, math.floor(n + 0.5)))
 end
 
+-- Segundos como reloj: 75 -> "1:15", 3700 -> "1:01:40".
+function Formato.tiempo(segundos: number): string
+	local t = math.max(0, math.ceil(segundos))
+	local h, m, sg = t // 3600, (t % 3600) // 60, t % 60
+	if h > 0 then
+		return ("%d:%02d:%02d"):format(h, m, sg)
+	end
+	return ("%d:%02d"):format(m, sg)
+end
+
 return Formato

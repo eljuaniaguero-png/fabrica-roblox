@@ -2,6 +2,7 @@
 -- Arma el modelo de una geoda y le da el aspecto de su zona y de su modificador exótico.
 -- Mallas de Blender (forja-rapida/arte/fbx), importadas en ServerStorage > Modelos > Geodas.
 -- Se busca, en orden:
+--   Geodas > Zona<N> > <tamaño>_<v>  Grupo 4: la variante v (2 o 3) de la roca de ese bioma
 --   Geodas > Zona<N> > <tamaño>      la roca de ese bioma (Geodas_Zona<N>.fbx)
 --   Geodas > Especiales > <tamaño>   la Oculta y la Prismática (Geodas_Especiales.fbx)
 --   Geodas > <tamaño>                la roca de siempre (Geoda_<tamaño>.fbx)
@@ -9,9 +10,11 @@
 -- no hay ninguna, se arma con partes simples (greybox) y se escala con Tamanos[..].Escala.
 -- El pivote se pone en la base, así se apoya en el punto aunque el modelo venga centrado.
 -- Partes que se pintan (por nombre):
---   "Roca"       la piedra: color de la zona, o el del modificador; en las exóticas, su textura
+--   "Roca"       la piedra: color de su variante (GameConfig.Zonas[..].Variantes), o el del
+--                modificador; en las exóticas, su textura
 --                (rayas de lava, cuadritos neón, oro, vacío) si ya está subida.
---   "Cristales"  lo que asoma arriba: Neon y del color del modificador en las exóticas.
+--   "Cristales"  lo que asoma arriba: del color de la variante; Neon y del color del modificador
+--                en las exóticas.
 --   "Grietas"    grietas que brillan (Grupo 1): solo se ven en las exóticas, del Color.
 --   "Grietas2"   la segunda grieta: solo en las combinaciones, del Color2.
 --   "Base"       el nido de escombros.
@@ -94,13 +97,15 @@ local function hijo(padre: Instance?, nombres: { string }, tamano: string): Mode
 	return nil
 end
 
-local function molde(tamano: string, zona: number): Model?
+local function molde(tamano: string, zona: number, variante: number): Model?
 	local carpeta = ServerStorage:FindFirstChild(GameConfig.Modelos.Carpeta)
 	local geodas = carpeta and carpeta:FindFirstChild("Geodas")
 	if not geodas then
 		return nil
 	end
-	local m = hijo(geodas, { "Zona" .. zona, "Geodas_Zona" .. zona }, tamano)
+	local deZona = { "Zona" .. zona, "Geodas_Zona" .. zona }
+	local m = (variante > 1 and hijo(geodas, deZona, tamano .. "_" .. variante))
+		or hijo(geodas, deZona, tamano)
 		or hijo(geodas, { "Especiales", "Geodas_Especiales" }, tamano)
 	if m then
 		return m
@@ -124,16 +129,18 @@ local function material(nombre: string?, porDefecto: Enum.Material): Enum.Materi
 	return if ok and typeof(m) == "EnumItem" then m :: Enum.Material else porDefecto
 end
 
--- Pinta la geoda según su zona, su tamaño y su modificador.
-local function pintar(m: Model, zona: number, tamano: string, modificador: string)
+-- Pinta la geoda según su zona, su variante, su tamaño y su modificador.
+local function pintar(m: Model, zona: number, tamano: string, modificador: string, variante: number)
 	local z = Reglas.zona(zona) or GameConfig.Zonas[1]
+	local v = Reglas.variante(zona, variante) or z.Variantes[1]
 	local mod = Reglas.modificador(modificador) or GameConfig.Modificadores[1]
 	local exotica = Reglas.esExotica(modificador)
-	local colorRoca = Color3.fromHex(mod.ColorRoca or z.ColorRoca)
-	local materialRoca = material(mod.MaterialRoca, Enum.Material.Slate)
+	local colorRoca = Color3.fromHex(mod.ColorRoca or (if v then v.ColorRoca else z.ColorRoca))
+	local materialRoca =
+		material(mod.MaterialRoca or (if v then v.MaterialRoca else nil), Enum.Material.Slate)
 	local colorCristal = if exotica
 		then Color3.fromHex(mod.Color)
-		else Color3.fromHex(z.ColorCristal)
+		else Color3.fromHex(if v then v.ColorCristal else z.ColorCristal)
 	local colorGrieta2 = Color3.fromHex(mod.Color2 or mod.Color)
 	-- Grupo 3: la Oculta brilla con el color de su mineral secreto; la Prismática es de cristal
 	local secreta = Reglas.secretaDe(tamano, zona)
@@ -145,6 +152,12 @@ local function pintar(m: Model, zona: number, tamano: string, modificador: strin
 		else
 			colorRoca = Color3.fromHex("#3A3F66")
 		end
+	end
+	-- Grupo 4: la Geoda Renacida es dorada con cristales de fuego
+	if tamano == "Renacida" and not exotica then
+		colorRoca, colorCristal = Color3.fromHex("#E8A317"), Color3.fromHex("#FF6A3D")
+		materialRoca = Enum.Material.Slate
+		especial = true
 	end
 	local brillan = exotica or especial
 
@@ -184,10 +197,21 @@ end
 
 -- Crea una geoda nueva (sin padre) para esa zona, tamaño y modificador.
 -- Devuelve el modelo y su parte "Roca" (la que se usa para medir distancias).
+-- Grupo 4: las geodas comunes del bioma nacen con una de sus 3 rocas al azar; las especiales
+-- (Oculta, Prismática, Ancestral, Renacida) siempre con la suya.
+local CON_VARIANTE = { Pequena = true, Mediana = true, Gigante = true, Jefe = true }
+local rng = Random.new()
+
 function ModeloGeoda.crear(zona: number, tamano: string, modificador: string): (Model, BasePart)
 	local t = Reglas.tamano(tamano)
+	local z = Reglas.zona(zona)
+	local variante = if CON_VARIANTE[tamano]
+			and z
+			and #z.Variantes > 1
+		then rng:NextInteger(1, #z.Variantes)
+		else 1
 	local m: Model
-	local deBlender = molde(tamano, zona)
+	local deBlender = molde(tamano, zona, variante)
 	if deBlender then
 		m = deBlender:Clone()
 		local cf, tam = m:GetBoundingBox()
@@ -210,7 +234,11 @@ function ModeloGeoda.crear(zona: number, tamano: string, modificador: string): (
 			p.Anchored = true
 		end
 	end
-	pintar(m, zona, tamano, modificador)
+	pintar(m, zona, tamano, modificador, variante)
+	local v = Reglas.variante(zona, variante)
+	if variante > 1 and v then
+		m:SetAttribute("Variante", v.Nombre) -- el cliente lo muestra en el cartel
+	end
 	local roca = m:FindFirstChild("Roca", true)
 	if not roca or not roca:IsA("BasePart") then
 		error("la geoda " .. tamano .. " no tiene una parte Roca")

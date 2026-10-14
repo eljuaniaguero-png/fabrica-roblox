@@ -64,7 +64,8 @@ local function crear()
 		local nivel = Datos.numero("NivelFuerza")
 		local monedas = Datos.numero("Monedas")
 		local pico = Datos.numero("Pico")
-		local ahora = Reglas.fuerza(nivel, math.max(1, pico))
+		local bono = Datos.bonos().Fuerza -- Grupo 4: Renacer y Golpe Firme
+		local ahora = Reglas.fuerza(nivel, math.max(1, pico), bono)
 		local precio = Reglas.precioFuerza(nivel)
 		local maximos, costoMax = Reglas.nivelesFuerza(nivel, monedas)
 
@@ -78,7 +79,7 @@ local function crear()
 		ic.Parent = izq
 		textoCentrado(izq, "Nivel " .. nivel, 44, 140)
 		if precio then
-			local despues = Reglas.fuerza(nivel + 1, math.max(1, pico))
+			local despues = Reglas.fuerza(nivel + 1, math.max(1, pico), bono)
 			local fila = Estilo.fila(10)
 			fila.AnchorPoint = Vector2.new(0.5, 0)
 			fila.Position = UDim2.new(0.5, 0, 0, 196)

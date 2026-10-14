@@ -2,8 +2,11 @@
 -- HUD de Forja Rápida (diseño de Figma v2, piezas de ForgeGUI):
 --   Arriba a la derecha: Monedas, Suerte y Fuerza en píldoras (saltan cuando cambian), y los
 --   botones "Vender todo" y Ajustes.
---   A la izquierda: botones grandes de los menús (Tienda, Mochila, Índice, Vitrina, Ranking y
---   Eventos) con globitos de aviso. En celular van arriba, para no tapar el joystick.
+--   A la izquierda: botones grandes de los menús (Tienda, Mochila, Museo, Vitrina, Ranking,
+--   Eventos y, del Grupo 4, Misiones, Mascotas y Renacer) con globitos de aviso, en 3 columnas.
+--   En celular van arriba, para no tapar el joystick.
+--   A la derecha, abajo de los recursos (Grupo 4): el seguimiento de las misiones (en celular,
+--   solo la que está más cerca de cumplirse). Tocarlo abre el menú.
 --   Abajo al centro: barra "Próxima zona" (tu Fuerza contra la que pide la zona siguiente).
 -- Arma también las ventanas de los menús (Menu*.luau).
 
@@ -19,6 +22,7 @@ local Reglas = require(ReplicatedStorage.Shared.Reglas)
 local Avisos = require(script.Parent.Avisos)
 local Datos = require(script.Parent.Datos)
 local Estilo = require(script.Parent.Estilo)
+local MenuMisiones = require(script.Parent.MenuMisiones)
 local Sonidos = require(script.Parent.Sonidos)
 local Ventanas = require(script.Parent.Ventanas)
 
@@ -26,6 +30,8 @@ local jugador = Players.LocalPlayer
 local remotos = ReplicatedStorage:WaitForChild("Remotos")
 local Vender = remotos:WaitForChild("Vender") :: RemoteEvent
 local Compra = remotos:WaitForChild("Compra") :: RemoteEvent
+local MisionRemoto = remotos:WaitForChild("Mision") :: RemoteEvent
+local RenacerRemoto = remotos:WaitForChild("Renacer") :: RemoteEvent
 local estado = ReplicatedStorage:WaitForChild("EstadoMundo")
 
 -- Las ventanas de los menús.
@@ -38,6 +44,9 @@ for _, nombre in
 		"MenuVitrina",
 		"MenuClasificacion",
 		"MenuAjustes",
+		"MenuMisiones",
+		"MenuMascotas",
+		"MenuRenacer",
 	}
 do
 	local modulo =
@@ -177,7 +186,7 @@ end)
 local izquierda = Instance.new("Frame")
 izquierda.Name = "Menus"
 izquierda.BackgroundTransparency = 1
-izquierda.Size = UDim2.fromOffset(2 * 96 + 12, 3 * 96 + 2 * 12)
+izquierda.Size = UDim2.fromOffset(3 * 96 + 2 * 12, 3 * 96 + 2 * 12)
 if celular then
 	izquierda.AnchorPoint = Vector2.new(0, 0)
 	izquierda.Position = UDim2.fromOffset(12, 8)
@@ -190,7 +199,7 @@ grilla.CellSize = UDim2.fromOffset(96, 96)
 grilla.CellPadding = UDim2.fromOffset(12, 12)
 grilla.SortOrder = Enum.SortOrder.LayoutOrder
 grilla.Parent = izquierda
-Estilo.escalar(izquierda, if celular then 0.9 else 1)
+Estilo.escalar(izquierda, if celular then 0.8 else 1)
 izquierda.Parent = pantalla
 
 type Boton = { Boton: TextButton, Globito: Frame }
@@ -236,6 +245,9 @@ botonMenu(3, "Museo", "Museo", "Libro", "Rosa")
 botonMenu(4, "Vitrina", "Vitrina", "Corona", "Violeta")
 botonMenu(5, "Clasificacion", "Ranking", "Trofeo", "Amarillo")
 botonMenu(6, "Eventos", "Eventos", "Reloj", "Azul")
+botonMenu(7, "Misiones", "Misiones", "Mision", "Cian")
+botonMenu(8, "Mascotas", "Mascotas", "Mascota", "Rosa")
+botonMenu(9, "Renacer", "Renacer", "Renacer", "Naranja")
 
 local function globito(id: string, texto: string?)
 	local g = botones[id].Globito
@@ -291,6 +303,26 @@ end
 avisoEvento()
 estado:GetAttributeChangedSignal("Evento"):Connect(avisoEvento)
 
+-- Grupo 4: Mascotas "!" si te alcanza para la ruleta; Renacer "!" si podés renacer o mejorar
+-- una rama; Misiones "!" cuando cumplís una (hasta que lo abrís).
+local function avisoMascotasRenacer()
+	local monedas = Datos.numero("Monedas")
+	globito("Mascotas", if monedas >= Reglas.precioRuleta(Datos.zonas()) then "!" else nil)
+	local n = Datos.numero("Renacimientos")
+	local puede = Reglas.puedeRenacer(Datos.zonas(), n)
+	local esencia = Datos.numero("Esencia")
+	local ramas = Datos.json("Ramas")
+	for _, r in GameConfig.Renacer.Ramas do
+		local costo = Reglas.costoRama(r.Id, tonumber(ramas[r.Id]) or 0)
+		if Reglas.ramaDisponible(r.Id, n) and costo and esencia >= costo then
+			puede = true
+		end
+	end
+	globito("Renacer", if puede then "!" else nil)
+end
+avisoMascotasRenacer()
+Datos.alCambiar({ "Monedas", "Zonas", "Renacimientos", "Esencia", "Ramas" }, avisoMascotasRenacer)
+
 -- El botón del menú abierto se marca con borde blanco.
 Ventanas.alCambiar(function(id: string?)
 	for nombre, b in botones do
@@ -299,7 +331,124 @@ Ventanas.alCambiar(function(id: string?)
 	if id == "Museo" then
 		vistas = #Datos.texto("Indice")
 		globito("Museo", nil)
+	elseif id == "Misiones" then
+		globito("Misiones", nil)
 	end
+end)
+
+-- A la derecha: seguimiento de misiones (Grupo 4) ------------------------------------------
+
+local seguimiento = Instance.new("TextButton")
+seguimiento.Name = "Misiones"
+seguimiento.Text = ""
+seguimiento.BackgroundTransparency = 1
+seguimiento.AnchorPoint = Vector2.new(1, 0)
+seguimiento.Position = UDim2.new(1, -16, if celular then 0.58 else 0.56, 0)
+seguimiento.AutomaticSize = Enum.AutomaticSize.XY
+local listaSeg = Instance.new("UIListLayout")
+listaSeg.HorizontalAlignment = Enum.HorizontalAlignment.Right
+listaSeg.Padding = UDim.new(0, 8)
+listaSeg.SortOrder = Enum.SortOrder.LayoutOrder
+listaSeg.Parent = seguimiento
+Estilo.escalar(seguimiento, if celular then 0.75 else 0.9)
+seguimiento.Parent = pantalla
+seguimiento.Activated:Connect(function()
+	Ventanas.alternar("Misiones")
+end)
+
+local function dibujarSeguimiento()
+	for _, h in seguimiento:GetChildren() do
+		if h:IsA("GuiObject") then
+			h:Destroy()
+		end
+	end
+	local lista = MenuMisiones.lista()
+	if celular and #lista > 1 then
+		-- solo la que está más cerca de cumplirse
+		table.sort(lista, function(a, b)
+			return a.Progreso / math.max(1, a.Meta) > b.Progreso / math.max(1, b.Meta)
+		end)
+		lista = { lista[1] }
+	end
+	for i, m in lista do
+		local f = Instance.new("Frame")
+		f.Name = m.Id
+		f.LayoutOrder = i
+		f.Size = UDim2.fromOffset(330, 66)
+		Estilo.superficie(f, { "Panel" }, Estilo.Colores.Oscuro, 14, 4, true)
+		local franja = Instance.new("Frame")
+		franja.Size = UDim2.new(0, 10, 1, -12)
+		franja.Position = UDim2.fromOffset(6, 6)
+		franja.ZIndex = 3
+		Estilo.superficie(franja, {}, Estilo.Colores[MenuMisiones.color(m.Dificultad)], 5, 0, true)
+		franja.Parent = f
+		local t = Estilo.texto(m.Texto, 17)
+		t.Position = UDim2.fromOffset(24, 6)
+		t.Size = UDim2.fromOffset(296, 22)
+		t.AutomaticSize = Enum.AutomaticSize.None
+		t.TextXAlignment = Enum.TextXAlignment.Left
+		t.TextTruncate = Enum.TextTruncate.AtEnd
+		t.ZIndex = 3
+		t.Parent = f
+		local barra, poner = Estilo.barra(296, 26, Estilo.Colores[MenuMisiones.color(m.Dificultad)])
+		barra.Position = UDim2.fromOffset(24, 34)
+		barra.ZIndex = 3
+		barra.Parent = f
+		poner(m.Progreso / math.max(1, m.Meta), ("%d / %d"):format(m.Progreso, m.Meta))
+		f.Parent = seguimiento
+	end
+end
+dibujarSeguimiento()
+Datos.alCambiar({ "Misiones" }, dibujarSeguimiento)
+
+MisionRemoto.OnClientEvent:Connect(function(texto: unknown, monedas: unknown, esencia: unknown)
+	if typeof(texto) ~= "string" or typeof(monedas) ~= "number" then
+		return
+	end
+	-- SONIDO: misión cumplida
+	Sonidos.tocar(GameConfig.Sonidos.Mision)
+	local premio = "+" .. Formato.corto(monedas) .. " Monedas"
+	if typeof(esencia) == "number" and esencia > 0 then
+		premio ..= (" · +%d Esencia"):format(esencia)
+	end
+	Avisos.mostrar({
+		Titulo = "¡Misión cumplida!",
+		Texto = texto .. " · " .. premio,
+		Color = Color3.fromHex("#8CFF5A"),
+		Duracion = 3,
+		Icono = "Mision",
+	})
+	if Ventanas.abierta() ~= "Misiones" then
+		globito("Misiones", "!")
+	end
+end)
+
+RenacerRemoto.OnClientEvent:Connect(function(numero: unknown, esencia: unknown)
+	if typeof(numero) ~= "number" or typeof(esencia) ~= "number" then
+		return
+	end
+	-- SONIDO: renacer
+	Sonidos.tocar(GameConfig.Sonidos.Renacer)
+	Ventanas.cerrar()
+	Avisos.mostrar({
+		Titulo = ("¡Renaciste! Renacer %d"):format(numero),
+		Texto = ("+%d de Esencia y bonos para siempre. ¡A romper de nuevo!"):format(esencia),
+		Color = Color3.fromHex("#FFD23F"),
+		Duracion = 4,
+		Icono = "Renacer",
+	})
+	local destello = Instance.new("Frame")
+	destello.Size = UDim2.fromScale(1, 1)
+	destello.BackgroundColor3 = Color3.fromHex("#FFD23F")
+	destello.BackgroundTransparency = 0.2
+	destello.BorderSizePixel = 0
+	destello.ZIndex = 50
+	destello.Parent = pantalla
+	local t = TweenService:Create(destello, TweenInfo.new(1.2), { BackgroundTransparency = 1 })
+	t.Completed:Connect(function()
+		destello:Destroy()
+	end)
+	t:Play()
 end)
 
 -- Abajo al centro: próxima zona ------------------------------------------------------------
@@ -362,6 +511,14 @@ Compra.OnClientEvent:Connect(function(tipo: unknown, texto: unknown)
 			Color = Color3.fromHex("#6CCBFF"),
 			Duracion = 2.5,
 			Icono = "Pico",
+		})
+	elseif tipo == "Rama" then
+		Avisos.mostrar({
+			Titulo = "¡Rama mejorada!",
+			Texto = detalle,
+			Color = Color3.fromHex("#FFB04D"),
+			Duracion = 2.5,
+			Icono = "Esencia",
 		})
 	elseif tipo == "Amuleto" then
 		saltar(pSuerte)

@@ -1,8 +1,8 @@
 --!strict
 -- Lo que comparten los sistemas del mundo: el evento que está pasando ahora (Eventos.luau lo
 -- pone y GeodeServerService lo usa para las chances, las gemas y la suerte) y avisos de lo
--- que pasa con las geodas (para eventos, récords y clasificaciones). Así ningún módulo
--- necesita a los otros.
+-- que pasa con las geodas (para eventos, récords, clasificaciones y misiones) y con los
+-- secretos del mapa. Así ningún módulo necesita a los otros.
 -- Los clientes ven el estado en ReplicatedStorage.EstadoMundo (atributos): Evento, EventoFin,
 -- Proximo, ProximoInicio, Progreso, Meta, JefeVida, JefeVidaMax, JefeTop y RecordJefe.
 -- Los tiempos son de workspace:GetServerTimeNow(), iguales en el servidor y en los clientes.
@@ -40,6 +40,7 @@ estado.Parent = ReplicatedStorage
 local actual: Evento? = nil
 local alRomper: { (Rotura) -> () } = {}
 local alRevelar: { (Revelado) -> () } = {}
+local alAccion: { (Player, string) -> () } = {}
 
 local Mundo = {}
 
@@ -98,6 +99,18 @@ end
 function Mundo.avisarRevelacion(r: Revelado)
 	for _, fn in alRevelar do
 		task.spawn(fn, r)
+	end
+end
+
+-- Grupo 4: algo que hizo un jugador en el mapa ("Altar", "Puerta", "Portal" o "Cofre"), para
+-- las misiones.
+function Mundo.alAccion(fn: (Player, string) -> ())
+	table.insert(alAccion, fn)
+end
+
+function Mundo.avisarAccion(jugador: Player, accion: string)
+	for _, fn in alAccion do
+		task.spawn(fn, jugador, accion)
 	end
 end
 

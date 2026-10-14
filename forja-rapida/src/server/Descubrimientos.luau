@@ -28,6 +28,7 @@ local NOMBRE_TIPO: { [string]: string } = {
 	Pico = "Diseño de pico",
 	Vitrina = "Vitrina",
 	Decoracion = "Decoración",
+	Efecto = "Evolución del pico",
 }
 
 local Descubrimientos = {}
@@ -41,26 +42,33 @@ local function cosmetico(l: GameConfig.Logro): string?
 	return (NOMBRE_TIPO[c.Tipo] or c.Tipo) .. ": " .. datos.Nombre
 end
 
--- Cobra los logros que el jugador ya cumple y todavía no cobró (una sola vez cada uno).
+-- Cobra los logros que el jugador ya cumple y todavía no cobró (una sola vez cada uno). Da
+-- más de una vuelta porque cobrar uno puede cumplir otro (Grupo 4: "completá 4 colecciones").
 local function cobrar(jugador: Player, d: Jugadores.Datos): { Hito }
 	local hitos: { Hito } = {}
-	for _, l in Reglas.logrosNuevos(d) do
-		if not d.Logros[l.Id] then
-			d.Logros[l.Id] = true -- primero se marca, después se paga
-			if l.Premio.Monedas then
-				d.Monedas += l.Premio.Monedas
+	for _ = 1, 3 do
+		local nuevos = Reglas.logrosNuevos(d)
+		if #nuevos == 0 then
+			break
+		end
+		for _, l in nuevos do
+			if not d.Logros[l.Id] then
+				d.Logros[l.Id] = true -- primero se marca, después se paga
+				if l.Premio.Monedas then
+					d.Monedas += l.Premio.Monedas
+				end
+				table.insert(hitos, {
+					Id = l.Id,
+					Nombre = l.Nombre,
+					Descripcion = l.Descripcion,
+					Monedas = l.Premio.Monedas,
+					Suerte = l.Premio.Suerte,
+					Coleccion = l.Museo == true
+						or l.Necesita.Tipo == "Gemas"
+						or l.Id:sub(1, 9) == "Coleccion",
+					Cosmetico = cosmetico(l),
+				})
 			end
-			table.insert(hitos, {
-				Id = l.Id,
-				Nombre = l.Nombre,
-				Descripcion = l.Descripcion,
-				Monedas = l.Premio.Monedas,
-				Suerte = l.Premio.Suerte,
-				Coleccion = l.Museo == true
-					or l.Necesita.Tipo == "Gemas"
-					or l.Id:sub(1, 9) == "Coleccion",
-				Cosmetico = cosmetico(l),
-			})
 		end
 	end
 	Jugadores.publicar(jugador)

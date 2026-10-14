@@ -203,6 +203,121 @@ Cada bioma tiene su propia geoda (`arte/scripts/rocas.py`, foto en `arte/renders
 - **Cómo entran al juego**: `ModeloGeoda.luau` busca en `ServerStorage > Modelos > Geodas` la carpeta del bioma (`Zona1`… o `Geodas_Zona1`…) y adentro el tamaño. Las especiales las busca en `Especiales` o `Geodas_Especiales`. Si no las encuentra, usa la geoda general y, si tampoco está, la de bloques simples.
 - **Pendiente para Juani**: importar los 6 FBX en Studio (los pasos están en el informe). Claude no puede subir mallas desde la nube.
 
+## Grupo 4 — Progresión y objetivos a largo plazo (pedido del 14/10/2026)
+
+La regla: lo que se ve y lo que da poder van separados. Las evoluciones del pico, las auras y los títulos solo se ven; la Fuerza sale del pico comprado, la suerte de amuletos, logros, mascotas y el árbol de Esencia.
+
+**Evolución visual de los picos** (Museo → Cosméticos → "Evoluciones del pico"). Son partículas, estelas, fuego, luces y cristalitos en la cabeza del pico que tenés en la mano, y los ven todos. Con "Efectos reducidos" se apagan en los picos de los demás.
+
+| Evolución | Cómo se gana | De dónde viene |
+|---|---|---|
+| Brillo Metálico | conseguir el Pico de Hierro (logro Forjador) | progreso |
+| Cristales Luminosos | completar 4 colecciones del Museo (Brillo Interior) | colecciones |
+| Runas Mágicas | cumplir 10 misiones (Aprendiz de Runas) | misiones |
+| Estela de Fuego | jugar 5 eventos (Cazador de Eventos) | eventos |
+| Descargas Eléctricas | ayudar a romper 10 Geodas Ancestrales | eventos de jefe |
+| Energía Cósmica | conseguir el Pico Cósmico (Forja Cósmica) | progreso |
+| Fénix | renacer 2 veces | prestigio |
+| Eclipse | renacer 5 veces | prestigio |
+
+**Misiones dinámicas** (botón "Misiones" y cartel en la plaza; seguimiento a la derecha de la pantalla):
+- Siempre hay una **Fácil, una Media y una Difícil**. Desde el primer Renacer se suma una de **Prestigio**, que da Esencia.
+- Se eligen al azar entre las que podés hacer de verdad. Por ejemplo, "Rompé Geodas Ocultas" solo te toca si ya abriste una puerta secreta, "Completá la colección X" solo si vas por la mitad o más, y la Legendaria solo desde la zona 2.
+- **Tipos de misión:**
+  - romper geodas (de un tamaño o en tu mejor zona)
+  - encontrar gemas de una rareza o mejor
+  - romper exóticas
+  - llevarte gema de una Geoda Jefe
+  - hacer una ofrenda en un altar
+  - cruzar el portal
+  - abrir una puerta secreta
+  - descubrir un mineral nuevo
+  - completar una colección
+  - romper Geodas Renacidas
+- Se siguen y se pagan solas. **Premio** = monedas por dificultad (40 / 150 / 500 / 800) × lo que vale una gema común de tu mejor zona, así sirve igual en la Pradera que en el Abismo.
+- A los 2 segundos aparece otra misión en ese lugar. Podés **cambiar** una gratis cada 1:30.
+- Logros por misiones cumplidas:
+  - 3 misiones: 150 monedas.
+  - 10 misiones: Runas Mágicas y +0,1 de suerte.
+  - 40 misiones: +0,25 de suerte y el título "Maestro de Misiones".
+
+**Renacer (prestigio)** (botón "Renacer" y cartel junto al Santuario):
+- **Qué pide:** el 1° renacer pide abrir el Glaciar (zona 3), el 2° el Volcán y del 3° en adelante el Abismo.
+- **Qué se reinicia:** Monedas, niveles de Fuerza, picos (volvés al de Madera), amuletos, zonas abiertas y gemas sin vender.
+- **Qué se conserva:**
+  - Museo, colecciones y logros (con su suerte)
+  - títulos, cosméticos y evoluciones del pico
+  - mascotas
+  - puertas secretas y llaves
+  - Esencia y ramas
+  - récords, vitrina y misiones cumplidas
+- **Qué da:**
+  - Esencia: tu mejor zona menos 1, o sea 2 a 4.
+  - Bonos para siempre: +10 % de monedas al vender y +5 % de Fuerza por cada renacer, hasta 10 renaceres.
+  - Te lleva de vuelta a la plaza con misiones nuevas.
+- **Cada renacer estrena algo:**
+  1. La misión de Prestigio, el Santuario del Renacer, el árbol de Esencia (Golpe Firme, Mercader y Buen Ojo), el aura Llamas del Renacer y el título Renacido.
+  2. La evolución Fénix y las ramas Rastreador e Inicio Rápido.
+  3. La Vitrina Renacida y el título Leyenda Renacida.
+  4. La rama Domador (más lugares de mascota).
+  5. La evolución Eclipse y el título Eterno.
+- **Árbol de Esencia** (mejoras permanentes moderadas):
+  - Golpe Firme: +5 % de Fuerza por nivel, 5 niveles.
+  - Mercader: +8 % de monedas por nivel, 5 niveles.
+  - Buen Ojo: +0,05 de suerte por nivel, 5 niveles.
+  - Rastreador: llaves 25 % más seguido por nivel, 3 niveles.
+  - Inicio Rápido: arrancás cada renacer con 5 niveles de Fuerza por nivel, 4 niveles.
+  - Domador: +1 lugar de mascota por nivel, 2 niveles.
+- **Santuario del Renacer** (contenido de prestigio, en la plaza): un patio cerrado con una puerta dorada que solo se abre si renaciste.
+  - Adentro hay 4 Geodas Renacidas (doradas).
+  - Dan 12 gemas de tu mejor zona, con suerte ×2, y 1 en 25 de soltar 1 de Esencia.
+  - Su vida sigue al más fuerte que ya renació (unos 20 golpes), así no se rompen de un golpe.
+
+**Ruleta de Mascotas** (escenario en la plaza; botón "Mascotas"):
+- **Cómo se paga:** solo con Monedas del juego, nunca con Robux. Las Monedas no se venden por Robux (ver `ideas/monetizacion.md`: "Nada con azar se compra con Robux").
+- **Precio:** 150 × lo que vale una gema común de tu mejor zona.
+- **Cómo funciona:** cada tirada da una mascota. La rueda tiene cada porción del tamaño de su chance, y al lado están todas las probabilidades en %, que suman 100.
+
+| Mascota | Rareza | Chance | Bono |
+|---|---|---|---|
+| Topito | Común | 30 % | +5 % monedas |
+| Piedrín | Común | 30 % | +0,05 suerte |
+| Chispa | Rara | 14 % | +10 % monedas |
+| Musgo | Rara | 14 % | +0,1 suerte |
+| Cuarcito | Épica | 4,5 % | +20 % monedas |
+| Glaciel | Épica | 4,5 % | +0,2 suerte |
+| Magmo | Legendaria | 2,6 % | +35 % monedas y +0,2 suerte |
+| Nébula | Mítica | 0,4 % | +60 % monedas y +0,5 suerte |
+
+- **Lugares:** te acompañan hasta 3 mascotas (Domador suma 2 lugares más). Se pueden repetir si tenés copias.
+- **Cómo se ven:** te siguen flotando y las ven todos. Las de Legendaria y Mítica se anuncian en el servidor.
+- **Menú "Mis mascotas":** elegís cuáles te acompañan.
+
+**Rocas:** cada bioma tiene 3 rocas distintas (forma, colores y material). Cada geoda nace con una al azar y su cartel dice cuál es ("Musgosa", "de Obsidiana"...). Solo cambia cómo se ve.
+
+| Bioma | Roca 1 | Roca 2 | Roca 3 |
+|---|---|---|---|
+| Pradera | Cuarzo (gris y violeta) | Musgosa (verde y rosa) | Caliza (crema y cian) |
+| Dunas | de Ámbar | de Arenisca Roja (roja y amarilla) | Desértica (arena y naranja) |
+| Glaciar | de Zafiro | de Escarcha (blanca y cian) | de Glaciar Profundo (azul y celeste) |
+| Volcán | de Rubí | de Obsidiana (negra y naranja) | de Azufre (ocre y amarillo) |
+| Abismo | Estelar | Nebulosa (violeta y rosa) | Meteorito (gris y naranja) |
+
+**HUD:**
+- 9 botones en 3 columnas: Tienda, Mochila, Museo, Vitrina, Ranking, Eventos, Misiones, Mascotas y Renacer.
+- Íconos nuevos en la hoja: Mascota, Misión, Renacer y Esencia.
+- Globitos:
+  - Mascotas: "!" si te alcanza para la ruleta.
+  - Renacer: "!" si podés renacer o mejorar una rama.
+  - Misiones: "!" cuando cumplís una.
+
+Decisiones del Grupo 4:
+- **Las misiones se pagan solas** (sin botón de cobrar): es lo más simple y no se pierde nada si te olvidás.
+- **La ruleta muestra las porciones del tamaño real de cada chance.** Una rueda con porciones iguales y chances distintas engañaría.
+- **La Esencia sale solo de renacer, de las misiones de Prestigio y (poco) del Santuario.** Así renacer sigue siendo la fuente principal.
+- **Los bonos del Renacer tienen tope** (10 renaceres). Más allá, solo suma Esencia para el árbol, que también tiene tope.
+- **Los datos siguen viviendo en memoria** (como todo el prototipo): el guardado con ProfileStore queda para antes de publicar.
+
 ## Números (en `forja-rapida/src/shared/GameConfig.luau`)
 
 Fórmulas (en `Reglas.luau`):

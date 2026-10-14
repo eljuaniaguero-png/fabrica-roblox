@@ -5,7 +5,8 @@ Arma, fuera de Roblox, cómo se ven las piezas puestas como en Hud.client.luau y
 el estilo sin abrir Studio; lo que vale es lo que se ve en el juego.
 
 Uso: python3 forja-rapida/arte/scripts/maqueta.py <letra.ttf>   (Fredoka, la de Roblox)
-Escribe arte/gui/maqueta_hud.png y arte/gui/maqueta_tienda.png.
+Escribe arte/gui/maqueta_hud.png, maqueta_tienda.png y (Grupo 4) maqueta_ruleta.png, con los 9
+botones, el seguimiento de misiones y la Ruleta de Mascotas con sus porciones reales.
 """
 
 import json
@@ -86,11 +87,12 @@ def fondo():
 
 def hud(lienzo):
     # izquierda: menús
-    menus = [("Tienda", "Tienda", "Verde", "!"), ("Mochila", "Mochila", "Naranja", "34"), ("Índice", "Libro", "Rosa", None),
-             ("Vitrina", "Corona", "Violeta", None), ("Ranking", "Trofeo", "Amarillo", None), ("Eventos", "Reloj", "Azul", "!")]
+    menus = [("Tienda", "Tienda", "Verde", "!"), ("Mochila", "Mochila", "Naranja", "34"), ("Museo", "Libro", "Rosa", None),
+             ("Vitrina", "Corona", "Violeta", None), ("Ranking", "Trofeo", "Amarillo", None), ("Eventos", "Reloj", "Azul", "!"),
+             ("Misiones", "Mision", "Cian", "!"), ("Mascotas", "Mascota", "Rosa", "!"), ("Renacer", "Renacer", "Naranja", None)]
     y0 = int(720 * 0.45 - (3 * 96 + 24) / 2)
     for i, (t, ic, c, g) in enumerate(menus):
-        x, y = 16 + (i % 2) * 108, y0 + (i // 2) * 108
+        x, y = 16 + (i % 3) * 108, y0 + (i // 3) * 108
         boton(lienzo, c, x, y, 96, 96)
         icono(lienzo, ic, x + 18, y + 6, 60)
         texto(lienzo, (x + 48, y + 80), t, 20, ancla="mm")
@@ -110,6 +112,18 @@ def hud(lienzo):
     texto(lienzo, (1280 - 16 - 268 + 118, y + 29), "Vender todo", 22, ancla="mm")
     boton(lienzo, "Azul", 1280 - 16 - 58, y, 58, 58)
     icono(lienzo, "Engranaje", 1280 - 16 - 58 + 6, y + 6, 46)
+    # derecha: seguimiento de misiones (Grupo 4), escala 0.9
+    misiones = [("Rompé 18 geodas", 11, 18, ["#8CFF5A", "#1FA33A"]), ("Hacé 1 ofrenda en un altar", 0, 1, ["#FFE45C", "#F59E00"]),
+                ("Rompé 4 Geodas Gigantes", 1, 4, ["#FF7A86", "#D11F3A"])]
+    y = int(720 * 0.56)
+    for t, pr, meta, cols in misiones:
+        w, h = 297, 59
+        x = 1280 - 16 - w
+        oscuro(lienzo, x, y, w, h, 0.4)
+        tenido(lienzo, cols, x + 6, y + 6, 9, h - 12, 0.1)
+        texto(lienzo, (x + 22, y + 6), t, 15)
+        barra(lienzo, x + 22, y + 30, 266, 23, pr / meta, cols, f"{pr} / {meta}")
+        y += h + 7
     # abajo: próxima zona
     x = (1280 - (52 + 10 + 460 + 10 + 210)) // 2
     icono(lienzo, "Fuerza", x, 720 - 16 - 50, 52)
@@ -164,6 +178,75 @@ def ventana_tienda(lienzo):
     texto(lienzo, (rx, ay + 292), "y un 2,5 % más de todo.", 24, ancla="mm")
 
 
+MASCOTAS = [("Topito", "Comun", 30, "#8A5A2B", "+5 % monedas"), ("Piedrín", "Comun", 30, "#8D939C", "+0,05 suerte"),
+            ("Chispa", "Raro", 14, "#FF8C42", "+10 % monedas"), ("Musgo", "Raro", 14, "#5E8C4A", "+0,1 suerte"),
+            ("Cuarcito", "Epico", 4.5, "#C77DFF", "+20 % monedas"), ("Glaciel", "Epico", 4.5, "#2F5D8A", "+0,2 suerte"),
+            ("Magmo", "Legendario", 2.6, "#FF3B1F", "+35 % monedas · +0,2 suerte"), ("Nébula", "Mitico", 0.4, "#4B2A6B", "+60 % monedas · +0,5 suerte")]
+RAREZA = {"Comun": ("Común", "#B9C2CC"), "Raro": ("Raro", "#3FA9FF"), "Epico": ("Épico", "#B04DFF"),
+          "Legendario": ("Legendario", "#FFB21E"), "Mitico": ("Mítico", "#FF3D7F")}
+
+
+def cara(lienzo, x, y, tam, color):
+    d = ImageDraw.Draw(lienzo)
+    d.ellipse((x, y + tam * 0.15, x + tam, y + tam), fill=hexa(color) + (255,), outline=OSC, width=max(2, tam // 18))
+    for ox in (0.33, 0.67):
+        cx, cy = x + tam * ox, y + tam * 0.55
+        d.ellipse((cx - tam * 0.09, cy - tam * 0.1, cx + tam * 0.09, cy + tam * 0.1), fill=(255, 255, 255, 255))
+        d.ellipse((cx - tam * 0.045, cy - tam * 0.05, cx + tam * 0.045, cy + tam * 0.05), fill=OSC)
+
+
+def ventana_ruleta(lienzo):
+    velo = Image.new("RGBA", lienzo.size, (14, 18, 48, 140))
+    lienzo.alpha_composite(velo)
+    W, H = 1100, 660
+    x0, y0 = (1280 - W) // 2, int(720 * 0.52 - H / 2)
+    oscuro(lienzo, x0, y0, W, H)
+    tenido(lienzo, ["#FF9ED8", "#E0308F"], x0 + 8, y0 + 8, W - 16, 96)
+    icono(lienzo, "Mascota", x0 + 30, y0 + 20, 70)
+    texto(lienzo, (x0 + 110, y0 + 56), "Mascotas", 58, ancla="lm", borde=6)
+    boton(lienzo, "Rojo", x0 + W - 84, y0 + 24, 64, 64)
+    texto(lienzo, (x0 + W - 52, y0 + 54), "X", 34, ancla="mm")
+    cx, cy = x0 + 24, y0 + 120
+    for i, (t, ic, c) in enumerate([("Ruleta", "Moneda", "Rosa"), ("Mis mascotas", "Mascota", "Gris")]):
+        bx = cx + i * 300
+        boton(lienzo, c, bx, cy, 290, 60)
+        icono(lienzo, ic, bx + 20, cy + 10, 40)
+        texto(lienzo, (bx + 165, cy + 30), t, 24, ancla="mm")
+    # rueda con porciones del tamaño de cada chance (0° arriba, sentido del reloj)
+    R = 190
+    rx, ry = cx + 30 + R, cy + 90 + R
+    d = ImageDraw.Draw(lienzo)
+    d.ellipse((rx - R - 12, ry - R - 12, rx + R + 12, ry + R + 12), fill=OSC, outline=hexa("#FFC83D") + (255,), width=7)
+    a = -90.0
+    for nombre, rz, ch, col, _ in MASCOTAS:
+        b = a + ch * 3.6
+        d.pieslice((rx - R, ry - R, rx + R, ry + R), a, b, fill=hexa(col) + (255,), outline=OSC, width=3)
+        if ch >= 4:
+            import math
+            m = math.radians((a + b) / 2)
+            cara(lienzo, rx + math.cos(m) * R * 0.62 - 26, ry + math.sin(m) * R * 0.62 - 26, 52, col)
+        a = b
+    d.ellipse((rx - 28, ry - 28, rx + 28, ry + 28), fill=hexa("#FFC83D") + (255,), outline=OSC, width=4)
+    d.polygon([(rx, ry - R + 8), (rx - 18, ry - R - 26), (rx + 18, ry - R - 26)], fill=(255, 255, 255, 255), outline=OSC)
+    boton(lienzo, "Rosa", rx - 170, ry + R + 26, 340, 70)
+    icono(lienzo, "Moneda", rx - 150, ry + R + 36, 50)
+    texto(lienzo, (rx + 20, ry + R + 61), "Girar · 150", 30, ancla="mm")
+    # probabilidades
+    px = cx + 30 + 2 * R + 50
+    texto(lienzo, (px, cy + 84), "Probabilidades", 32, hexa("#FF9ED8"))
+    fy = cy + 128
+    for nombre, rz, ch, col, bono in MASCOTAS:
+        tenido(lienzo, ["#353B63", "#262B4F"], px, fy, W - (px - x0) - 30, 44, 0.28)
+        cara(lienzo, px + 8, fy + 2, 38, col)
+        texto(lienzo, (px + 56, fy + 2), nombre, 19)
+        rn, rc = RAREZA[rz]
+        texto(lienzo, (px + 56, fy + 25), rn, 14, hexa(rc))
+        texto(lienzo, (px + 170, fy + 25), bono, 14, hexa("#C9F0FF"))
+        texto(lienzo, (x0 + W - 50, fy + 22), (f"{ch:g} %").replace(".", ","), 22, hexa("#FFE45C"), ancla="rm")
+        fy += 48
+    texto(lienzo, (px, fy + 6), "Total: 100 %. Cada tirada da una mascota. Solo con Monedas del juego.", 16, hexa("#C9D6EE"))
+
+
 def main():
     a = fondo()
     hud(a)
@@ -172,6 +255,10 @@ def main():
     hud(b)
     ventana_tienda(b)
     b.convert("RGB").save(os.path.join(RAIZ, "gui", "maqueta_tienda.png"))
+    c = fondo()
+    hud(c)
+    ventana_ruleta(c)
+    c.convert("RGB").save(os.path.join(RAIZ, "gui", "maqueta_ruleta.png"))
     print("listo")
 
 

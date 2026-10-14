@@ -37,9 +37,15 @@ local TIPOS = {
 	{ Id = "Pico", Nombre = "Diseños de pico", Icono = "Pico" },
 	{ Id = "Vitrina", Nombre = "Vitrinas", Icono = "Corona" },
 	{ Id = "Decoracion", Nombre = "Decoraciones", Icono = "Cristal" },
+	{ Id = "Efecto", Nombre = "Evoluciones del pico (solo se ven)", Icono = "Chispa" },
 }
-local ATRIBUTO_EQUIPADO =
-	{ Aura = "Aura", Pico = "DisenoPico", Vitrina = "EstiloVitrina", Decoracion = "Decoracion" }
+local ATRIBUTO_EQUIPADO = {
+	Aura = "Aura",
+	Pico = "DisenoPico",
+	Vitrina = "EstiloVitrina",
+	Decoracion = "Decoracion",
+	Efecto = "EfectoPico",
+}
 
 local function porcentaje(p: number): string
 	local x = p * 100
@@ -423,7 +429,9 @@ local function crear()
 				nombre.LayoutOrder = 3
 				nombre.Parent = colc
 				if tiene then
-					local quitable = tipo.Id == "Aura" or tipo.Id == "Decoracion"
+					local quitable = tipo.Id == "Aura"
+						or tipo.Id == "Decoracion"
+						or tipo.Id == "Efecto"
 					local b = Estilo.boton({
 						Texto = if esEste then (if quitable then "Sacar" else "Usando") else "Usar",
 						Color = if esEste then "Gris" else "Azul",
@@ -573,6 +581,7 @@ local function crear()
 		"DisenoPico",
 		"EstiloVitrina",
 		"Decoracion",
+		"EfectoPico",
 	}, function()
 		if Ventanas.abierta() == "Museo" then
 			dibujar()

@@ -5,9 +5,11 @@
 -- punto: Zona (número, obligatorio) y Jefe (true para el punto de la GEODA JEFE de la zona).
 -- Grupo 3: Tamano (fijo, para las vetas ocultas y la Dimensión Prisma) y Secreto (número de
 -- bioma: solo le pueden pegar los que abrieron su puerta secreta).
+-- Grupo 4: Renacer (número: solo le pueden pegar los que renacieron esas veces; el Santuario).
 -- Las geodas van a workspace.Geodas, con el tag "Geoda" y estos atributos (el cliente los lee
--- para el cartel, la barra de vida y los efectos): Zona, Tamano, Modificador, Vida, VidaMax y
--- Rota (true mientras se reproduce la revelación).
+-- para el cartel, la barra de vida y los efectos): Zona, Tamano, Modificador, Vida, VidaMax,
+-- Rota (true mientras se reproduce la revelación) y Variante (Grupo 4: el nombre de la roca, si
+-- no es la de siempre).
 --
 -- El servidor decide todo. Por cada golpe revisa: que la geoda exista y siga viva, que el
 -- jugador tenga datos, que no pase de GameConfig.Golpe.PorSegundo (con una ráfaga chica), que
@@ -63,6 +65,7 @@ type Estado = {
 	Especial: boolean, -- la trae un evento: no vuelve a nacer
 	ParteParaPremio: number,
 	Secreto: number?, -- Grupo 3: está detrás de la puerta secreta de ese bioma
+	Renacer: number?, -- Grupo 4: está en el Santuario (hace falta haber renacido tantas veces)
 }
 
 local G = GameConfig.Golpe
@@ -128,8 +131,9 @@ local function premiar(jugador: Player, e: Estado): boolean
 	if not d then
 		return false
 	end
-	-- la Ancestral da gemas de la mejor zona de cada uno; las demás, de su zona
-	local zonaGema = if e.Tamano == "Ancestral" then Reglas.mejorZona(d.Zonas) else e.Zona
+	-- la Ancestral y la Renacida dan gemas de la mejor zona de cada uno; las demás, de su zona
+	local deMejorZona = e.Tamano == "Ancestral" or e.Tamano == "Renacida"
+	local zonaGema = if deMejorZona then Reglas.mejorZona(d.Zonas) else e.Zona
 	local suerte = Reglas.suerteGeoda(Jugadores.suerte(d), zonaGema, e.Tamano)
 		* Mundo.suerte()
 		* Jugadores.bendicion(d)
@@ -149,6 +153,12 @@ local function premiar(jugador: Player, e: Estado): boolean
 		math.floor(Reglas.unidades(e.Tamano, e.Modificador) * Mundo.unidades(e.Modificador) + 0.5)
 	)
 	local nueva = Jugadores.agregarGema(jugador, gema.Id, unidades)
+	-- Grupo 4: la Geoda Renacida a veces suelta Esencia
+	if e.Tamano == "Renacida" and azar() < 1 / GameConfig.Renacer.EsenciaUnoEn then
+		d.Esencia += 1
+		Jugadores.publicar(jugador)
+		Remotos.Aviso:FireClient(jugador, "¡La Geoda Renacida soltó 1 de Esencia!")
+	end
 	local hitos = Descubrimientos.registrar(jugador, e.Modificador, rareza)
 	local chance = if esSecreta
 		then 1 / unoEnSecreta
@@ -245,6 +255,9 @@ local function alGolpear(jugador: Player, geoda: unknown)
 	if e.Secreto and not d.Secretos[e.Secreto] then
 		return -- veta oculta detrás de una puerta que no abrió
 	end
+	if e.Renacer and d.Renacimientos < e.Renacer then
+		return -- Santuario del Renacer: solo para los que ya renacieron
+	end
 	if not estaCerca(jugador, e) then
 		return
 	end
@@ -300,6 +313,9 @@ local function crear(
 		Secreto = if typeof(punto:GetAttribute("Secreto")) == "number"
 			then punto:GetAttribute("Secreto") :: number
 			else nil,
+		Renacer = if typeof(punto:GetAttribute("Renacer")) == "number"
+			then punto:GetAttribute("Renacer") :: number
+			else nil,
 	}
 	modelo.Parent = carpeta
 	return modelo
@@ -319,7 +335,18 @@ nacer = function(punto: BasePart)
 		else Reglas.tamanoAlAzar(azar)
 	local bonos = Mundo.bonos()
 	local modificador = Reglas.tirar(GameConfig.Modificadores, 1, azar, bonos)
-	crear(punto, zona, tamano, modificador, Reglas.vidaGeoda(zona, tamano), false)
+	local vida = Reglas.vidaGeoda(zona, tamano)
+	if tamano == "Renacida" then
+		-- Grupo 4: sigue al más fuerte de los que ya renacieron (para que no se rompa de un golpe)
+		local fuerte = 0
+		for _, d in Jugadores.todos() do
+			if d.Renacimientos >= 1 then
+				fuerte = math.max(fuerte, Jugadores.fuerza(d))
+			end
+		end
+		vida = Reglas.vidaRenacida(fuerte)
+	end
+	crear(punto, zona, tamano, modificador, vida, false)
 	-- Las rarísimas se anuncian (salvo las que el evento de ahora hace salir más: el evento ya
 	-- se anunció y serían demasiados carteles).
 	local mod = Reglas.modificador(modificador)

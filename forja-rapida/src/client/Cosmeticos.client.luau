@@ -3,6 +3,9 @@
 --   Auras de todos los jugadores (atributo Aura): destellos, chispas o runas que orbitan.
 --   Con "Efectos reducidos", menos partículas y sin runas que giran.
 --   El pico se sostiene como herramienta: se esconde la barra de herramientas de Roblox.
+--   Grupo 4: las evoluciones del pico (partículas, estelas, fuego) las pone el servidor en la
+--   herramienta "Pico"; con "Efectos reducidos" este cliente las apaga en los picos de los
+--   demás (el tuyo se sigue viendo).
 
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
@@ -119,10 +122,41 @@ for _, j in Players:GetPlayers() do
 	seguir(j)
 end
 Players.PlayerRemoving:Connect(quitar)
+
+-- Evoluciones del pico de los demás: se apagan con "Efectos reducidos".
+local yo = Players.LocalPlayer
+local function efectosPico(personaje: Instance)
+	local pico = personaje:FindFirstChild("Pico")
+	if not pico or not pico:IsA("Tool") or Players:GetPlayerFromCharacter(personaje) == yo then
+		return
+	end
+	local apagar = Efectos.reducidos()
+	for _, d in pico:GetDescendants() do
+		if d.Name == "Evolucion" then
+			if d:IsA("ParticleEmitter") or d:IsA("Trail") or d:IsA("Fire") or d:IsA("Sparkles") then
+				(d :: any).Enabled = not apagar
+			end
+		end
+	end
+end
+local function revisarPicos()
+	for _, j in Players:GetPlayers() do
+		if j.Character then
+			efectosPico(j.Character)
+		end
+	end
+end
+Workspace.DescendantAdded:Connect(function(d: Instance)
+	if d.Name == "Pico" and d:IsA("Tool") and d.Parent then
+		task.defer(efectosPico, d.Parent)
+	end
+end)
+
 Efectos.alCambiar(function()
 	for j in auras do
 		poner(j)
 	end
+	revisarPicos()
 end)
 
 -- Runas que orbitan (un solo bucle para todas).

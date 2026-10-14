@@ -76,9 +76,17 @@ local function crearCartel(m: Model, roca: BasePart): (BillboardGui, Frame, Text
 	)
 	nombre.LayoutOrder = 2
 	nombre.Parent = b
+	-- Grupo 4: el nombre de su roca, si no es la de siempre ("Musgosa", "de Obsidiana"...)
+	local variante = m:GetAttribute("Variante")
+	if typeof(variante) == "string" and variante ~= "" then
+		local vt = Estilo.texto(variante, 18, Color3.fromHex("#E3E8F2"))
+		vt.LayoutOrder = 3
+		vt.Parent = b
+		b.Size += UDim2.fromOffset(0, 20)
+	end
 
 	local barra = Instance.new("Frame")
-	barra.LayoutOrder = 3
+	barra.LayoutOrder = 4
 	barra.Size = UDim2.fromOffset(200, 24)
 	barra.BackgroundColor3 = Estilo.Oscuro
 	Estilo.esquinas(barra, 6)

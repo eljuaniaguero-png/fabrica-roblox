@@ -69,7 +69,8 @@ local function vender(jugador: Player)
 	if not d or not permitir(jugador) then
 		return
 	end
-	local total = Reglas.valorMochila(d.Mochila)
+	-- Grupo 4: el Renacer, la rama Mercader y las mascotas suben lo que te pagan
+	local total = math.floor(Reglas.valorMochila(d.Mochila) * Jugadores.bonos(d).Monedas)
 	if total <= 0 then
 		Remotos.Aviso:FireClient(jugador, "Tu mochila está vacía: ¡rompé geodas!")
 		return

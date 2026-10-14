@@ -72,6 +72,10 @@ local COLOR_ICONO: { [string]: { string } } = {
 	Pico = { "#D8DEE6", "#7A8494" },
 	Candado = { "#FFE07A", "#C98A00" },
 	Amuleto = { "#B8FF6A", "#E8A317" },
+	Mascota = { "#FFC2E6", "#E0308F" },
+	Mision = { "#B8FF6A", "#1C7FE0" },
+	Renacer = { "#FFF3B0", "#FF6A3D" },
+	Esencia = { "#FFE45C", "#C2185B" },
 }
 
 local function degradado(padre: Instance, colores: { Color3 }, rotacion: number?)

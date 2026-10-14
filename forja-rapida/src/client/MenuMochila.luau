@@ -104,7 +104,9 @@ local function crear()
 			t.Parent = lista
 		end
 		vacia.Visible = #ids == 0
-		textoTotal.Text = "Total: " .. Formato.corto(Reglas.valorMochila(mochila))
+		-- Grupo 4: con los bonos del Renacer, el árbol y las mascotas (lo mismo que paga el Banco)
+		textoTotal.Text = "Total: "
+			.. Formato.corto(math.floor(Reglas.valorMochila(mochila) * Datos.bonos().Monedas))
 		Estilo.colorBoton(vender, if #ids > 0 then "Amarillo" else "Gris")
 	end
 	table.insert(v.alAbrir, dibujar)

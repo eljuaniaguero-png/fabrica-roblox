@@ -5,7 +5,10 @@
 --   Puertas entre biomas (tag "PuertaZona", atributo Zona): si tu Fuerza ya abrió esa zona, se
 --   pueden atravesar; si no, muestran cuánta Fuerza piden. (El servidor igual revisa la zona en
 --   cada golpe, así que pasar a la fuerza no sirve de nada.)
---   Carteles con atributo Menu (por ejemplo el Museo del mapa): abren esa ventana.
+--   Puerta del Santuario del Renacer (Grupo 4, tag "PuertaRenacer", atributo Renacer): se
+--   puede atravesar si renaciste esas veces; si no, dice cuántas faltan. (El servidor igual
+--   revisa en cada golpe a las Geodas Renacidas.)
+--   Carteles con atributo Menu (el Museo, la Ruleta, Misiones, Renacer): abren esa ventana.
 --   Efectos de Remotos.Secreto: destello de color al abrir una puerta, un cofre, un altar o al
 --   cruzar un portal (sin destello con "Efectos reducidos").
 
@@ -109,6 +112,48 @@ local function revisarPuertasZona()
 		end
 	end
 end
+
+-- Santuario del Renacer -----------------------------------------------------------------------
+
+local function revisarSantuario()
+	local n = Datos.numero("Renacimientos")
+	for _, p in CollectionService:GetTagged("PuertaRenacer") do
+		if not p:IsA("BasePart") then
+			continue
+		end
+		local pide = p:GetAttribute("Renacer")
+		local veces = if typeof(pide) == "number" then pide else 1
+		if not p:FindFirstChild("CartelSantuario") then
+			local b = Instance.new("BillboardGui")
+			b.Name = "CartelSantuario"
+			b.Size = UDim2.fromOffset(380, 110)
+			b.StudsOffsetWorldSpace = Vector3.new(0, p.Size.Y / 2 + 3, 0)
+			b.MaxDistance = 140
+			b.LightInfluence = 0
+			local col = Estilo.contenido(b :: any, 2, true)
+			local t = Estilo.texto("Santuario del Renacer", 34, Color3.fromHex("#FFD23F"))
+			t.LayoutOrder = 1
+			t.Parent = col
+			local f = Estilo.conIconos(
+				{ "Renacer" },
+				("Para los que renacieron %d %s"):format(
+					veces,
+					if veces == 1 then "vez" else "veces"
+				),
+				24
+			)
+			f.LayoutOrder = 2
+			f.Parent = col
+			b.Parent = p
+		end
+		abrir(p, n >= veces)
+	end
+end
+CollectionService:GetInstanceAddedSignal("PuertaRenacer"):Connect(function()
+	task.defer(revisarSantuario)
+end)
+Datos.alCambiar({ "Renacimientos" }, revisarSantuario)
+revisarSantuario()
 
 for _, tag in { "PuertaSecreta", "Cofre" } do
 	CollectionService:GetInstanceAddedSignal(tag):Connect(function()

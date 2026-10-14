@@ -60,5 +60,19 @@ Object.assign(ICONOS, {
     `<path d="M22 4 Q32 16 42 4" fill="none" stroke="${O}" stroke-width="7" stroke-linecap="round"/><path d="M22 4 Q32 16 42 4" fill="none" stroke="#FFD23F" stroke-width="3" stroke-linecap="round"/><circle cx="32" cy="38" r="23" fill="url(#am1)" stroke="${O}" stroke-width="4"/><circle cx="32" cy="38" r="15" fill="url(#am2)" stroke="#B07800" stroke-width="3"/>` +
     [[27.5, 33.5], [36.5, 33.5], [27.5, 42.5], [36.5, 42.5]].map(([x, y]) => `<circle cx="${x}" cy="${y}" r="5" fill="#DFFFB0" stroke="#1E7A1E" stroke-width="1.5"/>`).join('') +
     `${brillo(22, 26, 5, 2.5)}${destello(55, 18, 6)}`),
+  // Grupo 4
+  Mascota: svg(g('ma1', '#FFC2E6', '#E0308F'),
+    `<ellipse cx="32" cy="42" rx="15" ry="13" fill="url(#ma1)" stroke="${O}" stroke-width="4"/>` +
+    [[13, 27, 6, 7.5], [24, 16, 6.5, 8], [40, 16, 6.5, 8], [51, 27, 6, 7.5]].map(([x, y, rx, ry]) => `<ellipse cx="${x}" cy="${y}" rx="${rx}" ry="${ry}" fill="url(#ma1)" stroke="${O}" stroke-width="4"/>`).join('') +
+    `${brillo(26, 37, 5, 2.5)}${brillo(22, 13, 2.5, 1.5)}${destello(55, 52, 6)}`),
+  Mision: svg(g('mi1', '#9CDBFF', '#1673E0') + g('mi2', '#B8FF6A', '#1FA33A'),
+    `<rect x="12" y="8" width="40" height="52" rx="7" fill="url(#mi1)" stroke="${O}" stroke-width="4"/><rect x="18" y="16" width="28" height="38" rx="3" fill="#FFFFFF" stroke="${O}" stroke-width="2.5"/><rect x="24" y="4" width="16" height="9" rx="3" fill="#C9CFDA" stroke="${O}" stroke-width="3"/>` +
+    `<path d="M22 24 H40 M22 31 H36" stroke="#9AA3B8" stroke-width="3" stroke-linecap="round"/><path d="M23 42 L30 49 L46 32" fill="none" stroke="${O}" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/><path d="M23 42 L30 49 L46 32" fill="none" stroke="url(#mi2)" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>${destello(54, 54, 6)}`),
+  Renacer: svg(g('re1', '#FFF3B0', '#FF6A3D') + g('re2', '#FFE45C', '#E8590C'),
+    `<path d="M32 9 A23 23 0 1 1 11 22" fill="none" stroke="${O}" stroke-width="12" stroke-linecap="round"/><path d="M32 9 A23 23 0 1 1 11 22" fill="none" stroke="url(#re1)" stroke-width="6" stroke-linecap="round"/>` +
+    `<path d="M4 17 L13 30 L21 15 Z" fill="url(#re2)" stroke="${O}" stroke-width="3.5" stroke-linejoin="round"/>` +
+    `<path d="M32 46 C22 44 22 33 28 28 C28 33 31 34 32 31 C33 26 31 22 34 18 C38 25 44 30 40 40 C39 44 36 46 32 46 Z" fill="url(#re2)" stroke="${O}" stroke-width="3.5" stroke-linejoin="round"/>${brillo(30, 36, 2.5, 1.5)}`),
+  Esencia: svg(g('es1', '#FFE45C', '#C2185B') + g('es2', '#FFFFFF', '#FFB04D'),
+    `<path d="M32 4 C40 18 52 28 52 41 A20 20 0 0 1 12 41 C12 28 24 18 32 4 Z" fill="url(#es1)" stroke="${O}" stroke-width="4" stroke-linejoin="round"/><path d="M32 22 C36 30 42 34 42 41 A10 10 0 0 1 22 41 C22 34 28 30 32 22 Z" fill="url(#es2)" opacity="0.9"/>${brillo(23, 34, 4, 2.5)}${destello(52, 14, 6)}`),
 });
 module.exports = ICONOS;

@@ -41,6 +41,14 @@ local Remotos = {
 	-- Grupo 3
 	Equipar = evento("Equipar"), -- cliente -> servidor: (tipo de cosmético, Id o "" para sacarlo)
 	Secreto = evento("Secreto"), -- servidor -> cliente: ("Puerta" | "Portal" | "Altar" | "Cofre", zona)
+	-- Grupo 4
+	Mision = evento("Mision"), -- servidor -> cliente: (texto, monedas, esencia) misión cumplida
+	CambiarMision = evento("CambiarMision"), -- cliente -> servidor: (dificultad) otra misión en ese lugar
+	Renacer = evento("Renacer"), -- cliente -> servidor: () renacer; servidor -> cliente: (número, esencia)
+	MejorarRama = evento("MejorarRama"), -- cliente -> servidor: (Id de la rama del árbol de Esencia)
+	GirarRuleta = evento("GirarRuleta"), -- cliente -> servidor: () tirar la Ruleta de Mascotas
+	Ruleta = evento("Ruleta"), -- servidor -> cliente: (Id de la mascota que salió)
+	EquiparMascota = evento("EquiparMascota"), -- cliente -> servidor: (Id, true = poner / false = sacar)
 }
 
 carpeta.Parent = ReplicatedStorage

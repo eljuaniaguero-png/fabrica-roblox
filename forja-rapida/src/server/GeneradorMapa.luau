@@ -5,6 +5,8 @@
 --   Marcadores lugares con función: les pone su tag y sus atributos y les arma su aspecto
 --              (vitrinas, tableros, puertas de los biomas, puertas secretas, cofres, altares,
 --              portales, el cartel del Museo y luces de las cámaras secretas).
+--              Grupo 4: la Ruleta de Mascotas, la puerta del Santuario del Renacer y los
+--              carteles que abren un menú (Misiones, Renacer).
 -- Si ya hay un workspace.Mapa (por ejemplo armado a mano en Studio), no hace nada.
 
 local CollectionService = game:GetService("CollectionService")
@@ -33,7 +35,43 @@ local TAGS: { [string]: string } = {
 	Altar = "Altar",
 	Portal = "Portal",
 	DestinoPortal = "DestinoPortal",
+	Ruleta = "Ruleta",
+	PuertaRenacer = "PuertaRenacer",
 }
+
+-- Colores de los 8 gajos de la ruleta (los mismos que dibuja el menú).
+local GAJOS =
+	{ "#FF4D5E", "#FFC93C", "#4CD964", "#2EC8FF", "#9B4DFF", "#FF8C42", "#FF6FD8", "#7CF5FF" }
+
+-- Cartel flotante con texto grande (Museo, Ruleta, Misiones...).
+local function letrero(p: BasePart, texto: string, color: string, alto: number)
+	local b = Instance.new("BillboardGui")
+	b.Name = "Letrero"
+	b.Size = UDim2.fromOffset(340, 60)
+	b.StudsOffset = Vector3.new(0, alto, 0)
+	b.MaxDistance = 110
+	local t = Instance.new("TextLabel")
+	t.Size = UDim2.fromScale(1, 1)
+	t.BackgroundTransparency = 1
+	t.Font = Enum.Font.FredokaOne
+	t.TextScaled = true
+	t.Text = texto
+	t.TextColor3 = Color3.fromHex(color)
+	t.TextStrokeTransparency = 0
+	t.Parent = b
+	b.Parent = p
+end
+
+-- ProximityPrompt que abre un menú en el cliente (lo abre Secretos.client por el atributo Menu).
+local function abreMenu(p: BasePart, menu: string, accion: string, objeto: string)
+	local prompt = Instance.new("ProximityPrompt")
+	prompt.ActionText = accion
+	prompt.ObjectText = objeto
+	prompt.MaxActivationDistance = 14
+	prompt.RequiresLineOfSight = false
+	prompt:SetAttribute("Menu", menu)
+	prompt.Parent = p
+end
 
 local function material(nombre: string): Enum.Material
 	local ok, m = pcall(function()
@@ -254,6 +292,104 @@ local function armarMarcador(m: Marcador, carpeta: Instance)
 		luz.Color = Color3.fromHex("#C99BFF")
 		luz.Range = 18
 		luz.Parent = p
+	elseif m.Tipo == "Ruleta" then
+		-- Grupo 4: rueda vertical de 8 gajos (de los dos lados) con un puntero arriba. Gira
+		-- alrededor del eje Z del marcador; la hace girar cada cliente (Mascotas.client).
+		local radio = math.max(tam.X, tam.Y) / 2
+		p = parte(
+			"Ruleta",
+			Vector3.new(1, radio * 2, radio * 2),
+			cf * CFrame.Angles(0, math.pi / 2, 0),
+			"#1B1F3B",
+			Enum.Material.SmoothPlastic,
+			carpeta
+		)
+		local disco = p :: Part
+		disco.Shape = Enum.PartType.Cylinder
+		local rueda = Instance.new("Model")
+		rueda.Name = "Rueda"
+		local eje = parte(
+			"Eje",
+			Vector3.new(radio * 0.3, radio * 0.3, 2.6),
+			cf,
+			"#FFC83D",
+			Enum.Material.Foil,
+			rueda
+		)
+		decorativa(eje)
+		for _, lado in { -1, 1 } do
+			for k = 1, 8 do
+				local ang = (k - 0.5) / 8 * math.pi * 2
+				local gajo = parte(
+					"Gajo",
+					Vector3.new(radio * 0.62, radio * 0.7, 0.4),
+					cf * CFrame.Angles(0, 0, ang) * CFrame.new(0, radio * 0.5, lado * 0.7),
+					GAJOS[k],
+					Enum.Material.SmoothPlastic,
+					rueda
+				)
+				decorativa(gajo)
+			end
+		end
+		rueda.PrimaryPart = eje
+		rueda.Parent = p
+		local puntero = parte(
+			"Puntero",
+			Vector3.new(1.4, 1.4, 2.8),
+			cf * CFrame.new(0, radio + 0.4, 0) * CFrame.Angles(0, 0, math.pi / 4),
+			"#FFFFFF",
+			Enum.Material.Neon,
+			p
+		)
+		decorativa(puntero)
+		abreMenu(p, "Mascotas", "Girar", "Ruleta de Mascotas")
+		letrero(p, "RULETA DE MASCOTAS", "#FF9ED8", radio + 3)
+	elseif m.Tipo == "PuertaRenacer" then
+		-- Grupo 4: portón dorado del Santuario; se abre para los que renacieron (Secretos.client)
+		p = parte("PuertaRenacer", tam, cf, "#FFD23F", Enum.Material.ForceField, carpeta)
+		p.Transparency = 0.15
+		p.CastShadow = false
+	elseif m.Tipo == "Cartel" then
+		p = parte("Cartel", tam, cf, "#2E3358", Enum.Material.SmoothPlastic, carpeta)
+		local marco = parte(
+			"Marco",
+			tam + Vector3.new(0.6, 0.6, -0.2),
+			cf * CFrame.new(0, 0, 0.2),
+			"#FFC83D",
+			Enum.Material.Foil,
+			p
+		)
+		decorativa(marco)
+		local poste = parte(
+			"Poste",
+			Vector3.new(0.8, cf.Position.Y, 0.8),
+			CFrame.new(cf.Position.X, cf.Position.Y / 2, cf.Position.Z),
+			"#8A5A2B",
+			Enum.Material.Wood,
+			p
+		)
+		poste.CanCollide = false
+		local menu = if typeof(a.Menu) == "string" then a.Menu else ""
+		local texto = if typeof(a.Texto) == "string" then a.Texto else menu
+		local sg = Instance.new("SurfaceGui")
+		sg.Face = Enum.NormalId.Front
+		sg.PixelsPerStud = 40
+		local t = Instance.new("TextLabel")
+		t.Size = UDim2.fromScale(1, 1)
+		t.BackgroundTransparency = 1
+		t.Font = Enum.Font.FredokaOne
+		t.TextScaled = true
+		t.Text = texto
+		t.TextColor3 = Color3.fromHex("#FFE45C")
+		t.TextStrokeTransparency = 0
+		t.Parent = sg
+		sg.Parent = p
+		local sg2 = sg:Clone()
+		sg2.Face = Enum.NormalId.Back
+		sg2.Parent = p
+		if menu ~= "" then
+			abreMenu(p, menu, "Abrir", texto)
+		end
 	elseif m.Tipo == "Museo" then
 		p = parte("CartelMuseo", tam, cf, "#FFC83D", Enum.Material.Foil, carpeta)
 		local prompt = Instance.new("ProximityPrompt")

@@ -16,6 +16,9 @@ type Titulo = GameConfig.Titulo
 type Pico = GameConfig.Pico
 type Amuleto = GameConfig.Amuleto
 type Cosmetico = GameConfig.Cosmetico
+type PlantillaMision = GameConfig.PlantillaMision
+type Rama = GameConfig.Rama
+type Mascota = GameConfig.Mascota
 
 -- Lo que hace falta para revisar los logros de un jugador (Reglas.logrosNuevos).
 export type EstadoLogros = {
@@ -26,6 +29,10 @@ export type EstadoLogros = {
 	JefesDerrotados: number, -- Geodas Ancestrales que ayudó a romper
 	EventosJugados: number,
 	Logros: { [string]: boolean }, -- los que ya cobró
+	-- Grupo 4 (nil = 1 pico, 0 misiones, 0 renaceres)
+	Pico: number?,
+	MisionesHechas: number?,
+	Renacimientos: number?,
 }
 
 -- Cualquier tabla que se tira con "1 en N": rarezas y modificadores. Las funciones que tiran
@@ -112,11 +119,12 @@ function Reglas.gemaDe(zona: number, rareza: string): Gema?
 end
 
 -- Fuerza = daño por golpe. Es el número grande del HUD y lo que piden las puertas.
-function Reglas.fuerza(nivelFuerza: number, pico: number): number
+-- `bono`: multiplicador del Renacer y del árbol de Esencia (Reglas.bonos(..).Fuerza).
+function Reglas.fuerza(nivelFuerza: number, pico: number, bono: number?): number
 	local F = GameConfig.Fuerza
 	local p = GameConfig.Picos[pico] or GameConfig.Picos[1]
 	local base = (F.Base + nivelFuerza * F.PorNivel) * (1 + F.Extra) ^ nivelFuerza
-	return math.floor(base * p.Multiplicador)
+	return math.floor(base * p.Multiplicador * (bono or 1))
 end
 
 -- Lo que cuesta pasar del nivel `nivel` al siguiente (nil si ya está al máximo).
@@ -183,8 +191,27 @@ local function cumple(l: Logro, e: EstadoLogros): boolean
 		return e.JefesDerrotados >= (n.Cuantos or math.huge)
 	elseif n.Tipo == "Eventos" then
 		return e.EventosJugados >= (n.Cuantos or math.huge)
+	elseif
+		n.Tipo == "Pico"
+		or n.Tipo == "Colecciones"
+		or n.Tipo == "Misiones"
+		or n.Tipo == "Renacer"
+	then
+		local tiene, total = Reglas.progreso(l, e)
+		return tiene >= total
 	end
 	return false
+end
+
+-- Colecciones del Museo que ya cobró (para el logro "Colecciones").
+local function coleccionesCompletas(cobrados: { [string]: boolean }): number
+	local n = 0
+	for _, l in GameConfig.Logros do
+		if l.Museo and cobrados[l.Id] then
+			n += 1
+		end
+	end
+	return n
 end
 
 -- Cuánto lleva un jugador de un logro o colección y cuánto pide (para las barras del Museo).
@@ -241,6 +268,18 @@ function Reglas.progreso(l: Logro, e: EstadoLogros): (number, number)
 	elseif n.Tipo == "Eventos" then
 		local total = n.Cuantos or 1
 		return math.min(e.EventosJugados, total), total
+	elseif n.Tipo == "Pico" then
+		local total = n.Cuantos or 1
+		return math.min(e.Pico or 1, total), total
+	elseif n.Tipo == "Colecciones" then
+		local total = n.Cuantas or 1
+		return math.min(coleccionesCompletas(e.Logros), total), total
+	elseif n.Tipo == "Misiones" then
+		local total = n.Cuantas or 1
+		return math.min(e.MisionesHechas or 0, total), total
+	elseif n.Tipo == "Renacer" then
+		local total = n.Cuantos or 1
+		return math.min(e.Renacimientos or 0, total), total
 	end
 	return 0, 1
 end
@@ -536,10 +575,11 @@ local LISTAS_COSMETICOS: { [string]: { Cosmetico } } = {
 	Pico = GameConfig.Cosmeticos.Picos,
 	Vitrina = GameConfig.Cosmeticos.Vitrinas,
 	Decoracion = GameConfig.Cosmeticos.Decoraciones,
+	Efecto = GameConfig.Cosmeticos.Efectos, -- Grupo 4: evoluciones del pico
 }
 local POR_DEFECTO: { [string]: string } = { Pico = "Clasico", Vitrina = "Clasica" }
 
--- Tipos de cosméticos ("Aura", "Pico", "Vitrina", "Decoracion") y su lista.
+-- Tipos de cosméticos ("Aura", "Pico", "Vitrina", "Decoracion", "Efecto") y su lista.
 function Reglas.tiposCosmeticos(): { [string]: { Cosmetico } }
 	return LISTAS_COSMETICOS
 end
@@ -595,6 +635,364 @@ function Reglas.coleccionesMuseo(): { Logro }
 		return a.Id < b.Id
 	end)
 	return lista
+end
+
+-- Grupo 4: variantes de roca ------------------------------------------------------------------
+
+-- La variante n de una zona (1 = la de siempre). Si no hay, nil.
+function Reglas.variante(zona: number, n: number): GameConfig.Variante?
+	local z = GameConfig.Zonas[zona]
+	return if z then z.Variantes[n] else nil
+end
+
+-- Grupo 4: bonos de Renacer, árbol de Esencia y mascotas --------------------------------------
+
+export type EstadoBonos = {
+	Renacimientos: number,
+	Ramas: { [string]: number }, -- rama -> nivel comprado
+	MascotasEquipadas: { string },
+}
+
+export type Bonos = {
+	Fuerza: number, -- multiplica la Fuerza
+	Monedas: number, -- multiplica lo que te dan al vender
+	Suerte: number, -- se suma a tu suerte
+	Llaves: number, -- multiplica la chance de encontrar llaves
+	Lugares: number, -- mascotas que te acompañan a la vez
+	NivelInicial: number, -- niveles de Fuerza con los que arrancás cada renacer
+}
+
+local mascotas: { [string]: Mascota } = {}
+for _, m in GameConfig.Mascotas.Lista do
+	mascotas[m.Id] = m
+end
+local ramas: { [string]: Rama } = {}
+for _, r in GameConfig.Renacer.Ramas do
+	ramas[r.Id] = r
+end
+
+function Reglas.mascota(id: string): Mascota?
+	return mascotas[id]
+end
+
+function Reglas.rama(id: string): Rama?
+	return ramas[id]
+end
+
+function Reglas.bonos(e: EstadoBonos): Bonos
+	local R = GameConfig.Renacer
+	local n = math.min(e.Renacimientos, R.MaximoBonos)
+	local b: Bonos = {
+		Fuerza = 1 + n * R.BonoFuerza,
+		Monedas = 1 + n * R.BonoMonedas,
+		Suerte = 0,
+		Llaves = 1,
+		Lugares = GameConfig.Mascotas.Lugares,
+		NivelInicial = 0,
+	}
+	for _, r in R.Ramas do
+		local nivel = math.min(e.Ramas[r.Id] or 0, #r.Costos)
+		local v = r.Valor * nivel
+		if r.Bono == "Fuerza" then
+			b.Fuerza += v
+		elseif r.Bono == "Monedas" then
+			b.Monedas += v
+		elseif r.Bono == "Suerte" then
+			b.Suerte += v
+		elseif r.Bono == "Llaves" then
+			b.Llaves += v
+		elseif r.Bono == "Lugares" then
+			b.Lugares += v
+		elseif r.Bono == "NivelInicial" then
+			b.NivelInicial += v
+		end
+	end
+	-- solo cuentan las que entran en tus lugares
+	for i, id in e.MascotasEquipadas do
+		local m = mascotas[id]
+		if m and i <= b.Lugares then
+			b.Monedas += m.Monedas or 0
+			b.Suerte += m.Suerte or 0
+		end
+	end
+	return b
+end
+
+-- Grupo 4: Renacer ---------------------------------------------------------------------------
+
+-- Zona que hay que tener abierta para el próximo renacer.
+function Reglas.zonaParaRenacer(renacimientos: number): number
+	local req = GameConfig.Renacer.Requisito
+	return req[math.min(renacimientos + 1, #req)]
+end
+
+function Reglas.puedeRenacer(zonas: { [number]: boolean }, renacimientos: number): boolean
+	return zonas[Reglas.zonaParaRenacer(renacimientos)] == true
+end
+
+-- Esencia que da renacer ahora (tu mejor zona menos 1, como mínimo 1).
+function Reglas.esenciaRenacer(zonas: { [number]: boolean }): number
+	return math.max(1, (Reglas.mejorZona(zonas) - 1) * GameConfig.Renacer.EsenciaPorZona)
+end
+
+-- ¿Ya se ve esta rama en el árbol?
+function Reglas.ramaDisponible(id: string, renacimientos: number): boolean
+	local r = ramas[id]
+	return r ~= nil and renacimientos >= r.Renacer
+end
+
+-- Esencia que cuesta el próximo nivel de la rama (nil si ya está al máximo o no existe).
+function Reglas.costoRama(id: string, nivel: number): number?
+	local r = ramas[id]
+	return if r then r.Costos[nivel + 1] else nil
+end
+
+-- Vida de una Geoda Renacida: la Fuerza del más fuerte que ya renació x GolpesRenacida.
+function Reglas.vidaRenacida(fuerzaMaxima: number): number
+	local t = tamanos.Renacida
+	local minimo = if t then t.Vida else 400
+	return math.max(minimo, math.floor(fuerzaMaxima * GameConfig.Renacer.GolpesRenacida))
+end
+
+-- Grupo 4: Ruleta de Mascotas -----------------------------------------------------------------
+
+-- Lo que cuesta una tirada: Ruleta.Precio x lo que vale una gema común de tu mejor zona.
+function Reglas.precioRuleta(zonas: { [number]: boolean }): number
+	return math.floor(
+		GameConfig.Mascotas.Ruleta.Precio * Reglas.valorComun(Reglas.mejorZona(zonas))
+	)
+end
+
+-- Tira la ruleta: azar() en [0, 1) contra las chances en % (suman 100).
+function Reglas.tirarRuleta(azar: () -> number): Mascota
+	local lista = GameConfig.Mascotas.Lista
+	local total = 0
+	for _, m in lista do
+		total += m.Chance
+	end
+	local x = azar() * total
+	for _, m in lista do
+		x -= m.Chance
+		if x < 0 then
+			return m
+		end
+	end
+	return lista[#lista]
+end
+
+-- ¿Puede sumar esta mascota a las que lo acompañan? (la tiene, le queda una copia libre y hay
+-- lugar)
+function Reglas.puedeEquipar(
+	equipadas: { string },
+	id: string,
+	tenidas: { [string]: number },
+	lugares: number
+): boolean
+	if not mascotas[id] or #equipadas >= lugares then
+		return false
+	end
+	local usadas = 0
+	for _, otra in equipadas do
+		if otra == id then
+			usadas += 1
+		end
+	end
+	return (tenidas[id] or 0) > usadas
+end
+
+-- Grupo 4: misiones --------------------------------------------------------------------------
+
+export type Mision = {
+	Id: string, -- la plantilla
+	Tipo: string,
+	Dificultad: string,
+	Meta: number,
+	Progreso: number,
+	Texto: string,
+	Monedas: number,
+	Esencia: number,
+	Zona: number?, -- "Geodas" en una zona
+	Tamano: string?,
+	Rareza: string?,
+	Accion: string?,
+	Logro: string?, -- "Coleccion": la colección a completar
+	Base: number?, -- "Nuevo": minerales distintos que tenía al empezar
+}
+
+-- Lo que hace falta del jugador para elegir y seguir misiones.
+export type EstadoMisiones = {
+	Indice: { [string]: boolean },
+	Exoticas: { [string]: boolean },
+	Rarezas: { [string]: boolean },
+	GeodasRotas: number,
+	JefesDerrotados: number,
+	EventosJugados: number,
+	Logros: { [string]: boolean },
+	Zonas: { [number]: boolean },
+	Secretos: { [number]: boolean },
+	Pico: number?,
+	MisionesHechas: number?,
+	Renacimientos: number?,
+}
+
+-- Lo que pasó en el juego y puede hacer avanzar una misión.
+export type EventoMision = {
+	Tipo: string, -- "Geoda" (se rompió y te llevaste gema), "Gema" (te salió) o "Accion"
+	Zona: number?,
+	Tamano: string?,
+	Modificador: string?,
+	Rareza: string?,
+	Accion: string?,
+}
+
+local ordenRareza: { [string]: number } = {}
+for i, r in GameConfig.Rarezas do
+	ordenRareza[r.Id] = i
+end
+
+-- Minerales distintos del Museo que tiene (los que existen).
+function Reglas.distintas(indice: { [string]: boolean }): number
+	local n = 0
+	for id, si in indice do
+		if si and gemas[id] then
+			n += 1
+		end
+	end
+	return n
+end
+
+-- La colección del Museo que conviene pedir: la más avanzada (al menos la mitad) que no sea
+-- de Leyenda ni esté completa.
+local function coleccionParaMision(e: EstadoMisiones): Logro?
+	local mejor: Logro? = nil
+	local mejorParte = 0.5
+	for _, l in GameConfig.Logros do
+		if l.Museo and l.Dificultad ~= "Leyenda" and not e.Logros[l.Id] then
+			local tiene, total = Reglas.progreso(l, e)
+			local parte = tiene / math.max(1, total)
+			if tiene < total and parte >= mejorParte then
+				mejor, mejorParte = l, parte
+			end
+		end
+	end
+	return mejor
+end
+
+local function posible(p: PlantillaMision, e: EstadoMisiones): boolean
+	if p.Dificultad == GameConfig.Misiones.LugarPrestigio and (e.Renacimientos or 0) < 1 then
+		return false
+	end
+	if p.ZonaMinima and Reglas.mejorZona(e.Zonas) < p.ZonaMinima then
+		return false
+	end
+	if p.Tipo == "Nuevo" and Reglas.distintas(e.Indice) >= #GameConfig.Gemas then
+		return false
+	end
+	if p.Tipo == "Coleccion" and not coleccionParaMision(e) then
+		return false
+	end
+	if p.Necesita == "Secreto" then
+		return next(e.Secretos) ~= nil
+	elseif p.Necesita == "PuertaCerrada" then
+		for _, z in GameConfig.Zonas do
+			if e.Zonas[z.Numero] and not e.Secretos[z.Numero] then
+				return true
+			end
+		end
+		return false
+	elseif p.Necesita == "Zona2" then
+		return e.Zonas[2] == true
+	end
+	return true
+end
+
+-- Una misión nueva de esa dificultad, al azar entre las que se pueden hacer (y que no sean de
+-- la misma plantilla que las de `evitar`, si se puede). nil si no hay ninguna posible.
+function Reglas.nuevaMision(
+	dificultad: string,
+	e: EstadoMisiones,
+	azar: () -> number,
+	evitar: { [string]: boolean }?
+): Mision?
+	local candidatas: { PlantillaMision } = {}
+	local repetidas: { PlantillaMision } = {}
+	for _, p in GameConfig.Misiones.Plantillas do
+		if p.Dificultad == dificultad and posible(p, e) then
+			table.insert(if evitar and evitar[p.Id] then repetidas else candidatas, p)
+		end
+	end
+	if #candidatas == 0 then
+		candidatas = repetidas
+	end
+	if #candidatas == 0 then
+		return nil
+	end
+	local p = candidatas[math.clamp(math.floor(azar() * #candidatas) + 1, 1, #candidatas)]
+	local desde, hasta = p.Meta[1], p.Meta[2] or p.Meta[1]
+	local meta = math.clamp(desde + math.floor(azar() * (hasta - desde + 1)), desde, hasta)
+	local zona = Reglas.mejorZona(e.Zonas)
+	local d = GameConfig.Misiones.Dificultades[dificultad]
+	local m: Mision = {
+		Id = p.Id,
+		Tipo = p.Tipo,
+		Dificultad = dificultad,
+		Meta = meta,
+		Progreso = 0,
+		Texto = "",
+		Monedas = math.floor((if d then d.Monedas else 0) * Reglas.valorComun(zona)),
+		Esencia = if d then d.Esencia else 0,
+		Tamano = p.Tamano,
+		Rareza = p.Rareza,
+		Accion = p.Accion,
+	}
+	if p.Tipo == "Coleccion" then
+		local l = coleccionParaMision(e) :: Logro
+		m.Logro = l.Id
+		m.Meta = 1
+		m.Texto = p.Texto:format(l.Nombre)
+	elseif p.EnZona then
+		m.Zona = zona
+		local z = GameConfig.Zonas[zona]
+		m.Texto = p.Texto:format(meta, if z then z.Nombre else "")
+	else
+		m.Texto = p.Texto:format(meta)
+	end
+	if p.Tipo == "Nuevo" then
+		m.Base = Reglas.distintas(e.Indice)
+	end
+	return m
+end
+
+-- Cuánto avanza la misión con lo que pasó (0 si no tiene que ver).
+function Reglas.avanceMision(m: Mision, ev: EventoMision): number
+	if ev.Tipo == "Geoda" then
+		if m.Tipo == "Geodas" then
+			local tamanoOk = m.Tamano == nil or m.Tamano == ev.Tamano
+			local zonaOk = m.Zona == nil or m.Zona == ev.Zona
+			return if tamanoOk and zonaOk then 1 else 0
+		elseif m.Tipo == "Exotica" then
+			return if ev.Modificador and Reglas.esExotica(ev.Modificador) then 1 else 0
+		elseif m.Tipo == "Jefe" then
+			return if ev.Tamano == "Jefe" or ev.Tamano == "Ancestral" then 1 else 0
+		end
+	elseif ev.Tipo == "Gema" and m.Tipo == "Rareza" then
+		local pide = ordenRareza[m.Rareza or ""] or math.huge
+		return if (ordenRareza[ev.Rareza or ""] or 0) >= pide then 1 else 0
+	elseif ev.Tipo == "Accion" and m.Tipo == "Accion" then
+		return if ev.Accion == m.Accion then 1 else 0
+	end
+	return 0
+end
+
+-- Progreso de las misiones que dependen del estado del jugador ("Nuevo" y "Coleccion"); las
+-- demás devuelven el que ya tienen.
+function Reglas.progresoMision(m: Mision, e: EstadoMisiones): number
+	if m.Tipo == "Nuevo" then
+		return math.max(0, Reglas.distintas(e.Indice) - (m.Base or 0))
+	elseif m.Tipo == "Coleccion" then
+		return if m.Logro and e.Logros[m.Logro] then 1 else 0
+	end
+	return m.Progreso
 end
 
 return Reglas

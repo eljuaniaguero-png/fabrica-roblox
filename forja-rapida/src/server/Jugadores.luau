@@ -11,6 +11,10 @@
 --   Grupo 3: Museo (JSON: gema -> { cantidad, primera vez }), Rarezas, Llaves ("1;3"),
 --   Secretos (puertas abiertas), Cofres, Aura, DisenoPico, EstiloVitrina, Decoracion y
 --   BendicionFin (hora del servidor).
+--   Grupo 4: Misiones (JSON: las de ahora), MisionesHechas, CambioMision (hora del servidor del
+--   último cambio), Renacimientos, Esencia, Ramas (JSON: rama -> nivel), Mascotas (JSON:
+--   mascota -> cuántas), MascotasEquipadas (JSON: lista), EfectoPico, BonoFuerza, BonoMonedas,
+--   BonoSuerte y LugaresMascota (para mostrar los bonos del Renacer, el árbol y las mascotas).
 -- Fuerza y Monedas también van en la tabla de jugadores (leaderstats).
 
 local HttpService = game:GetService("HttpService")
@@ -52,6 +56,15 @@ export type Datos = {
 	Equipado: { [string]: string }, -- cosmético elegido por tipo (Aura, Pico, Vitrina, Decoracion)
 	BendicionFin: number, -- hasta cuándo dura la bendición del altar (hora del servidor)
 	UltimoAltar: number, -- cuándo usó un altar por última vez (hora del servidor)
+	-- Grupo 4: misiones, renacer y mascotas
+	Misiones: { Reglas.Mision }, -- las de ahora (una por dificultad)
+	MisionesHechas: number,
+	CambioMision: number, -- cuándo cambió una misión por última vez (hora del servidor)
+	Renacimientos: number,
+	Esencia: number, -- la que tiene sin gastar
+	Ramas: { [string]: number }, -- rama del árbol de Esencia -> nivel
+	Mascotas: { [string]: number }, -- mascota -> cuántas tiene
+	MascotasEquipadas: { string }, -- las que lo acompañan (puede repetir si tiene copias)
 }
 
 -- Lo que el Museo guarda de cada mineral.
@@ -108,6 +121,14 @@ local function nuevos(): Datos
 		Equipado = {},
 		BendicionFin = 0,
 		UltimoAltar = 0,
+		Misiones = {},
+		MisionesHechas = 0,
+		CambioMision = 0,
+		Renacimientos = 0,
+		Esencia = 0,
+		Ramas = {},
+		Mascotas = {},
+		MascotasEquipadas = {},
 	}
 end
 
@@ -155,12 +176,17 @@ function Jugadores.todos(): { [Player]: Datos }
 	return datosDe
 end
 
+-- Grupo 4: bonos del Renacer, del árbol de Esencia y de las mascotas que lo acompañan.
+function Jugadores.bonos(d: Datos): Reglas.Bonos
+	return Reglas.bonos(d)
+end
+
 function Jugadores.fuerza(d: Datos): number
-	return Reglas.fuerza(d.NivelFuerza, d.Pico)
+	return Reglas.fuerza(d.NivelFuerza, d.Pico, Jugadores.bonos(d).Fuerza)
 end
 
 function Jugadores.suerte(d: Datos): number
-	return Reglas.suerteJugador(d.Amuletos, d.Logros)
+	return Reglas.suerteJugador(d.Amuletos, d.Logros) + Jugadores.bonos(d).Suerte
 end
 
 -- La bendición del altar (Grupo 3): multiplica la suerte mientras dura.
@@ -241,6 +267,33 @@ function Jugadores.publicar(jugador: Player)
 	jugador:SetAttribute("EstiloVitrina", d.Equipado.Vitrina or "Clasica")
 	jugador:SetAttribute("Decoracion", d.Equipado.Decoracion or "")
 	jugador:SetAttribute("BendicionFin", d.BendicionFin)
+	-- Grupo 4
+	local misiones = {}
+	for _, m in d.Misiones do
+		table.insert(misiones, {
+			Id = m.Id,
+			Texto = m.Texto,
+			Dificultad = m.Dificultad,
+			Meta = m.Meta,
+			Progreso = m.Progreso,
+			Monedas = m.Monedas,
+			Esencia = m.Esencia,
+		})
+	end
+	local bonos = Jugadores.bonos(d)
+	jugador:SetAttribute("Misiones", HttpService:JSONEncode(misiones))
+	jugador:SetAttribute("MisionesHechas", d.MisionesHechas)
+	jugador:SetAttribute("CambioMision", d.CambioMision)
+	jugador:SetAttribute("Renacimientos", d.Renacimientos)
+	jugador:SetAttribute("Esencia", d.Esencia)
+	jugador:SetAttribute("Ramas", HttpService:JSONEncode(d.Ramas))
+	jugador:SetAttribute("Mascotas", HttpService:JSONEncode(d.Mascotas))
+	jugador:SetAttribute("MascotasEquipadas", HttpService:JSONEncode(d.MascotasEquipadas))
+	jugador:SetAttribute("EfectoPico", d.Equipado.Efecto or "")
+	jugador:SetAttribute("BonoFuerza", bonos.Fuerza)
+	jugador:SetAttribute("BonoMonedas", bonos.Monedas)
+	jugador:SetAttribute("BonoSuerte", bonos.Suerte)
+	jugador:SetAttribute("LugaresMascota", bonos.Lugares)
 	local stats = jugador:FindFirstChild("leaderstats")
 	if stats then
 		valor(stats, "Fuerza").Value = fuerza

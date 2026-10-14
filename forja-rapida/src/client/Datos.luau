@@ -3,6 +3,7 @@
 -- (Jugadores.publicar), ya convertidos. Solo para mostrar; las cuentas de verdad las hace el
 -- servidor.
 --   "Cuarzo;Jaspe" -> { Cuarzo = true, Jaspe = true }   Mochila (JSON) -> { gema = cantidad }
+--   Grupo 4: Datos.json("Misiones") y los bonos del Renacer, el árbol y las mascotas.
 
 local HttpService = game:GetService("HttpService")
 local Players = game:GetService("Players")
@@ -56,6 +57,27 @@ function Datos.mochila(): { [string]: number }
 		end
 	end
 	return r
+end
+
+-- Un atributo JSON ya convertido (Grupo 4: Misiones, Ramas, Mascotas, MascotasEquipadas).
+-- Si no hay o está roto, una tabla vacía.
+function Datos.json(nombre: string): any
+	local texto = Datos.texto(nombre)
+	if texto == "" then
+		return {}
+	end
+	local ok, t = pcall(HttpService.JSONDecode, HttpService, texto)
+	return if ok and typeof(t) == "table" then t else {}
+end
+
+-- Lo que hace falta para Reglas.bonos (lo que el servidor también usa).
+function Datos.bonos(): { Fuerza: number, Monedas: number, Suerte: number, Lugares: number }
+	return {
+		Fuerza = math.max(1, Datos.numero("BonoFuerza")),
+		Monedas = math.max(1, Datos.numero("BonoMonedas")),
+		Suerte = Datos.numero("BonoSuerte"),
+		Lugares = math.max(1, Datos.numero("LugaresMascota")),
+	}
 end
 
 -- Llama a `fn` cuando cambia cualquiera de esos atributos (una vez por cuadro como mucho).
