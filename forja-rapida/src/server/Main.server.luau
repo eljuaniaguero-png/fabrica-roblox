@@ -14,5 +14,6 @@ for _, jugador in Players:GetPlayers() do
 end
 Players.PlayerRemoving:Connect(Jugadores.quitar)
 
+Jugadores.iniciar()
 GeodeServerService.iniciar()
 CampoPrueba.armarSiFalta()

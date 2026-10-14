@@ -26,7 +26,14 @@ export type Modificador = {
 	Nombre: string,
 	UnoEn: number, -- probabilidad de que una geoda nazca así (la Normal tiene 1: es lo que queda)
 	Premio: number, -- multiplica las unidades de la gema
-	Color: string, -- color del brillo y del texto del cartel
+	Color: string, -- grietas, cristales, brillo y texto del cartel
+	Color2: string?, -- combinaciones: color de la segunda grieta
+	Partes: { string }?, -- combinaciones: los dos modificadores que junta
+	ColorRoca: string?, -- si cambia el color de la roca (si no, el de la zona)
+	MaterialRoca: string?, -- nombre de un Enum.Material ("Basalt", "Foil"...)
+	Textura: string, -- rbxassetid de la textura de la roca (forja-rapida/arte/texturas); "" = sin
+	Sonido: string, -- SONIDO: aura que suena cerca de la geoda; "" = sin sonido
+	Anunciar: boolean?, -- avisa a todo el servidor cuando nace una
 }
 
 export type Tamano = {
@@ -57,6 +64,21 @@ export type Gema = {
 	Zona: number,
 	Rareza: string,
 	Color: string,
+}
+
+export type Logro = {
+	Id: string, -- lo que se guarda; no cambiarlo una vez publicado
+	Nombre: string,
+	Descripcion: string,
+	Necesita: {
+		Tipo: string,
+		Zona: number?,
+		Ids: { string }?,
+		Cuantos: number?,
+		Id: string?,
+		Cuantas: number?,
+	},
+	Premio: { Monedas: number?, Suerte: number? },
 }
 
 export type Pico = {
@@ -110,17 +132,117 @@ local GameConfig = {
 	} :: { Rareza },
 
 	-- Modificadores exóticos: con qué aura puede nacer una geoda (no depende del jugador).
+	-- Las combinaciones (Grupo 1) juntan dos y son mucho más raras. Van al final porque la lista
+	-- tiene que ir de la más común a la más rara (se tira de la más rara para abajo).
+	-- Texturas: subir las de forja-rapida/arte/texturas y pegar acá el "rbxassetid://...".
 	Modificadores = {
-		{ Id = "Normal", Nombre = "Normal", UnoEn = 1, Premio = 1, Color = "#FFFFFF" },
-		{ Id = "Lava", Nombre = "Exótica de Lava", UnoEn = 10, Premio = 3, Color = "#FF6A1A" },
-		{ Id = "Neon", Nombre = "Exótica Neón", UnoEn = 40, Premio = 5, Color = "#2EF2FF" },
-		{ Id = "Midas", Nombre = "Exótica Dorada", UnoEn = 150, Premio = 10, Color = "#FFD23F" },
+		{
+			Id = "Normal",
+			Nombre = "Normal",
+			UnoEn = 1,
+			Premio = 1,
+			Color = "#FFFFFF",
+			Textura = "",
+			Sonido = "",
+		},
+		{
+			Id = "Lava",
+			Nombre = "Exótica de Lava",
+			UnoEn = 10,
+			Premio = 3,
+			Color = "#FF6A1A",
+			ColorRoca = "#3A2622",
+			MaterialRoca = "Basalt",
+			Textura = "",
+			Sonido = "",
+		},
+		{
+			Id = "Neon",
+			Nombre = "Exótica Neón",
+			UnoEn = 40,
+			Premio = 5,
+			Color = "#2EF2FF",
+			Textura = "",
+			Sonido = "",
+		},
+		{
+			Id = "Midas",
+			Nombre = "Exótica Dorada",
+			UnoEn = 150,
+			Premio = 10,
+			Color = "#FFD23F",
+			ColorRoca = "#FFC83D",
+			MaterialRoca = "Foil",
+			Textura = "",
+			Sonido = "",
+		},
 		{
 			Id = "Vacio",
 			Nombre = "Exótica del Vacío",
 			UnoEn = 1000,
 			Premio = 25,
 			Color = "#9B4DFF",
+			ColorRoca = "#140C2B",
+			MaterialRoca = "Basalt",
+			Textura = "",
+			Sonido = "",
+			Anunciar = true,
+		},
+		{
+			Id = "LavaNeon",
+			Nombre = "Magma Eléctrico",
+			UnoEn = 2500,
+			Premio = 15,
+			Color = "#FF6A1A",
+			Color2 = "#2EF2FF",
+			Partes = { "Lava", "Neon" },
+			ColorRoca = "#3A2622",
+			MaterialRoca = "Basalt",
+			Textura = "",
+			Sonido = "",
+			Anunciar = true,
+		},
+		{
+			Id = "MidasNeon",
+			Nombre = "Relámpago Dorado",
+			UnoEn = 6000,
+			Premio = 50,
+			Color = "#FFD23F",
+			Color2 = "#2EF2FF",
+			Partes = { "Midas", "Neon" },
+			ColorRoca = "#FFC83D",
+			MaterialRoca = "Foil",
+			Textura = "",
+			Sonido = "",
+			Anunciar = true,
+		},
+		{
+			Id = "VacioLava",
+			Nombre = "Eclipse de Lava",
+			UnoEn = 15000,
+			Premio = 75,
+			Color = "#9B4DFF",
+			Color2 = "#FF6A1A",
+			Partes = { "Vacio", "Lava" },
+			ColorRoca = "#140C2B",
+			MaterialRoca = "Basalt",
+			Textura = "",
+			Sonido = "",
+			Anunciar = true,
+		},
+		{
+			Id = "VacioMidas",
+			Nombre = "Vacío Dorado",
+			UnoEn = 40000,
+			Premio = 250,
+			Color = "#9B4DFF",
+			Color2 = "#FFD23F",
+			Partes = { "Vacio", "Midas" },
+			ColorRoca = "#140C2B",
+			MaterialRoca = "Basalt",
+			Textura = "",
+			Sonido = "",
+			Anunciar = true,
 		},
 	} :: { Modificador },
 
@@ -210,7 +332,7 @@ local GameConfig = {
 			Dureza = 1100,
 			Valor = 4000,
 			Suerte = 4,
-			ColorRoca = "#3B2A2F",
+			ColorRoca = "#4A3338",
 			ColorCristal = "#FF2E4D",
 		},
 		{
@@ -220,7 +342,7 @@ local GameConfig = {
 			Dureza = 8000,
 			Valor = 50000,
 			Suerte = 7,
-			ColorRoca = "#26224A",
+			ColorRoca = "#2E2A5C",
 			ColorCristal = "#7CF5FF",
 		},
 	} :: { Zona },
@@ -354,19 +476,171 @@ local GameConfig = {
 		{ Id = "Corona", Nombre = "Corona Cósmica", Suerte = 5, Precio = 3000000000 },
 	} :: { Amuleto },
 
+	-- Logros y colecciones (Grupo 1, "descubrimiento en cadena"). Se cobran una sola vez: el
+	-- servidor anota cada uno en los datos del jugador antes de dar el premio.
+	-- Necesita:
+	--   { Tipo = "Gemas", Zona = n }            todas las gemas de esa zona en el Índice
+	--   { Tipo = "Modificadores", Ids = {...}, Cuantos = n }   romper geodas de n de esos modificadores
+	--   { Tipo = "Rareza", Id = "Mitico" }      encontrar una gema de esa rareza
+	--   { Tipo = "Geodas", Cuantas = n }         romper n geodas en total
+	-- Premio: Monedas (una vez) y/o Suerte (se suma para siempre a la del jugador).
+	Logros = {
+		{
+			Id = "Picapiedras",
+			Nombre = "Picapiedras",
+			Descripcion = "Rompé 100 geodas",
+			Necesita = { Tipo = "Geodas", Cuantas = 100 },
+			Premio = { Monedas = 300 },
+		},
+		{
+			Id = "PrimeraExotica",
+			Nombre = "¡Brilla!",
+			Descripcion = "Rompé tu primera geoda exótica",
+			Necesita = {
+				Tipo = "Modificadores",
+				Ids = {
+					"Lava",
+					"Neon",
+					"Midas",
+					"Vacio",
+					"LavaNeon",
+					"MidasNeon",
+					"VacioLava",
+					"VacioMidas",
+				},
+				Cuantos = 1,
+			},
+			Premio = { Monedas = 200 },
+		},
+		{
+			Id = "ColeccionExotica",
+			Nombre = "Coleccionista Exótico",
+			Descripcion = "Rompé una geoda de Lava, una Neón, una Dorada y una del Vacío",
+			Necesita = {
+				Tipo = "Modificadores",
+				Ids = { "Lava", "Neon", "Midas", "Vacio" },
+				Cuantos = 4,
+			},
+			Premio = { Suerte = 0.25 },
+		},
+		{
+			Id = "PrimeraCombinacion",
+			Nombre = "¡Doble Exótica!",
+			Descripcion = "Rompé una geoda con dos modificadores",
+			Necesita = {
+				Tipo = "Modificadores",
+				Ids = { "LavaNeon", "MidasNeon", "VacioLava", "VacioMidas" },
+				Cuantos = 1,
+			},
+			Premio = { Suerte = 0.25 },
+		},
+		{
+			Id = "ColeccionCombinaciones",
+			Nombre = "Maestro de las Combinaciones",
+			Descripcion = "Rompé las 4 combinaciones exóticas",
+			Necesita = {
+				Tipo = "Modificadores",
+				Ids = { "LavaNeon", "MidasNeon", "VacioLava", "VacioMidas" },
+				Cuantos = 4,
+			},
+			Premio = { Suerte = 1 },
+		},
+		{
+			Id = "Legendaria",
+			Nombre = "Leyenda",
+			Descripcion = "Encontrá una gema Legendaria",
+			Necesita = { Tipo = "Rareza", Id = "Legendario" },
+			Premio = { Monedas = 1000 },
+		},
+		{
+			Id = "Mitica",
+			Nombre = "¡Mítico!",
+			Descripcion = "Encontrá una gema Mítica",
+			Necesita = { Tipo = "Rareza", Id = "Mitico" },
+			Premio = { Suerte = 0.2 },
+		},
+		{
+			Id = "MineroImparable",
+			Nombre = "Minero Imparable",
+			Descripcion = "Rompé 2.000 geodas",
+			Necesita = { Tipo = "Geodas", Cuantas = 2000 },
+			Premio = { Suerte = 0.15 },
+		},
+		{
+			Id = "Coleccion1",
+			Nombre = "Colección de la Pradera",
+			Descripcion = "Conseguí las 5 gemas de la Pradera de Cuarzo",
+			Necesita = { Tipo = "Gemas", Zona = 1 },
+			Premio = { Monedas = 500, Suerte = 0.1 },
+		},
+		{
+			Id = "Coleccion2",
+			Nombre = "Colección de las Dunas",
+			Descripcion = "Conseguí las 5 gemas de las Dunas de Ámbar",
+			Necesita = { Tipo = "Gemas", Zona = 2 },
+			Premio = { Monedas = 8000, Suerte = 0.1 },
+		},
+		{
+			Id = "Coleccion3",
+			Nombre = "Colección del Glaciar",
+			Descripcion = "Conseguí las 5 gemas del Glaciar de Zafiro",
+			Necesita = { Tipo = "Gemas", Zona = 3 },
+			Premio = { Monedas = 250000, Suerte = 0.15 },
+		},
+		{
+			Id = "Coleccion4",
+			Nombre = "Colección del Volcán",
+			Descripcion = "Conseguí las 5 gemas del Volcán de Rubí",
+			Necesita = { Tipo = "Gemas", Zona = 4 },
+			Premio = { Monedas = 4000000, Suerte = 0.2 },
+		},
+		{
+			Id = "Coleccion5",
+			Nombre = "Colección del Abismo",
+			Descripcion = "Conseguí las 5 gemas del Abismo Estelar",
+			Necesita = { Tipo = "Gemas", Zona = 5 },
+			Premio = { Monedas = 60000000, Suerte = 0.3 },
+		},
+	} :: { Logro },
+
+	-- Avisos a todo el servidor: cuando nace una geoda con Anunciar = true y cuando alguien
+	-- encuentra una gema de esta rareza o más.
+	Anuncios = {
+		RarezaMinima = "Mitico",
+	},
+
+	-- Efectos del cliente (Grupo 1, pulido). Con "Efectos reducidos" (botón en pantalla, o solo
+	-- si la calidad gráfica de Roblox está en 3 o menos) no hay destello blanco ni temblor de
+	-- cámara, hay menos partículas y las auras se ven solo de cerca.
+	Efectos = {
+		DistanciaAura = 90, -- studs: más lejos, la geoda no anima ni tira partículas
+		DistanciaAuraReducida = 40,
+		CalidadParaReducir = 3, -- calidad gráfica de Roblox (1 a 10) con la que arranca reducido
+		TemblorCamara = 0.6, -- studs que se mueve la cámara al revelar una rara
+		DuracionRevelacion = 2.2, -- segundos que se muestra la gema (rara o mejor)
+		DuracionComun = 0.9, -- la común solo salta un cartelito
+		DestelloDesde = "Raro", -- rareza desde la que hay destello blanco y temblor
+		NumerosMaximos = 12, -- números flotantes a la vez
+	},
+
 	-- Sonidos (los usa el cliente; cada uso está marcado con "-- SONIDO:"). Vacíos = sin sonido.
 	-- Para cambiar el tono de un mismo sample se usa PlaybackSpeed (CLAUDE.md, Audio).
 	Sonidos = {
 		Golpe = "",
 		Romper = "",
-		Revelacion = "",
+		Revelacion = "", -- se sube el tono según la rareza
+		RevelacionRara = "", -- extra para Épica o mejor
+		Logro = "",
+		Anuncio = "",
 		Vender = "",
 		Comprar = "",
 	},
 
-	-- Modelos de Blender (forja-rapida/arte). Mientras estén vacíos, el servidor arma las
-	-- geodas con partes simples (greybox). Al importarlas, los modelos van en
-	-- ServerStorage > Modelos > Geodas > <Id del tamaño>, con las partes Roca, Cristales y Base.
+	-- Modelos de Blender (forja-rapida/arte). Mientras no estén, el servidor arma las geodas con
+	-- partes simples (greybox). Al importarlas, los modelos van en ServerStorage > Modelos >
+	-- Geodas > <Id del tamaño>, con las partes Roca, Cristales, Base, Grietas y Grietas2; y el
+	-- anillo de la Lava en ReplicatedStorage > Modelos > Anillo (si no está, el cliente lo arma
+	-- con cubitos).
 	Modelos = {
 		Carpeta = "Modelos",
 	},

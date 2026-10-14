@@ -3,8 +3,16 @@
 -- Si existe ServerStorage > Modelos > Geodas > <Id del tamaño> (las mallas de Blender, ya a su
 -- tamaño real y con el pivote en la base), se clona eso. Si no, se arma con partes simples
 -- (greybox) y se escala con GameConfig.Tamanos[..].Escala.
--- Partes que se pintan: "Roca" (la piedra), "Cristales" (lo que asoma) y "Base" (el nido de
--- escombros). Lo que tenga otro nombre se deja como está.
+-- Partes que se pintan (por nombre):
+--   "Roca"       la piedra: color de la zona, o el del modificador; en las exóticas, su textura
+--                (rayas de lava, cuadritos neón, oro, vacío) si ya está subida.
+--   "Cristales"  lo que asoma arriba: Neon y del color del modificador en las exóticas.
+--   "Grietas"    grietas que brillan (Grupo 1): solo se ven en las exóticas, del Color.
+--   "Grietas2"   la segunda grieta: solo en las combinaciones, del Color2.
+--   "Base"       el nido de escombros.
+-- Acá solo va lo que tiene que ver todo el mundo igual (colores, materiales, textura). Las
+-- partículas, luces, el anillo de lava y las animaciones las pone cada cliente
+-- (client/Geodas.client.luau), así cada uno puede pedir "efectos reducidos".
 
 local ServerStorage = game:GetService("ServerStorage")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
@@ -49,6 +57,18 @@ local function greybox(): Model
 		)
 		c.CanCollide = false
 	end
+	-- Grietas: tiras finas en zigzag sobre dos caras de la roca (de frente y al costado).
+	local tramos: { { Nombre: string, Cf: CFrame } } = {
+		{ Nombre = "Grietas", Cf = CFrame.new(-0.4, 2.4, -1.52) * CFrame.Angles(0, 0, 0.5) },
+		{ Nombre = "Grietas", Cf = CFrame.new(0.25, 1.6, -1.52) * CFrame.Angles(0, 0, -0.6) },
+		{ Nombre = "Grietas2", Cf = CFrame.new(1.52, 2.2, 0.3) * CFrame.Angles(0.55, 0, 0) },
+		{ Nombre = "Grietas2", Cf = CFrame.new(1.52, 1.4, -0.35) * CFrame.Angles(-0.5, 0, 0) },
+	}
+	for _, t in tramos do
+		local g = parte(t.Nombre, Vector3.new(0.14, 1.1, 0.14), t.Cf, m)
+		g.CanCollide = false
+		g.CanQuery = false
+	end
 	m.PrimaryPart = roca
 	m.WorldPivot = CFrame.new(0, 0, 0)
 	return m
@@ -64,104 +84,52 @@ local function molde(tamano: string): Model?
 	return nil
 end
 
-local function luz(padre: Instance, color: Color3, alcance: number)
-	local l = Instance.new("PointLight")
-	l.Color = color
-	l.Range = alcance
-	l.Brightness = 2
-	l.Shadows = false
-	l.Parent = padre
+local function material(nombre: string?, porDefecto: Enum.Material): Enum.Material
+	if not nombre then
+		return porDefecto
+	end
+	local ok, m = pcall(function()
+		return (Enum.Material :: any)[nombre]
+	end)
+	return if ok and typeof(m) == "EnumItem" then m :: Enum.Material else porDefecto
 end
 
-local function chispas(
-	padre: Instance,
-	color: Color3,
-	cantidad: number,
-	velocidad: number,
-	tamano: number
-)
-	local e = Instance.new("ParticleEmitter")
-	e.Color = ColorSequence.new(color)
-	e.LightEmission = 1
-	e.Rate = cantidad
-	e.Lifetime = NumberRange.new(0.8, 1.6)
-	e.Speed = NumberRange.new(velocidad * 0.5, velocidad)
-	e.SpreadAngle = Vector2.new(180, 180)
-	e.Size = NumberSequence.new({
-		NumberSequenceKeypoint.new(0, tamano),
-		NumberSequenceKeypoint.new(1, 0),
-	})
-	e.Parent = padre
-end
-
--- Pinta la geoda según su zona y le pone el aura de su modificador.
+-- Pinta la geoda según su zona y su modificador.
 local function pintar(m: Model, zona: number, modificador: string)
 	local z = Reglas.zona(zona) or GameConfig.Zonas[1]
-	local mod = Reglas.modificador(modificador)
-	local colorRoca = Color3.fromHex(z.ColorRoca)
-	local colorCristal = Color3.fromHex(z.ColorCristal)
-	local materialRoca = Enum.Material.Slate
-	local materialCristal = Enum.Material.SmoothPlastic
-	local colorMod = if mod then Color3.fromHex(mod.Color) else colorCristal
+	local mod = Reglas.modificador(modificador) or GameConfig.Modificadores[1]
+	local exotica = Reglas.esExotica(modificador)
+	local colorRoca = Color3.fromHex(mod.ColorRoca or z.ColorRoca)
+	local materialRoca = material(mod.MaterialRoca, Enum.Material.Slate)
+	local colorCristal = if exotica
+		then Color3.fromHex(mod.Color)
+		else Color3.fromHex(z.ColorCristal)
+	local colorGrieta2 = Color3.fromHex(mod.Color2 or mod.Color)
 
-	if modificador == "Lava" then
-		colorRoca = Color3.fromHex("#3A2622")
-		materialRoca = Enum.Material.Basalt
-		colorCristal, materialCristal = colorMod, Enum.Material.Neon
-	elseif modificador == "Neon" then
-		colorCristal, materialCristal = colorMod, Enum.Material.Neon
-	elseif modificador == "Midas" then
-		colorRoca, materialRoca = colorMod, Enum.Material.Foil
-		colorCristal, materialCristal = Color3.fromHex("#FFF3B0"), Enum.Material.Neon
-	elseif modificador == "Vacio" then
-		colorRoca, materialRoca = Color3.fromHex("#140C2B"), Enum.Material.Basalt
-		colorCristal, materialCristal = colorMod, Enum.Material.Neon
-	end
-
-	local roca: BasePart? = nil
 	for _, p in m:GetDescendants() do
-		if p:IsA("BasePart") then
-			if p.Name == "Roca" then
-				p.Color, p.Material = colorRoca, materialRoca
-				roca = p
-			elseif p.Name == "Cristales" then
-				p.Color, p.Material = colorCristal, materialCristal
-				p.Reflectance = if materialCristal == Enum.Material.SmoothPlastic then 0.15 else 0
-			elseif p.Name == "Base" then
-				p.Color, p.Material = COLOR_BASE, Enum.Material.Ground
-			end
+		if not p:IsA("BasePart") then
+			continue
 		end
-	end
-	if not roca or modificador == "Normal" then
-		return
-	end
-
-	-- Aura del modificador, con el tamaño de la roca.
-	local r = (roca :: BasePart).Size.Magnitude
-	local aura = Instance.new("Attachment")
-	aura.Name = "Aura"
-	aura.Parent = roca
-	if modificador == "Lava" then
-		local fuego = Instance.new("Fire")
-		fuego.Size = r * 0.9
-		fuego.Heat = 6
-		fuego.Color = colorMod
-		fuego.SecondaryColor = Color3.fromHex("#FFD23F")
-		fuego.Parent = aura
-		luz(aura, colorMod, r * 3)
-	elseif modificador == "Neon" then
-		local s = Instance.new("Sparkles")
-		s.SparkleColor = colorMod
-		s.Parent = aura
-		chispas(aura, colorMod, 12, r * 1.5, 0.35)
-		luz(aura, colorMod, r * 3)
-	elseif modificador == "Midas" then
-		chispas(aura, colorMod, 20, r * 0.8, 0.5)
-		luz(aura, colorMod, r * 4)
-	elseif modificador == "Vacio" then
-		chispas(aura, colorMod, 35, r * 0.4, 0.8)
-		chispas(aura, Color3.fromHex("#FFFFFF"), 6, r * 0.3, 0.25)
-		luz(aura, colorMod, r * 5)
+		if p.Name == "Roca" then
+			p.Color, p.Material = colorRoca, materialRoca
+			if exotica and mod.Textura ~= "" and p:IsA("MeshPart") then
+				p.TextureID = mod.Textura
+			end
+		elseif p.Name == "Cristales" then
+			p.Color = colorCristal
+			p.Material = if exotica then Enum.Material.Neon else Enum.Material.SmoothPlastic
+			p.Reflectance = if exotica then 0 else 0.15
+		elseif p.Name == "Grietas" or p.Name == "Grietas2" then
+			-- Grietas2 solo en las combinaciones (tienen dos colores)
+			local ver = exotica and (p.Name == "Grietas" or mod.Partes ~= nil)
+			p.Color = if p.Name == "Grietas" then colorCristal else colorGrieta2
+			p.Material = Enum.Material.Neon
+			p.Transparency = if ver then 0 else 1
+			p.CanCollide, p.CanQuery, p.CanTouch = false, false, false
+			p.CastShadow = false
+		elseif p.Name == "Base" then
+			p.Color, p.Material = COLOR_BASE, Enum.Material.Ground
+		end
 	end
 end
 

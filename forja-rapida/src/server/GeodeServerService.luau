@@ -14,6 +14,9 @@
 -- Al romperse, cada jugador que hizo al menos ParteParaPremio de la vida (y siempre el que la
 -- rompió) tira su gema con su propia suerte; la gema va a su mochila en el acto y después se
 -- le manda la revelación para la animación.
+-- Grupo 1: el modificador puede ser una combinación (dos exóticas juntas, mucho más rara). Al
+-- romper, Descubrimientos anota lo encontrado y cobra los logros nuevos (una sola vez), que
+-- viajan en la misma revelación para mostrarse en cadena. Lo rarísimo se anuncia a todos.
 
 local CollectionService = game:GetService("CollectionService")
 local Players = game:GetService("Players")
@@ -21,6 +24,7 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local GameConfig = require(ReplicatedStorage.Shared.GameConfig)
 local Reglas = require(ReplicatedStorage.Shared.Reglas)
+local Descubrimientos = require(script.Parent.Descubrimientos)
 local Jugadores = require(script.Parent.Jugadores)
 local ModeloGeoda = require(script.Parent.ModeloGeoda)
 local Remotos = require(script.Parent.Remotos)
@@ -35,6 +39,7 @@ export type Revelacion = {
 	Suerte: number, -- la suerte con la que se tiró (jugador x zona x tamaño)
 	UnoEn: number, -- qué tan rara fue con esa suerte: "1 en N"
 	Nueva: boolean, -- primera vez que la consigue (Índice)
+	Hitos: { Descubrimientos.Hito }, -- logros y colecciones que se completaron con esta gema
 }
 
 type Estado = {
@@ -57,6 +62,20 @@ local fichas: { [Player]: { Cantidad: number, Hora: number } } = {}
 local rng = Random.new()
 local function azar(): number
 	return rng:NextNumber()
+end
+
+local function rarezaIndice(id: string): number
+	for i, r in GameConfig.Rarezas do
+		if r.Id == id then
+			return i
+		end
+	end
+	return 0
+end
+local RAREZA_ANUNCIO = rarezaIndice(GameConfig.Anuncios.RarezaMinima)
+
+local function anunciar(texto: string, color: string)
+	Remotos.Anuncio:FireAllClients(texto, color)
 end
 
 local carpeta = Instance.new("Folder")
@@ -112,7 +131,15 @@ local function premiar(jugador: Player, e: Estado)
 	end
 	local unidades = Reglas.unidades(e.Tamano, e.Modificador)
 	local nueva = Jugadores.agregarGema(jugador, gema.Id, unidades)
+	local hitos = Descubrimientos.registrar(jugador, e.Modificador, rareza)
 	local chance = Reglas.probabilidades(GameConfig.Rarezas, suerte)[rareza]
+	local r = Reglas.rareza(rareza)
+	if r and rarezaIndice(rareza) >= RAREZA_ANUNCIO then
+		anunciar(
+			("¡%s encontró %s (%s)!"):format(jugador.DisplayName, gema.Nombre, r.Nombre),
+			r.Color
+		)
+	end
 	local revelacion: Revelacion = {
 		Geoda = e.Modelo,
 		Gema = gema.Id,
@@ -122,6 +149,7 @@ local function premiar(jugador: Player, e: Estado)
 		Suerte = suerte,
 		UnoEn = if chance > 0 then math.max(1, math.floor(1 / chance + 0.5)) else 0,
 		Nueva = nueva,
+		Hitos = hitos,
 	}
 	Remotos.Revelacion:FireClient(jugador, revelacion)
 end
@@ -206,6 +234,11 @@ nacer = function(punto: BasePart)
 	modelo:SetAttribute("VidaMax", vida)
 	modelo:SetAttribute("Rota", false)
 	CollectionService:AddTag(modelo, "Geoda")
+	local mod = Reglas.modificador(modificador)
+	local z = Reglas.zona(zona)
+	if mod and mod.Anunciar and z then
+		anunciar(("¡Apareció una geoda %s en %s!"):format(mod.Nombre, z.Nombre), mod.Color)
+	end
 
 	estados[modelo] = {
 		Modelo = modelo,

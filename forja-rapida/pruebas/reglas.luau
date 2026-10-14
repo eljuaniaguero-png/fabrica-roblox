@@ -139,6 +139,135 @@ for _ = 1, 20000 do
 	chequear(Reglas.tamanoAlAzar(azarLune) ~= "Jefe", "salió un Jefe en un punto común")
 end
 
+-- 8. Combinaciones (Grupo 1): sus dos partes existen, son más raras que cualquier modificador
+-- simple y dan más que cada una de sus partes.
+local masRaraSimple = 0
+for _, m in GameConfig.Modificadores do
+	if not m.Partes then
+		masRaraSimple = math.max(masRaraSimple, m.UnoEn)
+	end
+end
+local combos = 0
+for _, m in GameConfig.Modificadores do
+	if m.Partes then
+		combos += 1
+		chequear(
+			#m.Partes == 2 and m.Partes[1] ~= m.Partes[2],
+			m.Id .. ": tiene que juntar dos distintos"
+		)
+		chequear(m.Color2 ~= nil, m.Id .. ": le falta Color2")
+		chequear(m.UnoEn > masRaraSimple, m.Id .. ": no es más rara que las simples")
+		for _, parte in m.Partes do
+			local p = Reglas.modificador(parte)
+			chequear(p ~= nil and p.Partes == nil, m.Id .. ": parte desconocida " .. parte)
+			chequear(p == nil or m.Premio > p.Premio, m.Id .. ": no da más que " .. parte)
+		end
+	end
+	chequear(
+		type(m.Textura) == "string" and type(m.Sonido) == "string",
+		m.Id .. ": falta Textura o Sonido"
+	)
+end
+chequear(combos == 4, "hay " .. combos .. " combinaciones, se esperaban 4")
+chequear(Reglas.esExotica("Lava") and not Reglas.esExotica("Normal"), "esExotica mal")
+chequear(
+	Reglas.partes("VacioMidas")[2] == "Midas" and Reglas.partes("Neon")[1] == "Neon",
+	"partes mal"
+)
+
+-- 9. Logros: Ids únicos y todo lo que nombran existe.
+local logrosVistos: { [string]: boolean } = {}
+for _, l in GameConfig.Logros do
+	chequear(not logrosVistos[l.Id], "logro repetido: " .. l.Id)
+	logrosVistos[l.Id] = true
+	local n = l.Necesita
+	if n.Tipo == "Gemas" then
+		chequear(GameConfig.Zonas[n.Zona or 0] ~= nil, l.Id .. ": zona desconocida")
+	elseif n.Tipo == "Modificadores" then
+		for _, id in n.Ids or {} do
+			chequear(Reglas.esExotica(id), l.Id .. ": modificador desconocido " .. id)
+		end
+		chequear((n.Cuantos or 1) <= #(n.Ids or {}), l.Id .. ": pide más de los que hay")
+	elseif n.Tipo == "Rareza" then
+		chequear(Reglas.rareza(n.Id or "") ~= nil, l.Id .. ": rareza desconocida")
+	elseif n.Tipo == "Geodas" then
+		chequear((n.Cuantas or 0) > 0, l.Id .. ": Cuantas tiene que ser > 0")
+	else
+		chequear(false, l.Id .. ": tipo desconocido " .. tostring(n.Tipo))
+	end
+	chequear(l.Premio.Monedas ~= nil or l.Premio.Suerte ~= nil, l.Id .. ": no tiene premio")
+end
+
+-- 10. La cadena de descubrimientos: cada logro sale una sola vez y en el momento justo.
+local function ids(lista): string
+	local r = {}
+	for _, l in lista do
+		table.insert(r, l.Id)
+	end
+	return table.concat(r, ",")
+end
+local e = { Indice = {}, Exoticas = {}, Rarezas = {}, GeodasRotas = 0, Logros = {} }
+chequear(#Reglas.logrosNuevos(e) == 0, "un jugador nuevo ya tiene logros")
+e.Exoticas.Lava = true
+chequear(ids(Reglas.logrosNuevos(e)) == "PrimeraExotica", "la primera exótica no da su logro")
+e.Logros.PrimeraExotica = true
+chequear(#Reglas.logrosNuevos(e) == 0, "un logro cobrado vuelve a salir")
+e.Exoticas.Neon, e.Exoticas.Midas, e.Exoticas.Vacio = true, true, true
+chequear(
+	ids(Reglas.logrosNuevos(e)) == "ColeccionExotica",
+	"las 4 exóticas no completan la colección"
+)
+e.Exoticas.VacioMidas = true
+local conCombo = ids(Reglas.logrosNuevos(e))
+chequear(conCombo == "ColeccionExotica,PrimeraCombinacion", "combinación: salió " .. conCombo)
+for _, g in GameConfig.Gemas do
+	if g.Zona == 1 and g.Rareza ~= "Mitico" then
+		e.Indice[g.Id] = true
+	end
+end
+chequear(not ids(Reglas.logrosNuevos(e)):find("Coleccion1"), "la colección 1 sale sin la mítica")
+e.Indice.CorazonPradera = true
+e.Rarezas.Mitico = true
+e.GeodasRotas = 100
+local todo = ids(Reglas.logrosNuevos(e))
+chequear(
+	todo == "Picapiedras,ColeccionExotica,PrimeraCombinacion,Mitica,Coleccion1",
+	"cadena completa: salió " .. todo
+)
+chequear(
+	math.abs(
+		Reglas.suerteJugador({ Trebol = true }, { Mitica = true, ColeccionExotica = true }) - 1.7
+	) < 1e-9,
+	"la suerte de los logros no se suma"
+)
+
+-- 11. Formato de números en pantalla.
+local Formato = cargar("Formato")
+for _, caso in
+	{
+		{ 0, "0" },
+		{ 999, "999" },
+		{ 9999, "9.999" },
+		{ 10000, "10K" },
+		{ 12345, "12,3K" },
+		{ 123456, "123K" },
+		{ 1234567, "1,2M" },
+		{ 3000000000, "3B" },
+		{ -2500000, "-2,5M" },
+	}
+do
+	chequear(
+		Formato.corto(caso[1]) == caso[2],
+		("corto(%s) dio %s"):format(caso[1], Formato.corto(caso[1]))
+	)
+end
+chequear(
+	Formato.suerte(2.06) == "x2,06" and Formato.suerte(1) == "x1",
+	"Formato.suerte mal: " .. Formato.suerte(2.06)
+)
+chequear(Formato.suerte(1.5) == "x1,5", "Formato.suerte(1.5) dio " .. Formato.suerte(1.5))
+chequear(Formato.unoEn(2427.3) == "1 en 2.427", "Formato.unoEn mal: " .. Formato.unoEn(2427.3))
+
 if errores > 0 then
 	print(("%d pruebas fallaron"):format(errores))
 	process.exit(1)

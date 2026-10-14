@@ -10,6 +10,16 @@ type Modificador = GameConfig.Modificador
 type Tamano = GameConfig.Tamano
 type Zona = GameConfig.Zona
 type Gema = GameConfig.Gema
+type Logro = GameConfig.Logro
+
+-- Lo que hace falta para revisar los logros de un jugador (Reglas.logrosNuevos).
+export type EstadoLogros = {
+	Indice: { [string]: boolean }, -- gemas conseguidas
+	Exoticas: { [string]: boolean }, -- modificadores de geodas que rompió
+	Rarezas: { [string]: boolean }, -- rarezas que encontró
+	GeodasRotas: number,
+	Logros: { [string]: boolean }, -- los que ya cobró
+}
 
 -- Cualquier tabla que se tira con "1 en N": rarezas y modificadores. Las funciones que tiran
 -- son genéricas (<T>) porque Luau no deja pasar { Rareza } donde se pide { Tirable }.
@@ -29,6 +39,10 @@ end
 local tamanos: { [string]: Tamano } = {}
 for _, t in GameConfig.Tamanos do
 	tamanos[t.Id] = t
+end
+local logros: { [string]: Logro } = {}
+for _, l in GameConfig.Logros do
+	logros[l.Id] = l
 end
 local gemas: { [string]: Gema } = {}
 local gemaPorZona: { [number]: { [string]: Gema } } = {}
@@ -58,6 +72,24 @@ function Reglas.gema(id: string): Gema?
 	return gemas[id]
 end
 
+function Reglas.logro(id: string): Logro?
+	return logros[id]
+end
+
+-- true si la geoda tiene algún modificador exótico (o una combinación).
+function Reglas.esExotica(modificador: string): boolean
+	return modificadores[modificador] ~= nil and modificador ~= "Normal"
+end
+
+-- Los modificadores simples que forman uno: { "Lava" } o, en una combinación, { "Vacio", "Midas" }.
+function Reglas.partes(modificador: string): { string }
+	local m = modificadores[modificador]
+	if m and m.Partes then
+		return m.Partes
+	end
+	return { modificador }
+end
+
 -- La gema de una zona y rareza (hay exactamente una por pareja).
 function Reglas.gemaDe(zona: number, rareza: string): Gema?
 	local deZona = gemaPorZona[zona]
@@ -81,15 +113,62 @@ function Reglas.precioFuerza(nivel: number): number?
 	return math.floor(F.PrecioInicial * F.Crecimiento ^ nivel)
 end
 
--- Suerte propia del jugador: x1 más lo que suman sus amuletos.
-function Reglas.suerteJugador(amuletos: { [string]: boolean }): number
+-- Suerte propia del jugador: x1 más lo que suman sus amuletos y los logros que cobró.
+function Reglas.suerteJugador(
+	amuletos: { [string]: boolean },
+	cobrados: { [string]: boolean }?
+): number
 	local s = 1
 	for _, a in GameConfig.Amuletos do
 		if amuletos[a.Id] then
 			s += a.Suerte
 		end
 	end
+	if cobrados then
+		for _, l in GameConfig.Logros do
+			if cobrados[l.Id] and l.Premio.Suerte then
+				s += l.Premio.Suerte
+			end
+		end
+	end
 	return s
+end
+
+local function cumple(l: Logro, e: EstadoLogros): boolean
+	local n = l.Necesita
+	if n.Tipo == "Gemas" then
+		for _, g in GameConfig.Gemas do
+			if g.Zona == n.Zona and not e.Indice[g.Id] then
+				return false
+			end
+		end
+		return true
+	elseif n.Tipo == "Modificadores" then
+		local cuantos = 0
+		local lista: { string } = n.Ids or {}
+		for _, id in lista do
+			if e.Exoticas[id] then
+				cuantos += 1
+			end
+		end
+		return cuantos >= (n.Cuantos or 1)
+	elseif n.Tipo == "Rareza" then
+		return n.Id ~= nil and e.Rarezas[n.Id] == true
+	elseif n.Tipo == "Geodas" then
+		return e.GeodasRotas >= (n.Cuantas or math.huge)
+	end
+	return false
+end
+
+-- Logros que el jugador ya cumple y todavía no cobró, en el orden de GameConfig.Logros.
+function Reglas.logrosNuevos(e: EstadoLogros): { Logro }
+	local nuevos = {}
+	for _, l in GameConfig.Logros do
+		if not e.Logros[l.Id] and cumple(l, e) then
+			table.insert(nuevos, l)
+		end
+	end
+	return nuevos
 end
 
 -- Suerte con la que se tira la gema de una geoda.

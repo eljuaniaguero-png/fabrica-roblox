@@ -26,6 +26,9 @@ local Remotos = {
 	Golpe = eventoRapido("Golpe"), -- servidor -> cliente: (geoda, daño, vida que le queda)
 	Revelacion = evento("Revelacion"), -- servidor -> cliente: GeodeServerService.Revelacion
 	Aviso = evento("Aviso"), -- servidor -> cliente: texto corto para mostrar
+	-- Grupo 1
+	Anuncio = evento("Anuncio"), -- servidor -> todos: (texto, color hex) algo rarísimo pasó
+	Ajustes = evento("Ajustes"), -- cliente -> servidor: ("EfectosReducidos", boolean)
 }
 
 carpeta.Parent = ReplicatedStorage

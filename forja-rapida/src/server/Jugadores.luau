@@ -3,14 +3,16 @@
 -- ProfileStore es el sistema 6 de la ficha y va a cargar y guardar esta misma tabla.
 -- Se publican como atributos del Player para que el cliente los lea (solo para mostrar):
 --   Monedas, Fuerza (daño por golpe), Suerte (la del jugador, con amuletos), NivelFuerza,
---   Pico (número), GeodasRotas, Mochila (JSON: gema -> cantidad), Indice ("Cuarzo;Jaspe")
---   y Zonas ("1;2").
+--   Pico (número), GeodasRotas, Mochila (JSON: gema -> cantidad), Indice ("Cuarzo;Jaspe"),
+--   Zonas ("1;2"), Exoticas ("Lava;Neon"), Logros ("Picapiedras;Mitica") y EfectosReducidos.
 -- Fuerza y Monedas también van en la tabla de jugadores (leaderstats).
 
 local HttpService = game:GetService("HttpService")
+local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local Reglas = require(ReplicatedStorage.Shared.Reglas)
+local Remotos = require(script.Parent.Remotos)
 
 export type Datos = {
 	Monedas: number,
@@ -21,6 +23,11 @@ export type Datos = {
 	Indice: { [string]: boolean }, -- gemas que conseguiste alguna vez
 	Zonas: { [number]: boolean }, -- zonas abiertas
 	GeodasRotas: number,
+	-- Descubrimientos (Grupo 1)
+	Exoticas: { [string]: boolean }, -- modificadores de geodas que rompió (con combinaciones)
+	Rarezas: { [string]: boolean }, -- rarezas que encontró alguna vez
+	Logros: { [string]: boolean }, -- logros y colecciones ya cobrados
+	Ajustes: { EfectosReducidos: boolean? }, -- nil = que decida la calidad gráfica
 }
 
 local datosDe: { [Player]: Datos } = {}
@@ -37,6 +44,10 @@ local function nuevos(): Datos
 		Indice = {},
 		Zonas = { [1] = true },
 		GeodasRotas = 0,
+		Exoticas = {},
+		Rarezas = {},
+		Logros = {},
+		Ajustes = {},
 	}
 end
 
@@ -89,7 +100,7 @@ function Jugadores.fuerza(d: Datos): number
 end
 
 function Jugadores.suerte(d: Datos): number
-	return Reglas.suerteJugador(d.Amuletos)
+	return Reglas.suerteJugador(d.Amuletos, d.Logros)
 end
 
 -- Suma gemas a la mochila. Devuelve true si es la primera vez que consigue esa gema (Índice).
@@ -121,11 +132,38 @@ function Jugadores.publicar(jugador: Player)
 	jugador:SetAttribute("Mochila", HttpService:JSONEncode(d.Mochila))
 	jugador:SetAttribute("Indice", claves(d.Indice))
 	jugador:SetAttribute("Zonas", claves(d.Zonas))
+	jugador:SetAttribute("Exoticas", claves(d.Exoticas))
+	jugador:SetAttribute("Logros", claves(d.Logros))
+	jugador:SetAttribute("EfectosReducidos", d.Ajustes.EfectosReducidos)
 	local stats = jugador:FindFirstChild("leaderstats")
 	if stats then
 		valor(stats, "Fuerza").Value = fuerza
 		valor(stats, "Monedas").Value = d.Monedas
 	end
+end
+
+-- Ajustes que elige el jugador (por ahora, solo "Efectos reducidos"). El cliente pide; el
+-- servidor revisa el tipo y la frecuencia y lo publica (y se guarda con el resto).
+local ultimoAjuste: { [Player]: number } = {}
+local function alPedirAjuste(jugador: Player, nombre: unknown, elegido: unknown)
+	local d = datosDe[jugador]
+	if not d or nombre ~= "EfectosReducidos" or typeof(elegido) ~= "boolean" then
+		return
+	end
+	local ahora = os.clock()
+	if ultimoAjuste[jugador] and ahora - ultimoAjuste[jugador] < 0.5 then
+		return
+	end
+	ultimoAjuste[jugador] = ahora
+	d.Ajustes.EfectosReducidos = elegido
+	Jugadores.publicar(jugador)
+end
+
+function Jugadores.iniciar()
+	Remotos.Ajustes.OnServerEvent:Connect(alPedirAjuste)
+	Players.PlayerRemoving:Connect(function(jugador: Player)
+		ultimoAjuste[jugador] = nil
+	end)
 end
 
 return Jugadores

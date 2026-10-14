@@ -17,12 +17,48 @@ Simulador de minería con gacha. En el mapa nacen geodas con vida. Les pegás co
 
 ## Sistemas del prototipo (6)
 
-1. **Geodas y golpe** (hecho en código, falta probar en Studio): `GeodeServerService.luau`. Nacen en los puntos del mapa con tag `PuntoGeoda` (atributo `Zona`, y `Jefe` para el punto de la geoda jefe). Tamaño al azar por peso, modificador exótico al azar. El servidor valida cada golpe: geoda viva, datos del jugador, máximo 8 golpes por segundo (ráfaga de 4), zona abierta para ese jugador y distancia ≤ 12 studs. El daño sale de su Fuerza, nunca del cliente. Al romperse, cada jugador que hizo al menos el 10 % de la vida (y siempre el que la rompió) tira su propia gema con su propia suerte. La gema entra a la mochila en el acto y recién después se manda la animación.
-2. **Revelación y efectos** (cliente): número flotante por golpe (BillboardGui con TweenService, salta y se desvanece), cartel de la geoda con nombre, modificador y barra de vida, aura del modificador, y al romperse: temblor de la roca, temblor de cámara, destello blanco, la gema girando con su color y rareza, y un cartel de suerte. Las míticas y las del Vacío con algo más grande.
+1. **Geodas y golpe** (hecho en código, falta probar en Studio; el golpe del cliente y los números flotantes también): `GeodeServerService.luau`. Nacen en los puntos del mapa con tag `PuntoGeoda` (atributo `Zona`, y `Jefe` para el punto de la geoda jefe). Tamaño al azar por peso, modificador exótico al azar. El servidor valida cada golpe: geoda viva, datos del jugador, máximo 8 golpes por segundo (ráfaga de 4), zona abierta para ese jugador y distancia ≤ 12 studs. El daño sale de su Fuerza, nunca del cliente. Al romperse, cada jugador que hizo al menos el 10 % de la vida (y siempre el que la rompió) tira su propia gema con su propia suerte. La gema entra a la mochila en el acto y recién después se manda la animación.
+2. **Revelación y efectos** (cliente; hecho en código con el Grupo 1, falta probar en Studio): número flotante por golpe (BillboardGui con TweenService, salta y se desvanece), cartel de la geoda con nombre, modificador y barra de vida, aura del modificador, y al romperse: temblor de la roca, temblor de cámara, destello blanco, la gema girando con su color y rareza, y un cartel de suerte. Las míticas y las del Vacío con algo más grande.
 3. **Mochila, Banco y Tienda**: mochila sin límite; Banco con "Vender todo" (muestra el total antes); Tienda con tres pestañas: Fuerza (de a un nivel, muestra "+X Fuerza"), Amuletos (en orden, se suman) y Picos (en orden, siempre usás el mejor, se ve en la mano).
 4. **Zonas y puertas**: 5 biomas en fila, separados por barreras con la Fuerza pedida escrita arriba. Si llegás con la Fuerza suficiente se abre para siempre (no se gasta). Si no, te frena y dice "Te faltan X de Fuerza". El mapa se genera por código desde GameConfig.
 5. **HUD y guía** (diseñado en Figma): Fuerza, Suerte y Monedas abajo a la izquierda; barra "Próxima zona" arriba; botones de viaje arriba al centro (Banco · Mina · Tienda); botones Tienda, Mochila e Índice a la izquierda; Índice con las 25 gemas y la tabla de probabilidades con tu suerte actual; flecha en el piso para el jugador nuevo: geoda → banco → tienda → puerta.
 6. **Guardado**: ProfileStore (bloqueo de sesión, autoguardado, al salir y al cerrar el servidor). Guarda Monedas, nivel de Fuerza, pico, amuletos, mochila, Índice, zonas abiertas y geodas rotas.
+
+## Grupo 1 — Efectos visuales y descubrimientos épicos (pedido del 14/10/2026)
+
+Se suma a lo de arriba sin cambiar el loop: el servidor sigue decidiendo todo y el cliente solo muestra.
+
+1. **Señales de las geodas especiales.** Cada geoda de Blender tiene dos mallas de grietas (`Grietas` y `Grietas2`) que en las exóticas se ven en Neon del color del modificador y laten. La roca de las exóticas usa una textura de cubitos (en `arte/texturas/`), imitando tus referencias: rayas de lava naranja-amarilla (la vaca de lava), cuadritos de todos los colores sobre violeta (el gato neón), oro con destellos (el cocodrilo de oro) y negro-violeta con estrellas (vacío). Aura en el cliente: Lava = chispas que suben + anillo de cubitos que gira; Neón = cubitos que cambian de color + destellos; Dorada = destellos dorados + motitas verdes; Vacío = motas violetas + estrellitas. Todo sale del atributo `Modificador` que pone el servidor.
+2. **Combinaciones exóticas** (más raras que cualquier exótica simple; nombre, colores, textura, sonido y premio en `GameConfig.Modificadores`):
+
+| Combinación | Junta | Nace | Gemas |
+|---|---|---|---|
+| Magma Eléctrico | Lava + Neón | 1 en 2.500 | ×15 |
+| Relámpago Dorado | Dorada + Neón | 1 en 6.000 | ×50 |
+| Eclipse de Lava | Vacío + Lava | 1 en 15.000 | ×75 |
+| Vacío Dorado | Vacío + Dorada | 1 en 40.000 | ×250 |
+
+3. **Descubrimiento en cadena.** Geoda especial → revelación de la gema → colección o logro → premio, todo en la misma revelación y mostrado en fila. Cada logro se marca como cobrado antes de pagarse (nunca se paga dos veces). Cuando nace una geoda del Vacío o una combinación, o alguien encuentra una gema Mítica, se avisa a todo el servidor.
+
+| Logro | Cómo | Premio |
+|---|---|---|
+| Picapiedras | 100 geodas | 300 Monedas |
+| ¡Brilla! | primera exótica | 200 Monedas |
+| Coleccionista Exótico | una de Lava, Neón, Dorada y Vacío (las combinaciones cuentan para sus partes) | +0,25 Suerte |
+| ¡Doble Exótica! | primera combinación | +0,25 Suerte |
+| Maestro de las Combinaciones | las 4 combinaciones | +1 Suerte |
+| Leyenda | primera Legendaria | 1.000 Monedas |
+| ¡Mítico! | primera Mítica | +0,2 Suerte |
+| Minero Imparable | 2.000 geodas | +0,15 Suerte |
+| Colecciones 1 a 5 | las 5 gemas de una zona | 500 / 8.000 / 250K / 4M / 60M Monedas y +0,1 a +0,3 Suerte |
+
+4. **Pulido.** Número que salta con rebote y se desvanece; destello blanco, temblor y cubitos al pegar; revelación con rayos que giran (arcoíris en las Míticas). Botón "✨ Efectos: completos / reducidos" abajo a la derecha (se guarda); si nunca se tocó, arranca reducido con la calidad gráfica de Roblox en 3 o menos. Reducido = sin destello ni temblor de cámara, sin anillo ni cubitos neón, 30 % de las partículas y auras solo a 40 studs. Siempre: un solo bucle para todas las animaciones y nada anima lejos de la cámara.
+
+Decisiones del Grupo 1:
+- Las combinaciones son filas más de la tabla de modificadores (se tiran igual, de la más rara para abajo), así no hay un sistema nuevo.
+- La revelación grande (destello, temblor, tarjeta) es para Rara o mejor, o geodas exóticas. La común es un cartelito de un segundo: con una revelación grande cada tres segundos el juego cansaría.
+- "Misiones" quedan para otro pedido: los logros y colecciones cumplen ese papel en la cadena.
+- Partículas y luces van en el cliente (no en el servidor) para que cada uno pueda reducirlas.
 
 ## Números (en `forja-rapida/src/shared/GameConfig.luau`)
 
@@ -102,7 +138,7 @@ Ritmo medido con `lune run forja-rapida/pruebas/simular` (un jugador que no para
 
 De las capturas se toma el estilo, no el contenido: cielo celeste brillante, piso verde lima con studs, rocas tipo vóxel (cubitos) apoyadas en un nido de escombros, cartel arriba de cada geoda con nombre, rareza y barra de vida ("2/10 PV"), destello blanco al revelar con el cartel de suerte ("🍀 x2,06 Suerte"), botones gordos con borde oscuro y texto blanco con contorno, contador grande abajo a la izquierda con el "+X" que salta, barra de progreso arriba al centro. No se copian nombres, íconos ni personajes de esos juegos.
 
-- **Modelos 3D**: hechos en Blender con scripts (`forja-rapida/arte/scripts/`), estilo vóxel. Cada geoda tiene tres mallas (Roca, Cristales, Base) para que el juego las pinte según la zona y el modificador. Los modificadores (fuego, chispas, brillo dorado, aura del vacío) son efectos de Roblox, no modelos.
+- **Modelos 3D**: hechos en Blender con `forja-rapida/arte/scripts/modelos.py`, estilo vóxel. Cada geoda tiene cinco mallas (Roca, Cristales, Base, Grietas y Grietas2) para que el juego las pinte según la zona y el modificador; las exóticas suman una textura de cubitos (`arte/texturas/`). Las auras (chispas, anillo, destellos) son efectos de Roblox. Muestras en `arte/renders/`.
 - **HUD y menús**: diseñados en Figma (link en el chat del 14/10/2026), con tres paletas para elegir.
 
 Guía de estilo: **pendiente** (punto de control 2: elegir paleta en Figma).
@@ -111,7 +147,8 @@ Guía de estilo: **pendiente** (punto de control 2: elegir paleta en Figma).
 
 - Robux: ni compras ni pases. **Si alguna vez se venden Monedas por Robux**: romper geodas es gratis (no se paga por tirar), pero igual el Índice muestra siempre la tabla de probabilidades con tu suerte actual (GUIA, sección 6), así queda cubierto. Antes de vender Monedas, revisar la regla de ítems aleatorios pagos.
 - Renacer (rebirth), mascotas, auto-golpe, límite de mochila, tablas de récords, analítica y eventos.
-- Sonidos definitivos (quedan marcados con `-- SONIDO:` y los IDs vacíos en GameConfig).
+- Sonidos definitivos (quedan marcados con `-- SONIDO:` y los IDs vacíos en GameConfig: golpe, romper, revelación, revelación rara, logro, anuncio y un aura por modificador).
+- Subir las texturas de `arte/texturas/` y pegar los IDs en `GameConfig.Modificadores[..].Textura`. Mientras tanto, las exóticas se ven con color, material, grietas y aura.
 
 ## Prueba que va a hacer Claude
 
