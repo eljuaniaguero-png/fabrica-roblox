@@ -3,10 +3,11 @@
 -- ProfileStore es el sistema 6 de la ficha y va a cargar y guardar esta misma tabla.
 -- Se publican como atributos del Player para que el cliente los lea (solo para mostrar):
 --   Monedas, Fuerza (daño por golpe), Suerte (la del jugador, con amuletos), NivelFuerza,
---   Pico (número), GeodasRotas, Mochila (JSON: gema -> cantidad), Indice ("Cuarzo;Jaspe"),
---   Zonas ("1;2"), Exoticas ("Lava;Neon"), Logros ("Picapiedras;Mitica"), Titulo (el que se
---   muestra), Vitrina, JefesDerrotados, MayorDanioJefe, EventosJugados y los ajustes
---   (EfectosReducidos, AnunciarHallazgos, VerAnuncios, VerTitulos).
+--   Pico (número), Amuletos ("Trebol;Herradura"), GeodasRotas, Mochila (JSON: gema ->
+--   cantidad), Indice ("Cuarzo;Jaspe"), Zonas ("1;2"), Exoticas ("Lava;Neon"),
+--   Logros ("Picapiedras;Mitica"), Titulo (el que se muestra), Vitrina, JefesDerrotados,
+--   MayorDanioJefe, EventosJugados y los ajustes (EfectosReducidos, AnunciarHallazgos,
+--   VerAnuncios, VerTitulos).
 -- Fuerza y Monedas también van en la tabla de jugadores (leaderstats).
 
 local HttpService = game:GetService("HttpService")
@@ -170,6 +171,7 @@ function Jugadores.publicar(jugador: Player)
 	jugador:SetAttribute("Suerte", Jugadores.suerte(d))
 	jugador:SetAttribute("NivelFuerza", d.NivelFuerza)
 	jugador:SetAttribute("Pico", d.Pico)
+	jugador:SetAttribute("Amuletos", claves(d.Amuletos))
 	jugador:SetAttribute("GeodasRotas", d.GeodasRotas)
 	jugador:SetAttribute("Mochila", HttpService:JSONEncode(d.Mochila))
 	jugador:SetAttribute("Indice", claves(d.Indice))

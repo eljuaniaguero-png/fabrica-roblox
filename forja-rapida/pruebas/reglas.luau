@@ -374,6 +374,47 @@ chequear(
 )
 chequear(not jefesYEventos:find("JefeAncestral10"), "Leyenda de los Jefes salió con 1 jefe")
 
+-- 14. Tienda, Banco y zonas.
+local niveles, costo = Reglas.nivelesFuerza(0, 0)
+chequear(niveles == 0 and costo == 0, "sin monedas se compra Fuerza")
+local p0 = Reglas.precioFuerza(0) :: number
+local p1n = Reglas.precioFuerza(1) :: number
+niveles, costo = Reglas.nivelesFuerza(0, p0 + p1n)
+chequear(niveles == 2 and costo == p0 + p1n, "comprar el máximo no junta los dos niveles justos")
+niveles, costo = Reglas.nivelesFuerza(0, p0 + p1n - 1)
+chequear(niveles == 1 and costo == p0, "compra un nivel que no alcanza")
+niveles = Reglas.nivelesFuerza(0, 1e300, 1)
+chequear(niveles == 1, "comprar de a uno compra más de uno")
+niveles = Reglas.nivelesFuerza(GameConfig.Fuerza.NivelMaximo, 1e300)
+chequear(niveles == 0, "se pasa del nivel máximo")
+local sig, n = Reglas.siguientePico(1)
+chequear(sig ~= nil and n == 2 and sig.Id == GameConfig.Picos[2].Id, "el pico que sigue al primero")
+chequear(Reglas.siguientePico(#GameConfig.Picos) == nil, "hay pico después del último")
+chequear(
+	(Reglas.siguienteAmuleto({}) :: any).Id == GameConfig.Amuletos[1].Id,
+	"el primer amuleto no es el primero"
+)
+local todos = {}
+for _, a in GameConfig.Amuletos do
+	todos[a.Id] = true
+end
+chequear(Reglas.siguienteAmuleto(todos) == nil, "hay amuleto después de tenerlos todos")
+local g1 = GameConfig.Gemas[1]
+chequear(
+	Reglas.valorMochila({ [g1.Id] = 3, Inventada = 99 }) == 3 * Reglas.valorGema(g1.Id),
+	"el valor de la mochila está mal (o cuenta gemas que no existen)"
+)
+chequear(#Reglas.zonasNuevas({ [1] = true }, 0) == 0, "con Fuerza 0 se abre una zona")
+local z2 = GameConfig.Zonas[2]
+local nuevas = Reglas.zonasNuevas({ [1] = true }, z2.FuerzaParaAbrir)
+chequear(#nuevas == 1 and nuevas[1] == 2, "la zona 2 no se abre con su Fuerza justa")
+chequear((Reglas.proximaZona({ [1] = true }) :: any).Numero == 2, "la próxima zona no es la 2")
+local abiertas = {}
+for _, z in GameConfig.Zonas do
+	abiertas[z.Numero] = true
+end
+chequear(Reglas.proximaZona(abiertas) == nil, "hay próxima zona con todas abiertas")
+
 if errores > 0 then
 	print(("%d pruebas fallaron"):format(errores))
 	process.exit(1)

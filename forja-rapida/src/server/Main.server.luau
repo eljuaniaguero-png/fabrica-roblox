@@ -5,6 +5,7 @@
 local Players = game:GetService("Players")
 
 local CampoPrueba = require(script.Parent.CampoPrueba)
+local Economia = require(script.Parent.Economia)
 local Eventos = require(script.Parent.Eventos)
 local GeodeServerService = require(script.Parent.GeodeServerService)
 local Iluminacion = require(script.Parent.Iluminacion)
@@ -28,6 +29,7 @@ Players.PlayerRemoving:Connect(function(jugador: Player)
 end)
 
 Jugadores.iniciar()
+Economia.iniciar()
 CampoPrueba.armarSiFalta()
 GeodeServerService.iniciar()
 Social.iniciar()

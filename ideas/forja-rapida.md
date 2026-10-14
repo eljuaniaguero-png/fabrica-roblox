@@ -19,9 +19,9 @@ Simulador de minería con gacha. En el mapa nacen geodas con vida. Les pegás co
 
 1. **Geodas y golpe** (hecho en código, falta probar en Studio; el golpe del cliente y los números flotantes también): `GeodeServerService.luau`. Nacen en los puntos del mapa con tag `PuntoGeoda` (atributo `Zona`, y `Jefe` para el punto de la geoda jefe). Tamaño al azar por peso, modificador exótico al azar. El servidor valida cada golpe: geoda viva, datos del jugador, máximo 8 golpes por segundo (ráfaga de 4), zona abierta para ese jugador y distancia ≤ 12 studs. El daño sale de su Fuerza, nunca del cliente. Al romperse, cada jugador que hizo al menos el 10 % de la vida (y siempre el que la rompió) tira su propia gema con su propia suerte. La gema entra a la mochila en el acto y recién después se manda la animación.
 2. **Revelación y efectos** (cliente; hecho en código con el Grupo 1, falta probar en Studio): número flotante por golpe (BillboardGui con TweenService, salta y se desvanece), cartel de la geoda con nombre, modificador y barra de vida, aura del modificador, y al romperse: temblor de la roca, temblor de cámara, destello blanco, la gema girando con su color y rareza, y un cartel de suerte. Las míticas y las del Vacío con algo más grande.
-3. **Mochila, Banco y Tienda**: mochila sin límite; Banco con "Vender todo" (muestra el total antes); Tienda con tres pestañas: Fuerza (de a un nivel, muestra "+X Fuerza"), Amuletos (en orden, se suman) y Picos (en orden, siempre usás el mejor, se ve en la mano).
-4. **Zonas y puertas**: 5 biomas en fila, separados por barreras con la Fuerza pedida escrita arriba. Si llegás con la Fuerza suficiente se abre para siempre (no se gasta). Si no, te frena y dice "Te faltan X de Fuerza". El mapa se genera por código desde GameConfig.
-5. **HUD y guía** (diseñado en Figma): Fuerza, Suerte y Monedas abajo a la izquierda; barra "Próxima zona" arriba; botones de viaje arriba al centro (Banco · Mina · Tienda); botones Tienda, Mochila e Índice a la izquierda; Índice con las 25 gemas y la tabla de probabilidades con tu suerte actual; flecha en el piso para el jugador nuevo: geoda → banco → tienda → puerta.
+3. **Mochila, Banco y Tienda** (hecho en código: `Economia.luau` en el servidor y los menús Mochila y Tienda; falta probar en Studio): mochila sin límite; Banco con "Vender todo" (muestra el total antes); Tienda con tres pestañas: Fuerza (de a un nivel, muestra "+X Fuerza"), Amuletos (en orden, se suman) y Picos (en orden, siempre usás el mejor, se ve en la mano).
+4. **Zonas y puertas**: 5 biomas en fila, separados por barreras con la Fuerza pedida escrita arriba. Si llegás con la Fuerza suficiente se abre para siempre (no se gasta). Si no, te frena y dice "Te faltan X de Fuerza". El mapa se genera por código desde GameConfig. (Hecho: la zona se abre sola apenas tu Fuerza llega, con un cartel "¡Zona nueva!". Falta el mapa con las barreras.)
+5. **HUD y guía** (diseñado en Figma, rehecho en código con piezas de ForgeGUI: ver "HUD y menús v3"): Monedas, Suerte y Fuerza arriba a la derecha; barra "Próxima zona" abajo al centro; botones de menús a la izquierda; Índice con las 25 gemas y la tabla de probabilidades con tu suerte actual; flecha en el piso para el jugador nuevo: geoda → banco → tienda → puerta.
 6. **Guardado**: ProfileStore (bloqueo de sesión, autoguardado, al salir y al cerrar el servidor). Guarda Monedas, nivel de Fuerza, pico, amuletos, mochila, Índice, zonas abiertas y geodas rotas.
 
 ## Grupo 1 — Efectos visuales y descubrimientos épicos (pedido del 14/10/2026)
@@ -88,6 +88,39 @@ La regla: lucirse sin molestar. Nada va al chat y nada de esto da premios ni hac
 - **Clasificación semanal**: 4 tablas (Geodas rotas, Exóticas rotas, Jefes Ancestrales y Hallazgo más raro), top 10, se reinicia cada lunes. Se ve en tableros del mapa y en el menú "Clasificación", con un cartel que dice "solo para lucirse". Sin premios: así no obliga a nadie a competir.
 - **Récords de jefes**: al romper un Jefe Ancestral sale el podio de daño (top 3) y cada uno ve su puesto. Se guarda tu mayor daño y tu mejor puesto; si los superás, aparece "¡Nuevo récord personal!".
 - **Luz**: `ColorCorrection` en Lighting con Brillo 0,05, Contraste 0,15, Saturación 0,1 y color blanco (lo pediste). Durante los eventos se suma otro tinte suave que se va al terminar.
+
+## HUD y menús v3 — ForgeGUI (pedido del 14/10/2026)
+
+Pedido: rehacer todo el HUD y los menús con ForgeGUI. Así quedó armado:
+
+- **Las piezas son imágenes de ForgeGUI** y están en `GameConfig.Gui`: botones de 7 colores y uno blanco para teñir, la X de cerrar, el panel de las ventanas, la cabecera con rayas, la baldosa (gemas, títulos y filas), el fondo y el relleno de las barras, la píldora del HUD, el globito de aviso, los rayos y el marco "Destacado". Los íconos van en `GameConfig.Iconos`: los 14 de antes más Tienda, Mochila, Libro, Engranaje, Banco, Pico, Candado y Amuleto. Las piezas blancas se pintan desde el código con cualquier color, así no hace falta una imagen por color. Los botones, paneles y barras se estiran sin deformar las esquinas (9-slice), con la medida anotada en `Corte`.
+- **Mientras una pieza no esté subida**, el juego la dibuja con degradé, borde oscuro y brillo, como el diseño de Figma. Así todo anda desde ya y cada imagen nueva reemplaza al dibujo sin tocar el código.
+- **HUD** (`Hud.client.luau`):
+  - Arriba a la derecha: Monedas, Suerte y Fuerza en píldoras que saltan cuando suben, más los botones "Vender todo" y Ajustes.
+  - A la izquierda: 6 botones grandes (Tienda, Mochila, Índice, Vitrina, Ranking, Eventos) con globitos. La Tienda muestra "!" si te alcanza para algo, la Mochila cuántas gemas tenés, el Índice "!" si hay una gema nueva y Eventos "!" si hay uno en curso.
+  - Abajo al centro: la barra "Próxima zona".
+  - En celular los botones van arriba a la izquierda y todo se achica, para no tapar el joystick ni el salto.
+- **Ventanas** (`Ventanas.luau`): fondo oscurecido, cabecera de color con rayas, título grande con ícono, X roja y un "pop" al abrir. Se abre una por vez y se cierran tocando afuera.
+- **Menús**:
+  - Tienda: Fuerza, Amuletos y Picos, con "Destacado".
+  - Mochila: la grilla de gemas, el total y "¡Vender todo!".
+  - Índice: las 5 gemas por zona, las exóticas y las probabilidades con tu suerte, que suman 100 %.
+  - Eventos: el de ahora o el próximo, con cuenta regresiva, y los 6 eventos.
+  - Mi Vitrina: los títulos con candado y la gema que se exhibe.
+  - Clasificación: podio, del 4 al 10 y tu puesto. Es solo para lucirse.
+  - Ajustes: los 4 interruptores.
+- **Servidor** (`Economia.luau`): vender, comprar Fuerza (de a uno o "todo lo que alcance"), el pico siguiente y el amuleto siguiente. Revisa el tipo de pedido, un pedido cada 0,2 s y que te alcancen las monedas, y te avisa cuánto te falta.
+
+Decisiones v3:
+- **Vender se puede desde cualquier lado** (el botón "Vender todo" o la Mochila). Es lo más simple; un Banco en el mapa queda para cuando se arme el mapa.
+- **Las zonas se abren solas** cuando te alcanza la Fuerza. Las barreras físicas van con el mapa.
+- **Las gemas del menú son un rombo dibujado** del color de cada gema: son 25, y un ícono por gema sería mucho para ahora.
+
+Estado de ForgeGUI (14/10/2026):
+- Se generaron 4 botones: verde, amarillo, azul y rojo.
+- Las otras 36 piezas fallaron porque la cuenta se quedó sin créditos.
+- Las imágenes quedan guardadas en ForgeGUI, pero la sesión en la nube no las puede ver ni bajar: la red bloquea `azyjlkhpdgafuobyxoax.supabase.co`.
+- Falta: cargar créditos, habilitar ese dominio, generar el resto, revisarlas, recortarlas y subirlas a Roblox con la conexión de ForgeGUI. Después se pegan los IDs en `GameConfig.Gui` y `GameConfig.Iconos`.
 
 ## Números (en `forja-rapida/src/shared/GameConfig.luau`)
 

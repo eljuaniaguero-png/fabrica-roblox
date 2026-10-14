@@ -1,13 +1,20 @@
 --!strict
 -- Estilo de la UI de Forja Rápida (como las capturas de referencia y el diseño de Figma):
--- letra redonda y gorda, texto blanco con contorno oscuro, esquinas redondeadas, degradés.
--- Íconos: imágenes (GameConfig.Iconos), nunca emojis. Si un ícono todavía no está subido, se
--- dibuja una insignia redonda de su color con un brillo, para que nada quede vacío.
+-- letra redonda y gorda, texto blanco con contorno oscuro, botones gordos con brillo, degradés.
+-- Las piezas (botones, ventanas, barras, marcos e íconos) son imágenes hechas con ForgeGUI
+-- (GameConfig.Gui y GameConfig.Iconos). Mientras una pieza no esté subida, se dibuja con
+-- degradé, borde y brillo, así todo anda igual. Nunca emojis.
+--
+-- Ojo al armar cosas con estas piezas: el fondo y el brillo son hijos del objeto, así que los
+-- UIListLayout van dentro de un "Contenido" (Estilo.contenido), no directo en el botón.
 
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local TweenService = game:GetService("TweenService")
+local Workspace = game:GetService("Workspace")
 
 local GameConfig = require(ReplicatedStorage.Shared.GameConfig)
 local Reglas = require(ReplicatedStorage.Shared.Reglas)
+local Sonidos = require(script.Parent.Sonidos)
 
 local Estilo = {}
 
@@ -16,6 +23,30 @@ Estilo.Oscuro = Color3.fromHex("#1B1F3B")
 Estilo.Blanco = Color3.new(1, 1, 1)
 Estilo.Verde = Color3.fromHex("#7CFF3C")
 Estilo.VerdeOscuro = Color3.fromHex("#2DBA2D")
+
+-- Colores de botones, cabeceras y píldoras (arriba, abajo).
+Estilo.Colores = {
+	Verde = { "#8CFF5A", "#1FA33A" },
+	Amarillo = { "#FFE45C", "#F59E00" },
+	Azul = { "#6CCBFF", "#1673E0" },
+	Rojo = { "#FF7A86", "#D11F3A" },
+	Violeta = { "#C99BFF", "#6E22D6" },
+	Rosa = { "#FF9ED8", "#E0308F" },
+	Gris = { "#D5DAE1", "#8D939C" },
+	Naranja = { "#FFB04D", "#E8590C" },
+	Cian = { "#9CFBFF", "#14B8D9" },
+	Oscuro = { "#353B63", "#1E2240" },
+	Noche = { "#2E3358", "#1E2240" },
+}
+
+-- Colores de cada rareza para baldosas y textos (claro, oscuro).
+Estilo.Rarezas = {
+	Comun = { "#E3E8F2", "#8D939C" },
+	Raro = { "#8FD3FF", "#1673E0" },
+	Epico = { "#D9A8FF", "#7A2FE0" },
+	Legendario = { "#FFE45C", "#E8890C" },
+	Mitico = { "#FF9ED8", "#9B4DFF" },
+}
 
 -- Color de la insignia de cada ícono mientras no haya imagen.
 local COLOR_ICONO: { [string]: { string } } = {
@@ -33,6 +64,14 @@ local COLOR_ICONO: { [string]: { string } } = {
 	Jefe = { "#FFD23F", "#7A2FE0" },
 	Cristal = { "#C9FFFF", "#3FA9FF" },
 	Gema = { "#FFFFFF", "#B04DFF" },
+	Tienda = { "#B8FF6A", "#1FA33A" },
+	Mochila = { "#FFC27A", "#C0661E" },
+	Libro = { "#FF9ED8", "#B0206F" },
+	Engranaje = { "#E3E8F2", "#6E7487" },
+	Banco = { "#FFF3B0", "#C99A12" },
+	Pico = { "#D8DEE6", "#7A8494" },
+	Candado = { "#FFE07A", "#C98A00" },
+	Amuleto = { "#B8FF6A", "#E8A317" },
 }
 
 local function degradado(padre: Instance, colores: { Color3 }, rotacion: number?)
@@ -50,17 +89,415 @@ local function degradado(padre: Instance, colores: { Color3 }, rotacion: number?
 	return g
 end
 
+local function hex(lista: { string }): { Color3 }
+	local r = {}
+	for _, h in lista do
+		table.insert(r, Color3.fromHex(h))
+	end
+	return r
+end
+
 -- Degradé de colores (hex) para un texto o un marco (los títulos, "¡MÍTICO!", etc.).
 function Estilo.degradado(obj: GuiObject, colores: { string }, rotacion: number?): UIGradient
-	local lista = {}
-	for _, h in colores do
-		table.insert(lista, Color3.fromHex(h))
-	end
 	if obj:IsA("TextLabel") then
 		obj.TextColor3 = Color3.new(1, 1, 1) -- el degradé tiñe el blanco
 	end
-	return degradado(obj, lista, rotacion)
+	return degradado(obj, hex(colores), rotacion)
 end
+
+-- Piezas de ForgeGUI ------------------------------------------------------------------------
+
+-- La pieza si ya está subida (si no, nil y se usa el dibujo de respaldo).
+function Estilo.pieza(nombre: string): GameConfig.PiezaGui?
+	local p = GameConfig.Gui[nombre]
+	if p and p.Imagen ~= "" then
+		return p
+	end
+	return nil
+end
+
+-- Escala acumulada de los UIScale de los ancestros (para que el 9-slice no se agrande dos veces).
+local function escalaDe(obj: Instance): number
+	local s = 1
+	local a: Instance? = obj
+	while a do
+		local u = a:FindFirstChildOfClass("UIScale")
+		if u then
+			s *= u.Scale
+		end
+		a = a.Parent
+	end
+	return s
+end
+
+-- ImageLabel de la pieza, del tamaño de `obj` y detrás de todo lo demás.
+local function imagen(p: GameConfig.PiezaGui, obj: GuiObject): ImageLabel
+	local img = Instance.new("ImageLabel")
+	img.Name = "Fondo"
+	img.BackgroundTransparency = 1
+	img.Size = UDim2.fromScale(1, 1)
+	img.ZIndex = 0
+	img.Image = p.Imagen
+	local corte = p.Corte
+	if corte then
+		img.ScaleType = Enum.ScaleType.Slice
+		img.SliceCenter = Rect.new(corte[1], corte[2], corte[3], corte[4])
+		local function ajustar()
+			local alto = obj.AbsoluteSize.Y / math.max(0.01, escalaDe(obj))
+			if alto > 0 then
+				img.SliceScale = math.clamp(alto / p.Alto, 0.05, 2)
+			end
+		end
+		obj:GetPropertyChangedSignal("AbsoluteSize"):Connect(ajustar)
+		task.defer(ajustar)
+	else
+		img.ScaleType = Enum.ScaleType.Fit
+	end
+	img.Parent = obj
+	return img
+end
+
+-- Brillo de vidrio arriba (solo en el dibujo de respaldo; las piezas ya lo traen).
+local function brillo(obj: GuiObject, radio: number)
+	local b = Instance.new("Frame")
+	b.Name = "Brillo"
+	b.BackgroundColor3 = Color3.new(1, 1, 1)
+	b.BackgroundTransparency = 0.72
+	b.BorderSizePixel = 0
+	b.Position = UDim2.fromOffset(5, 4)
+	b.Size = UDim2.new(1, -10, 0.42, 0)
+	b.ZIndex = 0
+	Estilo.esquinas(b, math.max(4, radio - 3))
+	b.Parent = obj
+end
+
+-- Pinta el fondo de `obj`: con la primera pieza de `piezas` que esté subida (si es blanca, se
+-- tiñe con `colores`) o, si ninguna está, con degradé, borde oscuro y brillo.
+function Estilo.superficie(
+	obj: GuiObject,
+	piezas: { string },
+	colores: { string },
+	radio: number,
+	grosor: number?,
+	sinBrillo: boolean?
+)
+	for _, nombre in piezas do
+		local p = Estilo.pieza(nombre)
+		if p then
+			obj.BackgroundTransparency = 1
+			local img = imagen(p, obj)
+			if p.Tinte then
+				degradado(img, hex(colores))
+			end
+			return
+		end
+	end
+	obj.BackgroundTransparency = 0
+	obj.BackgroundColor3 = Color3.new(1, 1, 1)
+	obj.BorderSizePixel = 0
+	Estilo.esquinas(obj, radio)
+	if (grosor or 4) > 0 then
+		Estilo.borde(obj, grosor or 4)
+	end
+	degradado(obj, hex(colores))
+	if not sinBrillo then
+		brillo(obj, radio)
+	end
+end
+
+-- Marco transparente que ocupa todo `padre`, con una fila o columna centrada adentro.
+function Estilo.contenido(padre: GuiObject, espacio: number, vertical: boolean?): Frame
+	local c = Instance.new("Frame")
+	c.Name = "Contenido"
+	c.BackgroundTransparency = 1
+	c.Size = UDim2.fromScale(1, 1)
+	c.ZIndex = 2
+	local l = Instance.new("UIListLayout")
+	l.FillDirection = if vertical
+		then Enum.FillDirection.Vertical
+		else Enum.FillDirection.Horizontal
+	l.HorizontalAlignment = Enum.HorizontalAlignment.Center
+	l.VerticalAlignment = Enum.VerticalAlignment.Center
+	l.SortOrder = Enum.SortOrder.LayoutOrder
+	l.Padding = UDim.new(0, espacio)
+	l.Parent = c
+	c.Parent = padre
+	return c
+end
+
+-- Se achica al apretarlo y crece un poco al pasar el mouse (se siente "jugoso").
+function Estilo.presionable(b: GuiButton)
+	local escala = Instance.new("UIScale")
+	escala.Parent = b
+	local function ir(valor: number, t: number)
+		TweenService:Create(escala, TweenInfo.new(t, Enum.EasingStyle.Back), { Scale = valor })
+			:Play()
+	end
+	b.MouseEnter:Connect(function()
+		ir(1.05, 0.12)
+	end)
+	b.MouseLeave:Connect(function()
+		ir(1, 0.12)
+	end)
+	b.MouseButton1Down:Connect(function()
+		ir(0.9, 0.06)
+	end)
+	b.MouseButton1Up:Connect(function()
+		ir(1, 0.15)
+	end)
+	b.Activated:Connect(function()
+		-- SONIDO: tocar un botón
+		Sonidos.tocar(GameConfig.Sonidos.Click, 1 + math.random() * 0.1)
+	end)
+end
+
+export type OpcionesBoton = {
+	Texto: string?,
+	Color: string?, -- nombre de Estilo.Colores (Verde por defecto)
+	Icono: string?, -- nombre de GameConfig.Iconos
+	Ancho: number,
+	Alto: number,
+	TamanoTexto: number?,
+}
+
+-- Botón gordo: pieza de ForgeGUI de su color (o la blanca teñida) con ícono y texto.
+-- Devuelve el botón y su texto (para cambiarlo después).
+function Estilo.boton(o: OpcionesBoton): (TextButton, TextLabel?)
+	local b = Instance.new("TextButton")
+	b.Name = "Boton" .. (o.Texto or o.Icono or "")
+	b.Text = ""
+	b.AutoButtonColor = false
+	b.Size = UDim2.fromOffset(o.Ancho, o.Alto)
+	local color = o.Color or "Verde"
+	Estilo.superficie(
+		b,
+		{ "Boton" .. color, "BotonBlanco" },
+		Estilo.Colores[color] or Estilo.Colores.Verde,
+		math.floor(o.Alto * 0.3),
+		math.max(3, math.floor(o.Alto / 12))
+	)
+	local c = Estilo.contenido(b, 6)
+	if o.Icono then
+		local ic = Estilo.icono(o.Icono, math.floor(o.Alto * (if o.Texto then 0.66 else 0.8)))
+		ic.LayoutOrder = 1
+		ic.Parent = c
+	end
+	local etiqueta: TextLabel? = nil
+	if o.Texto then
+		local t = Estilo.texto(o.Texto, o.TamanoTexto or math.floor(o.Alto * 0.42))
+		t.Name = "Texto"
+		t.LayoutOrder = 2
+		t.Parent = c
+		etiqueta = t
+	end
+	Estilo.presionable(b)
+	return b, etiqueta
+end
+
+-- Cambia el color de un botón hecho con Estilo.boton (por ejemplo, "Comprar" en gris si no
+-- alcanza). Rehace solo el fondo.
+function Estilo.colorBoton(b: GuiObject, color: string)
+	for _, hijo in b:GetChildren() do
+		if
+			hijo.Name == "Fondo"
+			or hijo.Name == "Brillo"
+			or hijo:IsA("UIGradient")
+			or hijo:IsA("UIStroke")
+			or hijo:IsA("UICorner")
+		then
+			hijo:Destroy()
+		end
+	end
+	Estilo.superficie(
+		b,
+		{ "Boton" .. color, "BotonBlanco" },
+		Estilo.Colores[color] or Estilo.Colores.Verde,
+		math.floor(b.Size.Y.Offset * 0.3),
+		math.max(3, math.floor(b.Size.Y.Offset / 12))
+	)
+end
+
+-- X roja para cerrar ventanas.
+function Estilo.cerrar(tam: number): GuiButton
+	local p = Estilo.pieza("Cerrar")
+	if p then
+		local b = Instance.new("ImageButton")
+		b.Name = "Cerrar"
+		b.BackgroundTransparency = 1
+		b.Size = UDim2.fromOffset(tam, tam)
+		b.Image = p.Imagen
+		b.ScaleType = Enum.ScaleType.Fit
+		Estilo.presionable(b)
+		return b
+	end
+	local b = Estilo.boton({ Texto = "X", Color = "Rojo", Ancho = tam, Alto = tam })
+	b.Name = "Cerrar"
+	return b
+end
+
+-- Barra de progreso. Devuelve el marco y una función poner(parte 0..1, texto?).
+function Estilo.barra(
+	ancho: number,
+	alto: number,
+	colores: { string }
+): (Frame, (parte: number, texto: string?) -> ())
+	local marco = Instance.new("Frame")
+	marco.Name = "Barra"
+	marco.Size = UDim2.fromOffset(ancho, alto)
+	Estilo.superficie(
+		marco,
+		{ "BarraFondo" },
+		{ "#1B1F3B", "#2E3358" },
+		math.floor(alto / 2),
+		4,
+		true
+	)
+	local relleno = Instance.new("Frame")
+	relleno.Name = "Relleno"
+	relleno.ZIndex = 1
+	relleno.Position = UDim2.fromOffset(3, 3)
+	relleno.Size = UDim2.new(0, alto, 1, -6)
+	Estilo.superficie(relleno, { "BarraRelleno" }, colores, math.floor(alto / 2) - 3, 0)
+	relleno.Parent = marco
+	local texto = Estilo.texto("", math.floor(alto * 0.6))
+	texto.AnchorPoint = Vector2.new(0.5, 0.5)
+	texto.Position = UDim2.fromScale(0.5, 0.5)
+	texto.ZIndex = 3
+	texto.Parent = marco
+	local function poner(parte: number, t: string?)
+		parte = math.clamp(if parte == parte then parte else 0, 0, 1)
+		relleno.Visible = parte > 0
+		TweenService:Create(relleno, TweenInfo.new(0.25, Enum.EasingStyle.Quad), {
+			Size = UDim2.new(0, math.max(alto - 6, math.floor((ancho - 6) * parte)), 1, -6),
+		}):Play()
+		texto.Text = t or ""
+	end
+	return marco, poner
+end
+
+-- Píldora del HUD (monedas, suerte, fuerza): ícono grande que sobresale a la izquierda y el
+-- número. Devuelve el marco y el texto.
+function Estilo.pildora(
+	icono: string,
+	colores: { string },
+	ancho: number,
+	alto: number
+): (Frame, TextLabel)
+	local f = Instance.new("Frame")
+	f.Name = "Pildora" .. icono
+	f.Size = UDim2.fromOffset(ancho, alto)
+	Estilo.superficie(f, { "Pildora" }, colores, math.floor(alto / 2), 4)
+	local ic = Estilo.icono(icono, math.floor(alto * 1.25))
+	ic.AnchorPoint = Vector2.new(0.5, 0.5)
+	ic.Position = UDim2.new(0, math.floor(alto * 0.3), 0.5, 0)
+	ic.ZIndex = 3
+	ic.Parent = f
+	local t = Estilo.texto("0", math.floor(alto * 0.6))
+	t.Name = "Texto"
+	t.AnchorPoint = Vector2.new(0.5, 0.5)
+	t.Position = UDim2.new(0.5, math.floor(alto * 0.4), 0.5, 0)
+	t.ZIndex = 3
+	t.Parent = f
+	return f, t
+end
+
+-- Baldosa cuadrada (gemas, picos, títulos): pieza blanca teñida o degradé.
+function Estilo.baldosa(colores: { string }, tam: number): Frame
+	local f = Instance.new("Frame")
+	f.Name = "Baldosa"
+	f.Size = UDim2.fromOffset(tam, tam)
+	Estilo.superficie(f, { "Baldosa" }, colores, math.floor(tam * 0.14), 4)
+	return f
+end
+
+-- Una gema dibujada (rombo con brillo) del color pedido; para las 25 gemas del juego.
+function Estilo.gema(color: string, tam: number): Frame
+	local caja = Instance.new("Frame")
+	caja.Name = "Gema"
+	caja.BackgroundTransparency = 1
+	caja.Size = UDim2.fromOffset(tam, tam)
+	local r = Instance.new("Frame")
+	r.AnchorPoint = Vector2.new(0.5, 0.5)
+	r.Position = UDim2.fromScale(0.5, 0.5)
+	r.Size = UDim2.fromScale(0.62, 0.62)
+	r.Rotation = 45
+	r.BackgroundColor3 = Color3.new(1, 1, 1)
+	local c = Color3.fromHex(color)
+	degradado(r, { c:Lerp(Color3.new(1, 1, 1), 0.45), c, c:Lerp(Color3.new(0, 0, 0), 0.35) }, 45)
+	Estilo.esquinas(r, math.floor(tam * 0.08))
+	Estilo.borde(r, math.max(2, math.floor(tam / 16)))
+	r.Parent = caja
+	local destello = Instance.new("Frame")
+	destello.AnchorPoint = Vector2.new(0.5, 0.5)
+	destello.Position = UDim2.fromScale(0.36, 0.34)
+	destello.Size = UDim2.fromScale(0.14, 0.14)
+	destello.Rotation = 45
+	destello.BackgroundColor3 = Color3.new(1, 1, 1)
+	destello.BorderSizePixel = 0
+	destello.Parent = caja
+	return caja
+end
+
+-- Globito rojo de aviso ("!" o un número) para la esquina de un botón.
+function Estilo.globito(texto: string, tam: number): Frame
+	local f = Instance.new("Frame")
+	f.Name = "Globito"
+	f.AnchorPoint = Vector2.new(0.5, 0.5)
+	f.Size = UDim2.fromOffset(tam, tam)
+	f.ZIndex = 5
+	local p = Estilo.pieza("Globito")
+	if p then
+		f.BackgroundTransparency = 1
+		imagen(p, f)
+	else
+		f.BackgroundColor3 = Color3.new(1, 1, 1)
+		local esquina = Instance.new("UICorner")
+		esquina.CornerRadius = UDim.new(1, 0)
+		esquina.Parent = f
+		Estilo.borde(f, 3)
+		degradado(f, hex({ "#FF7A86", "#FF3B4E" }))
+	end
+	local t = Estilo.texto(texto, math.floor(tam * 0.62), nil, 2)
+	t.Name = "Texto"
+	t.AnchorPoint = Vector2.new(0.5, 0.5)
+	t.Position = UDim2.fromScale(0.5, 0.5)
+	t.ZIndex = 6
+	t.Parent = f
+	return f
+end
+
+-- Rayas diagonales de luz (cabeceras y carteles, como las capturas): un velo blanco con un
+-- degradé de transparencia a franjas, sobre la mitad derecha.
+function Estilo.rayas(obj: GuiObject, opacidad: number?)
+	local v = Instance.new("Frame")
+	v.Name = "Rayas"
+	v.BackgroundColor3 = Color3.new(1, 1, 1)
+	v.BorderSizePixel = 0
+	v.Size = UDim2.fromScale(1, 1)
+	v.ZIndex = 1
+	local op = 1 - (opacidad or 0.22)
+	local puntos = { NumberSequenceKeypoint.new(0, 1), NumberSequenceKeypoint.new(0.5, 1) }
+	for i = 0, 3 do
+		local x = 0.52 + i * 0.12
+		local ancho = if i % 2 == 0 then 0.05 else 0.025
+		table.insert(puntos, NumberSequenceKeypoint.new(x, 1))
+		table.insert(puntos, NumberSequenceKeypoint.new(x + 0.001, op))
+		table.insert(puntos, NumberSequenceKeypoint.new(x + ancho, op))
+		table.insert(puntos, NumberSequenceKeypoint.new(x + ancho + 0.001, 1))
+	end
+	table.insert(puntos, NumberSequenceKeypoint.new(1, 1))
+	local g = Instance.new("UIGradient")
+	g.Transparency = NumberSequence.new(puntos)
+	g.Rotation = -25
+	g.Parent = v
+	local radio = obj:FindFirstChildOfClass("UICorner")
+	if radio then
+		radio:Clone().Parent = v
+	end
+	v.Parent = obj
+end
+
+-- Íconos ----------------------------------------------------------------------------------
 
 -- Ícono por nombre (ver GameConfig.Iconos). Devuelve un ImageLabel o la insignia de color.
 function Estilo.icono(nombre: string, tamano: number): GuiObject
@@ -88,14 +525,14 @@ function Estilo.icono(nombre: string, tamano: number): GuiObject
 	borde.Color = Estilo.Oscuro
 	borde.Parent = f
 	-- brillo: un rombo blanco arriba a la izquierda
-	local brillo = Instance.new("Frame")
-	brillo.Size = UDim2.fromScale(0.28, 0.28)
-	brillo.Position = UDim2.fromScale(0.22, 0.18)
-	brillo.Rotation = 45
-	brillo.BackgroundColor3 = Color3.new(1, 1, 1)
-	brillo.BackgroundTransparency = 0.25
-	brillo.BorderSizePixel = 0
-	brillo.Parent = f
+	local destello = Instance.new("Frame")
+	destello.Size = UDim2.fromScale(0.28, 0.28)
+	destello.Position = UDim2.fromScale(0.22, 0.18)
+	destello.Rotation = 45
+	destello.BackgroundColor3 = Color3.new(1, 1, 1)
+	destello.BackgroundTransparency = 0.25
+	destello.BorderSizePixel = 0
+	destello.Parent = f
 	return f
 end
 
@@ -103,6 +540,8 @@ end
 function Estilo.iconosModificador(modificador: string): { string }
 	return Reglas.partes(modificador)
 end
+
+-- Básicos ---------------------------------------------------------------------------------
 
 function Estilo.esquinas(obj: GuiObject, radio: number)
 	local c = Instance.new("UICorner")
@@ -133,6 +572,16 @@ function Estilo.texto(texto: string, tamano: number, color: Color3?, grosor: num
 	s.Color = Estilo.Oscuro
 	s.LineJoinMode = Enum.LineJoinMode.Round
 	s.Parent = t
+	return t
+end
+
+-- Texto que se corta en varias líneas dentro de un ancho fijo.
+function Estilo.parrafo(texto: string, tamano: number, ancho: number, color: Color3?): TextLabel
+	local t = Estilo.texto(texto, tamano, color, math.max(1.5, tamano / 12))
+	t.AutomaticSize = Enum.AutomaticSize.Y
+	t.Size = UDim2.fromOffset(ancho, 0)
+	t.TextWrapped = true
+	t.TextXAlignment = Enum.TextXAlignment.Left
 	return t
 end
 
@@ -173,6 +622,31 @@ function Estilo.pantalla(nombre: string, orden: number): ScreenGui
 	g.DisplayOrder = orden
 	g.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
 	return g
+end
+
+-- Achica o agranda `obj` según la pantalla (diseñado para 1280×720; en celular queda más
+-- chico). Escala alrededor de su AnchorPoint, así lo anclado a una esquina queda en su esquina.
+function Estilo.escalar(obj: GuiObject, extra: number?)
+	local s = Instance.new("UIScale")
+	s.Parent = obj
+	local conexion: RBXScriptConnection? = nil
+	local function actualizar()
+		local cam = Workspace.CurrentCamera
+		local v = if cam then cam.ViewportSize else Vector2.new(1280, 720)
+		s.Scale = math.clamp(math.min(v.X / 1280, v.Y / 720), 0.55, 1.2) * (extra or 1)
+	end
+	local function seguirCamara()
+		if conexion then
+			conexion:Disconnect()
+		end
+		local cam = Workspace.CurrentCamera
+		if cam then
+			conexion = cam:GetPropertyChangedSignal("ViewportSize"):Connect(actualizar)
+		end
+		actualizar()
+	end
+	Workspace:GetPropertyChangedSignal("CurrentCamera"):Connect(seguirCamara)
+	seguirCamara()
 end
 
 return Estilo

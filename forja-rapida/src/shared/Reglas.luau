@@ -13,6 +13,8 @@ type Gema = GameConfig.Gema
 type Logro = GameConfig.Logro
 type Evento = GameConfig.Evento
 type Titulo = GameConfig.Titulo
+type Pico = GameConfig.Pico
+type Amuleto = GameConfig.Amuleto
 
 -- Lo que hace falta para revisar los logros de un jugador (Reglas.logrosNuevos).
 export type EstadoLogros = {
@@ -372,6 +374,69 @@ function Reglas.zonaMaxima(fuerza: number): number
 		end
 	end
 	return maxima
+end
+
+-- Tienda y Banco (sistema 3) -----------------------------------------------------------------
+
+-- Cuántos niveles de Fuerza se pueden comprar desde `nivel` con `monedas` (hasta `tope`
+-- niveles; sin tope = todos los que alcancen) y cuánto cuestan en total.
+function Reglas.nivelesFuerza(nivel: number, monedas: number, tope: number?): (number, number)
+	local niveles, costo = 0, 0
+	while tope == nil or niveles < tope do
+		local precio = Reglas.precioFuerza(nivel + niveles)
+		if not precio or costo + precio > monedas then
+			break
+		end
+		costo += precio
+		niveles += 1
+	end
+	return niveles, costo
+end
+
+-- El pico que sigue al que tenés (nil si ya tenés el mejor). Se compran en orden.
+function Reglas.siguientePico(pico: number): (Pico?, number)
+	local n = pico + 1
+	return GameConfig.Picos[n], n
+end
+
+-- El primer amuleto que todavía no tenés (se compran en orden).
+function Reglas.siguienteAmuleto(amuletos: { [string]: boolean }): Amuleto?
+	for _, a in GameConfig.Amuletos do
+		if not amuletos[a.Id] then
+			return a
+		end
+	end
+	return nil
+end
+
+-- Monedas que da vender toda la mochila (gema -> cantidad).
+function Reglas.valorMochila(mochila: { [string]: number }): number
+	local total = 0
+	for id, cantidad in mochila do
+		total += Reglas.valorGema(id) * math.max(0, math.floor(cantidad))
+	end
+	return total
+end
+
+-- Zonas que se abren con esa Fuerza y que todavía no estaban abiertas (en orden).
+function Reglas.zonasNuevas(zonas: { [number]: boolean }, fuerza: number): { number }
+	local lista = {}
+	for _, z in GameConfig.Zonas do
+		if not zonas[z.Numero] and fuerza >= z.FuerzaParaAbrir then
+			table.insert(lista, z.Numero)
+		end
+	end
+	return lista
+end
+
+-- La próxima zona cerrada (para la barra "Próxima zona" del HUD), o nil si están todas.
+function Reglas.proximaZona(zonas: { [number]: boolean }): Zona?
+	for _, z in GameConfig.Zonas do
+		if not zonas[z.Numero] then
+			return z
+		end
+	end
+	return nil
 end
 
 return Reglas

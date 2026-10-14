@@ -115,6 +115,15 @@ export type Pico = {
 	Precio: number,
 }
 
+-- Una pieza de la interfaz hecha con ForgeGUI (forja-rapida/arte/gui), subida a Roblox.
+export type PiezaGui = {
+	Imagen: string, -- "rbxassetid://..."; "" = todavía no está y se dibuja con degradés
+	Ancho: number, -- píxeles de la imagen subida
+	Alto: number,
+	Corte: { number }?, -- 9-slice: { x0, y0, x1, y1 } de la parte del medio que se estira
+	Tinte: boolean?, -- la pieza es blanca y el código la pinta del color que haga falta
+}
+
 export type Amuleto = {
 	Id: string,
 	Nombre: string,
@@ -854,8 +863,9 @@ local GameConfig = {
 		},
 	} :: { Titulo },
 
-	-- Íconos de la UI (imágenes, no emojis): subir los PNG de forja-rapida/arte/iconos y pegar
-	-- acá el "rbxassetid://...". Mientras estén vacíos, el cliente dibuja una insignia de color.
+	-- Íconos de la UI (imágenes, no emojis), hechos con ForgeGUI (forja-rapida/arte/gui; los
+	-- dibujos de respaldo están en arte/iconos). Pegar acá el "rbxassetid://..." de cada uno.
+	-- Mientras estén vacíos, el cliente dibuja una insignia de color.
 	Iconos = {
 		Lava = "",
 		Neon = "",
@@ -871,7 +881,71 @@ local GameConfig = {
 		Jefe = "",
 		Cristal = "",
 		Gema = "",
+		-- HUD y menús
+		Tienda = "",
+		Mochila = "",
+		Libro = "", -- Índice
+		Engranaje = "", -- Ajustes
+		Banco = "",
+		Pico = "",
+		Candado = "",
+		Amuleto = "",
 	},
+
+	-- Piezas de la interfaz hechas con ForgeGUI (forja-rapida/arte/gui): botones, ventanas,
+	-- barras y marcos. Mientras una Imagen esté vacía, el cliente la dibuja con degradés y
+	-- bordes (como el diseño de Figma), así el juego anda igual. Al subirlas, pegar acá el
+	-- "rbxassetid://..." con su tamaño y su corte (9-slice: las esquinas no se estiran).
+	Gui = {
+		BotonVerde = { Imagen = "", Ancho = 512, Alto = 170, Corte = { 70, 60, 442, 110 } },
+		BotonAmarillo = { Imagen = "", Ancho = 512, Alto = 170, Corte = { 70, 60, 442, 110 } },
+		BotonAzul = { Imagen = "", Ancho = 512, Alto = 170, Corte = { 70, 60, 442, 110 } },
+		BotonRojo = { Imagen = "", Ancho = 512, Alto = 170, Corte = { 70, 60, 442, 110 } },
+		BotonVioleta = { Imagen = "", Ancho = 512, Alto = 170, Corte = { 70, 60, 442, 110 } },
+		BotonRosa = { Imagen = "", Ancho = 512, Alto = 170, Corte = { 70, 60, 442, 110 } },
+		BotonGris = { Imagen = "", Ancho = 512, Alto = 170, Corte = { 70, 60, 442, 110 } },
+		BotonBlanco = {
+			Imagen = "",
+			Ancho = 512,
+			Alto = 170,
+			Corte = { 70, 60, 442, 110 },
+			Tinte = true,
+		},
+		Cerrar = { Imagen = "", Ancho = 256, Alto = 256 },
+		Panel = { Imagen = "", Ancho = 1024, Alto = 640, Corte = { 90, 90, 934, 550 } },
+		Cabecera = {
+			Imagen = "",
+			Ancho = 1024,
+			Alto = 128,
+			Corte = { 60, 40, 964, 88 },
+			Tinte = true,
+		},
+		Baldosa = {
+			Imagen = "",
+			Ancho = 256,
+			Alto = 256,
+			Corte = { 60, 60, 196, 196 },
+			Tinte = true,
+		},
+		BarraFondo = { Imagen = "", Ancho = 512, Alto = 64, Corte = { 32, 20, 480, 44 } },
+		BarraRelleno = {
+			Imagen = "",
+			Ancho = 512,
+			Alto = 64,
+			Corte = { 32, 20, 480, 44 },
+			Tinte = true,
+		},
+		Pildora = {
+			Imagen = "",
+			Ancho = 512,
+			Alto = 128,
+			Corte = { 64, 40, 448, 88 },
+			Tinte = true,
+		},
+		Globito = { Imagen = "", Ancho = 128, Alto = 128 },
+		Rayos = { Imagen = "", Ancho = 512, Alto = 512, Tinte = true },
+		MarcoDestacado = { Imagen = "", Ancho = 1024, Alto = 220, Corte = { 120, 80, 904, 140 } },
+	} :: { [string]: PiezaGui },
 
 	-- Efectos del cliente (Grupo 1, pulido). Con "Efectos reducidos" (botón en pantalla, o solo
 	-- si la calidad gráfica de Roblox está en 3 o menos) no hay destello blanco ni temblor de
@@ -902,6 +976,8 @@ local GameConfig = {
 		JefeAparece = "",
 		Vender = "",
 		Comprar = "",
+		Click = "", -- tocar un botón de la interfaz
+		AbrirMenu = "",
 	},
 
 	-- Modelos de Blender (forja-rapida/arte). Mientras no estén, el servidor arma las geodas con

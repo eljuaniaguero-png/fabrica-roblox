@@ -1,0 +1,257 @@
+{
+ "_leeme": "Piezas de la interfaz pedidas a ForgeGUI (generation_gui). Estado: 'listo' = generada (artifact_ref sirve para revisarla o subirla a Roblox con artifact_publish); 'sin_creditos' = falló por falta de créditos y hay que volver a pedirla con el mismo prompt. Los botones de color usan de referencia el BotonVerde. Destino en el juego: GameConfig.Gui y GameConfig.Iconos.",
+ "piezas": {
+  "BotonVerde": {
+   "tipo": "gui_button",
+   "estado": "listo",
+   "job_id": "d1c697b1-5442-4ded-ac63-808f40d4e709",
+   "prompt": "Blank Roblox game UI button, NO text, NO icon, NO letters. Wide rounded rectangle (about 3:1), chunky cartoon style like popular Roblox simulator games: bright lime-green vertical gradient (#8CFF5A top to #1FA33A bottom), thick dark navy outline (#1B1F3B) about 6% of the height, glossy white highlight strip across the top third, darker inner bevel at the bottom edge, soft drop shadow under it. Flat even edges so it can be 9-slice scaled. Centered on a fully transparent background, nothing else.",
+   "artifact_ref": "mcp-artifact:d1c697b1-5442-4ded-ac63-808f40d4e709:0"
+  },
+  "BotonAmarillo": {
+   "tipo": "gui_button",
+   "estado": "listo",
+   "job_id": "2a0965ec-06b5-4d4c-8dfe-160ebadf22cc",
+   "prompt": "Blank Roblox game UI button, NO text, NO icon, NO letters. Same shape and style as the reference button but bright golden-yellow vertical gradient (#FFE45C top to #F59E00 bottom). Wide rounded rectangle about 3:1, thick dark navy outline (#1B1F3B), glossy white highlight strip across the top third, darker inner bevel at the bottom, soft drop shadow. Flat even edges so it can be 9-slice scaled. Centered on a fully transparent background, nothing else.",
+   "artifact_ref": "mcp-artifact:2a0965ec-06b5-4d4c-8dfe-160ebadf22cc:0",
+   "referencia": "mcp-artifact:d1c697b1-5442-4ded-ac63-808f40d4e709:0"
+  },
+  "BotonAzul": {
+   "tipo": "gui_button",
+   "estado": "listo",
+   "job_id": "634fa49b-2cbe-4596-aac7-eb3da757d3fe",
+   "prompt": "Blank Roblox game UI button, NO text, NO icon, NO letters. Same shape and style as the reference button but sky-blue vertical gradient (#6CCBFF top to #1673E0 bottom). Wide rounded rectangle about 3:1, thick dark navy outline (#1B1F3B), glossy white highlight strip across the top third, darker inner bevel at the bottom, soft drop shadow. Flat even edges so it can be 9-slice scaled. Centered on a fully transparent background, nothing else.",
+   "artifact_ref": "mcp-artifact:634fa49b-2cbe-4596-aac7-eb3da757d3fe:0",
+   "referencia": "mcp-artifact:d1c697b1-5442-4ded-ac63-808f40d4e709:0"
+  },
+  "BotonRojo": {
+   "tipo": "gui_button",
+   "estado": "listo",
+   "job_id": "3c91054c-ff87-4d37-8378-3f3b6b25cf75",
+   "prompt": "Blank Roblox game UI button, NO text, NO icon, NO letters. Same shape and style as the reference button but cherry-red vertical gradient (#FF7A86 top to #D11F3A bottom). Wide rounded rectangle about 3:1, thick dark navy outline (#1B1F3B), glossy white highlight strip across the top third, darker inner bevel at the bottom, soft drop shadow. Flat even edges so it can be 9-slice scaled. Centered on a fully transparent background, nothing else.",
+   "artifact_ref": "mcp-artifact:3c91054c-ff87-4d37-8378-3f3b6b25cf75:0",
+   "referencia": "mcp-artifact:d1c697b1-5442-4ded-ac63-808f40d4e709:0"
+  },
+  "BotonVioleta": {
+   "tipo": "gui_button",
+   "estado": "sin_creditos",
+   "job_id": "3643cc81-ebd1-4f57-afff-5cd7180cbb24",
+   "prompt": "Blank Roblox game UI button, NO text, NO icon, NO letters. Same shape and style as the reference button but vivid purple vertical gradient (#C99BFF top to #6E22D6 bottom). Wide rounded rectangle about 3:1, thick dark navy outline (#1B1F3B), glossy white highlight strip across the top third, darker inner bevel at the bottom, soft drop shadow. Flat even edges so it can be 9-slice scaled. Centered on a fully transparent background, nothing else.",
+   "referencia": "mcp-artifact:d1c697b1-5442-4ded-ac63-808f40d4e709:0"
+  },
+  "BotonRosa": {
+   "tipo": "gui_button",
+   "estado": "sin_creditos",
+   "job_id": "9dc02e14-21b7-45e6-8c78-eb05509e740a",
+   "prompt": "Blank Roblox game UI button, NO text, NO icon, NO letters. Same shape and style as the reference button but hot-pink vertical gradient (#FF9ED8 top to #E0308F bottom). Wide rounded rectangle about 3:1, thick dark navy outline (#1B1F3B), glossy white highlight strip across the top third, darker inner bevel at the bottom, soft drop shadow. Flat even edges so it can be 9-slice scaled. Centered on a fully transparent background, nothing else.",
+   "referencia": "mcp-artifact:d1c697b1-5442-4ded-ac63-808f40d4e709:0"
+  },
+  "BotonGris": {
+   "tipo": "gui_button",
+   "estado": "sin_creditos",
+   "job_id": "d6cdff2b-0fac-4c1e-b90e-c723903825e6",
+   "prompt": "Blank Roblox game UI button, NO text, NO icon, NO letters. Same shape and style as the reference button but light steel-gray vertical gradient (#D5DAE1 top to #8D939C bottom), for a disabled state. Wide rounded rectangle about 3:1, thick dark navy outline (#1B1F3B), glossy white highlight strip across the top third, darker inner bevel at the bottom, soft drop shadow. Flat even edges so it can be 9-slice scaled. Centered on a fully transparent background, nothing else.",
+   "referencia": "mcp-artifact:d1c697b1-5442-4ded-ac63-808f40d4e709:0"
+  },
+  "BotonBlanco": {
+   "tipo": "gui_button",
+   "estado": "sin_creditos",
+   "job_id": "eacc1d2d-9b24-43a2-85a0-b635acc440ad",
+   "prompt": "Blank Roblox game UI button, NO text, NO icon, NO letters. Same shape and style as the reference button but pure white to very light gray vertical gradient (#FFFFFF top to #C9CFDA bottom), meant to be color-tinted in code. Wide rounded rectangle about 3:1, thick dark navy outline (#1B1F3B), glossy white highlight strip across the top third, darker inner bevel at the bottom, soft drop shadow. Flat even edges so it can be 9-slice scaled. Centered on a fully transparent background, nothing else.",
+   "referencia": "mcp-artifact:d1c697b1-5442-4ded-ac63-808f40d4e709:0"
+  },
+  "Cerrar": {
+   "tipo": "gui_button",
+   "estado": "sin_creditos",
+   "job_id": "5ca512c6-eb1d-468f-b160-19cc83453525",
+   "prompt": "Square Roblox game UI close button: rounded square, cherry-red vertical gradient (#FF7A86 top to #D11F3A bottom), thick dark navy outline (#1B1F3B), glossy white highlight on the top third, darker bevel at the bottom, a big bold white X symbol in the center with its own dark navy outline. No other text. Centered on a fully transparent background.",
+   "referencia": "mcp-artifact:d1c697b1-5442-4ded-ac63-808f40d4e709:0"
+  },
+  "PanelMenu": {
+   "tipo": "gui_panel",
+   "estado": "sin_creditos",
+   "job_id": "745d4226-21f1-49a3-8654-8b09e9b70264",
+   "prompt": "Empty Roblox game menu window body, NO text, NO icons, NO buttons. Large rounded rectangle (about 16:10) with deep navy-indigo vertical gradient (#353B63 top to #1E2240 bottom), very thick dark navy outline (#1B1F3B), a faint light grid pattern inside (thin lines at 5% opacity), subtle inner shadow along the top edge, soft drop shadow outside. Even uniform borders and corners so it can be 9-slice scaled. Fully transparent background."
+  },
+  "Cabecera": {
+   "tipo": "gui_frame",
+   "estado": "sin_creditos",
+   "job_id": "59cf9a24-5307-4c21-ba8f-63fc4aae50ef",
+   "prompt": "Empty Roblox game menu title bar meant to be color-tinted in code, NO text, NO icons. Wide rounded rectangle about 8:1, white to very light gray horizontal gradient, thick dark navy outline (#1B1F3B), several diagonal light stripes on the right half, glossy highlight on the top third, darker inner bevel at the bottom. Even uniform ends for 9-slice. Fully transparent background."
+  },
+  "Baldosa": {
+   "tipo": "gui_frame",
+   "estado": "sin_creditos",
+   "job_id": "7d3a1c5f-a7f7-4370-8b7a-02f5f06b1de3",
+   "prompt": "Empty square item slot tile for a Roblox inventory, meant to be color-tinted in code, NO text, NO item inside. Rounded square, white to light gray vertical gradient, thick dark navy outline (#1B1F3B), subtle diamond pattern inside at 15% opacity, glossy highlight on the top third, inner bevel at the bottom. Fully transparent background."
+  },
+  "BarraFondo": {
+   "tipo": "gui_frame",
+   "estado": "sin_creditos",
+   "job_id": "3a680718-6680-4390-a134-2db80afb3765",
+   "prompt": "Empty progress bar track, NO text, NO fill. Long pill about 8:1 with fully rounded ends, dark navy inside (#1B1F3B to #2E3358), thick dark navy outline (#11142A), subtle inner shadow at the top. Even ends for 9-slice. Fully transparent background."
+  },
+  "BarraRelleno": {
+   "tipo": "gui_frame",
+   "estado": "sin_creditos",
+   "job_id": "4c6948f2-8728-41f2-b0f7-0b77b3ab4929",
+   "prompt": "Progress bar fill piece meant to be color-tinted in code, NO text. Long pill about 8:1 with fully rounded ends, white to light gray vertical gradient, NO outline, bright glossy highlight stripe along the top third. Even ends for 9-slice. Fully transparent background."
+  },
+  "Pildora": {
+   "tipo": "gui_frame",
+   "estado": "sin_creditos",
+   "job_id": "7bf35de4-a331-414f-a8fa-fec76f8e0190",
+   "prompt": "Empty counter pill for a Roblox HUD, meant to be color-tinted in code, NO text, NO icon. Pill about 4:1 with fully rounded ends, white to light gray vertical gradient, thick dark navy outline (#1B1F3B), glossy highlight on the top third, inner bevel at the bottom, small drop shadow. Even ends for 9-slice. Fully transparent background."
+  },
+  "Globito": {
+   "tipo": "gui_icon",
+   "estado": "sin_creditos",
+   "job_id": "dc24ef86-38be-4b85-aa90-8a2fb4a9a489",
+   "prompt": "Small round notification badge, NO text, NO number: glossy red circle (#FF7A86 to #FF3B4E), thick dark navy outline (#1B1F3B), white highlight on the top left, soft drop shadow. Fully transparent background."
+  },
+  "Rayos": {
+   "tipo": "gui_asset",
+   "estado": "sin_creditos",
+   "job_id": "865cf3f7-faaa-4171-ba7f-c84ffb99a1ac",
+   "prompt": "Radial sunburst light rays for a reward reveal, meant to be tinted and rotated in code: 16 white rays fading to transparent toward the outside, soft glowing white center, perfectly centered and symmetrical, square image, NO text. Fully transparent background."
+  },
+  "MarcoDestacado": {
+   "tipo": "gui_frame",
+   "estado": "sin_creditos",
+   "job_id": "de75224a-5cf7-448e-947f-0f08072bd051",
+   "prompt": "Empty featured-offer card frame for a Roblox shop, NO text, NO item inside. Wide rounded rectangle about 5:1, thick shiny golden border with small gold diamond studs on the four corners, dark navy outline around the gold, inside a deep purple to magenta horizontal gradient (#3A1A7A to #4A1A3A) with faint golden sunburst rays from the left. Fully transparent background."
+  },
+  "Moneda": {
+   "tipo": "gui_icon",
+   "estado": "sin_creditos",
+   "job_id": "9fa3768a-8cd7-4b0c-b5d4-343a292f3fa8",
+   "prompt": "Game UI icon: a shiny thick gold coin seen slightly tilted, with a stamped faceted gem symbol in the middle and a raised rim, warm yellow-orange gradient. Chunky cartoon Roblox simulator style, saturated colors, thick dark navy outline (#1B1F3B), glossy white highlight, soft shading. Centered, fills about 85% of a square canvas, fully transparent background. No text, no letters, no numbers, no frame."
+  },
+  "Fuerza": {
+   "tipo": "gui_icon",
+   "estado": "sin_creditos",
+   "job_id": "f29bc037-2380-401e-ba04-cab45605baa9",
+   "prompt": "Game UI icon for strength: a chunky red dumbbell with dark gray handle, seen at a slight diagonal. Chunky cartoon Roblox simulator style, saturated colors, thick dark navy outline (#1B1F3B), glossy white highlight, soft shading. Centered, fills about 85% of a square canvas, fully transparent background. No text, no letters, no numbers, no frame."
+  },
+  "Trebol": {
+   "tipo": "gui_icon",
+   "estado": "sin_creditos",
+   "job_id": "d69388b7-c4f6-4d06-bb1e-1667f0b94b1f",
+   "prompt": "Game UI icon for luck: a bright green four-leaf clover with a tiny sparkle. Chunky cartoon Roblox simulator style, saturated colors, thick dark navy outline (#1B1F3B), glossy white highlight, soft shading. Centered, fills about 85% of a square canvas, fully transparent background. No text, no letters, no numbers, no frame."
+  },
+  "Lava": {
+   "tipo": "gui_icon",
+   "estado": "sin_creditos",
+   "job_id": "e8e4c646-8a5c-4a23-b80d-937da63a4246",
+   "prompt": "Game UI icon for a lava element: a big molten fire flame with a glowing yellow core, orange and red outer flame, two small lava droplets. Chunky cartoon Roblox simulator style, saturated colors, thick dark navy outline (#1B1F3B), glossy white highlight, soft shading. Centered, fills about 85% of a square canvas, fully transparent background. No text, no letters, no numbers, no frame."
+  },
+  "Neon": {
+   "tipo": "gui_icon",
+   "estado": "sin_creditos",
+   "job_id": "6509acab-5966-4500-9121-8c1101f7085b",
+   "prompt": "Game UI icon for a neon electric element: a bold zigzag lightning bolt with a cyan-to-magenta neon gradient and a soft glow, two tiny sparkles. Chunky cartoon Roblox simulator style, saturated colors, thick dark navy outline (#1B1F3B), glossy white highlight, soft shading. Centered, fills about 85% of a square canvas, fully transparent background. No text, no letters, no numbers, no frame."
+  },
+  "Midas": {
+   "tipo": "gui_icon",
+   "estado": "sin_creditos",
+   "job_id": "01ba64d6-404f-4c50-ad8e-5295a1c1ccfe",
+   "prompt": "Game UI icon for a golden Midas element: a chunky shiny faceted gold nugget with bright star sparkles around it. Chunky cartoon Roblox simulator style, saturated colors, thick dark navy outline (#1B1F3B), glossy white highlight, soft shading. Centered, fills about 85% of a square canvas, fully transparent background. No text, no letters, no numbers, no frame."
+  },
+  "Vacio": {
+   "tipo": "gui_icon",
+   "estado": "sin_creditos",
+   "job_id": "ee68c50b-5a17-4f9d-90bc-029272394743",
+   "prompt": "Game UI icon for a void cosmic element: a round swirling purple-black vortex orb with a spiral galaxy inside and tiny white stars, violet glow rim. Chunky cartoon Roblox simulator style, saturated colors, thick dark navy outline (#1B1F3B), glossy white highlight, soft shading. Centered, fills about 85% of a square canvas, fully transparent background. No text, no letters, no numbers, no frame."
+  },
+  "Chispa": {
+   "tipo": "gui_icon",
+   "estado": "sin_creditos",
+   "job_id": "ddf913a3-2620-48a6-9d3a-f72e46e33a09",
+   "prompt": "Game UI icon: a bright four-pointed sparkle star, white center fading to light sky blue at the tips, with one small companion sparkle. Chunky cartoon Roblox simulator style, saturated colors, thick dark navy outline (#1B1F3B), glossy white highlight, soft shading. Centered, fills about 85% of a square canvas, fully transparent background. No text, no letters, no numbers, no frame."
+  },
+  "Trofeo": {
+   "tipo": "gui_icon",
+   "estado": "sin_creditos",
+   "job_id": "2bc73235-6bad-428e-9b4e-426c6f0fcb88",
+   "prompt": "Game UI icon: a shiny golden trophy cup with two handles and a small star on the front, on a short dark base. Chunky cartoon Roblox simulator style, saturated colors, thick dark navy outline (#1B1F3B), glossy white highlight, soft shading. Centered, fills about 85% of a square canvas, fully transparent background. No text, no letters, no numbers, no frame."
+  },
+  "Corona": {
+   "tipo": "gui_icon",
+   "estado": "sin_creditos",
+   "job_id": "aa928b90-6c24-432b-a670-582c790ed9ce",
+   "prompt": "Game UI icon: a royal crown in bright purple with gold trim and three round gems on its points. Chunky cartoon Roblox simulator style, saturated colors, thick dark navy outline (#1B1F3B), glossy white highlight, soft shading. Centered, fills about 85% of a square canvas, fully transparent background. No text, no letters, no numbers, no frame."
+  },
+  "Reloj": {
+   "tipo": "gui_icon",
+   "estado": "sin_creditos",
+   "job_id": "f1095635-c107-475e-a46a-6e3cdcb608ac",
+   "prompt": "Game UI icon for events and timers: a round blue stopwatch with a white face, a single clock hand and a top button. Chunky cartoon Roblox simulator style, saturated colors, thick dark navy outline (#1B1F3B), glossy white highlight, soft shading. Centered, fills about 85% of a square canvas, fully transparent background. No text, no letters, no numbers, no frame."
+  },
+  "Jefe": {
+   "tipo": "gui_icon",
+   "estado": "sin_creditos",
+   "job_id": "b96fc007-259e-4fc9-95f7-eb6804634e4c",
+   "prompt": "Game UI icon for an ancient boss: a large round dark-purple crystal geode rock with glowing golden runes carved on it, white crystal spikes on top and a small gold crown. Chunky cartoon Roblox simulator style, saturated colors, thick dark navy outline (#1B1F3B), glossy white highlight, soft shading. Centered, fills about 85% of a square canvas, fully transparent background. No text, no letters, no numbers, no frame."
+  },
+  "Cristal": {
+   "tipo": "gui_icon",
+   "estado": "sin_creditos",
+   "job_id": "d6ef77c1-b7d8-418c-920a-5809d7d69544",
+   "prompt": "Game UI icon: a cluster of three tall pointed crystal shards in icy light-blue and cyan, the middle one taller, with a tiny sparkle. Chunky cartoon Roblox simulator style, saturated colors, thick dark navy outline (#1B1F3B), glossy white highlight, soft shading. Centered, fills about 85% of a square canvas, fully transparent background. No text, no letters, no numbers, no frame."
+  },
+  "Gema": {
+   "tipo": "gui_icon",
+   "estado": "sin_creditos",
+   "job_id": "6d6c049a-db2f-4c26-ab2c-88b81915a45c",
+   "prompt": "Game UI icon: a classic faceted diamond-cut gemstone in vivid purple-violet, front view, with clear facets and a bright white glint. Chunky cartoon Roblox simulator style, saturated colors, thick dark navy outline (#1B1F3B), glossy white highlight, soft shading. Centered, fills about 85% of a square canvas, fully transparent background. No text, no letters, no numbers, no frame."
+  },
+  "Mochila": {
+   "tipo": "gui_icon",
+   "estado": "sin_creditos",
+   "job_id": "d5e83c0e-3bfa-454e-88c3-577698a1ff3f",
+   "prompt": "Game UI icon for the inventory: a chunky orange-brown adventure backpack with a front pocket, a buckle and a purple gem peeking out of the top. Chunky cartoon Roblox simulator style, saturated colors, thick dark navy outline (#1B1F3B), glossy white highlight, soft shading. Centered, fills about 85% of a square canvas, fully transparent background. No text, no letters, no numbers, no frame."
+  },
+  "Libro": {
+   "tipo": "gui_icon",
+   "estado": "sin_creditos",
+   "job_id": "c83e3b3d-5e2f-4f83-855a-6d2f5248f1f3",
+   "prompt": "Game UI icon for a collection index: a thick closed magic book with a pink-magenta cover, gold corners and a faceted gem set in the middle of the cover. Chunky cartoon Roblox simulator style, saturated colors, thick dark navy outline (#1B1F3B), glossy white highlight, soft shading. Centered, fills about 85% of a square canvas, fully transparent background. No text, no letters, no numbers, no frame."
+  },
+  "Engranaje": {
+   "tipo": "gui_icon",
+   "estado": "sin_creditos",
+   "job_id": "ddcf6a71-1874-4d53-8e5b-43fd36fc14b4",
+   "prompt": "Game UI icon for settings: a chunky round gear cog in light steel blue-gray with a hole in the center. Chunky cartoon Roblox simulator style, saturated colors, thick dark navy outline (#1B1F3B), glossy white highlight, soft shading. Centered, fills about 85% of a square canvas, fully transparent background. No text, no letters, no numbers, no frame."
+  },
+  "Banco": {
+   "tipo": "gui_icon",
+   "estado": "sin_creditos",
+   "job_id": "108ce27b-4cab-44f4-a2c6-4b1ec956bd7c",
+   "prompt": "Game UI icon for the bank where you sell gems: a small classic bank building with white columns, a triangular roof and a big gold coin emblem on the roof, a small pile of gold coins in front. Chunky cartoon Roblox simulator style, saturated colors, thick dark navy outline (#1B1F3B), glossy white highlight, soft shading. Centered, fills about 85% of a square canvas, fully transparent background. No text, no letters, no numbers, no frame."
+  },
+  "Pico": {
+   "tipo": "gui_icon",
+   "estado": "sin_creditos",
+   "job_id": "b88e3ef3-4703-4187-b2f6-075a06dc0ee5",
+   "prompt": "Game UI icon: a mining pickaxe seen diagonally, wooden brown handle and a shiny steel-blue curved head with a small sparkle. Chunky cartoon Roblox simulator style, saturated colors, thick dark navy outline (#1B1F3B), glossy white highlight, soft shading. Centered, fills about 85% of a square canvas, fully transparent background. No text, no letters, no numbers, no frame."
+  },
+  "Candado": {
+   "tipo": "gui_icon",
+   "estado": "sin_creditos",
+   "job_id": "d6d125ce-e330-4aa0-8119-254ea936093c",
+   "prompt": "Game UI icon for something locked: a chunky golden padlock with a gray steel shackle and a dark keyhole. Chunky cartoon Roblox simulator style, saturated colors, thick dark navy outline (#1B1F3B), glossy white highlight, soft shading. Centered, fills about 85% of a square canvas, fully transparent background. No text, no letters, no numbers, no frame."
+  },
+  "Tienda": {
+   "tipo": "gui_icon",
+   "estado": "sin_creditos",
+   "job_id": "ccf903dd-d4d7-4d4e-adf2-14cf33163f9e",
+   "prompt": "Game UI icon for the shop: a small market stall with a green and white striped awning and a counter showing a pickaxe and a gem. Chunky cartoon Roblox simulator style, saturated colors, thick dark navy outline (#1B1F3B), glossy white highlight, soft shading. Centered, fills about 85% of a square canvas, fully transparent background. No text, no letters, no numbers, no frame."
+  },
+  "Amuleto": {
+   "tipo": "gui_icon",
+   "estado": "sin_creditos",
+   "job_id": "a6b06d63-26c5-4206-b0d2-b2100bb86a18",
+   "prompt": "Game UI icon for a luck amulet: a round golden pendant on a short chain with a green four-leaf clover gem inside, sparkling. Chunky cartoon Roblox simulator style, saturated colors, thick dark navy outline (#1B1F3B), glossy white highlight, soft shading. Centered, fills about 85% of a square canvas, fully transparent background. No text, no letters, no numbers, no frame."
+  }
+ }
+}

@@ -34,6 +34,10 @@ local Remotos = {
 	Premio = evento("Premio"), -- servidor -> cliente: (monedas, posición?) "+X" que salta
 	ElegirTitulo = evento("ElegirTitulo"), -- cliente -> servidor: (Id del título)
 	ElegirVitrina = evento("ElegirVitrina"), -- cliente -> servidor: (Id de la gema)
+	-- Banco y Tienda (Economia.luau)
+	Vender = evento("Vender"), -- cliente -> servidor: () vender toda la mochila
+	Comprar = evento("Comprar"), -- cliente -> servidor: ("Fuerza" | "FuerzaMax" | "Pico" | "Amuleto")
+	Compra = evento("Compra"), -- servidor -> cliente: (tipo, nombre) salió bien la compra o venta
 }
 
 carpeta.Parent = ReplicatedStorage
