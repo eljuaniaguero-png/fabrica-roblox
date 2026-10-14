@@ -1,5 +1,5 @@
 {
- "_leeme": "Piezas de la interfaz pedidas a ForgeGUI (generation_gui). Estado: 'listo' = generada (artifact_ref sirve para revisarla o subirla a Roblox con artifact_publish); 'sin_creditos' = falló por falta de créditos y hay que volver a pedirla con el mismo prompt. Los botones de color usan de referencia el BotonVerde. Destino en el juego: GameConfig.Gui y GameConfig.Iconos.",
+ "_leeme": "Piezas de la interfaz pedidas a ForgeGUI (generation_gui). Estado: 'listo' = generada (artifact_ref sirve para revisarla o subirla a Roblox con artifact_publish); 'sin_creditos' = falló por falta de créditos y hay que volver a pedirla con el mismo prompt. Los botones de color usan de referencia el BotonVerde. Destino en el juego: GameConfig.Gui y GameConfig.Iconos. Con los 4 botones listos se armó el kit de arte/gui/listas (scripts/gui.py) y se subió a Roblox (listas/roblox.json).",
  "piezas": {
   "BotonVerde": {
    "tipo": "gui_button",

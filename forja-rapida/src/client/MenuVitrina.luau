@@ -128,11 +128,7 @@ local function crear()
 			local t = MenuMochila.tarjeta(g, if g.Id == elegida then "ELEGIDA" else "", 112, true)
 			t.Size = UDim2.fromScale(1, 1)
 			if g.Id == elegida then
-				local borde = t:FindFirstChildOfClass("UIStroke")
-				if borde then
-					borde.Color = Color3.new(1, 1, 1)
-					borde.Thickness = 6
-				end
+				Estilo.marcar(t, true, 16)
 			end
 			t.Parent = boton
 			Estilo.presionable(boton)

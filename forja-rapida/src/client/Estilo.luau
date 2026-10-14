@@ -116,21 +116,24 @@ function Estilo.pieza(nombre: string): GameConfig.PiezaGui?
 	return nil
 end
 
--- Escala acumulada de los UIScale de los ancestros (para que el 9-slice no se agrande dos veces).
+-- Escala acumulada de los UIScale de los ancestros (el HUD se achica en celular).
 local function escalaDe(obj: Instance): number
 	local s = 1
-	local a: Instance? = obj
+	local a: Instance? = obj.Parent
 	while a do
-		local u = a:FindFirstChildOfClass("UIScale")
-		if u then
-			s *= u.Scale
+		for _, hijo in a:GetChildren() do
+			if hijo:IsA("UIScale") and hijo.Name ~= "Salto" then
+				s *= hijo.Scale
+			end
 		end
 		a = a.Parent
 	end
 	return s
 end
 
--- ImageLabel de la pieza, del tamaño de `obj` y detrás de todo lo demás.
+-- ImageLabel de la pieza, del tamaño de `obj` y detrás de todo lo demás. Con 9-slice, las
+-- esquinas van en proporción al alto en pantalla (botones, barras) o fijas con Escala
+-- (ventanas y baldosas), achicadas junto con el HUD.
 local function imagen(p: GameConfig.PiezaGui, obj: GuiObject): ImageLabel
 	local img = Instance.new("ImageLabel")
 	img.Name = "Fondo"
@@ -143,9 +146,13 @@ local function imagen(p: GameConfig.PiezaGui, obj: GuiObject): ImageLabel
 		img.ScaleType = Enum.ScaleType.Slice
 		img.SliceCenter = Rect.new(corte[1], corte[2], corte[3], corte[4])
 		local function ajustar()
-			local alto = obj.AbsoluteSize.Y / math.max(0.01, escalaDe(obj))
-			if alto > 0 then
-				img.SliceScale = math.clamp(alto / p.Alto, 0.05, 2)
+			if p.Escala then
+				img.SliceScale = p.Escala * escalaDe(obj)
+			else
+				local alto = obj.AbsoluteSize.Y
+				if alto > 0 then
+					img.SliceScale = math.clamp(alto / p.Alto, 0.05, 2)
+				end
 			end
 		end
 		obj:GetPropertyChangedSignal("AbsoluteSize"):Connect(ajustar)
@@ -315,6 +322,36 @@ function Estilo.colorBoton(b: GuiObject, color: string)
 		math.floor(b.Size.Y.Offset * 0.3),
 		math.max(3, math.floor(b.Size.Y.Offset / 12))
 	)
+end
+
+-- Borde blanco de "elegido" (el menú abierto, la gema de la vitrina). Sirve igual si el
+-- objeto tiene pieza de imagen (le agrega su propio borde) o está dibujado (usa el suyo).
+function Estilo.marcar(obj: GuiObject, si: boolean, radio: number)
+	local marca = obj:FindFirstChild("Marca")
+	local borde = if marca and marca:IsA("UIStroke")
+		then marca
+		else obj:FindFirstChildOfClass("UIStroke")
+	if not borde then
+		if not si then
+			return
+		end
+		if not obj:FindFirstChildOfClass("UICorner") then
+			Estilo.esquinas(obj, radio)
+		end
+		local nuevo = Instance.new("UIStroke")
+		nuevo.Name = "Marca"
+		nuevo.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+		nuevo.Parent = obj
+		borde = nuevo
+	end
+	local b = borde :: UIStroke
+	if b.Name == "Marca" then
+		b.Enabled = si
+		b.Color = Color3.new(1, 1, 1)
+		b.Thickness = 4
+	else
+		b.Color = if si then Color3.new(1, 1, 1) else Estilo.Oscuro
+	end
 end
 
 -- X roja para cerrar ventanas.
@@ -493,6 +530,13 @@ function Estilo.rayas(obj: GuiObject, opacidad: number?)
 	local radio = obj:FindFirstChildOfClass("UICorner")
 	if radio then
 		radio:Clone().Parent = v
+	else
+		-- con pieza de imagen: que no pise el borde oscuro ni se salga de las esquinas
+		v.Position = UDim2.fromOffset(5, 5)
+		v.Size = UDim2.new(1, -10, 1, -10)
+		local esquina = Instance.new("UICorner")
+		esquina.CornerRadius = UDim.new(0.3, 0)
+		esquina.Parent = v
 	end
 	v.Parent = obj
 end
@@ -500,15 +544,24 @@ end
 -- Íconos ----------------------------------------------------------------------------------
 
 -- Ícono por nombre (ver GameConfig.Iconos). Devuelve un ImageLabel o la insignia de color.
+-- Primero una imagen propia (GameConfig.Iconos), después la hoja de íconos (GameConfig.HojaIconos).
 function Estilo.icono(nombre: string, tamano: number): GuiObject
 	local id = (GameConfig.Iconos :: { [string]: string })[nombre]
-	if id and id ~= "" then
+	local hoja = GameConfig.HojaIconos
+	local lugar = hoja.Lugar[nombre]
+	if (id and id ~= "") or (hoja.Imagen ~= "" and lugar) then
 		local img = Instance.new("ImageLabel")
 		img.Name = "Icono" .. nombre
 		img.BackgroundTransparency = 1
 		img.Size = UDim2.fromOffset(tamano, tamano)
-		img.Image = id
 		img.ScaleType = Enum.ScaleType.Fit
+		if id and id ~= "" then
+			img.Image = id
+		else
+			img.Image = hoja.Imagen
+			img.ImageRectOffset = Vector2.new(lugar[1], lugar[2])
+			img.ImageRectSize = Vector2.new(hoja.Celda, hoja.Celda)
+		end
 		return img
 	end
 	local colores = COLOR_ICONO[nombre] or { "#FFFFFF", "#8D939C" }

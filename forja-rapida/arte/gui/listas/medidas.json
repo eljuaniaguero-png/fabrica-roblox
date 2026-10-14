@@ -1,0 +1,112 @@
+{
+ "BotonVerde": {
+  "Ancho": 525,
+  "Alto": 160,
+  "Corte": [
+   51,
+   64,
+   474,
+   96
+  ]
+ },
+ "BotonAmarillo": {
+  "Ancho": 514,
+  "Alto": 160,
+  "Corte": [
+   51,
+   64,
+   463,
+   96
+  ]
+ },
+ "BotonAzul": {
+  "Ancho": 472,
+  "Alto": 160,
+  "Corte": [
+   51,
+   64,
+   421,
+   96
+  ]
+ },
+ "BotonRojo": {
+  "Ancho": 464,
+  "Alto": 160,
+  "Corte": [
+   51,
+   64,
+   413,
+   96
+  ]
+ },
+ "BotonVioleta": {
+  "Ancho": 472,
+  "Alto": 160,
+  "Corte": [
+   51,
+   64,
+   421,
+   96
+  ]
+ },
+ "BotonCian": {
+  "Ancho": 472,
+  "Alto": 160,
+  "Corte": [
+   51,
+   64,
+   421,
+   96
+  ]
+ },
+ "BotonRosa": {
+  "Ancho": 464,
+  "Alto": 160,
+  "Corte": [
+   51,
+   64,
+   413,
+   96
+  ]
+ },
+ "BotonNaranja": {
+  "Ancho": 514,
+  "Alto": 160,
+  "Corte": [
+   51,
+   64,
+   463,
+   96
+  ]
+ },
+ "BotonGris": {
+  "Ancho": 472,
+  "Alto": 160,
+  "Corte": [
+   51,
+   64,
+   421,
+   96
+  ]
+ },
+ "BotonBlanco": {
+  "Ancho": 472,
+  "Alto": 160,
+  "Corte": [
+   51,
+   64,
+   421,
+   96
+  ]
+ },
+ "PanelOscuro": {
+  "Ancho": 472,
+  "Alto": 160,
+  "Corte": [
+   51,
+   64,
+   421,
+   96
+  ]
+ }
+}

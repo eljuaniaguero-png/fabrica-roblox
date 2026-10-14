@@ -255,10 +255,7 @@ estado:GetAttributeChangedSignal("Evento"):Connect(avisoEvento)
 -- El botón del menú abierto se marca con borde blanco.
 Ventanas.alCambiar(function(id: string?)
 	for nombre, b in botones do
-		local borde = b.Boton:FindFirstChildOfClass("UIStroke")
-		if borde then
-			borde.Color = if nombre == id then Color3.new(1, 1, 1) else Estilo.Oscuro
-		end
+		Estilo.marcar(b.Boton, nombre == id, 26)
 	end
 	if id == "Indice" then
 		vistas = #Datos.texto("Indice")

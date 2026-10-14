@@ -121,6 +121,7 @@ export type PiezaGui = {
 	Ancho: number, -- píxeles de la imagen subida
 	Alto: number,
 	Corte: { number }?, -- 9-slice: { x0, y0, x1, y1 } de la parte del medio que se estira
+	Escala: number?, -- esquinas fijas (SliceScale) en vez de seguir el alto (ventanas, baldosas)
 	Tinte: boolean?, -- la pieza es blanca y el código la pinta del color que haga falta
 }
 
@@ -129,6 +130,23 @@ export type Amuleto = {
 	Nombre: string,
 	Suerte: number, -- se suma a la suerte del jugador (x1 + esto)
 	Precio: number,
+}
+
+-- IDs de Roblox de las imágenes de la interfaz (subidas el 14/10/2026 a la cuenta de Juani con la
+-- conexión de ForgeGUI; todas aprobadas por moderación).
+local IMAGEN = {
+	BotonVerde = "rbxassetid://122751560070705",
+	BotonAmarillo = "rbxassetid://82270336976559",
+	BotonAzul = "rbxassetid://126415985605100",
+	BotonRojo = "rbxassetid://93266931408925",
+	BotonVioleta = "rbxassetid://107217277631497",
+	BotonRosa = "rbxassetid://111544531252348",
+	BotonNaranja = "rbxassetid://133433902020830",
+	BotonCian = "rbxassetid://103023351608085",
+	BotonGris = "rbxassetid://98527090618301",
+	BotonBlanco = "rbxassetid://81258172353128",
+	PanelOscuro = "rbxassetid://100656619903632",
+	HojaIconos = "rbxassetid://118396607568499",
 }
 
 local GameConfig = {
@@ -892,60 +910,150 @@ local GameConfig = {
 		Amuleto = "",
 	},
 
-	-- Piezas de la interfaz hechas con ForgeGUI (forja-rapida/arte/gui): botones, ventanas,
-	-- barras y marcos. Mientras una Imagen esté vacía, el cliente la dibuja con degradés y
-	-- bordes (como el diseño de Figma), así el juego anda igual. Al subirlas, pegar acá el
-	-- "rbxassetid://..." con su tamaño y su corte (9-slice: las esquinas no se estiran).
+	-- Piezas de la interfaz (forja-rapida/arte/gui/listas, armadas por arte/scripts/gui.py a
+	-- partir de los botones de ForgeGUI). Mientras una Imagen esté vacía, el cliente la dibuja
+	-- con degradés y bordes, así el juego anda igual. Corte = 9-slice (las esquinas no se
+	-- estiran); Escala = esquinas fijas; Tinte = pieza blanca que el código pinta.
 	Gui = {
-		BotonVerde = { Imagen = "", Ancho = 512, Alto = 170, Corte = { 70, 60, 442, 110 } },
-		BotonAmarillo = { Imagen = "", Ancho = 512, Alto = 170, Corte = { 70, 60, 442, 110 } },
-		BotonAzul = { Imagen = "", Ancho = 512, Alto = 170, Corte = { 70, 60, 442, 110 } },
-		BotonRojo = { Imagen = "", Ancho = 512, Alto = 170, Corte = { 70, 60, 442, 110 } },
-		BotonVioleta = { Imagen = "", Ancho = 512, Alto = 170, Corte = { 70, 60, 442, 110 } },
-		BotonRosa = { Imagen = "", Ancho = 512, Alto = 170, Corte = { 70, 60, 442, 110 } },
-		BotonGris = { Imagen = "", Ancho = 512, Alto = 170, Corte = { 70, 60, 442, 110 } },
+		BotonVerde = {
+			Imagen = IMAGEN.BotonVerde,
+			Ancho = 525,
+			Alto = 160,
+			Corte = { 51, 64, 474, 96 },
+		},
+		BotonAmarillo = {
+			Imagen = IMAGEN.BotonAmarillo,
+			Ancho = 514,
+			Alto = 160,
+			Corte = { 51, 64, 463, 96 },
+		},
+		BotonAzul = {
+			Imagen = IMAGEN.BotonAzul,
+			Ancho = 472,
+			Alto = 160,
+			Corte = { 51, 64, 421, 96 },
+		},
+		BotonRojo = {
+			Imagen = IMAGEN.BotonRojo,
+			Ancho = 464,
+			Alto = 160,
+			Corte = { 51, 64, 413, 96 },
+		},
+		BotonVioleta = {
+			Imagen = IMAGEN.BotonVioleta,
+			Ancho = 472,
+			Alto = 160,
+			Corte = { 51, 64, 421, 96 },
+		},
+		BotonRosa = {
+			Imagen = IMAGEN.BotonRosa,
+			Ancho = 464,
+			Alto = 160,
+			Corte = { 51, 64, 413, 96 },
+		},
+		BotonNaranja = {
+			Imagen = IMAGEN.BotonNaranja,
+			Ancho = 514,
+			Alto = 160,
+			Corte = { 51, 64, 463, 96 },
+		},
+		BotonCian = {
+			Imagen = IMAGEN.BotonCian,
+			Ancho = 472,
+			Alto = 160,
+			Corte = { 51, 64, 421, 96 },
+		},
+		BotonGris = {
+			Imagen = IMAGEN.BotonGris,
+			Ancho = 472,
+			Alto = 160,
+			Corte = { 51, 64, 421, 96 },
+		},
 		BotonBlanco = {
-			Imagen = "",
-			Ancho = 512,
-			Alto = 170,
-			Corte = { 70, 60, 442, 110 },
+			Imagen = IMAGEN.BotonBlanco,
+			Ancho = 472,
+			Alto = 160,
+			Corte = { 51, 64, 421, 96 },
 			Tinte = true,
 		},
-		Cerrar = { Imagen = "", Ancho = 256, Alto = 256 },
-		Panel = { Imagen = "", Ancho = 1024, Alto = 640, Corte = { 90, 90, 934, 550 } },
 		Cabecera = {
-			Imagen = "",
-			Ancho = 1024,
-			Alto = 128,
-			Corte = { 60, 40, 964, 88 },
-			Tinte = true,
-		},
-		Baldosa = {
-			Imagen = "",
-			Ancho = 256,
-			Alto = 256,
-			Corte = { 60, 60, 196, 196 },
-			Tinte = true,
-		},
-		BarraFondo = { Imagen = "", Ancho = 512, Alto = 64, Corte = { 32, 20, 480, 44 } },
-		BarraRelleno = {
-			Imagen = "",
-			Ancho = 512,
-			Alto = 64,
-			Corte = { 32, 20, 480, 44 },
+			Imagen = IMAGEN.BotonBlanco,
+			Ancho = 472,
+			Alto = 160,
+			Corte = { 51, 64, 421, 96 },
 			Tinte = true,
 		},
 		Pildora = {
-			Imagen = "",
-			Ancho = 512,
-			Alto = 128,
-			Corte = { 64, 40, 448, 88 },
+			Imagen = IMAGEN.BotonBlanco,
+			Ancho = 472,
+			Alto = 160,
+			Corte = { 51, 64, 421, 96 },
 			Tinte = true,
 		},
+		BarraRelleno = {
+			Imagen = IMAGEN.BotonBlanco,
+			Ancho = 472,
+			Alto = 160,
+			Corte = { 51, 64, 421, 96 },
+			Tinte = true,
+		},
+		Baldosa = {
+			Imagen = IMAGEN.BotonBlanco,
+			Ancho = 472,
+			Alto = 160,
+			Corte = { 51, 64, 421, 96 },
+			Escala = 0.42,
+			Tinte = true,
+		},
+		Panel = {
+			Imagen = IMAGEN.PanelOscuro,
+			Ancho = 472,
+			Alto = 160,
+			Corte = { 51, 64, 421, 96 },
+			Escala = 0.55,
+		},
+		BarraFondo = {
+			Imagen = IMAGEN.PanelOscuro,
+			Ancho = 472,
+			Alto = 160,
+			Corte = { 51, 64, 421, 96 },
+		},
+		-- Todavía dibujadas (hacen falta créditos de ForgeGUI): la X, el globito y el marco dorado.
+		Cerrar = { Imagen = "", Ancho = 256, Alto = 256 },
 		Globito = { Imagen = "", Ancho = 128, Alto = 128 },
-		Rayos = { Imagen = "", Ancho = 512, Alto = 512, Tinte = true },
 		MarcoDestacado = { Imagen = "", Ancho = 1024, Alto = 220, Corte = { 120, 80, 904, 140 } },
 	} :: { [string]: PiezaGui },
+
+	-- Hoja con los 22 íconos (arte/gui/listas/HojaIconos.png, de arte/scripts/iconos): una sola
+	-- imagen para todos, cada uno en su celda. Un ícono puesto en Iconos tiene prioridad.
+	HojaIconos = {
+		Imagen = IMAGEN.HojaIconos,
+		Celda = 128,
+		Lugar = {
+			Moneda = { 0, 0 },
+			Fuerza = { 128, 0 },
+			Trebol = { 256, 0 },
+			Lava = { 384, 0 },
+			Neon = { 512, 0 },
+			Midas = { 640, 0 },
+			Vacio = { 0, 128 },
+			Chispa = { 128, 128 },
+			Trofeo = { 256, 128 },
+			Corona = { 384, 128 },
+			Reloj = { 512, 128 },
+			Jefe = { 640, 128 },
+			Cristal = { 0, 256 },
+			Gema = { 128, 256 },
+			Tienda = { 256, 256 },
+			Mochila = { 384, 256 },
+			Libro = { 512, 256 },
+			Engranaje = { 640, 256 },
+			Banco = { 0, 384 },
+			Pico = { 128, 384 },
+			Candado = { 256, 384 },
+			Amuleto = { 384, 384 },
+		} :: { [string]: { number } },
+	},
 
 	-- Efectos del cliente (Grupo 1, pulido). Con "Efectos reducidos" (botón en pantalla, o solo
 	-- si la calidad gráfica de Roblox está en 3 o menos) no hay destello blanco ni temblor de

@@ -1,0 +1,53 @@
+{
+ "_leeme": "Imágenes de arte/gui/listas subidas a Roblox (cuenta del creador 1720276531) con la conexión de ForgeGUI el 14/10/2026. Todas aprobadas. Los IDs están en GameConfig (IMAGEN). forgegui_asset = la copia en ForgeGUI.",
+ "imagenes": {
+  "BotonVerde": {
+   "roblox": "rbxassetid://122751560070705",
+   "forgegui_asset": "555088b7-d7a8-4072-8625-c40a6fae1332"
+  },
+  "BotonAmarillo": {
+   "roblox": "rbxassetid://82270336976559",
+   "forgegui_asset": "c5cd04fb-8111-4ce5-bd1d-77f66102c41c"
+  },
+  "BotonAzul": {
+   "roblox": "rbxassetid://126415985605100",
+   "forgegui_asset": "8d485e81-4fed-4970-81f4-99a9b2955ff0"
+  },
+  "BotonRojo": {
+   "roblox": "rbxassetid://93266931408925",
+   "forgegui_asset": "83c7dd99-93c6-4010-9e97-5e9dd045da1d"
+  },
+  "BotonVioleta": {
+   "roblox": "rbxassetid://107217277631497",
+   "forgegui_asset": "78d2a2c9-353b-4a0e-b0c9-42a95c2b328c"
+  },
+  "BotonRosa": {
+   "roblox": "rbxassetid://111544531252348",
+   "forgegui_asset": "f30de183-cee0-48c5-9019-2ce9b49205a4"
+  },
+  "BotonNaranja": {
+   "roblox": "rbxassetid://133433902020830",
+   "forgegui_asset": "70065c3b-3ea8-48ca-adb0-ef1728814c3a"
+  },
+  "BotonCian": {
+   "roblox": "rbxassetid://103023351608085",
+   "forgegui_asset": "09e80859-89ca-49df-8c7b-a1520906a919"
+  },
+  "BotonGris": {
+   "roblox": "rbxassetid://98527090618301",
+   "forgegui_asset": "cb7f8f69-92ac-44cf-bec5-1ba46fbd06ea"
+  },
+  "BotonBlanco": {
+   "roblox": "rbxassetid://81258172353128",
+   "forgegui_asset": "3c88df63-dc55-4779-b0d5-a3a799bdfc76"
+  },
+  "PanelOscuro": {
+   "roblox": "rbxassetid://100656619903632",
+   "forgegui_asset": "ffa25df2-989b-4297-affd-246d0f22d66b"
+  },
+  "HojaIconos": {
+   "roblox": "rbxassetid://118396607568499",
+   "forgegui_asset": "6f046ac1-1c04-4a6f-b948-e1b0ad9ef10f"
+  }
+ }
+}

@@ -117,10 +117,14 @@ Decisiones v3:
 - **Las gemas del menú son un rombo dibujado** del color de cada gema: son 25, y un ícono por gema sería mucho para ahora.
 
 Estado de ForgeGUI (14/10/2026):
-- Se generaron 4 botones: verde, amarillo, azul y rojo.
-- Las otras 36 piezas fallaron porque la cuenta se quedó sin créditos.
-- Las imágenes quedan guardadas en ForgeGUI, pero la sesión en la nube no las puede ver ni bajar: la red bloquea `azyjlkhpdgafuobyxoax.supabase.co`.
-- Falta: cargar créditos, habilitar ese dominio, generar el resto, revisarlas, recortarlas y subirlas a Roblox con la conexión de ForgeGUI. Después se pegan los IDs en `GameConfig.Gui` y `GameConfig.Iconos`.
+- **ForgeGUI generó 4 botones** (verde, amarillo, azul y rojo); las otras 36 piezas fallaron por falta de créditos. Lo pedido está en `arte/gui/forgegui.json`.
+- **Con esos 4 botones se armó todo el kit** (`arte/scripts/gui.py`):
+  - Se les limpió el borde violeta que dejaba el recorte y se achicaron a 160 px de alto.
+  - De ellos salen los colores que faltaban (violeta, rosa, naranja, cian y gris), el blanco que se pinta desde el código (cabeceras, baldosas, píldoras y barras) y el oscuro de las ventanas.
+  - Hoja para mirar el kit: `arte/gui/kit.png`. Cómo se ve puesto: `arte/gui/maqueta_hud.png` y `maqueta_tienda.png`.
+- **Íconos:** son los 14 dibujos propios más 8 nuevos (Tienda, Mochila, Libro, Engranaje, Banco, Pico, Candado y Amuleto), todos en una sola hoja (`arte/scripts/iconos`, celdas de 128 px). Cuando haya créditos se pueden cambiar por íconos de ForgeGUI pegándolos en `GameConfig.Iconos`, que tiene prioridad sobre la hoja.
+- **Subidas a Roblox:** las 12 imágenes (11 piezas y la hoja de íconos) están en la cuenta de Juani con la conexión de ForgeGUI, todas aprobadas. Los IDs están en `GameConfig` (tabla `IMAGEN`) y en `arte/gui/listas/roblox.json`.
+- **Siguen dibujados por código:** la X de cerrar (usa el botón rojo con una X), el globito rojo y el marco dorado de "Destacado".
 
 ## Números (en `forja-rapida/src/shared/GameConfig.luau`)
 
