@@ -11,7 +11,7 @@ Simulador de minería con gacha. En el mapa nacen geodas con vida. Les pegás co
 ## Loop de 30 segundos
 
 1. Ves una geoda con su cartel ("Geoda Mediana · Exótica de Lava · 28/40 PV") y fuego alrededor. Le pegás: saltan números, baja la barra.
-2. Se rompe: tiembla la cámara, destello blanco, aparece la gema con su rareza y "🍀 x2,06 Suerte · 1 en 194".
+2. Se rompe: tiembla la cámara, destello blanco, aparece la gema con su rareza y "x2,06 Suerte · 1 en 194" con el ícono de trébol.
 3. La gema va a la mochila. Cuando querés, vendés todo en el Banco y ves la pila de Monedas.
 4. Comprás un nivel de Fuerza, un amuleto o un pico, y volvés a pegarle más fuerte. Arriba, la barra te dice cuánta Fuerza falta para la próxima zona.
 
@@ -52,13 +52,42 @@ Se suma a lo de arriba sin cambiar el loop: el servidor sigue decidiendo todo y 
 | Minero Imparable | 2.000 geodas | +0,15 Suerte |
 | Colecciones 1 a 5 | las 5 gemas de una zona | 500 / 8.000 / 250K / 4M / 60M Monedas y +0,1 a +0,3 Suerte |
 
-4. **Pulido.** Número que salta con rebote y se desvanece; destello blanco, temblor y cubitos al pegar; revelación con rayos que giran (arcoíris en las Míticas). Botón "✨ Efectos: completos / reducidos" abajo a la derecha (se guarda); si nunca se tocó, arranca reducido con la calidad gráfica de Roblox en 3 o menos. Reducido = sin destello ni temblor de cámara, sin anillo ni cubitos neón, 30 % de las partículas y auras solo a 40 studs. Siempre: un solo bucle para todas las animaciones y nada anima lejos de la cámara.
+4. **Pulido.** Número que salta con rebote y se desvanece; destello blanco, temblor y cubitos al pegar; revelación con rayos que giran (arcoíris en las Míticas). Opción "Efectos reducidos" en el panel de Ajustes, abajo a la derecha (se guarda); si nunca se tocó, arranca reducido con la calidad gráfica de Roblox en 3 o menos. Reducido = sin destello ni temblor de cámara, sin anillo ni cubitos neón, 30 % de las partículas y auras solo a 40 studs. Siempre: un solo bucle para todas las animaciones y nada anima lejos de la cámara.
 
 Decisiones del Grupo 1:
 - Las combinaciones son filas más de la tabla de modificadores (se tiran igual, de la más rara para abajo), así no hay un sistema nuevo.
 - La revelación grande (destello, temblor, tarjeta) es para Rara o mejor, o geodas exóticas. La común es un cartelito de un segundo: con una revelación grande cada tres segundos el juego cansaría.
 - "Misiones" quedan para otro pedido: los logros y colecciones cumplen ese papel en la cadena.
 - Partículas y luces van en el cliente (no en el servidor) para que cada uno pueda reducirlas.
+
+## Grupo 6 — Eventos dinámicos del mundo (pedido del 14/10/2026)
+
+Cada 7 a 12 minutos (el primero a los 4) arranca un evento al azar, con un cartel 20 segundos antes. Nunca se repite el mismo dos veces seguidas. Mientras dura, el cielo cambia de tinte, aparece un cartel arriba con la cuenta regresiva y el mapa hace algo distinto. Todo está en `GameConfig.Eventos` (duración, peso para salir, multiplicadores y premios); `Activos = false` los apaga.
+
+| Evento | Dura | Sale | Qué cambia en el mapa | Premio temático |
+|---|---|---|---|---|
+| Lluvia de Cristales | 1:30 | 30 % | Caen cristales cerca de los jugadores (uno cada 2,5 s, duran 12 s) | Cada cristal agarrado: 25 × el valor de una gema común de tu mejor zona |
+| Erupción Volcánica | 2:00 | 22 % | Bombas de lava, cielo naranja, se renueva el 35 % de las geodas | Lava sale 4 veces más y da el doble de gemas |
+| Tormenta Neón | 2:00 | 22 % | Rayos de colores, cielo violeta | Neón sale 4 veces más y da el doble |
+| Eclipse del Vacío | 1:30 | 10 % | Todo se oscurece | Vacío sale 6 veces más y +50 % de suerte |
+| Fiebre de Minería | 2:30 | 18 % | Barra de meta compartida (40 geodas por jugador, mínimo 60) | Cada geoda da x1,5 y, si llegan, 60 gemas comunes de tu mejor zona para todos |
+| Jefe Ancestral | 3:00 | 12 % | Aparece una geoda enorme con runas doradas; su vida crece con la Fuerza de los que están | Cada uno que hizo al menos el 2 % del daño se lleva una gema de su mejor zona con suerte x5 y modificador casi seguro; si no la rompen, se va |
+
+- Las combinaciones que llevan el modificador del evento también suben (por ejemplo Lava+Neón en la Erupción y en la Tormenta).
+- Las probabilidades del Índice y de la revelación ya incluyen el evento: siempre suman 100 %.
+- Participar (romper algo durante el evento) suma al logro "Cazador de Eventos" (5 eventos).
+- En Studio se puede forzar uno para probar: atributo `ForzarEvento` en Workspace con el Id del evento.
+
+## Grupo 7 — Exhibición social (pedido del 14/10/2026)
+
+La regla: lucirse sin molestar. Nada va al chat y nada de esto da premios ni hace falta para avanzar.
+
+- **Vitrinas y estatuas**: cada jugador recibe una vitrina libre al entrar. Arriba gira y flota una estatua de su mejor hallazgo (la gema en grande, del color de su rareza) con un cartel: nombre, título, gema, rareza en degradé y "1 en N". Desde el menú "Mi Vitrina" se elige cuál de tus 5 mejores hallazgos mostrar.
+- **Títulos**: 11 títulos que se ganan con logros (Picapiedras, Cazador de Exóticas, Cazador de Jefes, Maestro de Combinaciones, etc.). El elegido se ve arriba de tu cabeza con su degradé. Cada uno puede ocultar los títulos de los demás.
+- **Anuncios de hallazgos**: solo gemas Míticas y geodas Vacío o de combinación (las más raras). Salen como cartel arriba de la pantalla (no en el chat), como mucho uno cada 6 segundos y con fila de 4 (lo que sobra se descarta). Ajustes: "Anunciar mis hallazgos" y "Ver hallazgos de otros". Los de eventos y jefes se ven siempre porque son pocos.
+- **Clasificación semanal**: 4 tablas (Geodas rotas, Exóticas rotas, Jefes Ancestrales y Hallazgo más raro), top 10, se reinicia cada lunes. Se ve en tableros del mapa y en el menú "Clasificación", con un cartel que dice "solo para lucirse". Sin premios: así no obliga a nadie a competir.
+- **Récords de jefes**: al romper un Jefe Ancestral sale el podio de daño (top 3) y cada uno ve su puesto. Se guarda tu mayor daño y tu mejor puesto; si los superás, aparece "¡Nuevo récord personal!".
+- **Luz**: `ColorCorrection` en Lighting con Brillo 0,05, Contraste 0,15, Saturación 0,1 y color blanco (lo pediste). Durante los eventos se suma otro tinte suave que se va al terminar.
 
 ## Números (en `forja-rapida/src/shared/GameConfig.luau`)
 
@@ -80,10 +109,10 @@ Fórmulas (en `Reglas.luau`):
 | Modificador | Nace | Gemas |
 |---|---|---|
 | Normal | 87,1 % | ×1 |
-| 🔥 Exótica de Lava | 1 en 10 | ×3 |
-| ⚡ Exótica Neón | 1 en 40 | ×5 |
-| 🌟 Exótica Dorada | 1 en 150 | ×10 |
-| 🌌 Exótica del Vacío | 1 en 1.000 | ×25 |
+| Exótica de Lava | 1 en 10 | ×3 |
+| Exótica Neón | 1 en 40 | ×5 |
+| Exótica Dorada | 1 en 150 | ×10 |
+| Exótica del Vacío | 1 en 1.000 | ×25 |
 
 | Tamaño | Vida (zona 1) | Gemas | Suerte | Aparece |
 |---|---|---|---|---|
@@ -136,18 +165,21 @@ Ritmo medido con `lune run forja-rapida/pruebas/simular` (un jugador que no para
 
 ## Cómo se ve
 
-De las capturas se toma el estilo, no el contenido: cielo celeste brillante, piso verde lima con studs, rocas tipo vóxel (cubitos) apoyadas en un nido de escombros, cartel arriba de cada geoda con nombre, rareza y barra de vida ("2/10 PV"), destello blanco al revelar con el cartel de suerte ("🍀 x2,06 Suerte"), botones gordos con borde oscuro y texto blanco con contorno, contador grande abajo a la izquierda con el "+X" que salta, barra de progreso arriba al centro. No se copian nombres, íconos ni personajes de esos juegos.
+De las capturas se toma el estilo, no el contenido: cielo celeste brillante, piso verde lima con studs, rocas tipo vóxel (cubitos) apoyadas en un nido de escombros, cartel arriba de cada geoda con nombre, rareza y barra de vida ("2/10 PV"), destello blanco al revelar con el cartel de suerte (ícono de trébol + "x2,06 Suerte"), botones gordos con borde oscuro y texto blanco con contorno, contador grande abajo a la izquierda con el "+X" que salta, barra de progreso arriba al centro. No se copian nombres, íconos ni personajes de esos juegos. Sin emojis: todos los íconos son dibujos propios (`arte/iconos/`, 14 PNG) y, mientras no estén subidos, el juego dibuja una insignia de color en su lugar.
 
-- **Modelos 3D**: hechos en Blender con `forja-rapida/arte/scripts/modelos.py`, estilo vóxel. Cada geoda tiene cinco mallas (Roca, Cristales, Base, Grietas y Grietas2) para que el juego las pinte según la zona y el modificador; las exóticas suman una textura de cubitos (`arte/texturas/`). Las auras (chispas, anillo, destellos) son efectos de Roblox. Muestras en `arte/renders/`.
+- **Modelos 3D**: hechos en Blender con `forja-rapida/arte/scripts/modelos.py`, estilo vóxel. Cada geoda tiene cinco mallas (Roca, Cristales, Base, Grietas y Grietas2) para que el juego las pinte según la zona y el modificador; las exóticas suman una textura de cubitos (`arte/texturas/`). Las auras (chispas, anillo, destellos) son efectos de Roblox. Muestras en `arte/renders/`. Para los grupos 6 y 7 se sumaron la Geoda Ancestral (con runas doradas), la vitrina, el tablero de la clasificación, el cristal de la lluvia, la bomba de lava y una estatua por rareza (`eventos_y_exhibicion.jpg`).
 - **HUD y menús**: diseñados en Figma, archivo "Forja Rápida · HUD y menús" (https://www.figma.com/design/DZ114Em8TCx2WZPzRiPAeL). Pantallas: HUD de compu (1920×1080) y de celular (844×390, sin tapar el joystick ni el salto de Roblox), revelación Épica con aviso en cadena, Tienda (Fuerza, Amuletos con "qué cambia" en números, Picos), Mochila/Banco, Índice con probabilidades (suman 100 %), avisos, carteles por modificador, botón de efectos y tres paletas para elegir. Letra: Lilita One en Figma; en Roblox, FredokaOne (la más parecida que trae Roblox).
+- **HUD y menús v2** (página "v2 · Eventos y social" del mismo archivo, con el estilo de tus últimas capturas): HUD de compu más colorido (botones con globitos, bonos activos, cartel del evento), Geoda Ancestral con podio de daño, Índice, Tienda con "Destacado", Eventos, Mi Vitrina (títulos y ajustes), Clasificación semanal y HUD de celular v2. Los 14 íconos están como componentes en esa página.
 
 Guía de estilo: **pendiente** (punto de control 2: elegir paleta A · Pradera, B · Caramelo o C · Noche volcánica en Figma). Hasta que elijas, todo usa la A, que es la de tus capturas.
 
 ## Afuera del prototipo
 
 - Robux: ni compras ni pases. **Si alguna vez se venden Monedas por Robux**: romper geodas es gratis (no se paga por tirar), pero igual el Índice muestra siempre la tabla de probabilidades con tu suerte actual (GUIA, sección 6), así queda cubierto. Antes de vender Monedas, revisar la regla de ítems aleatorios pagos.
-- Renacer (rebirth), mascotas, auto-golpe, límite de mochila, tablas de récords, analítica y eventos.
-- Sonidos definitivos (quedan marcados con `-- SONIDO:` y los IDs vacíos en GameConfig: golpe, romper, revelación, revelación rara, logro, anuncio y un aura por modificador).
+- Renacer (rebirth), mascotas, auto-golpe, límite de mochila y analítica.
+- Sonidos definitivos (quedan marcados con `-- SONIDO:` y los IDs vacíos en GameConfig: golpe, romper, revelación, revelación rara, logro, anuncio, un aura por modificador y los de eventos: empieza, cristal, trueno y jefe).
+- Subir los íconos de `arte/iconos/` y pegar los IDs en `GameConfig.Iconos`.
+- Guardado con ProfileStore: por ahora los datos viven en memoria (la clasificación semanal sí usa su propio almacén).
 - Subir las texturas de `arte/texturas/` y pegar los IDs en `GameConfig.Modificadores[..].Textura`. Mientras tanto, las exóticas se ven con color, material, grietas y aura.
 
 ## Prueba que va a hacer Claude

@@ -4,6 +4,9 @@ Arma en Blender:
   - 4 geodas (Pequena, Mediana, Gigante, Jefe), cada una con 5 mallas: Roca, Cristales, Base,
     Grietas y Grietas2 (las grietas que brillan en las geodas exóticas, una por modificador).
   - Un anillo de cubitos (Geoda_Anillo) que gira alrededor de las geodas de Lava.
+  - Eventos y exhibición (grupos 6 y 7): Geoda Ancestral (con corona de cristales y cinturón de
+    Runas), pedestal de vitrina, estatuas de gemas (una por rareza), cristal de la lluvia, bomba
+    de lava y tablero de clasificación.
   - 8 texturas de 256 px para la Roca de las exóticas (texturas/): rayas de lava, cuadritos de
     colores neón, oro, vacío y las 4 combinaciones. La Roca tiene un mapa UV "por cubito": cada
     cara cae en una celda de 16 x 16 según su altura, así la misma textura sirve en los 4 tamaños.
@@ -323,9 +326,14 @@ def caminos_grieta(celdas, semilla, cantidad, largo):
 def grietas(nombre, celdas, lado, mat, origen, semilla, cantidad, largo):
     """Grietas que brillan: una baldosita apenas salida sobre cada cara del camino. El juego
     las muestra (material Neon, color del modificador) solo en las geodas exóticas."""
+    return baldositas(nombre, caminos_grieta(celdas, semilla, cantidad, largo), lado, mat, origen)
+
+
+def baldositas(nombre, caras, lado, mat, origen):
+    """Una baldosita apenas salida (una cajita finita) sobre cada cara (celda, dirección)."""
     bm = bmesh.new()
     achicar, salir, grosor = 0.78, 0.02, 0.05
-    for c, d in caminos_grieta(celdas, semilla, cantidad, largo):
+    for c, d in caras:
         esquinas = dict(CARAS)[d]
         centro = Vector(c) + Vector((0.5, 0.5, 0.5)) + Vector(d) * 0.5
         base = []
@@ -341,6 +349,23 @@ def grietas(nombre, celdas, lado, mat, origen, semilla, cantidad, largo):
             j = (i + 1) % 4
             bm.faces.new([vb[i], vb[j], va[j], va[i]])
     return objeto_desde_bmesh(nombre, bm, mat)
+
+
+def caras_runas(celdas):
+    """Cinturón de runas alrededor de la mitad de la roca: una fila entera y, arriba y abajo,
+    marcas salteadas (parecen letras antiguas)."""
+    zmax = max(c[2] for c in celdas)
+    zmid = zmax // 2
+    caras = []
+    for x, y, z in celdas:
+        if abs(z - zmid) > 1:
+            continue
+        for d in EJES[:4]:
+            if _suma((x, y, z), d) in celdas:
+                continue
+            if z == zmid or (x * 3 + y * 5 + z) % 4 == 0:
+                caras.append(((x, y, z), d))
+    return caras
 
 
 def celdas_anillo(r):
@@ -485,7 +510,7 @@ def hacer_texturas():
     print(f"  {len(TEXTURAS_MOD)} texturas en {TEXTURAS}")
 
 
-def armar_geoda(nombre, datos, mats):
+def armar_geoda(nombre, datos, mats, runas=False):
     r = datos["radio"]
     lado = datos["diametro"] * STUD / (2 * r)
     roca = celdas_roca(r, datos["semilla"])
@@ -512,7 +537,12 @@ def armar_geoda(nombre, datos, mats):
     print(
         f"  Geoda {nombre}: roca {t1}, cristales {t2}, base {t3}, grietas {t4} + {t5} triángulos"
     )
-    return [obj_roca, obj_cris, obj_base, obj_g1, obj_g2]
+    objetos = [obj_roca, obj_cris, obj_base, obj_g1, obj_g2]
+    if runas:
+        obj_r, t6 = baldositas("Runas", caras_runas(roca), lado, mats.get("runas", mats["cristal"]), o_roca)
+        print(f"  Geoda {nombre}: runas {t6} triángulos")
+        objetos.append(obj_r)
+    return objetos
 
 
 # ---------------------------------------------------------------------------------------------
@@ -715,6 +745,137 @@ def armar_pico(nombre, mats):
 
 
 # ---------------------------------------------------------------------------------------------
+# Eventos y exhibición (grupos 6 y 7)
+
+# La Geoda Ancestral: como el Jefe pero de 18 studs, con más cristales y runas.
+ANCESTRAL = {"diametro": 18.0, "radio": 9, "cristales": 14, "semilla": 77}
+
+
+def celdas_columna(r, alto):
+    """Columna octogonal de cubitos (r = radio en celdas)."""
+    celdas = set()
+    for x in range(-r, r):
+        for y in range(-r, r):
+            cx, cy = x + 0.5, y + 0.5
+            if abs(cx) + abs(cy) <= r * 1.35:
+                for z in range(alto):
+                    celdas.add((x, y, z))
+    return celdas
+
+
+def armar_vitrina(mats):
+    """Pedestal de la vitrina: columna de piedra clara, bordes dorados y una placa al frente.
+    5 studs de ancho y 4 de alto (la estatua flota arriba). En el juego, el tag "Vitrina" va en
+    la parte "Pedestal"."""
+    r, alto = 5, 8
+    lado = 5 * STUD / (2 * r)
+    columna = celdas_columna(r, alto - 2)  # entre los dos bordes, sin pisarlos
+    borde = {(x, y, z) for x, y, z in celdas_columna(r + 1, 2)}
+    borde |= {(x, y, z + alto) for x, y, z in celdas_columna(r + 1, 2)}
+    placa = {(x, -r - 1, z) for x in range(-2, 2) for z in range(3, 6)}
+    o1, t1 = voxeles("Pedestal", columna, lado, mats["pedestal"], origen=(0, 0, 2 * lado))
+    o2, t2 = voxeles("Borde", borde, lado, mats["borde"])
+    o3, t3 = voxeles("Placa", placa, lado, mats["borde"], origen=(0, 0, 0))
+    print(f"  Vitrina: pedestal {t1}, borde {t2}, placa {t3} triángulos")
+    return [o1, o2, o3]
+
+
+def armar_tablero(mats):
+    """Tablero de la clasificación: marco de cubitos, pantalla (ahí va el SurfaceGui y el tag
+    "TableroClasificacion") y un remate dorado arriba. 14 x 10 studs."""
+    ancho, alto = 28, 20  # celdas de 0,5 stud
+    lado = 0.5 * STUD
+    marco = set()
+    for x in range(ancho):
+        for z in range(alto):
+            if x < 1 or x >= ancho - 1 or z < 1 or z >= alto - 1:
+                for y in range(2):
+                    marco.add((x - ancho // 2, y, z))
+    remate = set()
+    for x in range(-5, 5):
+        for z in range(alto, alto + 3 - abs(x) // 2):
+            remate.add((x, 0, z))
+            remate.add((x, 1, z))
+    o1, t1 = voxeles("Marco", marco, lado, mats["marco"])
+    o2, t2 = voxeles("Remate", remate, lado, mats["borde"])
+    bm = bmesh.new()
+    bmesh.ops.create_cube(bm, size=1.0)
+    for v in bm.verts:
+        v.co.x *= (ancho - 2) * lado
+        v.co.y *= lado * 0.6
+        v.co.z *= (alto - 2) * lado
+        v.co.z += alto * lado / 2
+        v.co.y += lado * 0.9
+    o3, t3 = objeto_desde_bmesh("Pantalla", bm, mats["pantalla"])
+    print(f"  Tablero: marco {t1}, remate {t2}, pantalla {t3} triángulos")
+    return [o1, o2, o3]
+
+
+def cristal_lluvia(alto):
+    """Cristal de la Lluvia de Cristales: un prisma de 6 lados con punta, 2,4 studs."""
+    bm = bmesh.new()
+    bm_prisma(bm, 6, alto * 0.2, alto * 0.15, alto * 0.7, alto * 0.3, alto * 0.15)
+    return objeto_desde_bmesh("CristalLluvia", bm, None)
+
+
+def bomba_lava(mat):
+    """Bomba de lava (Erupción): bolita de cubitos con el mapa UV de la textura de lava."""
+    r = 3
+    celdas = set()
+    for x in range(-r, r):
+        for y in range(-r, r):
+            for z in range(-r, r):
+                if (x + 0.5) ** 2 + (y + 0.5) ** 2 + (z + 0.5) ** 2 <= r * r + ruido(x, y, z, 0.6, 5) * 3:
+                    celdas.add((x, y, z + r))
+    lado = 2 * STUD / (2 * r)
+    return voxeles("BombaLava", celdas, lado, mat, atlas=True)
+
+
+def exportar_eventos_y_exhibicion():
+    mats = {
+        "roca": material("Roca", COLOR_ROCA),
+        "cristal": material("Cristales", COLOR_CRISTAL),
+        "base": material("Base", COLOR_BASE),
+        "grieta": material("Grietas", "#FF6A1A"),
+        "grieta2": material("Grietas2", "#2EF2FF"),
+        "runas": material("Runas", "#FFD23F"),
+        "pedestal": material("Pedestal", "#E3E8F2"),
+        "borde": material("Borde", "#FFC93C", metal=0.6, rugoso=0.3),
+        "marco": material("Marco", "#7A2FE0"),
+        "pantalla": material("Pantalla", "#1B1F3B"),
+    }
+    objetos = armar_geoda("Ancestral", ANCESTRAL, mats, runas=True)
+    exportar(objetos, "Geoda_Ancestral.fbx")
+    for o in objetos:
+        bpy.data.objects.remove(o)
+    for nombre, crear, archivo in (
+        ("Vitrina", armar_vitrina, "Vitrina.fbx"),
+        ("Tablero", armar_tablero, "Tablero.fbx"),
+    ):
+        objetos = crear(mats)
+        exportar(objetos, archivo)
+        for o in objetos:
+            bpy.data.objects.remove(o)
+    cristal, t = cristal_lluvia(2.4 * STUD)
+    cristal.data.materials.append(material("CristalLluvia", "#7CF5FF"))
+    print(f"  Cristal de lluvia: {t} triángulos")
+    exportar([cristal], "CristalLluvia.fbx")
+    bpy.data.objects.remove(cristal)
+    bomba, t = bomba_lava(material("BombaLava", "#FF6A1A"))
+    print(f"  Bomba de lava: {t} triángulos")
+    exportar([bomba], "BombaLava.fbx")
+    bpy.data.objects.remove(bomba)
+    # Estatuas: la misma forma de cada gema, de 3,5 studs, con el nombre de la rareza
+    for rareza, (crear, color) in GEMAS.items():
+        obj, t = crear(3.5 * STUD)
+        obj.data.materials.clear()
+        obj.data.materials.append(material("Estatua_" + rareza, color, rugoso=0.15))
+        obj.name = rareza
+        exportar([obj], f"Estatua_{rareza}.fbx")
+        bpy.data.objects.remove(obj)
+
+
+# ---------------------------------------------------------------------------------------------
 # Exportar
 
 
@@ -779,6 +940,7 @@ def exportar_todo():
         exportar(objetos, f"Pico_{nombre}.fbx")
         for o in objetos:
             bpy.data.objects.remove(o)
+    exportar_eventos_y_exhibicion()
 
 
 # ---------------------------------------------------------------------------------------------
@@ -1063,11 +1225,58 @@ def render_picos():
     render("picos")
 
 
+def render_eventos_y_exhibicion():
+    limpiar_escena()
+    escena = escena_render()
+    # Geoda Ancestral del Vacío con runas doradas y la corona de cristales
+    mats = {
+        "roca": material_textura("Roca_Vacio_A", "Vacio", brillo=0.2),
+        "cristal": material("CrisA", "#C77DFF", rugoso=0.2, brillo="#C77DFF", fuerza_brillo=8),
+        "base": material("B" + COLOR_BASE, COLOR_BASE),
+        "grieta": material("G1A", "#9B4DFF", brillo="#9B4DFF", fuerza_brillo=10),
+        "grieta2": material("G2A", "#FFD23F", brillo="#FFD23F", fuerza_brillo=10),
+        "runas": material("RunasA", "#FFD23F", brillo="#FFD23F", fuerza_brillo=12),
+    }
+    mover(armar_geoda("Ancestral", ANCESTRAL, mats, runas=True), -5.0, y=3.0, giro=0.4)
+    luz_punto(-5.0, 0.0, 2.5, "#9B4DFF", 120)
+    etiqueta("GEODA ANCESTRAL", -5.0, -0.6, tam=0.4)
+    # vitrina con una estatua Mítica arriba
+    mv = {
+        "pedestal": material("PedR", "#E3E8F2"),
+        "borde": material("BorR", "#FFC93C", metal=0.6, rugoso=0.3),
+    }
+    mover(armar_vitrina(mv), 1.2)
+    est, _ = gema_mitica(3.5 * STUD)
+    est.data.materials.clear()
+    est.data.materials.append(material("EstR", "#9DFF3C", rugoso=0.1, brillo="#9DFF3C", fuerza_brillo=1.5))
+    mover([est], 1.2)
+    est.location.z += 4 * STUD + 0.35
+    etiqueta("Vitrina", 1.2, -1.2, tam=0.28)
+    # tablero
+    mt = {"marco": material("MarR", "#7A2FE0"), "borde": mv["borde"], "pantalla": material("PanR", "#20243F")}
+    tablero = armar_tablero(mt)
+    mover(tablero, 4.6, y=0.8, giro=-0.35)
+    etiqueta("Tablero", 4.6, -1.0, tam=0.28)
+    # cristales de la lluvia y bombas de lava
+    for i, (x, y) in enumerate([(-0.6, -1.6), (0.2, -2.1), (2.6, -1.9)]):
+        c, _ = cristal_lluvia(2.4 * STUD)
+        c.data.materials.append(material(f"CL{i}", "#7CF5FF", rugoso=0.1, brillo="#7CF5FF", fuerza_brillo=3))
+        mover([c], x, y=y, giro=i)
+    for i, (x, y) in enumerate([(-1.6, -2.4), (3.4, -2.6)]):
+        b, _ = bomba_lava(material_textura(f"BL{i}", "Lava", brillo=0.8))
+        mover([b], x, y=y, giro=i)
+    etiqueta("Cristales y bombas de lava", 1.0, -2.9, tam=0.22)
+    camara(escena, (-0.6, 0.8, 1.6), 19.0, 4.2, lente=40, giro=-8)
+    render("eventos_y_exhibicion")
+
+
 if __name__ == "__main__":
     argumentos = sys.argv[sys.argv.index("--") + 1 :] if "--" in sys.argv else sys.argv[1:]
     print("Exportando FBX a", FBX)
     exportar_todo()
-    if "--sin-renders" not in argumentos:
+    if "--solo-eventos" in argumentos:
+        render_eventos_y_exhibicion()
+    elif "--sin-renders" not in argumentos:
         print("Renders a", RENDERS)
         render_tamanos()
         render_exoticas()
@@ -1075,4 +1284,5 @@ if __name__ == "__main__":
         render_zonas()
         render_gemas()
         render_picos()
+        render_eventos_y_exhibicion()
     print("Listo")

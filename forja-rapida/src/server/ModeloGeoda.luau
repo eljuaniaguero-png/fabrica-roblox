@@ -10,6 +10,7 @@
 --   "Grietas"    grietas que brillan (Grupo 1): solo se ven en las exóticas, del Color.
 --   "Grietas2"   la segunda grieta: solo en las combinaciones, del Color2.
 --   "Base"       el nido de escombros.
+--   "Runas"      el cinturón de runas de la Geoda Ancestral (dorado, brilla).
 -- Acá solo va lo que tiene que ver todo el mundo igual (colores, materiales, textura). Las
 -- partículas, luces, el anillo de lava y las animaciones las pone cada cliente
 -- (client/Geodas.client.luau), así cada uno puede pedir "efectos reducidos".
@@ -129,6 +130,10 @@ local function pintar(m: Model, zona: number, modificador: string)
 			p.CastShadow = false
 		elseif p.Name == "Base" then
 			p.Color, p.Material = COLOR_BASE, Enum.Material.Ground
+		elseif p.Name == "Runas" then
+			-- cinturón de runas de la Geoda Ancestral: siempre dorado y brillante
+			p.Color, p.Material = Color3.fromHex("#FFD23F"), Enum.Material.Neon
+			p.CanCollide, p.CanQuery = false, false
 		end
 	end
 end
