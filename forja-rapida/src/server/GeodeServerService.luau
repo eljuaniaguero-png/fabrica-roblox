@@ -17,6 +17,9 @@
 -- Grupo 1: el modificador puede ser una combinación (dos exóticas juntas, mucho más rara). Al
 -- romper, Descubrimientos anota lo encontrado y cobra los logros nuevos (una sola vez), que
 -- viajan en la misma revelación para mostrarse en cadena. Lo rarísimo se anuncia a todos.
+-- Grupo 6: durante un evento (Mundo.evento) cambian las chances de los modificadores, las gemas
+-- y la suerte. La Geoda Ancestral la hace nacer Eventos.luau con GeodeServerService.nacerEspecial:
+-- no vuelve a nacer y a cada uno le da una gema de su mejor zona.
 
 local CollectionService = game:GetService("CollectionService")
 local Players = game:GetService("Players")
@@ -24,9 +27,11 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local GameConfig = require(ReplicatedStorage.Shared.GameConfig)
 local Reglas = require(ReplicatedStorage.Shared.Reglas)
+local Anuncios = require(script.Parent.Anuncios)
 local Descubrimientos = require(script.Parent.Descubrimientos)
 local Jugadores = require(script.Parent.Jugadores)
 local ModeloGeoda = require(script.Parent.ModeloGeoda)
+local Mundo = require(script.Parent.Mundo)
 local Remotos = require(script.Parent.Remotos)
 
 -- Lo que se le manda a cada jugador al romper una geoda (Remotos.Revelacion).
@@ -53,6 +58,8 @@ type Estado = {
 	VidaMax: number,
 	Viva: boolean,
 	Danio: { [Player]: number }, -- cuánto le hizo cada uno
+	Especial: boolean, -- la trae un evento: no vuelve a nacer
+	ParteParaPremio: number,
 }
 
 local G = GameConfig.Golpe
@@ -73,10 +80,6 @@ local function rarezaIndice(id: string): number
 	return 0
 end
 local RAREZA_ANUNCIO = rarezaIndice(GameConfig.Anuncios.RarezaMinima)
-
-local function anunciar(texto: string, color: string)
-	Remotos.Anuncio:FireAllClients(texto, color)
-end
 
 local carpeta = Instance.new("Folder")
 carpeta.Name = "Geodas"
@@ -117,27 +120,34 @@ end
 local nacer: (punto: BasePart) -> ()
 
 -- Tira la gema de un jugador para esta geoda, la suma a su mochila y le avisa.
-local function premiar(jugador: Player, e: Estado)
+local function premiar(jugador: Player, e: Estado): boolean
 	local d = Jugadores.obtener(jugador)
 	if not d then
-		return
+		return false
 	end
-	local suerte = Reglas.suerteGeoda(Jugadores.suerte(d), e.Zona, e.Tamano)
+	-- la Ancestral da gemas de la mejor zona de cada uno; las demás, de su zona
+	local zonaGema = if e.Tamano == "Ancestral" then Reglas.mejorZona(d.Zonas) else e.Zona
+	local suerte = Reglas.suerteGeoda(Jugadores.suerte(d), zonaGema, e.Tamano) * Mundo.suerte()
 	local rareza = Reglas.tirar(GameConfig.Rarezas, suerte, azar)
-	local gema = Reglas.gemaDe(e.Zona, rareza)
+	local gema = Reglas.gemaDe(zonaGema, rareza)
 	if not gema then
-		warn(("[Geodas] no hay gema %s en la zona %d"):format(rareza, e.Zona))
-		return
+		warn(("[Geodas] no hay gema %s en la zona %d"):format(rareza, zonaGema))
+		return false
 	end
-	local unidades = Reglas.unidades(e.Tamano, e.Modificador)
+	local unidades = math.max(
+		1,
+		math.floor(Reglas.unidades(e.Tamano, e.Modificador) * Mundo.unidades(e.Modificador) + 0.5)
+	)
 	local nueva = Jugadores.agregarGema(jugador, gema.Id, unidades)
 	local hitos = Descubrimientos.registrar(jugador, e.Modificador, rareza)
 	local chance = Reglas.probabilidades(GameConfig.Rarezas, suerte)[rareza]
 	local r = Reglas.rareza(rareza)
 	if r and rarezaIndice(rareza) >= RAREZA_ANUNCIO then
-		anunciar(
+		Anuncios.enviar(
 			("¡%s encontró %s (%s)!"):format(jugador.DisplayName, gema.Nombre, r.Nombre),
-			r.Color
+			r.Color,
+			"Hallazgo",
+			jugador
 		)
 	end
 	local revelacion: Revelacion = {
@@ -152,6 +162,15 @@ local function premiar(jugador: Player, e: Estado)
 		Hitos = hitos,
 	}
 	Remotos.Revelacion:FireClient(jugador, revelacion)
+	Mundo.avisarRevelacion({
+		Jugador = jugador,
+		Gema = gema.Id,
+		Rareza = rareza,
+		UnoEn = revelacion.UnoEn,
+		Modificador = e.Modificador,
+		Unidades = unidades,
+	})
+	return true
 end
 
 local function romper(e: Estado, ultimo: Player)
@@ -163,17 +182,32 @@ local function romper(e: Estado, ultimo: Player)
 			p.CanQuery = false
 		end
 	end
-	local minimo = e.VidaMax * G.ParteParaPremio
+	local minimo = e.VidaMax * e.ParteParaPremio
+	local premiados: { Player } = {}
 	for jugador, danio in e.Danio do
 		if jugador.Parent and (jugador == ultimo or danio >= minimo) then
-			premiar(jugador, e)
+			if premiar(jugador, e) then
+				table.insert(premiados, jugador)
+			end
 		end
 	end
-	-- Se deja la geoda un momento para la animación y después nace otra en el mismo punto.
+	Mundo.avisarRotura({
+		Modelo = e.Modelo,
+		Zona = e.Zona,
+		Tamano = e.Tamano,
+		Modificador = e.Modificador,
+		Danio = e.Danio,
+		Premiados = premiados,
+	})
+	-- Se deja la geoda un momento para la animación y después nace otra en el mismo punto
+	-- (salvo las especiales de los eventos).
 	local t = Reglas.tamano(e.Tamano)
 	task.delay(GameConfig.Revelacion.Duracion, function()
 		estados[e.Modelo] = nil
 		e.Modelo:Destroy()
+		if e.Especial then
+			return
+		end
 		task.wait(if t then t.Reaparicion else 3)
 		if e.Punto.Parent then
 			nacer(e.Punto)
@@ -211,16 +245,15 @@ local function alGolpear(jugador: Player, geoda: unknown)
 	end
 end
 
-nacer = function(punto: BasePart)
-	local zona = punto:GetAttribute("Zona")
-	if typeof(zona) ~= "number" or not Reglas.zona(zona) then
-		warn("[Geodas] el punto " .. punto:GetFullName() .. " no tiene un atributo Zona válido")
-		return
-	end
-	local tamano = if punto:GetAttribute("Jefe") == true then "Jefe" else Reglas.tamanoAlAzar(azar)
-	local modificador = Reglas.tirar(GameConfig.Modificadores, 1, azar)
-	local vida = Reglas.vidaGeoda(zona, tamano)
-
+-- Arma una geoda en un punto (con todo lo que necesita el servidor y el cliente).
+local function crear(
+	punto: BasePart,
+	zona: number,
+	tamano: string,
+	modificador: string,
+	vida: number,
+	especial: boolean
+): Model
 	local modelo, roca = ModeloGeoda.crear(zona, tamano, modificador)
 	-- Apoyada arriba del punto, girada al azar para que no se vean todas iguales.
 	local arriba = punto.CFrame * CFrame.new(0, punto.Size.Y / 2, 0)
@@ -234,12 +267,6 @@ nacer = function(punto: BasePart)
 	modelo:SetAttribute("VidaMax", vida)
 	modelo:SetAttribute("Rota", false)
 	CollectionService:AddTag(modelo, "Geoda")
-	local mod = Reglas.modificador(modificador)
-	local z = Reglas.zona(zona)
-	if mod and mod.Anunciar and z then
-		anunciar(("¡Apareció una geoda %s en %s!"):format(mod.Nombre, z.Nombre), mod.Color)
-	end
-
 	estados[modelo] = {
 		Modelo = modelo,
 		Roca = roca,
@@ -251,8 +278,36 @@ nacer = function(punto: BasePart)
 		VidaMax = vida,
 		Viva = true,
 		Danio = {},
+		Especial = especial,
+		ParteParaPremio = if tamano == "Ancestral"
+			then G.ParteParaPremioAncestral
+			else G.ParteParaPremio,
 	}
 	modelo.Parent = carpeta
+	return modelo
+end
+
+nacer = function(punto: BasePart)
+	local zona = punto:GetAttribute("Zona")
+	if typeof(zona) ~= "number" or not Reglas.zona(zona) then
+		warn("[Geodas] el punto " .. punto:GetFullName() .. " no tiene un atributo Zona válido")
+		return
+	end
+	local tamano = if punto:GetAttribute("Jefe") == true then "Jefe" else Reglas.tamanoAlAzar(azar)
+	local bonos = Mundo.bonos()
+	local modificador = Reglas.tirar(GameConfig.Modificadores, 1, azar, bonos)
+	crear(punto, zona, tamano, modificador, Reglas.vidaGeoda(zona, tamano), false)
+	-- Las rarísimas se anuncian (salvo las que el evento de ahora hace salir más: el evento ya
+	-- se anunció y serían demasiados carteles).
+	local mod = Reglas.modificador(modificador)
+	local z = Reglas.zona(zona)
+	if mod and mod.Anunciar and z and not (bonos and bonos[modificador]) then
+		Anuncios.enviar(
+			("¡Apareció una geoda %s en %s!"):format(mod.Nombre, z.Nombre),
+			mod.Color,
+			"Hallazgo"
+		)
+	end
 end
 
 local function alAgregarPunto(punto: Instance)
@@ -277,6 +332,54 @@ function GeodeServerService.iniciar()
 			e.Danio[jugador] = nil
 		end
 	end)
+end
+
+-- Para los eventos ----------------------------------------------------------------------------
+
+-- Hace nacer una geoda especial (no vuelve a nacer al romperse). Devuelve el modelo.
+function GeodeServerService.nacerEspecial(
+	punto: BasePart,
+	zona: number,
+	tamano: string,
+	modificador: string,
+	vida: number
+): Model
+	return crear(punto, zona, tamano, modificador, vida, true)
+end
+
+-- Saca una geoda especial que nadie terminó de romper (el jefe que se escapa).
+function GeodeServerService.quitarEspecial(modelo: Model)
+	local e = estados[modelo]
+	if not e or not e.Viva then
+		return
+	end
+	e.Viva = false
+	modelo:SetAttribute("Escapo", true)
+	task.delay(1.5, function()
+		estados[modelo] = nil
+		modelo:Destroy()
+	end)
+end
+
+-- Vuelve a hacer nacer (con las chances de ahora) una parte de las geodas que nadie tocó.
+-- Lo usan los eventos para que se note enseguida que cambiaron las chances.
+function GeodeServerService.renovar(fraccion: number)
+	local elegidas = {}
+	for _, e in estados do
+		if e.Viva and not e.Especial and e.Vida >= e.VidaMax and next(e.Danio) == nil then
+			if rng:NextNumber() < fraccion then
+				table.insert(elegidas, e)
+			end
+		end
+	end
+	for _, e in elegidas do
+		e.Viva = false
+		estados[e.Modelo] = nil
+		e.Modelo:Destroy()
+		if e.Punto.Parent then
+			nacer(e.Punto)
+		end
+	end
 end
 
 -- Para las pruebas: cuántas geodas vivas hay.

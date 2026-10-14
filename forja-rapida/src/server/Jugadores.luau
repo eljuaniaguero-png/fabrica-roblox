@@ -4,7 +4,9 @@
 -- Se publican como atributos del Player para que el cliente los lea (solo para mostrar):
 --   Monedas, Fuerza (daño por golpe), Suerte (la del jugador, con amuletos), NivelFuerza,
 --   Pico (número), GeodasRotas, Mochila (JSON: gema -> cantidad), Indice ("Cuarzo;Jaspe"),
---   Zonas ("1;2"), Exoticas ("Lava;Neon"), Logros ("Picapiedras;Mitica") y EfectosReducidos.
+--   Zonas ("1;2"), Exoticas ("Lava;Neon"), Logros ("Picapiedras;Mitica"), Titulo (el que se
+--   muestra), Vitrina, JefesDerrotados, MayorDanioJefe, EventosJugados y los ajustes
+--   (EfectosReducidos, AnunciarHallazgos, VerAnuncios, VerTitulos).
 -- Fuerza y Monedas también van en la tabla de jugadores (leaderstats).
 
 local HttpService = game:GetService("HttpService")
@@ -27,7 +29,31 @@ export type Datos = {
 	Exoticas: { [string]: boolean }, -- modificadores de geodas que rompió (con combinaciones)
 	Rarezas: { [string]: boolean }, -- rarezas que encontró alguna vez
 	Logros: { [string]: boolean }, -- logros y colecciones ya cobrados
-	Ajustes: { EfectosReducidos: boolean? }, -- nil = que decida la calidad gráfica
+	Ajustes: Ajustes,
+	-- Eventos y exhibición (Grupos 6 y 7)
+	EventosJugados: number,
+	JefesDerrotados: number,
+	MayorDanioJefe: number, -- récord personal de daño a una Geoda Ancestral
+	MejorPuestoJefe: number, -- 0 = nunca
+	Titulo: string?, -- el que eligió (nil = el último que desbloqueó)
+	Vitrina: string?, -- gema que eligió mostrar (nil = su hallazgo más raro)
+	Hallazgos: { Hallazgo }, -- sus mejores hallazgos, del más raro al menos raro
+}
+
+-- Ajustes del jugador (nil = el valor por defecto).
+export type Ajustes = {
+	EfectosReducidos: boolean?, -- nil = que decida la calidad gráfica
+	AnunciarHallazgos: boolean?, -- nil = sí
+	VerAnuncios: boolean?, -- nil = sí (los de hallazgos de otros)
+	VerTitulos: boolean?, -- nil = sí (los títulos arriba de las cabezas)
+}
+
+export type Hallazgo = {
+	Gema: string,
+	Rareza: string,
+	UnoEn: number,
+	Modificador: string,
+	Cuando: number,
 }
 
 local datosDe: { [Player]: Datos } = {}
@@ -48,6 +74,13 @@ local function nuevos(): Datos
 		Rarezas = {},
 		Logros = {},
 		Ajustes = {},
+		EventosJugados = 0,
+		JefesDerrotados = 0,
+		MayorDanioJefe = 0,
+		MejorPuestoJefe = 0,
+		Titulo = nil,
+		Vitrina = nil,
+		Hallazgos = {},
 	}
 end
 
@@ -103,6 +136,15 @@ function Jugadores.suerte(d: Datos): number
 	return Reglas.suerteJugador(d.Amuletos, d.Logros)
 end
 
+-- El título que se muestra: el elegido (si todavía lo tiene) o el último que desbloqueó.
+function Jugadores.titulo(d: Datos): string
+	if d.Titulo and Reglas.tituloDisponible(d.Titulo, d.Logros) then
+		return d.Titulo
+	end
+	local lista = Reglas.titulosDe(d.Logros)
+	return lista[#lista].Id
+end
+
 -- Suma gemas a la mochila. Devuelve true si es la primera vez que consigue esa gema (Índice).
 function Jugadores.agregarGema(jugador: Player, gema: string, cantidad: number): boolean
 	local d = datosDe[jugador]
@@ -135,6 +177,14 @@ function Jugadores.publicar(jugador: Player)
 	jugador:SetAttribute("Exoticas", claves(d.Exoticas))
 	jugador:SetAttribute("Logros", claves(d.Logros))
 	jugador:SetAttribute("EfectosReducidos", d.Ajustes.EfectosReducidos)
+	jugador:SetAttribute("AnunciarHallazgos", d.Ajustes.AnunciarHallazgos ~= false)
+	jugador:SetAttribute("VerAnuncios", d.Ajustes.VerAnuncios ~= false)
+	jugador:SetAttribute("VerTitulos", d.Ajustes.VerTitulos ~= false)
+	jugador:SetAttribute("Titulo", Jugadores.titulo(d))
+	jugador:SetAttribute("Vitrina", d.Vitrina)
+	jugador:SetAttribute("EventosJugados", d.EventosJugados)
+	jugador:SetAttribute("JefesDerrotados", d.JefesDerrotados)
+	jugador:SetAttribute("MayorDanioJefe", d.MayorDanioJefe)
 	local stats = jugador:FindFirstChild("leaderstats")
 	if stats then
 		valor(stats, "Fuerza").Value = fuerza
@@ -142,12 +192,23 @@ function Jugadores.publicar(jugador: Player)
 	end
 end
 
--- Ajustes que elige el jugador (por ahora, solo "Efectos reducidos"). El cliente pide; el
--- servidor revisa el tipo y la frecuencia y lo publica (y se guarda con el resto).
+-- Ajustes que elige el jugador. El cliente pide; el servidor revisa el nombre, el tipo y la
+-- frecuencia y lo publica (y se guarda con el resto).
+local AJUSTES = {
+	EfectosReducidos = true,
+	AnunciarHallazgos = true,
+	VerAnuncios = true,
+	VerTitulos = true,
+}
 local ultimoAjuste: { [Player]: number } = {}
 local function alPedirAjuste(jugador: Player, nombre: unknown, elegido: unknown)
 	local d = datosDe[jugador]
-	if not d or nombre ~= "EfectosReducidos" or typeof(elegido) ~= "boolean" then
+	if
+		not d
+		or typeof(nombre) ~= "string"
+		or not AJUSTES[nombre]
+		or typeof(elegido) ~= "boolean"
+	then
 		return
 	end
 	local ahora = os.clock()
@@ -155,7 +216,8 @@ local function alPedirAjuste(jugador: Player, nombre: unknown, elegido: unknown)
 		return
 	end
 	ultimoAjuste[jugador] = ahora
-	d.Ajustes.EfectosReducidos = elegido
+	local ajustes: any = d.Ajustes
+	ajustes[nombre] = elegido
 	Jugadores.publicar(jugador)
 end
 

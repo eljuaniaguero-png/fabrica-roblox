@@ -13,6 +13,7 @@ local Jugadores = require(script.Parent.Jugadores)
 -- Lo que el cliente muestra de cada logro cumplido.
 export type Hito = {
 	Id: string,
+	Titulo: string?, -- título del cartel si no es un logro común ("¡Nuevo récord!")
 	Nombre: string,
 	Descripcion: string,
 	Monedas: number?,
@@ -22,21 +23,8 @@ export type Hito = {
 
 local Descubrimientos = {}
 
--- Anota lo que rompió y encontró, cobra los logros nuevos y los devuelve.
-function Descubrimientos.registrar(jugador: Player, modificador: string, rareza: string): { Hito }
-	local d = Jugadores.obtener(jugador)
-	if not d then
-		return {}
-	end
-	if Reglas.esExotica(modificador) then
-		d.Exoticas[modificador] = true
-		-- una combinación también cuenta para cada una de sus partes
-		for _, parte in Reglas.partes(modificador) do
-			d.Exoticas[parte] = true
-		end
-	end
-	d.Rarezas[rareza] = true
-
+-- Cobra los logros que el jugador ya cumple y todavía no cobró (una sola vez cada uno).
+local function cobrar(jugador: Player, d: Jugadores.Datos): { Hito }
 	local hitos: { Hito } = {}
 	for _, l in Reglas.logrosNuevos(d) do
 		if not d.Logros[l.Id] then
@@ -56,6 +44,29 @@ function Descubrimientos.registrar(jugador: Player, modificador: string, rareza:
 	end
 	Jugadores.publicar(jugador)
 	return hitos
+end
+
+-- Revisa los logros fuera de una revelación (por ejemplo, al terminar un evento).
+function Descubrimientos.revisar(jugador: Player): { Hito }
+	local d = Jugadores.obtener(jugador)
+	return if d then cobrar(jugador, d) else {}
+end
+
+-- Anota lo que rompió y encontró, cobra los logros nuevos y los devuelve.
+function Descubrimientos.registrar(jugador: Player, modificador: string, rareza: string): { Hito }
+	local d = Jugadores.obtener(jugador)
+	if not d then
+		return {}
+	end
+	if Reglas.esExotica(modificador) then
+		d.Exoticas[modificador] = true
+		-- una combinación también cuenta para cada una de sus partes
+		for _, parte in Reglas.partes(modificador) do
+			d.Exoticas[parte] = true
+		end
+	end
+	d.Rarezas[rareza] = true
+	return cobrar(jugador, d)
 end
 
 return Descubrimientos

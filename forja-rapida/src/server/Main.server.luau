@@ -5,15 +5,30 @@
 local Players = game:GetService("Players")
 
 local CampoPrueba = require(script.Parent.CampoPrueba)
+local Eventos = require(script.Parent.Eventos)
 local GeodeServerService = require(script.Parent.GeodeServerService)
+local Iluminacion = require(script.Parent.Iluminacion)
 local Jugadores = require(script.Parent.Jugadores)
+local Social = require(script.Parent.Social)
 
-Players.PlayerAdded:Connect(Jugadores.crear)
-for _, jugador in Players:GetPlayers() do
-	task.spawn(Jugadores.crear, jugador)
+Iluminacion.aplicar()
+
+local function alEntrar(jugador: Player)
+	Jugadores.crear(jugador)
+	Social.alEntrar(jugador)
 end
-Players.PlayerRemoving:Connect(Jugadores.quitar)
+
+Players.PlayerAdded:Connect(alEntrar)
+for _, jugador in Players:GetPlayers() do
+	task.spawn(alEntrar, jugador)
+end
+Players.PlayerRemoving:Connect(function(jugador: Player)
+	Social.alSalir(jugador) -- antes de borrar sus datos (sube sus puntos de la semana)
+	Jugadores.quitar(jugador)
+end)
 
 Jugadores.iniciar()
-GeodeServerService.iniciar()
 CampoPrueba.armarSiFalta()
+GeodeServerService.iniciar()
+Social.iniciar()
+Eventos.iniciar()

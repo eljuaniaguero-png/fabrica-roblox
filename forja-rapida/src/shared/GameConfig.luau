@@ -81,6 +81,33 @@ export type Logro = {
 	Premio: { Monedas: number?, Suerte: number? },
 }
 
+-- Un evento del mundo (Grupo 6). Lo que no se pone, no cambia.
+export type Evento = {
+	Id: string,
+	Nombre: string,
+	Descripcion: string,
+	Duracion: number, -- segundos
+	Peso: number, -- qué tan seguido sale comparado con los demás
+	Color: string,
+	Color2: string,
+	Modificadores: { [string]: number }?, -- multiplica la chance de nacer con ese modificador
+	Unidades: { [string]: number }?, -- multiplica las gemas de las geodas con ese modificador
+	UnidadesTodas: number?, -- multiplica las gemas de todas las geodas
+	Suerte: number?, -- multiplica la suerte de todas las revelaciones
+	Renovar: number?, -- parte de las geodas sanas que vuelven a nacer al empezar (con las chances nuevas)
+	Cristales: { Cada: number, Radio: number, Duran: number, Premio: number, Maximo: number }?,
+	Meta: { PorJugador: number, Minimo: number, Premio: number }?,
+	Jefe: { VidaPorFuerza: number, VidaMinima: number, SuerteModificador: number }?,
+}
+
+-- Un título que se muestra arriba de la cabeza y en la vitrina (Grupo 7).
+export type Titulo = {
+	Id: string,
+	Texto: string,
+	Colores: { string }, -- degradé del texto (uno solo = color liso)
+	Requiere: string?, -- logro que lo desbloquea (nil = lo tiene todo el mundo)
+}
+
 export type Pico = {
 	Id: string,
 	Nombre: string,
@@ -104,6 +131,7 @@ local GameConfig = {
 		-- Si varios le pegan a la misma geoda, cada uno que hizo al menos este porcentaje de su
 		-- vida (o el que la rompió) se lleva su propia revelación, con su propia suerte.
 		ParteParaPremio = 0.1,
+		ParteParaPremioAncestral = 0.02, -- en la Geoda Ancestral alcanza con menos (son muchos)
 	},
 
 	-- Mejoras de Fuerza (Tienda). Cada nivel suma Fuerza.PorNivel a la base y además un
@@ -287,6 +315,18 @@ local GameConfig = {
 			Escala = 4,
 			Peso = 0, -- solo nace en los puntos marcados como Jefe
 			Reaparicion = 90,
+		},
+		{
+			-- Solo lo trae el evento "Jefe Ancestral": su vida depende de cuántos juegan y la gema
+			-- sale de la mejor zona de cada jugador (así le sirve a todos).
+			Id = "Ancestral",
+			Nombre = "GEODA ANCESTRAL",
+			Vida = 3000, -- mínimo; ver GameConfig.Eventos (Jefe.VidaPorFuerza)
+			Unidades = 150,
+			Suerte = 5,
+			Escala = 6,
+			Peso = 0,
+			Reaparicion = 0, -- no vuelve a nacer
 		},
 	} :: { Tamano },
 
@@ -483,6 +523,8 @@ local GameConfig = {
 	--   { Tipo = "Modificadores", Ids = {...}, Cuantos = n }   romper geodas de n de esos modificadores
 	--   { Tipo = "Rareza", Id = "Mitico" }      encontrar una gema de esa rareza
 	--   { Tipo = "Geodas", Cuantas = n }         romper n geodas en total
+	--   { Tipo = "Jefes", Cuantos = n }          ayudar a romper n Geodas Ancestrales
+	--   { Tipo = "Eventos", Cuantos = n }        jugar n eventos (romper al menos una geoda durante)
 	-- Premio: Monedas (una vez) y/o Suerte (se suma para siempre a la del jugador).
 	Logros = {
 		{
@@ -601,12 +643,234 @@ local GameConfig = {
 			Necesita = { Tipo = "Gemas", Zona = 5 },
 			Premio = { Monedas = 60000000, Suerte = 0.3 },
 		},
+		{
+			Id = "JefeAncestral1",
+			Nombre = "Cazador de Jefes",
+			Descripcion = "Ayudá a romper una Geoda Ancestral",
+			Necesita = { Tipo = "Jefes", Cuantos = 1 },
+			Premio = { Suerte = 0.2 },
+		},
+		{
+			Id = "JefeAncestral10",
+			Nombre = "Leyenda de los Jefes",
+			Descripcion = "Ayudá a romper 10 Geodas Ancestrales",
+			Necesita = { Tipo = "Jefes", Cuantos = 10 },
+			Premio = { Suerte = 0.5 },
+		},
+		{
+			Id = "Eventos5",
+			Nombre = "Cazador de Eventos",
+			Descripcion = "Jugá 5 eventos del mundo",
+			Necesita = { Tipo = "Eventos", Cuantos = 5 },
+			Premio = { Suerte = 0.15 },
+		},
 	} :: { Logro },
 
 	-- Avisos a todo el servidor: cuando nace una geoda con Anunciar = true y cuando alguien
 	-- encuentra una gema de esta rareza o más.
+	-- Para no saturar: como mucho uno cada Minimo segundos y Cola esperando (los demás se
+	-- descartan). No van al chat: son carteles. Cada jugador puede no anunciar sus hallazgos y
+	-- no ver los de los demás (Ajustes); los avisos de eventos se ven siempre.
 	Anuncios = {
 		RarezaMinima = "Mitico",
+		Minimo = 6,
+		Cola = 4,
+	},
+
+	-- Luz pedida por Juani: ColorCorrection en Lighting.
+	Luz = {
+		Brillo = 0.05,
+		Contraste = 0.15,
+		Saturacion = 0.1,
+		Color = "#FFFFFF",
+	},
+
+	-- Eventos del mundo (Grupo 6). Uno por vez: se anuncia AvisoPrevio segundos antes, dura su
+	-- Duracion y después hay una pausa al azar entre Intervalo[1] e Intervalo[2] segundos.
+	-- Para probar en Studio: poné el atributo ForzarEvento (texto, el Id) en Workspace.
+	Eventos = {
+		Activos = true,
+		PrimeraEspera = 240,
+		Intervalo = { 420, 720 },
+		AvisoPrevio = 20,
+		Lista = {
+			{
+				Id = "LluviaCristales",
+				Nombre = "Lluvia de Cristales",
+				Descripcion = "¡Caen cristales del cielo! Agarralos antes de que se apaguen",
+				Duracion = 90,
+				Peso = 30,
+				Color = "#7CF5FF",
+				Color2 = "#C77DFF",
+				-- un cristal cerca de cada jugador cada Cada segundos; vale Premio veces una gema
+				-- común de su mejor zona
+				Cristales = { Cada = 2.5, Radio = 30, Duran = 12, Premio = 25, Maximo = 60 },
+			},
+			{
+				Id = "Erupcion",
+				Nombre = "Erupción Volcánica",
+				Descripcion = "Las geodas de Lava salen 4 veces más y dan el doble",
+				Duracion = 120,
+				Peso = 22,
+				Color = "#FF6A1A",
+				Color2 = "#FFE14D",
+				Modificadores = { Lava = 4, LavaNeon = 3, VacioLava = 3 },
+				Unidades = { Lava = 2, LavaNeon = 2, VacioLava = 2 },
+				Renovar = 0.35,
+			},
+			{
+				Id = "TormentaNeon",
+				Nombre = "Tormenta Neón",
+				Descripcion = "Rayos de colores: las geodas Neón salen 4 veces más y dan el doble",
+				Duracion = 120,
+				Peso = 22,
+				Color = "#2EF2FF",
+				Color2 = "#FF4DF0",
+				Modificadores = { Neon = 4, LavaNeon = 3, MidasNeon = 3 },
+				Unidades = { Neon = 2, LavaNeon = 2, MidasNeon = 2 },
+				Renovar = 0.35,
+			},
+			{
+				Id = "EclipseVacio",
+				Nombre = "Eclipse del Vacío",
+				Descripcion = "Se oscurece todo: más geodas del Vacío y +50 % de suerte",
+				Duracion = 90,
+				Peso = 10,
+				Color = "#9B4DFF",
+				Color2 = "#140C2B",
+				Modificadores = { Vacio = 6, VacioLava = 4, VacioMidas = 4 },
+				Suerte = 1.5,
+				Renovar = 0.25,
+			},
+			{
+				Id = "FiebreMineria",
+				Nombre = "Fiebre de Minería",
+				Descripcion = "¡Entre todos! Lleguen a la meta de geodas y todos ganan. Cada geoda da x1,5",
+				Duracion = 150,
+				Peso = 18,
+				Color = "#FFC93C",
+				Color2 = "#FF8C42",
+				UnidadesTodas = 1.5,
+				-- meta = PorJugador x jugadores (como mínimo Minimo); premio = Premio veces una
+				-- gema común de la mejor zona de cada uno, para los que rompieron al menos una
+				Meta = { PorJugador = 40, Minimo = 60, Premio = 60 },
+			},
+			{
+				Id = "JefeAncestral",
+				Nombre = "Jefe Ancestral",
+				Descripcion = "Una geoda gigante y antiquísima: ¡rómpanla entre todos antes de que se vaya!",
+				Duracion = 180,
+				Peso = 12,
+				Color = "#FFD23F",
+				Color2 = "#9B4DFF",
+				-- vida = suma de la Fuerza de los que están jugando x VidaPorFuerza (como mínimo
+				-- VidaMinima); su modificador se tira con esta suerte (casi siempre exótico)
+				Jefe = { VidaPorFuerza = 250, VidaMinima = 3000, SuerteModificador = 30 },
+			},
+		} :: { Evento },
+	},
+
+	-- Exhibición social (Grupo 7).
+	Social = {
+		Hallazgos = 5, -- mejores hallazgos que se guardan de cada jugador (por lo raros)
+		-- Clasificaciones semanales (OrderedDataStore, la semana empieza el lunes 00:00 UTC).
+		-- Solo reconocimiento: no hay premios, así nadie se siente obligado a competir.
+		Clasificacion = {
+			Almacen = "ForjaSemana",
+			Guardar = 60, -- cada cuánto se suben los puntos de cada jugador
+			Leer = 120, -- cada cuánto se actualizan los tableros
+			Cuantos = 10,
+			Tablas = {
+				{ Id = "Geodas", Nombre = "Geodas rotas" },
+				{ Id = "Exoticas", Nombre = "Exóticas rotas" },
+				{ Id = "Jefes", Nombre = "Jefes Ancestrales" },
+				{ Id = "Hallazgo", Nombre = "Hallazgo más raro" },
+			},
+		},
+	},
+
+	-- Títulos: se desbloquean con logros y se eligen (arriba de la cabeza y en la vitrina).
+	Titulos = {
+		{ Id = "Novato", Texto = "Minero Novato", Colores = { "#FFFFFF", "#B9C2CC" } },
+		{
+			Id = "Picapiedras",
+			Texto = "Picapiedras",
+			Colores = { "#FFD84A", "#F5A300" },
+			Requiere = "Picapiedras",
+		},
+		{
+			Id = "CazaExoticas",
+			Texto = "Cazador de Exóticas",
+			Colores = { "#FF6A1A", "#2EF2FF" },
+			Requiere = "PrimeraExotica",
+		},
+		{
+			Id = "Coleccionista",
+			Texto = "Coleccionista Exótico",
+			Colores = { "#FF6A1A", "#2EF2FF", "#FFD23F", "#9B4DFF" },
+			Requiere = "ColeccionExotica",
+		},
+		{
+			Id = "Combinador",
+			Texto = "Maestro de Combinaciones",
+			Colores = { "#FF4D5E", "#FFC93C", "#4CD964", "#2EF2FF", "#9B4DFF" },
+			Requiere = "ColeccionCombinaciones",
+		},
+		{
+			Id = "Leyenda",
+			Texto = "Leyenda",
+			Colores = { "#FFB21E", "#FFF15C" },
+			Requiere = "Legendaria",
+		},
+		{
+			Id = "Mitico",
+			Texto = "Toque Mítico",
+			Colores = { "#FF3D7F", "#B04DFF" },
+			Requiere = "Mitica",
+		},
+		{
+			Id = "CazaJefes",
+			Texto = "Cazador de Jefes",
+			Colores = { "#FFD23F", "#9B4DFF" },
+			Requiere = "JefeAncestral1",
+		},
+		{
+			Id = "LeyendaJefes",
+			Texto = "Leyenda de los Jefes",
+			Colores = { "#FFF15C", "#FF3D7F", "#9B4DFF" },
+			Requiere = "JefeAncestral10",
+		},
+		{
+			Id = "CazaEventos",
+			Texto = "Cazador de Eventos",
+			Colores = { "#7CF5FF", "#C77DFF" },
+			Requiere = "Eventos5",
+		},
+		{
+			Id = "Imparable",
+			Texto = "Minero Imparable",
+			Colores = { "#FF4D5E", "#FF9B3D" },
+			Requiere = "MineroImparable",
+		},
+	} :: { Titulo },
+
+	-- Íconos de la UI (imágenes, no emojis): subir los PNG de forja-rapida/arte/iconos y pegar
+	-- acá el "rbxassetid://...". Mientras estén vacíos, el cliente dibuja una insignia de color.
+	Iconos = {
+		Lava = "",
+		Neon = "",
+		Midas = "",
+		Vacio = "",
+		Trebol = "",
+		Moneda = "",
+		Fuerza = "",
+		Chispa = "",
+		Trofeo = "",
+		Corona = "",
+		Reloj = "",
+		Jefe = "",
+		Cristal = "",
+		Gema = "",
 	},
 
 	-- Efectos del cliente (Grupo 1, pulido). Con "Efectos reducidos" (botón en pantalla, o solo
@@ -632,6 +896,10 @@ local GameConfig = {
 		RevelacionRara = "", -- extra para Épica o mejor
 		Logro = "",
 		Anuncio = "",
+		EventoEmpieza = "", -- uno por evento estaría bueno; por ahora el mismo con otro tono
+		Cristal = "", -- agarrar un cristal de la lluvia
+		Trueno = "", -- relámpago de la Tormenta Neón
+		JefeAparece = "",
 		Vender = "",
 		Comprar = "",
 	},
@@ -640,7 +908,8 @@ local GameConfig = {
 	-- partes simples (greybox). Al importarlas, los modelos van en ServerStorage > Modelos >
 	-- Geodas > <Id del tamaño>, con las partes Roca, Cristales, Base, Grietas y Grietas2; y el
 	-- anillo de la Lava en ReplicatedStorage > Modelos > Anillo (si no está, el cliente lo arma
-	-- con cubitos).
+	-- con cubitos). Eventos y vitrinas: ServerStorage > Modelos > CristalLluvia (una parte),
+	-- Geodas > Ancestral (como las demás geodas) y Estatuas > <rareza> (la gema grande).
 	Modelos = {
 		Carpeta = "Modelos",
 	},

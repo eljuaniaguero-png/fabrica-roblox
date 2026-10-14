@@ -192,6 +192,8 @@ for _, l in GameConfig.Logros do
 		chequear(Reglas.rareza(n.Id or "") ~= nil, l.Id .. ": rareza desconocida")
 	elseif n.Tipo == "Geodas" then
 		chequear((n.Cuantas or 0) > 0, l.Id .. ": Cuantas tiene que ser > 0")
+	elseif n.Tipo == "Jefes" or n.Tipo == "Eventos" then
+		chequear((n.Cuantos or 0) > 0, l.Id .. ": Cuantos tiene que ser > 0")
 	else
 		chequear(false, l.Id .. ": tipo desconocido " .. tostring(n.Tipo))
 	end
@@ -206,7 +208,15 @@ local function ids(lista): string
 	end
 	return table.concat(r, ",")
 end
-local e = { Indice = {}, Exoticas = {}, Rarezas = {}, GeodasRotas = 0, Logros = {} }
+local e = {
+	Indice = {},
+	Exoticas = {},
+	Rarezas = {},
+	GeodasRotas = 0,
+	JefesDerrotados = 0,
+	EventosJugados = 0,
+	Logros = {},
+}
 chequear(#Reglas.logrosNuevos(e) == 0, "un jugador nuevo ya tiene logros")
 e.Exoticas.Lava = true
 chequear(ids(Reglas.logrosNuevos(e)) == "PrimeraExotica", "la primera exótica no da su logro")
@@ -267,6 +277,102 @@ chequear(
 )
 chequear(Formato.suerte(1.5) == "x1,5", "Formato.suerte(1.5) dio " .. Formato.suerte(1.5))
 chequear(Formato.unoEn(2427.3) == "1 en 2.427", "Formato.unoEn mal: " .. Formato.unoEn(2427.3))
+
+-- 12. Eventos del mundo (Grupo 6).
+local eventosVistos: { [string]: boolean } = {}
+for _, ev in GameConfig.Eventos.Lista do
+	chequear(not eventosVistos[ev.Id], "evento repetido: " .. ev.Id)
+	eventosVistos[ev.Id] = true
+	chequear(ev.Duracion > 0 and ev.Peso > 0, ev.Id .. ": Duracion y Peso tienen que ser > 0")
+	for id, x in ev.Modificadores or {} do
+		chequear(
+			Reglas.modificador(id) ~= nil and x > 0,
+			ev.Id .. ": modificador desconocido " .. id
+		)
+	end
+	for id, x in ev.Unidades or {} do
+		chequear(
+			Reglas.modificador(id) ~= nil and x > 0,
+			ev.Id .. ": unidades de modificador desconocido " .. id
+		)
+	end
+end
+for _, id in
+	{
+		"LluviaCristales",
+		"Erupcion",
+		"TormentaNeon",
+		"EclipseVacio",
+		"FiebreMineria",
+		"JefeAncestral",
+	}
+do
+	chequear(Reglas.evento(id) ~= nil, "falta el evento " .. id)
+end
+-- con bonos de evento las probabilidades siguen sumando 100 % y la bonificada sube
+local erupcion = Reglas.evento("Erupcion")
+local bonos = if erupcion then erupcion.Modificadores else nil
+local sinBono = Reglas.probabilidades(GameConfig.Modificadores, 1)
+local conBono = Reglas.probabilidades(GameConfig.Modificadores, 1, bonos)
+local sumaBono = 0
+for _, v in conBono do
+	sumaBono += v
+end
+chequear(cerca(sumaBono, 1, 1e-9), "con bonos no suman 100 %")
+chequear(conBono.Lava > sinBono.Lava * 3, "la Erupción no sube la Lava")
+local cuentaLava = 0
+for _ = 1, 200000 do
+	if Reglas.tirar(GameConfig.Modificadores, 1, azarLune, bonos) == "Lava" then
+		cuentaLava += 1
+	end
+end
+chequear(
+	cerca(cuentaLava / 200000, conBono.Lava, 0.005),
+	"tirar con bonos no coincide con las probabilidades"
+)
+-- el evento al azar nunca repite el anterior
+for _ = 1, 2000 do
+	chequear(
+		Reglas.eventoAlAzar(azarLune, "Erupcion").Id ~= "Erupcion",
+		"se repitió el evento anterior"
+	)
+end
+-- vida del Jefe Ancestral
+chequear(Reglas.vidaAncestral({}) == 3000, "la vida mínima del jefe no es 3000")
+chequear(Reglas.vidaAncestral({ 100, 300 }) == 100000, "la vida del jefe no crece con la Fuerza")
+chequear(Reglas.tamanoAlAzar(azarLune) ~= "Ancestral", "la Ancestral salió en un punto común")
+chequear(Reglas.mejorZona({ [1] = true, [3] = true }) == 3, "mejorZona mal")
+
+-- 13. Exhibición social (Grupo 7).
+chequear(Reglas.semana(1791763199) ~= Reglas.semana(1791763200), "la semana no cambia el lunes")
+chequear(
+	Reglas.semana(1791763200) == Reglas.semana(1791763200 + 6 * 86400),
+	"la semana cambia antes del lunes"
+)
+local titulosVistos: { [string]: boolean } = {}
+for _, t in GameConfig.Titulos do
+	chequear(not titulosVistos[t.Id], "título repetido: " .. t.Id)
+	titulosVistos[t.Id] = true
+	chequear(
+		t.Requiere == nil or Reglas.logro(t.Requiere) ~= nil,
+		t.Id .. ": pide un logro que no existe"
+	)
+	chequear(#t.Colores >= 1, t.Id .. ": sin colores")
+end
+chequear(#Reglas.titulosDe({}) == 1, "un jugador nuevo tiene más de un título")
+chequear(
+	Reglas.tituloDisponible("CazaJefes", { JefeAncestral1 = true }),
+	"el título de jefes no se desbloquea"
+)
+chequear(not Reglas.tituloDisponible("CazaJefes", {}), "el título de jefes sale sin el logro")
+e.JefesDerrotados = 1
+e.EventosJugados = 5
+local jefesYEventos = ids(Reglas.logrosNuevos(e))
+chequear(
+	jefesYEventos:find("JefeAncestral1") ~= nil and jefesYEventos:find("Eventos5") ~= nil,
+	"logros de jefes/eventos: " .. jefesYEventos
+)
+chequear(not jefesYEventos:find("JefeAncestral10"), "Leyenda de los Jefes salió con 1 jefe")
 
 if errores > 0 then
 	print(("%d pruebas fallaron"):format(errores))

@@ -11,6 +11,8 @@ type Tamano = GameConfig.Tamano
 type Zona = GameConfig.Zona
 type Gema = GameConfig.Gema
 type Logro = GameConfig.Logro
+type Evento = GameConfig.Evento
+type Titulo = GameConfig.Titulo
 
 -- Lo que hace falta para revisar los logros de un jugador (Reglas.logrosNuevos).
 export type EstadoLogros = {
@@ -18,6 +20,8 @@ export type EstadoLogros = {
 	Exoticas: { [string]: boolean }, -- modificadores de geodas que rompió
 	Rarezas: { [string]: boolean }, -- rarezas que encontró
 	GeodasRotas: number,
+	JefesDerrotados: number, -- Geodas Ancestrales que ayudó a romper
+	EventosJugados: number,
 	Logros: { [string]: boolean }, -- los que ya cobró
 }
 
@@ -156,6 +160,10 @@ local function cumple(l: Logro, e: EstadoLogros): boolean
 		return n.Id ~= nil and e.Rarezas[n.Id] == true
 	elseif n.Tipo == "Geodas" then
 		return e.GeodasRotas >= (n.Cuantas or math.huge)
+	elseif n.Tipo == "Jefes" then
+		return e.JefesDerrotados >= (n.Cuantos or math.huge)
+	elseif n.Tipo == "Eventos" then
+		return e.EventosJugados >= (n.Cuantos or math.huge)
 	end
 	return false
 end
@@ -207,12 +215,18 @@ end
 -- Chance de que salga cada fila con esa suerte: se prueba de la más rara a la más común y
 -- cada una sale si azar < Suerte / UnoEn. La primera fila (UnoEn = 1) se queda con el resto,
 -- así que todo suma 1 (100 %). Devuelve Id -> probabilidad.
-function Reglas.probabilidades<T>(tabla: { T }, suerte: number): { [string]: number }
+-- `bonos` (opcional, eventos) multiplica la suerte de algunas filas: { Lava = 4 }.
+function Reglas.probabilidades<T>(
+	tabla: { T },
+	suerte: number,
+	bonos: { [string]: number }?
+): { [string]: number }
 	local r = {}
 	local queda = 1 -- probabilidad de que todavía no haya salido ninguna más rara
 	for i = #tabla, 1, -1 do
 		local fila: Tirable = tabla[i] :: any
-		local chance = if i == 1 then 1 else math.min(1, suerte / fila.UnoEn)
+		local extra = if bonos then bonos[fila.Id] or 1 else 1
+		local chance = if i == 1 then 1 else math.min(1, suerte * extra / fila.UnoEn)
 		r[fila.Id] = queda * chance
 		queda *= 1 - chance
 	end
@@ -221,10 +235,16 @@ end
 
 -- Tira una vez con la misma regla. `azar` devuelve un número entre 0 y 1 (en el servidor,
 -- Random:NextNumber).
-function Reglas.tirar<T>(tabla: { T }, suerte: number, azar: () -> number): string
+function Reglas.tirar<T>(
+	tabla: { T },
+	suerte: number,
+	azar: () -> number,
+	bonos: { [string]: number }?
+): string
 	for i = #tabla, 2, -1 do
 		local fila: Tirable = tabla[i] :: any
-		if azar() < suerte / fila.UnoEn then
+		local extra = if bonos then bonos[fila.Id] or 1 else 1
+		if azar() < suerte * extra / fila.UnoEn then
 			return fila.Id
 		end
 	end
@@ -247,6 +267,100 @@ function Reglas.tamanoAlAzar(azar: () -> number): string
 		end
 	end
 	return GameConfig.Tamanos[1].Id
+end
+
+-- Eventos del mundo ---------------------------------------------------------------------------
+
+function Reglas.evento(id: string): Evento?
+	for _, e in GameConfig.Eventos.Lista do
+		if e.Id == id then
+			return e
+		end
+	end
+	return nil
+end
+
+-- El próximo evento, al azar por Peso, sin repetir el anterior (si hay más de uno).
+function Reglas.eventoAlAzar(azar: () -> number, anterior: string?): Evento
+	local lista = {}
+	local total = 0
+	for _, e in GameConfig.Eventos.Lista do
+		if e.Id ~= anterior or #GameConfig.Eventos.Lista == 1 then
+			table.insert(lista, e)
+			total += e.Peso
+		end
+	end
+	local x = azar() * total
+	for _, e in lista do
+		x -= e.Peso
+		if x < 0 then
+			return e
+		end
+	end
+	return lista[#lista]
+end
+
+-- Vida de la Geoda Ancestral: crece con la Fuerza de todos los que están jugando.
+function Reglas.vidaAncestral(fuerzas: { number }): number
+	local def = Reglas.evento("JefeAncestral")
+	local jefe = if def then def.Jefe else nil
+	local vidaPorFuerza = if jefe then jefe.VidaPorFuerza else 250
+	local minima = if jefe then jefe.VidaMinima else 3000
+	local suma = 0
+	for _, f in fuerzas do
+		suma += f
+	end
+	return math.max(minima, math.floor(suma * vidaPorFuerza))
+end
+
+-- Exhibición social ---------------------------------------------------------------------------
+
+-- Semana de la clasificación ("S2961"): cambia los lunes a las 00:00 UTC.
+-- (El 1/1/1970 fue jueves y el primer lunes, el 5: se cuenta desde ahí.)
+function Reglas.semana(segundos: number): string
+	return "S" .. tostring(math.floor((segundos - 4 * 86400) / 604800))
+end
+
+function Reglas.titulo(id: string): Titulo?
+	for _, t in GameConfig.Titulos do
+		if t.Id == id then
+			return t
+		end
+	end
+	return nil
+end
+
+function Reglas.tituloDisponible(id: string, cobrados: { [string]: boolean }): boolean
+	local t = Reglas.titulo(id)
+	return t ~= nil and (t.Requiere == nil or cobrados[t.Requiere] == true)
+end
+
+-- Títulos que tiene un jugador, en el orden de GameConfig.Titulos.
+function Reglas.titulosDe(cobrados: { [string]: boolean }): { Titulo }
+	local r = {}
+	for _, t in GameConfig.Titulos do
+		if t.Requiere == nil or cobrados[t.Requiere] then
+			table.insert(r, t)
+		end
+	end
+	return r
+end
+
+-- La zona abierta más alta de un jugador.
+function Reglas.mejorZona(zonas: { [number]: boolean }): number
+	local mejor = 1
+	for n, abierta in zonas do
+		if abierta and GameConfig.Zonas[n] then
+			mejor = math.max(mejor, n)
+		end
+	end
+	return mejor
+end
+
+-- Monedas que vale una gema común de esa zona (base de los premios de eventos).
+function Reglas.valorComun(zona: number): number
+	local z = GameConfig.Zonas[zona]
+	return if z then z.Valor else 1
 end
 
 -- Zona más alta que se abre con esa Fuerza.

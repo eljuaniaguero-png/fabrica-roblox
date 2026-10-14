@@ -28,7 +28,12 @@ local Remotos = {
 	Aviso = evento("Aviso"), -- servidor -> cliente: texto corto para mostrar
 	-- Grupo 1
 	Anuncio = evento("Anuncio"), -- servidor -> todos: (texto, color hex) algo rarísimo pasó
-	Ajustes = evento("Ajustes"), -- cliente -> servidor: ("EfectosReducidos", boolean)
+	Ajustes = evento("Ajustes"), -- cliente -> servidor: (nombre del ajuste, boolean); ver Jugadores
+	-- Grupos 6 y 7
+	Hitos = evento("Hitos"), -- servidor -> cliente: { Descubrimientos.Hito } fuera de una revelación
+	Premio = evento("Premio"), -- servidor -> cliente: (monedas, posición?) "+X" que salta
+	ElegirTitulo = evento("ElegirTitulo"), -- cliente -> servidor: (Id del título)
+	ElegirVitrina = evento("ElegirVitrina"), -- cliente -> servidor: (Id de la gema)
 }
 
 carpeta.Parent = ReplicatedStorage

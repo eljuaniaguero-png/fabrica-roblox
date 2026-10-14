@@ -65,11 +65,8 @@ local function crearCartel(m: Model, roca: BasePart): (BillboardGui, Frame, Text
 	lista.Parent = b
 
 	if exotica and mod then
-		local linea = Estilo.texto(
-			Estilo.icono(Reglas.partes(mod.Id)) .. " " .. mod.Nombre,
-			20,
-			Color3.fromHex(mod.Color)
-		)
+		local linea =
+			Estilo.conIconos(Reglas.partes(mod.Id), mod.Nombre, 20, Color3.fromHex(mod.Color))
 		linea.LayoutOrder = 1
 		linea.Parent = b
 	end

@@ -3,8 +3,9 @@
 -- guardada en tu mochila. Según qué tan especial es:
 --   Común (y geoda normal): un cartelito corto abajo, sin cortar el juego.
 --   Rara o mejor, o geoda exótica: la geoda tiembla, destello blanco, temblor de cámara y la
---   gema en grande con rayos, su rareza, cuántas son, el cartel de suerte ("🍀 x2,06 Suerte ·
---   1 en 194") y "¡NUEVA!" si es la primera vez.
+--   gema en grande con rayos, su rareza (con degradé; arcoíris en las Míticas), cuántas son, el
+--   cartel de suerte ("x2,06 Suerte · 1 en 194", con el ícono del trébol) y "¡NUEVA!" si es la
+--   primera vez.
 --   Después, en fila: colecciones y logros que se completaron con esa gema (descubrimiento en
 --   cadena), cada uno con su premio.
 -- Con "Efectos reducidos" no hay destello ni temblor y la tarjeta es más simple.
@@ -66,7 +67,7 @@ type Datos = {
 	Suerte: number,
 	UnoEn: number,
 	Nueva: boolean,
-	Hitos: { Hito }?,
+	Hitos: { Avisos.Hito }?,
 }
 
 -- Efectos de pantalla -----------------------------------------------------------------------
@@ -122,7 +123,7 @@ end
 
 -- Tarjeta de la gema --------------------------------------------------------------------------
 
-local function chip(texto: string, color: Color3): Frame
+local function chip(texto: string, color: Color3, iconos: { string }?): Frame
 	local f = Instance.new("Frame")
 	f.AutomaticSize = Enum.AutomaticSize.XY
 	f.Size = UDim2.fromOffset(0, 0)
@@ -133,7 +134,8 @@ local function chip(texto: string, color: Color3): Frame
 	relleno.PaddingLeft, relleno.PaddingRight = UDim.new(0, 14), UDim.new(0, 14)
 	relleno.PaddingTop, relleno.PaddingBottom = UDim.new(0, 4), UDim.new(0, 6)
 	relleno.Parent = f
-	Estilo.texto(texto, 24).Parent = f
+	local contenido = Estilo.conIconos(iconos or {}, texto, 24)
+	contenido.Parent = f
 	return f
 end
 
@@ -226,6 +228,11 @@ local function tarjeta(d: Datos, reducidos: boolean)
 	)
 	titulo.LayoutOrder = 1
 	titulo.Parent = lista
+	if mitica then
+		Estilo.degradado(titulo, { "#FF4D5E", "#FFC93C", "#4CD964", "#2EF2FF", "#9B4DFF" }, 0)
+	else
+		Estilo.degradado(titulo, { "#FFFFFF", rareza.Color, rareza.Color })
+	end
 	local nombre = Estilo.texto(gema.Nombre .. "  x" .. Formato.corto(d.Unidades), 36)
 	nombre.LayoutOrder = 2
 	nombre.Parent = lista
@@ -239,17 +246,14 @@ local function tarjeta(d: Datos, reducidos: boolean)
 	enFila.Padding = UDim.new(0, 10)
 	enFila.Parent = fila
 	fila.Parent = lista
-	chip(
-		"🍀 " .. Formato.suerte(d.Suerte) .. " Suerte · " .. Formato.unoEn(d.UnoEn),
-		Color3.fromHex("#2DBA2D")
-	).Parent =
-		fila
+	local suerte = Formato.suerte(d.Suerte) .. " Suerte · " .. Formato.unoEn(d.UnoEn)
+	chip(suerte, Color3.fromHex("#2DBA2D"), { "Trebol" }).Parent = fila
 	if mod and Reglas.esExotica(mod.Id) then
-		local texto = Estilo.icono(Reglas.partes(mod.Id)) .. " " .. mod.Nombre .. " x" .. mod.Premio
-		chip(texto, Color3.fromHex(mod.Color)).Parent = fila
+		local texto = mod.Nombre .. " x" .. mod.Premio
+		chip(texto, Color3.fromHex(mod.Color), Reglas.partes(mod.Id)).Parent = fila
 	end
 	if d.Nueva then
-		local nueva = chip("¡NUEVA EN EL ÍNDICE!", Color3.fromHex("#FFC93C"))
+		local nueva = chip("¡NUEVA EN EL ÍNDICE!", Color3.fromHex("#FFC93C"), { "Chispa" })
 		nueva.LayoutOrder = 4
 		nueva.Parent = lista
 	end
@@ -298,27 +302,6 @@ local function cartelito(d: Datos)
 	end)
 end
 
--- Hitos de la cadena: colecciones y logros, en fila después de la gema.
-local function hitos(lista: { Hito })
-	for _, h in lista do
-		local premio = {}
-		if h.Monedas then
-			table.insert(premio, "+" .. Formato.corto(h.Monedas) .. " Monedas")
-		end
-		if h.Suerte then
-			table.insert(premio, "+" .. Formato.suerte(h.Suerte):sub(2) .. " Suerte para siempre")
-		end
-		-- SONIDO: logro o colección completada
-		Sonidos.tocar(GameConfig.Sonidos.Logro, if h.Coleccion then 1.1 else 1)
-		Avisos.mostrar({
-			Titulo = if h.Coleccion then "¡Colección completa!" else "¡Logro desbloqueado!",
-			Texto = h.Nombre .. " · " .. table.concat(premio, " · "),
-			Color = Color3.fromHex(if h.Coleccion then "#B04DFF" else "#FFC93C"),
-			Duracion = 3,
-		})
-	end
-end
-
 local cola: { Datos } = {}
 local ocupado = false
 
@@ -345,7 +328,7 @@ local function procesar(d: Datos)
 		tarjeta(d, reducidos)
 	end
 	if d.Hitos and #d.Hitos > 0 then
-		hitos(d.Hitos)
+		Avisos.hitos(d.Hitos) -- colecciones y logros, en fila después de la gema
 	end
 end
 
