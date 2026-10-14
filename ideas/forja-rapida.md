@@ -139,9 +139,9 @@ Ritmo medido con `lune run forja-rapida/pruebas/simular` (un jugador que no para
 De las capturas se toma el estilo, no el contenido: cielo celeste brillante, piso verde lima con studs, rocas tipo vóxel (cubitos) apoyadas en un nido de escombros, cartel arriba de cada geoda con nombre, rareza y barra de vida ("2/10 PV"), destello blanco al revelar con el cartel de suerte ("🍀 x2,06 Suerte"), botones gordos con borde oscuro y texto blanco con contorno, contador grande abajo a la izquierda con el "+X" que salta, barra de progreso arriba al centro. No se copian nombres, íconos ni personajes de esos juegos.
 
 - **Modelos 3D**: hechos en Blender con `forja-rapida/arte/scripts/modelos.py`, estilo vóxel. Cada geoda tiene cinco mallas (Roca, Cristales, Base, Grietas y Grietas2) para que el juego las pinte según la zona y el modificador; las exóticas suman una textura de cubitos (`arte/texturas/`). Las auras (chispas, anillo, destellos) son efectos de Roblox. Muestras en `arte/renders/`.
-- **HUD y menús**: diseñados en Figma (link en el chat del 14/10/2026), con tres paletas para elegir.
+- **HUD y menús**: diseñados en Figma, archivo "Forja Rápida · HUD y menús" (https://www.figma.com/design/DZ114Em8TCx2WZPzRiPAeL). Pantallas: HUD de compu (1920×1080) y de celular (844×390, sin tapar el joystick ni el salto de Roblox), revelación Épica con aviso en cadena, Tienda (Fuerza, Amuletos con "qué cambia" en números, Picos), Mochila/Banco, Índice con probabilidades (suman 100 %), avisos, carteles por modificador, botón de efectos y tres paletas para elegir. Letra: Lilita One en Figma; en Roblox, FredokaOne (la más parecida que trae Roblox).
 
-Guía de estilo: **pendiente** (punto de control 2: elegir paleta en Figma).
+Guía de estilo: **pendiente** (punto de control 2: elegir paleta A · Pradera, B · Caramelo o C · Noche volcánica en Figma). Hasta que elijas, todo usa la A, que es la de tus capturas.
 
 ## Afuera del prototipo
 
