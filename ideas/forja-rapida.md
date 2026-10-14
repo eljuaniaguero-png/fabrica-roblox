@@ -1,79 +1,118 @@
 # Forja Rápida — ficha del prototipo
 
-Origen: documento de diseño de Juani (chat del 14/10/2026) + 3 capturas de referencia.
+Origen: documento de diseño de Juani (chat del 14/10/2026, versión 2: geodas, modificadores exóticos y revelación por suerte) + 5 capturas de referencia. Reemplaza a la versión 1 (rocas que daban Fuerza y Banco de Fuerza por Monedas).
 Estado: **borrador, esperando OK** (punto de control 1).
-Carpeta: `forja-rapida/` (código en `forja-rapida/src/`, Rojo con `rojo serve forja-rapida`). Place propio en Studio.
+Carpeta: `forja-rapida/` (código en `forja-rapida/src/`, Rojo con `rojo serve forja-rapida`, puerto 34874). Place propio en Studio.
 
 ## Concepto
 
-Simulador de clics. Golpeás una roca y ganás Fuerza. La Fuerza sirve para dos cosas: abrir puertas a zonas nuevas (hay que *tenerla*) o cambiarla por Monedas en el Banco (100 Fuerza = 1 Moneda) para comprar picos mejores. La gracia es decidir: ¿gasto o guardo para la próxima puerta?
+Simulador de minería con gacha. En el mapa nacen geodas con vida. Les pegás con el pico hasta romperlas y, al romperse, la geoda tiembla, se pone blanca y revela una gema adentro: Común, Rara, Épica, Legendaria o Mítica. Qué tan rara sale depende de tu Suerte. Algunas geodas nacen "exóticas" (Lava, Neón, Dorada o del Vacío) y dan muchas más gemas. Las gemas se venden en el Banco por Monedas, y con las Monedas comprás Fuerza, amuletos de Suerte y picos. Con más Fuerza se abren biomas nuevos, con geodas más duras pero gemas mucho mejores.
 
 ## Loop de 30 segundos
 
-1. Tocás la roca: salta un "+5", la roca se aplasta un poco, vuelan chispas y el personaje pega con el pico.
-2. Arriba, la barra hacia la próxima puerta se llena.
-3. Cuando te alcanza para un pico, aparece un aviso y una flecha en el piso te lleva al Banco y después a la Tienda.
-4. Pico nuevo → cada golpe da mucho más → volvés a la roca o cruzás la puerta hacia una roca que multiplica.
+1. Ves una geoda con su cartel ("Geoda Mediana · Exótica de Lava · 28/40 PV") y fuego alrededor. Le pegás: saltan números, baja la barra.
+2. Se rompe: tiembla la cámara, destello blanco, aparece la gema con su rareza y "🍀 x2,06 Suerte · 1 en 194".
+3. La gema va a la mochila. Cuando querés, vendés todo en el Banco y ves la pila de Monedas.
+4. Comprás un nivel de Fuerza, un amuleto o un pico, y volvés a pegarle más fuerte. Arriba, la barra te dice cuánta Fuerza falta para la próxima zona.
 
-## Sistemas del prototipo (5)
+## Sistemas del prototipo (6)
 
-1. **Golpe.** Tocar o clickear la roca. El cliente solo avisa "le pegué a esta roca"; el servidor revisa que sea una roca (tag `Roca`), que estés cerca (≤ 30 studs), que su zona esté abierta para vos y que no pases de 12 golpes por segundo. Suma Fuerza = poder del pico × multiplicador de la zona. Efectos: número que salta, roca que se aplasta, chispas, golpe del pico, `-- SONIDO:` golpe.
-2. **Banco y Tienda de picos.** Dos puestos en la plaza de inicio. Banco: "Canjear todo" y "Canjear la mitad" (lo que sobra por debajo de 100 queda como Fuerza); muestra cuánto pide la próxima puerta para que decidas. Tienda: 5 picos que se compran en orden; al comprar se equipa solo (siempre usás el mejor). El pico se ve en la mano.
-3. **Zonas y puertas.** 5 zonas en fila, separadas por barreras de energía con el requisito escrito arriba. Si llegás a la barrera con la Fuerza suficiente, se abre para siempre (no gasta la Fuerza). Si no, te frena y dice "Te faltan X". El servidor también controla: si aparecés en una zona que no abriste, volvés a la plaza.
-4. **HUD y guía.** Fuerza y Monedas grandes abajo a la izquierda; barra "Próxima puerta" arriba; tres botones de viaje arriba al centro (Banco · Mina · Tienda, donde Mina te lleva a la roca de tu mejor zona); cartel central "¡Golpeá la roca!" y flecha en el piso que guía al jugador nuevo: roca → banco → tienda → puerta. Fuerza y Monedas también en la tabla de jugadores (leaderstats).
-5. **Guardado.** ProfileStore (bloqueo de sesión, autoguardado, al salir y al cerrar el servidor). Guarda Fuerza, Monedas, picos, zonas abiertas y Fuerza total histórica (para tablas de récords más adelante).
+1. **Geodas y golpe** (hecho en código, falta probar en Studio): `GeodeServerService.luau`. Nacen en los puntos del mapa con tag `PuntoGeoda` (atributo `Zona`, y `Jefe` para el punto de la geoda jefe). Tamaño al azar por peso, modificador exótico al azar. El servidor valida cada golpe: geoda viva, datos del jugador, máximo 8 golpes por segundo (ráfaga de 4), zona abierta para ese jugador y distancia ≤ 12 studs. El daño sale de su Fuerza, nunca del cliente. Al romperse, cada jugador que hizo al menos el 10 % de la vida (y siempre el que la rompió) tira su propia gema con su propia suerte. La gema entra a la mochila en el acto y recién después se manda la animación.
+2. **Revelación y efectos** (cliente): número flotante por golpe (BillboardGui con TweenService, salta y se desvanece), cartel de la geoda con nombre, modificador y barra de vida, aura del modificador, y al romperse: temblor de la roca, temblor de cámara, destello blanco, la gema girando con su color y rareza, y un cartel de suerte. Las míticas y las del Vacío con algo más grande.
+3. **Mochila, Banco y Tienda**: mochila sin límite; Banco con "Vender todo" (muestra el total antes); Tienda con tres pestañas: Fuerza (de a un nivel, muestra "+X Fuerza"), Amuletos (en orden, se suman) y Picos (en orden, siempre usás el mejor, se ve en la mano).
+4. **Zonas y puertas**: 5 biomas en fila, separados por barreras con la Fuerza pedida escrita arriba. Si llegás con la Fuerza suficiente se abre para siempre (no se gasta). Si no, te frena y dice "Te faltan X de Fuerza". El mapa se genera por código desde GameConfig.
+5. **HUD y guía** (diseñado en Figma): Fuerza, Suerte y Monedas abajo a la izquierda; barra "Próxima zona" arriba; botones de viaje arriba al centro (Banco · Mina · Tienda); botones Tienda, Mochila e Índice a la izquierda; Índice con las 25 gemas y la tabla de probabilidades con tu suerte actual; flecha en el piso para el jugador nuevo: geoda → banco → tienda → puerta.
+6. **Guardado**: ProfileStore (bloqueo de sesión, autoguardado, al salir y al cerrar el servidor). Guarda Monedas, nivel de Fuerza, pico, amuletos, mochila, Índice, zonas abiertas y geodas rotas.
 
-## Números (van en `Config.luau`)
+## Números (en `forja-rapida/src/shared/GameConfig.luau`)
 
-Son tus números con un ajuste: con +1 por golpe, el Pico de Piedra a 50 Monedas pide 5.000 golpes (unos 17 minutos tocando sin parar) antes de que cambie algo. Roblox mide cuánta gente se va en la primera partida, así que propongo que el primer pico llegue al minuto y que cada paso tarde un poco más que el anterior. Para eso cada zona multiplica lo que da su roca.
+Fórmulas (en `Reglas.luau`):
+- Fuerza (daño por golpe) = (1 + nivel) × 1,025^nivel × multiplicador del pico.
+- Vida de una geoda = vida del tamaño × dureza de la zona.
+- Suerte de una tirada = (1 + amuletos) × suerte de la zona × suerte del tamaño.
+- Gema: se prueba de la más rara a la más común; cada una sale si el azar < Suerte ÷ "1 en N". Con suerte ×2, "1 en 400" pasa a "1 en 200". Siempre suma 100 % (probado con 500.000 tiradas).
+- Gemas que te llevás = unidades del tamaño × premio del modificador. Monedas al vender = gemas × valor de la zona × valor de la rareza.
 
-| Pico | Fuerza por golpe | Precio en Monedas (tuyo → propuesto) |
+| Rareza | Sale con suerte ×1 | Valor |
 |---|---|---|
-| Madera | +1 | gratis |
-| Piedra | +5 | 50 → **3** |
-| Hierro | +20 | 250 → **100** |
-| Oro | +100 | 1.000 → **1.500** |
-| Legendario | +500 | 5.000 → **12.000** |
+| Común | 77,8 % | ×1 |
+| Rara | 1 en 5 (19,4 %) | ×3 |
+| Épica | 1 en 40 (2,5 %) | ×12 |
+| Legendaria | 1 en 400 (0,25 %) | ×60 |
+| Mítica | 1 en 5.000 (0,02 %) | ×500 |
 
-| Zona | La roca multiplica | Fuerza para abrir (tuyo → propuesto) |
+| Modificador | Nace | Gemas |
 |---|---|---|
-| 1 · Cantera | x1 | abierta |
-| 2 · Cañón de Piedra | x2 | 5.000 → **2.500** |
-| 3 · Cueva de Hierro | x3 | 50.000 → **40.000** |
-| 4 · Mina de Oro | x4 | 250.000 → **400.000** |
-| 5 · Cráter Legendario | x5 | 1.000.000 → **3.000.000** |
+| Normal | 87,1 % | ×1 |
+| 🔥 Exótica de Lava | 1 en 10 | ×3 |
+| ⚡ Exótica Neón | 1 en 40 | ×5 |
+| 🌟 Exótica Dorada | 1 en 150 | ×10 |
+| 🌌 Exótica del Vacío | 1 en 1.000 | ×25 |
 
-- Banco: 100 Fuerza = 1 Moneda (sin cambios).
-- Tope: 12 golpes por segundo (lo que pase de eso no cuenta).
-- Ritmo calculado a 5 golpes por segundo sin parar: Piedra al minuto 1 · Zona 2 al 2:40 · Hierro 5:10 · Zona 3 8:30 · Oro 14:40 · Zona 4 19:00 · Legendario 25:40 · Zona 5 30:40. Jugando normal, más o menos el doble.
+| Tamaño | Vida (zona 1) | Gemas | Suerte | Aparece |
+|---|---|---|---|---|
+| Pequeña | 10 | 1 | ×1 | 65 % |
+| Mediana | 35 | 3 | ×1,25 | 28 % |
+| Gigante | 130 | 10 | ×1,6 | 7 % |
+| JEFE | 1.500 | 80 | ×3 | un punto propio por zona, renace cada 90 s |
+
+| Zona | Fuerza para abrir | Dureza | Valor | Suerte | Gemas (común → mítica) |
+|---|---|---|---|---|---|
+| 1 · Pradera de Cuarzo | abierta | ×1 | 1 | ×1 | Cuarzo, Jaspe, Amatista, Esmeralda, Corazón de la Pradera |
+| 2 · Dunas de Ámbar | 25 | ×8 | 10 | ×1,5 | Ámbar, Citrino, Topacio, Ojo de Tigre, Sol de las Dunas |
+| 3 · Glaciar de Zafiro | 700 | ×120 | 300 | ×2,5 | Cristal de Hielo, Aguamarina, Zafiro, Diamante Azul, Lágrima del Glaciar |
+| 4 · Volcán de Rubí | 6.000 | ×1.100 | 4.000 | ×4 | Obsidiana, Granate, Rubí, Ópalo de Fuego, Corazón del Volcán |
+| 5 · Abismo Estelar | 40.000 | ×8.000 | 50.000 | ×7 | Meteorita, Ópalo Negro, Cuarzo Estelar, Nebulita, Núcleo Galáctico |
+
+| Tienda | Precios en Monedas |
+|---|---|
+| Fuerza | 10 el primer nivel, cada uno 12 % más caro (máximo 200 niveles) |
+| Picos | Madera ×1 (gratis) · Piedra ×2 (25) · Hierro ×4 (5.000) · Oro ×8 (250.000) · Cósmico ×16 (8 M) |
+| Amuletos | Trébol de Hierro +0,25 (300) · Herradura de Cobre +0,5 (20.000) · Estrella Fugaz +1 (1,5 M) · Ojo de Dragón +2 (60 M) · Corona Cósmica +5 (3.000 M) |
+
+Ritmo medido con `lune run forja-rapida/pruebas/simular` (un jugador que no para, compra lo que más le rinde por moneda y vende al toque, con 15 % de tiempo extra por viajes):
+
+| Hito | A 4 golpes/s | A 2 golpes/s |
+|---|---|---|
+| Pico de Piedra | 1:12 | 2:06 |
+| Zona 2 | 2:11 | 3:23 |
+| Trébol de Hierro | 3:01 | 4:36 |
+| Pico de Hierro | 5:23 | 7:41 |
+| Zona 3 | 12:00 | 15:30 |
+| Pico de Oro | 14:20 | 18:50 |
+| Zona 4 | 31:40 | 39:40 |
+| Pico Cósmico | 35:00 | 44:40 |
+| Zona 5 | 1:14 h | 1:34 h |
+| Corona Cósmica | 2:10 h | 2:46 h |
 
 ## Decisiones (eran ambiguas, elegí lo más simple)
 
-- "Rocas más resistentes": no se rompen; cada zona tiene una roca más grande y vistosa que multiplica. Cualquier pico le pega a cualquier roca.
-- Las puertas piden Fuerza **actual** (no la histórica): así existe la decisión de gastar o guardar. Una vez abierta, queda abierta.
-- Banco y Tienda están solo en la plaza; los botones de viaje evitan caminar de vuelta.
-- El pico no es una herramienta de la mochila: va pegado a la mano, sin equipar ni desequipar.
-- En pantalla, los números grandes van cortos: 2,5K · 1,2M.
-- El mapa se genera por código (`GeneradorMapa.luau`) desde Config, así vive en git.
-- El código sigue la estructura de los otros juegos (Rojo con `src/server`, `src/client`, `src/shared`) en vez de scripts sueltos en Studio como decía el prompt. Remotos: Golpear, Canjear, ComprarPico y Viajar.
+- **Fuerza = daño por golpe.** Es un solo número: las mejoras de Fuerza lo suben, el pico lo multiplica y las puertas lo piden. Cada nivel suma +1 y además un 2,5 % de todo (si no, no alcanza para zonas que piden 10 veces más).
+- **Las geodas son compartidas.** Si varios le pegan a la misma, cada uno que hizo al menos el 10 % de la vida se lleva su propia gema con su suerte. Así nadie te "roba" un Jefe y jugar juntos conviene.
+- **El modificador exótico multiplica la cantidad de gemas** (una Dorada da 10 gemas en vez de 1), no el valor. Así la mochila guarda solo "gema → cantidad" (25 tipos como máximo).
+- **Cada zona tiene sus 5 gemas** (25 en total) y mejor suerte. Las zonas altas dan gemas más valiosas y más raras.
+- **Los modificadores no dependen de tu suerte**: la geoda ya nace exótica y la ven todos.
+- **La gema entra a la mochila antes de la animación**: si salís en medio, no la perdés.
+- **Los picos y amuletos se compran en orden**, y siempre usás el mejor pico.
+- **Los números grandes se muestran cortos**: 2,5K · 1,2M · 3B.
+- El módulo de números se llama `GameConfig.luau` (como lo pediste); cumple el papel del `Config.luau` de los otros juegos. Los colores van en hex para que las pruebas con Lune lo puedan leer.
+- Nombres en código: `GeodeServerService` (como lo pediste); el resto de los módulos en español como en los otros juegos.
 
 ## Cómo se ve
 
-De las capturas se toma el estilo general, no el contenido: colores muy saturados, piso con studs, cielo celeste brillante, botones gordos con borde negro y texto blanco con contorno, íconos al lado del texto, contador grande abajo a la izquierda, botones de viaje arriba al centro y flecha guía en el piso. No se copian nombres, íconos ni personajes de esos juegos.
+De las capturas se toma el estilo, no el contenido: cielo celeste brillante, piso verde lima con studs, rocas tipo vóxel (cubitos) apoyadas en un nido de escombros, cartel arriba de cada geoda con nombre, rareza y barra de vida ("2/10 PV"), destello blanco al revelar con el cartel de suerte ("🍀 x2,06 Suerte"), botones gordos con borde oscuro y texto blanco con contorno, contador grande abajo a la izquierda con el "+X" que salta, barra de progreso arriba al centro. No se copian nombres, íconos ni personajes de esos juegos.
 
-Guía de estilo: **pendiente** (punto de control 2). Tres muestras dentro de esa familia:
-- A · Pradera: verde lima, amarillo y celeste (captura 1).
-- B · Pileta: rojo, azul y cian (captura 2).
-- C · Caramelo: amarillo, rosa y violeta (captura 3).
+- **Modelos 3D**: hechos en Blender con scripts (`forja-rapida/arte/scripts/`), estilo vóxel. Cada geoda tiene tres mallas (Roca, Cristales, Base) para que el juego las pinte según la zona y el modificador. Los modificadores (fuego, chispas, brillo dorado, aura del vacío) son efectos de Roblox, no modelos.
+- **HUD y menús**: diseñados en Figma (link en el chat del 14/10/2026), con tres paletas para elegir.
 
-Modelos: el prototipo va con partes de Roblox (roca, picos, puertas). Blender para la roca y los picos cuando el loop demuestre que es divertido (GUIA, sección 5). Figma no hace falta: el HUD se arma directo en Studio imitando las capturas.
+Guía de estilo: **pendiente** (punto de control 2: elegir paleta en Figma).
 
 ## Afuera del prototipo
 
-- Robux: ni compras ni pases. Como el juego no tiene azar, vender Monedas más adelante no cae en la regla de ítems aleatorios pagos, salvo que se sumen huevos o mascotas.
-- Renacer (rebirth), mascotas, auto-clic, tablas de récords, analítica y eventos.
-- Sonidos definitivos (quedan marcados con `-- SONIDO:`) y modelos de Blender.
+- Robux: ni compras ni pases. **Si alguna vez se venden Monedas por Robux**: romper geodas es gratis (no se paga por tirar), pero igual el Índice muestra siempre la tabla de probabilidades con tu suerte actual (GUIA, sección 6), así queda cubierto. Antes de vender Monedas, revisar la regla de ítems aleatorios pagos.
+- Renacer (rebirth), mascotas, auto-golpe, límite de mochila, tablas de récords, analítica y eventos.
+- Sonidos definitivos (quedan marcados con `-- SONIDO:` y los IDs vacíos en GameConfig).
 
 ## Prueba que va a hacer Claude
 
-Jugador nuevo: golpea, canjea, compra el Pico de Piedra, abre la Zona 2 y le pega a su roca. No se puede pegarle a la roca de una zona cerrada ni pasar de 12 golpes por segundo. Salir y volver: sigue todo. Captura en compu y en celular.
+Jugador nuevo: rompe geodas de la zona 1, ve la revelación, vende, compra el Pico de Piedra y niveles de Fuerza, abre la Zona 2. No puede pegarle a una geoda de una zona cerrada, ni desde lejos, ni más de 8 veces por segundo. Dos jugadores rompen un Jefe juntos y los dos reciben gema. Salir y volver: sigue todo. Captura en compu y en celular.

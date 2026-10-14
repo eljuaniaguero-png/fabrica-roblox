@@ -9,11 +9,13 @@ case "$archivo" in
 esac
 [ -f "$archivo" ] || exit 0
 
-# StyLua y Selene leen su configuración de la carpeta donde corren: Mutant Lab tiene la suya.
-# (Si StyLua corre en otra carpeta, usa el ancho de línea por defecto y desordena el código.)
+# StyLua y Selene leen su configuración de la carpeta donde corren: Mutant Lab y Forja Rápida
+# tienen la suya. (Si StyLua corre en otra carpeta, usa el ancho de línea por defecto y
+# desordena el código.)
 raiz="${CLAUDE_PROJECT_DIR:-.}"
 case "$archivo" in
 *mutant-lab*) raiz="$raiz/mutant-lab" ;;
+*forja-rapida*) raiz="$raiz/forja-rapida" ;;
 esac
 (cd "$raiz" && stylua "$archivo") 2>&1 >/dev/null
 

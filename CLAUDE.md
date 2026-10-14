@@ -11,16 +11,18 @@ Esto vale para todas las respuestas, también las cortas, las preguntas y los in
 
 ## Varios juegos en esta carpeta
 
-Hay dos juegos. Cada uno tiene su propio código, su propio archivo de Rojo y su propio place de Studio. Nunca mezcles archivos de uno con el otro.
+Hay tres juegos. Cada uno tiene su propio código, su propio archivo de Rojo y su propio place de Studio. Nunca mezcles archivos de uno con el otro.
 
 | Juego | Código | Proyecto de Rojo | Ficha |
 |---|---|---|---|
 | Pisada Sonora | `src/` (en la raíz) | `default.project.json` | `ideas/pisada-sonora.md` |
 | Mutant Lab | `mutant-lab/src/` | `mutant-lab/default.project.json` | `ideas/mutant-lab.md` |
+| Forja Rápida | `forja-rapida/src/` | `forja-rapida/default.project.json` | `ideas/forja-rapida.md` |
 
 - El usuario dice al principio de cada pedido en qué juego trabaja. Si no lo dice y no es obvio, preguntá antes de tocar nada.
 - Cuando trabajes en Mutant Lab, todo lo que este archivo dice de `src/` vale para `mutant-lab/src/`: el código va ahí, y los chequeos son `stylua mutant-lab/src` y `selene mutant-lab/src`. No toques el `src/` de la raíz.
 - Para Mutant Lab, Rojo se levanta con `rojo serve mutant-lab`. Solo puede haber un `rojo serve` corriendo a la vez.
+- Forja Rápida funciona igual que Mutant Lab, con su carpeta `forja-rapida/` (`rojo serve forja-rapida`, `stylua forja-rapida/src`, `selene forja-rapida/src`). Sus números van en `forja-rapida/src/shared/GameConfig.luau` y sus pruebas de lógica con `lune run forja-rapida/pruebas/reglas`.
 - Antes de construir por MCP, listá los Studios conectados y confirmá que el place abierto es el del juego en el que estás trabajando. Si está abierto el del otro juego, frená y avisá.
 - Todo lo que se pague con Robux sigue las reglas de `ideas/monetizacion.md`.
 

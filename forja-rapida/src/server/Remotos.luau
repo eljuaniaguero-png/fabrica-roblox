@@ -1,0 +1,33 @@
+--!strict
+-- Crea los remotos que usan el cliente y el servidor (ReplicatedStorage.Remotos).
+
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+
+local carpeta = Instance.new("Folder")
+carpeta.Name = "Remotos"
+
+local function evento(nombre: string): RemoteEvent
+	local r = Instance.new("RemoteEvent")
+	r.Name = nombre
+	r.Parent = carpeta
+	return r
+end
+
+-- Para avisos que se repiten mucho y pueden perderse sin problema (números flotantes).
+local function eventoRapido(nombre: string): UnreliableRemoteEvent
+	local r = Instance.new("UnreliableRemoteEvent")
+	r.Name = nombre
+	r.Parent = carpeta
+	return r
+end
+
+local Remotos = {
+	Golpear = evento("Golpear"), -- cliente -> servidor: (geoda: Model) "le pegué a esta geoda"
+	Golpe = eventoRapido("Golpe"), -- servidor -> cliente: (geoda, daño, vida que le queda)
+	Revelacion = evento("Revelacion"), -- servidor -> cliente: GeodeServerService.Revelacion
+	Aviso = evento("Aviso"), -- servidor -> cliente: texto corto para mostrar
+}
+
+carpeta.Parent = ReplicatedStorage
+
+return Remotos
