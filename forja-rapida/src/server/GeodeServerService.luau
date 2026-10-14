@@ -3,6 +3,8 @@
 --
 -- Mapa: cada parte con el tag "PuntoGeoda" es un lugar donde nace una geoda. Atributos del
 -- punto: Zona (número, obligatorio) y Jefe (true para el punto de la GEODA JEFE de la zona).
+-- Grupo 3: Tamano (fijo, para las vetas ocultas y la Dimensión Prisma) y Secreto (número de
+-- bioma: solo le pueden pegar los que abrieron su puerta secreta).
 -- Las geodas van a workspace.Geodas, con el tag "Geoda" y estos atributos (el cliente los lee
 -- para el cartel, la barra de vida y los efectos): Zona, Tamano, Modificador, Vida, VidaMax y
 -- Rota (true mientras se reproduce la revelación).
@@ -60,6 +62,7 @@ type Estado = {
 	Danio: { [Player]: number }, -- cuánto le hizo cada uno
 	Especial: boolean, -- la trae un evento: no vuelve a nacer
 	ParteParaPremio: number,
+	Secreto: number?, -- Grupo 3: está detrás de la puerta secreta de ese bioma
 }
 
 local G = GameConfig.Golpe
@@ -127,9 +130,16 @@ local function premiar(jugador: Player, e: Estado): boolean
 	end
 	-- la Ancestral da gemas de la mejor zona de cada uno; las demás, de su zona
 	local zonaGema = if e.Tamano == "Ancestral" then Reglas.mejorZona(d.Zonas) else e.Zona
-	local suerte = Reglas.suerteGeoda(Jugadores.suerte(d), zonaGema, e.Tamano) * Mundo.suerte()
-	local rareza = Reglas.tirar(GameConfig.Rarezas, suerte, azar)
-	local gema = Reglas.gemaDe(zonaGema, rareza)
+	local suerte = Reglas.suerteGeoda(Jugadores.suerte(d), zonaGema, e.Tamano)
+		* Mundo.suerte()
+		* Jugadores.bendicion(d)
+	-- Grupo 3: las geodas ocultas y prismáticas pueden dar su mineral secreto
+	local secreta, unoEnSecreta = Reglas.secretaDe(e.Tamano, zonaGema)
+	local esSecreta = secreta ~= nil and azar() < 1 / unoEnSecreta
+	local rareza = if esSecreta and secreta
+		then secreta.Rareza
+		else Reglas.tirar(GameConfig.Rarezas, suerte, azar)
+	local gema = if esSecreta then secreta else Reglas.gemaDe(zonaGema, rareza)
 	if not gema then
 		warn(("[Geodas] no hay gema %s en la zona %d"):format(rareza, zonaGema))
 		return false
@@ -140,7 +150,9 @@ local function premiar(jugador: Player, e: Estado): boolean
 	)
 	local nueva = Jugadores.agregarGema(jugador, gema.Id, unidades)
 	local hitos = Descubrimientos.registrar(jugador, e.Modificador, rareza)
-	local chance = Reglas.probabilidades(GameConfig.Rarezas, suerte)[rareza]
+	local chance = if esSecreta
+		then 1 / unoEnSecreta
+		else Reglas.probabilidades(GameConfig.Rarezas, suerte)[rareza]
 	local r = Reglas.rareza(rareza)
 	if r and rarezaIndice(rareza) >= RAREZA_ANUNCIO then
 		Anuncios.enviar(
@@ -230,6 +242,9 @@ local function alGolpear(jugador: Player, geoda: unknown)
 	if not d.Zonas[e.Zona] then
 		return -- zona cerrada para este jugador
 	end
+	if e.Secreto and not d.Secretos[e.Secreto] then
+		return -- veta oculta detrás de una puerta que no abrió
+	end
 	if not estaCerca(jugador, e) then
 		return
 	end
@@ -282,6 +297,9 @@ local function crear(
 		ParteParaPremio = if tamano == "Ancestral"
 			then G.ParteParaPremioAncestral
 			else G.ParteParaPremio,
+		Secreto = if typeof(punto:GetAttribute("Secreto")) == "number"
+			then punto:GetAttribute("Secreto") :: number
+			else nil,
 	}
 	modelo.Parent = carpeta
 	return modelo
@@ -293,7 +311,12 @@ nacer = function(punto: BasePart)
 		warn("[Geodas] el punto " .. punto:GetFullName() .. " no tiene un atributo Zona válido")
 		return
 	end
-	local tamano = if punto:GetAttribute("Jefe") == true then "Jefe" else Reglas.tamanoAlAzar(azar)
+	-- Grupo 3: un punto puede pedir un tamaño fijo (las vetas ocultas y la Dimensión Prisma)
+	local fijo = punto:GetAttribute("Tamano")
+	local tamano = if typeof(fijo) == "string" and Reglas.tamano(fijo)
+		then fijo
+		elseif punto:GetAttribute("Jefe") == true then "Jefe"
+		else Reglas.tamanoAlAzar(azar)
 	local bonos = Mundo.bonos()
 	local modificador = Reglas.tirar(GameConfig.Modificadores, 1, azar, bonos)
 	crear(punto, zona, tamano, modificador, Reglas.vidaGeoda(zona, tamano), false)

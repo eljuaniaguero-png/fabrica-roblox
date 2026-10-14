@@ -83,23 +83,35 @@ for _, g in GameConfig.Gemas do
 end
 for _, z in GameConfig.Zonas do
 	for _, r in GameConfig.Rarezas do
-		chequear(
-			Reglas.gemaDe(z.Numero, r.Id) ~= nil,
-			("falta la gema %s de la zona %d"):format(r.Id, z.Numero)
-		)
+		chequear(Reglas.gemaDe(z.Numero, r.Id) ~= nil, ("falta la gema %s de la zona %d"):format(r.Id, z.Numero))
 	end
 end
-chequear(#GameConfig.Gemas == #GameConfig.Zonas * #GameConfig.Rarezas, "sobran gemas")
+local comunes, secretas = 0, 0
+for _, g in GameConfig.Gemas do
+	if g.Secreta then
+		secretas += 1
+	else
+		comunes += 1
+	end
+end
+chequear(comunes == #GameConfig.Zonas * #GameConfig.Rarezas, "sobran gemas")
+-- Grupo 3: un mineral secreto por bioma (más la Prismita) que nunca sale al tirar la rareza
+for _, z in GameConfig.Zonas do
+	local s = Reglas.gemaSecreta(z.Numero)
+	chequear(s ~= nil and s.Secreta == true and s.Zona == z.Numero, "falta la gema secreta de la zona " .. z.Numero)
+	for _, r in GameConfig.Rarezas do
+		local g = Reglas.gemaDe(z.Numero, r.Id)
+		chequear(g ~= nil and not g.Secreta, "una secreta sale al tirar en la zona " .. z.Numero)
+	end
+end
+chequear(secretas == #GameConfig.Zonas + 1, "tienen que ser 6 secretas: " .. secretas)
 
 -- 5. Zonas, picos y amuletos van en orden creciente.
 for i = 2, #GameConfig.Zonas do
 	local a, b = GameConfig.Zonas[i - 1], GameConfig.Zonas[i]
 	chequear(b.Numero == i, "zona " .. i .. " mal numerada")
 	chequear(b.FuerzaParaAbrir > a.FuerzaParaAbrir, "zona " .. i .. ": la puerta no pide más")
-	chequear(
-		b.Dureza > a.Dureza and b.Valor > a.Valor,
-		"zona " .. i .. ": no es más dura o no paga más"
-	)
+	chequear(b.Dureza > a.Dureza and b.Valor > a.Valor, "zona " .. i .. ": no es más dura o no paga más")
 	chequear(b.Suerte >= a.Suerte, "zona " .. i .. ": baja la suerte")
 end
 for nombre, lista in { Picos = GameConfig.Picos, Amuletos = GameConfig.Amuletos } do
@@ -110,23 +122,11 @@ end
 
 -- 6. Fórmulas.
 chequear(Reglas.fuerza(0, 1) == 1, "la Fuerza inicial no es 1")
-chequear(
-	Reglas.fuerza(4, 2) == math.floor(5 * 1.025 ^ 4 * 2),
-	"Fuerza nivel 4 con Pico de Piedra mal"
-)
-chequear(
-	Reglas.precioFuerza(0) == GameConfig.Fuerza.PrecioInicial,
-	"el primer nivel no cuesta el inicial"
-)
-chequear(
-	Reglas.precioFuerza(GameConfig.Fuerza.NivelMaximo) == nil,
-	"se puede pasar el nivel máximo"
-)
+chequear(Reglas.fuerza(4, 2) == math.floor(5 * 1.025 ^ 4 * 2), "Fuerza nivel 4 con Pico de Piedra mal")
+chequear(Reglas.precioFuerza(0) == GameConfig.Fuerza.PrecioInicial, "el primer nivel no cuesta el inicial")
+chequear(Reglas.precioFuerza(GameConfig.Fuerza.NivelMaximo) == nil, "se puede pasar el nivel máximo")
 chequear(Reglas.suerteJugador({}) == 1, "sin amuletos la suerte no es x1")
-chequear(
-	Reglas.suerteJugador({ Trebol = true, Herradura = true }) == 1.75,
-	"amuletos no suman bien"
-)
+chequear(Reglas.suerteJugador({ Trebol = true, Herradura = true }) == 1.75, "amuletos no suman bien")
 chequear(Reglas.vidaGeoda(1, "Pequena") == 10, "la geoda pequeña de la zona 1 no tiene 10 de vida")
 chequear(Reglas.unidades("Mediana", "Vacio") == 75, "Mediana del Vacío no da 3 x 25")
 chequear(Reglas.valorGema("Cuarzo") == 1, "el Cuarzo no vale 1")
@@ -151,10 +151,7 @@ local combos = 0
 for _, m in GameConfig.Modificadores do
 	if m.Partes then
 		combos += 1
-		chequear(
-			#m.Partes == 2 and m.Partes[1] ~= m.Partes[2],
-			m.Id .. ": tiene que juntar dos distintos"
-		)
+		chequear(#m.Partes == 2 and m.Partes[1] ~= m.Partes[2], m.Id .. ": tiene que juntar dos distintos")
 		chequear(m.Color2 ~= nil, m.Id .. ": le falta Color2")
 		chequear(m.UnoEn > masRaraSimple, m.Id .. ": no es más rara que las simples")
 		for _, parte in m.Partes do
@@ -163,17 +160,11 @@ for _, m in GameConfig.Modificadores do
 			chequear(p == nil or m.Premio > p.Premio, m.Id .. ": no da más que " .. parte)
 		end
 	end
-	chequear(
-		type(m.Textura) == "string" and type(m.Sonido) == "string",
-		m.Id .. ": falta Textura o Sonido"
-	)
+	chequear(type(m.Textura) == "string" and type(m.Sonido) == "string", m.Id .. ": falta Textura o Sonido")
 end
 chequear(combos == 4, "hay " .. combos .. " combinaciones, se esperaban 4")
 chequear(Reglas.esExotica("Lava") and not Reglas.esExotica("Normal"), "esExotica mal")
-chequear(
-	Reglas.partes("VacioMidas")[2] == "Midas" and Reglas.partes("Neon")[1] == "Neon",
-	"partes mal"
-)
+chequear(Reglas.partes("VacioMidas")[2] == "Midas" and Reglas.partes("Neon")[1] == "Neon", "partes mal")
 
 -- 9. Logros: Ids únicos y todo lo que nombran existe.
 local logrosVistos: { [string]: boolean } = {}
@@ -194,10 +185,35 @@ for _, l in GameConfig.Logros do
 		chequear((n.Cuantas or 0) > 0, l.Id .. ": Cuantas tiene que ser > 0")
 	elseif n.Tipo == "Jefes" or n.Tipo == "Eventos" then
 		chequear((n.Cuantos or 0) > 0, l.Id .. ": Cuantos tiene que ser > 0")
+	elseif n.Tipo == "Distintas" then
+		chequear((n.Cuantas or 0) > 0 and (n.Cuantas or 0) <= #GameConfig.Gemas, l.Id .. ": Cuantas fuera de rango")
+	elseif n.Tipo == "Secretas" then
+		chequear((n.Cuantas or 0) > 0 and (n.Cuantas or 0) <= secretas, l.Id .. ": pide más secretas de las que hay")
+	elseif n.Tipo == "Lista" then
+		for _, id in n.Ids or {} do
+			chequear(Reglas.gema(id) ~= nil, l.Id .. ": gema desconocida " .. id)
+		end
+	elseif n.Tipo == "Rarezas" then
+		for _, id in n.Ids or {} do
+			chequear(Reglas.rareza(id) ~= nil, l.Id .. ": rareza desconocida " .. id)
+		end
 	else
 		chequear(false, l.Id .. ": tipo desconocido " .. tostring(n.Tipo))
 	end
-	chequear(l.Premio.Monedas ~= nil or l.Premio.Suerte ~= nil, l.Id .. ": no tiene premio")
+	chequear(
+		l.Premio.Monedas ~= nil or l.Premio.Suerte ~= nil or l.Premio.Cosmetico ~= nil,
+		l.Id .. ": no tiene premio"
+	)
+	local c = l.Premio.Cosmetico
+	if c then
+		chequear(Reglas.cosmetico(c.Tipo, c.Id) ~= nil, l.Id .. ": cosmético desconocido " .. c.Tipo .. "/" .. c.Id)
+	end
+	if l.Museo then
+		chequear(
+			l.Dificultad == "Facil" or l.Dificultad == "Media" or l.Dificultad == "Dificil" or l.Dificultad == "Leyenda",
+			l.Id .. ": dificultad desconocida"
+		)
+	end
 end
 
 -- 10. La cadena de descubrimientos: cada logro sale una sola vez y en el momento justo.
@@ -223,15 +239,12 @@ chequear(ids(Reglas.logrosNuevos(e)) == "PrimeraExotica", "la primera exótica n
 e.Logros.PrimeraExotica = true
 chequear(#Reglas.logrosNuevos(e) == 0, "un logro cobrado vuelve a salir")
 e.Exoticas.Neon, e.Exoticas.Midas, e.Exoticas.Vacio = true, true, true
-chequear(
-	ids(Reglas.logrosNuevos(e)) == "ColeccionExotica",
-	"las 4 exóticas no completan la colección"
-)
+chequear(ids(Reglas.logrosNuevos(e)) == "ColeccionExotica", "las 4 exóticas no completan la colección")
 e.Exoticas.VacioMidas = true
 local conCombo = ids(Reglas.logrosNuevos(e))
 chequear(conCombo == "ColeccionExotica,PrimeraCombinacion", "combinación: salió " .. conCombo)
 for _, g in GameConfig.Gemas do
-	if g.Zona == 1 and g.Rareza ~= "Mitico" then
+	if g.Zona == 1 and g.Rareza ~= "Mitico" and not g.Secreta then
 		e.Indice[g.Id] = true
 	end
 end
@@ -241,13 +254,11 @@ e.Rarezas.Mitico = true
 e.GeodasRotas = 100
 local todo = ids(Reglas.logrosNuevos(e))
 chequear(
-	todo == "Picapiedras,ColeccionExotica,PrimeraCombinacion,Mitica,Coleccion1",
+	todo == "Picapiedras,ColeccionExotica,PrimeraCombinacion,Mitica,Coleccion1,Museo3,PraderaBrillante",
 	"cadena completa: salió " .. todo
 )
 chequear(
-	math.abs(
-		Reglas.suerteJugador({ Trebol = true }, { Mitica = true, ColeccionExotica = true }) - 1.7
-	) < 1e-9,
+	math.abs(Reglas.suerteJugador({ Trebol = true }, { Mitica = true, ColeccionExotica = true }) - 1.7) < 1e-9,
 	"la suerte de los logros no se suma"
 )
 
@@ -266,15 +277,9 @@ for _, caso in
 		{ -2500000, "-2,5M" },
 	}
 do
-	chequear(
-		Formato.corto(caso[1]) == caso[2],
-		("corto(%s) dio %s"):format(caso[1], Formato.corto(caso[1]))
-	)
+	chequear(Formato.corto(caso[1]) == caso[2], ("corto(%s) dio %s"):format(caso[1], Formato.corto(caso[1])))
 end
-chequear(
-	Formato.suerte(2.06) == "x2,06" and Formato.suerte(1) == "x1",
-	"Formato.suerte mal: " .. Formato.suerte(2.06)
-)
+chequear(Formato.suerte(2.06) == "x2,06" and Formato.suerte(1) == "x1", "Formato.suerte mal: " .. Formato.suerte(2.06))
 chequear(Formato.suerte(1.5) == "x1,5", "Formato.suerte(1.5) dio " .. Formato.suerte(1.5))
 chequear(Formato.unoEn(2427.3) == "1 en 2.427", "Formato.unoEn mal: " .. Formato.unoEn(2427.3))
 
@@ -285,16 +290,10 @@ for _, ev in GameConfig.Eventos.Lista do
 	eventosVistos[ev.Id] = true
 	chequear(ev.Duracion > 0 and ev.Peso > 0, ev.Id .. ": Duracion y Peso tienen que ser > 0")
 	for id, x in ev.Modificadores or {} do
-		chequear(
-			Reglas.modificador(id) ~= nil and x > 0,
-			ev.Id .. ": modificador desconocido " .. id
-		)
+		chequear(Reglas.modificador(id) ~= nil and x > 0, ev.Id .. ": modificador desconocido " .. id)
 	end
 	for id, x in ev.Unidades or {} do
-		chequear(
-			Reglas.modificador(id) ~= nil and x > 0,
-			ev.Id .. ": unidades de modificador desconocido " .. id
-		)
+		chequear(Reglas.modificador(id) ~= nil and x > 0, ev.Id .. ": unidades de modificador desconocido " .. id)
 	end
 end
 for _, id in
@@ -326,16 +325,10 @@ for _ = 1, 200000 do
 		cuentaLava += 1
 	end
 end
-chequear(
-	cerca(cuentaLava / 200000, conBono.Lava, 0.005),
-	"tirar con bonos no coincide con las probabilidades"
-)
+chequear(cerca(cuentaLava / 200000, conBono.Lava, 0.005), "tirar con bonos no coincide con las probabilidades")
 -- el evento al azar nunca repite el anterior
 for _ = 1, 2000 do
-	chequear(
-		Reglas.eventoAlAzar(azarLune, "Erupcion").Id ~= "Erupcion",
-		"se repitió el evento anterior"
-	)
+	chequear(Reglas.eventoAlAzar(azarLune, "Erupcion").Id ~= "Erupcion", "se repitió el evento anterior")
 end
 -- vida del Jefe Ancestral
 chequear(Reglas.vidaAncestral({}) == 3000, "la vida mínima del jefe no es 3000")
@@ -345,25 +338,16 @@ chequear(Reglas.mejorZona({ [1] = true, [3] = true }) == 3, "mejorZona mal")
 
 -- 13. Exhibición social (Grupo 7).
 chequear(Reglas.semana(1791763199) ~= Reglas.semana(1791763200), "la semana no cambia el lunes")
-chequear(
-	Reglas.semana(1791763200) == Reglas.semana(1791763200 + 6 * 86400),
-	"la semana cambia antes del lunes"
-)
+chequear(Reglas.semana(1791763200) == Reglas.semana(1791763200 + 6 * 86400), "la semana cambia antes del lunes")
 local titulosVistos: { [string]: boolean } = {}
 for _, t in GameConfig.Titulos do
 	chequear(not titulosVistos[t.Id], "título repetido: " .. t.Id)
 	titulosVistos[t.Id] = true
-	chequear(
-		t.Requiere == nil or Reglas.logro(t.Requiere) ~= nil,
-		t.Id .. ": pide un logro que no existe"
-	)
+	chequear(t.Requiere == nil or Reglas.logro(t.Requiere) ~= nil, t.Id .. ": pide un logro que no existe")
 	chequear(#t.Colores >= 1, t.Id .. ": sin colores")
 end
 chequear(#Reglas.titulosDe({}) == 1, "un jugador nuevo tiene más de un título")
-chequear(
-	Reglas.tituloDisponible("CazaJefes", { JefeAncestral1 = true }),
-	"el título de jefes no se desbloquea"
-)
+chequear(Reglas.tituloDisponible("CazaJefes", { JefeAncestral1 = true }), "el título de jefes no se desbloquea")
 chequear(not Reglas.tituloDisponible("CazaJefes", {}), "el título de jefes sale sin el logro")
 e.JefesDerrotados = 1
 e.EventosJugados = 5
@@ -390,10 +374,7 @@ chequear(niveles == 0, "se pasa del nivel máximo")
 local sig, n = Reglas.siguientePico(1)
 chequear(sig ~= nil and n == 2 and sig.Id == GameConfig.Picos[2].Id, "el pico que sigue al primero")
 chequear(Reglas.siguientePico(#GameConfig.Picos) == nil, "hay pico después del último")
-chequear(
-	(Reglas.siguienteAmuleto({}) :: any).Id == GameConfig.Amuletos[1].Id,
-	"el primer amuleto no es el primero"
-)
+chequear((Reglas.siguienteAmuleto({}) :: any).Id == GameConfig.Amuletos[1].Id, "el primer amuleto no es el primero")
 local todos = {}
 for _, a in GameConfig.Amuletos do
 	todos[a.Id] = true
@@ -414,6 +395,54 @@ for _, z in GameConfig.Zonas do
 	abiertas[z.Numero] = true
 end
 chequear(Reglas.proximaZona(abiertas) == nil, "hay próxima zona con todas abiertas")
+
+-- 15. Grupo 3: Museo, cosméticos y geodas ocultas.
+local m = {
+	Indice = {} :: { [string]: boolean },
+	Exoticas = {},
+	Rarezas = {} :: { [string]: boolean },
+	GeodasRotas = 0,
+	JefesDerrotados = 0,
+	EventosJugados = 0,
+	Logros = {},
+}
+local tiene, total = Reglas.progreso(Reglas.logro("Museo10") :: any, m)
+chequear(tiene == 0 and total == 10, "progreso del museo vacío")
+m.Indice.Cuarzo, m.Indice.Jaspe, m.Indice.Inventada = true, true, true
+tiene = Reglas.progreso(Reglas.logro("Museo3") :: any, m)
+chequear(tiene == 2, "cuenta gemas que no existen: " .. tiene)
+m.Indice.CuarzoLunar = true
+local nuevos = ids(Reglas.logrosNuevos(m))
+chequear(nuevos == "Museo3,PrimerSecreto", "museo: salió " .. nuevos)
+tiene, total = Reglas.progreso(Reglas.logro("Coleccion1") :: any, m)
+chequear(tiene == 2 and total == 5, "la colección 1 cuenta la secreta: " .. tiene .. "/" .. total)
+chequear(Reglas.tieneCosmetico("Pico", "Clasico", {}), "el pico clásico no lo tiene todo el mundo")
+chequear(not Reglas.tieneCosmetico("Aura", "Cuarzo", {}), "el aura de cuarzo sale sin la colección")
+chequear(Reglas.tieneCosmetico("Aura", "Cuarzo", { Coleccion1 = true }), "el aura de cuarzo no sale con la colección")
+chequear(not Reglas.tieneCosmetico("Aura", "Inventada", { Coleccion1 = true }), "aura inventada")
+for tipo, lista in Reglas.tiposCosmeticos() do
+	for _, c in lista do
+		chequear(
+			(tipo == "Pico" and c.Id == "Clasico")
+				or (tipo == "Vitrina" and c.Id == "Clasica")
+				or Reglas.logroDeCosmetico(tipo, c.Id) ~= nil,
+			"cosmético que no se puede ganar: " .. tipo .. "/" .. c.Id
+		)
+	end
+end
+local sec, unoEn = Reglas.secretaDe("Oculta", 3)
+chequear(
+	sec ~= nil and sec.Id == (Reglas.gemaSecreta(3) :: any).Id and unoEn > 1,
+	"la geoda oculta no da la secreta de su zona"
+)
+sec = Reglas.secretaDe("Prisma", 2)
+chequear(sec ~= nil and sec.Id == "Prismita", "la geoda prismática no da la Prismita")
+chequear(Reglas.secretaDe("Mediana", 1) == nil, "una geoda común da secretas")
+local col = Reglas.coleccionesMuseo()
+chequear(
+	#col >= 10 and col[1].Dificultad == "Facil" and col[#col].Dificultad == "Leyenda",
+	"colecciones del museo mal ordenadas"
+)
 
 if errores > 0 then
 	print(("%d pruebas fallaron"):format(errores))

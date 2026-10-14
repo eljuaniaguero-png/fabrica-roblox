@@ -29,6 +29,7 @@ export type Hito = {
 	Monedas: number?,
 	Suerte: number?,
 	Coleccion: boolean,
+	Cosmetico: string?, -- Grupo 3: lo que desbloquea ("Aura: Destellos de Cuarzo")
 }
 
 local pantalla = Estilo.pantalla("Avisos", 20)
@@ -117,6 +118,9 @@ function Avisos.hitos(lista: { Hito })
 		end
 		if h.Suerte then
 			table.insert(premio, "+" .. Formato.suerte(h.Suerte):sub(2) .. " Suerte para siempre")
+		end
+		if h.Cosmetico then
+			table.insert(premio, h.Cosmetico)
 		end
 		local texto = h.Nombre
 			.. " · "

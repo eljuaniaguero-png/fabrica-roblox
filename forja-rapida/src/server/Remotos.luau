@@ -38,6 +38,9 @@ local Remotos = {
 	Vender = evento("Vender"), -- cliente -> servidor: () vender toda la mochila
 	Comprar = evento("Comprar"), -- cliente -> servidor: ("Fuerza" | "FuerzaMax" | "Pico" | "Amuleto")
 	Compra = evento("Compra"), -- servidor -> cliente: (tipo, nombre) salió bien la compra o venta
+	-- Grupo 3
+	Equipar = evento("Equipar"), -- cliente -> servidor: (tipo de cosmético, Id o "" para sacarlo)
+	Secreto = evento("Secreto"), -- servidor -> cliente: ("Puerta" | "Portal" | "Altar" | "Cofre", zona)
 }
 
 carpeta.Parent = ReplicatedStorage

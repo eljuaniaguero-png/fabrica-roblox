@@ -82,6 +82,108 @@ local function estatua(gemaId: string): BasePart?
 	return p
 end
 
+-- Grupo 3: estilo de la vitrina y decoración (cosméticos del Museo).
+local function estiloVitrina(base: BasePart, id: string)
+	local c = Reglas.cosmetico("Vitrina", id) or Reglas.cosmetico("Vitrina", "Clasica")
+	if not c then
+		return
+	end
+	base.Color = Color3.fromHex(c.Colores[1] or "#2A2F4F")
+	local ok, m = pcall(function()
+		return (Enum.Material :: any)[c.Material or "SmoothPlastic"]
+	end)
+	base.Material = if ok and typeof(m) == "EnumItem"
+		then m :: Enum.Material
+		else Enum.Material.SmoothPlastic
+end
+
+local function adorno(
+	nombre: string,
+	tam: Vector3,
+	cf: CFrame,
+	color: string,
+	neon: boolean,
+	padre: Instance
+): Part
+	local p = Instance.new("Part")
+	p.Name = nombre
+	p.Size = tam
+	p.CFrame = cf
+	p.Color = Color3.fromHex(color)
+	p.Material = if neon then Enum.Material.Neon else Enum.Material.SmoothPlastic
+	p.Anchored = true
+	p.CanCollide, p.CanTouch, p.CanQuery = false, false, false
+	p.CastShadow = false
+	p.Parent = padre
+	return p
+end
+
+local function decorar(m: Model, base: BasePart, id: string)
+	local c = Reglas.cosmetico("Decoracion", id)
+	if not c then
+		return
+	end
+	local deco = Instance.new("Model")
+	deco.Name = "Decoracion"
+	local radio = math.max(base.ExtentsSize.X, base.ExtentsSize.Z) / 2 + 0.9
+	local piso = base.Position.Y - base.ExtentsSize.Y / 2
+	local cantidad = if id == "Llamas" then 4 else 6
+	for i = 1, cantidad do
+		local a = (i / cantidad) * math.pi * 2
+		local pos = Vector3.new(
+			base.Position.X + math.cos(a) * radio,
+			piso,
+			base.Position.Z + math.sin(a) * radio
+		)
+		local color = c.Colores[(i - 1) % #c.Colores + 1]
+		if id == "Flores" then
+			adorno(
+				"Tallo",
+				Vector3.new(0.2, 1, 0.2),
+				CFrame.new(pos + Vector3.new(0, 0.5, 0)),
+				"#3E9E22",
+				false,
+				deco
+			)
+			adorno(
+				"Flor",
+				Vector3.new(0.7, 0.3, 0.7),
+				CFrame.new(pos + Vector3.new(0, 1.1, 0)) * CFrame.Angles(0, a, 0),
+				color,
+				false,
+				deco
+			)
+		elseif id == "Cristalitos" then
+			local alto = 1 + (i % 3) * 0.5
+			adorno(
+				"Cristal",
+				Vector3.new(0.45, alto, 0.45),
+				CFrame.new(pos + Vector3.new(0, alto / 2, 0))
+					* CFrame.Angles(0.25 * math.cos(a), a, 0.25 * math.sin(a)),
+				color,
+				true,
+				deco
+			)
+		else
+			local llama = adorno(
+				"Llama",
+				Vector3.new(0.5, 1.2, 0.5),
+				CFrame.new(pos + Vector3.new(0, 0.6, 0)) * CFrame.Angles(0, a, 0),
+				color,
+				true,
+				deco
+			)
+			local fuego = Instance.new("Fire")
+			fuego.Size = 2
+			fuego.Heat = 4
+			fuego.Color = Color3.fromHex(c.Colores[1])
+			fuego.SecondaryColor = Color3.fromHex(c.Colores[2] or c.Colores[1])
+			fuego.Parent = llama
+		end
+	end
+	deco.Parent = m
+end
+
 local function exhibir(jugador: Player)
 	local base = asignadas[jugador]
 	local d = Jugadores.obtener(jugador)
@@ -118,6 +220,10 @@ local function exhibir(jugador: Player)
 			m.PrimaryPart = p
 			CollectionService:AddTag(p, "Estatua") -- el cliente la hace girar y flotar
 		end
+	end
+	estiloVitrina(base, d.Equipado.Vitrina or "Clasica")
+	if d.Equipado.Decoracion and d.Equipado.Decoracion ~= "" then
+		decorar(m, base, d.Equipado.Decoracion)
 	end
 	m.Parent = base
 end
@@ -392,6 +498,11 @@ end)
 
 -- Entrada y salida ----------------------------------------------------------------------------------
 
+-- Vuelve a armar la vitrina del jugador (cambió su gema, su estilo o su decoración).
+function Social.refrescar(jugador: Player)
+	exhibir(jugador)
+end
+
 function Social.alEntrar(jugador: Player)
 	local base = vitrinaLibre()
 	if base then
@@ -408,6 +519,7 @@ function Social.alSalir(jugador: Player)
 		if m then
 			m:Destroy()
 		end
+		estiloVitrina(base, "Clasica")
 	end
 	asignadas[jugador] = nil
 	ultimoPedido[jugador] = nil

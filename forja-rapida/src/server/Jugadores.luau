@@ -8,12 +8,17 @@
 --   Logros ("Picapiedras;Mitica"), Titulo (el que se muestra), Vitrina, JefesDerrotados,
 --   MayorDanioJefe, EventosJugados y los ajustes (EfectosReducidos, AnunciarHallazgos,
 --   VerAnuncios, VerTitulos).
+--   Grupo 3: Museo (JSON: gema -> { cantidad, primera vez }), Rarezas, Llaves ("1;3"),
+--   Secretos (puertas abiertas), Cofres, Aura, DisenoPico, EstiloVitrina, Decoracion y
+--   BendicionFin (hora del servidor).
 -- Fuerza y Monedas también van en la tabla de jugadores (leaderstats).
 
 local HttpService = game:GetService("HttpService")
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local Workspace = game:GetService("Workspace")
 
+local GameConfig = require(ReplicatedStorage.Shared.GameConfig)
 local Reglas = require(ReplicatedStorage.Shared.Reglas)
 local Remotos = require(script.Parent.Remotos)
 
@@ -39,6 +44,20 @@ export type Datos = {
 	Titulo: string?, -- el que eligió (nil = el último que desbloqueó)
 	Vitrina: string?, -- gema que eligió mostrar (nil = su hallazgo más raro)
 	Hallazgos: { Hallazgo }, -- sus mejores hallazgos, del más raro al menos raro
+	-- Grupo 3: Museo, secretos y cosméticos
+	Museo: { [string]: Ficha }, -- gema -> cuántas encontró en total y cuándo fue la primera
+	Llaves: { [number]: boolean }, -- llaves que tiene sin usar (una por bioma)
+	Secretos: { [number]: boolean }, -- puertas secretas que abrió
+	Cofres: { [string]: boolean }, -- cofres de tesoro que ya abrió
+	Equipado: { [string]: string }, -- cosmético elegido por tipo (Aura, Pico, Vitrina, Decoracion)
+	BendicionFin: number, -- hasta cuándo dura la bendición del altar (hora del servidor)
+	UltimoAltar: number, -- cuándo usó un altar por última vez (hora del servidor)
+}
+
+-- Lo que el Museo guarda de cada mineral.
+export type Ficha = {
+	Cantidad: number,
+	Primera: number, -- os.time() de la primera vez (0 = no se sabe)
 }
 
 -- Ajustes del jugador (nil = el valor por defecto).
@@ -82,6 +101,13 @@ local function nuevos(): Datos
 		Titulo = nil,
 		Vitrina = nil,
 		Hallazgos = {},
+		Museo = {},
+		Llaves = {},
+		Secretos = {},
+		Cofres = {},
+		Equipado = {},
+		BendicionFin = 0,
+		UltimoAltar = 0,
 	}
 end
 
@@ -137,6 +163,13 @@ function Jugadores.suerte(d: Datos): number
 	return Reglas.suerteJugador(d.Amuletos, d.Logros)
 end
 
+-- La bendición del altar (Grupo 3): multiplica la suerte mientras dura.
+function Jugadores.bendicion(d: Datos): number
+	return if Workspace:GetServerTimeNow() < d.BendicionFin
+		then GameConfig.Secretos.Altar.Suerte
+		else 1
+end
+
 -- El título que se muestra: el elegido (si todavía lo tiene) o el último que desbloqueó.
 function Jugadores.titulo(d: Datos): string
 	if d.Titulo and Reglas.tituloDisponible(d.Titulo, d.Logros) then
@@ -155,6 +188,12 @@ function Jugadores.agregarGema(jugador: Player, gema: string, cantidad: number):
 	d.Mochila[gema] = (d.Mochila[gema] or 0) + cantidad
 	local nueva = not d.Indice[gema]
 	d.Indice[gema] = true
+	local ficha = d.Museo[gema]
+	if ficha then
+		ficha.Cantidad += cantidad
+	else
+		d.Museo[gema] = { Cantidad = cantidad, Primera = os.time() }
+	end
 	d.GeodasRotas += 1
 	Jugadores.publicar(jugador)
 	return nueva
@@ -187,6 +226,21 @@ function Jugadores.publicar(jugador: Player)
 	jugador:SetAttribute("EventosJugados", d.EventosJugados)
 	jugador:SetAttribute("JefesDerrotados", d.JefesDerrotados)
 	jugador:SetAttribute("MayorDanioJefe", d.MayorDanioJefe)
+	-- Grupo 3
+	local museo = {}
+	for id, f in d.Museo do
+		museo[id] = { f.Cantidad, f.Primera }
+	end
+	jugador:SetAttribute("Museo", HttpService:JSONEncode(museo))
+	jugador:SetAttribute("Rarezas", claves(d.Rarezas))
+	jugador:SetAttribute("Llaves", claves(d.Llaves))
+	jugador:SetAttribute("Secretos", claves(d.Secretos))
+	jugador:SetAttribute("Cofres", claves(d.Cofres))
+	jugador:SetAttribute("Aura", d.Equipado.Aura or "")
+	jugador:SetAttribute("DisenoPico", d.Equipado.Pico or "Clasico")
+	jugador:SetAttribute("EstiloVitrina", d.Equipado.Vitrina or "Clasica")
+	jugador:SetAttribute("Decoracion", d.Equipado.Decoracion or "")
+	jugador:SetAttribute("BendicionFin", d.BendicionFin)
 	local stats = jugador:FindFirstChild("leaderstats")
 	if stats then
 		valor(stats, "Fuerza").Value = fuerza

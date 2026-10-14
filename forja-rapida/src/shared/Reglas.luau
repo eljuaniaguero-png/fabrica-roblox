@@ -15,6 +15,7 @@ type Evento = GameConfig.Evento
 type Titulo = GameConfig.Titulo
 type Pico = GameConfig.Pico
 type Amuleto = GameConfig.Amuleto
+type Cosmetico = GameConfig.Cosmetico
 
 -- Lo que hace falta para revisar los logros de un jugador (Reglas.logrosNuevos).
 export type EstadoLogros = {
@@ -52,10 +53,18 @@ for _, l in GameConfig.Logros do
 end
 local gemas: { [string]: Gema } = {}
 local gemaPorZona: { [number]: { [string]: Gema } } = {}
+local secretaPorZona: { [number]: Gema } = {}
 for _, g in GameConfig.Gemas do
 	gemas[g.Id] = g
-	gemaPorZona[g.Zona] = gemaPorZona[g.Zona] or {}
-	gemaPorZona[g.Zona][g.Rareza] = g
+	if g.Secreta then
+		-- las secretas no salen al tirar la rareza (solo en las vetas ocultas)
+		if not g.Lugar then
+			secretaPorZona[g.Zona] = g
+		end
+	else
+		gemaPorZona[g.Zona] = gemaPorZona[g.Zona] or {}
+		gemaPorZona[g.Zona][g.Rareza] = g
+	end
 end
 
 function Reglas.rareza(id: string): Rareza?
@@ -144,11 +153,19 @@ local function cumple(l: Logro, e: EstadoLogros): boolean
 	local n = l.Necesita
 	if n.Tipo == "Gemas" then
 		for _, g in GameConfig.Gemas do
-			if g.Zona == n.Zona and not e.Indice[g.Id] then
+			if g.Zona == n.Zona and not g.Secreta and not e.Indice[g.Id] then
 				return false
 			end
 		end
 		return true
+	elseif
+		n.Tipo == "Distintas"
+		or n.Tipo == "Lista"
+		or n.Tipo == "Secretas"
+		or n.Tipo == "Rarezas"
+	then
+		local tiene, total = Reglas.progreso(l, e)
+		return total > 0 and tiene >= total
 	elseif n.Tipo == "Modificadores" then
 		local cuantos = 0
 		local lista: { string } = n.Ids or {}
@@ -168,6 +185,64 @@ local function cumple(l: Logro, e: EstadoLogros): boolean
 		return e.EventosJugados >= (n.Cuantos or math.huge)
 	end
 	return false
+end
+
+-- Cuánto lleva un jugador de un logro o colección y cuánto pide (para las barras del Museo).
+function Reglas.progreso(l: Logro, e: EstadoLogros): (number, number)
+	local n = l.Necesita
+	if n.Tipo == "Gemas" then
+		local tiene, total = 0, 0
+		for _, g in GameConfig.Gemas do
+			if g.Zona == n.Zona and not g.Secreta then
+				total += 1
+				if e.Indice[g.Id] then
+					tiene += 1
+				end
+			end
+		end
+		return tiene, total
+	elseif n.Tipo == "Distintas" or n.Tipo == "Secretas" then
+		local tiene = 0
+		for id, si in e.Indice do
+			local g = gemas[id]
+			if si and g and (n.Tipo == "Distintas" or g.Secreta) then
+				tiene += 1
+			end
+		end
+		local total = n.Cuantas or 1
+		return math.min(tiene, total), total
+	elseif n.Tipo == "Lista" or n.Tipo == "Rarezas" then
+		local lista: { string } = n.Ids or {}
+		local tiene = 0
+		for _, id in lista do
+			if (n.Tipo == "Lista" and e.Indice[id]) or (n.Tipo == "Rarezas" and e.Rarezas[id]) then
+				tiene += 1
+			end
+		end
+		return tiene, #lista
+	elseif n.Tipo == "Modificadores" then
+		local tiene = 0
+		local ids: { string } = n.Ids or {}
+		for _, id in ids do
+			if e.Exoticas[id] then
+				tiene += 1
+			end
+		end
+		local total = n.Cuantos or 1
+		return math.min(tiene, total), total
+	elseif n.Tipo == "Rareza" then
+		return if n.Id and e.Rarezas[n.Id] then 1 else 0, 1
+	elseif n.Tipo == "Geodas" then
+		local total = n.Cuantas or 1
+		return math.min(e.GeodasRotas, total), total
+	elseif n.Tipo == "Jefes" then
+		local total = n.Cuantos or 1
+		return math.min(e.JefesDerrotados, total), total
+	elseif n.Tipo == "Eventos" then
+		local total = n.Cuantos or 1
+		return math.min(e.EventosJugados, total), total
+	end
+	return 0, 1
 end
 
 -- Logros que el jugador ya cumple y todavía no cobró, en el orden de GameConfig.Logros.
@@ -437,6 +512,89 @@ function Reglas.proximaZona(zonas: { [number]: boolean }): Zona?
 		end
 	end
 	return nil
+end
+
+-- Grupo 3: Museo, cosméticos y secretos -------------------------------------------------------
+
+-- El mineral secreto de un bioma (el de su veta oculta).
+function Reglas.gemaSecreta(zona: number): Gema?
+	return secretaPorZona[zona]
+end
+
+-- Si una geoda de ese tamaño puede dar un mineral secreto: cuál y con qué chance (1 en N).
+function Reglas.secretaDe(tamano: string, zona: number): (Gema?, number)
+	local t = tamanos[tamano]
+	if not t or not t.UnoEnSecreta then
+		return nil, 0
+	end
+	local g = if t.GemaSecreta then gemas[t.GemaSecreta] else secretaPorZona[zona]
+	return g, t.UnoEnSecreta
+end
+
+local LISTAS_COSMETICOS: { [string]: { Cosmetico } } = {
+	Aura = GameConfig.Cosmeticos.Auras,
+	Pico = GameConfig.Cosmeticos.Picos,
+	Vitrina = GameConfig.Cosmeticos.Vitrinas,
+	Decoracion = GameConfig.Cosmeticos.Decoraciones,
+}
+local POR_DEFECTO: { [string]: string } = { Pico = "Clasico", Vitrina = "Clasica" }
+
+-- Tipos de cosméticos ("Aura", "Pico", "Vitrina", "Decoracion") y su lista.
+function Reglas.tiposCosmeticos(): { [string]: { Cosmetico } }
+	return LISTAS_COSMETICOS
+end
+
+function Reglas.cosmetico(tipo: string, id: string): Cosmetico?
+	local lista: { Cosmetico } = LISTAS_COSMETICOS[tipo] or {}
+	for _, c in lista do
+		if c.Id == id then
+			return c
+		end
+	end
+	return nil
+end
+
+-- El logro (colección) que da ese cosmético, o nil si es de los que tiene todo el mundo.
+function Reglas.logroDeCosmetico(tipo: string, id: string): Logro?
+	for _, l in GameConfig.Logros do
+		local c = l.Premio.Cosmetico
+		if c and c.Tipo == tipo and c.Id == id then
+			return l
+		end
+	end
+	return nil
+end
+
+-- ¿Lo puede usar? Los clásicos sí; los demás, si cobró la colección que lo da.
+function Reglas.tieneCosmetico(tipo: string, id: string, cobrados: { [string]: boolean }): boolean
+	if not Reglas.cosmetico(tipo, id) then
+		return false
+	end
+	if POR_DEFECTO[tipo] == id then
+		return true
+	end
+	local l = Reglas.logroDeCosmetico(tipo, id)
+	return l ~= nil and cobrados[l.Id] == true
+end
+
+-- Las colecciones del Museo, de la más fácil a la más difícil.
+local ORDEN_DIFICULTAD = { Facil = 1, Media = 2, Dificil = 3, Leyenda = 4 }
+function Reglas.coleccionesMuseo(): { Logro }
+	local lista = {}
+	for _, l in GameConfig.Logros do
+		if l.Museo then
+			table.insert(lista, l)
+		end
+	end
+	table.sort(lista, function(a, b)
+		local da = ORDEN_DIFICULTAD[a.Dificultad or "Media"] or 2
+		local db = ORDEN_DIFICULTAD[b.Dificultad or "Media"] or 2
+		if da ~= db then
+			return da < db
+		end
+		return a.Id < b.Id
+	end)
+	return lista
 end
 
 return Reglas

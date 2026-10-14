@@ -7,6 +7,7 @@
 
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
+local GameConfig = require(ReplicatedStorage.Shared.GameConfig)
 local Reglas = require(ReplicatedStorage.Shared.Reglas)
 local Jugadores = require(script.Parent.Jugadores)
 
@@ -19,9 +20,26 @@ export type Hito = {
 	Monedas: number?,
 	Suerte: number?,
 	Coleccion: boolean, -- true si es una colección (completar el Índice de una zona, exóticas...)
+	Cosmetico: string?, -- Grupo 3: lo que desbloquea ("Aura: Destellos de Cuarzo")
+}
+
+local NOMBRE_TIPO: { [string]: string } = {
+	Aura = "Aura",
+	Pico = "Diseño de pico",
+	Vitrina = "Vitrina",
+	Decoracion = "Decoración",
 }
 
 local Descubrimientos = {}
+
+local function cosmetico(l: GameConfig.Logro): string?
+	local c = l.Premio.Cosmetico
+	local datos = c and Reglas.cosmetico(c.Tipo, c.Id)
+	if not c or not datos then
+		return nil
+	end
+	return (NOMBRE_TIPO[c.Tipo] or c.Tipo) .. ": " .. datos.Nombre
+end
 
 -- Cobra los logros que el jugador ya cumple y todavía no cobró (una sola vez cada uno).
 local function cobrar(jugador: Player, d: Jugadores.Datos): { Hito }
@@ -38,7 +56,10 @@ local function cobrar(jugador: Player, d: Jugadores.Datos): { Hito }
 				Descripcion = l.Descripcion,
 				Monedas = l.Premio.Monedas,
 				Suerte = l.Premio.Suerte,
-				Coleccion = l.Necesita.Tipo == "Gemas" or l.Id:sub(1, 9) == "Coleccion",
+				Coleccion = l.Museo == true
+					or l.Necesita.Tipo == "Gemas"
+					or l.Id:sub(1, 9) == "Coleccion",
+				Cosmetico = cosmetico(l),
 			})
 		end
 	end

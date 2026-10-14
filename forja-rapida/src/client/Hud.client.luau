@@ -11,6 +11,7 @@ local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local TweenService = game:GetService("TweenService")
 local UserInputService = game:GetService("UserInputService")
+local Workspace = game:GetService("Workspace")
 
 local Formato = require(ReplicatedStorage.Shared.Formato)
 local GameConfig = require(ReplicatedStorage.Shared.GameConfig)
@@ -32,7 +33,7 @@ for _, nombre in
 	{
 		"MenuTienda",
 		"MenuMochila",
-		"MenuIndice",
+		"MenuMuseo",
 		"MenuEventos",
 		"MenuVitrina",
 		"MenuClasificacion",
@@ -133,6 +134,44 @@ end
 recursos()
 Datos.alCambiar({ "Monedas", "Suerte", "Fuerza" }, recursos)
 
+-- Grupo 3: llaves sin usar y bendición del altar (solo se ven si hay).
+local pLlaves, tLlaves = Estilo.pildora("Candado", Estilo.Colores.Violeta, 210, 46)
+pLlaves.LayoutOrder = 5
+pLlaves.Visible = false
+pLlaves.Parent = derecha
+local pBendicion, tBendicion = Estilo.pildora("Chispa", Estilo.Colores.Amarillo, 250, 46)
+pBendicion.LayoutOrder = 6
+pBendicion.Visible = false
+pBendicion.Parent = derecha
+local function llaves()
+	local n = 0
+	for _ in Datos.conjunto("Llaves") do
+		n += 1
+	end
+	local antes = pLlaves.Visible
+	pLlaves.Visible = n > 0
+	tLlaves.Text = if n == 1 then "1 llave" else n .. " llaves"
+	if n > 0 and not antes then
+		saltar(pLlaves)
+	end
+end
+llaves()
+Datos.alCambiar({ "Llaves" }, llaves)
+task.spawn(function()
+	while true do
+		local falta = Datos.numero("BendicionFin") - Workspace:GetServerTimeNow()
+		pBendicion.Visible = falta > 0
+		if falta > 0 then
+			tBendicion.Text = ("%s · %d:%02d"):format(
+				Formato.suerte(GameConfig.Secretos.Altar.Suerte),
+				falta // 60,
+				math.floor(falta % 60)
+			)
+		end
+		task.wait(0.5)
+	end
+end)
+
 -- A la izquierda: menús ----------------------------------------------------------------------
 
 local izquierda = Instance.new("Frame")
@@ -193,7 +232,7 @@ end
 
 botonMenu(1, "Tienda", "Tienda", "Tienda", "Verde")
 botonMenu(2, "Mochila", "Mochila", "Mochila", "Naranja")
-botonMenu(3, "Indice", "Índice", "Libro", "Rosa")
+botonMenu(3, "Museo", "Museo", "Libro", "Rosa")
 botonMenu(4, "Vitrina", "Vitrina", "Corona", "Violeta")
 botonMenu(5, "Clasificacion", "Ranking", "Trofeo", "Amarillo")
 botonMenu(6, "Eventos", "Eventos", "Reloj", "Azul")
@@ -236,11 +275,11 @@ end
 avisoTienda()
 Datos.alCambiar({ "Monedas", "NivelFuerza", "Pico", "Amuletos" }, avisoTienda)
 
--- Índice: "!" cuando encontrás una gema nueva, hasta que lo abrís.
+-- Museo: "!" cuando encontrás una gema nueva, hasta que lo abrís.
 local vistas = #Datos.texto("Indice")
 Datos.alCambiar({ "Indice" }, function()
-	if #Datos.texto("Indice") > vistas and Ventanas.abierta() ~= "Indice" then
-		globito("Indice", "!")
+	if #Datos.texto("Indice") > vistas and Ventanas.abierta() ~= "Museo" then
+		globito("Museo", "!")
 	end
 end)
 
@@ -257,9 +296,9 @@ Ventanas.alCambiar(function(id: string?)
 	for nombre, b in botones do
 		Estilo.marcar(b.Boton, nombre == id, 26)
 	end
-	if id == "Indice" then
+	if id == "Museo" then
 		vistas = #Datos.texto("Indice")
-		globito("Indice", nil)
+		globito("Museo", nil)
 	end
 end)
 

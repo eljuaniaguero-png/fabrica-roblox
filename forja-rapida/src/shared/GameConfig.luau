@@ -45,6 +45,10 @@ export type Tamano = {
 	Escala: number, -- tamaño del modelo (1 = la pequeña)
 	Peso: number, -- qué tan seguido aparece en los puntos comunes (el Jefe tiene su propio punto)
 	Reaparicion: number, -- segundos hasta que nace otra en el mismo punto
+	-- Grupo 3: geodas de zonas ocultas. Con 1 en UnoEnSecreta dan la gema secreta (GemaSecreta, o
+	-- la de su zona si no dice) en vez de tirar la rareza.
+	UnoEnSecreta: number?,
+	GemaSecreta: string?,
 }
 
 export type Zona = {
@@ -64,6 +68,8 @@ export type Gema = {
 	Zona: number,
 	Rareza: string,
 	Color: string,
+	Secreta: boolean?, -- Grupo 3: solo sale en vetas ocultas, nunca en una geoda común
+	Lugar: string?, -- de dónde sale, si no es el bioma de su zona (el Museo lo muestra)
 }
 
 export type Logro = {
@@ -78,7 +84,20 @@ export type Logro = {
 		Id: string?,
 		Cuantas: number?,
 	},
-	Premio: { Monedas: number?, Suerte: number? },
+	Premio: { Monedas: number?, Suerte: number?, Cosmetico: { Tipo: string, Id: string }? },
+	-- Grupo 3: las que tienen Museo = true son colecciones y se ven en el Museo, con su dificultad
+	-- ("Facil", "Media", "Dificil" o "Leyenda").
+	Museo: boolean?,
+	Dificultad: string?,
+}
+
+-- Grupo 3: cosméticos que se ganan con colecciones del Museo (Premio.Cosmetico).
+export type Cosmetico = {
+	Id: string,
+	Nombre: string,
+	Colores: { string }, -- aura y decoración: sus colores; pico: { cabeza, mango }; vitrina: { color }
+	Material: string?, -- nombre de un Enum.Material (picos y vitrinas)
+	Forma: string?, -- auras: "Destellos", "Chispas" u "Orbita"
 }
 
 -- Un evento del mundo (Grupo 6). Lo que no se pone, no cambia.
@@ -113,6 +132,7 @@ export type Pico = {
 	Nombre: string,
 	Multiplicador: number,
 	Precio: number,
+	Color: string, -- color de la cabeza del pico que se ve en la mano (diseño Clásico)
 }
 
 -- Una pieza de la interfaz hecha con ForgeGUI (forja-rapida/arte/gui), subida a Roblox.
@@ -355,6 +375,30 @@ local GameConfig = {
 			Peso = 0,
 			Reaparicion = 0, -- no vuelve a nacer
 		},
+		-- Grupo 3: solo nacen en los puntos que lo dicen (atributo Tamano del punto)
+		{
+			Id = "Oculta",
+			Nombre = "Geoda Oculta",
+			Vida = 60,
+			Unidades = 4,
+			Suerte = 2,
+			Escala = 1.6,
+			Peso = 0,
+			Reaparicion = 25,
+			UnoEnSecreta = 6, -- la gema secreta de su zona
+		},
+		{
+			Id = "Prisma",
+			Nombre = "Geoda Prismática",
+			Vida = 90,
+			Unidades = 6,
+			Suerte = 3,
+			Escala = 1.9,
+			Peso = 0,
+			Reaparicion = 30,
+			UnoEnSecreta = 8,
+			GemaSecreta = "Prismita",
+		},
 	} :: { Tamano },
 
 	-- Biomas, en orden. La zona 1 está abierta desde el principio.
@@ -523,15 +567,97 @@ local GameConfig = {
 			Rareza = "Mitico",
 			Color = "#FFFFFF",
 		},
+
+		-- Grupo 3: minerales de las vetas ocultas (uno por bioma, detrás de su puerta secreta) y
+		-- el de la Dimensión Prisma. No salen en las geodas comunes.
+		{
+			Id = "CuarzoLunar",
+			Nombre = "Cuarzo Lunar",
+			Zona = 1,
+			Rareza = "Legendario",
+			Color = "#CFE8FF",
+			Secreta = true,
+		},
+		{
+			Id = "AmbarFosil",
+			Nombre = "Ámbar Fósil",
+			Zona = 2,
+			Rareza = "Legendario",
+			Color = "#FF9F1C",
+			Secreta = true,
+		},
+		{
+			Id = "ZafiroBoreal",
+			Nombre = "Zafiro Boreal",
+			Zona = 3,
+			Rareza = "Legendario",
+			Color = "#6BE4FF",
+			Secreta = true,
+		},
+		{
+			Id = "RubiMagma",
+			Nombre = "Rubí de Magma",
+			Zona = 4,
+			Rareza = "Mitico",
+			Color = "#FF3B1F",
+			Secreta = true,
+		},
+		{
+			Id = "OpaloEstelar",
+			Nombre = "Ópalo Estelar",
+			Zona = 5,
+			Rareza = "Mitico",
+			Color = "#E9B8FF",
+			Secreta = true,
+		},
+		{
+			Id = "Prismita",
+			Nombre = "Prismita",
+			Zona = 2,
+			Rareza = "Mitico",
+			Color = "#9CFBFF",
+			Secreta = true,
+			Lugar = "Dimensión Prisma",
+		},
 	} :: { Gema },
 
 	-- Tienda: los picos se compran en orden y siempre usás el mejor.
 	Picos = {
-		{ Id = "Madera", Nombre = "Pico de Madera", Multiplicador = 1, Precio = 0 },
-		{ Id = "Piedra", Nombre = "Pico de Piedra", Multiplicador = 2, Precio = 25 },
-		{ Id = "Hierro", Nombre = "Pico de Hierro", Multiplicador = 4, Precio = 5000 },
-		{ Id = "Oro", Nombre = "Pico de Oro", Multiplicador = 8, Precio = 250000 },
-		{ Id = "Cosmico", Nombre = "Pico Cósmico", Multiplicador = 16, Precio = 8000000 },
+		{
+			Id = "Madera",
+			Nombre = "Pico de Madera",
+			Multiplicador = 1,
+			Precio = 0,
+			Color = "#C08A4E",
+		},
+		{
+			Id = "Piedra",
+			Nombre = "Pico de Piedra",
+			Multiplicador = 2,
+			Precio = 25,
+			Color = "#8D939C",
+		},
+		{
+			Id = "Hierro",
+			Nombre = "Pico de Hierro",
+			Multiplicador = 4,
+			Precio = 5000,
+			Color = "#D8DEE6",
+		},
+		{
+			Id = "Oro",
+			Nombre = "Pico de Oro",
+			Multiplicador = 8,
+			Precio = 250000,
+			Color = "#FFC83D",
+		},
+		{
+			Id = "Cosmico",
+			Nombre = "Pico Cósmico",
+			Multiplicador = 16,
+			Precio = 8000000,
+			Color = "#9B6BFF",
+		},
 	} :: { Pico },
 
 	-- Tienda: los amuletos también van en orden y se suman (con los 5: suerte x9,75).
@@ -590,7 +716,9 @@ local GameConfig = {
 				Ids = { "Lava", "Neon", "Midas", "Vacio" },
 				Cuantos = 4,
 			},
-			Premio = { Suerte = 0.25 },
+			Premio = { Suerte = 0.25, Cosmetico = { Tipo = "Decoracion", Id = "Llamas" } },
+			Museo = true,
+			Dificultad = "Media",
 		},
 		{
 			Id = "PrimeraCombinacion",
@@ -612,7 +740,9 @@ local GameConfig = {
 				Ids = { "LavaNeon", "MidasNeon", "VacioLava", "VacioMidas" },
 				Cuantos = 4,
 			},
-			Premio = { Suerte = 1 },
+			Premio = { Suerte = 1, Cosmetico = { Tipo = "Aura", Id = "Arcoiris" } },
+			Museo = true,
+			Dificultad = "Leyenda",
 		},
 		{
 			Id = "Legendaria",
@@ -640,35 +770,57 @@ local GameConfig = {
 			Nombre = "Colección de la Pradera",
 			Descripcion = "Conseguí las 5 gemas de la Pradera de Cuarzo",
 			Necesita = { Tipo = "Gemas", Zona = 1 },
-			Premio = { Monedas = 500, Suerte = 0.1 },
+			Premio = { Monedas = 500, Suerte = 0.1, Cosmetico = { Tipo = "Aura", Id = "Cuarzo" } },
+			Museo = true,
+			Dificultad = "Facil",
 		},
 		{
 			Id = "Coleccion2",
 			Nombre = "Colección de las Dunas",
 			Descripcion = "Conseguí las 5 gemas de las Dunas de Ámbar",
 			Necesita = { Tipo = "Gemas", Zona = 2 },
-			Premio = { Monedas = 8000, Suerte = 0.1 },
+			Premio = { Monedas = 8000, Suerte = 0.1, Cosmetico = { Tipo = "Pico", Id = "Ambar" } },
+			Museo = true,
+			Dificultad = "Media",
 		},
 		{
 			Id = "Coleccion3",
 			Nombre = "Colección del Glaciar",
 			Descripcion = "Conseguí las 5 gemas del Glaciar de Zafiro",
 			Necesita = { Tipo = "Gemas", Zona = 3 },
-			Premio = { Monedas = 250000, Suerte = 0.15 },
+			Premio = {
+				Monedas = 250000,
+				Suerte = 0.15,
+				Cosmetico = { Tipo = "Vitrina", Id = "Hielo" },
+			},
+			Museo = true,
+			Dificultad = "Media",
 		},
 		{
 			Id = "Coleccion4",
 			Nombre = "Colección del Volcán",
 			Descripcion = "Conseguí las 5 gemas del Volcán de Rubí",
 			Necesita = { Tipo = "Gemas", Zona = 4 },
-			Premio = { Monedas = 4000000, Suerte = 0.2 },
+			Premio = {
+				Monedas = 4000000,
+				Suerte = 0.2,
+				Cosmetico = { Tipo = "Aura", Id = "Magma" },
+			},
+			Museo = true,
+			Dificultad = "Dificil",
 		},
 		{
 			Id = "Coleccion5",
 			Nombre = "Colección del Abismo",
 			Descripcion = "Conseguí las 5 gemas del Abismo Estelar",
 			Necesita = { Tipo = "Gemas", Zona = 5 },
-			Premio = { Monedas = 60000000, Suerte = 0.3 },
+			Premio = {
+				Monedas = 60000000,
+				Suerte = 0.3,
+				Cosmetico = { Tipo = "Pico", Id = "Estelar" },
+			},
+			Museo = true,
+			Dificultad = "Leyenda",
 		},
 		{
 			Id = "JefeAncestral1",
@@ -690,6 +842,71 @@ local GameConfig = {
 			Descripcion = "Jugá 5 eventos del mundo",
 			Necesita = { Tipo = "Eventos", Cuantos = 5 },
 			Premio = { Suerte = 0.15 },
+		},
+
+		-- Grupo 3: colecciones del Museo de minerales (de fáciles a difíciles)
+		{
+			Id = "Museo3",
+			Nombre = "Primeros Hallazgos",
+			Descripcion = "Encontrá 3 minerales distintos",
+			Necesita = { Tipo = "Distintas", Cuantas = 3 },
+			Premio = { Monedas = 50 },
+			Museo = true,
+			Dificultad = "Facil",
+		},
+		{
+			Id = "PraderaBrillante",
+			Nombre = "Pradera Brillante",
+			Descripcion = "Encontrá Cuarzo, Jaspe y Amatista",
+			Necesita = { Tipo = "Lista", Ids = { "Cuarzo", "Jaspe", "Amatista" } },
+			Premio = { Monedas = 150, Cosmetico = { Tipo = "Decoracion", Id = "Flores" } },
+			Museo = true,
+			Dificultad = "Facil",
+		},
+		{
+			Id = "Museo10",
+			Nombre = "Museo en Marcha",
+			Descripcion = "Encontrá 10 minerales distintos",
+			Necesita = { Tipo = "Distintas", Cuantas = 10 },
+			Premio = { Monedas = 2000, Cosmetico = { Tipo = "Decoracion", Id = "Cristalitos" } },
+			Museo = true,
+			Dificultad = "Media",
+		},
+		{
+			Id = "CazaRarezas",
+			Nombre = "Cazarrarezas",
+			Descripcion = "Encontrá un mineral Raro, uno Épico y uno Legendario",
+			Necesita = { Tipo = "Rarezas", Ids = { "Raro", "Epico", "Legendario" } },
+			Premio = { Monedas = 1500 },
+			Museo = true,
+			Dificultad = "Media",
+		},
+		{
+			Id = "PrimerSecreto",
+			Nombre = "Explorador",
+			Descripcion = "Encontrá un mineral secreto en una veta oculta",
+			Necesita = { Tipo = "Secretas", Cuantas = 1 },
+			Premio = { Suerte = 0.1, Cosmetico = { Tipo = "Aura", Id = "Arcana" } },
+			Museo = true,
+			Dificultad = "Media",
+		},
+		{
+			Id = "SecretasTodas",
+			Nombre = "Guardián de Secretos",
+			Descripcion = "Encontrá los 6 minerales secretos",
+			Necesita = { Tipo = "Secretas", Cuantas = 6 },
+			Premio = { Suerte = 0.3, Cosmetico = { Tipo = "Vitrina", Id = "Arcana" } },
+			Museo = true,
+			Dificultad = "Dificil",
+		},
+		{
+			Id = "MuseoCompleto",
+			Nombre = "Curador Legendario",
+			Descripcion = "Completá el Museo: los 31 minerales",
+			Necesita = { Tipo = "Distintas", Cuantas = 31 },
+			Premio = { Suerte = 0.5, Cosmetico = { Tipo = "Vitrina", Id = "Dorada" } },
+			Museo = true,
+			Dificultad = "Leyenda",
 		},
 	} :: { Logro },
 
@@ -879,7 +1096,138 @@ local GameConfig = {
 			Colores = { "#FF4D5E", "#FF9B3D" },
 			Requiere = "MineroImparable",
 		},
+		-- Grupo 3
+		{
+			Id = "Curioso",
+			Texto = "Curioso",
+			Colores = { "#B8FF6A", "#22A83A" },
+			Requiere = "Museo3",
+		},
+		{
+			Id = "Cazarrarezas",
+			Texto = "Cazarrarezas",
+			Colores = { "#8FD3FF", "#D9A8FF", "#FFE45C" },
+			Requiere = "CazaRarezas",
+		},
+		{
+			Id = "Explorador",
+			Texto = "Explorador",
+			Colores = { "#9CFBFF", "#9B4DFF" },
+			Requiere = "PrimerSecreto",
+		},
+		{
+			Id = "GuardianSecretos",
+			Texto = "Guardián de Secretos",
+			Colores = { "#2E2A5C", "#9CFBFF", "#9B4DFF" },
+			Requiere = "SecretasTodas",
+		},
+		{
+			Id = "Curador",
+			Texto = "Curador Legendario",
+			Colores = { "#FFF3B0", "#FFC83D", "#FF9ED8" },
+			Requiere = "MuseoCompleto",
+		},
 	} :: { Titulo },
+
+	-- Grupo 3: cosméticos que dan las colecciones del Museo. Se eligen en el Museo; los ven todos.
+	-- Los "Clasico"/"Clasica" los tiene todo el mundo.
+	Cosmeticos = {
+		Auras = {
+			{
+				Id = "Cuarzo",
+				Nombre = "Destellos de Cuarzo",
+				Colores = { "#FFFFFF", "#C77DFF" },
+				Forma = "Destellos",
+			},
+			{
+				Id = "Magma",
+				Nombre = "Chispas de Magma",
+				Colores = { "#FFE14D", "#FF3B1F" },
+				Forma = "Chispas",
+			},
+			{
+				Id = "Arcana",
+				Nombre = "Runas Arcanas",
+				Colores = { "#9CFBFF", "#9B4DFF" },
+				Forma = "Orbita",
+			},
+			{
+				Id = "Arcoiris",
+				Nombre = "Arcoíris",
+				Colores = { "#FF4D5E", "#FFC93C", "#4CD964", "#2EF2FF", "#9B4DFF" },
+				Forma = "Destellos",
+			},
+		} :: { Cosmetico },
+		-- Diseños del pico que se ve en la mano: { cabeza, mango }. El Clásico usa el color del
+		-- pico que tenés comprado.
+		Picos = {
+			{ Id = "Clasico", Nombre = "Clásico", Colores = {}, Material = "Metal" },
+			{
+				Id = "Ambar",
+				Nombre = "Pico de Ámbar",
+				Colores = { "#FFB627", "#6B3E1A" },
+				Material = "Glass",
+			},
+			{
+				Id = "Estelar",
+				Nombre = "Pico Estelar",
+				Colores = { "#7CF5FF", "#2E2A5C" },
+				Material = "Neon",
+			},
+		} :: { Cosmetico },
+		Vitrinas = {
+			{
+				Id = "Clasica",
+				Nombre = "Clásica",
+				Colores = { "#2A2F4F" },
+				Material = "SmoothPlastic",
+			},
+			{
+				Id = "Hielo",
+				Nombre = "Vitrina de Hielo",
+				Colores = { "#A8E6FF" },
+				Material = "Ice",
+			},
+			{
+				Id = "Arcana",
+				Nombre = "Vitrina Arcana",
+				Colores = { "#5A2BD9" },
+				Material = "Glass",
+			},
+			{
+				Id = "Dorada",
+				Nombre = "Vitrina Dorada",
+				Colores = { "#FFC83D" },
+				Material = "Foil",
+			},
+		} :: { Cosmetico },
+		Decoraciones = {
+			{ Id = "Flores", Nombre = "Flores", Colores = { "#FF6FB5", "#FFE14D", "#7ED957" } },
+			{ Id = "Cristalitos", Nombre = "Cristalitos", Colores = { "#C77DFF", "#7CF5FF" } },
+			{ Id = "Llamas", Nombre = "Llamitas", Colores = { "#FFB300", "#FF3B1F" } },
+		} :: { Cosmetico },
+	},
+
+	-- Grupo 3: secretos del mapa. Nada de esto hace falta para avanzar.
+	Secretos = {
+		-- Al romper una geoda, chance de encontrar la llave de su bioma (si no abriste todavía su
+		-- puerta secreta y no la tenés ya).
+		LlaveUnoEn = 35,
+		-- El cofre de cada cámara se abre una vez y da esto x el valor de una gema común del bioma.
+		CofreMonedas = 120,
+		-- Altar: ofrecés gemas comunes del bioma y te da una bendición de suerte por un rato.
+		Altar = { Gemas = 5, Suerte = 1.5, Duracion = 180, Espera = 600 },
+		-- Lo que susurra cada altar (una pista para la puerta secreta de su bioma).
+		Pistas = {
+			"«Detrás de la cascada de cristal, la roca no es roca.»",
+			"«Donde la duna más alta da sombra, una pared respira.»",
+			"«Entre los picos de hielo, una grieta guarda calor.»",
+			"«Bajo el río de lava, la piedra está hueca.»",
+			"«Donde no llegan las estrellas, hay una puerta.»",
+		},
+		PortalEspera = 3, -- segundos entre dos viajes por un portal
+		Distancia = 14, -- studs: lo más lejos que se puede usar un cofre, altar, puerta o portal
+	},
 
 	-- Íconos de la UI (imágenes, no emojis), hechos con ForgeGUI (forja-rapida/arte/gui; los
 	-- dibujos de respaldo están en arte/iconos). Pegar acá el "rbxassetid://..." de cada uno.
@@ -1086,6 +1434,7 @@ local GameConfig = {
 		Comprar = "",
 		Click = "", -- tocar un botón de la interfaz
 		AbrirMenu = "",
+		Secreto = "", -- Grupo 3: abrir una puerta secreta, un cofre, un altar o cruzar un portal
 	},
 
 	-- Modelos de Blender (forja-rapida/arte). Mientras no estén, el servidor arma las geodas con
