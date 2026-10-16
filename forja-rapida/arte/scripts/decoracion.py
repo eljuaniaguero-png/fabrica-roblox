@@ -62,6 +62,11 @@ Piezas:
   Piramide       Dunas (zona 2), la montaña del fondo: pirámide de 10 escalones anchos de 3 studs
                  de alto, color arena (el risco de las Dunas), 64 x 64 studs de base y 30 de alto
                  (arte/referencias/mapa-2.png). Malla Piramide.
+  Duna           Dunas: duna baja de pisos de bloques arena con las esquinas mordidas, cada piso
+                 más chico y corrido para el mismo lado (como si el viento la empujara). Tres
+                 tamaños: Chica (16 x 10 studs, 2 pisos, 3 de alto), Mediana (28 x 16, 3 pisos, 5)
+                 y Grande (44 x 24, 3 pisos, 9: la duna alta donde se esconde el portal). Malla
+                 Duna_<tamaño>.
                  Cada árbol de la Pradera (y el arbusto) tiene 3 variantes (Arbol_Grande_1, _2 y _3...).
   Roca_Meteorito solo Abismo: media bola chata de bloques de 2 studs azul noche, con un cráter
                  arriba (corrido a un costado) que brilla violeta en el fondo y estrellitas lilas
@@ -1454,6 +1459,44 @@ def mats_piramide(studs=None):
     return {"piramide": M.material("Piramide", PIRAMIDE_COLOR)}
 
 
+# Duna (Dunas): pisos de arena con las esquinas mordidas, corridos a sotavento
+DUNA_COLOR = ZONAS[2]["tapa"]
+# tamaño -> (largo, ancho, alto de cada piso, cuánto se mete cada piso en largo y en ancho,
+#            cuánto se corre cada piso en x, mordida de las esquinas)
+DUNAS = {
+    "Chica": (16, 10, (1.5, 1.5), (3, 2), 1.5, 2),
+    "Mediana": (28, 16, (2, 1.5, 1.5), (4, 3), 2, 3),
+    "Grande": (44, 24, (3, 3, 3), (6, 4), 3, 4),
+}
+MAX_DUNA = 2000  # por pieza
+
+
+def duna(mats, tam="Mediana"):
+    """Duna_<tam>: cada piso es una franja del medio de todo el ancho y dos puntas más angostas
+    (así las esquinas quedan mordidas); sin las caras de abajo ni las que se tocan adentro.
+    Pivote en el centro de la base."""
+    largo, ancho, altos, (mete_l, mete_a), corre, mordida = DUNAS[tam]
+    m = Malla()
+    z, cx = 0.0, 0.0
+    for k, alto in enumerate(altos):
+        hl, ha = largo / 2 - k * mete_l, ancho / 2 - k * mete_a
+        c = min(mordida, ha / 2)
+        zz = (z, z + alto)
+        m.caja((cx - hl + c, cx + hl - c), (-ha, ha), zz, caras="xXyYZ")
+        m.caja((cx - hl, cx - hl + c), (-ha + c, ha - c), zz, caras="xyYZ")
+        m.caja((cx + hl - c, cx + hl), (-ha + c, ha - c), zz, caras="XyYZ")
+        z += alto
+        cx += corre
+    return mallas([(f"Duna_{tam}", m, mats["duna"])], MAX_DUNA, f"Duna {tam}")
+
+
+def mats_duna(studs=None):
+    """Con studs, para el render; sin, para exportar."""
+    if studs:
+        return {"duna": material_studs("Duna", DUNA_COLOR, studs)}
+    return {"duna": M.material("Duna", DUNA_COLOR)}
+
+
 # Roca_Meteorito: roca azul noche de bloques con un cráter que brilla violeta adentro y
 # estrellitas lilas en los costados (como el cielo del Abismo, arte/referencias/abismo-1.png;
 # el naranja quedaba de la zona de lava)
@@ -1746,6 +1789,7 @@ REFERENCIAS = {
     "Cascada_Cristal": ("estilo-1.png", ("mapa-1.png", (0.62, 0.30, 0.95, 0.62))),
     # la pirámide de las Dunas y la captura de la zona
     "Piramide": ("mapa-2.png", "estilo-2.png"),
+    "Duna": ("mapa-2.png", "estilo-2.png"),
 }
 
 
@@ -1925,6 +1969,34 @@ def render_piramide():
         M.render(f"piramide_{vista}")
     comparar("Piramide")
     print("TRIANGULOS Piramide", conteo, "total", sum(conteo.values()))
+
+
+def render_duna():
+    """Duna Chica, Mediana y Grande en fila, de frente y de costado, al lado de las referencias."""
+    conteo = {}
+    total = sum(DUNAS[t][0] for t in DUNAS) + 8 * (len(DUNAS) - 1)
+    for vista in ("frente", "costado"):
+        M.limpiar_escena()
+        escena = M.escena_render(1280, 720)
+        bpy.data.lights["Sol"].energy = 2.6  # menos sol: si no, la arena clara se quema
+        tablero = bpy.data.materials["Piso"].node_tree.nodes["Checker Texture"]  # piso de arena oscura
+        tablero.inputs["Color1"].default_value = (*M.hex_a_rgb(ZONAS[2]["risco"]), 1)
+        tablero.inputs["Color2"].default_value = (*M.hex_a_rgb("#CF9652"), 1)
+        mats = mats_duna(textura_studs())
+        x = -total / 2
+        for tam in DUNAS:
+            largo = DUNAS[tam][0]
+            objs, c = duna(mats, tam)
+            conteo[tam] = c
+            pos = (x + largo / 2) * M.STUD
+            M.mover(objs, pos if vista == "frente" else 0, 0 if vista == "frente" else pos)
+            x += largo + 8
+        giro = -14 if vista == "frente" else 76
+        camara_orto(escena, (0, 0, 3 * M.STUD), total * M.STUD * 1.15, 22, giro)
+        M.render(f"duna_{vista}")
+    comparar("Duna")
+    for tam, c in conteo.items():
+        print("TRIANGULOS Duna", tam, c, "total", sum(c.values()))
 
 
 def noche_abismo(escena):
@@ -2312,7 +2384,8 @@ def exportar_zona1():
 
 def exportar_zona2():
     """Deco_Zona2.fbx: piezas que son solo de las Dunas. Raíz Deco_Zona2 con un vacío Piramide y
-    su malla Piramide_Piramide. Sin textura: el juego pone el color y TextureID = Studs.png."""
+    su malla Piramide_Piramide, y uno por tamaño de duna (Duna_Chica, Duna_Mediana, Duna_Grande)
+    con su malla Duna_Chica_Arena... Sin textura: el juego pone el color y TextureID = Studs.png."""
     M.limpiar_escena()
     raiz = bpy.data.objects.new("Deco_Zona2", None)
     bpy.context.scene.collection.objects.link(raiz)
@@ -2325,6 +2398,16 @@ def exportar_zona2():
             o.parent = vacio
             o.name = o.data.name = f"{nombre}_{o.name.split('.')[0]}"
         print("TRIANGULOS", nombre, conteo, "total", sum(conteo.values()))
+    mats = mats_duna()
+    for tam in DUNAS:
+        vacio = bpy.data.objects.new(f"Duna_{tam}", None)
+        bpy.context.scene.collection.objects.link(vacio)
+        vacio.parent = raiz
+        objs, conteo = duna(mats, tam)
+        for o in objs:
+            o.parent = vacio
+            o.name = o.data.name = f"Duna_{tam}_Arena"  # el vacío ya se llama Duna_<tam>
+        print("TRIANGULOS", f"Duna_{tam}", conteo, "total", sum(conteo.values()))
     bpy.ops.object.select_all(action="DESELECT")
     for o in [raiz, *raiz.children_recursive]:
         o.select_set(True)
@@ -2395,4 +2478,6 @@ if __name__ == "__main__":
         render_cascada()
     if "--pieza" not in sys.argv or "Piramide" in sys.argv:
         render_piramide()
+    if "--pieza" not in sys.argv or "Duna" in sys.argv:
+        render_duna()
     print("Listo")
