@@ -10,9 +10,11 @@ Piezas:
                  con juntas marcadas de los dos lados y una tapa de pasto de 2 studs que sale medio
                  stud para cada lado, con gotitas. Encaja sin costura con otro tramo igual (mismo
                  truco que el risco). Mallas Pared y Tapa (la tapa toma el color de cada bioma).
-  Losas_Piedra   montoncito de 2 o 3 losas planas de ladrillo gris azulado, apiladas un poco
-                 corridas (escombros), en tres tamaños: Chica (2 losas), Mediana y Larga (3).
-                 Una malla por tamaño, la misma para todas las zonas (arte/referencias/losas-*.png).
+  Losas_Piedra   montoncito de 2 o 3 losas planas de piedra apiladas un poco corridas
+                 (escombros), en tres tamaños por zona: Chica (2 losas), Mediana y Larga (3). Cada
+                 losa es un bloque entero (arriba lisa, con studs) y los costados tienen hiladas de
+                 ladrillo con juntas finitas. Mallas Piedra y (si la zona tiene) Detalle: musgo,
+                 arena, nieve, grietas de lava o cristales (arte/referencias/losas-*.png).
 
 Cada pieza tiene una variante por zona (ZONAS): sus colores y lo que tiene la tapa (pasto con
 gotitas; dunas de arena; nieve con carámbanos; ceniza con piedritas y chorros de lava; cristales
@@ -77,19 +79,27 @@ PARED_TAPA = 2  # tapa de pasto: 22 + 2 = 24 de alto
 PARED_ESPESOR = 4  # y, de -2 a 2
 MAX_PARED = 2000
 
-# Losas_Piedra, en studs: losas planas de ladrillo apiladas un poco corridas (escombros). Cada
-# losa es (x0, x1, y0, y1); van una encima de la otra, de abajo para arriba.
-COLOR_LOSAS = "#686C8A"  # gris azulado de las capturas
-LOSA_ALTO = 2  # grosor de cada losa
-LOSA_LADRILLO = (4, 2)  # largo (x) y ancho (y) de cada ladrillo de la losa
-LOSA_JUNTA = 0.24  # junta entre ladrillos
-MAX_LOSAS = 1500
+# Losas_Piedra, en studs: losas planas apiladas un poco corridas (escombros). Cada losa es
+# (x0, x1, y0, y1); van una encima de la otra, de abajo para arriba. Las zonas pares las usan
+# espejadas, así no se repiten igual entre zonas.
+LOSA_ALTO = 2  # grosor de cada losa (2 hiladas de ladrillo de 1)
+LOSA_LADRILLO = 4  # largo de cada ladrillo de los costados
+LOSA_RELIEVE = 0.12  # cuánto salen los ladrillos del bloque de la losa
+LOSA_JUNTA = 0.1  # junta finita entre ladrillos
+MAX_LOSAS = 1500  # por pieza (sumando sus mallas)
 LOSAS = {
-    "Chica": [(-4, 4, -3, 3), (-3, 4.5, -2.5, 2.5)],
-    "Mediana": [(-5, 5, -4, 4), (-4, 5.5, -3.5, 3), (-4.5, 2.5, -3, 3.5)],
-    "Larga": [(-8, 8, -3, 3), (-7, 8.5, -2.5, 3.5), (-6, 2, -3, 2)],
+    "Chica": [(-4, 4, -3, 3), (-3.5, 3, -2.5, 2.5)],
+    "Mediana": [(-5, 5, -4, 4), (-4.5, 4.5, -3.5, 3.5), (-3.5, 2.5, -3, 2.5)],
+    "Larga": [(-8, 8, -3, 3), (-7.5, 7, -2.5, 2.5), (-5, 3, -2.5, 2)],
 }
-
+# Colores de cada zona: piedra y detalle (neon = el detalle brilla)
+LOSAS_ZONAS = {
+    1: {"piedra": "#686C8A", "detalle": "#3DB02A", "neon": False, "estilo": "musgo"},
+    2: {"piedra": "#B08A5E", "detalle": "#F2D27A", "neon": False, "estilo": "arena"},
+    3: {"piedra": "#7F95B5", "detalle": "#F4FAFF", "neon": False, "estilo": "nieve"},
+    4: {"piedra": "#3A2E33", "detalle": "#FF5A00", "neon": True, "estilo": "lava"},
+    5: {"piedra": "#3B3570", "detalle": "#7CF5FF", "neon": True, "estilo": "cristal"},
+}
 
 class Malla:
     """Caras rectangulares (alineadas a los ejes, en studs) con UV de studs por cuadrado de TEJA."""
@@ -329,37 +339,126 @@ def pared_ladrillo(mats, zona=1, semilla=23):
     return objs, conteo
 
 
-def losas_piedra(mats, tam):
-    """Una malla con el montoncito de losas de un tamaño (Chica, Mediana o Larga). Cada losa es de
-    ladrillos de LOSA_LADRILLO separados por una junta (por la junta se ve el centro de la losa,
-    un poco hundido), con las filas corridas medio ladrillo. Pivote en el centro de la base."""
-    losas = LOSAS[tam]
+def hiladas(m, eje, signo, fijo, r0, r1, z0, abajo, corrido):
+    """Ladrillos (plaquitas de LOSA_RELIEVE) sobre un costado de la losa: el plano eje = fijo,
+    mirando a signo, de r0 a r1 a lo largo del costado, dos hiladas de 1 de alto."""
+    j = LOSA_JUNTA / 2
+    afuera = (fijo, fijo + LOSA_RELIEVE) if signo > 0 else (fijo - LOSA_RELIEVE, fijo)
+    for fila in range(round(LOSA_ALTO)):
+        za, zb = z0 + fila + j, z0 + fila + 1 - j
+        if fila == 0 and abajo:
+            za = z0  # la hilada de abajo de todo apoya en el piso
+        r = r0 - (LOSA_LADRILLO / 2 if (fila + corrido) % 2 else 0)
+        while r < r1 - 1e-6:
+            ra, rb = max(r, r0) + j, min(r + LOSA_LADRILLO, r1) - j
+            if rb - ra > 0.5:
+                letra = "xX"[signo > 0] if eje == 0 else "yY"[signo > 0]
+                lados = "yY" if eje == 0 else "xX"
+                caras = letra + lados + "Z" + ("" if za == z0 and abajo else "z")
+                if eje == 0:
+                    m.caja(afuera, (ra, rb), (za, zb), caras=caras)
+                else:
+                    m.caja((ra, rb), afuera, (za, zb), caras=caras)
+            r += LOSA_LADRILLO
+
+
+def adorno(det, rng, estilo, x0, x1, y0, y1, z, grande):
+    """Detalle de la zona sobre la parte de arriba (x0..x1, y0..y1) a la altura z. grande: la
+    losa de arriba de todo (lleva más); si no, es el borde libre de una losa de abajo."""
+    w, d = x1 - x0, y1 - y0
+    if w < 1 or d < 1:
+        return
+    caras = "xXyYZ"
+
+    def lugar(a, b):
+        a, b = min(a, w), min(b, d)
+        xa, ya = rng.uniform(x0, x1 - a), rng.uniform(y0, y1 - b)
+        return (xa, xa + a), (ya, ya + b)
+
+    if estilo == "musgo":
+        for k in range(3 if grande else 1):  # alturas distintas: si se pisan, no se mezclan
+            rx, ry = lugar(rng.choice((1.5, 2, 3)), rng.choice((1, 1.5, 2)))
+            det.caja(rx, ry, (z, z + 0.2 + 0.08 * k), caras=caras)
+    elif estilo == "arena":
+        if grande:
+            rx, ry = lugar(rng.choice((3, 4)), rng.choice((2.5, 3)))
+            det.caja(rx, ry, (z, z + 0.5), caras=caras)
+            det.caja((rx[0] + 0.75, rx[1] - 0.75), (ry[0] + 0.6, ry[1] - 0.6), (z + 0.5, z + 1), caras=caras)
+        else:
+            rx, ry = lugar(2, 1.5)
+            det.caja(rx, ry, (z, z + 0.5), caras=caras)
+    elif estilo == "nieve":
+        if grande:  # capa que tapa toda la losa de arriba, con un montoncito
+            det.caja((x0 - 0.15, x1 + 0.15), (y0 - 0.15, y1 + 0.15), (z, z + 0.4), caras="xXyYzZ")
+            rx, ry = lugar(2, 1.5)
+            det.caja(rx, ry, (z + 0.4, z + 0.9), caras=caras)
+        else:
+            rx, ry = lugar(w, min(d, 1.5))
+            det.caja(rx, ry, (z, z + 0.3), caras=caras)
+    elif estilo == "lava":
+        for k in range(2 if grande else 1):  # grietas finitas que brillan
+            if rng.random() < 0.5:
+                rx, ry = lugar(rng.choice((2, 3, 4)), 0.4)
+            else:
+                rx, ry = lugar(0.4, rng.choice((2, 3)))
+            det.caja(rx, ry, (z, z + 0.06 + 0.03 * k), caras=caras)
+    elif estilo == "cristal":
+        rx, ry = lugar(1.6, 1.6)
+        piezas = ((0, 0, 0.8, 2.2), (0.8, 0.3, 0.6, 1.4), (0.2, 0.9, 0.5, 1)) if grande else ((0, 0, 0.6, 1.2),)
+        for dx, dy, a, h in piezas:
+            h *= rng.choice((0.8, 1, 1.2))
+            det.caja((rx[0] + dx, rx[0] + dx + a), (ry[0] + dy, ry[0] + dy + a), (z, z + h), caras=caras)
+
+
+def losas_piedra(mats, tam, zona=1):
+    """El montoncito de losas de un tamaño (Chica, Mediana o Larga) para una zona: mallas Piedra
+    y (si la zona tiene) Detalle. Cada losa es un bloque entero (arriba lisa, así se lee como
+    una sola piedra) con hiladas de ladrillo en los costados. Pivote en el centro de la base."""
+    rng = random.Random(f"{tam}{zona}")
+    espejo = -1 if zona % 2 == 0 else 1
+    losas = [(min(espejo * a, espejo * b), max(espejo * a, espejo * b), y0, y1) for a, b, y0, y1 in LOSAS[tam]]
     # centrar: el centro de lo que ocupa el montón queda en x = 0, y = 0
     cx = (min(l[0] for l in losas) + max(l[1] for l in losas)) / 2
     cy = (min(l[2] for l in losas) + max(l[3] for l in losas)) / 2
-    m = Malla()
-    j = LOSA_JUNTA / 2
-    largo, ancho = LOSA_LADRILLO
+    losas = [(x0 - cx, x1 - cx, y0 - cy, y1 - cy) for x0, x1, y0, y1 in losas]
+    estilo = LOSAS_ZONAS[zona]["estilo"]
+    piedra, det = Malla(), Malla()
     for i, (x0, x1, y0, y1) in enumerate(losas):
-        x0, x1, y0, y1 = x0 - cx, x1 - cx, y0 - cy, y1 - cy
         z0, z1 = i * LOSA_ALTO, (i + 1) * LOSA_ALTO
-        # el centro de la losa (se ve por las juntas; más adentro que los ladrillos, así no se pisan)
-        h = j + 0.12
-        m.caja((x0 + h, x1 - h), (y0 + h, y1 - h), (z0, z1 - 0.15), caras="xXyY")
-        fila, y = 0, y0
-        while y < y1 - 1e-6:
-            ya, yb = y, min(y + ancho, y1)
-            x = x0 - (largo / 2 if (fila + i) % 2 else 0)
-            while x < x1 - 1e-6:
-                xa, xb = max(x, x0), min(x + largo, x1)
-                if xb - xa > 0.6:  # sin ladrillitos finitos en las puntas
-                    caras = "xXyYZ" if i == 0 else "xXyYzZ"  # la de abajo no muestra la base
-                    m.caja((xa + j, xb - j), (ya + j, yb - j), (z0, z1), caras=caras)
-                x += largo
-            y += ancho
-            fila += 1
-    return mallas([(f"Losas_{tam}", m, mats["losas"])], MAX_LOSAS, f"Losas_Piedra {tam}")
+        abajo = i == 0
+        # el bloque de la losa (arriba entero) y los ladrillos de los 4 costados
+        # (sin base: la de abajo apoya en el piso y las demás apoyan enteras sobre la anterior)
+        piedra.caja((x0, x1), (y0, y1), (z0, z1), caras="xXyYZ")
+        hiladas(piedra, 0, -1, x0, y0, y1, z0, abajo, i)
+        hiladas(piedra, 0, 1, x1, y0, y1, z0, abajo, i + 1)
+        hiladas(piedra, 1, -1, y0, x0, x1, z0, abajo, i + 1)
+        hiladas(piedra, 1, 1, y1, x0, x1, z0, abajo, i)
+        if i + 1 < len(losas):
+            # borde libre más ancho de esta losa (lo que no tapa la de arriba)
+            ux0, ux1, uy0, uy1 = losas[i + 1]
+            bordes = [(x0, ux0, y0, y1), (ux1, x1, y0, y1), (x0, x1, y0, uy0), (x0, x1, uy1, y1)]
+            bx0, bx1, by0, by1 = max(bordes, key=lambda b: min(b[1] - b[0], b[3] - b[2]))
+            adorno(det, rng, estilo, bx0 + 0.2, bx1 - 0.2, by0 + 0.2, by1 - 0.2, z1, False)
+        else:
+            adorno(det, rng, estilo, x0 + 0.3, x1 - 0.3, y0 + 0.3, y1 - 0.3, z1, True)
+    nombre = f"Losas_{tam}"
+    objs, conteo = mallas([("Piedra", piedra, mats["piedra"]), ("Detalle", det, mats["detalle"])], MAX_LOSAS, nombre)
+    if sum(conteo.values()) > MAX_LOSAS:
+        raise RuntimeError(f"{nombre} zona {zona}: {sum(conteo.values())} triángulos (máximo {MAX_LOSAS})")
+    return objs, conteo
 
+
+def mats_losas(zona, studs=None):
+    """Materiales de las losas de una zona; con studs, para el render (y lo Neon brilla)."""
+    z = LOSAS_ZONAS[zona]
+    if studs is None:
+        return {"piedra": M.material(f"Losas_Zona{zona}", z["piedra"]), "detalle": M.material(f"Losas_Detalle_Zona{zona}", z["detalle"])}
+    det = (
+        M.material(f"LDet{zona}", z["detalle"], brillo=z["detalle"], fuerza_brillo=1.2)
+        if z["neon"]
+        else material_studs(f"LDet{zona}", z["detalle"], studs)
+    )
+    return {"piedra": material_studs(f"Losas{zona}", z["piedra"], studs), "detalle": det}
 
 # nombre -> (función, alto total en studs, fondo en studs)
 PIEZAS = {
@@ -465,29 +564,49 @@ REFERENCIAS = {
 
 
 def render_losas():
-    """Losas_Piedra: chica, mediana y larga en fila, de frente y de costado, y al lado de las
-    referencias."""
-    conteo = {}
+    """Losas_Piedra de la zona 1 (chica, mediana y larga en fila) de frente y de costado, al lado
+    de las referencias; y losas_zonas.jpg con las 3 de cada zona (una fila por zona)."""
+    import numpy as np
+
     paso = 18 * M.STUD
     for vista in ("frente", "costado"):
         M.limpiar_escena()
         escena = M.escena_render(1280, 720)
-        mats = {"losas": material_studs("Losas", COLOR_LOSAS, textura_studs())}
+        mats = mats_losas(1, textura_studs())
         for k, tam in enumerate(LOSAS):
-            objs, c = losas_piedra(mats, tam)
-            conteo.update(c)
-            if vista == "frente":
-                M.mover(objs, (k - 1) * paso)
-            else:
-                M.mover(objs, 0, (k - 1) * paso)
-        if vista == "frente":
-            camara_orto(escena, (0, 0, 1.6 * LOSA_ALTO * M.STUD), 3 * paso * 1.0, 26, -12)
-        else:
-            camara_orto(escena, (0, 0, 1.6 * LOSA_ALTO * M.STUD), 3 * paso * 1.0, 26, 78)
+            objs, _ = losas_piedra(mats, tam, 1)
+            M.mover(objs, (k - 1) * paso if vista == "frente" else 0, 0 if vista == "frente" else (k - 1) * paso)
+        giro = -12 if vista == "frente" else 78
+        camara_orto(escena, (0, 0, 1.6 * LOSA_ALTO * M.STUD), 3 * paso, 26, giro)
         M.render(f"losas_piedra_{vista}")
     comparar("Losas_Piedra")
-    print("TRIANGULOS Losas_Piedra", conteo)
-
+    # todas las zonas: una imagen por zona y después juntas, de arriba (zona 1) para abajo
+    filas = []
+    for zona in LOSAS_ZONAS:
+        M.limpiar_escena()
+        escena = M.escena_render(1800, 520)
+        mats = mats_losas(zona, textura_studs())
+        for k, tam in enumerate(LOSAS):
+            objs, conteo = losas_piedra(mats, tam, zona)
+            M.mover(objs, (k - 1) * paso)
+            print("TRIANGULOS Losas", f"zona {zona}", tam, conteo, "total", sum(conteo.values()))
+        t = M.etiqueta(f"Zona {zona}", -1.5 * paso - 0.6, -2.2, tam=0.5, color="#1B1F3B")
+        t.rotation_euler.x = math.radians(64)
+        camara_orto(escena, (0, 0, 1.2 * LOSA_ALTO * M.STUD), 3.2 * paso, 26, -12)
+        M.render(f"losas_zona{zona}")
+        filas.append(cargar(M.RENDERS / f"losas_zona{zona}.jpg", 1800, 520))
+        (M.RENDERS / f"losas_zona{zona}.jpg").unlink()
+    blanco = np.ones((10, 1800, 4), dtype=np.float32)
+    partes = []
+    for fila in reversed(filas):  # en Blender la fila 0 es la de abajo
+        partes += [fila, blanco]
+    junto = np.concatenate(partes[:-1], axis=0)
+    salida = bpy.data.images.new("losas", junto.shape[1], junto.shape[0])
+    salida.pixels.foreach_set(junto.ravel())
+    salida.filepath_raw = str(M.RENDERS / "losas_zonas.jpg")
+    salida.file_format = "JPEG"
+    salida.save()
+    print("  Render losas_zonas.jpg")
 
 def render(pieza):
     """De frente: 3 piezas seguidas (para ver que no se nota la unión). De costado: una sola.
@@ -592,9 +711,9 @@ def comparar(pieza):
 
 def exportar():
     """Deco_Comun.fbx: Zona1..Zona5, cada una con un vacío por pieza (Risco_Escalon_Zona2...) y
-    sus mallas (Risco_Zona2, Risco_Tapa_Zona2, Pared_Detalle_Zona2...), y Losas_Piedra (una sola
-    para todas las zonas) con Losas_Chica, Losas_Mediana y Losas_Larga. Sin textura: el juego
-    pone el color y TextureID = Studs.png."""
+    sus mallas (Risco_Zona2, Risco_Tapa_Zona2, Pared_Detalle_Zona2...), y las 3 losas
+    (Losas_Chica_Zona2... con Losas_Chica_Piedra_Zona2 y Losas_Chica_Detalle_Zona2). Sin
+    textura: el juego pone el color y TextureID = Studs.png."""
     M.limpiar_escena()
     raiz = bpy.data.objects.new("Deco_Comun", None)
     bpy.context.scene.collection.objects.link(raiz)
@@ -612,14 +731,14 @@ def exportar():
                 malla, pieza = o.name.split(".")[0], nombre.split("_")[0]
                 # Risco_Zona2, Risco_Tapa_Zona2, Pared_Detalle_Zona2...
                 o.name = o.data.name = f"{malla if malla == pieza else pieza + '_' + malla}_Zona{zona}"
-    losas = bpy.data.objects.new("Losas_Piedra", None)
-    bpy.context.scene.collection.objects.link(losas)
-    losas.parent = raiz
-    mats = {"losas": M.material("Losas", COLOR_LOSAS)}
-    for tam in LOSAS:
-        objs, _ = losas_piedra(mats, tam)
-        for o in objs:
-            o.parent = losas
+        for tam in LOSAS:
+            vacio = bpy.data.objects.new(f"Losas_{tam}_Zona{zona}", None)
+            bpy.context.scene.collection.objects.link(vacio)
+            vacio.parent = carpeta
+            objs, _ = losas_piedra(mats_losas(zona), tam, zona)
+            for o in objs:
+                o.parent = vacio
+                o.name = o.data.name = f"Losas_{tam}_{o.name.split('.')[0]}_Zona{zona}"
     bpy.ops.object.select_all(action="DESELECT")
     for o in [raiz, *raiz.children_recursive]:
         o.select_set(True)
