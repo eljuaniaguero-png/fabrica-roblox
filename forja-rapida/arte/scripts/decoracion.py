@@ -67,6 +67,10 @@ Piezas:
                  tamaños: Chica (16 x 10 studs, 2 pisos, 3 de alto), Mediana (28 x 16, 3 pisos, 5)
                  y Grande (44 x 24, 3 pisos, 9: la duna alta donde se esconde el portal). Malla
                  Duna_<tamaño>.
+  Cactus         Dunas: columna verde de bloques con una tapita más angosta arriba y 1 o 2 brazos
+                 que salen de costado y suben en escalón (arte/referencias/cactus-*.webp). Tres
+                 tamaños: Chico (4 studs de alto, 1 brazo), Mediano (7, 2 brazos) y Grande (11, 2
+                 brazos). Malla Cactus_<tamaño>.
                  Cada árbol de la Pradera (y el arbusto) tiene 3 variantes (Arbol_Grande_1, _2 y _3...).
   Roca_Meteorito solo Abismo: media bola chata de bloques de 2 studs azul noche, con un cráter
                  arriba (corrido a un costado) que brilla violeta en el fondo y estrellitas lilas
@@ -1497,6 +1501,50 @@ def mats_duna(studs=None):
     return {"duna": M.material("Duna", DUNA_COLOR)}
 
 
+# Cactus (Dunas): tronco con tapita y brazos en L
+CACTUS_COLOR = ZONAS[1]["tapa"]  # el verde del pasto, como los cactus de las capturas
+CACTUS_TAPA = 0.5  # alto de la tapita de arriba (un poco más angosta) del tronco y de cada brazo
+# tamaño -> (alto, ancho del tronco, brazos: (lado ±1 en x, z donde sale, cuánto sale, cuánto sube
+#            arriba del codo, grosor))
+CACTUS = {
+    "Chico": (4, 1.5, [(1, 1.2, 1.2, 1.2, 0.9)]),
+    "Mediano": (7, 2.5, [(1, 2.5, 2, 2.5, 1.5), (-1, 3.5, 1.75, 1.5, 1.25)]),
+    "Grande": (11, 3.5, [(1, 3.5, 3, 4, 2), (-1, 5, 2.5, 3, 1.75)]),
+}
+MAX_CACTUS = 1500  # por pieza
+
+
+def cactus(mats, tam="Mediano"):
+    """Cactus_<tam>: tronco de ancho x ancho con tapita, y cada brazo: un tramo que sale de
+    costado y una columna que sube desde la punta, con su tapita. Sin las caras que quedan
+    pegadas (así no se pisan). Pivote en el centro de la base."""
+    alto, ancho, brazos = CACTUS[tam]
+    m = Malla()
+    h = ancho / 2
+    m.caja((-h, h), (-h, h), (0, alto - CACTUS_TAPA), caras="xXyYZ")
+    m.caja((-h + 0.25, h - 0.25), (-h + 0.25, h - 0.25), (alto - CACTUS_TAPA, alto), caras="xXyYZ")
+    for lado, z, sale, sube, g in brazos:
+        gy = (-g / 2, g / 2)
+        afuera = h + sale  # donde termina el brazo
+        codo = (afuera - g, afuera)  # la columna que sube
+        horiz = (h, afuera - g)
+        arriba = z + g + sube
+        if lado < 0:
+            codo, horiz = (-codo[1], -codo[0]), (-horiz[1], -horiz[0])
+        m.caja(horiz, gy, (z, z + g), caras="yYzZ")  # sin las puntas: tronco y codo las tapan
+        m.caja(codo, gy, (z, arriba - CACTUS_TAPA), caras="xXyYzZ")
+        t = 0.2
+        m.caja((codo[0] + t, codo[1] - t), (gy[0] + t, gy[1] - t), (arriba - CACTUS_TAPA, arriba), caras="xXyYZ")
+    return mallas([(f"Cactus_{tam}", m, mats["cactus"])], MAX_CACTUS, f"Cactus {tam}")
+
+
+def mats_cactus(studs=None):
+    """Con studs, para el render; sin, para exportar."""
+    if studs:
+        return {"cactus": material_studs("Cactus", CACTUS_COLOR, studs)}
+    return {"cactus": M.material("Cactus", CACTUS_COLOR)}
+
+
 # Roca_Meteorito: roca azul noche de bloques con un cráter que brilla violeta adentro y
 # estrellitas lilas en los costados (como el cielo del Abismo, arte/referencias/abismo-1.png;
 # el naranja quedaba de la zona de lava)
@@ -1790,6 +1838,7 @@ REFERENCIAS = {
     # la pirámide de las Dunas y la captura de la zona
     "Piramide": ("mapa-2.png", "estilo-2.png"),
     "Duna": ("mapa-2.png", "estilo-2.png"),
+    "Cactus": ("cactus-1.webp", "cactus-2.webp"),
 }
 
 
@@ -1997,6 +2046,32 @@ def render_duna():
     comparar("Duna")
     for tam, c in conteo.items():
         print("TRIANGULOS Duna", tam, c, "total", sum(c.values()))
+
+
+def render_cactus():
+    """Cactus Chico, Mediano y Grande en fila, de frente y de costado, al lado de las
+    referencias (sobre piso de arena, como en el juego)."""
+    conteo = {}
+    paso = 12  # studs entre cactus
+    alto = CACTUS["Grande"][0] * M.STUD
+    for vista in ("frente", "costado"):
+        M.limpiar_escena()
+        escena = M.escena_render(1280, 720)
+        tablero = bpy.data.materials["Piso"].node_tree.nodes["Checker Texture"]
+        tablero.inputs["Color1"].default_value = (*M.hex_a_rgb(ZONAS[2]["tapa"]), 1)
+        tablero.inputs["Color2"].default_value = (*M.hex_a_rgb("#EACB72"), 1)
+        mats = mats_cactus(textura_studs())
+        for k, tam in enumerate(CACTUS):
+            objs, c = cactus(mats, tam)
+            conteo[tam] = c
+            pos = (k - 1) * paso * M.STUD
+            M.mover(objs, pos if vista == "frente" else 0, 0 if vista == "frente" else pos)
+        giro = -14 if vista == "frente" else 76
+        camara_orto(escena, (0, 0, alto * 0.5), 3.4 * paso * M.STUD, 10, giro)
+        M.render(f"cactus_{vista}")
+    comparar("Cactus")
+    for tam, c in conteo.items():
+        print("TRIANGULOS Cactus", tam, c, "total", sum(c.values()))
 
 
 def noche_abismo(escena):
@@ -2385,7 +2460,8 @@ def exportar_zona1():
 def exportar_zona2():
     """Deco_Zona2.fbx: piezas que son solo de las Dunas. Raíz Deco_Zona2 con un vacío Piramide y
     su malla Piramide_Piramide, y uno por tamaño de duna (Duna_Chica, Duna_Mediana, Duna_Grande)
-    con su malla Duna_Chica_Arena... Sin textura: el juego pone el color y TextureID = Studs.png."""
+    con su malla Duna_Chica_Arena..., y uno por tamaño de cactus (Cactus_Chico...) con su malla
+    Cactus_Chico_Cactus... Sin textura: el juego pone el color y TextureID = Studs.png."""
     M.limpiar_escena()
     raiz = bpy.data.objects.new("Deco_Zona2", None)
     bpy.context.scene.collection.objects.link(raiz)
@@ -2398,16 +2474,20 @@ def exportar_zona2():
             o.parent = vacio
             o.name = o.data.name = f"{nombre}_{o.name.split('.')[0]}"
         print("TRIANGULOS", nombre, conteo, "total", sum(conteo.values()))
-    mats = mats_duna()
-    for tam in DUNAS:
-        vacio = bpy.data.objects.new(f"Duna_{tam}", None)
-        bpy.context.scene.collection.objects.link(vacio)
-        vacio.parent = raiz
-        objs, conteo = duna(mats, tam)
-        for o in objs:
-            o.parent = vacio
-            o.name = o.data.name = f"Duna_{tam}_Arena"  # el vacío ya se llama Duna_<tam>
-        print("TRIANGULOS", f"Duna_{tam}", conteo, "total", sum(conteo.values()))
+    # una por tamaño: el vacío se llama Duna_<tam> y la malla Duna_<tam>_Arena (Cactus_<tam>_Cactus)
+    for pieza, crear, mats, tamanos, malla in (
+        ("Duna", duna, mats_duna(), DUNAS, "Arena"),
+        ("Cactus", cactus, mats_cactus(), CACTUS, "Cactus"),
+    ):
+        for tam in tamanos:
+            vacio = bpy.data.objects.new(f"{pieza}_{tam}", None)
+            bpy.context.scene.collection.objects.link(vacio)
+            vacio.parent = raiz
+            objs, conteo = crear(mats, tam)
+            for o in objs:
+                o.parent = vacio
+                o.name = o.data.name = f"{pieza}_{tam}_{malla}"
+            print("TRIANGULOS", f"{pieza}_{tam}", conteo, "total", sum(conteo.values()))
     bpy.ops.object.select_all(action="DESELECT")
     for o in [raiz, *raiz.children_recursive]:
         o.select_set(True)
@@ -2480,4 +2560,6 @@ if __name__ == "__main__":
         render_piramide()
     if "--pieza" not in sys.argv or "Duna" in sys.argv:
         render_duna()
+    if "--pieza" not in sys.argv or "Cactus" in sys.argv:
+        render_cactus()
     print("Listo")
