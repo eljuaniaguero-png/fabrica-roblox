@@ -21,6 +21,10 @@ Piezas:
                  franjas (rojo afuera, violeta adentro), una malla por franja, y una nube de
                  bloques en cada punta (malla Nube). Las dos piezas del cielo son las mismas para
                  todas las zonas (arte/referencias/cielo-*.png).
+  Columna_Estelar  solo Abismo (zona 5): columna alta de bloques de 2 studs violeta muy oscuro,
+                 un poco torcida (cada capa se corre un bloque en una curva suave), con pie ancho
+                 y punta angosta, y estrellitas blancas (cruces de cubitos, Neon) pegadas en las
+                 paredes. Dos alturas: Alta (44 studs) y Baja (28). Mallas Columna y Estrellas.
 
 Cada pieza tiene una variante por zona (ZONAS): sus colores y lo que tiene la tapa (pasto con
 gotitas; dunas de arena; nieve con carámbanos; ceniza con piedritas y chorros de lava; cristales
@@ -40,7 +44,8 @@ Reglas (GUIA, sección 5): escala real (1 stud = 0,28 m), pivote en el centro de
 Uso: <python de Blender> forja-rapida/arte/scripts/decoracion.py
   (sin nada: render de frente y de costado de cada pieza al lado de las referencias, y
    triángulos; --pieza <Nombre>: solo esa; --zonas: las 5 variantes de cada pieza en
-   arte/renders/deco_zonas.jpg; --exportar: además arma arte/fbx/Deco_Comun.fbx)
+   arte/renders/deco_zonas.jpg; --exportar: además arma arte/fbx/Deco_Comun.fbx;
+   --pieza Columna_Estelar: render de la columna del Abismo)
 """
 
 import math
@@ -655,6 +660,119 @@ def mats_cielo(studs=None):
     return mats
 
 
+# --- Abismo (zona 5): Columna_Estelar -----------------------------------------------------------
+
+COLUMNA_COLOR = "#2E1660"  # violeta muy oscuro (más oscuro que el risco del Abismo)
+ESTRELLA_COLOR = "#F4F6FF"  # en Roblox, Material Neon
+COLUMNA_CUBO = 2  # studs de cada bloque de la columna
+# alto -> (capas de bloques, estrellas, semilla): Alta 44 studs, Baja 28
+COLUMNAS = {"Alta": (22, 12, 5), "Baja": (14, 8, 9)}
+ESTRELLA_PX = 0.6  # studs de cada cubito de la estrella
+ESTRELLA_SALE = 0.3  # cuánto sale de la pared
+MAX_COLUMNA = 2000  # por pieza (sumando sus mallas)
+
+
+def celdas_columna(capas, semilla):
+    """Columna de bloques de 2 studs: pie ancho (6 x 6 con las puntas cortadas), cuerpo de 4 x 4
+    sin esquinas que se va corriendo en x e y al subir (torcida en una curva suave) y punta de
+    2 x 2. Devuelve las celdas y el corrimiento (cx, cy) de cada capa."""
+    rng = random.Random(semilla)
+    fase, giro = rng.uniform(0, math.pi), rng.choice((-1, 1))
+    celdas, centros = set(), []
+    for k in range(capas):
+        t = k / (capas - 1)
+        # se inclina para un lado y vuelve un poco arriba, con un vaivén suave en el otro eje
+        cx = round(2.2 * math.sin(math.pi * t * 0.75) * giro)
+        cy = round(0.9 * math.sin(math.pi * t * 1.6 + fase))
+        if k < 2:
+            cx = cy = 0  # el pie, centrado en el pivote
+        centros.append((cx, cy))
+        if k == 0:
+            lado = 6
+        elif k >= capas - 2:
+            lado = 2
+        elif k == 1:
+            lado = 5
+        elif k >= capas - 3:
+            lado = 3
+        else:
+            lado = 4
+        for i in range(lado):
+            for j in range(lado):
+                esquina = i in (0, lado - 1) and j in (0, lado - 1)
+                if esquina and lado >= 4:
+                    continue
+                celdas.add((cx + i - lado // 2, cy + j - lado // 2, k))
+    return celdas, centros
+
+
+def estrella(m, eje, signo, plano, a, b, grande):
+    """Estrellita de cubitos pegada a una pared: una cruz (brazos de 1 o 2 cubitos) centrada en
+    (a, b), saliendo ESTRELLA_SALE de la pared en eje = plano."""
+    brazo = 2 if grande else 1
+    cruz = {(0, 0)} | {(d * s, 0) for d in range(1, brazo + 1) for s in (-1, 1)}
+    cruz |= {(0, d * s) for d in range(1, brazo + 1) for s in (-1, 1)}
+    ea, eb = Malla.EJES[eje]
+    tam, origen, celdas = [0.0] * 3, [0.0] * 3, set()
+    tam[eje], tam[ea], tam[eb] = ESTRELLA_SALE, ESTRELLA_PX, ESTRELLA_PX
+    origen[eje] = plano if signo > 0 else plano - ESTRELLA_SALE
+    origen[ea], origen[eb] = a - ESTRELLA_PX / 2, b - ESTRELLA_PX / 2
+    for u, v in cruz:
+        c = [0, 0, 0]
+        c[ea], c[eb] = u, v
+        celdas.add(tuple(c))
+    voxeles_malla(m, celdas, tam, origen)
+
+
+def columna_estelar(mats, alto="Alta"):
+    """Columna_Estelar_<alto>: mallas Columna (bloques) y Estrellas (cruces blancas que brillan,
+    pegadas en las paredes de afuera). Pivote en el centro de la base."""
+    capas, cantidad, semilla = COLUMNAS[alto]
+    celdas, centros = celdas_columna(capas, semilla)
+    s = COLUMNA_CUBO
+    col = Malla()
+    voxeles_malla(col, celdas, (s, s, s))
+    rng = random.Random(semilla * 7)
+    est, usadas = Malla(), set()
+    intentos = 0
+    while len(usadas) < cantidad and intentos < 500:
+        intentos += 1
+        k = rng.randrange(2, capas - 2)
+        eje, signo = rng.choice(((0, 1), (0, -1), (1, 1), (1, -1)))
+        otro = 1 - eje
+        # cara de afuera: la celda más lejana de la capa k en esa dirección
+        fila = [c for c in celdas if c[2] == k]
+        borde = max(c[eje] * signo for c in fila) * signo
+        caras = [c for c in fila if c[eje] == borde]
+        c = rng.choice(caras)
+        if (k // 2, eje, signo) in usadas:  # repartidas: una por cada 2 capas y lado
+            continue
+        usadas.add((k // 2, eje, signo))
+        plano = (c[eje] + (1 if signo > 0 else 0)) * s
+        centro_otro = (c[otro] + 0.5) * s + rng.uniform(-0.3, 0.3)
+        centro_z = (k + 0.5) * s + rng.uniform(-0.3, 0.3)
+        a, b = (centro_otro, centro_z) if Malla.EJES[eje][0] == otro else (centro_z, centro_otro)
+        estrella(est, eje, signo, plano, a, b, rng.random() < 0.35)
+    objs, conteo = mallas(
+        [(f"Columna_{alto}", col, mats["columna"]), (f"Estrellas_{alto}", est, mats["estrellas"])],
+        MAX_COLUMNA,
+        f"Columna_Estelar {alto}",
+    )
+    if sum(conteo.values()) > MAX_COLUMNA:
+        raise RuntimeError(f"Columna_Estelar {alto}: {sum(conteo.values())} triángulos (máximo {MAX_COLUMNA})")
+    return objs, conteo
+
+
+def mats_columna(studs=None):
+    """Con studs, para el render (las estrellas brillan); sin, para exportar."""
+    if studs:
+        return {
+            "columna": material_studs("Columna", COLUMNA_COLOR, studs),
+            "estrellas": M.material("Estrellas", ESTRELLA_COLOR, brillo=ESTRELLA_COLOR, fuerza_brillo=2.5),
+        }
+    return {"columna": M.material("Columna", COLUMNA_COLOR), "estrellas": M.material("Estrellas", ESTRELLA_COLOR)}
+
+
 # nombre -> (función, alto total en studs, fondo en studs)
 PIEZAS = {
     "Risco_Escalon": (risco_escalon, 30, 16),
@@ -804,6 +922,8 @@ REFERENCIAS = {
     "Losas_Piedra": ("losas-1.png", "losas-2.png"),
     "Risco_Escalon": ("mapa-1.png", "mapa-3.png"),
     "Pared_Ladrillo": ("pared-1.png", "pared-2.png"),
+    # la captura entera y un acercamiento a los árboles violetas del fondo
+    "Columna_Estelar": ("estilo-1.png", ("estilo-1.png", (0.40, 0.33, 0.60, 0.58))),
 }
 
 
@@ -839,6 +959,28 @@ def render_cielo(pieza):
         M.render(f"{pieza.lower()}_{vista}")
     comparar(pieza)
     print("TRIANGULOS", pieza, conteo, "total", sum(conteo.values()))
+
+
+def render_columna():
+    """Columna_Estelar Alta y Baja de frente y de costado, al lado de la referencia
+    (estilo-1.png y un acercamiento a sus árboles violetas)."""
+    conteo = {}
+    paso = 16 * M.STUD
+    alto = COLUMNAS["Alta"][0] * COLUMNA_CUBO * M.STUD
+    for vista in ("frente", "costado"):
+        M.limpiar_escena()
+        escena = M.escena_render(1280, 720)
+        mats = mats_columna(textura_studs())
+        for k, tam in enumerate(COLUMNAS):
+            objs, c = columna_estelar(mats, tam)
+            conteo.update(c)
+            M.mover(objs, (k - 0.5) * paso if vista == "frente" else 0, 0 if vista == "frente" else (k - 0.5) * paso)
+        giro = -14 if vista == "frente" else 76
+        camara_orto(escena, (0, 0, alto * 0.5), alto * 1.25 * 16 / 9, 10, giro)
+        M.render(f"columna_estelar_{vista}")
+    comparar("Columna_Estelar")
+    print("TRIANGULOS Columna_Estelar", conteo, "Alta", sum(v for k, v in conteo.items() if "Alta" in k),
+          "Baja", sum(v for k, v in conteo.items() if "Baja" in k))
 
 
 def render_losas():
@@ -942,7 +1084,8 @@ def render_zonas():
     print("  Render deco_zonas.jpg")
 
 
-def cargar(ruta, ancho, alto):
+def cargar(ruta, ancho, alto, recorte=None):
+    """recorte: (x0, y0, x1, y1) en fracciones de la imagen, y = 0 arriba."""
     import numpy as np
 
     img = bpy.data.images.load(str(ruta))
@@ -950,6 +1093,10 @@ def cargar(ruta, ancho, alto):
     px = np.empty(w * h * 4, dtype=np.float32)
     img.pixels.foreach_get(px)
     px = px.reshape(h, w, 4)
+    if recorte:
+        x0, y0, x1, y1 = recorte  # en Blender la fila 0 es la de abajo
+        px = px[round(h * (1 - y1)) : round(h * (1 - y0)), round(w * x0) : round(w * x1)]
+        h, w = px.shape[:2]
     # recorte al centro con la proporción pedida y escala sencilla (vecino más cercano)
     if w / h > ancho / alto:
         nw = round(h * ancho / alto)
@@ -970,7 +1117,7 @@ def comparar(pieza):
     ref = M.ARTE / "referencias"
     archivo = pieza.lower()
     cuadros = [
-        *(cargar(ref / r, w, h) for r in REFERENCIAS[pieza]),
+        *(cargar(ref / r, w, h) if isinstance(r, str) else cargar(ref / r[0], w, h, r[1]) for r in REFERENCIAS[pieza]),
         cargar(M.RENDERS / f"{archivo}_frente.jpg", w, h),
         cargar(M.RENDERS / f"{archivo}_costado.jpg", w, h),
     ]
@@ -1066,4 +1213,6 @@ if __name__ == "__main__":
     for pieza in ("Nube_Bloques", "Arcoiris"):
         if "--pieza" not in sys.argv or pieza in sys.argv:
             render_cielo(pieza)
+    if "--pieza" not in sys.argv or "Columna_Estelar" in sys.argv:
+        render_columna()
     print("Listo")
