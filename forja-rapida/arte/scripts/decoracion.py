@@ -45,7 +45,8 @@ Uso: <python de Blender> forja-rapida/arte/scripts/decoracion.py
   (sin nada: render de frente y de costado de cada pieza al lado de las referencias, y
    triángulos; --pieza <Nombre>: solo esa; --zonas: las 5 variantes de cada pieza en
    arte/renders/deco_zonas.jpg; --exportar: además arma arte/fbx/Deco_Comun.fbx;
-   --pieza Columna_Estelar: render de la columna del Abismo)
+   --pieza Columna_Estelar: render de la columna del Abismo; --exportar-zona5: solo arma
+   arte/fbx/Deco_Zona5.fbx con las piezas del Abismo, sin renders)
 """
 
 import math
@@ -1196,7 +1197,50 @@ def exportar():
     print("  FBX Deco_Comun.fbx")
 
 
+def exportar_zona5():
+    """Deco_Zona5.fbx: piezas que son solo del Abismo. Raíz Deco_Zona5 con un vacío por alto
+    (Columna_Estelar_Alta, Columna_Estelar_Baja) y sus mallas (Columna_Alta y Estrellas_Alta...).
+    Sin textura: el juego pone el color, TextureID = Studs.png en la Columna y Material Neon en
+    las Estrellas."""
+    M.limpiar_escena()
+    raiz = bpy.data.objects.new("Deco_Zona5", None)
+    bpy.context.scene.collection.objects.link(raiz)
+    mats = mats_columna()
+    for alto in COLUMNAS:
+        vacio = bpy.data.objects.new(f"Columna_Estelar_{alto}", None)
+        bpy.context.scene.collection.objects.link(vacio)
+        vacio.parent = raiz
+        objs, conteo = columna_estelar(mats, alto)
+        for o in objs:
+            o.parent = vacio
+        print("TRIANGULOS", f"Columna_Estelar_{alto}", conteo, "total", sum(conteo.values()))
+    bpy.ops.object.select_all(action="DESELECT")
+    for o in [raiz, *raiz.children_recursive]:
+        o.select_set(True)
+    bpy.context.view_layer.objects.active = raiz
+    bpy.ops.export_scene.fbx(
+        filepath=str(M.FBX / "Deco_Zona5.fbx"),
+        use_selection=True,
+        object_types={"MESH", "EMPTY"},
+        apply_unit_scale=True,
+        apply_scale_options="FBX_SCALE_ALL",
+        axis_forward="-Z",
+        axis_up="Y",
+        mesh_smooth_type="FACE",
+        bake_space_transform=True,
+        add_leaf_bones=False,
+    )
+    print("  FBX Deco_Zona5.fbx")
+
+
 if __name__ == "__main__":
+    if "--exportar-zona5" in sys.argv:
+        M.FBX.mkdir(parents=True, exist_ok=True)
+        exportar_zona5()
+        sys.argv.append("--solo-fbx")
+    if "--solo-fbx" in sys.argv:
+        print("Listo")
+        sys.exit(0)
     if "--exportar" in sys.argv:
         M.FBX.mkdir(parents=True, exist_ok=True)
         exportar()
