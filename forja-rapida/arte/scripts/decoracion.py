@@ -30,6 +30,10 @@ Piezas:
                  escalones hasta una punta de 2 x 2 bloques. Tres tamaños: Chica (12 studs de
                  ancho), Mediana (20) y Grande (28). Mallas Roca, Pasto y Cristales; pivote en el
                  centro de la punta de abajo.
+  Cristales_Abismo solo Abismo: racimo de 6 cristales de cubitos de 1 stud (rosas y violetas,
+                 Neon), el del medio recto y los otros inclinados hacia afuera en escalones,
+                 saliendo de una roca oscura de bloques de 2 studs (10 x 10 studs de base).
+                 Mallas Roca, CristalRosa y CristalVioleta.
 
 Cada pieza tiene una variante por zona (ZONAS): sus colores y lo que tiene la tapa (pasto con
 gotitas; dunas de arena; nieve con carámbanos; ceniza con piedritas y chorros de lava; cristales
@@ -50,7 +54,7 @@ Uso: <python de Blender> forja-rapida/arte/scripts/decoracion.py
   (sin nada: render de frente y de costado de cada pieza al lado de las referencias, y
    triángulos; --pieza <Nombre>: solo esa; --zonas: las 5 variantes de cada pieza en
    arte/renders/deco_zonas.jpg; --exportar: además arma arte/fbx/Deco_Comun.fbx;
-   --pieza Columna_Estelar / Isla_Flotante: render de esa pieza del Abismo; --exportar-zona5: solo arma
+   --pieza Columna_Estelar / Isla_Flotante / Cristales_Abismo: render de esa pieza del Abismo; --exportar-zona5: solo arma
    arte/fbx/Deco_Zona5.fbx con las piezas del Abismo, sin renders)
 """
 
@@ -853,6 +857,82 @@ def isla_flotante(mats, tam="Mediana"):
     return objs, conteo
 
 
+# Cristales_Abismo: racimo de cristales rosas y violetas (Neon) saliendo de una roca oscura
+RACIMO_ROSA = ISLA_CRISTAL
+RACIMO_VIOLETA = "#7A2CFF"
+RACIMO_ROCA = ISLA_ROCA
+RACIMO_CUBO = 2  # studs de cada bloque de la roca
+RACIMO_PX = 1  # studs de cada cubito de los cristales
+# cada cristal: (x, y) donde nace, en studs; dirección hacia donde se inclina (dx, dy);
+# alto en cubitos; cada cuántos cubitos se corre 1 hacia afuera; ancho (2: 2 x 2, 3: 3 x 3)
+RACIMO = [
+    ((0, 0), (0, 0), 11, 99, 3),  # el del medio, recto y grueso
+    ((-2, 1), (-1, 0), 8, 3, 2),
+    ((2, 1), (1, 1), 7, 3, 2),
+    ((1, -2), (0, -1), 6, 2, 2),
+    ((-2, -2), (-1, -1), 5, 2, 2),
+    ((3, -1), (1, 0), 4, 2, 2),
+]
+MAX_RACIMO = 1500  # por pieza (sumando sus mallas)
+
+
+def celdas_cristal(x0, y0, dx, dy, alto, paso, ancho):
+    """Cubitos de un cristal: columna de ancho x ancho que se corre 1 hacia (dx, dy) cada `paso`
+    cubitos y termina en punta (las 2 capas de arriba más angostas)."""
+    celdas = set()
+    for k in range(alto):
+        corre = min(k, alto - 3) // paso  # la punta ya no se corre: queda pegada
+        cx, cy = x0 + dx * corre, y0 + dy * corre
+        lado = ancho if k < alto - 2 else max(1, ancho - (k - (alto - 3)))
+        for i in range(lado):
+            for j in range(lado):
+                celdas.add((cx + i - lado // 2, cy + j - lado // 2, k))
+    return celdas
+
+
+def cristales_abismo(mats):
+    """Cristales_Abismo: mallas Roca (bloques de 2 studs: base de 5 x 5 sin esquinas y una
+    segunda capa más chica) y CristalRosa y CristalVioleta (cubitos de 1 stud, Neon), que nacen
+    un bloque adentro de la roca. Pivote en el centro de la base."""
+    roca = {(x, y, 0) for x in range(-3, 2) for y in range(-3, 2) if not (x in (-3, 1) and y in (-3, 1))}
+    roca |= {(x, y, 1) for x in range(-2, 1) for y in range(-2, 1)} | {(1, -1, 1), (-3, 0, 1)}
+    s = RACIMO_CUBO
+    m_roca = Malla()
+    voxeles_malla(m_roca, roca, (s, s, s), (s / 2, s / 2, 0))  # la base de 5 x 5 queda centrada
+    rosa, violeta = set(), set()
+    for n, ((x, y), (dx, dy), alto, paso, ancho) in enumerate(RACIMO):
+        (rosa if n % 2 == 0 else violeta).update(celdas_cristal(x, y, dx, dy, alto, paso, ancho))
+    violeta -= rosa
+    nace = s + 0.5  # medio stud arriba de la primera capa: nacen adentro de la segunda
+    m_rosa, m_violeta = Malla(), Malla()
+    voxeles_malla(m_rosa, rosa, (RACIMO_PX,) * 3, (0, 0, nace))
+    voxeles_malla(m_violeta, violeta, (RACIMO_PX,) * 3, (0, 0, nace))
+    objs, conteo = mallas(
+        [("Roca", m_roca, mats["roca"]), ("CristalRosa", m_rosa, mats["rosa"]),
+         ("CristalVioleta", m_violeta, mats["violeta"])],
+        MAX_RACIMO,
+        "Cristales_Abismo",
+    )
+    if sum(conteo.values()) > MAX_RACIMO:
+        raise RuntimeError(f"Cristales_Abismo: {sum(conteo.values())} triángulos (máximo {MAX_RACIMO})")
+    return objs, conteo
+
+
+def mats_racimo(studs=None):
+    """Con studs, para el render (los cristales brillan); sin, para exportar."""
+    if studs:
+        return {
+            "roca": material_studs("RacimoRoca", RACIMO_ROCA, studs),
+            "rosa": M.material("RacimoRosa", RACIMO_ROSA, brillo=RACIMO_ROSA, fuerza_brillo=0.45),
+            "violeta": M.material("RacimoVioleta", RACIMO_VIOLETA, brillo=RACIMO_VIOLETA, fuerza_brillo=0.45),
+        }
+    return {
+        "roca": M.material("RacimoRoca", RACIMO_ROCA),
+        "rosa": M.material("RacimoRosa", RACIMO_ROSA),
+        "violeta": M.material("RacimoVioleta", RACIMO_VIOLETA),
+    }
+
+
 def mats_isla(studs=None):
     """Con studs, para el render (los cristales brillan); sin, para exportar."""
     if studs:
@@ -1030,6 +1110,7 @@ REFERENCIAS = {
     # la captura entera y un acercamiento a los árboles violetas del fondo
     "Columna_Estelar": ("estilo-1.png", ("estilo-1.png", (0.40, 0.33, 0.60, 0.58))),
     "Isla_Flotante": ("estilo-1.png", ("estilo-1.png", (0.40, 0.33, 0.60, 0.58))),
+    "Cristales_Abismo": ("estilo-1.png", ("estilo-1.png", (0.40, 0.33, 0.60, 0.58))),
 }
 
 
@@ -1115,6 +1196,20 @@ def render_isla():
     comparar("Isla_Flotante")
     for tam, c in conteo.items():
         print("TRIANGULOS Isla_Flotante", tam, c, "total", sum(c.values()))
+
+
+def render_racimo():
+    """Cristales_Abismo de frente y de costado, al lado de la referencia."""
+    alto = 18 * M.STUD
+    for vista in ("frente", "costado"):
+        M.limpiar_escena()
+        escena = M.escena_render(1280, 720)
+        objs, conteo = cristales_abismo(mats_racimo(textura_studs()))
+        giro = -20 if vista == "frente" else 70
+        camara_orto(escena, (0, 0, alto * 0.45), alto * 1.3 * 16 / 9, 12, giro)
+        M.render(f"cristales_abismo_{vista}")
+    comparar("Cristales_Abismo")
+    print("TRIANGULOS Cristales_Abismo", conteo, "total", sum(conteo.values()))
 
 
 def render_losas():
@@ -1404,4 +1499,6 @@ if __name__ == "__main__":
         render_columna()
     if "--pieza" not in sys.argv or "Isla_Flotante" in sys.argv:
         render_isla()
+    if "--pieza" not in sys.argv or "Cristales_Abismo" in sys.argv:
+        render_racimo()
     print("Listo")
