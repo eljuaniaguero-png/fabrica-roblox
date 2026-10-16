@@ -6,6 +6,10 @@ Piezas:
                  escalón (con unas gotitas de pasto que cuelgan). Se pone uno al lado del otro sin
                  que se note la unión: los ladrillos cortados en los bordes no tienen junta del lado
                  del borde y los studs siguen la grilla del mundo (cada 4 studs empieza la textura).
+  Pared_Ladrillo tramo de pared recta de 16 studs de largo, 4 de espesor y 24 de alto: ladrillos
+                 con juntas marcadas de los dos lados y una tapa de pasto de 2 studs que sale medio
+                 stud para cada lado, con gotitas. Encaja sin costura con otro tramo igual (mismo
+                 truco que el risco). Mallas Pared y Tapa (la tapa toma el color de cada bioma).
 
 Estilo de las capturas del juego (arte/referencias/mapa-1.png y mapa-3.png): todo de bloques,
 colores planos, studs como textura (texturas/Studs.png, nunca modelados). Dos mallas, un color cada
@@ -15,11 +19,12 @@ Color de cada una debajo. Las UV van en 0-1: cada cara se corta en cuadrados de 
 mide la textura), así los studs quedan alineados entre caras y entre piezas.
 
 Reglas (GUIA, sección 5): escala real (1 stud = 0,28 m), pivote en el centro de la base, frente
-(la pared de los escalones) hacia -Z de Roblox, un material por malla, como mucho 6.000 triángulos.
+(la pared de los escalones) hacia -Z de Roblox, un material por malla, como mucho 6.000 triángulos
+(el risco) o 2.000 (la pared).
 
 Uso: <python de Blender> forja-rapida/arte/scripts/decoracion.py
-  (sin nada: render de frente y de costado al lado de las referencias, y tabla de triángulos;
-   --exportar: además arma arte/fbx/Deco_Comun.fbx)
+  (sin nada: render de frente y de costado de cada pieza al lado de las referencias, y
+   triángulos; --pieza <Nombre>: solo esa; --exportar: además arma arte/fbx/Deco_Comun.fbx)
 """
 
 import math
@@ -33,7 +38,6 @@ import bpy  # noqa: E402,I001  (bpy antes que modelos, que usa bmesh)
 import bmesh  # noqa: E402
 import modelos as M  # noqa: E402
 
-MAX_TRIANGULOS = 6000
 TEJA = 4  # studs que mide la textura de studs (4 x 4 studs en 256 px)
 
 # Colores de las capturas (los de la guía; en el juego los cambia cada bioma)
@@ -49,6 +53,12 @@ VUELO = 0.5  # cuánto sale el pasto hacia adelante
 LADRILLO = (4, 2)  # ancho y alto de cada ladrillo
 RELIEVE = 0.2  # cuánto sobresale cada ladrillo de la junta
 JUNTA = 0.25  # ancho de la junta entre ladrillos
+
+# Pared_Ladrillo, en studs (mismo largo, ladrillos y vuelo que el risco)
+PARED_ALTO = 22  # ladrillos (11 filas)
+PARED_TAPA = 2  # tapa de pasto: 22 + 2 = 24 de alto
+PARED_ESPESOR = 4  # y, de -2 a 2
+MAX_PARED = 2000
 
 
 class Malla:
@@ -120,12 +130,14 @@ def cortes(v0, v1):
     return list(zip(puntos, puntos[1:]))
 
 
-def ladrillos(m, y, z0, z1, fila0):
-    """Pared de ladrillos con relieve en el plano y (mirando a -y), de z0 a z1. Las filas se
-    corren medio ladrillo; los ladrillos cortados en x = ±8 siguen en la pieza de al lado, por
+def ladrillos(m, y, z0, z1, fila0, signo=-1):
+    """Pared de ladrillos con relieve en el plano y (mirando a signo * y), de z0 a z1. Las filas
+    se corren medio ladrillo; los ladrillos cortados en x = ±8 siguen en la pieza de al lado, por
     eso no tienen junta de ese lado."""
     medio = LARGO / 2
-    m.rect(1, -1, y, (z0, z1), (-medio, medio))  # la junta (fondo)
+    m.rect(1, signo, y, (z0, z1), (-medio, medio))  # la junta (fondo)
+    relieve = (y - RELIEVE, y) if signo < 0 else (y, y + RELIEVE)
+    caras = "xXyzZ" if signo < 0 else "xXYzZ"
     ancho, alto = LADRILLO
     j = JUNTA / 2
     for fila in range(round((z1 - z0) / alto)):
@@ -136,8 +148,33 @@ def ladrillos(m, y, z0, z1, fila0):
             xa, xb = max(x, -medio), min(x + ancho, medio)
             xa += 0 if xa == -medio else j
             xb -= 0 if xb == medio else j
-            m.caja((xa, xb), (y - RELIEVE, y), (za, zb), caras="xXyzZ")
+            m.caja((xa, xb), relieve, (za, zb), caras=caras)
             x += ancho
+
+
+def gotitas(m, rng, y, alto, signo=-1):
+    """Gotitas de pasto que cuelgan del vuelo de la tapa, delante de la pared en el plano y
+    (lejos de los bordes, así no cortan la unión)."""
+    medio = LARGO / 2
+    fondo = (y - VUELO, y - RELIEVE - 0.05) if signo < 0 else (y + RELIEVE + 0.05, y + VUELO)
+    x = -medio + rng.choice((1, 2))
+    while x < medio - 3:
+        largo = rng.choice((1, 1, 2))
+        ancho = rng.choice((1, 2))
+        m.caja((x, x + ancho), fondo, (alto - largo, alto), caras="xXyYz")
+        x += ancho + rng.choice((2, 3, 4))
+
+
+def mallas(piezas, tope, pieza):
+    """Arma los objetos de [(nombre, Malla, material)] y avisa si alguno se pasa de triángulos."""
+    objs, conteo = [], {}
+    for nombre, malla, mat in piezas:
+        obj, t = malla.objeto(nombre, mat)
+        if t > tope:
+            raise RuntimeError(f"{pieza} {nombre}: {t} triángulos (máximo {tope})")
+        objs.append(obj)
+        conteo[nombre] = t
+    return objs, conteo
 
 
 def risco_escalon(mats, semilla=11):
@@ -157,25 +194,42 @@ def risco_escalon(mats, semilla=11):
         caras = "xXyZ" + ("Y" if i + 1 == len(ESCALONES_Y) else "")
         pasto.caja((-medio, medio), (y - VUELO, y_sig), (alto, alto + PASTO), caras=caras)
         pasto.rect(2, -1, alto, (-medio, medio), (y - VUELO, y))
-        # gotitas de pasto que cuelgan (lejos de los bordes, así no cortan la unión)
-        x = -medio + rng.choice((1, 2))
-        while x < medio - 3:
-            largo = rng.choice((1, 1, 2))
-            ancho = rng.choice((1, 2))
-            pasto.caja((x, x + ancho), (y - VUELO, y - RELIEVE - 0.05), (alto - largo, alto), caras="xXyYz")
-            x += ancho + rng.choice((2, 3, 4))
+        gotitas(pasto, rng, y, alto)
     # fondo y base
     risco.rect(1, 1, fondo, (0, ALTOS[-1]), (-medio, medio))
     risco.rect(2, -1, 0, (-medio, medio), (-fondo, fondo))
-    obj_r, t_r = risco.objeto("Risco", mats["risco"])
-    obj_p, t_p = pasto.objeto("Pasto", mats["pasto"])
-    for nombre, t in (("Risco", t_r), ("Pasto", t_p)):
-        if t > MAX_TRIANGULOS:
-            raise RuntimeError(f"Risco_Escalon {nombre}: {t} triángulos (máximo {MAX_TRIANGULOS})")
-    return [obj_r, obj_p], {"Risco": t_r, "Pasto": t_p}
+    return mallas([("Risco", risco, mats["risco"]), ("Pasto", pasto, mats["pasto"])], 6000, "Risco_Escalon")
 
 
-PIEZAS = {"Risco_Escalon": risco_escalon}
+def pared_ladrillo(mats, semilla=23):
+    """Las dos mallas de la Pared_Ladrillo: (Pared, Tapa). La pared tiene ladrillos de los dos
+    lados; la tapa de pasto sale VUELO para cada lado y le cuelgan gotitas de los dos lados.
+    Entre las dos mallas no pasan de MAX_PARED triángulos."""
+    rng = random.Random(semilla)
+    medio, e = LARGO / 2, PARED_ESPESOR / 2
+    pared, tapa = Malla(), Malla()
+    ladrillos(pared, -e, 0, PARED_ALTO, 0, -1)
+    ladrillos(pared, e, 0, PARED_ALTO, 1, 1)
+    for signo in (-1, 1):
+        pared.rect(0, signo, signo * medio, (-e, e), (0, PARED_ALTO))  # puntas (tapadas entre tramos)
+    pared.rect(2, -1, 0, (-medio, medio), (-e, e))
+    arriba = PARED_ALTO + PARED_TAPA
+    tapa.caja((-medio, medio), (-e - VUELO, e + VUELO), (PARED_ALTO, arriba), caras="xXyYZ")
+    for y0, y1 in ((-e - VUELO, -e), (e, e + VUELO)):
+        tapa.rect(2, -1, PARED_ALTO, (-medio, medio), (y0, y1))
+    gotitas(tapa, rng, -e, PARED_ALTO, -1)
+    gotitas(tapa, rng, e, PARED_ALTO, 1)
+    objs, conteo = mallas([("Pared", pared, mats["risco"]), ("Tapa", tapa, mats["pasto"])], MAX_PARED, "Pared_Ladrillo")
+    if sum(conteo.values()) > MAX_PARED:
+        raise RuntimeError(f"Pared_Ladrillo: {sum(conteo.values())} triángulos (máximo {MAX_PARED})")
+    return objs, conteo
+
+
+# nombre -> (función, alto total en studs, fondo en studs)
+PIEZAS = {
+    "Risco_Escalon": (risco_escalon, 30, 16),
+    "Pared_Ladrillo": (pared_ladrillo, 24, 4),
+}
 
 
 # --- textura de studs ------------------------------------------------------------------------
@@ -250,9 +304,19 @@ def camara_orto(escena, centro, ancho, elevacion, giro):
     escena.camera = obj
 
 
-def render():
-    """De frente: 3 piezas seguidas (para ver que no se nota la unión). De costado: una sola,
-    con el perfil de los escalones. Después, las dos al lado de las referencias."""
+# capturas del juego con las que se compara cada pieza (arte/referencias/)
+REFERENCIAS = {
+    "Risco_Escalon": ("mapa-1.png", "mapa-3.png"),
+    "Pared_Ladrillo": ("pared-1.png", "pared-2.png"),
+}
+
+
+def render(pieza):
+    """De frente: 3 piezas seguidas (para ver que no se nota la unión). De costado: una sola.
+    Después, las dos al lado de las referencias."""
+    crear, alto, _ = PIEZAS[pieza]
+    alto *= M.STUD
+    archivo = pieza.lower()
     conteo = {}
     for vista in ("frente", "costado"):
         M.limpiar_escena()
@@ -260,16 +324,15 @@ def render():
         mats = mats_render(textura_studs())
         copias = (-1, 0, 1) if vista == "frente" else (0,)
         for k in copias:
-            objs, conteo = risco_escalon(mats)
+            objs, conteo = crear(mats)
             M.mover(objs, k * LARGO * M.STUD)
-        alto = (ALTOS[-1] + PASTO) * M.STUD
         if vista == "frente":
-            camara_orto(escena, (0, 0, alto / 2), 3 * LARGO * M.STUD * 1.35, 16, 0)
+            camara_orto(escena, (0, 0, alto / 2), max(3 * LARGO * M.STUD, alto * 16 / 9) * 1.35, 16, 0)
         else:
             camara_orto(escena, (0, 0, alto / 2), alto * 2.1, 10, 68)
-        M.render(f"risco_escalon_{vista}")
-    comparar()
-    print("TRIANGULOS Risco_Escalon", conteo, "total", sum(conteo.values()))
+        M.render(f"{archivo}_{vista}")
+    comparar(pieza)
+    print("TRIANGULOS", pieza, conteo, "total", sum(conteo.values()))
 
 
 def cargar(ruta, ancho, alto):
@@ -292,17 +355,17 @@ def cargar(ruta, ancho, alto):
     return px[fy][:, fx]
 
 
-def comparar():
-    """risco_escalon_vs_referencia.jpg: arriba las capturas del juego, abajo frente y costado."""
+def comparar(pieza):
+    """<pieza>_vs_referencia.jpg: arriba las capturas del juego, abajo frente y costado."""
     import numpy as np
 
     w, h = 960, 540
     ref = M.ARTE / "referencias"
+    archivo = pieza.lower()
     cuadros = [
-        cargar(ref / "mapa-1.png", w, h),
-        cargar(ref / "mapa-3.png", w, h),
-        cargar(M.RENDERS / "risco_escalon_frente.jpg", w, h),
-        cargar(M.RENDERS / "risco_escalon_costado.jpg", w, h),
+        *(cargar(ref / r, w, h) for r in REFERENCIAS[pieza]),
+        cargar(M.RENDERS / f"{archivo}_frente.jpg", w, h),
+        cargar(M.RENDERS / f"{archivo}_costado.jpg", w, h),
     ]
     blanco_v = np.ones((h, 12, 4), dtype=np.float32)
     # en Blender la fila 0 es la de abajo: los renders van primero
@@ -311,10 +374,10 @@ def comparar():
     junto = np.concatenate([abajo, np.ones((12, abajo.shape[1], 4), dtype=np.float32), arriba], axis=0)
     salida = bpy.data.images.new("comparacion", junto.shape[1], junto.shape[0])
     salida.pixels.foreach_set(junto.ravel())
-    salida.filepath_raw = str(M.RENDERS / "risco_escalon_vs_referencia.jpg")
+    salida.filepath_raw = str(M.RENDERS / f"{archivo}_vs_referencia.jpg")
     salida.file_format = "JPEG"
     salida.save()
-    print("  Render risco_escalon_vs_referencia.jpg")
+    print(f"  Render {archivo}_vs_referencia.jpg")
 
 
 def exportar():
@@ -324,7 +387,7 @@ def exportar():
     mats = {"risco": M.material("Risco", COLOR_RISCO), "pasto": M.material("Pasto", COLOR_PASTO)}
     raiz = bpy.data.objects.new("Deco_Comun", None)
     bpy.context.scene.collection.objects.link(raiz)
-    for nombre, crear in PIEZAS.items():
+    for nombre, (crear, _, _) in PIEZAS.items():
         vacio = bpy.data.objects.new(nombre, None)
         bpy.context.scene.collection.objects.link(vacio)
         vacio.parent = raiz
@@ -354,5 +417,8 @@ if __name__ == "__main__":
     if "--exportar" in sys.argv:
         M.FBX.mkdir(parents=True, exist_ok=True)
         exportar()
-    render()
+    # --pieza <Nombre>: solo esa (si no, todas)
+    elegidas = [sys.argv[sys.argv.index("--pieza") + 1]] if "--pieza" in sys.argv else list(PIEZAS)
+    for pieza in elegidas:
+        render(pieza)
     print("Listo")
