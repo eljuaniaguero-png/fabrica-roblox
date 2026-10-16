@@ -94,6 +94,10 @@ Piezas:
                  punta (tramos de cajas inclinadas que se angostan) que salen abiertas de la
                  nieve, la del medio de 12 studs. Mallas HieloCeleste y HieloBlanco, las dos con
                  Transparency = HIELO_TRANSPARENCIA en Roblox.
+  Escalones_Nevados  Glaciar: losas gris oscuro con ladrillos cuadrados en relieve, apiladas en
+                 escalera, con una capa de nieve arriba de cada una (glaciar-2.webp y -3). Dos
+                 versiones: 1 (escalón bajo, bloque alto y tapa: 12 x 8 studs, 9 de alto) y 2 (dos
+                 losas bajas, la de arriba corrida: 10 x 6, 5 de alto). Mallas Piedra y Nieve.
                  Cada árbol de la Pradera (y el arbusto) tiene 3 variantes (Arbol_Grande_1, _2 y _3...).
   Roca_Meteorito solo Abismo: media bola chata de bloques de 2 studs azul noche, con un cráter
                  arriba (corrido a un costado) que brilla violeta en el fondo y estrellitas lilas
@@ -1907,6 +1911,81 @@ def mats_pico_hielo(studs=None):
     return {k: M.material(f"PicoHielo_{k}", c) for k, c in colores.items()}
 
 
+# Escalones_Nevados (Glaciar): losas gris oscuro con ladrillos cuadrados en relieve, apiladas en
+# escalera (cada una más chica y corrida para atrás) con nieve arriba de cada una, como los escalones grises de las
+# capturas del Glaciar (arte/referencias/glaciar-2.webp y glaciar-3.webp)
+ESCALON_PIEDRA = "#5C6373"
+ESCALON_NIEVE = ZONAS[3]["tapa"]
+ESCALON_NIEVE_ALTO = 0.4
+ESCALON_NIEVE_VUELO = 0.25  # sale más que los ladrillos, así los tapa
+ESCALON_LADRILLO = 2  # lado de cada ladrillo cuadrado (como los de las capturas)
+ESCALON_MARGEN = 0.3  # junta alrededor de cada ladrillo
+ESCALON_RELIEVE = 0.15  # cuánto sale cada ladrillo de la losa
+# cada versión: losas (x0, x1, y0, y1, alto) de abajo para arriba
+ESCALONES = {
+    1: [(-6, 6, -4, 4, 2), (-4.5, 4.5, -2.5, 4, 4), (-3, 3, -1, 3, 2)],  # escalón bajo, bloque alto y tapa
+    2: [(-5, 5, -3, 3, 2), (-4.5, 1.5, -1.5, 2.5, 2)],  # 2 losas bajas, la de arriba corrida a un costado
+}
+MAX_ESCALONES = 1200
+
+
+def ladrillos_cuadrados(m, eje, signo, fijo, r0, r1, z0, z1):
+    """Ladrillos cuadrados en relieve sobre el costado eje = fijo (mirando a signo), de r0 a r1 y
+    de z0 a z1: una grilla de ESCALON_LADRILLO (estirada para que entre justo), sin la cara de
+    atrás (pegada a la losa)."""
+    cols = max(1, round((r1 - r0) / ESCALON_LADRILLO))
+    filas = max(1, round((z1 - z0) / ESCALON_LADRILLO))
+    w, h, j = (r1 - r0) / cols, (z1 - z0) / filas, ESCALON_MARGEN
+    afuera = (fijo, fijo + ESCALON_RELIEVE) if signo > 0 else (fijo - ESCALON_RELIEVE, fijo)
+    letra = "xX"[signo > 0] if eje == 0 else "yY"[signo > 0]
+    caras = letra + ("yY" if eje == 0 else "xX") + "zZ"
+    for c in range(cols):
+        ra, rb = r0 + c * w + j, r0 + (c + 1) * w - j
+        for f in range(filas):
+            za, zb = z0 + f * h + j, z0 + (f + 1) * h - j
+            if eje == 0:
+                m.caja(afuera, (ra, rb), (za, zb), caras=caras)
+            else:
+                m.caja((ra, rb), afuera, (za, zb), caras=caras)
+
+
+def escalones_nevados(mats, version=1):
+    """Escalones_Nevados_<version>: mallas Piedra (cada losa con ladrillos cuadrados en relieve
+    en los 4 costados) y Nieve (una capa arriba de cada losa; la de arriba de todo con un
+    montoncito). Cada losa apoya sobre la nieve de la de abajo. Pivote en el centro de la base."""
+    rng = random.Random(f"Escalones{version}")
+    piedra, nieve = Malla(), Malla()
+    z0 = 0.0
+    losas = ESCALONES[version]
+    for i, (x0, x1, y0, y1, alto) in enumerate(losas):
+        z1 = z0 + alto
+        piedra.caja((x0, x1), (y0, y1), (z0, z1), caras="xXyY")  # arriba la tapa la nieve
+        ladrillos_cuadrados(piedra, 0, -1, x0, y0, y1, z0, z1)
+        ladrillos_cuadrados(piedra, 0, 1, x1, y0, y1, z0, z1)
+        ladrillos_cuadrados(piedra, 1, -1, y0, x0, x1, z0, z1)
+        ladrillos_cuadrados(piedra, 1, 1, y1, x0, x1, z0, z1)
+        v = ESCALON_NIEVE_VUELO
+        nieve.caja((x0 - v, x1 + v), (y0 - v, y1 + v), (z1, z1 + ESCALON_NIEVE_ALTO))
+        if i == len(losas) - 1:
+            a = rng.uniform(x0 + 0.5, x1 - 3)
+            b = rng.uniform(y0 + 0.5, y1 - 2.5)
+            nieve.caja((a, a + 2.5), (b, b + 2), (z1 + ESCALON_NIEVE_ALTO, z1 + ESCALON_NIEVE_ALTO + 0.5), caras="xXyYZ")
+        z0 = z1 + ESCALON_NIEVE_ALTO
+    nombre = f"Escalones_Nevados_{version}"
+    objs, conteo = mallas([("Piedra", piedra, mats["piedra"]), ("Nieve", nieve, mats["nieve"])], MAX_ESCALONES, nombre)
+    if sum(conteo.values()) > MAX_ESCALONES:
+        raise RuntimeError(f"{nombre}: {sum(conteo.values())} triángulos (máximo {MAX_ESCALONES})")
+    return objs, conteo
+
+
+def mats_escalones(studs=None):
+    """Con studs, para el render; sin, para exportar."""
+    colores = {"piedra": ESCALON_PIEDRA, "nieve": ESCALON_NIEVE}
+    if studs:
+        return {k: material_studs(f"Escalones_{k}", c, studs) for k, c in colores.items()}
+    return {k: M.material(f"Escalones_{k}", c) for k, c in colores.items()}
+
+
 # Roca_Meteorito: roca azul noche de bloques con un cráter que brilla violeta adentro y
 # estrellitas lilas en los costados (como el cielo del Abismo, arte/referencias/abismo-1.png;
 # el naranja quedaba de la zona de lava)
@@ -2209,6 +2288,8 @@ REFERENCIAS = {
     "Pino_Nevado": ("glaciar-1.webp", "glaciar-2.webp"),
     "Monte_Nevado": ("glaciar-1.webp", "glaciar-3.webp"),
     # la bola de hielo que brilla de la izquierda y la captura del Glaciar
+    # los escalones grises con nieve de las capturas del Glaciar
+    "Escalones_Nevados": (("glaciar-2.webp", (0.08, 0.35, 0.50, 0.70)), ("glaciar-3.webp", (0.25, 0.10, 0.80, 0.55))),
     "Pico_Hielo": (("glaciar-1.webp", (0.15, 0.50, 0.50, 0.95)), "glaciar-2.webp"),
     "Esqueleto": (("cactus-2.webp", (0.10, 0.42, 0.42, 0.80)), ("estilo-2.png", (0.76, 0.45, 0.98, 0.75))),
 }
@@ -2552,6 +2633,33 @@ def render_pico_hielo():
         M.render(f"pico_hielo_{vista}")
     comparar("Pico_Hielo")
     print("TRIANGULOS Pico_Hielo", conteo, "total", sum(conteo.values()))
+
+
+def render_escalones():
+    """Escalones_Nevados 1 y 2 en fila, de frente y de costado (sobre nieve), al lado de las
+    referencias."""
+    conteo = {}
+    paso = 14  # studs entre versiones
+    alto = 9 * M.STUD
+    for vista in ("frente", "costado"):
+        M.limpiar_escena()
+        escena = M.escena_render(1280, 720)
+        escena.view_settings.exposure = -0.6  # que no se queme la nieve
+        tablero = bpy.data.materials["Piso"].node_tree.nodes["Checker Texture"]
+        tablero.inputs["Color1"].default_value = (*M.hex_a_rgb(ZONAS[3]["tapa"]), 1)
+        tablero.inputs["Color2"].default_value = (*M.hex_a_rgb("#DCE8F4"), 1)
+        mats = mats_escalones(textura_studs())
+        for k, v in enumerate(ESCALONES):
+            objs, c = escalones_nevados(mats, v)
+            conteo[v] = c
+            pos = (k - 0.5) * paso * M.STUD
+            M.mover(objs, pos if vista == "frente" else 0, 0 if vista == "frente" else pos)
+        giro = -20 if vista == "frente" else 70
+        camara_orto(escena, (0, 0, alto * 0.4), 2.4 * paso * M.STUD, 18, giro)
+        M.render(f"escalones_nevados_{vista}")
+    comparar("Escalones_Nevados")
+    for v, c in conteo.items():
+        print("TRIANGULOS Escalones_Nevados", v, c, "total", sum(c.values()))
 
 
 def noche_abismo(escena):
@@ -3010,7 +3118,8 @@ def exportar_zona3():
     pino (Pino_Nevado_Chico, Pino_Nevado_Grande) y sus mallas Pino_Nevado_Chico_Tronco, _Copa y
     _Nieve, y uno por tamaño de monte (Monte_Nevado_Chico, _Mediano, _Grande) con sus mallas
     Monte_Nevado_Chico_Nieve y _Hielo, y Pico_Hielo con Pico_Hielo_HieloCeleste y _HieloBlanco
-    (en Roblox, Transparency = HIELO_TRANSPARENCIA). Sin textura: el juego pone el color y TextureID = Studs.png."""
+    (en Roblox, Transparency = HIELO_TRANSPARENCIA), y Escalones_Nevados_1 y _2 con sus mallas
+    Escalones_Nevados_1_Piedra y _Nieve. Sin textura: el juego pone el color y TextureID = Studs.png."""
     M.limpiar_escena()
     raiz = bpy.data.objects.new("Deco_Zona3", None)
     bpy.context.scene.collection.objects.link(raiz)
@@ -3025,6 +3134,7 @@ def exportar_zona3():
     for pieza, crear, mats, tamanos in (
         ("Pino_Nevado", pino_nevado, mats_pino(), PINOS),
         ("Monte_Nevado", monte_nevado, mats_monte(), MONTES),
+        ("Escalones_Nevados", escalones_nevados, mats_escalones(), ESCALONES),
     ):
         for tam in tamanos:
             nombre = f"{pieza}_{tam}"
@@ -3124,4 +3234,6 @@ if __name__ == "__main__":
         render_monte()
     if "--pieza" not in sys.argv or "Pico_Hielo" in sys.argv:
         render_pico_hielo()
+    if "--pieza" not in sys.argv or "Escalones_Nevados" in sys.argv:
+        render_escalones()
     print("Listo")
