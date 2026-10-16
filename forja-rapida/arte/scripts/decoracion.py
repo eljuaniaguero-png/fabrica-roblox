@@ -1332,9 +1332,10 @@ def exportar():
 
 def exportar_zona5():
     """Deco_Zona5.fbx: piezas que son solo del Abismo. Raíz Deco_Zona5 con un vacío por alto
-    (Columna_Estelar_Alta, Columna_Estelar_Baja) y sus mallas (Columna_Alta y Estrellas_Alta...).
-    Sin textura: el juego pone el color, TextureID = Studs.png en la Columna y Material Neon en
-    las Estrellas."""
+    (Columna_Estelar_Alta, Columna_Estelar_Baja) y sus mallas (Columna_Alta y Estrellas_Alta...),
+    y uno por tamaño de isla (Isla_Flotante_Chica...) con Roca_Chica, Pasto_Chica y
+    Cristales_Chica. Sin textura: el juego pone el color, TextureID = Studs.png en Columna, Roca
+    y Pasto, y Material Neon en Estrellas y Cristales."""
     M.limpiar_escena()
     raiz = bpy.data.objects.new("Deco_Zona5", None)
     bpy.context.scene.collection.objects.link(raiz)
@@ -1347,6 +1348,15 @@ def exportar_zona5():
         for o in objs:
             o.parent = vacio
         print("TRIANGULOS", f"Columna_Estelar_{alto}", conteo, "total", sum(conteo.values()))
+    mats = mats_isla()
+    for tam in ISLAS:
+        vacio = bpy.data.objects.new(f"Isla_Flotante_{tam}", None)
+        bpy.context.scene.collection.objects.link(vacio)
+        vacio.parent = raiz
+        objs, conteo = isla_flotante(mats, tam)
+        for o in objs:
+            o.parent = vacio
+        print("TRIANGULOS", f"Isla_Flotante_{tam}", conteo, "total", sum(conteo.values()))
     bpy.ops.object.select_all(action="DESELECT")
     for o in [raiz, *raiz.children_recursive]:
         o.select_set(True)
