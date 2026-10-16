@@ -79,6 +79,9 @@ Piezas:
                  cierran hacia adelante como una garra, en tramos de cajas inclinadas
                  (arte/referencias/cactus-2.webp). Gris claro hueso, unos 12 studs de alto.
                  Malla Huesos.
+  Racimo_Ambar   Dunas: 5 gotas de ámbar naranja bien juntas (pisos de bloques que se angostan hacia arriba,
+                 Neon suave en Roblox) con un cubito de brillo más claro, sobre una piedra color
+                 arena de 3 bloques (9 x 7 studs de base). Mallas Piedra, Ambar y Brillo.
                  Cada árbol de la Pradera (y el arbusto) tiene 3 variantes (Arbol_Grande_1, _2 y _3...).
   Roca_Meteorito solo Abismo: media bola chata de bloques de 2 studs azul noche, con un cráter
                  arriba (corrido a un costado) que brilla violeta en el fondo y estrellitas lilas
@@ -1630,6 +1633,63 @@ def mats_esqueleto(studs=None):
     return {"huesos": M.material("Huesos", ESQUELETO_COLOR)}
 
 
+# Racimo_Ambar (Dunas): gotas de ámbar sobre una piedra color arena
+AMBAR_PIEDRA = LOSAS_ZONAS[2]["piedra"]  # la piedra de las losas de las Dunas
+AMBAR = "#F27A12"
+AMBAR_BRILLO = "#FFD27A"
+# cada gota: (x, y) del centro, z donde se apoya (un poco hundida en la piedra), tamaño
+# (todas juntas arriba del bloque del medio, casi tocándose alrededor de la grande)
+GOTAS_AMBAR = [((-0.5, -0.2), 2.9, 1.3), ((1.55, 0.75), 2.9, 0.9), ((-2.3, 0.95), 2.9, 0.8), ((1.3, -1.6), 2.9, 0.75),
+               ((-2.2, -1.55), 2.9, 0.7)]
+# pisos de cada gota de abajo para arriba: (medio ancho, alto), por tamaño: angosta abajo, panza
+# en el medio y punta arriba
+PISOS_GOTA = [(0.7, 0.5), (1.0, 1.0), (0.75, 0.6), (0.45, 0.6), (0.2, 0.5)]
+MAX_AMBAR = 1500
+
+
+def racimo_ambar(mats):
+    """Racimo_Ambar: mallas Piedra (3 bloques encimados con studs), Ambar (cada gota: pisos que
+    se angostan hacia arriba, sin las caras de abajo que quedan tapadas) y Brillo (un cubito
+    claro arriba y adelante de cada gota). Pivote en el centro de la base."""
+    piedra, ambar, brillo = Malla(), Malla(), Malla()
+    piedra.caja((-4.5, 4.5), (-3.5, 3.5), (0, 1.5), caras="xXyYZ")
+    piedra.caja((-3, 2.5), (-2.5, 2), (1.5, 3), caras="xXyYZ")
+    piedra.caja((1.5, 4), (0, 3), (1.5, 2.2), caras="xXyYZ")
+    for (x, y), z, t in GOTAS_AMBAR:
+        antes = 0.0
+        for medio, alto in PISOS_GOTA:
+            w, a = medio * t, alto * t
+            # la cara de abajo solo si el piso es más ancho que el de abajo (si no, queda tapada)
+            ambar.caja((x - w, x + w), (y - w, y + w), (z, z + a), caras="xXyYZz" if medio > antes else "xXyYZ")
+            if medio == 1.0:  # el brillo: en la cara de adelante (-y) de la panza, arriba a la izquierda
+                brillo.caja((x - w * 0.7, x - w * 0.25), (y - w - 0.1, y - w), (z + a * 0.45, z + a * 0.85), caras="xXyzZ")
+            z += a
+            antes = medio
+    objs, conteo = mallas(
+        [("Piedra", piedra, mats["piedra"]), ("Ambar", ambar, mats["ambar"]), ("Brillo", brillo, mats["brillo"])],
+        MAX_AMBAR,
+        "Racimo_Ambar",
+    )
+    if sum(conteo.values()) > MAX_AMBAR:
+        raise RuntimeError(f"Racimo_Ambar: {sum(conteo.values())} triángulos (máximo {MAX_AMBAR})")
+    return objs, conteo
+
+
+def mats_ambar(studs=None):
+    """Con studs, para el render (el ámbar brilla poquito); sin, para exportar."""
+    if studs:
+        return {
+            "piedra": material_studs("AmbarPiedra", AMBAR_PIEDRA, studs),
+            "ambar": M.material("Ambar", AMBAR, brillo=AMBAR, fuerza_brillo=0.35),
+            "brillo": M.material("AmbarBrillo", AMBAR_BRILLO, brillo=AMBAR_BRILLO, fuerza_brillo=0.6),
+        }
+    return {
+        "piedra": M.material("AmbarPiedra", AMBAR_PIEDRA),
+        "ambar": M.material("Ambar", AMBAR),
+        "brillo": M.material("AmbarBrillo", AMBAR_BRILLO),
+    }
+
+
 # Roca_Meteorito: roca azul noche de bloques con un cráter que brilla violeta adentro y
 # estrellitas lilas en los costados (como el cielo del Abismo, arte/referencias/abismo-1.png;
 # el naranja quedaba de la zona de lava)
@@ -1927,6 +1987,7 @@ REFERENCIAS = {
     # los árboles secos de las Dunas
     "Arbol_Seco_Desierto": ("mapa-2.png", "cactus-1.webp"),
     # las costillas de la izquierda de cactus-2 y las de la derecha de estilo-2
+    "Racimo_Ambar": ("estilo-2.png", "mapa-2.png"),
     "Esqueleto": (("cactus-2.webp", (0.10, 0.42, 0.42, 0.80)), ("estilo-2.png", (0.76, 0.45, 0.98, 0.75))),
 }
 
@@ -2181,6 +2242,23 @@ def render_esqueleto():
         M.render(f"esqueleto_{vista}")
     comparar("Esqueleto")
     print("TRIANGULOS Esqueleto", conteo, "total", sum(conteo.values()))
+
+
+def render_ambar():
+    """Racimo_Ambar de frente y de costado (sobre arena), al lado de las referencias."""
+    alto = 8 * M.STUD
+    for vista in ("frente", "costado"):
+        M.limpiar_escena()
+        escena = M.escena_render(1280, 720)
+        tablero = bpy.data.materials["Piso"].node_tree.nodes["Checker Texture"]
+        tablero.inputs["Color1"].default_value = (*M.hex_a_rgb(ZONAS[2]["tapa"]), 1)
+        tablero.inputs["Color2"].default_value = (*M.hex_a_rgb("#EACB72"), 1)
+        objs, conteo = racimo_ambar(mats_ambar(textura_studs()))
+        giro = -20 if vista == "frente" else 70
+        camara_orto(escena, (0, 0, alto * 0.4), alto * 1.4 * 16 / 9, 16, giro)
+        M.render(f"racimo_ambar_{vista}")
+    comparar("Racimo_Ambar")
+    print("TRIANGULOS Racimo_Ambar", conteo, "total", sum(conteo.values()))
 
 
 def noche_abismo(escena):
@@ -2568,14 +2646,19 @@ def exportar_zona1():
 
 def exportar_zona2():
     """Deco_Zona2.fbx: piezas que son solo de las Dunas. Raíz Deco_Zona2 con un vacío Piramide y
-    su malla Piramide_Piramide, Esqueleto con Esqueleto_Huesos, y uno por tamaño de duna (Duna_Chica, Duna_Mediana, Duna_Grande)
+    su malla Piramide_Piramide, Esqueleto con Esqueleto_Huesos, Racimo_Ambar con
+    Racimo_Ambar_Piedra, _Ambar y _Brillo (estas dos en Material Neon), y uno por tamaño de duna (Duna_Chica, Duna_Mediana, Duna_Grande)
     con su malla Duna_Chica_Arena..., y uno por tamaño de cactus (Cactus_Chico...) con su malla
     Cactus_Chico_Cactus..., y Arbol_Seco_Desierto_1 y _2 con su malla Arbol_Seco_Desierto_1_Tronco...
     Sin textura: el juego pone el color y TextureID = Studs.png."""
     M.limpiar_escena()
     raiz = bpy.data.objects.new("Deco_Zona2", None)
     bpy.context.scene.collection.objects.link(raiz)
-    for nombre, crear, mats in (("Piramide", piramide, mats_piramide()), ("Esqueleto", esqueleto, mats_esqueleto())):
+    for nombre, crear, mats in (
+        ("Piramide", piramide, mats_piramide()),
+        ("Esqueleto", esqueleto, mats_esqueleto()),
+        ("Racimo_Ambar", racimo_ambar, mats_ambar()),
+    ):
         vacio = bpy.data.objects.new(nombre, None)
         bpy.context.scene.collection.objects.link(vacio)
         vacio.parent = raiz
@@ -2686,4 +2769,6 @@ if __name__ == "__main__":
         render_cactus()
     if "--pieza" not in sys.argv or "Esqueleto" in sys.argv:
         render_esqueleto()
+    if "--pieza" not in sys.argv or "Racimo_Ambar" in sys.argv:
+        render_ambar()
     print("Listo")
