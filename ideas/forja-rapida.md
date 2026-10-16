@@ -191,16 +191,19 @@ Cada bioma tiene su propia geoda (`arte/scripts/rocas.py`, foto en `arte/renders
 
 | Bioma | Forma de la roca | Cristales |
 |---|---|---|
-| 1 · Pradera | huevo | puntas de cuarzo |
-| 2 · Dunas | canto ancho con capas | gotas de ámbar |
-| 3 · Glaciar | roca facetada | esquirlas largas de zafiro |
-| 4 · Volcán | columnas de basalto | bloques de rubí |
-| 5 · Abismo | roca con un surco | estrellas que flotan |
+| 1 · Pradera | huevo de vóxeles con anillos | racimo de amatistas arriba a un costado |
+| 2 · Dunas | huevo en capas | gotas de ámbar que chorrean |
+| 3 · Glaciar | huevo de hielo facetado | esquirlas largas de zafiro inclinadas |
+| 4 · Volcán | columnas de basalto | rubíes facetados y lava abajo |
+| 5 · Abismo | huevo alto con una abertura al frente | estrellas adentro y flotando arriba |
 | Oculta | huevo oscuro | una veta que brilla alrededor |
 | Prismática | prisma alto de vidrio | esquirlas de colores |
 
 - **Archivos**: `arte/fbx/Geodas_Zona1.fbx` a `Geodas_Zona5.fbx`, cada uno con los 4 tamaños adentro (Pequena, Mediana, Gigante y Jefe), y `Geodas_Especiales.fbx` con la Oculta y la Prismática. Cada tamaño trae las mallas Roca, Cristales, Base, Grietas y Grietas2, que el juego pinta según el modificador.
 - **Cómo entran al juego**: `ModeloGeoda.luau` busca en `ServerStorage > Modelos > Geodas` la carpeta del bioma (`Zona1`… o `Geodas_Zona1`…) y adentro el tamaño. Las especiales las busca en `Especiales` o `Geodas_Especiales`. Si no las encuentra, usa la geoda general y, si tampoco está, la de bloques simples.
+- **Rocas 1 nuevas (16/10/2026)**: copiadas de `arte/referencias/geodas-gemini.jpg` (comparación en `arte/renders/geodas_nuevas_vs_gemini.jpg`), con un nido de ramitas nuevo. Sin la ranura de cada cubito: la Mediana usa unos 1.400 a 3.200 triángulos y el Jefe hasta 5.400. Se exportan con `rocas.py --solo-roca1` (los FBX llevan solo la roca 1; las rocas 2 y 3 todavía no se exportaron). Respaldo de las de antes en `arte/blend/Geodas_roca1_antes_2026-10-16.blend`.
+- **Límite del juego**: cada malla se pinta de un solo color y los Cristales no brillan en las geodas normales, así que la lava del Volcán sale del rojo de los rubíes y las estrellas del Abismo, celestes y sin brillo.
+- **Pendiente**: la roca 3 de las Dunas (Desértica) en Gigante pasa los 20.000 triángulos en Cristales; hay que achicarla antes de exportar las rocas 2 y 3.
 - **Pendiente para Juani**: importar los 6 FBX en Studio (los pasos están en el informe). Claude no puede subir mallas desde la nube.
 
 ## Grupo 4 — Progresión y objetivos a largo plazo (pedido del 14/10/2026)

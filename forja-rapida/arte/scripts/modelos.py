@@ -191,9 +191,10 @@ def voxeles(nombre, celdas, lado, mat, origen=(0, 0, 0), ranura=0.16, hundir=0.0
             v0, v1 = (fila + 0.1) / n, (fila + 0.9) / n
             for loop, uv in zip(cara.loops, [(u0, v0), (u1, v0), (u1, v1), (u0, v1)]):
                 loop[capa].uv = uv
-    bmesh.ops.inset_individual(
-        bm, faces=caras, thickness=lado * ranura, depth=-lado * hundir, use_even_offset=True
-    )
+    if ranura > 0:  # con ranura=0, cubitos lisos (2 triángulos por cara en vez de 10)
+        bmesh.ops.inset_individual(
+            bm, faces=caras, thickness=lado * ranura, depth=-lado * hundir, use_even_offset=True
+        )
     return objeto_desde_bmesh(nombre, bm, mat, uv=not atlas)
 
 

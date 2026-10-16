@@ -25,7 +25,9 @@ Gigante_3 (sin Jefe). Las especiales van en Geodas_Especiales.fbx (Oculta, Prism
 Cada tamaño tiene las mallas Roca, Cristales, Base, Grietas y Grietas2 (las que pinta
 ModeloGeoda.luau). Render de muestra: arte/renders/geodas_biomas.jpg (las 15 y las especiales).
 
-Uso: <python de Blender> forja-rapida/arte/scripts/rocas.py   (--solo-render: sin exportar)
+Uso: <python de Blender> forja-rapida/arte/scripts/rocas.py   (--solo-render: sin exportar;
+--nuevas: tabla de triángulos y render de las rocas 1 nuevas al lado de la imagen de Gemini;
+--solo-roca1: exporta Geodas_Zona1..5 solo con la variante 1)
 """
 
 import math
@@ -36,31 +38,35 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 import bpy  # noqa: E402,I001  (bpy antes que modelos, que usa bmesh)
+import bmesh  # noqa: E402
 import modelos as M  # noqa: E402
+from mathutils import Vector  # noqa: E402
+from mathutils.bvhtree import BVHTree  # noqa: E402
 
+# La variante 1 de cada bioma es una de las rocas nuevas (ver "rocas 1 nuevas" más abajo).
 ESTILOS = {
     1: [
-        {"nombre": "Cuarzo", "forma": "huevo", "cristal": "puntas", "roca": "#6E7487", "cris": "#C77DFF"},
+        {"nombre": "Cuarzo", "forma": "anillos", "cristal": "amatistas", "roca": "#6E7487", "cris": "#C77DFF"},
         {"nombre": "Musgosa", "forma": "musgo", "cristal": "drusa", "roca": "#5E8C4A", "cris": "#FF8FD8"},
         {"nombre": "Caliza", "forma": "capas", "cristal": "agujas", "roca": "#D8D2C0", "cris": "#7CF5FF"},
     ],
     2: [
-        {"nombre": "Ámbar", "forma": "canto", "cristal": "gotas", "roca": "#B07A4A", "cris": "#FFB627"},
+        {"nombre": "Ámbar", "forma": "capas_ambar", "cristal": "chorreadas", "roca": "#B07A4A", "cris": "#FFB627"},
         {"nombre": "Arenisca Roja", "forma": "meseta", "cristal": "rosas", "roca": "#C4553A", "cris": "#FFE14D"},
         {"nombre": "Desértica", "forma": "partida", "cristal": "adentro", "roca": "#E8C98A", "cris": "#FF8C42"},
     ],
     3: [
-        {"nombre": "Zafiro", "forma": "facetada", "cristal": "esquirlas", "roca": "#7FA6C9", "cris": "#3D7BFF"},
+        {"nombre": "Zafiro", "forma": "hielo", "cristal": "esquirlas_zafiro", "roca": "#7FA6C9", "cris": "#3D7BFF"},
         {"nombre": "Escarcha", "forma": "nevada", "cristal": "escarcha", "roca": "#E8F4FF", "cris": "#7CF5FF"},
         {"nombre": "Glaciar Profundo", "forma": "tempano", "cristal": "carambanos", "roca": "#2F5D8A", "cris": "#B8F3FF"},
     ],
     4: [
-        {"nombre": "Rubí", "forma": "columnas", "cristal": "bloques", "roca": "#4A3338", "cris": "#FF2E4D"},
+        {"nombre": "Rubí", "forma": "basalto", "cristal": "rubies_lava", "roca": "#4A3338", "cris": "#FF2E4D"},
         {"nombre": "Obsidiana", "forma": "filosa", "cristal": "vetas", "roca": "#1E1A24", "cris": "#FF7A00"},
         {"nombre": "Azufre", "forma": "crater", "cristal": "drusa", "roca": "#6B5A2E", "cris": "#F5FF4D"},
     ],
     5: [
-        {"nombre": "Estelar", "forma": "surco", "cristal": "estrellas", "roca": "#2E2A5C", "cris": "#7CF5FF"},
+        {"nombre": "Estelar", "forma": "abertura", "cristal": "estrellas_adentro", "roca": "#2E2A5C", "cris": "#7CF5FF"},
         {"nombre": "Nebulosa", "forma": "planeta", "cristal": "anillo", "roca": "#4B2A6B", "cris": "#FF6FD8"},
         {"nombre": "Meteorito", "forma": "meteorito", "cristal": "brasas", "roca": "#3B3B3B", "cris": "#FFB347"},
     ],
@@ -817,10 +823,408 @@ def cristales(nombre, roca, cantidad, semilla, info=None):
     return CRISTALES[nombre](roca, cantidad, rng, semilla, {} if info is None else info)
 
 
+# --- rocas 1 nuevas (16/10/2026) -------------------------------------------------------------
+# Copiadas de arte/referencias/geodas-gemini.jpg. Van sin la ranura de cada cubito y con piezas
+# facetadas (cascos convexos), así la Mediana queda debajo de 4.000 triángulos y el Jefe de
+# 20.000. Medidas en metros: W es el ancho de la roca (el diámetro del tamaño), z0 donde se apoya
+# la roca adentro del nido. El frente es -Y (de ahí mira la cámara del render).
+
+
+def casco(bm, puntos):
+    """Agrega a bm el casco convexo de los puntos: una pieza facetada."""
+    tmp = bmesh.new()
+    vs = [tmp.verts.new(p) for p in puntos]
+    res = bmesh.ops.convex_hull(tmp, input=vs)
+    sobra = {v for v in res["geom_interior"] + res["geom_unused"] if isinstance(v, bmesh.types.BMVert)}
+    if sobra:
+        bmesh.ops.delete(tmp, geom=list(sobra), context="VERTS")
+    malla = bpy.data.meshes.new("tmp")
+    tmp.to_mesh(malla)
+    tmp.free()
+    bm.from_mesh(malla)  # se suma a lo que ya tenía bm
+    bpy.data.meshes.remove(malla)
+
+
+def punta(base, direccion, radio, largo, lados=6, giro=0.0, hombro=0.72):
+    """Cristal: prisma de `lados` lados que sale de `base` hacia `direccion` y termina en punta
+    (arranca un poco metido en la roca)."""
+    d = Vector(direccion).normalized()
+    a = d.orthogonal().normalized()
+    b = d.cross(a)
+    base = Vector(base)
+    pts = [base + d * largo]
+    for i in range(lados):
+        t = giro + i / lados * math.tau
+        r = (a * math.cos(t) + b * math.sin(t)) * radio
+        pts.append(base - d * radio * 0.6 + r)
+        pts.append(base + d * largo * hombro + r * 0.92)
+    return pts
+
+
+def caja(centro, ejes, medios):
+    c = Vector(centro)
+    return [
+        c + ejes[0] * medios[0] * sx + ejes[1] * medios[1] * sy + ejes[2] * medios[2] * sz
+        for sx in (-1, 1)
+        for sy in (-1, 1)
+        for sz in (-1, 1)
+    ]
+
+
+def gema(bm, x, y, z, radio, giro):
+    """Gema facetada apoyada en (x, y, z): corona de 6 lados con mesa arriba."""
+    pts = [Vector((x, y, z - radio * 0.2)), Vector((x, y, z + radio * 1.5))]
+    for i in range(6):
+        a = giro + i / 6 * math.tau
+        pts.append(Vector((x + math.cos(a) * radio * 0.8, y + math.sin(a) * radio * 0.8, z + radio * 0.35)))
+        b = a + math.pi / 6
+        pts.append(Vector((x + math.cos(b) * radio, y + math.sin(b) * radio, z + radio * 0.85)))
+    casco(bm, pts)
+
+
+def estrella(bm, c, t):
+    """Estrellita de 4 puntas que mira al frente: dos rombos finitos cruzados."""
+    c = Vector(c)
+    g, f = t * 0.2, t * 0.12
+    casco(bm, [c + Vector(v) for v in ((0, 0, t), (0, 0, -t), (g, 0, 0), (-g, 0, 0), (0, f, 0), (0, -f, 0))])
+    casco(bm, [c + Vector(v) for v in ((t, 0, 0), (-t, 0, 0), (0, 0, g), (0, 0, -g), (0, f, 0), (0, -f, 0))])
+
+
+def nido(W, semilla):
+    """Nido de pájaro: tres vueltas de ramitas cruzadas, bajito y más ancho que la roca."""
+    rng = random.Random(semilla + 5)
+    bm = bmesh.new()
+    vueltas = ((0.5, 0.03, 16), (0.56, 0.075, 18), (0.53, 0.125, 18), (0.48, 0.17, 16))
+    for capa, (radio, z, n) in enumerate(vueltas):
+        for i in range(n):
+            a = (i + rng.uniform(-0.25, 0.25) + capa * 0.5) / n * math.tau
+            cruce = math.radians(rng.uniform(14, 26)) * (1 if (i + capa) % 2 else -1)
+            rumbo = a + math.pi / 2 + cruce  # tangente al anillo, girada para que se crucen
+            d = Vector((math.cos(rumbo), math.sin(rumbo), rng.uniform(-0.25, 0.25))).normalized()
+            costado = Vector((0, 0, 1)).cross(d).normalized()
+            arriba = d.cross(costado)
+            r = W * (radio + rng.uniform(-0.02, 0.02))
+            centro = (math.cos(a) * r, math.sin(a) * r, W * z)
+            grueso = W * rng.uniform(0.024, 0.032)
+            casco(bm, caja(centro, (d, costado, arriba), (W * rng.uniform(0.15, 0.19), grueso, grueso)))
+    return bm
+
+
+def sobre(alto, lado, z0, x, y):
+    """Altura en metros de la cara de arriba de la roca de vóxeles en el punto (x, y)."""
+    z = alto.get((math.floor(x / lado), math.floor(y / lado)))
+    return None if z is None else z0 + (z + 1) * lado
+
+
+def borde(celdas, a, z):
+    """Hasta dónde llega la roca (en celdas, desde el eje) yendo en el ángulo a a la altura z."""
+    ultimo, s = 0.0, 0.0
+    while s < 40:
+        if (math.floor(math.cos(a) * s), math.floor(math.sin(a) * s), z) in celdas:
+            ultimo = s
+        s += 0.25
+    return ultimo + 0.25
+
+
+def huevo_liso(r, semilla, alto=1.12, bultos=0.06):
+    """Huevo de cubitos con pocos bultos (el de modelos.celdas_roca es más grumoso)."""
+    rx, ry, rz = r, r * 0.95, r * alto
+    celdas = set()
+    for x in range(-r - 2, r + 2):
+        for y in range(-r - 2, r + 2):
+            for z in range(-int(rz) - 2, int(rz) + 2):
+                cx, cy, cz = x + 0.5, y + 0.5, z + 0.5
+                ancho = 1 + 0.14 * (-cz / rz)
+                d = (cx / (rx * ancho)) ** 2 + (cy / (ry * ancho)) ** 2 + (cz / rz) ** 2
+                d += bultos * M.ruido(cx, cy, cz, 0.35, semilla)
+                if d <= 1 and cz > -rz * 0.72:
+                    celdas.add((x, y, z))
+    return apoyar(celdas)
+
+
+def r_anillos(W, r, lado, z0, semilla):
+    # Pradera: huevo gris con anillos marcados (surcos de un cubito en el frente y atrás) y un
+    # racimo de amatistas arriba a la izquierda
+    rng = random.Random(semilla)
+    celdas = huevo_liso(r, semilla)
+    zc = max(c[2] for c in celdas) * 0.45
+    # anillos: rebordes de un cubito en la cara de adelante y la de atrás, como vetas de geoda
+    # (solo en la parte que mira al frente o atrás: en los costados deformaba el huevo)
+    rebordes = set()
+    for x, y, z in celdas:
+        d = math.hypot(x + 0.5, (z + 0.5 - zc) * 0.85)
+        anillo = d < 0.9 or (d < r * 0.6 and abs(d - 2.6 * round(d / 2.6)) < 0.5)
+        for dy in (-1, 1):
+            if anillo and (x, y + dy, z) not in celdas:
+                rebordes.add((x, y + dy, z))
+    celdas |= rebordes
+    alto = techo(celdas)
+    cris = bmesh.new()
+    bx, by = -r * 0.42 * lado, -r * 0.15 * lado
+    for i in range(7):
+        if i == 0:
+            off, d, largo, radio = Vector((0, 0, 0)), Vector((-0.35, -0.1, 1)), W * 0.42, W * 0.075
+        else:
+            a = i / 6 * math.tau + rng.uniform(-0.3, 0.3)
+            off = Vector((math.cos(a), math.sin(a), 0)) * W * 0.1
+            d = Vector((math.cos(a) * 0.75 - 0.25, math.sin(a) * 0.75, 1))
+            largo, radio = W * rng.uniform(0.2, 0.3), W * rng.uniform(0.045, 0.06)
+        x, y = bx + off.x, by + off.y
+        z = sobre(alto, lado, z0, x, y) or sobre(alto, lado, z0, bx, by)
+        cris_pts = punta((x, y, z - lado * 0.3), d, radio, largo, giro=rng.random())
+        casco(cris, cris_pts)
+    return {"roca": celdas, "cris": cris}
+
+
+def r_capas_ambar(W, r, lado, z0, semilla):
+    # Dunas: huevo color arena en capas (cada 3 filas, el borde se mete un cubito) y gotas de
+    # ámbar que chorrean desde arriba
+    rng = random.Random(semilla)
+    celdas = huevo_liso(r, semilla, alto=1.18)
+    # capas: cada 3 filas, un borde que sobresale un cubito alrededor
+    capas = set()
+    for x, y, z in celdas:
+        if z % 3 == 0 and z > 0:
+            for dx, dy in ((1, 0), (-1, 0), (0, 1), (0, -1)):
+                if (x + dx, y + dy, z) not in celdas:
+                    capas.add((x + dx, y + dy, z))
+    celdas |= capas
+    zmax = max(c[2] for c in celdas)
+    cris = bmesh.new()
+
+    def en(a, z, afuera=0.0):
+        s = borde(celdas, a, z) * lado + afuera
+        return Vector((math.cos(a) * s, math.sin(a) * s, z0 + (z + 0.5) * lado))
+
+    # charco arriba, que cae un poco por el costado
+    top = z0 + (zmax + 1) * lado
+    pts = [Vector((0.02 * W, -0.02 * W, top + W * 0.06))]
+    for i in range(8):
+        a = i / 8 * math.tau
+        pts.append(Vector((math.cos(a) * W * 0.17, math.sin(a) * W * 0.15, top - lado * 0.6)))
+        pts.append(Vector((math.cos(a) * W * 0.12, math.sin(a) * W * 0.1, top + W * 0.035)))
+    casco(cris, pts)
+    # chorreadas: arriba finitas, abajo una gota gorda
+    angulos = [-math.pi / 2 + v for v in (-1.1, -0.45, 0.2, 0.9)] + [math.pi / 2 + v for v in (-0.6, 0.6)]
+    for a in angulos:
+        a += rng.uniform(-0.15, 0.15)
+        zt = round(zmax * rng.uniform(0.82, 0.92))
+        zb = max(2, zt - round(r * rng.uniform(0.25, 0.45)))
+        arriba_, gota = en(a, zt, W * 0.01), en(a, zb, W * 0.045)
+        afuera = Vector((math.cos(a), math.sin(a), 0))
+        lado_ = Vector((-math.sin(a), math.cos(a), 0))
+        g = W * rng.uniform(0.085, 0.105)
+        pts = [gota - Vector((0, 0, g * 0.95))]
+        for i in range(7):
+            t = i / 7 * math.tau
+            v = lado_ * math.cos(t) + afuera * math.sin(t) * 0.8
+            pts.append(arriba_ + v * W * 0.035)
+            pts.append(gota + v * g * 0.75 + Vector((0, 0, g * 0.55)))
+            pts.append(gota + v * g)
+            pts.append(gota + v * g * 0.7 - Vector((0, 0, g * 0.7)))
+        casco(cris, pts)
+    return {"roca": celdas, "cris": cris}
+
+
+def r_hielo(W, r, lado, z0, semilla):
+    # Glaciar: huevo de hielo de caras planas grandes y esquirlas largas de zafiro inclinadas
+    rng = random.Random(semilla)
+    H = W * 1.18
+    perfil = [(0.0, 0.64), (0.13, 0.88), (0.3, 1.0), (0.5, 0.97), (0.7, 0.8), (0.87, 0.52)]
+    roca = bmesh.new()
+    pts = []
+    for k, (h, f) in enumerate(perfil):
+        for i in range(9):
+            a = (i + (k % 2) * 0.5 + rng.uniform(-0.3, 0.3)) / 9 * math.tau
+            rr = W / 2 * f * rng.uniform(0.84, 1.06)
+            pts.append(Vector((math.cos(a) * rr, math.sin(a) * rr, z0 + H * h + rng.uniform(-0.05, 0.05) * W)))
+    pts.append(Vector((rng.uniform(-0.05, 0.05) * W, rng.uniform(-0.05, 0.05) * W, z0 + H)))
+    casco(roca, pts)
+
+    def radio_a(h):
+        for (h1, f1), (h2, f2) in zip(perfil, perfil[1:]):
+            if h1 <= h <= h2:
+                return W / 2 * (f1 + (f2 - f1) * (h - h1) / (h2 - h1))
+        return W / 2 * 0.4
+
+    cris = bmesh.new()
+    # (ángulo en grados, altura 0-1, inclinación desde arriba, largo, grosor)
+    for ang, h, incl, largo, grosor in (
+        (-10, 0.62, 42, 0.62, 0.06),
+        (25, 0.78, 30, 0.7, 0.065),
+        (-55, 0.45, 55, 0.42, 0.05),
+        (160, 0.58, 40, 0.55, 0.055),
+        (110, 0.75, 32, 0.45, 0.05),
+        (200, 0.4, 58, 0.32, 0.045),
+    ):
+        a = math.radians(ang + rng.uniform(-8, 8))
+        t = math.radians(incl)
+        rr = radio_a(h) * 0.8
+        base = (math.cos(a) * rr, math.sin(a) * rr, z0 + H * h)
+        d = (math.cos(a) * math.sin(t), math.sin(a) * math.sin(t), math.cos(t))
+        casco(cris, punta(base, d, W * grosor, W * largo, lados=5, giro=rng.random(), hombro=0.8))
+    return {"roca": roca, "cris": cris}
+
+
+def r_basalto(W, r, lado, z0, semilla):
+    # Volcán: columnas de basalto de distintas alturas, rubíes facetados encima y lava que
+    # asoma abajo entre las columnas
+    rng = random.Random(semilla)
+    roca = bmesh.new()
+    cris = bmesh.new()
+    s = W * 0.215
+    topes = []
+    for j in range(-3, 4):
+        for i in range(-3, 4):
+            x, y = (i + 0.5 * j) * s, j * s * 0.866
+            dist = math.hypot(x, y)
+            if dist > W * 0.43:
+                continue
+            x += rng.uniform(-0.02, 0.02) * W
+            y += rng.uniform(-0.02, 0.02) * W
+            alto = max(W * 0.4, W * (1.18 - 1.3 * dist / W) * rng.uniform(0.8, 1.1))
+            m, giro = W * rng.uniform(0.085, 0.097), rng.uniform(0, math.pi / 2)
+            pts = []
+            for k in range(8):
+                # 8 lados: un cuadrado con las esquinas cortadas
+                a = giro + k * math.pi / 4
+                ex, ey = math.cos(a) * m, math.sin(a) * m
+                pts.append(Vector((x + ex, y + ey, z0 - W * 0.02)))
+                pts.append(Vector((x + ex, y + ey, z0 + alto + rng.uniform(-0.02, 0.02) * W)))
+            casco(roca, pts)
+            topes.append((alto, x, y))
+    topes.sort(reverse=True)
+    for n, (alto, x, y) in enumerate(topes[:9]):
+        if n in (0, 1, 3, 5, 6, 8):
+            gema(cris, x, y, z0 + alto, W * rng.uniform(0.1, 0.13), rng.random())
+    # lava: una losa que brilla abajo, entre las columnas
+    pts = []
+    for i in range(12):
+        a = i / 12 * math.tau
+        rr = W * 0.47 * rng.uniform(0.92, 1.0)
+        pts.append(Vector((math.cos(a) * rr, math.sin(a) * rr, z0 - W * 0.02)))
+        pts.append(Vector((math.cos(a) * rr * 0.97, math.sin(a) * rr * 0.97, z0 + W * 0.2)))
+    casco(cris, pts)
+    # grietas de lava que suben por el frente, entre las columnas de afuera
+    for x, y in sorted(((x, y) for _, x, y in topes if y < -W * 0.15), key=lambda p: p[0]):
+        for lado_x in (-1, 1):
+            px = x + lado_x * W * 0.1
+            pz = z0 + W * rng.uniform(0.22, 0.32)
+            ejes = (Vector((1, 0, 0)), Vector((0, 1, 0)), Vector((0, 0, 1)))
+            casco(cris, caja((px, y - W * 0.05, (pz + z0) * 0.5), ejes, (W * 0.04, W * 0.05, (pz - z0) * 0.5)))
+    return {"roca": roca, "cris": cris}
+
+
+def r_abertura(W, r, lado, z0, semilla):
+    # Abismo: huevo alto violeta muy oscuro con una abertura al frente, estrellitas adentro y
+    # otras que flotan arriba
+    rng = random.Random(semilla)
+    rx, ry, rz = r * 0.9, r * 0.86, r * 1.42
+    celdas = set()
+    for x in range(-r - 2, r + 2):
+        for y in range(-r - 2, r + 2):
+            for z in range(-int(rz) - 2, int(rz) + 2):
+                cx, cy, cz = x + 0.5, y + 0.5, z + 0.5
+                ancho = 1 + 0.1 * (-cz / rz)
+                d = (cx / (rx * ancho)) ** 2 + (cy / (ry * ancho)) ** 2 + (cz / rz) ** 2
+                d += 0.16 * M.ruido(cx, cy, cz, 0.35, semilla)
+                if d <= 1 and cz > -rz * 0.72:
+                    celdas.add((x, y, z))
+    celdas = apoyar(celdas)
+    zmax = max(c[2] for c in celdas)
+    hc = (0.0, -ry * 0.85, zmax * 0.47)
+    hr = (r * 0.42, r * 0.62, zmax * 0.3)
+    celdas = {
+        c
+        for c in celdas
+        if sum(((c[i] + 0.5 - hc[i]) / hr[i]) ** 2 for i in range(3)) > 1
+    }
+    cris = bmesh.new()
+    fondo_y = (hc[1] + hr[1] * 0.55) * lado
+    for i in range(7):
+        a = rng.uniform(0, math.tau)
+        d = math.sqrt(rng.uniform(0.05, 0.75))
+        x = math.cos(a) * d * hr[0] * lado
+        z = z0 + (hc[2] + math.sin(a) * d * hr[2]) * lado
+        estrella(cris, (x, fondo_y - rng.uniform(0, 0.06) * W, z), W * rng.uniform(0.05, 0.085))
+    top = z0 + (zmax + 1) * lado
+    for i in range(5):
+        x = (i - 2) * W * 0.17 + rng.uniform(-0.04, 0.04) * W
+        z = top + W * (0.06 + 0.14 * rng.random() + (0.08 if i == 2 else 0))
+        estrella(cris, (x * 0.8, rng.uniform(-0.12, 0.05) * W, z), W * rng.uniform(0.05, 0.08))
+    return {"roca": celdas, "cris": cris}
+
+
+NUEVAS = {
+    "anillos": r_anillos,
+    "capas_ambar": r_capas_ambar,
+    "hielo": r_hielo,
+    "basalto": r_basalto,
+    "abertura": r_abertura,
+}
+
+
+def grietas_rayos(nombre, obj_roca, mat, semilla, cantidad, W):
+    """Grietas para cualquier forma: zigzags pegados a la superficie (se buscan tirando rayos
+    hacia el eje). Cada tramo es una tira finita con lomo."""
+    bpy.context.view_layer.update()
+    arbol = BVHTree.FromObject(obj_roca, bpy.context.evaluated_depsgraph_get())
+    zs = [v.co.z for v in obj_roca.data.vertices]
+    zmin, zmax = min(zs), max(zs)
+    rng = random.Random(semilla)
+    bm = bmesh.new()
+    for g in range(cantidad):
+        a = rng.uniform(0, math.tau)
+        h = rng.uniform(0.45, 0.8)
+        sentido = 1 if g % 2 == 0 else -1
+        puntos = []
+        for k in range(9):
+            z = zmin + (zmax - zmin) * h
+            hit, normal, _, _ = arbol.ray_cast(
+                Vector((math.cos(a) * W * 2, math.sin(a) * W * 2, z)), Vector((-math.cos(a), -math.sin(a), 0))
+            )
+            if hit is None:
+                break
+            puntos.append((hit + normal * W * 0.002, normal))
+            a += rng.uniform(0.08, 0.14) * sentido
+            h += 0.05 if k % 2 == 0 else -0.1
+        for (p, n), (q, _) in zip(puntos, puntos[1:]):
+            if (q - p).length > W * 0.25 or (q - p).length < 1e-4:
+                continue  # saltó de una columna a otra
+            ancho = (q - p).cross(n).normalized() * W * 0.018
+            lomo = n * W * 0.012
+            casco(bm, [p - ancho, p + ancho, q + ancho, q - ancho, p + lomo, q + lomo])
+    return M.objeto_desde_bmesh(nombre, bm, mat)
+
+
+CONTEO = {}  # nombre -> triángulos de (Roca, Cristales, Base, Grietas, Grietas2)
+
+
+def armar_nueva(nombre, datos, estilo, mats, semilla):
+    r = datos["radio"]
+    W = datos["diametro"] * M.STUD
+    lado = W / (2 * r)
+    z0 = W * 0.05
+    hecho = NUEVAS[estilo["forma"]](W, r, lado, z0, semilla)
+    if isinstance(hecho["roca"], set):
+        obj_roca, t1 = M.voxeles("Roca", hecho["roca"], lado, mats["roca"], origen=(0, 0, z0), ranura=0, atlas=True)
+    else:
+        obj_roca, t1 = M.objeto_desde_bmesh("Roca", hecho["roca"], mats["roca"])
+    obj_cris, t2 = M.objeto_desde_bmesh("Cristales", hecho["cris"], mats["cristal"])
+    obj_base, t3 = M.objeto_desde_bmesh("Base", nido(W, semilla), mats["base"])
+    obj_g1, t4 = grietas_rayos("Grietas", obj_roca, mats["grieta"], semilla, 3, W)
+    obj_g2, t5 = grietas_rayos("Grietas2", obj_roca, mats["grieta2"], semilla + 1000, 3, W)
+    CONTEO[nombre] = (t1, t2, t3, t4, t5)
+    print(f"  {nombre}: {t1 + t2 + t3 + t4 + t5} triángulos (roca {t1}, cristales {t2}, nido {t3}, grietas {t4 + t5})")
+    return [obj_roca, obj_cris, obj_base, obj_g1, obj_g2]
+
+
 # --- armar y exportar -------------------------------------------------------------------------
 
 
 def armar(nombre, datos, estilo, mats, semilla):
+    if estilo["forma"] in NUEVAS:
+        return armar_nueva(nombre, datos, estilo, mats, semilla)
     r = datos["radio"]
     lado = datos["diametro"] * M.STUD / (2 * r)
     info = {}
@@ -886,12 +1290,14 @@ def exportar_grupo(raiz, archivo):
     print("  FBX", archivo)
 
 
-def exportar():
+def exportar(solo_roca1=False):
+    """Con solo_roca1, cada Geodas_Zona<N>.fbx lleva solo la variante 1 (los 4 tamaños) y no se
+    tocan las especiales."""
     M.limpiar_escena()
     for zona, lista in ESTILOS.items():
         raiz = bpy.data.objects.new(f"Zona{zona}", None)
         bpy.context.scene.collection.objects.link(raiz)
-        for v, est in enumerate(lista, 1):
+        for v, est in enumerate(lista[:1] if solo_roca1 else lista, 1):
             mats = mats_de(est)
             for tam, datos in M.GEODAS.items():
                 if tam == "Jefe" and v > 1:
@@ -901,6 +1307,8 @@ def exportar():
                 agrupar(nombre, objs, raiz)
         exportar_grupo(raiz, f"Geodas_Zona{zona}.fbx")
         M.limpiar_escena()
+    if solo_roca1:
+        return
     raiz = bpy.data.objects.new("Especiales", None)
     bpy.context.scene.collection.objects.link(raiz)
     for nombre, est in ESPECIALES.items():
@@ -965,8 +1373,74 @@ def render():
     M.render("geodas_biomas")
 
 
+def contar_nuevas():
+    """Tabla de triángulos de las 5 rocas nuevas en los 4 tamaños (y avisa si se pasan)."""
+    topes = {"Mediana": 4000, "Jefe": 20000}
+    filas = []
+    for zona in ESTILOS:
+        est = ESTILOS[zona][0]
+        fila = [f"{zona} {est['nombre']}"]
+        for tam, datos in M.GEODAS.items():
+            M.limpiar_escena()
+            armar(f"{zona}-{tam}", datos, est, mats_de(est), semilla_de(datos, zona, 1))
+            total = sum(CONTEO[f"{zona}-{tam}"])
+            fila.append(f"{total}{' (SE PASA)' if total > topes.get(tam, 1e9) else ''}")
+        filas.append(fila)
+    print("TABLA | Roca | " + " | ".join(M.GEODAS))
+    for fila in filas:
+        print("TABLA | " + " | ".join(fila))
+    M.limpiar_escena()
+
+
+def render_nuevas():
+    """Las 5 rocas nuevas (Mediana) en fila, con el encuadre de la imagen de Gemini, y una
+    imagen con las dos lado a lado. Se ven como en el juego: un color por malla, sin Neon."""
+    M.limpiar_escena()
+    escena = M.escena_render(1376, 768)
+    datos = M.GEODAS["Mediana"]
+    paso = 1.6
+    for zona in ESTILOS:
+        est = ESTILOS[zona][0]
+        objs = armar(f"{zona} {est['nombre']}", datos, est, mats_de(est), semilla_de(datos, zona, 1))
+        M.mover(M.sin_grietas(objs), (zona - 3) * paso)
+    M.camara(escena, (0, 0, 1.4), 11.7, 2.7, lente=50, giro=0)
+    M.render("geodas_nuevas")
+    # lado a lado: Gemini a la izquierda, el render a la derecha
+    import numpy as np
+
+    ref = bpy.data.images.load(str(M.ARTE / "referencias" / "geodas-gemini.jpg"))
+    nuevo = bpy.data.images.load(str(M.RENDERS / "geodas_nuevas.jpg"))
+    w, h = ref.size
+    if tuple(nuevo.size) != (w, h):
+        nuevo.scale(w, h)
+    capas = []
+    for img in (ref, nuevo):
+        px = np.empty(w * h * 4, dtype=np.float32)
+        img.pixels.foreach_get(px)
+        capas.append(px.reshape(h, w, 4))
+    capas.insert(1, np.ones((h, 16, 4), dtype=np.float32))
+    junto = np.concatenate(capas, axis=1)
+    salida = bpy.data.images.new("comparacion", junto.shape[1], h)
+    salida.pixels.foreach_set(junto.ravel())
+    salida.filepath_raw = str(M.RENDERS / "geodas_nuevas_vs_gemini.jpg")
+    salida.file_format = "JPEG"
+    salida.save()
+    print("  Render geodas_nuevas_vs_gemini.jpg")
+
+
 if __name__ == "__main__":
     M.FBX.mkdir(parents=True, exist_ok=True)
+    if "--nuevas" in sys.argv:
+        # solo para revisar: tabla de triángulos y render, sin exportar
+        contar_nuevas()
+        render_nuevas()
+        print("Listo")
+        sys.exit(0)
+    if "--solo-roca1" in sys.argv:
+        # las rocas 1 nuevas, sin tocar las variantes 2 y 3 ni las especiales
+        exportar(solo_roca1=True)
+        print("Listo")
+        sys.exit(0)
     if "--solo-render" not in sys.argv:
         exportar()
     render()
