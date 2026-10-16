@@ -100,6 +100,9 @@ Piezas:
                  losas bajas, la de arriba corrida: 10 x 6, 5 de alto). Mallas Piedra y Nieve.
   Hielo_Suelto   Glaciar: 4 cubos de hielo celeste (3, 2, 1,6 y 1,5 studs) tirados juntos, girados
                  y uno apoyado de canto. Malla Hielo, con Transparency = HIELO_TRANSPARENCIA.
+  Lago_Congelado Glaciar: lago plano de 24 x 16 studs: un óvalo de lajas de hielo celeste (4 x 4
+                 studs, cada una apenas más alta o más baja) con un borde de bloques de nieve de
+                 alturas distintas y 2 grietas blancas en zigzag. Mallas Hielo, Nieve y Grieta.
                  Cada árbol de la Pradera (y el arbusto) tiene 3 variantes (Arbol_Grande_1, _2 y _3...).
   Roca_Meteorito solo Abismo: media bola chata de bloques de 2 studs azul noche, con un cráter
                  arriba (corrido a un costado) que brilla violeta en el fondo y estrellitas lilas
@@ -1947,6 +1950,119 @@ def mats_hielo_suelto(studs=None):
     return {"hielo": M.material("HieloSuelto", HIELO_CELESTE)}
 
 
+# Lago_Congelado (Glaciar): lago plano de lajas de hielo celeste (de 4 x 4 studs, cada una apenas
+# más alta o más baja) en un óvalo, con un borde de bloques de nieve de alturas distintas y
+# grietas blancas que zigzaguean sobre el hielo. 24 x 16 studs.
+LAGO_CELDA = 2  # studs de cada bloque de la grilla
+LAGO_CELDAS = (12, 8)  # 24 x 16 studs
+LAGO_RADIOS = (9.5, 5.5)  # óvalo del hielo, en studs
+LAGO_ALTOS_HIELO = (0.3, 0.4, 0.5)  # cada laja (2 x 2 celdas) uno de estos
+LAGO_ALTOS_NIEVE = (1, 1, 1.5, 2)
+LAGO_GRIETA = (0.25, 0.06)  # ancho y cuánto sale arriba del hielo
+LAGO_GRIETA_COLOR = "#FFFFFF"
+LAGO_GRIETAS = [((3, 4), 6), ((8, 2), 4)]  # celda donde empieza y cuántos pasos da
+MAX_LAGO = 2000
+
+
+def celdas_lago():
+    """Alto de cada celda del hielo y de la nieve: {(i, j): alto}. La nieve son las celdas que
+    tocan el hielo (también en diagonal)."""
+    rng = random.Random("Lago")
+    ni, nj = LAGO_CELDAS
+    hielo, nieve = {}, {}
+    lajas = {}
+    for i in range(ni):
+        for j in range(nj):
+            x, y = -ni + 2 * i + 1, -nj + 2 * j + 1  # centro en studs
+            if (x / LAGO_RADIOS[0]) ** 2 + (y / LAGO_RADIOS[1]) ** 2 <= 1:
+                hielo[(i, j)] = lajas.setdefault((i // 2, j // 2), rng.choice(LAGO_ALTOS_HIELO))
+    for i in range(ni):
+        for j in range(nj):
+            if (i, j) not in hielo and any((i + a, j + b) in hielo for a in (-1, 0, 1) for b in (-1, 0, 1)):
+                nieve[(i, j)] = rng.choice(LAGO_ALTOS_NIEVE)
+    return hielo, nieve
+
+
+def columnas(m, celdas, altos):
+    """Cada celda de `celdas` como una columna de su alto: la tapa y los costados que se ven
+    (donde la celda vecina, de cualquier malla en `altos`, es más baja)."""
+    ni, nj = LAGO_CELDAS
+    for (i, j), h in celdas.items():
+        x0, y0 = -ni + LAGO_CELDA * i, -nj + LAGO_CELDA * j
+        x1, y1 = x0 + LAGO_CELDA, y0 + LAGO_CELDA
+        m.rect(2, 1, h, (x0, x1), (y0, y1))
+        for di, dj, eje, signo, fijo in ((-1, 0, 0, -1, x0), (1, 0, 0, 1, x1), (0, -1, 1, -1, y0), (0, 1, 1, 1, y1)):
+            hv = altos.get((i + di, j + dj), 0)
+            if hv < h:
+                if eje == 0:
+                    m.rect(0, signo, fijo, (y0, y1), (hv, h))
+                else:
+                    m.rect(1, signo, fijo, (hv, h), (x0, x1))
+
+
+def lago_congelado(mats):
+    """Lago_Congelado: mallas Hielo, Nieve y Grieta. Cada grieta camina de celda en celda por el
+    hielo (sin volver atrás) y en cada celda va a la altura de su laja. Pivote en el centro de
+    la base."""
+    rng = random.Random("Grietas")
+    hielo_c, nieve_c = celdas_lago()
+    altos = {**hielo_c, **nieve_c}
+    hielo, nieve, grieta = Malla(), Malla(), Malla()
+    columnas(hielo, hielo_c, altos)
+    columnas(nieve, nieve_c, altos)
+    ni, nj = LAGO_CELDAS
+    w, sale = LAGO_GRIETA[0] / 2, LAGO_GRIETA[1]
+    # por qué lados sale la grieta de cada celda: {(i, j): {(di, dj), ...}}
+    brazos = {}
+    for celda, pasos in LAGO_GRIETAS:
+        visto, ultimo = {celda}, None
+        for _ in range(pasos):
+            vecinas = [(celda[0] + a, celda[1] + b) for a, b in ((1, 0), (-1, 0), (0, 1), (0, -1))]
+            vecinas = [v for v in vecinas if v in hielo_c and v not in visto]
+            if not vecinas:
+                break
+            # zigzag: si puede, no sigue derecho
+            torcidas = [v for v in vecinas if ultimo is None or (v[0] - celda[0], v[1] - celda[1]) != ultimo]
+            sig = rng.choice(torcidas or vecinas)
+            d = (sig[0] - celda[0], sig[1] - celda[1])
+            brazos.setdefault(celda, set()).add(d)
+            brazos.setdefault(sig, set()).add((-d[0], -d[1]))
+            ultimo, celda = d, sig
+            visto.add(sig)
+    # cada celda: un cuadradito en el centro y un brazo hasta el borde por cada lado, sin pisarse;
+    # la punta del brazo solo si la laja de al lado es más baja (si no, queda tapada)
+    for (i, j), lados in brazos.items():
+        cx, cy = -ni + LAGO_CELDA * i + 1, -nj + LAGO_CELDA * j + 1
+        h = hielo_c[(i, j)]
+        z = (h, h + sale)
+        centro = "".join(c for c, d in zip("xXyY", ((-1, 0), (1, 0), (0, -1), (0, 1))) if d not in lados)
+        grieta.caja((cx - w, cx + w), (cy - w, cy + w), z, caras=centro + "Z")
+        for di, dj in lados:
+            punta = hielo_c.get((i + di, j + dj), 0) < h
+            if di:
+                xs = (cx + w, cx + 1) if di > 0 else (cx - 1, cx - w)
+                caras = "yYZ" + (("X" if di > 0 else "x") if punta else "")
+                grieta.caja(xs, (cy - w, cy + w), z, caras=caras)
+            else:
+                ys = (cy + w, cy + 1) if dj > 0 else (cy - 1, cy - w)
+                caras = "xXZ" + (("Y" if dj > 0 else "y") if punta else "")
+                grieta.caja((cx - w, cx + w), ys, z, caras=caras)
+    objs, conteo = mallas(
+        [("Hielo", hielo, mats["hielo"]), ("Nieve", nieve, mats["nieve"]), ("Grieta", grieta, mats["grieta"])], MAX_LAGO, "Lago_Congelado"
+    )
+    if sum(conteo.values()) > MAX_LAGO:
+        raise RuntimeError(f"Lago_Congelado: {sum(conteo.values())} triángulos (máximo {MAX_LAGO})")
+    return objs, conteo
+
+
+def mats_lago(studs=None):
+    """Con studs, para el render; sin, para exportar."""
+    colores = {"hielo": HIELO_CELESTE, "nieve": ZONAS[3]["tapa"], "grieta": LAGO_GRIETA_COLOR}
+    if studs:
+        return {k: material_studs(f"Lago_{k}", c, studs) for k, c in colores.items()}
+    return {k: M.material(f"Lago_{k}", c) for k, c in colores.items()}
+
+
 # Escalones_Nevados (Glaciar): losas gris oscuro con ladrillos cuadrados en relieve, apiladas en
 # escalera (cada una más chica y corrida para atrás) con nieve arriba de cada una, como los escalones grises de las
 # capturas del Glaciar (arte/referencias/glaciar-2.webp y glaciar-3.webp)
@@ -2326,6 +2442,8 @@ REFERENCIAS = {
     # la bola de hielo que brilla de la izquierda y la captura del Glaciar
     # la bola de hielo de la izquierda y los cubitos blancos tirados de la derecha
     "Hielo_Suelto": (("glaciar-1.webp", (0.15, 0.50, 0.50, 0.95)), ("glaciar-3.webp", (0.70, 0.05, 1.0, 0.40))),
+    # la captura del Glaciar entera y el piso de nieve
+    "Lago_Congelado": ("glaciar-1.webp", "glaciar-3.webp"),
     # los escalones grises con nieve de las capturas del Glaciar
     "Escalones_Nevados": (("glaciar-2.webp", (0.08, 0.35, 0.50, 0.70)), ("glaciar-3.webp", (0.25, 0.10, 0.80, 0.55))),
     "Pico_Hielo": (("glaciar-1.webp", (0.15, 0.50, 0.50, 0.95)), "glaciar-2.webp"),
@@ -2716,6 +2834,24 @@ def render_hielo_suelto():
         M.render(f"hielo_suelto_{vista}")
     comparar("Hielo_Suelto")
     print("TRIANGULOS Hielo_Suelto", conteo, "total", sum(conteo.values()))
+
+
+def render_lago():
+    """Lago_Congelado de frente y de costado (sobre nieve, desde más arriba para ver el hielo),
+    al lado de las referencias."""
+    for vista in ("frente", "costado"):
+        M.limpiar_escena()
+        escena = M.escena_render(1280, 720)
+        escena.view_settings.exposure = -0.8  # que no se queme la nieve
+        tablero = bpy.data.materials["Piso"].node_tree.nodes["Checker Texture"]
+        tablero.inputs["Color1"].default_value = (*M.hex_a_rgb(ZONAS[3]["tapa"]), 1)
+        tablero.inputs["Color2"].default_value = (*M.hex_a_rgb("#DCE8F4"), 1)
+        objs, conteo = lago_congelado(mats_lago(textura_studs()))
+        giro = -20 if vista == "frente" else 70
+        camara_orto(escena, (0, 0, 0), 32 * M.STUD, 35, giro)
+        M.render(f"lago_congelado_{vista}")
+    comparar("Lago_Congelado")
+    print("TRIANGULOS Lago_Congelado", conteo, "total", sum(conteo.values()))
 
 
 def noche_abismo(escena):
@@ -3175,6 +3311,7 @@ def exportar_zona3():
     _Nieve, y uno por tamaño de monte (Monte_Nevado_Chico, _Mediano, _Grande) con sus mallas
     Monte_Nevado_Chico_Nieve y _Hielo, y Pico_Hielo con Pico_Hielo_HieloCeleste y _HieloBlanco
     y Hielo_Suelto con Hielo_Suelto_Hielo (todas en Roblox con Transparency = HIELO_TRANSPARENCIA),
+    Lago_Congelado con Lago_Congelado_Hielo, _Nieve y _Grieta,
     y Escalones_Nevados_1 y _2 con sus mallas
     Escalones_Nevados_1_Piedra y _Nieve. Sin textura: el juego pone el color y TextureID = Studs.png."""
     M.limpiar_escena()
@@ -3184,6 +3321,7 @@ def exportar_zona3():
     for nombre, crear, mats in (
         ("Pico_Hielo", pico_hielo, mats_pico_hielo()),
         ("Hielo_Suelto", hielo_suelto, mats_hielo_suelto()),
+        ("Lago_Congelado", lago_congelado, mats_lago()),
     ):
         vacio = bpy.data.objects.new(nombre, None)
         bpy.context.scene.collection.objects.link(vacio)
@@ -3300,4 +3438,6 @@ if __name__ == "__main__":
         render_escalones()
     if "--pieza" not in sys.argv or "Hielo_Suelto" in sys.argv:
         render_hielo_suelto()
+    if "--pieza" not in sys.argv or "Lago_Congelado" in sys.argv:
+        render_lago()
     print("Listo")
