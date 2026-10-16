@@ -59,6 +59,9 @@ Piezas:
                  celestes transparentes que baja en escalera por 3 escalones de risco (con pasto
                  arriba) y cae en una pileta de bloques con espuma blanca (10 x 13 studs de base, 15
                  de alto; la espalda se apoya contra el risco). Mallas Risco, Pasto, Agua y Espuma.
+  Piramide       Dunas (zona 2), la montaña del fondo: pirámide de 10 escalones anchos de 3 studs
+                 de alto, color arena (el risco de las Dunas), 64 x 64 studs de base y 30 de alto
+                 (arte/referencias/mapa-2.png). Malla Piramide.
                  Cada árbol de la Pradera (y el arbusto) tiene 3 variantes (Arbol_Grande_1, _2 y _3...).
   Roca_Meteorito solo Abismo: media bola chata de bloques de 2 studs azul noche, con un cráter
                  arriba (corrido a un costado) que brilla violeta en el fondo y estrellitas lilas
@@ -87,7 +90,8 @@ Uso: <python de Blender> forja-rapida/arte/scripts/decoracion.py
    --pieza Columna_Estelar / Isla_Flotante / Cristales_Abismo / Arbol_Nebuloso /
    Roca_Meteorito: render de esa pieza del Abismo; --exportar-zona5: solo arma
    arte/fbx/Deco_Zona5.fbx con las piezas del Abismo, sin renders; --pieza Arbol_Grande y
-   --exportar-zona1: lo mismo con las piezas de la Pradera y arte/fbx/Deco_Zona1.fbx)
+   --exportar-zona1: lo mismo con las piezas de la Pradera y arte/fbx/Deco_Zona1.fbx;
+   --exportar-zona2: arte/fbx/Deco_Zona2.fbx con las piezas de las Dunas)
 """
 
 import math
@@ -1413,6 +1417,43 @@ def mats_cascada(studs=None):
     }
 
 
+# Piramide (Dunas): escalones cuadrados que se achican 3 studs por lado en cada piso
+PIRAMIDE_COLOR = ZONAS[2]["risco"]
+PIRAMIDE_ESCALONES = 10
+PIRAMIDE_ALTO = 3  # studs de alto de cada escalón (10 x 3 = 30)
+PIRAMIDE_PASO = 3  # cuánto se mete cada escalón por lado
+PIRAMIDE_BASE = 64  # studs de lado del escalón de abajo
+MAX_PIRAMIDE = 4000
+
+
+def piramide(mats):
+    """Piramide: una sola malla con los costados de cada escalón y, arriba, solo el anillo que
+    queda a la vista (lo que tapa el escalón de arriba no se hace: ahorra triángulos). Sin
+    piso. Pivote en el centro de la base."""
+    m = Malla()
+    for k in range(PIRAMIDE_ESCALONES):
+        h = PIRAMIDE_BASE / 2 - k * PIRAMIDE_PASO
+        z0, z1 = k * PIRAMIDE_ALTO, (k + 1) * PIRAMIDE_ALTO
+        m.caja((-h, h), (-h, h), (z0, z1), caras="xXyY")
+        if k == PIRAMIDE_ESCALONES - 1:
+            m.rect(2, 1, z1, (-h, h), (-h, h))
+            continue
+        a = h - PIRAMIDE_PASO  # el escalón de arriba
+        m.rect(2, 1, z1, (-h, h), (-h, -a))
+        m.rect(2, 1, z1, (-h, h), (a, h))
+        m.rect(2, 1, z1, (-h, -a), (-a, a))
+        m.rect(2, 1, z1, (a, h), (-a, a))
+    objs, conteo = mallas([("Piramide", m, mats["piramide"])], MAX_PIRAMIDE, "Piramide")
+    return objs, conteo
+
+
+def mats_piramide(studs=None):
+    """Con studs, para el render; sin, para exportar."""
+    if studs:
+        return {"piramide": material_studs("Piramide", PIRAMIDE_COLOR, studs)}
+    return {"piramide": M.material("Piramide", PIRAMIDE_COLOR)}
+
+
 # Roca_Meteorito: roca azul noche de bloques con un cráter que brilla violeta adentro y
 # estrellitas lilas en los costados (como el cielo del Abismo, arte/referencias/abismo-1.png;
 # el naranja quedaba de la zona de lava)
@@ -1703,6 +1744,8 @@ REFERENCIAS = {
     "Racimo_Cuarzo": ("estilo-1.png", ("mapa-1.png", (0.10, 0.45, 0.35, 0.62))),
     # la captura entera y el risco con pasto de la derecha
     "Cascada_Cristal": ("estilo-1.png", ("mapa-1.png", (0.62, 0.30, 0.95, 0.62))),
+    # la pirámide de las Dunas y la captura de la zona
+    "Piramide": ("mapa-2.png", "estilo-2.png"),
 }
 
 
@@ -1868,6 +1911,20 @@ def render_cascada():
         M.render(f"cascada_cristal_{vista}")
     comparar("Cascada_Cristal")
     print("TRIANGULOS Cascada_Cristal", conteo, "total", sum(conteo.values()))
+
+
+def render_piramide():
+    """Piramide de frente y de costado, al lado de las referencias."""
+    alto = PIRAMIDE_ESCALONES * PIRAMIDE_ALTO * M.STUD
+    for vista in ("frente", "costado"):
+        M.limpiar_escena()
+        escena = M.escena_render(1280, 720)
+        objs, conteo = piramide(mats_piramide(textura_studs()))
+        giro = -20 if vista == "frente" else 70
+        camara_orto(escena, (0, 0, alto * 0.45), PIRAMIDE_BASE * M.STUD * 1.6, 12, giro)
+        M.render(f"piramide_{vista}")
+    comparar("Piramide")
+    print("TRIANGULOS Piramide", conteo, "total", sum(conteo.values()))
 
 
 def noche_abismo(escena):
@@ -2253,7 +2310,45 @@ def exportar_zona1():
     print("  FBX Deco_Zona1.fbx")
 
 
+def exportar_zona2():
+    """Deco_Zona2.fbx: piezas que son solo de las Dunas. Raíz Deco_Zona2 con un vacío Piramide y
+    su malla Piramide_Piramide. Sin textura: el juego pone el color y TextureID = Studs.png."""
+    M.limpiar_escena()
+    raiz = bpy.data.objects.new("Deco_Zona2", None)
+    bpy.context.scene.collection.objects.link(raiz)
+    for nombre, crear, mats in (("Piramide", piramide, mats_piramide()),):
+        vacio = bpy.data.objects.new(nombre, None)
+        bpy.context.scene.collection.objects.link(vacio)
+        vacio.parent = raiz
+        objs, conteo = crear(mats)
+        for o in objs:
+            o.parent = vacio
+            o.name = o.data.name = f"{nombre}_{o.name.split('.')[0]}"
+        print("TRIANGULOS", nombre, conteo, "total", sum(conteo.values()))
+    bpy.ops.object.select_all(action="DESELECT")
+    for o in [raiz, *raiz.children_recursive]:
+        o.select_set(True)
+    bpy.context.view_layer.objects.active = raiz
+    bpy.ops.export_scene.fbx(
+        filepath=str(M.FBX / "Deco_Zona2.fbx"),
+        use_selection=True,
+        object_types={"MESH", "EMPTY"},
+        apply_unit_scale=True,
+        apply_scale_options="FBX_SCALE_ALL",
+        axis_forward="-Z",
+        axis_up="Y",
+        mesh_smooth_type="FACE",
+        bake_space_transform=True,
+        add_leaf_bones=False,
+    )
+    print("  FBX Deco_Zona2.fbx")
+
+
 if __name__ == "__main__":
+    if "--exportar-zona2" in sys.argv:
+        M.FBX.mkdir(parents=True, exist_ok=True)
+        exportar_zona2()
+        sys.argv.append("--solo-fbx")
     if "--exportar-zona1" in sys.argv:
         M.FBX.mkdir(parents=True, exist_ok=True)
         exportar_zona1()
@@ -2298,4 +2393,6 @@ if __name__ == "__main__":
         render_cuarzo()
     if "--pieza" not in sys.argv or "Cascada_Cristal" in sys.argv:
         render_cascada()
+    if "--pieza" not in sys.argv or "Piramide" in sys.argv:
+        render_piramide()
     print("Listo")
