@@ -55,6 +55,10 @@ Piezas:
   Racimo_Cuarzo  Pradera: 4 cristales de cuarzo violeta (cajas inclinadas con la punta más angosta
                  y clara, Neon suave en Roblox) que salen de una base de losas de piedra gris (9 x 7
                  studs de base, 10 de alto). Mallas Piedra, Cuarzo y CuarzoPunta.
+  Cascada_Cristal  Pradera (la pista de la puerta secreta de la zona 1): cascada chica de bloques
+                 celestes transparentes que baja en escalera por 3 escalones de risco (con pasto
+                 arriba) y cae en una pileta de bloques con espuma blanca (10 x 13 studs de base, 15
+                 de alto; la espalda se apoya contra el risco). Mallas Risco, Pasto, Agua y Espuma.
                  Cada árbol de la Pradera (y el arbusto) tiene 3 variantes (Arbol_Grande_1, _2 y _3...).
   Roca_Meteorito solo Abismo: media bola chata de bloques de 2 studs azul noche, con un cráter
                  arriba (corrido a un costado) que brilla violeta en el fondo y estrellitas lilas
@@ -1334,6 +1338,81 @@ def mats_cuarzo(studs=None):
     }
 
 
+# Cascada_Cristal (Pradera, pista de la puerta secreta): agua celeste transparente en escalera
+# sobre escalones del risco de la Pradera, y una pileta con espuma. Frente hacia -y (como el risco).
+CASCADA_RISCO = ZONAS[1]["risco"]
+CASCADA_PASTO = ZONAS[1]["tapa"]
+CASCADA_AGUA = "#7FD8FF"  # en Roblox, Transparency 0.35 (o Material Glass)
+CASCADA_ESPUMA = "#F4FAFF"
+CASCADA_TRANSPARENCIA = 0.35
+MAX_CASCADA = 3000  # por pieza (sumando sus mallas)
+CASCADA_Y = 1.5  # corre todo para que el centro de la base quede en y = 0 (va de -8 a 5)
+
+
+def cascada_cristal(mats):
+    """Cascada_Cristal: mallas Risco (3 escalones y el borde de la pileta, con studs), Pasto
+    (las tapas de los escalones a los costados del agua), Agua (la tirada de arriba, una
+    cortina por escalón y la pileta) y Espuma (bloquecitos blancos donde cae). Pivote en el
+    centro de la base."""
+    d = CASCADA_Y
+
+    def y(a, b):
+        return (a + d, b + d)
+
+    risco, pasto, agua, espuma = Malla(), Malla(), Malla(), Malla()
+    # escalones de risco: el de atrás es el más alto (z, desde dónde empieza en y)
+    escalones = [((-4, 4), y(3, 5), (0, 13)), ((-3.5, 3.5), y(1, 3), (0, 9)), ((-3, 3), y(-1, 1), (0, 5))]
+    for ex, ey, ez in escalones:
+        risco.caja(ex, ey, ez)
+        # pasto arriba, a los dos costados del agua (el agua tiene 4 de ancho)
+        for px in ((ex[0], -2), (2, ex[1])):
+            pasto.caja(px, (ey[0] - 0.3, ey[1]), (ez[1], ez[1] + 1))
+    # el agua: tirada arriba del escalón de atrás y, en cada uno, una cortina que baja por el
+    # frente y una lámina arriba del escalón de abajo
+    agua.caja((-2, 2), y(3.5, 5), (13, 13.5))
+    for (ex, ey, ez), sigue in zip(escalones, [9, 5, 1.2]):
+        agua.caja((-2, 2), (ey[0] - 0.6, ey[0]), (sigue, ez[1] + 0.5))
+        if sigue > 2:
+            agua.caja((-2.2, 2.2), (ey[0] - 2, ey[0] - 0.6), (sigue, sigue + 0.5))
+    # la pileta: borde de 1 stud de risco y el agua adentro
+    risco.caja((-5, 5), y(-8, -7), (0, 1.5))
+    risco.caja((-5, -4), y(-7, -1), (0, 1.5))
+    risco.caja((4, 5), y(-7, -1), (0, 1.5))
+    agua.caja((-4, 4), y(-7, -1), (0, 1.2), caras="xXyYZ")
+    # espuma donde cae el agua
+    for bx, by, bz in (((-2.5, 2.5), (-2.4, -1.6), (1.2, 1.7)), ((-1.5, 0.5), (-3.2, -2.4), (1.2, 1.5)),
+                       ((1, 2), (-3, -2.4), (1.2, 1.6)), ((-3.2, -2.2), (-2, -1.4), (1.2, 1.5))):
+        espuma.caja(bx, y(*by), bz)
+    objs, conteo = mallas(
+        [("Risco", risco, mats["risco"]), ("Pasto", pasto, mats["pasto"]), ("Agua", agua, mats["agua"]),
+         ("Espuma", espuma, mats["espuma"])],
+        MAX_CASCADA,
+        "Cascada_Cristal",
+    )
+    if sum(conteo.values()) > MAX_CASCADA:
+        raise RuntimeError(f"Cascada_Cristal: {sum(conteo.values())} triángulos (máximo {MAX_CASCADA})")
+    return objs, conteo
+
+
+def mats_cascada(studs=None):
+    """Con studs, para el render (el agua se ve a través); sin, para exportar."""
+    if studs:
+        agua = material_studs("CascadaAgua", CASCADA_AGUA, studs)
+        agua.node_tree.nodes["Principled BSDF"].inputs["Alpha"].default_value = 1 - CASCADA_TRANSPARENCIA
+        return {
+            "risco": material_studs("CascadaRisco", CASCADA_RISCO, studs),
+            "pasto": material_studs("CascadaPasto", CASCADA_PASTO, studs),
+            "agua": agua,
+            "espuma": material_studs("CascadaEspuma", CASCADA_ESPUMA, studs),
+        }
+    return {
+        "risco": M.material("CascadaRisco", CASCADA_RISCO),
+        "pasto": M.material("CascadaPasto", CASCADA_PASTO),
+        "agua": M.material("CascadaAgua", CASCADA_AGUA),
+        "espuma": M.material("CascadaEspuma", CASCADA_ESPUMA),
+    }
+
+
 # Roca_Meteorito: roca azul noche de bloques con un cráter que brilla violeta adentro y
 # estrellitas lilas en los costados (como el cielo del Abismo, arte/referencias/abismo-1.png;
 # el naranja quedaba de la zona de lava)
@@ -1622,6 +1701,8 @@ REFERENCIAS = {
     "Arbusto": (("estilo-1.png", (0.18, 0.52, 0.36, 0.70)), ("mapa-1.png", (0.18, 0.47, 0.36, 0.62))),
     # la captura entera y las losas de piedra gris de la izquierda
     "Racimo_Cuarzo": ("estilo-1.png", ("mapa-1.png", (0.10, 0.45, 0.35, 0.62))),
+    # la captura entera y el risco con pasto de la derecha
+    "Cascada_Cristal": ("estilo-1.png", ("mapa-1.png", (0.62, 0.30, 0.95, 0.62))),
 }
 
 
@@ -1773,6 +1854,20 @@ def render_cuarzo():
         M.render(f"racimo_cuarzo_{vista}")
     comparar("Racimo_Cuarzo")
     print("TRIANGULOS Racimo_Cuarzo", conteo, "total", sum(conteo.values()))
+
+
+def render_cascada():
+    """Cascada_Cristal de frente y de costado, al lado de las referencias."""
+    alto = 15 * M.STUD
+    for vista in ("frente", "costado"):
+        M.limpiar_escena()
+        escena = M.escena_render(1280, 720)
+        objs, conteo = cascada_cristal(mats_cascada(textura_studs()))
+        giro = -20 if vista == "frente" else 70
+        camara_orto(escena, (0, 0, alto * 0.45), alto * 1.3 * 16 / 9, 14, giro)
+        M.render(f"cascada_cristal_{vista}")
+    comparar("Cascada_Cristal")
+    print("TRIANGULOS Cascada_Cristal", conteo, "total", sum(conteo.values()))
 
 
 def noche_abismo(escena):
@@ -2109,9 +2204,10 @@ EXPORTAR_ZONA1 = ["Arbol_Grande", "Arbol_Mediano", "Arbol_Rosa", "Arbol_Seco", "
 def exportar_zona1():
     """Deco_Zona1.fbx: piezas que son solo de la Pradera. Raíz Deco_Zona1 con un vacío por
     variante de cada árbol (Arbol_Grande_1, _2, _3...) y sus mallas (Arbol_Grande_1_Tronco,
-    _Sombra, _Copa...), y Racimo_Cuarzo con Racimo_Cuarzo_Piedra, _Cuarzo y _CuarzoPunta. Sin
-    textura: el juego pone el color y TextureID = Studs.png en todas, salvo el Cuarzo y la
-    CuarzoPunta, que van en Material Neon."""
+    _Sombra, _Copa...), Racimo_Cuarzo con Racimo_Cuarzo_Piedra, _Cuarzo y _CuarzoPunta, y
+    Cascada_Cristal con Cascada_Cristal_Risco, _Pasto, _Agua y _Espuma. Sin textura: el juego
+    pone el color y TextureID = Studs.png en todas, salvo el Cuarzo y la CuarzoPunta, que van en
+    Material Neon; el Agua lleva además Transparency = CASCADA_TRANSPARENCIA."""
     M.limpiar_escena()
     raiz = bpy.data.objects.new("Deco_Zona1", None)
     bpy.context.scene.collection.objects.link(raiz)
@@ -2126,14 +2222,18 @@ def exportar_zona1():
                 o.parent = vacio
                 o.name = o.data.name = f"{nombre}_{o.name.split('.')[0]}"
             print("TRIANGULOS", nombre, conteo, "total", sum(conteo.values()))
-    vacio = bpy.data.objects.new("Racimo_Cuarzo", None)
-    bpy.context.scene.collection.objects.link(vacio)
-    vacio.parent = raiz
-    objs, conteo = racimo_cuarzo(mats_cuarzo())
-    for o in objs:
-        o.parent = vacio
-        o.name = o.data.name = f"Racimo_Cuarzo_{o.name.split('.')[0]}"
-    print("TRIANGULOS Racimo_Cuarzo", conteo, "total", sum(conteo.values()))
+    for nombre, crear, mats in (
+        ("Racimo_Cuarzo", racimo_cuarzo, mats_cuarzo()),
+        ("Cascada_Cristal", cascada_cristal, mats_cascada()),
+    ):
+        vacio = bpy.data.objects.new(nombre, None)
+        bpy.context.scene.collection.objects.link(vacio)
+        vacio.parent = raiz
+        objs, conteo = crear(mats)
+        for o in objs:
+            o.parent = vacio
+            o.name = o.data.name = f"{nombre}_{o.name.split('.')[0]}"
+        print("TRIANGULOS", nombre, conteo, "total", sum(conteo.values()))
     bpy.ops.object.select_all(action="DESELECT")
     for o in [raiz, *raiz.children_recursive]:
         o.select_set(True)
@@ -2196,4 +2296,6 @@ if __name__ == "__main__":
         render_meteorito()
     if "--pieza" not in sys.argv or "Racimo_Cuarzo" in sys.argv:
         render_cuarzo()
+    if "--pieza" not in sys.argv or "Cascada_Cristal" in sys.argv:
+        render_cascada()
     print("Listo")
