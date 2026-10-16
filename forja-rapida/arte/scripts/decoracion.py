@@ -11,6 +11,10 @@ Piezas:
                  stud para cada lado, con gotitas. Encaja sin costura con otro tramo igual (mismo
                  truco que el risco). Mallas Pared y Tapa (la tapa toma el color de cada bioma).
 
+Cada pieza tiene una variante por zona (ZONAS): sus colores y lo que tiene la tapa (pasto con
+gotitas; dunas de arena; nieve con carámbanos; ceniza con piedritas y chorros de lava; cristales
+estelares). Lo que brilla o es de otro color va en una tercera malla, Detalle.
+
 Estilo de las capturas del juego (arte/referencias/mapa-1.png y mapa-3.png): todo de bloques,
 colores planos, studs como textura (texturas/Studs.png, nunca modelados). Dos mallas, un color cada
 una: Risco (pared, ladrillos, costados, fondo y base) y Pasto (franjas y gotitas). La textura de
@@ -24,7 +28,8 @@ Reglas (GUIA, sección 5): escala real (1 stud = 0,28 m), pivote en el centro de
 
 Uso: <python de Blender> forja-rapida/arte/scripts/decoracion.py
   (sin nada: render de frente y de costado de cada pieza al lado de las referencias, y
-   triángulos; --pieza <Nombre>: solo esa; --exportar: además arma arte/fbx/Deco_Comun.fbx)
+   triángulos; --pieza <Nombre>: solo esa; --zonas: las 5 variantes de cada pieza en
+   arte/renders/deco_zonas.jpg; --exportar: además arma arte/fbx/Deco_Comun.fbx)
 """
 
 import math
@@ -40,9 +45,18 @@ import modelos as M  # noqa: E402
 
 TEJA = 4  # studs que mide la textura de studs (4 x 4 studs en 256 px)
 
-# Colores de las capturas (los de la guía; en el juego los cambia cada bioma)
-COLOR_RISCO = "#C96F5C"
-COLOR_PASTO = "#3DB02A"
+# Una variante por zona: colores (los de las capturas y de mapa.py) y cómo es la tapa.
+#   risco/tapa/detalle: color de cada malla (detalle = None: la variante no tiene esa malla)
+#   neon: el Detalle brilla (en Roblox, Material Neon)
+#   estilo: pasto (gotitas), arena (dunas arriba, chorritos anchos), nieve (montoncitos y
+#   carámbanos), ceniza (piedritas arriba y chorros de lava), estelar (cristales arriba)
+ZONAS = {
+    1: {"nombre": "Pradera", "risco": "#C96F5C", "tapa": "#3DB02A", "detalle": None, "neon": False, "estilo": "pasto"},
+    2: {"nombre": "Dunas", "risco": "#D9A05B", "tapa": "#F2D27A", "detalle": None, "neon": False, "estilo": "arena"},
+    3: {"nombre": "Glaciar", "risco": "#7FA6C9", "tapa": "#F4FAFF", "detalle": "#A8E6FF", "neon": False, "estilo": "nieve"},
+    4: {"nombre": "Volcán", "risco": "#3A2E33", "tapa": "#5A4A50", "detalle": "#FF5A00", "neon": True, "estilo": "ceniza"},
+    5: {"nombre": "Abismo", "risco": "#2E2A5C", "tapa": "#4B3F8F", "detalle": "#7CF5FF", "neon": True, "estilo": "estelar"},
+}
 
 # Risco_Escalon, en studs
 LARGO = 16  # x, de -8 a 8
@@ -152,23 +166,90 @@ def ladrillos(m, y, z0, z1, fila0, signo=-1):
             x += ancho
 
 
-def gotitas(m, rng, y, alto, signo=-1):
-    """Gotitas de pasto que cuelgan del vuelo de la tapa, delante de la pared en el plano y
-    (lejos de los bordes, así no cortan la unión)."""
+def colgantes(tapa, detalle, rng, estilo, y, alto, signo=-1):
+    """Lo que cuelga del vuelo de la tapa, delante de la pared en el plano y (lejos de los bordes,
+    así no cortan la unión): gotitas de pasto, chorritos de arena, nieve y carámbanos, o lava."""
     medio = LARGO / 2
-    fondo = (y - VUELO, y - RELIEVE - 0.05) if signo < 0 else (y + RELIEVE + 0.05, y + VUELO)
+    if signo < 0:
+        fondo, fino = (y - VUELO, y - RELIEVE - 0.05), (y - RELIEVE - 0.3, y - RELIEVE - 0.02)
+    else:
+        fondo, fino = (y + RELIEVE + 0.05, y + VUELO), (y + RELIEVE + 0.02, y + RELIEVE + 0.3)
+    caras = "xXyYz"
     x = -medio + rng.choice((1, 2))
     while x < medio - 3:
-        largo = rng.choice((1, 1, 2))
-        ancho = rng.choice((1, 2))
-        m.caja((x, x + ancho), fondo, (alto - largo, alto), caras="xXyYz")
+        if estilo == "pasto":
+            largo = rng.choice((1, 1, 2))  # en este orden: así queda igual a la aprobada
+            ancho = rng.choice((1, 2))
+            tapa.caja((x, x + ancho), fondo, (alto - largo, alto), caras=caras)
+        elif estilo == "arena":
+            ancho, largo = rng.choice((2, 3)), rng.choice((0.5, 1))
+            tapa.caja((x, x + ancho), fondo, (alto - largo, alto), caras=caras)
+        elif estilo == "nieve":
+            ancho = rng.choice((2, 3))
+            tapa.caja((x, x + ancho), fondo, (alto - 0.5, alto), caras=caras)
+            # carámbano: un tramo de 1 de ancho y la punta más fina
+            cx, l1, l2 = x + rng.choice((0, 1)), rng.choice((1, 1.5)), rng.choice((1, 1.5, 2))
+            detalle.caja((cx, cx + 1), fondo, (alto - 0.5 - l1, alto - 0.5), caras=caras)
+            detalle.caja((cx + 0.25, cx + 0.75), fondo, (alto - 0.5 - l1 - l2, alto - 0.5 - l1), caras=caras)
+        elif estilo == "ceniza":
+            ancho = 1
+            if rng.random() < 0.6:  # chorro de lava pegado a los ladrillos
+                largo = rng.choice((2, 3, 4, 5))
+                detalle.caja((x, x + ancho), fino, (alto - largo, alto), caras=caras)
+        else:  # estelar: gotitas chicas de polvo
+            ancho, largo = 1, rng.choice((0.5, 1))
+            tapa.caja((x, x + ancho), fondo, (alto - largo, alto), caras=caras)
         x += ancho + rng.choice((2, 3, 4))
 
 
+def encima(tapa, detalle, rng, estilo, z, y0, y1):
+    """Lo que va arriba de la tapa (entre y0 e y1, lejos de los bordes en x): dunas, montoncitos
+    de nieve, piedritas de ceniza o cristales. El pasto va liso."""
+    caras = "xXyYZ"
+    hondo = y1 - y0
+    if estilo == "arena":
+        x = rng.uniform(-7, -3)
+        while x < 2:
+            ancho = rng.choice((4, 5))
+            d = min(hondo, rng.choice((2.5, 3)))
+            yc = rng.uniform(y0, y1 - d)
+            tapa.caja((x, x + ancho), (yc, yc + d), (z, z + 0.5), caras=caras)
+            tapa.caja((x + 1, x + ancho - 1), (yc + 0.5, yc + d - 0.5), (z + 0.5, z + 1), caras=caras)
+            x += ancho + rng.choice((2, 3))
+    elif estilo == "nieve":
+        x = rng.uniform(-7, -4)
+        while x < 4:
+            ancho = rng.choice((2, 3))
+            d = min(hondo, 2)
+            yc = rng.uniform(y0, y1 - d)
+            tapa.caja((x, x + ancho), (yc, yc + d), (z, z + rng.choice((0.5, 1))), caras=caras)
+            x += ancho + rng.choice((2, 3, 4))
+    elif estilo == "ceniza":
+        x = rng.uniform(-7, -5)
+        while x < 5.5:
+            ancho, alto = rng.choice((1, 1.5, 2)), rng.choice((1, 1.5, 2))
+            d = min(hondo, rng.choice((1, 1.5)))
+            yc = rng.uniform(y0, y1 - d)
+            tapa.caja((x, x + ancho), (yc, yc + d), (z, z + alto), caras=caras)
+            x += ancho + rng.choice((1.5, 2.5, 3.5))
+    elif estilo == "estelar":
+        x = rng.uniform(-6.5, -4)
+        while x < 4.5:
+            yc = rng.uniform(y0, y1 - 1.5)
+            for dx, dy, ancho, alto in ((0, 0.3, 1, 3), (1, 0, 0.75, 2), (0.2, 1.1, 0.6, 1.5)):
+                alto *= rng.choice((0.8, 1, 1.2))
+                detalle.caja((x + dx, x + dx + ancho), (yc + dy, yc + dy + ancho), (z, z + alto), caras=caras)
+            x += rng.choice((4, 5, 6))
+
+
 def mallas(piezas, tope, pieza):
-    """Arma los objetos de [(nombre, Malla, material)] y avisa si alguno se pasa de triángulos."""
+    """Arma los objetos de [(nombre, Malla, material)] y avisa si alguno se pasa de triángulos.
+    Las mallas vacías (el Detalle de las zonas que no tienen) no se arman."""
     objs, conteo = [], {}
     for nombre, malla, mat in piezas:
+        if not malla.bm.faces:
+            malla.bm.free()
+            continue
         obj, t = malla.objeto(nombre, mat)
         if t > tope:
             raise RuntimeError(f"{pieza} {nombre}: {t} triángulos (máximo {tope})")
@@ -177,12 +258,14 @@ def mallas(piezas, tope, pieza):
     return objs, conteo
 
 
-def risco_escalon(mats, semilla=11):
-    """Las dos mallas del Risco_Escalon: (Risco, Pasto) y sus triángulos."""
-    rng = random.Random(semilla)
+def risco_escalon(mats, zona=1, semilla=11):
+    """Las mallas del Risco_Escalon de una zona: Risco, Tapa y (si tiene) Detalle. La zona 1
+    usa la misma semilla de antes, así queda igual a la aprobada."""
+    rng = random.Random(semilla + (zona - 1) * 101)
+    estilo = ZONAS[zona]["estilo"]
     medio = LARGO / 2
     fondo = medio
-    risco, pasto = Malla(), Malla()
+    risco, pasto, detalle = Malla(), Malla(), Malla()
     for i, (y, alto) in enumerate(zip(ESCALONES_Y, ALTOS)):
         y_sig = ESCALONES_Y[i + 1] if i + 1 < len(ESCALONES_Y) else fondo
         z0 = 0 if i == 0 else ALTOS[i - 1] + PASTO
@@ -194,20 +277,23 @@ def risco_escalon(mats, semilla=11):
         caras = "xXyZ" + ("Y" if i + 1 == len(ESCALONES_Y) else "")
         pasto.caja((-medio, medio), (y - VUELO, y_sig), (alto, alto + PASTO), caras=caras)
         pasto.rect(2, -1, alto, (-medio, medio), (y - VUELO, y))
-        gotitas(pasto, rng, y, alto)
+        colgantes(pasto, detalle, rng, estilo, y, alto)
+        encima(pasto, detalle, rng, estilo, alto + PASTO, y - VUELO + 0.3, y_sig - 0.6)
     # fondo y base
     risco.rect(1, 1, fondo, (0, ALTOS[-1]), (-medio, medio))
     risco.rect(2, -1, 0, (-medio, medio), (-fondo, fondo))
-    return mallas([("Risco", risco, mats["risco"]), ("Pasto", pasto, mats["pasto"])], 6000, "Risco_Escalon")
+    piezas = [("Risco", risco, mats["risco"]), ("Tapa", pasto, mats["tapa"]), ("Detalle", detalle, mats["detalle"])]
+    return mallas(piezas, 6000, "Risco_Escalon")
 
 
-def pared_ladrillo(mats, semilla=23):
-    """Las dos mallas de la Pared_Ladrillo: (Pared, Tapa). La pared tiene ladrillos de los dos
-    lados; la tapa de pasto sale VUELO para cada lado y le cuelgan gotitas de los dos lados.
-    Entre las dos mallas no pasan de MAX_PARED triángulos."""
-    rng = random.Random(semilla)
+def pared_ladrillo(mats, zona=1, semilla=23):
+    """Las mallas de la Pared_Ladrillo de una zona: Pared, Tapa y (si tiene) Detalle. La pared
+    tiene ladrillos de los dos lados; la tapa sale VUELO para cada lado y le cuelga lo de la zona
+    de los dos lados. Entre todas las mallas no pasan de MAX_PARED triángulos."""
+    rng = random.Random(semilla + (zona - 1) * 101)
+    estilo = ZONAS[zona]["estilo"]
     medio, e = LARGO / 2, PARED_ESPESOR / 2
-    pared, tapa = Malla(), Malla()
+    pared, tapa, detalle = Malla(), Malla(), Malla()
     ladrillos(pared, -e, 0, PARED_ALTO, 0, -1)
     ladrillos(pared, e, 0, PARED_ALTO, 1, 1)
     for signo in (-1, 1):
@@ -217,9 +303,11 @@ def pared_ladrillo(mats, semilla=23):
     tapa.caja((-medio, medio), (-e - VUELO, e + VUELO), (PARED_ALTO, arriba), caras="xXyYZ")
     for y0, y1 in ((-e - VUELO, -e), (e, e + VUELO)):
         tapa.rect(2, -1, PARED_ALTO, (-medio, medio), (y0, y1))
-    gotitas(tapa, rng, -e, PARED_ALTO, -1)
-    gotitas(tapa, rng, e, PARED_ALTO, 1)
-    objs, conteo = mallas([("Pared", pared, mats["risco"]), ("Tapa", tapa, mats["pasto"])], MAX_PARED, "Pared_Ladrillo")
+    colgantes(tapa, detalle, rng, estilo, -e, PARED_ALTO, -1)
+    colgantes(tapa, detalle, rng, estilo, e, PARED_ALTO, 1)
+    encima(tapa, detalle, rng, estilo, arriba, -e - VUELO + 0.3, e + VUELO - 0.3)
+    piezas = [("Pared", pared, mats["risco"]), ("Tapa", tapa, mats["tapa"]), ("Detalle", detalle, mats["detalle"])]
+    objs, conteo = mallas(piezas, MAX_PARED, "Pared_Ladrillo")
     if sum(conteo.values()) > MAX_PARED:
         raise RuntimeError(f"Pared_Ladrillo: {sum(conteo.values())} triángulos (máximo {MAX_PARED})")
     return objs, conteo
@@ -277,11 +365,27 @@ def material_studs(nombre, color, studs):
     return m
 
 
-def mats_render(studs):
-    return {
-        "risco": material_studs("Risco", COLOR_RISCO, studs),
-        "pasto": material_studs("Pasto", COLOR_PASTO, studs),
+def mats_render(studs, zona=1):
+    z = ZONAS[zona]
+    mats = {
+        "risco": material_studs(f"Risco{zona}", z["risco"], studs),
+        "tapa": material_studs(f"Tapa{zona}", z["tapa"], studs),
+        "detalle": None,
     }
+    if z["detalle"]:
+        if z["neon"]:
+            mats["detalle"] = M.material(f"Detalle{zona}", z["detalle"], brillo=z["detalle"], fuerza_brillo=1.2)
+        else:
+            mats["detalle"] = material_studs(f"Detalle{zona}", z["detalle"], studs)
+    return mats
+
+
+def mats_export(zona):
+    """Sin textura (el juego pone el color y TextureID = Studs.png); el nombre dice la zona."""
+    z = ZONAS[zona]
+    mats = {"risco": M.material(f"Risco_Zona{zona}", z["risco"]), "tapa": M.material(f"Tapa_Zona{zona}", z["tapa"])}
+    mats["detalle"] = M.material(f"Detalle_Zona{zona}", z["detalle"]) if z["detalle"] else None
+    return mats
 
 
 # --- render y exportación --------------------------------------------------------------------
@@ -335,6 +439,38 @@ def render(pieza):
     print("TRIANGULOS", pieza, conteo, "total", sum(conteo.values()))
 
 
+def render_zonas():
+    """deco_zonas.jpg: arriba los 5 Risco_Escalon, abajo las 5 Pared_Ladrillo (zona 1 a 5, de
+    izquierda a derecha), vistos de tres cuartos. Lo de Neon brilla, como en el juego."""
+    import numpy as np
+
+    paso = (LARGO + 6) * M.STUD
+    filas = []
+    for pieza in PIEZAS:
+        crear, alto, _ = PIEZAS[pieza]
+        M.limpiar_escena()
+        alto_px = round(2000 * alto * M.STUD * 1.65 / (5 * paso + 1))
+        escena = M.escena_render(2000, alto_px)
+        studs = textura_studs()
+        for zona, z in ZONAS.items():
+            objs, conteo = crear(mats_render(studs, zona), zona)
+            M.mover(objs, (zona - 3) * paso)
+            t = M.etiqueta(f"{zona} {z['nombre']}", (zona - 3) * paso, -LARGO * M.STUD * 0.75, tam=0.6, color="#1B1F3B")
+            t.rotation_euler.x = math.radians(70)
+            print("TRIANGULOS", pieza, f"zona {zona}", conteo, "total", sum(conteo.values()))
+        camara_orto(escena, (0, -1, alto * M.STUD * 0.62), 5 * paso + 1, 14, -18)
+        M.render(f"deco_zonas_{pieza.lower()}")
+        filas.append(cargar(M.RENDERS / f"deco_zonas_{pieza.lower()}.jpg", 2000, alto_px))
+    # en Blender la fila 0 es la de abajo: la pared primero
+    junto = np.concatenate([filas[1], np.ones((12, 2000, 4), dtype=np.float32), filas[0]], axis=0)
+    salida = bpy.data.images.new("zonas", junto.shape[1], junto.shape[0])
+    salida.pixels.foreach_set(junto.ravel())
+    salida.filepath_raw = str(M.RENDERS / "deco_zonas.jpg")
+    salida.file_format = "JPEG"
+    salida.save()
+    print("  Render deco_zonas.jpg")
+
+
 def cargar(ruta, ancho, alto):
     import numpy as np
 
@@ -381,19 +517,22 @@ def comparar(pieza):
 
 
 def exportar():
-    """Deco_Comun.fbx: un vacío por pieza con sus mallas (sin textura: el juego pone el color y
-    TextureID = Studs.png)."""
+    """Deco_Comun.fbx: Zona1..Zona5, cada una con un vacío por pieza y sus mallas (sin textura:
+    el juego pone el color y TextureID = Studs.png)."""
     M.limpiar_escena()
-    mats = {"risco": M.material("Risco", COLOR_RISCO), "pasto": M.material("Pasto", COLOR_PASTO)}
     raiz = bpy.data.objects.new("Deco_Comun", None)
     bpy.context.scene.collection.objects.link(raiz)
-    for nombre, (crear, _, _) in PIEZAS.items():
-        vacio = bpy.data.objects.new(nombre, None)
-        bpy.context.scene.collection.objects.link(vacio)
-        vacio.parent = raiz
-        objs, _ = crear(mats)
-        for o in objs:
-            o.parent = vacio
+    for zona in ZONAS:
+        carpeta = bpy.data.objects.new(f"Zona{zona}", None)
+        bpy.context.scene.collection.objects.link(carpeta)
+        carpeta.parent = raiz
+        for nombre, (crear, _, _) in PIEZAS.items():
+            vacio = bpy.data.objects.new(nombre, None)
+            bpy.context.scene.collection.objects.link(vacio)
+            vacio.parent = carpeta
+            objs, _ = crear(mats_export(zona), zona)
+            for o in objs:
+                o.parent = vacio
     bpy.ops.object.select_all(action="DESELECT")
     for o in [raiz, *raiz.children_recursive]:
         o.select_set(True)
@@ -419,6 +558,9 @@ if __name__ == "__main__":
         exportar()
     # --pieza <Nombre>: solo esa (si no, todas)
     elegidas = [sys.argv[sys.argv.index("--pieza") + 1]] if "--pieza" in sys.argv else list(PIEZAS)
+    if "--zonas" in sys.argv:
+        render_zonas()
+        elegidas = []
     for pieza in elegidas:
         render(pieza)
     print("Listo")
