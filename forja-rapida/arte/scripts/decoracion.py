@@ -90,6 +90,10 @@ Piezas:
                  (va contra los riscos y al fondo) y algunos bloques de hielo celeste en la cara
                  de adelante. Tres tamaños: Chico (16 x 10 studs, 10 de alto), Mediano (28 x 16,
                  18) y Grande (40 x 24, 28). Mallas Nieve y Hielo.
+  Pico_Hielo     Glaciar (la pista de la puerta secreta de la zona 3): 5 esquirlas de hielo en
+                 punta (tramos de cajas inclinadas que se angostan) que salen abiertas de la
+                 nieve, la del medio de 12 studs. Mallas HieloCeleste y HieloBlanco, las dos con
+                 Transparency = HIELO_TRANSPARENCIA en Roblox.
                  Cada árbol de la Pradera (y el arbusto) tiene 3 variantes (Arbol_Grande_1, _2 y _3...).
   Roca_Meteorito solo Abismo: media bola chata de bloques de 2 studs azul noche, con un cráter
                  arriba (corrido a un costado) que brilla violeta en el fondo y estrellitas lilas
@@ -1857,6 +1861,52 @@ def mats_monte(studs=None):
     return {k: M.material(f"Monte_{k}", c) for k, c in colores.items()}
 
 
+# Pico_Hielo (Glaciar, pista de la puerta secreta de la zona 3): esquirlas de hielo altas y en
+# punta que salen inclinadas del piso, celestes y blancas, semitransparentes
+HIELO_CELESTE = ZONAS[3]["detalle"]
+HIELO_BLANCO = ZONAS[3]["tapa"]
+HIELO_TRANSPARENCIA = 0.3  # en Roblox, Transparency de las dos MeshPart
+# cada esquirla: color, (x, y) donde nace (en studs), rumbo (grados en el piso, 0 = +x) y tramos
+# (inclinación desde la vertical, largo, ancho): cada tramo más angosto, el último es la punta.
+# Nacen medio stud bajo el piso, así parece que salen de la nieve.
+ESQUIRLAS = [
+    ("celeste", (0, 0.5), 100, [(8, 4.5, 2.4), (10, 3.5, 1.7), (12, 3, 1.0), (14, 1.5, 0.5)]),
+    ("blanco", (-2, -0.5), 190, [(28, 3.5, 1.8), (32, 2.5, 1.2), (36, 1.5, 0.6)]),
+    ("celeste", (2.2, -0.8), -20, [(25, 4, 2.0), (28, 3, 1.4), (32, 1.8, 0.7)]),
+    ("blanco", (1, 2), 70, [(30, 3, 1.5), (35, 2, 1.0), (40, 1.2, 0.5)]),
+    ("celeste", (-1.6, 1.8), 135, [(40, 2.5, 1.3), (45, 1.6, 0.8), (50, 1, 0.4)]),
+]
+MAX_PICO_HIELO = 1500
+
+
+def pico_hielo(mats):
+    """Pico_Hielo: mallas HieloCeleste y HieloBlanco, cada esquirla en tramos de cajas inclinadas
+    (rama_seca). Pivote en el centro de la base."""
+    hielo = {"celeste": Malla(), "blanco": Malla()}
+    for color, (x, y), rumbo, tramos in ESQUIRLAS:
+        for c in rama_seca((x, y, -0.5), rumbo, tramos):
+            hielo[color].caja_girada(*c[1:])
+    objs, conteo = mallas(
+        [("HieloCeleste", hielo["celeste"], mats["celeste"]), ("HieloBlanco", hielo["blanco"], mats["blanco"])],
+        MAX_PICO_HIELO,
+        "Pico_Hielo",
+    )
+    if sum(conteo.values()) > MAX_PICO_HIELO:
+        raise RuntimeError(f"Pico_Hielo: {sum(conteo.values())} triángulos (máximo {MAX_PICO_HIELO})")
+    return objs, conteo
+
+
+def mats_pico_hielo(studs=None):
+    """Con studs, para el render (el hielo se ve a través); sin, para exportar."""
+    colores = {"celeste": HIELO_CELESTE, "blanco": HIELO_BLANCO}
+    if studs:
+        mats = {k: material_studs(f"PicoHielo_{k}", c, studs) for k, c in colores.items()}
+        for m in mats.values():
+            m.node_tree.nodes["Principled BSDF"].inputs["Alpha"].default_value = 1 - HIELO_TRANSPARENCIA
+        return mats
+    return {k: M.material(f"PicoHielo_{k}", c) for k, c in colores.items()}
+
+
 # Roca_Meteorito: roca azul noche de bloques con un cráter que brilla violeta adentro y
 # estrellitas lilas en los costados (como el cielo del Abismo, arte/referencias/abismo-1.png;
 # el naranja quedaba de la zona de lava)
@@ -2158,6 +2208,8 @@ REFERENCIAS = {
     # las capturas del Glaciar: el iglú y los árboles de cajas sobre la nieve
     "Pino_Nevado": ("glaciar-1.webp", "glaciar-2.webp"),
     "Monte_Nevado": ("glaciar-1.webp", "glaciar-3.webp"),
+    # la bola de hielo que brilla de la izquierda y la captura del Glaciar
+    "Pico_Hielo": (("glaciar-1.webp", (0.15, 0.50, 0.50, 0.95)), "glaciar-2.webp"),
     "Esqueleto": (("cactus-2.webp", (0.10, 0.42, 0.42, 0.80)), ("estilo-2.png", (0.76, 0.45, 0.98, 0.75))),
 }
 
@@ -2482,6 +2534,24 @@ def render_monte():
     comparar("Monte_Nevado")
     for tam, c in conteo.items():
         print("TRIANGULOS Monte_Nevado", tam, c, "total", sum(c.values()))
+
+
+def render_pico_hielo():
+    """Pico_Hielo de frente y de costado (sobre nieve), al lado de las referencias."""
+    alto = 12 * M.STUD
+    for vista in ("frente", "costado"):
+        M.limpiar_escena()
+        escena = M.escena_render(1280, 720)
+        escena.view_settings.exposure = -0.8  # que no se queme el blanco
+        tablero = bpy.data.materials["Piso"].node_tree.nodes["Checker Texture"]
+        tablero.inputs["Color1"].default_value = (*M.hex_a_rgb(ZONAS[3]["tapa"]), 1)
+        tablero.inputs["Color2"].default_value = (*M.hex_a_rgb("#DCE8F4"), 1)
+        objs, conteo = pico_hielo(mats_pico_hielo(textura_studs()))
+        giro = -20 if vista == "frente" else 70
+        camara_orto(escena, (0, 0, alto * 0.45), alto * 1.3 * 16 / 9, 12, giro)
+        M.render(f"pico_hielo_{vista}")
+    comparar("Pico_Hielo")
+    print("TRIANGULOS Pico_Hielo", conteo, "total", sum(conteo.values()))
 
 
 def noche_abismo(escena):
@@ -2939,10 +3009,19 @@ def exportar_zona3():
     """Deco_Zona3.fbx: piezas que son solo del Glaciar. Raíz Deco_Zona3 con un vacío por tamaño de
     pino (Pino_Nevado_Chico, Pino_Nevado_Grande) y sus mallas Pino_Nevado_Chico_Tronco, _Copa y
     _Nieve, y uno por tamaño de monte (Monte_Nevado_Chico, _Mediano, _Grande) con sus mallas
-    Monte_Nevado_Chico_Nieve y _Hielo. Sin textura: el juego pone el color y TextureID = Studs.png."""
+    Monte_Nevado_Chico_Nieve y _Hielo, y Pico_Hielo con Pico_Hielo_HieloCeleste y _HieloBlanco
+    (en Roblox, Transparency = HIELO_TRANSPARENCIA). Sin textura: el juego pone el color y TextureID = Studs.png."""
     M.limpiar_escena()
     raiz = bpy.data.objects.new("Deco_Zona3", None)
     bpy.context.scene.collection.objects.link(raiz)
+    vacio = bpy.data.objects.new("Pico_Hielo", None)
+    bpy.context.scene.collection.objects.link(vacio)
+    vacio.parent = raiz
+    objs, conteo = pico_hielo(mats_pico_hielo())
+    for o in objs:
+        o.parent = vacio
+        o.name = o.data.name = f"Pico_Hielo_{o.name.split('.')[0]}"
+    print("TRIANGULOS Pico_Hielo", conteo, "total", sum(conteo.values()))
     for pieza, crear, mats, tamanos in (
         ("Pino_Nevado", pino_nevado, mats_pino(), PINOS),
         ("Monte_Nevado", monte_nevado, mats_monte(), MONTES),
@@ -3043,4 +3122,6 @@ if __name__ == "__main__":
         render_pino()
     if "--pieza" not in sys.argv or "Monte_Nevado" in sys.argv:
         render_monte()
+    if "--pieza" not in sys.argv or "Pico_Hielo" in sys.argv:
+        render_pico_hielo()
     print("Listo")
