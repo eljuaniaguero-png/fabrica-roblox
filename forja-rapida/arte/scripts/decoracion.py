@@ -68,7 +68,8 @@ Uso: <python de Blender> forja-rapida/arte/scripts/decoracion.py
    arte/renders/deco_zonas.jpg; --exportar: además arma arte/fbx/Deco_Comun.fbx;
    --pieza Columna_Estelar / Isla_Flotante / Cristales_Abismo / Arbol_Nebuloso /
    Roca_Meteorito: render de esa pieza del Abismo; --exportar-zona5: solo arma
-   arte/fbx/Deco_Zona5.fbx con las piezas del Abismo, sin renders)
+   arte/fbx/Deco_Zona5.fbx con las piezas del Abismo, sin renders; --pieza Arbol_Grande y
+   --exportar-zona1: lo mismo con las piezas de la Pradera y arte/fbx/Deco_Zona1.fbx)
 """
 
 import math
@@ -1812,7 +1813,45 @@ def exportar_zona5():
     print("  FBX Deco_Zona5.fbx")
 
 
+def exportar_zona1():
+    """Deco_Zona1.fbx: piezas que son solo de la Pradera. Raíz Deco_Zona1 con un vacío
+    Arbol_Grande y sus mallas Arbol_Grande_Tronco, _Sombra y _Copa. Sin textura: el juego pone
+    el color y TextureID = Studs.png en las tres."""
+    M.limpiar_escena()
+    raiz = bpy.data.objects.new("Deco_Zona1", None)
+    bpy.context.scene.collection.objects.link(raiz)
+    vacio = bpy.data.objects.new("Arbol_Grande", None)
+    bpy.context.scene.collection.objects.link(vacio)
+    vacio.parent = raiz
+    objs, conteo = arbol_grande(mats_grande())
+    for o in objs:
+        o.parent = vacio
+        o.name = o.data.name = f"Arbol_Grande_{o.name.split('.')[0]}"
+    print("TRIANGULOS Arbol_Grande", conteo, "total", sum(conteo.values()))
+    bpy.ops.object.select_all(action="DESELECT")
+    for o in [raiz, *raiz.children_recursive]:
+        o.select_set(True)
+    bpy.context.view_layer.objects.active = raiz
+    bpy.ops.export_scene.fbx(
+        filepath=str(M.FBX / "Deco_Zona1.fbx"),
+        use_selection=True,
+        object_types={"MESH", "EMPTY"},
+        apply_unit_scale=True,
+        apply_scale_options="FBX_SCALE_ALL",
+        axis_forward="-Z",
+        axis_up="Y",
+        mesh_smooth_type="FACE",
+        bake_space_transform=True,
+        add_leaf_bones=False,
+    )
+    print("  FBX Deco_Zona1.fbx")
+
+
 if __name__ == "__main__":
+    if "--exportar-zona1" in sys.argv:
+        M.FBX.mkdir(parents=True, exist_ok=True)
+        exportar_zona1()
+        sys.argv.append("--solo-fbx")
     if "--exportar-zona5" in sys.argv:
         M.FBX.mkdir(parents=True, exist_ok=True)
         exportar_zona5()
