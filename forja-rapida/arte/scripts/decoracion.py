@@ -15,6 +15,12 @@ Piezas:
                  losa es un bloque entero (arriba lisa, con studs) y los costados tienen hiladas de
                  ladrillo con juntas finitas. Mallas Piedra y (si la zona tiene) Detalle: musgo,
                  arena, nieve, grietas de lava o cristales (arte/referencias/losas-*.png).
+  Nube_Bloques   nube blanca de cubos grandes (4 studs) apilados, plana abajo y con bultos arriba,
+                 en tres tamaños: Chica (24 x 16 studs), Mediana (40 x 24) y Grande (56 x 32).
+  Arcoiris       medio arco de bloques en escalera (60 studs de ancho, 30 de alto) con las 6
+                 franjas (rojo afuera, violeta adentro), una malla por franja, y una nube de
+                 bloques en cada punta (malla Nube). Las dos piezas del cielo son las mismas para
+                 todas las zonas (arte/referencias/cielo-*.png).
 
 Cada pieza tiene una variante por zona (ZONAS): sus colores y lo que tiene la tapa (pasto con
 gotitas; dunas de arena; nieve con carámbanos; ceniza con piedritas y chorros de lava; cristales
@@ -526,6 +532,129 @@ def mats_losas(zona, studs=None):
     return {"piedra": material_studs(f"Losas{zona}", z["piedra"], studs), "detalle": det}
 
 
+# --- cielo: nubes y arcoíris --------------------------------------------------------------------
+
+COLOR_NUBE = "#F4F6FF"
+NUBE_CUBO = 4  # studs de cada cubo de la nube
+# tamaño -> (radio en x, radio en y, cantidad de bultos), en cubos
+NUBES = {"Chica": (3, 2, 2), "Mediana": (5, 3, 3), "Grande": (7, 4, 4)}
+MAX_CIELO = {"Nube_Bloques": 1500, "Arcoiris": 3000}
+ARCO_CUBO = (2, 3, 2)  # studs de cada bloque del arcoíris (x, fondo, alto)
+ARCO_RADIO = 30  # radio de afuera, en studs
+ARCO_FRANJAS = [  # de afuera para adentro, 1 bloque (2 studs) cada una
+    ("Rojo", "#FF4D4D"),
+    ("Naranja", "#FF9A3C"),
+    ("Amarillo", "#FFE14D"),
+    ("Verde", "#5BD45B"),
+    ("Azul", "#3FA9FF"),
+    ("Violeta", "#B04DFF"),
+]
+
+
+def voxeles_malla(m, celdas, tam, origen=(0, 0, 0)):
+    """Agrega a la Malla m las caras de afuera de las celdas (x, y, z enteros; cada una mide tam
+    studs y la celda 0 empieza en origen). Las caras vecinas que miran para el mismo lado se
+    juntan en tiras (menos triángulos)."""
+    for eje in range(3):
+        for signo in (-1, 1):
+            vecino = [0, 0, 0]
+            vecino[eje] = signo
+            caras = [c for c in celdas if (c[0] + vecino[0], c[1] + vecino[1], c[2] + vecino[2]) not in celdas]
+            a, b = Malla.EJES[eje]
+            tira = 0 if eje != 0 else 2  # se juntan a lo largo de x (o de z en las caras de x)
+            otro = b if tira == a else a
+            grupos = {}
+            for c in caras:
+                grupos.setdefault((c[eje], c[otro]), []).append(c[tira])
+            for (fijo, o), lista in grupos.items():
+                lista.sort()
+                ini = prev = lista[0]
+                for v in lista[1:] + [None]:
+                    if v is not None and v == prev + 1:
+                        prev = v
+                        continue
+                    r = {tira: (ini, prev + 1), otro: (o, o + 1)}
+                    rango = {k: (origen[k] + r[k][0] * tam[k], origen[k] + r[k][1] * tam[k]) for k in r}
+                    plano = origen[eje] + (fijo + (1 if signo > 0 else 0)) * tam[eje]
+                    m.rect(eje, signo, plano, rango[a], rango[b])
+                    if v is not None:
+                        ini = prev = v
+
+
+def celdas_nube(rx, ry, bultos, semilla, dx=0):
+    """Celdas de una nube: una base chata (elipse de rx x ry cubos, 1 de alto) y bultos redondos
+    arriba, sin salirse de la base (abajo queda plana). dx corre la nube en x (en cubos)."""
+    rng = random.Random(semilla)
+    base = set()
+    for x in range(-rx, rx):
+        for y in range(-ry, ry):
+            if ((x + 0.5) / rx) ** 2 + ((y + 0.5) / ry) ** 2 <= 1.05:
+                base.add((x, y))
+    celdas = {(x + dx, y, 0) for x, y in base}
+    # segundo piso un poco más angosto: redondea el borde
+    for x, y in base:
+        if ((x + 0.5) / (rx - 0.8)) ** 2 + ((y + 0.5) / max(1, ry - 0.6)) ** 2 <= 1:
+            celdas.add((x + dx, y, 1))
+    escala = 1 + (rx - 3) / 8
+    for k in range(bultos):
+        cx = -rx * 0.55 + (2 * rx * 0.55) * (k / max(1, bultos - 1)) if bultos > 1 else 0
+        cx += rng.uniform(-0.6, 0.6)
+        cy = rng.uniform(-ry * 0.25, ry * 0.25)
+        radio = rng.uniform(1.9, 2.4) * escala
+        if k in (bultos // 2, (bultos - 1) // 2):
+            radio += 0.7  # el del medio más alto
+        for x, y in base:
+            for z in range(1, int(radio) + 3):
+                if (x + 0.5 - cx) ** 2 + (y + 0.5 - cy) ** 2 + (z - 0.2) ** 2 <= radio * radio:
+                    celdas.add((x + dx, y, z))
+    return celdas
+
+
+def nube_bloques(mats, tam):
+    """Una nube (malla Nube_<tam>), pivote en el centro de la base."""
+    rx, ry, bultos = NUBES[tam]
+    m = Malla()
+    voxeles_malla(m, celdas_nube(rx, ry, bultos, f"nube{tam}"), (NUBE_CUBO,) * 3)
+    return mallas([(f"Nube_{tam}", m, mats["nube"])], MAX_CIELO["Nube_Bloques"], f"Nube_Bloques {tam}")
+
+
+def arcoiris(mats):
+    """Medio arco en escalera (una malla por franja) y una nube en cada punta (malla Nube),
+    parados en el piso; pivote en el centro de la base."""
+    sx, sy, sz = ARCO_CUBO
+    franjas = [set() for _ in ARCO_FRANJAS]
+    n = ARCO_RADIO // sx
+    for i in range(-n, n):
+        for k in range(1, ARCO_RADIO // sz):  # la fila de abajo queda adentro de las nubes
+            r = math.hypot((i + 0.5) * sx, (k + 0.5) * sz)
+            f = int((ARCO_RADIO - r) // sx)
+            if 0 <= f < len(ARCO_FRANJAS):
+                franjas[f].add((i, 0, k))
+    piezas = []
+    for (nombre, _), celdas in zip(ARCO_FRANJAS, franjas):
+        m = Malla()
+        voxeles_malla(m, celdas, ARCO_CUBO, (0, -sy / 2, 0))
+        piezas.append((f"Arcoiris_{nombre}", m, mats[nombre]))
+    # una nube chica en cada punta, centrada en el pie del arco
+    pie = round((ARCO_RADIO - len(ARCO_FRANJAS) * sx / 2) / NUBE_CUBO)
+    nube = Malla()
+    celdas = celdas_nube(3, 2, 2, "arco1", dx=-pie) | celdas_nube(3, 2, 2, "arco2", dx=pie)
+    voxeles_malla(nube, celdas, (NUBE_CUBO,) * 3)
+    piezas.append(("Arcoiris_Nube", nube, mats["nube"]))
+    objs, conteo = mallas(piezas, MAX_CIELO["Arcoiris"], "Arcoiris")
+    if sum(conteo.values()) > MAX_CIELO["Arcoiris"]:
+        raise RuntimeError(f"Arcoiris: {sum(conteo.values())} triángulos (máximo {MAX_CIELO['Arcoiris']})")
+    return objs, conteo
+
+
+def mats_cielo(studs=None):
+    """Materiales de la nube y de las 6 franjas; con studs, para el render."""
+    hacer = (lambda n, c: material_studs(n, c, studs)) if studs else (lambda n, c: M.material(n, c))
+    mats = {nombre: hacer(f"Arcoiris_{nombre}", color) for nombre, color in ARCO_FRANJAS}
+    mats["nube"] = hacer("Nube", COLOR_NUBE)
+    return mats
+
+
 # nombre -> (función, alto total en studs, fondo en studs)
 PIEZAS = {
     "Risco_Escalon": (risco_escalon, 30, 16),
@@ -670,10 +799,46 @@ def camara_orto(escena, centro, ancho, elevacion, giro):
 
 # capturas del juego con las que se compara cada pieza (arte/referencias/)
 REFERENCIAS = {
+    "Nube_Bloques": ("cielo-1.png", "cielo-2.png"),
+    "Arcoiris": ("cielo-1.png", "cielo-2.png"),
     "Losas_Piedra": ("losas-1.png", "losas-2.png"),
     "Risco_Escalon": ("mapa-1.png", "mapa-3.png"),
     "Pared_Ladrillo": ("pared-1.png", "pared-2.png"),
 }
+
+
+def render_cielo(pieza):
+    """Nube_Bloques (los 3 tamaños en fila) o Arcoiris, de frente y de costado, al lado de las
+    referencias. La cámara mira casi horizontal, con el cielo atrás."""
+    conteo = {}
+    for vista in ("frente", "costado"):
+        M.limpiar_escena()
+        escena = M.escena_render(1280, 720)
+        for o in [o for o in escena.objects if o.name.startswith("Plane")]:
+            bpy.data.objects.remove(o)  # sin el piso: van en el cielo
+        bpy.data.lights["Sol"].energy = 2.6  # menos sol: si no, el blanco se quema
+        mats = mats_cielo(textura_studs())
+        if pieza == "Nube_Bloques":
+            x, ancho_total = 0.0, 0.0
+            anchos = [2 * NUBES[t][0] * NUBE_CUBO for t in NUBES]
+            ancho_total = sum(anchos) + 8 * (len(anchos) - 1)
+            x = -ancho_total / 2
+            for tam, ancho in zip(NUBES, anchos):
+                objs, c = nube_bloques(mats, tam)
+                conteo.update(c)
+                M.mover(objs, (x + ancho / 2) * M.STUD)
+                x += ancho + 8
+            alto = 4 * NUBE_CUBO
+        else:
+            objs, conteo = arcoiris(mats)
+            ancho_total, alto = 2 * ARCO_RADIO + 2 * 3 * NUBE_CUBO, ARCO_RADIO
+        if vista == "frente":
+            camara_orto(escena, (0, 0, alto * M.STUD / 2), ancho_total * M.STUD * 1.08, 10, -22)
+        else:
+            camara_orto(escena, (0, 0, alto * M.STUD / 2), ancho_total * M.STUD * 1.08, 14, 62)
+        M.render(f"{pieza.lower()}_{vista}")
+    comparar(pieza)
+    print("TRIANGULOS", pieza, conteo, "total", sum(conteo.values()))
 
 
 def render_losas():
@@ -825,7 +990,9 @@ def comparar(pieza):
 def exportar():
     """Deco_Comun.fbx: Zona1..Zona5, cada una con un vacío por pieza (Risco_Escalon_Zona2...) y
     sus mallas (Risco_Zona2, Risco_Tapa_Zona2, Pared_Detalle_Zona2...), y las 3 losas
-    (Losas_Chica_Zona2... con Losas_Chica_Piedra_Zona2 y Losas_Chica_Detalle_Zona2). Sin
+    (Losas_Chica_Zona2... con Losas_Chica_Piedra_Zona2 y Losas_Chica_Detalle_Zona2); y el cielo,
+    igual para todas: Nube_Bloques (Nube_Chica, Nube_Mediana, Nube_Grande) y Arcoiris
+    (Arcoiris_Rojo... Arcoiris_Violeta y Arcoiris_Nube). Sin
     textura: el juego pone el color y TextureID = Studs.png."""
     M.limpiar_escena()
     raiz = bpy.data.objects.new("Deco_Comun", None)
@@ -852,6 +1019,17 @@ def exportar():
             for o in objs:
                 o.parent = vacio
                 o.name = o.data.name = f"Losas_{tam}_{o.name.split('.')[0]}_Zona{zona}"
+    # el cielo (igual para todas las zonas): Nube_Bloques con Nube_Chica... y Arcoiris
+    mats = mats_cielo()
+    for nombre, objs in (
+        ("Nube_Bloques", [o for tam in NUBES for o in nube_bloques(mats, tam)[0]]),
+        ("Arcoiris", arcoiris(mats)[0]),
+    ):
+        vacio = bpy.data.objects.new(nombre, None)
+        bpy.context.scene.collection.objects.link(vacio)
+        vacio.parent = raiz
+        for o in objs:
+            o.parent = vacio
     bpy.ops.object.select_all(action="DESELECT")
     for o in [raiz, *raiz.children_recursive]:
         o.select_set(True)
@@ -885,4 +1063,7 @@ if __name__ == "__main__":
         render(pieza)
     if "--pieza" not in sys.argv or "Losas_Piedra" in sys.argv:
         render_losas()
+    for pieza in ("Nube_Bloques", "Arcoiris"):
+        if "--pieza" not in sys.argv or pieza in sys.argv:
+            render_cielo(pieza)
     print("Listo")
