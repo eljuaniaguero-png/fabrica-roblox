@@ -86,6 +86,10 @@ Piezas:
                  escalones, cada una con una capa de nieve arriba que sale por los bordes y cae en
                  gotitas (arte/referencias/glaciar-*.webp). Dos tamaños: Chico (2 cajas, 11 studs
                  de alto) y Grande (3 cajas, 18). Mallas Tronco, Copa y Nieve.
+  Monte_Nevado   Glaciar: montañita blanca de bloques en escalones irregulares, con el pico atrás
+                 (va contra los riscos y al fondo) y algunos bloques de hielo celeste en la cara
+                 de adelante. Tres tamaños: Chico (16 x 10 studs, 10 de alto), Mediano (28 x 16,
+                 18) y Grande (40 x 24, 28). Mallas Nieve y Hielo.
                  Cada árbol de la Pradera (y el arbusto) tiene 3 variantes (Arbol_Grande_1, _2 y _3...).
   Roca_Meteorito solo Abismo: media bola chata de bloques de 2 studs azul noche, con un cráter
                  arriba (corrido a un costado) que brilla violeta en el fondo y estrellitas lilas
@@ -661,15 +665,17 @@ ARCO_FRANJAS = [  # de afuera para adentro, 1 bloque (2 studs) cada una
 ]
 
 
-def voxeles_malla(m, celdas, tam, origen=(0, 0, 0)):
+def voxeles_malla(m, celdas, tam, origen=(0, 0, 0), llenas=None):
     """Agrega a la Malla m las caras de afuera de las celdas (x, y, z enteros; cada una mide tam
     studs y la celda 0 empieza en origen). Las caras vecinas que miran para el mismo lado se
-    juntan en tiras (menos triángulos)."""
+    juntan en tiras (menos triángulos). `llenas`: todas las celdas del objeto, si las de esta
+    malla son solo una parte (las caras que tocan otra malla no se hacen)."""
+    llenas = celdas if llenas is None else llenas
     for eje in range(3):
         for signo in (-1, 1):
             vecino = [0, 0, 0]
             vecino[eje] = signo
-            caras = [c for c in celdas if (c[0] + vecino[0], c[1] + vecino[1], c[2] + vecino[2]) not in celdas]
+            caras = [c for c in celdas if (c[0] + vecino[0], c[1] + vecino[1], c[2] + vecino[2]) not in llenas]
             a, b = Malla.EJES[eje]
             tira = 0 if eje != 0 else 2  # se juntan a lo largo de x (o de z en las caras de x)
             otro = b if tira == a else a
@@ -1778,6 +1784,79 @@ def mats_pino(studs=None):
     return {k: M.material(f"Pino_{k}", c) for k, c in colores.items()}
 
 
+# Monte_Nevado (Glaciar): montañita blanca de bloques en escalones irregulares con algunos
+# bloques de hielo celeste. Va contra los riscos y al fondo: el pico está atrás (+y) y la
+# espalda baja casi recta; adelante y a los costados baja en escalones.
+MONTE_NIEVE = ZONAS[3]["tapa"]
+MONTE_HIELO = ZONAS[3]["detalle"]
+# tamaño -> (ancho x, fondo y, alto en studs, lado de cada bloque, alto de cada bloque, picos,
+#            bloques de hielo, semilla); cada pico: (x, y) en fracción del ancho/fondo (y = 1:
+#            la espalda), alto en fracción del alto, radio en fracción del ancho
+MONTES = {
+    "Chico": (16, 10, 10, 2, 2, [((0.0, 0.8), 1.0, 0.55)], 3, 41),
+    "Mediano": (28, 16, 18, 4, 2, [((-0.15, 0.85), 1.0, 0.55), ((0.3, 0.7), 0.7, 0.35)], 5, 43),
+    "Grande": (40, 24, 28, 4, 3, [((0.1, 0.9), 1.0, 0.5), ((-0.3, 0.75), 0.75, 0.35), ((0.4, 0.5), 0.45, 0.3)], 7, 47),
+}
+MAX_MONTE = 3000
+
+
+def celdas_monte(tam):
+    """Celdas (i, j, k) de la nieve y del hielo. Cada columna sube hasta el más alto de los picos
+    (cono que baja con la distancia); una de cada cuatro, más o menos, un escalón más arriba o
+    más abajo (así los escalones quedan irregulares pero se leen como terrazas)."""
+    ancho, fondo, alto, lado, piso, picos, hielos, semilla = MONTES[tam]
+    rng = random.Random(semilla)
+    ni, nj, pisos = ancho // lado, fondo // lado, round(alto / piso)
+    llenas = set()
+    for i in range(ni):
+        for j in range(nj):
+            x = ((i + 0.5) / ni - 0.5) * 2  # de -1 a 1
+            y = (j + 0.5) / nj  # de 0 (frente) a 1 (espalda)
+            h = 0.0
+            for (px, py), pa, pr in picos:
+                d = math.hypot(x - px * 2, (y - py) * fondo / ancho * 2)
+                h = max(h, pa * (1 - d / (pr * 2)))
+            salto = rng.choice((-1, 1)) if rng.random() < 0.25 else 0
+            k = round(h * pisos) + salto if h > 0 else 0
+            for z in range(min(k, pisos)):
+                llenas.add((i, j, z))
+    # hielo: bloques de arriba de una columna que se ven de frente (y el de abajo, si también se ve)
+    arriba = [c for c in llenas if (c[0], c[1], c[2] + 1) not in llenas and (c[0], c[1] - 1, c[2]) not in llenas and c[2] > 0]
+    arriba.sort()
+    hielo = set()
+    for c in rng.sample(arriba, min(hielos, len(arriba))):
+        hielo.add(c)
+        abajo = (c[0], c[1], c[2] - 1)
+        if (c[0], c[1] - 1, c[2] - 1) not in llenas and rng.random() < 0.6:
+            hielo.add(abajo)
+    return llenas - hielo, hielo, llenas
+
+
+def monte_nevado(mats, tam="Mediano"):
+    """Monte_Nevado_<tam>: mallas Nieve y Hielo (sin las caras de abajo ni las que se tocan).
+    Pivote en el centro de la base."""
+    ancho, fondo, _, lado, piso, *_ = MONTES[tam]
+    nieve_c, hielo_c, llenas = celdas_monte(tam)
+    nieve, hielo = Malla(), Malla()
+    origen = (-ancho / 2, -fondo / 2, 0)
+    solo_afuera = llenas | {(i, j, -1) for i, j, _ in llenas}  # sin la cara de abajo
+    voxeles_malla(nieve, nieve_c, (lado, lado, piso), origen, solo_afuera)
+    voxeles_malla(hielo, hielo_c, (lado, lado, piso), origen, solo_afuera)
+    nombre = f"Monte_Nevado_{tam}"
+    objs, conteo = mallas([("Nieve", nieve, mats["nieve"]), ("Hielo", hielo, mats["hielo"])], MAX_MONTE, nombre)
+    if sum(conteo.values()) > MAX_MONTE:
+        raise RuntimeError(f"{nombre}: {sum(conteo.values())} triángulos (máximo {MAX_MONTE})")
+    return objs, conteo
+
+
+def mats_monte(studs=None):
+    """Con studs, para el render; sin, para exportar."""
+    colores = {"nieve": MONTE_NIEVE, "hielo": MONTE_HIELO}
+    if studs:
+        return {k: material_studs(f"Monte_{k}", c, studs) for k, c in colores.items()}
+    return {k: M.material(f"Monte_{k}", c) for k, c in colores.items()}
+
+
 # Roca_Meteorito: roca azul noche de bloques con un cráter que brilla violeta adentro y
 # estrellitas lilas en los costados (como el cielo del Abismo, arte/referencias/abismo-1.png;
 # el naranja quedaba de la zona de lava)
@@ -2078,6 +2157,7 @@ REFERENCIAS = {
     "Racimo_Ambar": ("estilo-2.png", "mapa-2.png"),
     # las capturas del Glaciar: el iglú y los árboles de cajas sobre la nieve
     "Pino_Nevado": ("glaciar-1.webp", "glaciar-2.webp"),
+    "Monte_Nevado": ("glaciar-1.webp", "glaciar-3.webp"),
     "Esqueleto": (("cactus-2.webp", (0.10, 0.42, 0.42, 0.80)), ("estilo-2.png", (0.76, 0.45, 0.98, 0.75))),
 }
 
@@ -2375,6 +2455,33 @@ def render_pino():
     comparar("Pino_Nevado")
     for tam, c in conteo.items():
         print("TRIANGULOS Pino_Nevado", tam, c, "total", sum(c.values()))
+
+
+def render_monte():
+    """Monte_Nevado Chico, Mediano y Grande en fila, de frente y de costado (sobre nieve, con un
+    risco del Glaciar atrás), al lado de las referencias."""
+    conteo = {}
+    xs = {"Chico": -36, "Mediano": -10, "Grande": 27}  # studs
+    alto = MONTES["Grande"][2] * M.STUD
+    for vista in ("frente", "costado"):
+        M.limpiar_escena()
+        escena = M.escena_render(1280, 720)
+        tablero = bpy.data.materials["Piso"].node_tree.nodes["Checker Texture"]
+        tablero.inputs["Color1"].default_value = (*M.hex_a_rgb(ZONAS[3]["tapa"]), 1)
+        tablero.inputs["Color2"].default_value = (*M.hex_a_rgb("#DCE8F4"), 1)
+        escena.view_settings.exposure = -1.3  # si no, tanto blanco se quema y no se ven los escalones
+        mats = mats_monte(textura_studs())
+        for tam, x in xs.items():
+            objs, c = monte_nevado(mats, tam)
+            conteo[tam] = c
+            # todos con la espalda en la misma línea (contra el risco)
+            M.mover(objs, x * M.STUD, (12 - MONTES[tam][1] / 2) * M.STUD)
+        giro = -15 if vista == "frente" else 60
+        camara_orto(escena, (0, 0, alto * 0.45), 90 * M.STUD, 14, giro)
+        M.render(f"monte_nevado_{vista}")
+    comparar("Monte_Nevado")
+    for tam, c in conteo.items():
+        print("TRIANGULOS Monte_Nevado", tam, c, "total", sum(c.values()))
 
 
 def noche_abismo(escena):
@@ -2831,20 +2938,25 @@ def exportar_zona2():
 def exportar_zona3():
     """Deco_Zona3.fbx: piezas que son solo del Glaciar. Raíz Deco_Zona3 con un vacío por tamaño de
     pino (Pino_Nevado_Chico, Pino_Nevado_Grande) y sus mallas Pino_Nevado_Chico_Tronco, _Copa y
-    _Nieve. Sin textura: el juego pone el color y TextureID = Studs.png."""
+    _Nieve, y uno por tamaño de monte (Monte_Nevado_Chico, _Mediano, _Grande) con sus mallas
+    Monte_Nevado_Chico_Nieve y _Hielo. Sin textura: el juego pone el color y TextureID = Studs.png."""
     M.limpiar_escena()
     raiz = bpy.data.objects.new("Deco_Zona3", None)
     bpy.context.scene.collection.objects.link(raiz)
-    for tam in PINOS:
-        nombre = f"Pino_Nevado_{tam}"
-        vacio = bpy.data.objects.new(nombre, None)
-        bpy.context.scene.collection.objects.link(vacio)
-        vacio.parent = raiz
-        objs, conteo = pino_nevado(mats_pino(), tam)
-        for o in objs:
-            o.parent = vacio
-            o.name = o.data.name = f"{nombre}_{o.name.split('.')[0]}"
-        print("TRIANGULOS", nombre, conteo, "total", sum(conteo.values()))
+    for pieza, crear, mats, tamanos in (
+        ("Pino_Nevado", pino_nevado, mats_pino(), PINOS),
+        ("Monte_Nevado", monte_nevado, mats_monte(), MONTES),
+    ):
+        for tam in tamanos:
+            nombre = f"{pieza}_{tam}"
+            vacio = bpy.data.objects.new(nombre, None)
+            bpy.context.scene.collection.objects.link(vacio)
+            vacio.parent = raiz
+            objs, conteo = crear(mats, tam)
+            for o in objs:
+                o.parent = vacio
+                o.name = o.data.name = f"{nombre}_{o.name.split('.')[0]}"
+            print("TRIANGULOS", nombre, conteo, "total", sum(conteo.values()))
     bpy.ops.object.select_all(action="DESELECT")
     for o in [raiz, *raiz.children_recursive]:
         o.select_set(True)
@@ -2929,4 +3041,6 @@ if __name__ == "__main__":
         render_ambar()
     if "--pieza" not in sys.argv or "Pino_Nevado" in sys.argv:
         render_pino()
+    if "--pieza" not in sys.argv or "Monte_Nevado" in sys.argv:
+        render_monte()
     print("Listo")
