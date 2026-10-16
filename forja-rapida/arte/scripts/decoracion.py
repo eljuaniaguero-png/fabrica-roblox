@@ -74,6 +74,11 @@ Piezas:
   Arbol_Seco_Desierto  Dunas: como el Arbol_Seco de la Pradera, pero el tronco sube torcido (tramos
                  inclinados para un lado y para el otro) y las ramas son más largas y con codos.
                  Dos variantes (_1 y _2, unos 19 studs de alto). Malla Tronco.
+  Esqueleto      Dunas: costillas de un esqueleto grande tirado de costado y medio enterrado: la
+                 columna sube curva desde la arena y 5 costillas salen casi horizontales y se
+                 cierran hacia adelante como una garra, en tramos de cajas inclinadas
+                 (arte/referencias/cactus-2.webp). Gris claro hueso, unos 12 studs de alto.
+                 Malla Huesos.
                  Cada árbol de la Pradera (y el arbusto) tiene 3 variantes (Arbol_Grande_1, _2 y _3...).
   Roca_Meteorito solo Abismo: media bola chata de bloques de 2 studs azul noche, con un cráter
                  arriba (corrido a un costado) que brilla violeta en el fondo y estrellitas lilas
@@ -1575,6 +1580,56 @@ def mats_cactus(studs=None):
     return {"cactus": M.material("Cactus", CACTUS_COLOR)}
 
 
+# Esqueleto (Dunas): caja de costillas tirada de costado y medio enterrada (como en
+# cactus-2.webp): la columna sube curva desde la arena y las costillas salen casi horizontales
+# y se cierran hacia adelante como una garra
+ESQUELETO_COLOR = "#BDB7A9"  # gris claro hueso
+# costillas de abajo para arriba: (alto donde sale de la columna, tamaño)
+ESQUELETO_COSTILLAS = [(0.8, 0.75), (3.0, 1.0), (5.2, 1.0), (7.4, 0.9), (9.4, 0.7)]
+# cada costilla: tramos (rumbo en el piso, inclinación desde la vertical, largo, grueso): sale
+# hacia -x apenas para atrás y se va curvando hacia adelante (-y) y un poco para abajo
+ESQUELETO_TRAMOS = [(165, 80, 5.5, 1.2), (188, 88, 5, 1.1), (218, 96, 4.5, 1), (248, 106, 3.5, 0.9)]
+ESQUELETO_X = 5.5  # dónde sale la columna (así el centro de la base queda cerca de x = 0)
+MAX_ESQUELETO = 2000
+
+
+def curva(base, tramos):
+    """Como rama_seca, pero cada tramo con su propio rumbo: (rumbo, inclinación, largo, ancho)."""
+    x, y, z = base
+    cajas = []
+    for rumbo, inclinacion, largo, ancho in tramos:
+        cajas.append(("girada", (x, y, z), largo, ancho, rumbo, inclinacion))
+        t, r = math.radians(inclinacion), math.radians(rumbo)
+        sigue = largo - ancho * 0.4
+        x += sigue * math.sin(t) * math.cos(r)
+        y += sigue * math.sin(t) * math.sin(r)
+        z += sigue * math.cos(t)
+    return cajas
+
+
+def esqueleto(mats):
+    """Esqueleto: una malla Huesos con la columna (tramos que suben echándose para atrás, +y)
+    y 5 costillas que salen de ella; las del medio son las más largas. Pivote en el centro de
+    la base."""
+    m = Malla()
+    columna = [(90, 6, 3, 1.8), (90, 14, 3, 1.7), (90, 22, 3, 1.6), (90, 30, 3, 1.5), (90, 40, 2.5, 1.3)]
+    for c in curva((ESQUELETO_X, 0, -0.5), columna):  # arranca medio stud bajo la arena
+        m.caja_girada(*c[1:])
+    for z, esc in ESQUELETO_COSTILLAS:
+        y = z * 0.35  # la columna se va para atrás a medida que sube
+        tramos = [(r, inc, largo * esc, grueso * (0.7 + 0.3 * esc)) for r, inc, largo, grueso in ESQUELETO_TRAMOS]
+        for c in curva((ESQUELETO_X - 0.5, y, z), tramos):
+            m.caja_girada(*c[1:])
+    return mallas([("Huesos", m, mats["huesos"])], MAX_ESQUELETO, "Esqueleto")
+
+
+def mats_esqueleto(studs=None):
+    """Con studs, para el render; sin, para exportar."""
+    if studs:
+        return {"huesos": material_studs("Huesos", ESQUELETO_COLOR, studs)}
+    return {"huesos": M.material("Huesos", ESQUELETO_COLOR)}
+
+
 # Roca_Meteorito: roca azul noche de bloques con un cráter que brilla violeta adentro y
 # estrellitas lilas en los costados (como el cielo del Abismo, arte/referencias/abismo-1.png;
 # el naranja quedaba de la zona de lava)
@@ -1871,6 +1926,8 @@ REFERENCIAS = {
     "Cactus": ("cactus-1.webp", "cactus-2.webp"),
     # los árboles secos de las Dunas
     "Arbol_Seco_Desierto": ("mapa-2.png", "cactus-1.webp"),
+    # las costillas de la izquierda de cactus-2 y las de la derecha de estilo-2
+    "Esqueleto": (("cactus-2.webp", (0.10, 0.42, 0.42, 0.80)), ("estilo-2.png", (0.76, 0.45, 0.98, 0.75))),
 }
 
 
@@ -2108,6 +2165,22 @@ def render_cactus():
     comparar("Cactus")
     for tam, c in conteo.items():
         print("TRIANGULOS Cactus", tam, c, "total", sum(c.values()))
+
+
+def render_esqueleto():
+    """Esqueleto de frente y de costado (sobre arena), al lado de las referencias."""
+    for vista in ("frente", "costado"):
+        M.limpiar_escena()
+        escena = M.escena_render(1280, 720)
+        tablero = bpy.data.materials["Piso"].node_tree.nodes["Checker Texture"]
+        tablero.inputs["Color1"].default_value = (*M.hex_a_rgb(ZONAS[2]["tapa"]), 1)
+        tablero.inputs["Color2"].default_value = (*M.hex_a_rgb("#EACB72"), 1)
+        objs, conteo = esqueleto(mats_esqueleto(textura_studs()))
+        giro = -25 if vista == "frente" else 70
+        camara_orto(escena, (0, 0, 5 * M.STUD), 36 * M.STUD, 18, giro)
+        M.render(f"esqueleto_{vista}")
+    comparar("Esqueleto")
+    print("TRIANGULOS Esqueleto", conteo, "total", sum(conteo.values()))
 
 
 def noche_abismo(escena):
@@ -2495,14 +2568,14 @@ def exportar_zona1():
 
 def exportar_zona2():
     """Deco_Zona2.fbx: piezas que son solo de las Dunas. Raíz Deco_Zona2 con un vacío Piramide y
-    su malla Piramide_Piramide, y uno por tamaño de duna (Duna_Chica, Duna_Mediana, Duna_Grande)
+    su malla Piramide_Piramide, Esqueleto con Esqueleto_Huesos, y uno por tamaño de duna (Duna_Chica, Duna_Mediana, Duna_Grande)
     con su malla Duna_Chica_Arena..., y uno por tamaño de cactus (Cactus_Chico...) con su malla
     Cactus_Chico_Cactus..., y Arbol_Seco_Desierto_1 y _2 con su malla Arbol_Seco_Desierto_1_Tronco...
     Sin textura: el juego pone el color y TextureID = Studs.png."""
     M.limpiar_escena()
     raiz = bpy.data.objects.new("Deco_Zona2", None)
     bpy.context.scene.collection.objects.link(raiz)
-    for nombre, crear, mats in (("Piramide", piramide, mats_piramide()),):
+    for nombre, crear, mats in (("Piramide", piramide, mats_piramide()), ("Esqueleto", esqueleto, mats_esqueleto())):
         vacio = bpy.data.objects.new(nombre, None)
         bpy.context.scene.collection.objects.link(vacio)
         vacio.parent = raiz
@@ -2611,4 +2684,6 @@ if __name__ == "__main__":
         render_duna()
     if "--pieza" not in sys.argv or "Cactus" in sys.argv:
         render_cactus()
+    if "--pieza" not in sys.argv or "Esqueleto" in sys.argv:
+        render_esqueleto()
     print("Listo")
