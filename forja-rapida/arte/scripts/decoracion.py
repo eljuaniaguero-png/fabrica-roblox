@@ -82,6 +82,10 @@ Piezas:
   Racimo_Ambar   Dunas: 5 gotas de ámbar naranja bien juntas (pisos de bloques que se angostan hacia arriba,
                  Neon suave en Roblox) con un cubito de brillo más claro, sobre una piedra color
                  arena de 3 bloques (9 x 7 studs de base). Mallas Piedra, Ambar y Brillo.
+  Pino_Nevado    Glaciar (zona 3): tronco bordó con raíces en escalones y copa de cajas verdes en
+                 escalones, cada una con una capa de nieve arriba que sale por los bordes y cae en
+                 gotitas (arte/referencias/glaciar-*.webp). Dos tamaños: Chico (2 cajas, 11 studs
+                 de alto) y Grande (3 cajas, 18). Mallas Tronco, Copa y Nieve.
                  Cada árbol de la Pradera (y el arbusto) tiene 3 variantes (Arbol_Grande_1, _2 y _3...).
   Roca_Meteorito solo Abismo: media bola chata de bloques de 2 studs azul noche, con un cráter
                  arriba (corrido a un costado) que brilla violeta en el fondo y estrellitas lilas
@@ -111,7 +115,8 @@ Uso: <python de Blender> forja-rapida/arte/scripts/decoracion.py
    Roca_Meteorito: render de esa pieza del Abismo; --exportar-zona5: solo arma
    arte/fbx/Deco_Zona5.fbx con las piezas del Abismo, sin renders; --pieza Arbol_Grande y
    --exportar-zona1: lo mismo con las piezas de la Pradera y arte/fbx/Deco_Zona1.fbx;
-   --exportar-zona2: arte/fbx/Deco_Zona2.fbx con las piezas de las Dunas)
+   --exportar-zona2: arte/fbx/Deco_Zona2.fbx con las piezas de las Dunas; --exportar-zona3:
+   arte/fbx/Deco_Zona3.fbx con las del Glaciar)
 """
 
 import math
@@ -1690,6 +1695,89 @@ def mats_ambar(studs=None):
     }
 
 
+# Pino_Nevado (Glaciar, zona 3): tronco bordó y copa de cajas verdes en escalones (cada una más
+# chica y un poco corrida), con una capa de nieve arriba de cada caja que sale un poco por los
+# bordes y cae en gotitas por los costados (arte/referencias/glaciar-*.webp)
+PINO_TRONCO = GRANDE_TRONCO
+PINO_COPA = GRANDE_COPA
+PINO_NIEVE = ZONAS[3]["tapa"]
+NIEVE_ALTO = 0.6  # cuánto sube la nieve arriba de la caja
+NIEVE_BAJA = 0.5  # cuánto baja la nieve por los costados de la caja
+NIEVE_VUELO = 0.4  # cuánto sale la nieve de la caja
+# tamaño -> tronco (cajas en studs), dónde empieza la copa, y cada caja de copa de abajo para
+# arriba: (medio ancho x, medio ancho y, alto, corrida x, corrida y); semilla de las gotitas
+PINOS = {
+    "Grande": {
+        "tronco": [((-3.5, 3.5), (-3.5, 3.5), (0, 1)), ((-2.5, 2.5), (-2.5, 2.5), (1, 2)), ((-1.75, 1.75), (-1.75, 1.75), (2, 7.5))],
+        "copa_z": 7,
+        "copa": [(7, 6.5, 4, 0, 0), (5, 4.5, 3.5, 0.5, -0.5), (3, 3, 3, -0.5, 0.5)],
+        "semilla": 31,
+    },
+    "Chico": {
+        "tronco": [((-2.5, 2.5), (-2.5, 2.5), (0, 1)), ((-1.75, 1.75), (-1.75, 1.75), (1, 1.75)), ((-1.25, 1.25), (-1.25, 1.25), (1.75, 5))],
+        "copa_z": 4.5,
+        "copa": [(4.5, 4.5, 3, 0, 0), (2.5, 2.5, 2.5, 0.5, 0.5)],
+        "semilla": 37,
+    },
+}
+MAX_PINO = 2500
+
+
+def gotitas_nieve(nieve, rng, x, y, z):
+    """Gotitas de nieve que cuelgan abajo de la capa de una caja (x, y): por cada costado, tramos de
+    1 a 2 studs de ancho con huecos, del grosor del vuelo (quedan al ras de la capa)."""
+    for eje in (0, 1):
+        r0, r1 = (x, y)[eje]
+        for signo in (-1, 1):
+            borde = (r0, r1)[signo > 0]
+            plano = (borde - NIEVE_VUELO, borde) if signo < 0 else (borde, borde + NIEVE_VUELO)
+            a = r0 + rng.uniform(0.3, 1.2)
+            while a < r1 - 1.3:
+                b = min(a + rng.choice((1, 1.5, 2)), r1 - 0.3)
+                cuelga = (z - rng.choice((0.5, 0.8, 1.2)), z)
+                # sin la cara pegada a la copa ni la de arriba (tapada por la capa)
+                if eje == 0:
+                    nieve.caja(plano, (a, b), cuelga, caras=("xyYz" if signo < 0 else "XyYz"))
+                else:
+                    nieve.caja((a, b), plano, cuelga, caras=("xXyz" if signo < 0 else "xXYz"))
+                a = b + rng.uniform(0.8, 2)
+
+
+def pino_nevado(mats, tam="Grande"):
+    """Pino_Nevado_<tam>: mallas Tronco, Copa y Nieve. Pivote en el centro de la base."""
+    datos = PINOS[tam]
+    rng = random.Random(datos["semilla"])
+    tronco, copa, nieve = Malla(), Malla(), Malla()
+    for i, c in enumerate(datos["tronco"]):
+        # la punta queda dentro de la copa
+        tronco.caja(*c, caras="xXyY" if i == len(datos["tronco"]) - 1 else "xXyYZ")
+    z = datos["copa_z"]
+    for i, (mx, my, alto, dx, dy) in enumerate(datos["copa"]):
+        x, y = (dx - mx, dx + mx), (dy - my, dy + my)
+        z1 = z + alto
+        # sin la tapa (la tapa la nieve) ni el fondo de las de arriba (apoyado en la nieve de abajo)
+        copa.caja(x, y, (z, z1), caras="xXyYz" if i == 0 else "xXyY")
+        v = NIEVE_VUELO
+        nieve.caja((x[0] - v, x[1] + v), (y[0] - v, y[1] + v), (z1 - NIEVE_BAJA, z1 + NIEVE_ALTO))
+        gotitas_nieve(nieve, rng, x, y, z1 - NIEVE_BAJA)
+        z = z1 + NIEVE_ALTO
+    nombre = f"Pino_Nevado_{tam}"
+    objs, conteo = mallas(
+        [("Tronco", tronco, mats["tronco"]), ("Copa", copa, mats["copa"]), ("Nieve", nieve, mats["nieve"])], MAX_PINO, nombre
+    )
+    if sum(conteo.values()) > MAX_PINO:
+        raise RuntimeError(f"{nombre}: {sum(conteo.values())} triángulos (máximo {MAX_PINO})")
+    return objs, conteo
+
+
+def mats_pino(studs=None):
+    """Con studs, para el render; sin, para exportar."""
+    colores = {"tronco": PINO_TRONCO, "copa": PINO_COPA, "nieve": PINO_NIEVE}
+    if studs:
+        return {k: material_studs(f"Pino_{k}", c, studs) for k, c in colores.items()}
+    return {k: M.material(f"Pino_{k}", c) for k, c in colores.items()}
+
+
 # Roca_Meteorito: roca azul noche de bloques con un cráter que brilla violeta adentro y
 # estrellitas lilas en los costados (como el cielo del Abismo, arte/referencias/abismo-1.png;
 # el naranja quedaba de la zona de lava)
@@ -1988,6 +2076,8 @@ REFERENCIAS = {
     "Arbol_Seco_Desierto": ("mapa-2.png", "cactus-1.webp"),
     # las costillas de la izquierda de cactus-2 y las de la derecha de estilo-2
     "Racimo_Ambar": ("estilo-2.png", "mapa-2.png"),
+    # las capturas del Glaciar: el iglú y los árboles de cajas sobre la nieve
+    "Pino_Nevado": ("glaciar-1.webp", "glaciar-2.webp"),
     "Esqueleto": (("cactus-2.webp", (0.10, 0.42, 0.42, 0.80)), ("estilo-2.png", (0.76, 0.45, 0.98, 0.75))),
 }
 
@@ -2259,6 +2349,32 @@ def render_ambar():
         M.render(f"racimo_ambar_{vista}")
     comparar("Racimo_Ambar")
     print("TRIANGULOS Racimo_Ambar", conteo, "total", sum(conteo.values()))
+
+
+def render_pino():
+    """Pino_Nevado Chico y Grande en fila, de frente y de costado (sobre nieve), al lado de las
+    referencias."""
+    conteo = {}
+    paso = 18  # studs entre pinos
+    alto = 20 * M.STUD
+    for vista in ("frente", "costado"):
+        M.limpiar_escena()
+        escena = M.escena_render(1280, 720)
+        tablero = bpy.data.materials["Piso"].node_tree.nodes["Checker Texture"]
+        tablero.inputs["Color1"].default_value = (*M.hex_a_rgb(ZONAS[3]["tapa"]), 1)
+        tablero.inputs["Color2"].default_value = (*M.hex_a_rgb("#DCE8F4"), 1)
+        mats = mats_pino(textura_studs())
+        for k, tam in enumerate(("Chico", "Grande")):
+            objs, c = pino_nevado(mats, tam)
+            conteo[tam] = c
+            pos = (k - 0.5) * paso * M.STUD
+            M.mover(objs, pos if vista == "frente" else 0, 0 if vista == "frente" else pos)
+        giro = -18 if vista == "frente" else 72
+        camara_orto(escena, (0, 0, alto * 0.5), alto * 1.3 * 16 / 9, 12, giro)
+        M.render(f"pino_nevado_{vista}")
+    comparar("Pino_Nevado")
+    for tam, c in conteo.items():
+        print("TRIANGULOS Pino_Nevado", tam, c, "total", sum(c.values()))
 
 
 def noche_abismo(escena):
@@ -2712,7 +2828,47 @@ def exportar_zona2():
     print("  FBX Deco_Zona2.fbx")
 
 
+def exportar_zona3():
+    """Deco_Zona3.fbx: piezas que son solo del Glaciar. Raíz Deco_Zona3 con un vacío por tamaño de
+    pino (Pino_Nevado_Chico, Pino_Nevado_Grande) y sus mallas Pino_Nevado_Chico_Tronco, _Copa y
+    _Nieve. Sin textura: el juego pone el color y TextureID = Studs.png."""
+    M.limpiar_escena()
+    raiz = bpy.data.objects.new("Deco_Zona3", None)
+    bpy.context.scene.collection.objects.link(raiz)
+    for tam in PINOS:
+        nombre = f"Pino_Nevado_{tam}"
+        vacio = bpy.data.objects.new(nombre, None)
+        bpy.context.scene.collection.objects.link(vacio)
+        vacio.parent = raiz
+        objs, conteo = pino_nevado(mats_pino(), tam)
+        for o in objs:
+            o.parent = vacio
+            o.name = o.data.name = f"{nombre}_{o.name.split('.')[0]}"
+        print("TRIANGULOS", nombre, conteo, "total", sum(conteo.values()))
+    bpy.ops.object.select_all(action="DESELECT")
+    for o in [raiz, *raiz.children_recursive]:
+        o.select_set(True)
+    bpy.context.view_layer.objects.active = raiz
+    bpy.ops.export_scene.fbx(
+        filepath=str(M.FBX / "Deco_Zona3.fbx"),
+        use_selection=True,
+        object_types={"MESH", "EMPTY"},
+        apply_unit_scale=True,
+        apply_scale_options="FBX_SCALE_ALL",
+        axis_forward="-Z",
+        axis_up="Y",
+        mesh_smooth_type="FACE",
+        bake_space_transform=True,
+        add_leaf_bones=False,
+    )
+    print("  FBX Deco_Zona3.fbx")
+
+
 if __name__ == "__main__":
+    if "--exportar-zona3" in sys.argv:
+        M.FBX.mkdir(parents=True, exist_ok=True)
+        exportar_zona3()
+        sys.argv.append("--solo-fbx")
     if "--exportar-zona2" in sys.argv:
         M.FBX.mkdir(parents=True, exist_ok=True)
         exportar_zona2()
@@ -2771,4 +2927,6 @@ if __name__ == "__main__":
         render_esqueleto()
     if "--pieza" not in sys.argv or "Racimo_Ambar" in sys.argv:
         render_ambar()
+    if "--pieza" not in sys.argv or "Pino_Nevado" in sys.argv:
+        render_pino()
     print("Listo")
