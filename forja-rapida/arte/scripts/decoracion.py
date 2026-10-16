@@ -39,10 +39,10 @@ Piezas:
                  copa de cajas fucsia y lila encimadas en escalones (32 studs de alto, 31 de
                  ancho), con estrellitas blancas (Neon) cerca de donde se juntan las cajas.
                  Mallas Tronco, Sombra, CopaFucsia, CopaLila y Estrellas.
-  Roca_Meteorito solo Abismo: media bola chata de bloques de 2 studs gris oscuro, con un cráter
-                 arriba (corrido a un costado) y manchas naranjas que brillan (Neon) en el fondo
-                 del cráter y en los costados. Dos tamaños: Chico (12 studs de ancho) y Grande
-                 (20). Mallas Roca y Brasas.
+  Roca_Meteorito solo Abismo: media bola chata de bloques de 2 studs azul noche, con un cráter
+                 arriba (corrido a un costado) que brilla violeta en el fondo y estrellitas lilas
+                 (Neon) en los costados (arte/referencias/abismo-1.png). Dos tamaños: Chico (12
+                 studs de ancho) y Grande (20). Mallas Roca, Nucleo y Estrellas.
 
 Cada pieza tiene una variante por zona (ZONAS): sus colores y lo que tiene la tapa (pasto con
 gotitas; dunas de arena; nieve con carámbanos; ceniza con piedritas y chorros de lava; cristales
@@ -1022,19 +1022,22 @@ def mats_arbol(studs=None):
     return mats
 
 
-# Roca_Meteorito: roca gris oscuro de bloques, con un cráter arriba y manchas naranjas que brillan
-METEORITO_ROCA = "#3E3E48"
-METEORITO_BRASA = ZONAS[4]["detalle"]  # el naranja de la lava del Volcán; en Roblox, Neon
+# Roca_Meteorito: roca azul noche de bloques con un cráter que brilla violeta adentro y
+# estrellitas lilas en los costados (como el cielo del Abismo, arte/referencias/abismo-1.png;
+# el naranja quedaba de la zona de lava)
+METEORITO_ROCA = "#262A63"
+METEORITO_NUCLEO = "#7B3CFF"  # en Roblox, Neon
+METEORITO_ESTRELLA = "#D6CCFF"  # en Roblox, Neon
 METEORITO_CUBO = 2  # studs de cada bloque
-# tamaño -> (radio en bloques, alto en bloques, manchas en los costados, semilla)
+# tamaño -> (radio en bloques, alto en bloques, estrellas en los costados, semilla)
 METEORITOS = {"Chico": (3, 3, 3, 4), "Grande": (5, 5, 5, 17)}
 MAX_METEORITO = 1500  # por pieza (sumando sus mallas)
 
 
-def celdas_meteorito(radio, alto, manchas, semilla):
+def celdas_meteorito(radio, alto, semilla):
     """Media bola chata de bloques (abajo plana, con el borde un poco mordido) con un cráter
-    corrido para un costado. El fondo del cráter y algunas celdas de los costados son brasas.
-    Devuelve (roca, brasas)."""
+    corrido para un costado. El fondo del cráter es el núcleo que brilla.
+    Devuelve (roca, nucleo)."""
     rng = random.Random(semilla)
     roca = set()
     for x in range(-radio, radio):
@@ -1051,34 +1054,48 @@ def celdas_meteorito(radio, alto, manchas, semilla):
         d = math.hypot(c[0] + 0.5 - cx, c[1] + 0.5 - cy) / rc
         if d < 1 and c[2] > fondo + d * d * 2.2:
             roca.discard(c)
-    brasas = set()
+    nucleo = set()
     for x, y, z in roca:
         d = math.hypot(x + 0.5 - cx, y + 0.5 - cy) / rc
         if d < 0.8 and (x, y, z + 1) not in roca:
-            brasas.add((x, y, z))
-    # manchas en los costados: celdas de afuera a media altura
-    lados = [c for c in roca if 0 < c[2] < alto - 1 and c not in brasas
-             and any((c[0] + dx, c[1] + dy, c[2]) not in roca for dx, dy in ((1, 0), (-1, 0), (0, 1), (0, -1)))]
-    rng.shuffle(lados)
-    for c in lados:
-        if manchas == 0:
-            break
-        if all(abs(c[0] - b[0]) + abs(c[1] - b[1]) + abs(c[2] - b[2]) > 2 for b in brasas):
-            brasas.add(c)
-            manchas -= 1
-    return roca - brasas, brasas
+            nucleo.add((x, y, z))
+    return roca - nucleo, nucleo
 
 
 def roca_meteorito(mats, tam="Grande"):
-    """Roca_Meteorito_<tam>: mallas Roca y Brasas. Pivote en el centro de la base."""
-    radio, alto, manchas, semilla = METEORITOS[tam]
-    roca, brasas = celdas_meteorito(radio, alto, manchas, semilla)
-    s = (METEORITO_CUBO,) * 3
-    m_roca, m_brasas = Malla(), Malla()
-    voxeles_malla(m_roca, roca, s)
-    voxeles_malla(m_brasas, brasas, s)
+    """Roca_Meteorito_<tam>: mallas Roca, Nucleo y Estrellas (cruces de cubitos pegadas en las
+    paredes de afuera, a media altura). Pivote en el centro de la base."""
+    radio, alto, estrellas, semilla = METEORITOS[tam]
+    roca, nucleo = celdas_meteorito(radio, alto, semilla)
+    c = METEORITO_CUBO
+    m_roca, m_nucleo, m_est = Malla(), Malla(), Malla()
+    voxeles_malla(m_roca, roca, (c, c, c))
+    voxeles_malla(m_nucleo, nucleo, (c, c, c))
+    rng = random.Random(semilla * 5)
+    todas = roca | nucleo
+    caras = []  # (celda, eje, signo) de las paredes de afuera
+    for x, y, z in roca:
+        if 0 < z < alto - 1:
+            for eje, signo in ((0, 1), (0, -1), (1, 1), (1, -1)):
+                v = [x, y, z]
+                v[eje] += signo
+                if tuple(v) not in todas:
+                    caras.append(((x, y, z), eje, signo))
+    rng.shuffle(caras)
+    puestas = []
+    for celda, eje, signo in caras:
+        if len(puestas) == estrellas:
+            break
+        centro = [(k + 0.5) * c for k in celda]
+        if any(math.dist(centro, q) < 3.5 * c for q in puestas):
+            continue
+        puestas.append(centro)
+        a, b = Malla.EJES[eje]
+        plano = (celda[eje] + (1 if signo > 0 else 0)) * c
+        estrella(m_est, eje, signo, plano, centro[a], centro[b], rng.random() < 0.4)
     objs, conteo = mallas(
-        [(f"Roca_{tam}", m_roca, mats["roca"]), (f"Brasas_{tam}", m_brasas, mats["brasas"])],
+        [(f"Roca_{tam}", m_roca, mats["roca"]), (f"Nucleo_{tam}", m_nucleo, mats["nucleo"]),
+         (f"Estrellas_{tam}", m_est, mats["estrellas"])],
         MAX_METEORITO,
         f"Roca_Meteorito {tam}",
     )
@@ -1088,13 +1105,18 @@ def roca_meteorito(mats, tam="Grande"):
 
 
 def mats_meteorito(studs=None):
-    """Con studs, para el render (las brasas brillan); sin, para exportar."""
+    """Con studs, para el render (núcleo y estrellas brillan); sin, para exportar."""
     if studs:
         return {
             "roca": material_studs("MeteoritoRoca", METEORITO_ROCA, studs),
-            "brasas": M.material("MeteoritoBrasa", METEORITO_BRASA, brillo=METEORITO_BRASA, fuerza_brillo=1.2),
+            "nucleo": M.material("MeteoritoNucleo", METEORITO_NUCLEO, brillo=METEORITO_NUCLEO, fuerza_brillo=0.8),
+            "estrellas": M.material("MeteoritoEstrella", METEORITO_ESTRELLA, brillo=METEORITO_ESTRELLA, fuerza_brillo=2.0),
         }
-    return {"roca": M.material("MeteoritoRoca", METEORITO_ROCA), "brasas": M.material("MeteoritoBrasa", METEORITO_BRASA)}
+    return {
+        "roca": M.material("MeteoritoRoca", METEORITO_ROCA),
+        "nucleo": M.material("MeteoritoNucleo", METEORITO_NUCLEO),
+        "estrellas": M.material("MeteoritoEstrella", METEORITO_ESTRELLA),
+    }
 
 
 def mats_isla(studs=None):
@@ -1275,7 +1297,7 @@ REFERENCIAS = {
     "Columna_Estelar": ("estilo-1.png", ("estilo-1.png", (0.40, 0.33, 0.60, 0.58))),
     "Isla_Flotante": ("estilo-1.png", ("estilo-1.png", (0.40, 0.33, 0.60, 0.58))),
     "Cristales_Abismo": ("estilo-1.png", ("estilo-1.png", (0.40, 0.33, 0.60, 0.58))),
-    "Roca_Meteorito": ("estilo-1.png", ("estilo-1.png", (0.40, 0.33, 0.60, 0.58))),
+    "Roca_Meteorito": ("abismo-1.png", ("estilo-1.png", (0.40, 0.33, 0.60, 0.58))),
     "Arbol_Nebuloso": ("arbol-1.png", ("estilo-1.png", (0.40, 0.33, 0.60, 0.58))),
 }
 
@@ -1392,15 +1414,27 @@ def render_arbol():
     print("TRIANGULOS Arbol_Nebuloso", conteo, "total", sum(conteo.values()))
 
 
+def noche_abismo(escena):
+    """Cambia el cielo y el piso del render por la noche del Abismo (abismo-1.png): fondo azul
+    muy oscuro, piso azul noche y un sol más flojo, para ver bien lo que brilla."""
+    escena.world.node_tree.nodes["Background"].inputs["Color"].default_value = (*M.hex_a_rgb("#0E1338"), 1)
+    sol = bpy.data.lights["Sol"]
+    sol.energy, sol.color = 2.2, M.hex_a_rgb("#C9C2FF")
+    tablero = bpy.data.materials["Piso"].node_tree.nodes["Checker Texture"]
+    tablero.inputs["Color1"].default_value = (*M.hex_a_rgb("#1E2A66"), 1)
+    tablero.inputs["Color2"].default_value = (*M.hex_a_rgb("#1A2459"), 1)
+
+
 def render_meteorito():
     """Roca_Meteorito Chico y Grande en fila, de frente y de costado (un poco desde arriba, para
-    ver el cráter), al lado de la referencia."""
+    ver el cráter) en la noche del Abismo, al lado de la referencia."""
     conteo = {}
     anchos = [2 * METEORITOS[t][0] * METEORITO_CUBO for t in METEORITOS]
     total = sum(anchos) + 6
     for vista in ("frente", "costado"):
         M.limpiar_escena()
         escena = M.escena_render(1280, 720)
+        noche_abismo(escena)
         mats = mats_meteorito(textura_studs())
         x = -total / 2
         for tam, ancho in zip(METEORITOS, anchos):
@@ -1636,7 +1670,9 @@ def exportar_zona5():
     y uno por tamaño de isla (Isla_Flotante_Chica...) con Roca_Chica, Pasto_Chica y
     Cristales_Chica; y Cristales_Abismo con Cristales_Abismo_Roca, Cristales_Abismo_CristalRosa y
     Cristales_Abismo_CristalVioleta; y Arbol_Nebuloso con Arbol_Nebuloso_Tronco, _Sombra,
-    _CopaFucsia, _CopaLila y _Estrellas. Sin textura: el juego pone el color, TextureID =
+    _CopaFucsia, _CopaLila y _Estrellas; y Roca_Meteorito_Chico y _Grande con
+    Meteorito_Roca_Chico, Meteorito_Nucleo_Chico y Meteorito_Estrellas_Chico (las dos últimas
+    en Neon). Sin textura: el juego pone el color, TextureID =
     Studs.png en Columna, Roca, Pasto, Tronco, Sombra y Copa, y Material Neon en las estrellas y
     en los cristales."""
     M.limpiar_escena()
@@ -1676,6 +1712,17 @@ def exportar_zona5():
         o.parent = vacio
         o.name = o.data.name = f"Arbol_Nebuloso_{o.name.split('.')[0]}"
     print("TRIANGULOS Arbol_Nebuloso", conteo, "total", sum(conteo.values()))
+    mats = mats_meteorito()
+    for tam in METEORITOS:
+        vacio = bpy.data.objects.new(f"Roca_Meteorito_{tam}", None)
+        bpy.context.scene.collection.objects.link(vacio)
+        vacio.parent = raiz
+        objs, conteo = roca_meteorito(mats, tam)
+        for o in objs:
+            o.parent = vacio
+            # Roca_Grande ya es de la isla: Meteorito_Roca_Grande, Meteorito_Nucleo_Grande...
+            o.name = o.data.name = f"Meteorito_{o.name.split('.')[0]}"
+        print("TRIANGULOS", f"Roca_Meteorito_{tam}", conteo, "total", sum(conteo.values()))
     bpy.ops.object.select_all(action="DESELECT")
     for o in [raiz, *raiz.children_recursive]:
         o.select_set(True)
