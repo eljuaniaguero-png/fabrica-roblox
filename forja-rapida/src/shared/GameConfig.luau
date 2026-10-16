@@ -62,7 +62,7 @@ export type Zona = {
 	Suerte: number,
 	ColorRoca: string,
 	ColorCristal: string,
-	-- Grupo 4: las 3 rocas del bioma (la primera es la de siempre). Cada geoda nace con una al
+	-- Grupo 4: las 5 rocas del bioma (la primera es la de siempre). Cada geoda nace con una al
 	-- azar; solo cambia cómo se ve (forma, colores y material), no lo que da.
 	Variantes: { Variante },
 }
@@ -518,6 +518,18 @@ local GameConfig = {
 					ColorCristal = "#7CF5FF",
 					MaterialRoca = "Limestone",
 				},
+				{
+					Id = "Esmeralda",
+					Nombre = "de Esmeralda",
+					ColorRoca = "#8A8F7A",
+					ColorCristal = "#2EE88A",
+				},
+				{
+					Id = "CuarzoRosa",
+					Nombre = "de Cuarzo Rosa",
+					ColorRoca = "#C9B8C4",
+					ColorCristal = "#FF7BB0",
+				},
 			},
 		},
 		{
@@ -551,6 +563,20 @@ local GameConfig = {
 					ColorCristal = "#FF8C42",
 					MaterialRoca = "Sand",
 				},
+				{
+					Id = "Topacio",
+					Nombre = "de Topacio",
+					ColorRoca = "#9A6B3F",
+					ColorCristal = "#FFD27A",
+					MaterialRoca = "Sandstone",
+				},
+				{
+					Id = "Fosil",
+					Nombre = "Fósil",
+					ColorRoca = "#8C7B6B",
+					ColorCristal = "#FF6A2B",
+					MaterialRoca = "Limestone",
+				},
 			},
 		},
 		{
@@ -581,6 +607,19 @@ local GameConfig = {
 					Nombre = "de Glaciar Profundo",
 					ColorRoca = "#2F5D8A",
 					ColorCristal = "#B8F3FF",
+				},
+				{
+					Id = "Iceberg",
+					Nombre = "de Iceberg",
+					ColorRoca = "#5FB8D6",
+					ColorCristal = "#E0FFFF",
+					MaterialRoca = "Glacier",
+				},
+				{
+					Id = "Aurora",
+					Nombre = "de Aurora",
+					ColorRoca = "#3B4A7A",
+					ColorCristal = "#7CFFB2",
 				},
 			},
 		},
@@ -614,6 +653,19 @@ local GameConfig = {
 					ColorRoca = "#6B5A2E",
 					ColorCristal = "#F5FF4D",
 				},
+				{
+					Id = "Magma",
+					Nombre = "de Magma",
+					ColorRoca = "#7A2E1E",
+					ColorCristal = "#FFB000",
+					MaterialRoca = "Basalt",
+				},
+				{
+					Id = "Ceniza",
+					Nombre = "de Ceniza",
+					ColorRoca = "#8E8A86",
+					ColorCristal = "#FF4D1A",
+				},
 			},
 		},
 		{
@@ -644,6 +696,18 @@ local GameConfig = {
 					ColorRoca = "#3B3B3B",
 					ColorCristal = "#FFB347",
 					MaterialRoca = "Basalt",
+				},
+				{
+					Id = "Cometa",
+					Nombre = "Cometa",
+					ColorRoca = "#5A6B9C",
+					ColorCristal = "#B8FFFF",
+				},
+				{
+					Id = "Eclipse",
+					Nombre = "Eclipse",
+					ColorRoca = "#14121F",
+					ColorCristal = "#FFE07A",
 				},
 			},
 		},

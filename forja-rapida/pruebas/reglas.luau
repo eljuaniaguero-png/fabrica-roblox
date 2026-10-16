@@ -485,7 +485,7 @@ chequear(ids(Reglas.logrosNuevos(g4)):find("BrilloInterior") ~= nil, "brillo int
 local efectos = Reglas.tiposCosmeticos().Efecto
 chequear(efectos ~= nil and #efectos >= 6, "faltan evoluciones del pico")
 for _, z in GameConfig.Zonas do
-	chequear(#z.Variantes >= 3, z.Nombre .. ": menos de 3 rocas")
+	chequear(#z.Variantes == 5, z.Nombre .. ": no tiene 5 rocas")
 	chequear(
 		z.Variantes[1].ColorRoca == z.ColorRoca and z.Variantes[1].ColorCristal == z.ColorCristal,
 		z.Nombre .. ": la roca 1 no es la de siempre"
