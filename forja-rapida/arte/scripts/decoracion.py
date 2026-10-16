@@ -39,6 +39,9 @@ Piezas:
                  copa de cajas fucsia y lila encimadas en escalones (32 studs de alto, 31 de
                  ancho), con estrellitas blancas (Neon) cerca de donde se juntan las cajas.
                  Mallas Tronco, Sombra, CopaFucsia, CopaLila y Estrellas.
+  Arbol_Grande   Pradera (zona 1): tronco grueso bordó en escalones que se abre en 2 ramas, losa
+                 verde oscuro de sombra y copa de 4 cajas verdes corridas en escalones, una que
+                 sobresale de costado (14 studs de alto). Mallas Tronco, Sombra y Copa.
   Roca_Meteorito solo Abismo: media bola chata de bloques de 2 studs azul noche, con un cráter
                  arriba (corrido a un costado) que brilla violeta en el fondo y estrellitas lilas
                  (Neon) en los costados (arte/referencias/abismo-1.png). Dos tamaños: Chico (12
@@ -1022,6 +1025,57 @@ def mats_arbol(studs=None):
     return mats
 
 
+# Arbol_Grande (Pradera): como los árboles de las capturas (arte/referencias/estilo-1.png y
+# mapa-1.png): tronco grueso bordó en escalones que se abre en 2 ramas, una losa verde oscuro de
+# sombra abajo de la copa y 4 cajas verdes corridas y en escalones (la de la izquierda sobresale
+# de costado). 14 studs de alto, 17 de ancho.
+GRANDE_TRONCO = "#B0414E"  # bordó, como los troncos del juego
+GRANDE_SOMBRA = "#2F8F3A"  # HojasOscuras de mapa.py
+GRANDE_COPA = "#66C23A"
+# cajas en studs: ((x0, x1), (y0, y1), (z0, z1))
+GRANDE_CAJAS = {
+    "tronco": [
+        ((-4, 4), (-3, 3), (0, 1)),  # raíces
+        ((-3, 3), (-2.5, 2.5), (1, 2)),
+        ((-2, 2), (-2, 2), (2, 5)),
+        ((-3.5, -0.5), (-1.5, 1.5), (5, 6.5)),  # rama izquierda
+        ((-5, -2), (-1.5, 1.5), (6.5, 8.5)),
+        ((0.5, 3.5), (-1.5, 1.5), (5, 6.5)),  # rama derecha
+        ((2, 5), (-1.5, 1.5), (6.5, 8.5)),
+    ],
+    "sombra": [((-6, 6), (-3.5, 3), (8, 9))],
+    "copa": [
+        ((-7, 0.5), (-4, 4.5), (8.5, 13)),  # la grande de la izquierda
+        ((-1, 7.5), (-5, 3), (9, 12.5)),  # la de la derecha, más baja y corrida al frente
+        ((-4.5, 2.5), (-3, 3), (12.5, 14)),  # escalón de arriba
+        ((-10, -6), (-2.5, 2), (9.5, 12)),  # la que sobresale de costado
+    ],
+}
+MAX_GRANDE = 3000  # por pieza (sumando sus mallas)
+
+
+def arbol_grande(mats):
+    """Arbol_Grande: mallas Tronco, Sombra y Copa. Pivote en el centro de la base."""
+    piezas = []
+    for clave, nombre in (("tronco", "Tronco"), ("sombra", "Sombra"), ("copa", "Copa")):
+        m = Malla()
+        for x, y, z in GRANDE_CAJAS[clave]:
+            m.caja(x, y, z)
+        piezas.append((nombre, m, mats[clave]))
+    objs, conteo = mallas(piezas, MAX_GRANDE, "Arbol_Grande")
+    if sum(conteo.values()) > MAX_GRANDE:
+        raise RuntimeError(f"Arbol_Grande: {sum(conteo.values())} triángulos (máximo {MAX_GRANDE})")
+    return objs, conteo
+
+
+def mats_grande(studs=None):
+    """Con studs, para el render; sin, para exportar."""
+    colores = {"tronco": GRANDE_TRONCO, "sombra": GRANDE_SOMBRA, "copa": GRANDE_COPA}
+    if studs:
+        return {k: material_studs(f"Grande_{k}", c, studs) for k, c in colores.items()}
+    return {k: M.material(f"Grande_{k}", c) for k, c in colores.items()}
+
+
 # Roca_Meteorito: roca azul noche de bloques con un cráter que brilla violeta adentro y
 # estrellitas lilas en los costados (como el cielo del Abismo, arte/referencias/abismo-1.png;
 # el naranja quedaba de la zona de lava)
@@ -1299,6 +1353,8 @@ REFERENCIAS = {
     "Cristales_Abismo": ("estilo-1.png", ("estilo-1.png", (0.40, 0.33, 0.60, 0.58))),
     "Roca_Meteorito": ("abismo-1.png", ("estilo-1.png", (0.40, 0.33, 0.60, 0.58))),
     "Arbol_Nebuloso": ("arbol-1.png", ("estilo-1.png", (0.40, 0.33, 0.60, 0.58))),
+    # acercamientos al árbol de la izquierda de cada captura
+    "Arbol_Grande": (("estilo-1.png", (0.18, 0.38, 0.32, 0.64)), ("mapa-1.png", (0.19, 0.40, 0.32, 0.64))),
 }
 
 
@@ -1412,6 +1468,20 @@ def render_arbol():
         M.render(f"arbol_nebuloso_{vista}")
     comparar("Arbol_Nebuloso")
     print("TRIANGULOS Arbol_Nebuloso", conteo, "total", sum(conteo.values()))
+
+
+def render_arbol_grande():
+    """Arbol_Grande de frente y de costado, al lado de las referencias."""
+    alto = 14 * M.STUD
+    for vista in ("frente", "costado"):
+        M.limpiar_escena()
+        escena = M.escena_render(1280, 720)
+        objs, conteo = arbol_grande(mats_grande(textura_studs()))
+        giro = -18 if vista == "frente" else 72
+        camara_orto(escena, (0, 0, alto * 0.5), alto * 1.25 * 16 / 9, 10, giro)
+        M.render(f"arbol_grande_{vista}")
+    comparar("Arbol_Grande")
+    print("TRIANGULOS Arbol_Grande", conteo, "total", sum(conteo.values()))
 
 
 def noche_abismo(escena):
@@ -1774,6 +1844,8 @@ if __name__ == "__main__":
         render_racimo()
     if "--pieza" not in sys.argv or "Arbol_Nebuloso" in sys.argv:
         render_arbol()
+    if "--pieza" not in sys.argv or "Arbol_Grande" in sys.argv:
+        render_arbol_grande()
     if "--pieza" not in sys.argv or "Roca_Meteorito" in sys.argv:
         render_meteorito()
     print("Listo")
