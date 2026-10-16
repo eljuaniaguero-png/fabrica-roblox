@@ -517,8 +517,9 @@ def comparar(pieza):
 
 
 def exportar():
-    """Deco_Comun.fbx: Zona1..Zona5, cada una con un vacío por pieza y sus mallas (sin textura:
-    el juego pone el color y TextureID = Studs.png)."""
+    """Deco_Comun.fbx: Zona1..Zona5, cada una con un vacío por pieza (Risco_Escalon_Zona2...) y
+    sus mallas (Risco_Zona2, Risco_Tapa_Zona2, Pared_Detalle_Zona2...), sin textura: el juego
+    pone el color y TextureID = Studs.png."""
     M.limpiar_escena()
     raiz = bpy.data.objects.new("Deco_Comun", None)
     bpy.context.scene.collection.objects.link(raiz)
@@ -527,12 +528,15 @@ def exportar():
         bpy.context.scene.collection.objects.link(carpeta)
         carpeta.parent = raiz
         for nombre, (crear, _, _) in PIEZAS.items():
-            vacio = bpy.data.objects.new(nombre, None)
+            vacio = bpy.data.objects.new(f"{nombre}_Zona{zona}", None)  # nombres únicos (si no, Blender pone .001)
             bpy.context.scene.collection.objects.link(vacio)
             vacio.parent = carpeta
             objs, _ = crear(mats_export(zona), zona)
             for o in objs:
                 o.parent = vacio
+                malla, pieza = o.name.split(".")[0], nombre.split("_")[0]
+                # Risco_Zona2, Risco_Tapa_Zona2, Pared_Detalle_Zona2...
+                o.name = o.data.name = f"{malla if malla == pieza else pieza + '_' + malla}_Zona{zona}"
     bpy.ops.object.select_all(action="DESELECT")
     for o in [raiz, *raiz.children_recursive]:
         o.select_set(True)
