@@ -2004,7 +2004,7 @@ def exportar_zona5():
     print("  FBX Deco_Zona5.fbx")
 
 
-EXPORTAR_ZONA1 = ["Arbol_Grande", "Arbol_Mediano", "Arbol_Rosa"]  # los tipos aprobados
+EXPORTAR_ZONA1 = ["Arbol_Grande", "Arbol_Mediano", "Arbol_Rosa", "Arbol_Seco"]  # los tipos aprobados
 
 
 def exportar_zona1():
