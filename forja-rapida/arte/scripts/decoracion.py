@@ -34,6 +34,11 @@ Piezas:
                  Neon), el del medio recto y los otros inclinados hacia afuera en escalones,
                  saliendo de una roca oscura de bloques de 2 studs (10 x 10 studs de base).
                  Mallas Roca, CristalRosa y CristalVioleta.
+  Arbol_Nebuloso solo Abismo: árbol de cajas como los del juego (arte/referencias/arbol-1.png):
+                 tronco violeta oscuro en escalones con raíces, losa de sombra abajo de la copa y
+                 copa de cajas fucsia y lila encimadas en escalones (32 studs de alto, 31 de
+                 ancho), con estrellitas blancas (Neon) cerca de donde se juntan las cajas.
+                 Mallas Tronco, Sombra, CopaFucsia, CopaLila y Estrellas.
 
 Cada pieza tiene una variante por zona (ZONAS): sus colores y lo que tiene la tapa (pasto con
 gotitas; dunas de arena; nieve con carámbanos; ceniza con piedritas y chorros de lava; cristales
@@ -54,7 +59,7 @@ Uso: <python de Blender> forja-rapida/arte/scripts/decoracion.py
   (sin nada: render de frente y de costado de cada pieza al lado de las referencias, y
    triángulos; --pieza <Nombre>: solo esa; --zonas: las 5 variantes de cada pieza en
    arte/renders/deco_zonas.jpg; --exportar: además arma arte/fbx/Deco_Comun.fbx;
-   --pieza Columna_Estelar / Isla_Flotante / Cristales_Abismo: render de esa pieza del Abismo; --exportar-zona5: solo arma
+   --pieza Columna_Estelar / Isla_Flotante / Cristales_Abismo / Arbol_Nebuloso: render de esa pieza del Abismo; --exportar-zona5: solo arma
    arte/fbx/Deco_Zona5.fbx con las piezas del Abismo, sin renders)
 """
 
@@ -156,7 +161,10 @@ class Malla:
                     p[eje], p[a], p[b] = fijo, ca, cb
                     vs.append(self.vert(p))
                     uvs.append(((ca - ta) / TEJA, (cb - tb) / TEJA))
-                cara = self.bm.faces.new(vs)
+                try:
+                    cara = self.bm.faces.new(vs)
+                except ValueError:  # dos cajas pegadas con la misma cara: queda adentro, no se ve
+                    continue
                 for loop, uv in zip(cara.loops, uvs):
                     loop[self.uv].uv = uv
 
@@ -933,6 +941,82 @@ def mats_racimo(studs=None):
     }
 
 
+# Arbol_Nebuloso: como los árboles de cajas del juego (arte/referencias/arbol-1.png): tronco en
+# escalones con raíces, una losa de sombra abajo de la copa y cajas grandes encimadas
+ARBOL_TRONCO = COLUMNA_COLOR  # violeta oscuro
+ARBOL_SOMBRA = "#4B3F8F"  # la tapa del Abismo
+ARBOL_FUCSIA = "#E23DBE"
+ARBOL_LILA = "#B57BE8"  # como los árboles violetas de estilo-1.png
+# cajas en studs: ((x0, x1), (y0, y1), (z0, z1))
+ARBOL_CAJAS = {
+    "tronco": [
+        ((-6, 6), (-5, 5), (0, 2)),  # raíces
+        ((-5, 4), (-4, 4), (2, 4)),
+        ((-3, 3), (-3, 3), (4, 9)),
+        ((-2, 4), (-3, 3), (9, 14)),  # el tronco se corre un escalón
+    ],
+    "sombra": [((-9, 9), (-8, 8), (13, 15))],
+    "fucsia": [((-11, 9), (-9, 9), (15, 27)), ((-16, -8), (-5, 5), (16, 24))],
+    "lila": [((5, 15), (-6, 6), (13, 24)), ((-7, 5), (-6, 6), (27, 32))],
+}
+ARBOL_ESTRELLAS = 16
+MAX_ARBOL = 2500  # por pieza (sumando sus mallas)
+
+
+def arbol_nebuloso(mats, semilla=21):
+    """Arbol_Nebuloso: mallas Tronco, Sombra, CopaFucsia, CopaLila y Estrellas (cruces de cubitos,
+    Neon, sobre las caras de afuera de la copa, casi siempre cerca de donde se juntan dos cajas).
+    Pivote en el centro de la base."""
+    piezas = []
+    for clave, nombre in (("tronco", "Tronco"), ("sombra", "Sombra"), ("fucsia", "CopaFucsia"), ("lila", "CopaLila")):
+        m = Malla()
+        for x, y, z in ARBOL_CAJAS[clave]:
+            m.caja(x, y, z)
+        piezas.append((nombre, m, mats[clave]))
+    copa = ARBOL_CAJAS["fucsia"] + ARBOL_CAJAS["lila"]
+
+    def tapado(p):  # el punto queda adentro (o muy cerca) de otra caja
+        return any(all(c[i][0] - 0.4 < p[i] < c[i][1] + 0.4 for i in range(3)) for c in copa)
+
+    rng = random.Random(semilla)
+    est, puestas, intentos = Malla(), [], 0
+    while len(puestas) < ARBOL_ESTRELLAS and intentos < 2000:
+        intentos += 1
+        caja = rng.choice(copa)
+        eje, signo = rng.choice(((0, 1), (0, -1), (1, 1), (1, -1), (1, -1), (1, -1), (2, 1)))  # más al frente
+        plano = caja[eje][1 if signo > 0 else 0]
+        a, b = Malla.EJES[eje]
+        p = [0.0, 0.0, 0.0]
+        p[eje] = plano + 0.6 * signo  # apenas afuera de la cara, para ver si otra caja la tapa
+        for k in (a, b):
+            lo, hi = caja[k][0] + 1.5, caja[k][1] - 1.5
+            if rng.random() < 0.6:  # cerca de un borde (donde se juntan las cajas)
+                p[k] = rng.choice((lo + rng.uniform(0, 1.5), hi - rng.uniform(0, 1.5)))
+            else:
+                p[k] = rng.uniform(lo, hi)
+        if tapado(p) or any(math.dist(p, q) < 4 for q in puestas):
+            continue
+        puestas.append(p)
+        estrella(est, eje, signo, plano, p[a], p[b], rng.random() < 0.35)
+    piezas.append(("Estrellas", est, mats["estrellas"]))
+    objs, conteo = mallas(piezas, MAX_ARBOL, "Arbol_Nebuloso")
+    if sum(conteo.values()) > MAX_ARBOL:
+        raise RuntimeError(f"Arbol_Nebuloso: {sum(conteo.values())} triángulos (máximo {MAX_ARBOL})")
+    return objs, conteo
+
+
+def mats_arbol(studs=None):
+    """Con studs, para el render (las estrellas brillan); sin, para exportar."""
+    colores = {"tronco": ARBOL_TRONCO, "sombra": ARBOL_SOMBRA, "fucsia": ARBOL_FUCSIA, "lila": ARBOL_LILA}
+    if studs:
+        mats = {k: material_studs(f"Arbol_{k}", c, studs) for k, c in colores.items()}
+        mats["estrellas"] = M.material("ArbolEstrellas", ESTRELLA_COLOR, brillo=ESTRELLA_COLOR, fuerza_brillo=2.5)
+        return mats
+    mats = {k: M.material(f"Arbol_{k}", c) for k, c in colores.items()}
+    mats["estrellas"] = M.material("ArbolEstrellas", ESTRELLA_COLOR)
+    return mats
+
+
 def mats_isla(studs=None):
     """Con studs, para el render (los cristales brillan); sin, para exportar."""
     if studs:
@@ -1111,6 +1195,7 @@ REFERENCIAS = {
     "Columna_Estelar": ("estilo-1.png", ("estilo-1.png", (0.40, 0.33, 0.60, 0.58))),
     "Isla_Flotante": ("estilo-1.png", ("estilo-1.png", (0.40, 0.33, 0.60, 0.58))),
     "Cristales_Abismo": ("estilo-1.png", ("estilo-1.png", (0.40, 0.33, 0.60, 0.58))),
+    "Arbol_Nebuloso": ("arbol-1.png", ("estilo-1.png", (0.40, 0.33, 0.60, 0.58))),
 }
 
 
@@ -1210,6 +1295,20 @@ def render_racimo():
         M.render(f"cristales_abismo_{vista}")
     comparar("Cristales_Abismo")
     print("TRIANGULOS Cristales_Abismo", conteo, "total", sum(conteo.values()))
+
+
+def render_arbol():
+    """Arbol_Nebuloso de frente y de costado, al lado de las referencias."""
+    alto = 32 * M.STUD
+    for vista in ("frente", "costado"):
+        M.limpiar_escena()
+        escena = M.escena_render(1280, 720)
+        objs, conteo = arbol_nebuloso(mats_arbol(textura_studs()))
+        giro = -18 if vista == "frente" else 72
+        camara_orto(escena, (0, 0, alto * 0.5), alto * 1.25 * 16 / 9, 10, giro)
+        M.render(f"arbol_nebuloso_{vista}")
+    comparar("Arbol_Nebuloso")
+    print("TRIANGULOS Arbol_Nebuloso", conteo, "total", sum(conteo.values()))
 
 
 def render_losas():
@@ -1510,4 +1609,6 @@ if __name__ == "__main__":
         render_isla()
     if "--pieza" not in sys.argv or "Cristales_Abismo" in sys.argv:
         render_racimo()
+    if "--pieza" not in sys.argv or "Arbol_Nebuloso" in sys.argv:
+        render_arbol()
     print("Listo")
