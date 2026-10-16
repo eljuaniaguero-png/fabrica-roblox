@@ -44,6 +44,9 @@ Piezas:
                  sobresale de costado (14 studs de alto). Mallas Tronco, Sombra y Copa.
   Arbol_Mediano  Pradera: como el grande, con tronco recto y 2 cajas de copa en escalón (9 studs
                  de alto). Mismas mallas.
+  Arbol_Rosa     Pradera (va al fondo): el mediano como un cerezo de bloques: tronco marrón rojizo,
+                 caja de abajo fucsia y escalón violeta. Mallas Tronco, Sombra, CopaFucsia y
+                 CopaVioleta.
   Roca_Meteorito solo Abismo: media bola chata de bloques de 2 studs azul noche, con un cráter
                  arriba (corrido a un costado) que brilla violeta en el fondo y estrellitas lilas
                  (Neon) en los costados (arte/referencias/abismo-1.png). Dos tamaños: Chico (12
@@ -1069,34 +1072,48 @@ MEDIANO_CAJAS = {
     ],
 }
 MAX_MEDIANO = 2000
-# nombre -> (cajas, alto en studs, máximo de triángulos)
+# Arbol_Rosa (Pradera, va al fondo): el mediano como un cerezo de bloques (capturas del juego):
+# tronco marrón rojizo, la caja de abajo fucsia y el escalón violeta, sombra violeta oscuro.
+ROSA_CAJAS = {
+    "tronco": MEDIANO_CAJAS["tronco"],
+    "sombra": MEDIANO_CAJAS["sombra"],
+    "fucsia": MEDIANO_CAJAS["copa"][:1],
+    "violeta": MEDIANO_CAJAS["copa"][1:],
+}
+COLORES_VERDE = {"tronco": GRANDE_TRONCO, "sombra": GRANDE_SOMBRA, "copa": GRANDE_COPA}
+COLORES_ROSA = {"tronco": "#8E4A42", "sombra": "#8A2C9E", "fucsia": "#E05CEB", "violeta": "#B04DFF"}  # violeta del arcoíris
+# nombre de cada malla
+MALLAS_ARBOL = {"tronco": "Tronco", "sombra": "Sombra", "copa": "Copa", "fucsia": "CopaFucsia", "violeta": "CopaVioleta"}
+# nombre -> (cajas, alto en studs, máximo de triángulos, colores, prefijo de los materiales)
 ARBOLES_PRADERA = {
-    "Arbol_Grande": (GRANDE_CAJAS, 14, MAX_GRANDE),
-    "Arbol_Mediano": (MEDIANO_CAJAS, 9, MAX_MEDIANO),
+    "Arbol_Grande": (GRANDE_CAJAS, 14, MAX_GRANDE, COLORES_VERDE, "Grande"),
+    "Arbol_Mediano": (MEDIANO_CAJAS, 9, MAX_MEDIANO, COLORES_VERDE, "Grande"),
+    "Arbol_Rosa": (ROSA_CAJAS, 9, MAX_MEDIANO, COLORES_ROSA, "Rosa"),
 }
 
 
 def arbol_pradera(mats, pieza="Arbol_Grande"):
-    """Arbol_Grande o Arbol_Mediano: mallas Tronco, Sombra y Copa. Pivote en el centro de la base."""
-    cajas, _, tope = ARBOLES_PRADERA[pieza]
+    """Un árbol de ARBOLES_PRADERA: una malla por clave de sus cajas (Tronco, Sombra y Copa, o
+    CopaFucsia y CopaVioleta en el rosa). Pivote en el centro de la base."""
+    cajas, _, tope, _, _ = ARBOLES_PRADERA[pieza]
     piezas = []
-    for clave, nombre in (("tronco", "Tronco"), ("sombra", "Sombra"), ("copa", "Copa")):
+    for clave, lista in cajas.items():
         m = Malla()
-        for x, y, z in cajas[clave]:
+        for x, y, z in lista:
             m.caja(x, y, z)
-        piezas.append((nombre, m, mats[clave]))
+        piezas.append((MALLAS_ARBOL[clave], m, mats[clave]))
     objs, conteo = mallas(piezas, tope, pieza)
     if sum(conteo.values()) > tope:
         raise RuntimeError(f"{pieza}: {sum(conteo.values())} triángulos (máximo {tope})")
     return objs, conteo
 
 
-def mats_grande(studs=None):
+def mats_pradera(pieza, studs=None):
     """Con studs, para el render; sin, para exportar."""
-    colores = {"tronco": GRANDE_TRONCO, "sombra": GRANDE_SOMBRA, "copa": GRANDE_COPA}
+    _, _, _, colores, prefijo = ARBOLES_PRADERA[pieza]
     if studs:
-        return {k: material_studs(f"Grande_{k}", c, studs) for k, c in colores.items()}
-    return {k: M.material(f"Grande_{k}", c) for k, c in colores.items()}
+        return {k: material_studs(f"{prefijo}_{k}", c, studs) for k, c in colores.items()}
+    return {k: bpy.data.materials.get(f"{prefijo}_{k}") or M.material(f"{prefijo}_{k}", c) for k, c in colores.items()}
 
 
 # Roca_Meteorito: roca azul noche de bloques con un cráter que brilla violeta adentro y
@@ -1379,6 +1396,8 @@ REFERENCIAS = {
     # acercamientos al árbol de la izquierda de cada captura
     "Arbol_Grande": (("estilo-1.png", (0.18, 0.38, 0.32, 0.64)), ("mapa-1.png", (0.19, 0.40, 0.32, 0.64))),
     "Arbol_Mediano": (("estilo-1.png", (0.18, 0.38, 0.32, 0.64)), ("mapa-1.png", (0.19, 0.40, 0.32, 0.64))),
+    # la captura entera (los árboles rosas del fondo) y un acercamiento
+    "Arbol_Rosa": ("estilo-1.png", ("estilo-1.png", (0.40, 0.33, 0.60, 0.58))),
 }
 
 
@@ -1500,7 +1519,7 @@ def render_arbol_pradera(pieza):
     for vista in ("frente", "costado"):
         M.limpiar_escena()
         escena = M.escena_render(1280, 720)
-        objs, conteo = arbol_pradera(mats_grande(textura_studs()), pieza)
+        objs, conteo = arbol_pradera(mats_pradera(pieza, textura_studs()), pieza)
         giro = -18 if vista == "frente" else 72
         camara_orto(escena, (0, 0, alto * 0.5), alto * 1.25 * 16 / 9, 10, giro)
         M.render(f"{pieza.lower()}_{vista}")
@@ -1846,12 +1865,11 @@ def exportar_zona1():
     M.limpiar_escena()
     raiz = bpy.data.objects.new("Deco_Zona1", None)
     bpy.context.scene.collection.objects.link(raiz)
-    mats = mats_grande()
     for pieza in EXPORTAR_ZONA1:
         vacio = bpy.data.objects.new(pieza, None)
         bpy.context.scene.collection.objects.link(vacio)
         vacio.parent = raiz
-        objs, conteo = arbol_pradera(mats, pieza)
+        objs, conteo = arbol_pradera(mats_pradera(pieza), pieza)
         for o in objs:
             o.parent = vacio
             o.name = o.data.name = f"{pieza}_{o.name.split('.')[0]}"
