@@ -1429,8 +1429,9 @@ def exportar_zona5():
     """Deco_Zona5.fbx: piezas que son solo del Abismo. Raíz Deco_Zona5 con un vacío por alto
     (Columna_Estelar_Alta, Columna_Estelar_Baja) y sus mallas (Columna_Alta y Estrellas_Alta...),
     y uno por tamaño de isla (Isla_Flotante_Chica...) con Roca_Chica, Pasto_Chica y
-    Cristales_Chica. Sin textura: el juego pone el color, TextureID = Studs.png en Columna, Roca
-    y Pasto, y Material Neon en Estrellas y Cristales."""
+    Cristales_Chica; y Cristales_Abismo con Cristales_Abismo_Roca, Cristales_Abismo_CristalRosa y
+    Cristales_Abismo_CristalVioleta. Sin textura: el juego pone el color, TextureID = Studs.png
+    en Columna, Roca y Pasto, y Material Neon en Estrellas y en los cristales."""
     M.limpiar_escena()
     raiz = bpy.data.objects.new("Deco_Zona5", None)
     bpy.context.scene.collection.objects.link(raiz)
@@ -1452,6 +1453,14 @@ def exportar_zona5():
         for o in objs:
             o.parent = vacio
         print("TRIANGULOS", f"Isla_Flotante_{tam}", conteo, "total", sum(conteo.values()))
+    vacio = bpy.data.objects.new("Cristales_Abismo", None)
+    bpy.context.scene.collection.objects.link(vacio)
+    vacio.parent = raiz
+    objs, conteo = cristales_abismo(mats_racimo())
+    for o in objs:
+        o.parent = vacio
+        o.name = o.data.name = f"Cristales_Abismo_{o.name.split('.')[0]}"  # Roca solo se repite
+    print("TRIANGULOS Cristales_Abismo", conteo, "total", sum(conteo.values()))
     bpy.ops.object.select_all(action="DESELECT")
     for o in [raiz, *raiz.children_recursive]:
         o.select_set(True)
