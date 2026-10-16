@@ -52,9 +52,10 @@ TEJA = 4  # studs que mide la textura de studs (4 x 4 studs en 256 px)
 
 # Una variante por zona: colores (los de las capturas y de mapa.py) y cómo es la tapa.
 #   risco/tapa/detalle: color de cada malla (detalle = None: la variante no tiene esa malla)
-#   neon: el Detalle brilla (en Roblox, Material Neon)
+#   neon: el Detalle brilla (en Roblox, Material Neon). La lava del Volcán (Detalle de la zona 4,
+#   también en las losas) no va Neon: lleva TextureID = texturas/LavaLiquida.png, que ya brilla.
 #   estilo: pasto (gotitas), arena (dunas arriba, chorritos anchos), nieve (montoncitos y
-#   carámbanos), ceniza (piedritas arriba y chorros de lava), estelar (cristales arriba)
+#   carámbanos), ceniza (piedritas arriba y ríos de lava líquida), estelar (cristales arriba)
 ZONAS = {
     1: {"nombre": "Pradera", "risco": "#C96F5C", "tapa": "#3DB02A", "detalle": None, "neon": False, "estilo": "pasto"},
     2: {"nombre": "Dunas", "risco": "#D9A05B", "tapa": "#F2D27A", "detalle": None, "neon": False, "estilo": "arena"},
@@ -192,14 +193,55 @@ def ladrillos(m, y, z0, z1, fila0, signo=-1):
             x += ancho
 
 
-def colgantes(tapa, detalle, rng, estilo, y, alto, signo=-1):
+def chorro_lava(det, rng, c, plano, signo, z_arriba, z_fin, charco, ancho0=None):
+    """Chorro de lava líquida que baja por la pared (el plano y = plano, mirando a signo) desde
+    z_arriba hasta z_fin: tramos de 1 stud que se van angostando y ondulando. Termina en un charco
+    que se desparrama (charco=True) o en una gota gorda colgando. Devuelve el ancho de arriba."""
+    grueso = 0.3
+    capa = (plano - grueso, plano) if signo < 0 else (plano, plano + grueso)
+    frente = "y" if signo < 0 else "Y"
+    ancho0 = ancho0 or rng.choice((2, 2.5))
+    fase = rng.uniform(0, 6.3)
+    z, k, ancho = z_arriba, 0, ancho0
+    while z > z_fin + 1e-6:
+        z0 = max(z_fin, z - 1)
+        ancho = max(1.2, ancho0 - 0.15 * k + 0.35 * math.sin(k * 1.7 + fase))
+        det.caja((c - ancho / 2, c + ancho / 2), capa, (z0, z), caras=frente + "xXz")
+        z, k = z0, k + 1
+    if charco:  # se desparrama en el piso de abajo
+        lejos = (plano - 1.6, plano) if signo < 0 else (plano, plano + 1.6)
+        det.caja((c - ancho / 2 - 1, c + ancho / 2 + 1), lejos, (z_fin, z_fin + 0.15), caras="xXyYZ")
+        cerca = (plano - 0.9, plano) if signo < 0 else (plano, plano + 0.9)
+        det.caja((c - ancho / 2 - 0.3, c + ancho / 2 + 0.3), cerca, (z_fin + 0.15, z_fin + 0.3), caras="xXyYZ")
+    else:  # gota gorda en la punta
+        gota = (plano - grueso - 0.1, plano) if signo < 0 else (plano, plano + grueso + 0.1)
+        det.caja((c - ancho / 2 - 0.25, c + ancho / 2 + 0.25), gota, (z_fin - 0.8, z_fin), caras=frente + "xXzZ")
+    return ancho0
+
+
+def rio_de_lava(det, rng, c, y, signo, alto, tope, bajo):
+    """Lava que se junta arriba de la tapa, se derrama por el borde y baja por los ladrillos (ver
+    chorro_lava). Con bajo (el piso del escalón de abajo) a veces llega y hace un charco."""
+    ancho0 = rng.choice((2, 2.5))
+    s = signo
+    adentro = (y - VUELO, y - VUELO + 1.6) if s < 0 else (y + VUELO - 1.6, y + VUELO)
+    borde = (y - VUELO - 0.15, y - VUELO) if s < 0 else (y + VUELO, y + VUELO + 0.15)
+    frente = "y" if s < 0 else "Y"
+    # charquito arriba de la tapa y el derrame por el borde (tapa el frente del vuelo)
+    det.caja((c - ancho0 / 2 - 0.5, c + ancho0 / 2 + 0.5), adentro, (tope, tope + 0.12), caras="xXyYZ")
+    det.caja((c - ancho0 / 2, c + ancho0 / 2), borde, (alto - 0.4, tope + 0.12), caras=frente + "xXzZ")
+    charco = bajo is not None and bajo > 0 and rng.random() < 0.75
+    fin = bajo if charco else max((bajo or 0) + 1, alto - rng.choice((3, 4, 5)))
+    plano = y - RELIEVE if s < 0 else y + RELIEVE
+    chorro_lava(det, rng, c, plano, s, alto - 0.4, fin, charco, ancho0)
+
+
+def colgantes(tapa, detalle, rng, estilo, y, alto, signo=-1, tope=None, bajo=None):
     """Lo que cuelga del vuelo de la tapa, delante de la pared en el plano y (lejos de los bordes,
-    así no cortan la unión): gotitas de pasto, chorritos de arena, nieve y carámbanos, o lava."""
+    así no cortan la unión): gotitas de pasto, chorritos de arena, nieve y carámbanos, o ríos de
+    lava (tope: arriba de la tapa; bajo: el piso de abajo, donde la lava puede hacer charco)."""
     medio = LARGO / 2
-    if signo < 0:
-        fondo, fino = (y - VUELO, y - RELIEVE - 0.05), (y - RELIEVE - 0.3, y - RELIEVE - 0.02)
-    else:
-        fondo, fino = (y + RELIEVE + 0.05, y + VUELO), (y + RELIEVE + 0.02, y + RELIEVE + 0.3)
+    fondo = (y - VUELO, y - RELIEVE - 0.05) if signo < 0 else (y + RELIEVE + 0.05, y + VUELO)
     caras = "xXyYz"
     x = -medio + rng.choice((1, 2))
     while x < medio - 3:
@@ -218,10 +260,10 @@ def colgantes(tapa, detalle, rng, estilo, y, alto, signo=-1):
             detalle.caja((cx, cx + 1), fondo, (alto - 0.5 - l1, alto - 0.5), caras=caras)
             detalle.caja((cx + 0.25, cx + 0.75), fondo, (alto - 0.5 - l1 - l2, alto - 0.5 - l1), caras=caras)
         elif estilo == "ceniza":
-            ancho = 1
-            if rng.random() < 0.6:  # chorro de lava pegado a los ladrillos
-                largo = rng.choice((2, 3, 4, 5))
-                detalle.caja((x, x + ancho), fino, (alto - largo, alto), caras=caras)
+            ancho = 2
+            if rng.random() < 0.6:  # río de lava líquida
+                rio_de_lava(detalle, rng, x + 1.5, y, signo, alto, tope, bajo)
+                ancho = 3
         else:  # estelar: gotitas chicas de polvo
             ancho, largo = 1, rng.choice((0.5, 1))
             tapa.caja((x, x + ancho), fondo, (alto - largo, alto), caras=caras)
@@ -303,7 +345,7 @@ def risco_escalon(mats, zona=1, semilla=11):
         caras = "xXyZ" + ("Y" if i + 1 == len(ESCALONES_Y) else "")
         pasto.caja((-medio, medio), (y - VUELO, y_sig), (alto, alto + PASTO), caras=caras)
         pasto.rect(2, -1, alto, (-medio, medio), (y - VUELO, y))
-        colgantes(pasto, detalle, rng, estilo, y, alto)
+        colgantes(pasto, detalle, rng, estilo, y, alto, -1, alto + PASTO, z0)
         encima(pasto, detalle, rng, estilo, alto + PASTO, y - VUELO + 0.3, y_sig - 0.6)
     # fondo y base
     risco.rect(1, 1, fondo, (0, ALTOS[-1]), (-medio, medio))
@@ -329,8 +371,8 @@ def pared_ladrillo(mats, zona=1, semilla=23):
     tapa.caja((-medio, medio), (-e - VUELO, e + VUELO), (PARED_ALTO, arriba), caras="xXyYZ")
     for y0, y1 in ((-e - VUELO, -e), (e, e + VUELO)):
         tapa.rect(2, -1, PARED_ALTO, (-medio, medio), (y0, y1))
-    colgantes(tapa, detalle, rng, estilo, -e, PARED_ALTO, -1)
-    colgantes(tapa, detalle, rng, estilo, e, PARED_ALTO, 1)
+    colgantes(tapa, detalle, rng, estilo, -e, PARED_ALTO, -1, PARED_ALTO + PARED_TAPA)
+    colgantes(tapa, detalle, rng, estilo, e, PARED_ALTO, 1, PARED_ALTO + PARED_TAPA)
     encima(tapa, detalle, rng, estilo, arriba, -e - VUELO + 0.3, e + VUELO - 0.3)
     piezas = [("Pared", pared, mats["risco"]), ("Tapa", tapa, mats["tapa"]), ("Detalle", detalle, mats["detalle"])]
     objs, conteo = mallas(piezas, MAX_PARED, "Pared_Ladrillo")
@@ -395,19 +437,39 @@ def adorno(det, rng, estilo, x0, x1, y0, y1, z, grande):
         else:
             rx, ry = lugar(w, min(d, 1.5))
             det.caja(rx, ry, (z, z + 0.3), caras=caras)
-    elif estilo == "lava":
-        for k in range(2 if grande else 1):  # grietas finitas que brillan
-            if rng.random() < 0.5:
-                rx, ry = lugar(rng.choice((2, 3, 4)), 0.4)
-            else:
-                rx, ry = lugar(0.4, rng.choice((2, 3)))
-            det.caja(rx, ry, (z, z + 0.06 + 0.03 * k), caras=caras)
     elif estilo == "cristal":
         rx, ry = lugar(1.6, 1.6)
         piezas = ((0, 0, 0.8, 2.2), (0.8, 0.3, 0.6, 1.4), (0.2, 0.9, 0.5, 1)) if grande else ((0, 0, 0.6, 1.2),)
         for dx, dy, a, h in piezas:
             h *= rng.choice((0.8, 1, 1.2))
             det.caja((rx[0] + dx, rx[0] + dx + a), (ry[0] + dy, ry[0] + dy + a), (z, z + h), caras=caras)
+
+
+def lava_losas(det, rng, losas):
+    """Lava de las losas del Volcán: un charco arriba de la losa de más arriba que se derrama por
+    el frente (y-) y baja por cada losa; en cada escalón se junta en un charquito y sigue, y al
+    llegar abajo queda colgando una gota (no se sale de la base)."""
+    tx0, tx1, ty0, _ = losas[-1]
+    ancho0 = 2
+    c = rng.uniform(tx0 + 1.8, tx1 - 1.8)
+    ztop = len(losas) * LOSA_ALTO
+    # charco arriba y derrame por el borde
+    det.caja((c - 1.6, c + 1.6), (ty0, ty0 + 2.2), (ztop, ztop + 0.12), caras="xXyYZ")
+    det.caja((c - 0.7, c + 1.9), (ty0 + 1.2, ty0 + 3), (ztop, ztop + 0.12), caras="xXyYZ")
+    det.caja((c - ancho0 / 2, c + ancho0 / 2), (ty0 - LOSA_RELIEVE - 0.15, ty0), (ztop - 0.4, ztop + 0.12), caras="yxXzZ")
+    for i in range(len(losas) - 1, -1, -1):
+        y0 = losas[i][2]
+        plano = y0 - LOSA_RELIEVE
+        z0, z1 = i * LOSA_ALTO, (i + 1) * LOSA_ALTO
+        arriba = z1 - 0.4 if i == len(losas) - 1 else z1
+        if i == 0:
+            chorro_lava(det, rng, c, plano, -1, arriba, 0.9, False, ancho0)
+        else:
+            chorro_lava(det, rng, c, plano, -1, arriba, z0, False, ancho0)
+            # charquito en el escalón de abajo (si sobresale) que une con el chorro siguiente
+            y_abajo = losas[i - 1][2] - LOSA_RELIEVE
+            if plano - 0.3 - y_abajo > 0.05:
+                det.caja((c - ancho0 / 2 - 0.6, c + ancho0 / 2 + 0.6), (y_abajo - 0.15, plano - 0.3), (z0, z0 + 0.15), caras="xXyYZ")
 
 
 def losas_piedra(mats, tam, zona=1):
@@ -441,6 +503,8 @@ def losas_piedra(mats, tam, zona=1):
             adorno(det, rng, estilo, bx0 + 0.2, bx1 - 0.2, by0 + 0.2, by1 - 0.2, z1, False)
         else:
             adorno(det, rng, estilo, x0 + 0.3, x1 - 0.3, y0 + 0.3, y1 - 0.3, z1, True)
+    if estilo == "lava":
+        lava_losas(det, rng, losas)
     nombre = f"Losas_{tam}"
     objs, conteo = mallas([("Piedra", piedra, mats["piedra"]), ("Detalle", det, mats["detalle"])], MAX_LOSAS, nombre)
     if sum(conteo.values()) > MAX_LOSAS:
@@ -453,12 +517,14 @@ def mats_losas(zona, studs=None):
     z = LOSAS_ZONAS[zona]
     if studs is None:
         return {"piedra": M.material(f"Losas_Zona{zona}", z["piedra"]), "detalle": M.material(f"Losas_Detalle_Zona{zona}", z["detalle"])}
-    det = (
-        M.material(f"LDet{zona}", z["detalle"], brillo=z["detalle"], fuerza_brillo=1.2)
-        if z["neon"]
-        else material_studs(f"LDet{zona}", z["detalle"], studs)
-    )
+    if z["estilo"] == "lava":
+        det = material_lava(f"LDet{zona}")
+    elif z["neon"]:
+        det = M.material(f"LDet{zona}", z["detalle"], brillo=z["detalle"], fuerza_brillo=1.2)
+    else:
+        det = material_studs(f"LDet{zona}", z["detalle"], studs)
     return {"piedra": material_studs(f"Losas{zona}", z["piedra"], studs), "detalle": det}
+
 
 # nombre -> (función, alto total en studs, fondo en studs)
 PIEZAS = {
@@ -496,6 +562,51 @@ def textura_studs(px=256):
     return imagen
 
 
+def textura_lava(px=256):
+    """LavaLiquida.png: lava derretida que se repite sin costura (TEJA x TEJA studs): manchas
+    naranjas y rojas con vetas amarillas brillantes entre ellas (como la lava de las capturas)."""
+    import numpy as np
+
+    rng = np.random.default_rng(7)
+    puntos = rng.uniform(0, px, (14, 2))
+    v, u = np.mgrid[0:px, 0:px].astype(np.float32) + 0.5
+    d1 = np.full((px, px), 1e9, dtype=np.float32)
+    d2 = np.full((px, px), 1e9, dtype=np.float32)
+    for pu, pv in puntos:
+        for du in (-px, 0, px):  # copias alrededor: así se repite sin costura
+            for dv in (-px, 0, px):
+                d = np.hypot(u - pu - du, v - pv - dv)
+                d2 = np.where(d < d1, d1, np.minimum(d2, d))
+                d1 = np.minimum(d1, d)
+    veta = np.clip(1 - (d2 - d1) / 9, 0, 1) ** 1.5  # 1 en el borde entre manchas
+    centro = np.clip(d1 / 38, 0, 1)  # 0 en el medio de cada mancha
+    rojo, naranja, amarillo = np.array([0.55, 0.06, 0.0]), np.array([1.0, 0.36, 0.0]), np.array([1.0, 0.9, 0.3])
+    base = rojo * (1 - centro[..., None]) + naranja * centro[..., None]
+    color = base * (1 - veta[..., None]) + amarillo * veta[..., None]
+    img = np.ones((px, px, 4), dtype=np.float32)
+    img[..., :3] = color
+    imagen = bpy.data.images.new("LavaLiquida", px, px)
+    imagen.pixels.foreach_set(img.ravel())
+    imagen.filepath_raw = str(M.TEXTURAS / "LavaLiquida.png")
+    imagen.file_format = "PNG"
+    imagen.save()
+    return imagen
+
+
+def material_lava(nombre):
+    """Para el render: la textura de lava, que además brilla (en Roblox la textura va en
+    TextureID del Detalle; ver ZONAS)."""
+    m = M.material(nombre, "#FF5A00", rugoso=0.3)
+    nodos, enlaces = m.node_tree.nodes, m.node_tree.links
+    tex = nodos.new("ShaderNodeTexImage")
+    tex.image = bpy.data.images.get("LavaLiquida") or textura_lava()
+    bsdf = nodos["Principled BSDF"]
+    enlaces.new(tex.outputs["Color"], bsdf.inputs["Base Color"])
+    enlaces.new(tex.outputs["Color"], bsdf.inputs["Emission Color"])
+    bsdf.inputs["Emission Strength"].default_value = 1.4
+    return m
+
+
 def material_studs(nombre, color, studs):
     """Para el render: color plano con la textura de studs encima (como la ve Roblox)."""
     m = M.material(nombre, color, rugoso=0.7)
@@ -520,7 +631,9 @@ def mats_render(studs, zona=1):
         "detalle": None,
     }
     if z["detalle"]:
-        if z["neon"]:
+        if z["estilo"] == "ceniza":
+            mats["detalle"] = material_lava(f"Detalle{zona}")
+        elif z["neon"]:
             mats["detalle"] = M.material(f"Detalle{zona}", z["detalle"], brillo=z["detalle"], fuerza_brillo=1.2)
         else:
             mats["detalle"] = material_studs(f"Detalle{zona}", z["detalle"], studs)
