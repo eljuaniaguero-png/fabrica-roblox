@@ -71,6 +71,9 @@ Piezas:
                  que salen de costado y suben en escalón (arte/referencias/cactus-*.webp). Tres
                  tamaños: Chico (4 studs de alto, 1 brazo), Mediano (7, 2 brazos) y Grande (11, 2
                  brazos). Malla Cactus_<tamaño>.
+  Arbol_Seco_Desierto  Dunas: como el Arbol_Seco de la Pradera, pero el tronco sube torcido (tramos
+                 inclinados para un lado y para el otro) y las ramas son más largas y con codos.
+                 Dos variantes (_1 y _2, unos 19 studs de alto). Malla Tronco.
                  Cada árbol de la Pradera (y el arbusto) tiene 3 variantes (Arbol_Grande_1, _2 y _3...).
   Roca_Meteorito solo Abismo: media bola chata de bloques de 2 studs azul noche, con un cráter
                  arriba (corrido a un costado) que brilla violeta en el fondo y estrellitas lilas
@@ -1234,6 +1237,31 @@ SECOS = [
         ],
     },
 ]
+SECOS_DESIERTO = [  # el tronco también es una "rama": tramos inclinados que van y vuelven
+    {  # 1: tronco en zigzag, rama larga con codo a cada lado y una chica al frente
+        "tronco": [
+            ((-4, 4), (-3.5, 3.5), (0, 1.5)),  # base y raíces
+            ((-5.5, -3.5), (-1.5, 1), (0, 1)),
+            ((3.5, 5.5), (-1, 1.5), (0, 1)),
+            ((-1, 1.5), (-4.5, -3), (0, 0.8)),
+            *rama_seca((0, 0, 0.5), 0, [(8, 7, 3), (-10, 6, 2.6), (8, 5, 2.2), (-6, 3, 1.6)]),
+            *rama_seca((0.4, 0, 8), 180, [(50, 7, 2), (25, 6, 1.7), (50, 3, 1.3)]),
+            *rama_seca((0.2, 0, 11), 0, [(45, 7, 2), (20, 5, 1.6), (40, 3, 1.2)]),
+            *rama_seca((0.5, -0.3, 14), -70, [(40, 4, 1.4)]),
+        ],
+    },
+    {  # 2: tronco que se tuerce hacia atrás, una rama muy larga a la derecha y dos más cortas
+        "tronco": [
+            ((-3.5, 3.5), (-3, 3), (0, 1.5)),
+            ((2.5, 4.5), (-2, 0), (0, 1)),  # más baja que la base: si no, las tapas se pisan
+            ((-4.5, -2.5), (0, 2), (0, 1)),
+            *rama_seca((0, 0, 0.5), 200, [(12, 7, 2.8), (-15, 6, 2.4), (10, 5, 2), (-8, 3, 1.5)]),
+            *rama_seca((-0.8, -0.3, 7), 20, [(60, 9, 2), (30, 5, 1.6), (60, 3, 1.2)]),
+            *rama_seca((-0.5, 0, 10), 170, [(45, 7, 1.8), (20, 5, 1.5)]),
+            *rama_seca((-0.6, 0, 13.5), 100, [(35, 5, 1.4)]),
+        ],
+    },
+]
 ARBUSTOS = [  # columnitas de bloques verdes de 2 studs apilados y corridos, como en las capturas
     {  # 1: 3 bloques en una torre que se corre
         "hojas": [((-1.5, 0.5), (-1, 1), (0, 2)), ((-1, 1), (-0.5, 1.5), (2, 4)), ((-0.5, 1.5), (-1, 1), (4, 5))],
@@ -1268,6 +1296,8 @@ ARBOLES_PRADERA = {
     "Arbol_Rosa": (ROSAS, 9, 2000, COLORES_ROSA, "Rosa"),
     "Arbol_Seco": (SECOS, 16, 2500, COLORES_SECO, "Seco"),
     "Arbusto": (ARBUSTOS, 5, 600, {"hojas": GRANDE_COPA}, "Arbusto"),
+    # de las Dunas, pero se arma igual (va en Deco_Zona2.fbx)
+    "Arbol_Seco_Desierto": (SECOS_DESIERTO, 19, 2500, COLORES_SECO, "Seco"),
 }
 
 
@@ -1839,6 +1869,8 @@ REFERENCIAS = {
     "Piramide": ("mapa-2.png", "estilo-2.png"),
     "Duna": ("mapa-2.png", "estilo-2.png"),
     "Cactus": ("cactus-1.webp", "cactus-2.webp"),
+    # los árboles secos de las Dunas
+    "Arbol_Seco_Desierto": ("mapa-2.png", "cactus-1.webp"),
 }
 
 
@@ -1959,15 +1991,19 @@ def render_arbol_pradera(pieza):
     frente y de costado, al lado de las referencias."""
     variantes, alto, *_ = ARBOLES_PRADERA[pieza]
     alto *= M.STUD
-    paso = {"Arbol_Grande": 22, "Arbol_Seco": 17, "Arbusto": 9}.get(pieza, 15)  # studs entre variantes
+    paso = {"Arbol_Grande": 22, "Arbol_Seco": 17, "Arbusto": 9, "Arbol_Seco_Desierto": 24}.get(pieza, 15)  # studs entre variantes
     for vista in ("frente", "costado"):
         M.limpiar_escena()
         escena = M.escena_render(1280, 720)
+        if pieza.endswith("_Desierto"):  # piso de arena, como en las Dunas
+            tablero = bpy.data.materials["Piso"].node_tree.nodes["Checker Texture"]
+            tablero.inputs["Color1"].default_value = (*M.hex_a_rgb(ZONAS[2]["tapa"]), 1)
+            tablero.inputs["Color2"].default_value = (*M.hex_a_rgb("#EACB72"), 1)
         mats = mats_pradera(pieza, textura_studs())
         conteos = []
         for i in range(len(variantes)):
             objs, conteo = arbol_pradera(mats, pieza, i + 1)
-            M.mover(objs, (i - 1) * paso * M.STUD)
+            M.mover(objs, (i - (len(variantes) - 1) / 2) * paso * M.STUD)
             conteos.append(conteo)
         giro = -18 if vista == "frente" else 72
         ancho = max(alto * 1.25 * 16 / 9, 3.2 * paso * M.STUD)
@@ -2461,7 +2497,8 @@ def exportar_zona2():
     """Deco_Zona2.fbx: piezas que son solo de las Dunas. Raíz Deco_Zona2 con un vacío Piramide y
     su malla Piramide_Piramide, y uno por tamaño de duna (Duna_Chica, Duna_Mediana, Duna_Grande)
     con su malla Duna_Chica_Arena..., y uno por tamaño de cactus (Cactus_Chico...) con su malla
-    Cactus_Chico_Cactus... Sin textura: el juego pone el color y TextureID = Studs.png."""
+    Cactus_Chico_Cactus..., y Arbol_Seco_Desierto_1 y _2 con su malla Arbol_Seco_Desierto_1_Tronco...
+    Sin textura: el juego pone el color y TextureID = Studs.png."""
     M.limpiar_escena()
     raiz = bpy.data.objects.new("Deco_Zona2", None)
     bpy.context.scene.collection.objects.link(raiz)
@@ -2488,6 +2525,18 @@ def exportar_zona2():
                 o.parent = vacio
                 o.name = o.data.name = f"{pieza}_{tam}_{malla}"
             print("TRIANGULOS", f"{pieza}_{tam}", conteo, "total", sum(conteo.values()))
+    # los árboles secos: igual que los de la Pradera (Arbol_Seco_Desierto_1 con ..._1_Tronco)
+    pieza = "Arbol_Seco_Desierto"
+    for v in range(1, len(ARBOLES_PRADERA[pieza][0]) + 1):
+        nombre = f"{pieza}_{v}"
+        vacio = bpy.data.objects.new(nombre, None)
+        bpy.context.scene.collection.objects.link(vacio)
+        vacio.parent = raiz
+        objs, conteo = arbol_pradera(mats_pradera(pieza), pieza, v)
+        for o in objs:
+            o.parent = vacio
+            o.name = o.data.name = f"{nombre}_{o.name.split('.')[0]}"
+        print("TRIANGULOS", nombre, conteo, "total", sum(conteo.values()))
     bpy.ops.object.select_all(action="DESELECT")
     for o in [raiz, *raiz.children_recursive]:
         o.select_set(True)
