@@ -47,6 +47,10 @@ Piezas:
   Arbol_Rosa     Pradera (va al fondo): el mediano como un cerezo de bloques: tronco marrón rojizo,
                  caja de abajo fucsia y escalón violeta. Mallas Tronco, Sombra, CopaFucsia y
                  CopaVioleta.
+  Arbol_Seco     Pradera: tronco de ladrillos marrón violeta con base en escalones y 3 ramas de
+                 cajas inclinadas que terminan en punta, sin hojas (16 studs de alto; referencia
+                 arte/referencias/arbol-seco-*.png). Malla Tronco.
+                 Cada árbol de la Pradera tiene 3 variantes (Arbol_Grande_1, _2 y _3...).
   Roca_Meteorito solo Abismo: media bola chata de bloques de 2 studs azul noche, con un cráter
                  arriba (corrido a un costado) que brilla violeta en el fondo y estrellitas lilas
                  (Neon) en los costados (arte/referencias/abismo-1.png). Dos tamaños: Chico (12
@@ -190,6 +194,37 @@ class Malla:
             signo = 1 if letra.isupper() else -1
             a, b = self.EJES[eje]
             self.rect(eje, signo, rangos[eje][1 if signo > 0 else 0], rangos[a], rangos[b])
+
+    def caja_girada(self, base, largo, ancho, rumbo, inclinacion):
+        """Caja de ancho x ancho x largo que sale de `base` (centro de su cara de abajo, en studs)
+        inclinada `inclinacion` grados desde la vertical hacia `rumbo` (grados en el piso, 0 = +x).
+        Los studs siguen a la caja (sus UV se cortan cada TEJA studs desde su propia esquina)."""
+        from mathutils import Matrix, Vector
+
+        giro = Matrix.Rotation(math.radians(rumbo), 3, "Z") @ Matrix.Rotation(math.radians(inclinacion), 3, "Y")
+        h = ancho / 2
+        rangos = ((-h, h), (-h, h), (0, largo))
+        for eje in range(3):
+            a, b = self.EJES[eje]
+            for signo in (-1, 1):
+                fijo = rangos[eje][1 if signo > 0 else 0]
+                # en la caja, los cortes de la textura empiezan en su esquina
+                for a0, a1 in cortes(0, rangos[a][1] - rangos[a][0]):
+                    for b0, b1 in cortes(0, rangos[b][1] - rangos[b][0]):
+                        ta, tb = math.floor(a0 / TEJA + 1e-6) * TEJA, math.floor(b0 / TEJA + 1e-6) * TEJA
+                        esquinas = [(a0, b0), (a1, b0), (a1, b1), (a0, b1)]
+                        if signo < 0:
+                            esquinas.reverse()
+                        vs, uvs = [], []
+                        for ca, cb in esquinas:
+                            p = Vector((0.0, 0.0, 0.0))
+                            p[eje], p[a], p[b] = fijo, ca + rangos[a][0], cb + rangos[b][0]
+                            q = Vector(base) + giro @ p
+                            vs.append(self.bm.verts.new([c * M.STUD for c in q]))
+                            uvs.append(((ca - ta) / TEJA, (cb - tb) / TEJA))
+                        cara = self.bm.faces.new(vs)
+                        for loop, uv in zip(cara.loops, uvs):
+                            loop[self.uv].uv = uv
 
     def objeto(self, nombre, mat):
         malla = bpy.data.meshes.new(nombre)
@@ -1031,80 +1066,182 @@ def mats_arbol(studs=None):
     return mats
 
 
-# Arbol_Grande (Pradera): como los árboles de las capturas (arte/referencias/estilo-1.png y
-# mapa-1.png): tronco grueso bordó en escalones que se abre en 2 ramas, una losa verde oscuro de
-# sombra abajo de la copa y 4 cajas verdes corridas y en escalones (la de la izquierda sobresale
-# de costado). 14 studs de alto, 17 de ancho.
+# Árboles de la Pradera (zona 1), como los de las capturas (arte/referencias/estilo-1.png y
+# mapa-1.png): cajas en studs ((x0, x1), (y0, y1), (z0, z1)), una lista por malla. Cada tipo tiene
+# 3 variantes; pivote en el centro de la base.
+#   Arbol_Grande  (14 studs) tronco grueso bordó que se abre en ramas, losa de sombra y copa de
+#                 4 cajas verdes corridas en escalones, alguna que sobresale.
+#   Arbol_Mediano (9) tronco recto y 2 cajas de copa en escalón.
+#   Arbol_Rosa    (9) el mediano como un cerezo de bloques: abajo fucsia, el escalón violeta.
+#   Arbol_Seco    (16) tronco de ladrillos marrón violeta en punta, con base en escalones y 3 ramas
+#                 de cajas inclinadas que terminan en punta, sin hojas (arte/referencias/arbol-seco-*.png).
 GRANDE_TRONCO = "#B0414E"  # bordó, como los troncos del juego
 GRANDE_SOMBRA = "#2F8F3A"  # HojasOscuras de mapa.py
 GRANDE_COPA = "#66C23A"
-# cajas en studs: ((x0, x1), (y0, y1), (z0, z1))
-GRANDE_CAJAS = {
-    "tronco": [
-        ((-4, 4), (-3, 3), (0, 1)),  # raíces
-        ((-3, 3), (-2.5, 2.5), (1, 2)),
-        ((-2, 2), (-2, 2), (2, 5)),
-        ((-3.5, -0.5), (-1.5, 1.5), (5, 6.5)),  # rama izquierda
-        ((-5, -2), (-1.5, 1.5), (6.5, 8.5)),
-        ((0.5, 3.5), (-1.5, 1.5), (5, 6.5)),  # rama derecha
-        ((2, 5), (-1.5, 1.5), (6.5, 8.5)),
-    ],
-    "sombra": [((-6, 6), (-3.5, 3), (8, 9))],
-    "copa": [
-        ((-7, 0.5), (-4, 4.5), (8.5, 13)),  # la grande de la izquierda
-        ((-1, 7.5), (-5, 3), (9, 12.5)),  # la de la derecha, más baja y corrida al frente
-        ((-4.5, 2.5), (-3, 3), (12.5, 14)),  # escalón de arriba
-        ((-10, -6), (-2.5, 2), (9.5, 12)),  # la que sobresale de costado
-    ],
-}
-MAX_GRANDE = 3000  # por pieza (sumando sus mallas)
-# Arbol_Mediano (Pradera): como el grande, con tronco recto y 2 cajas de copa en escalón.
-# 9 studs de alto, 10 de ancho.
-MEDIANO_CAJAS = {
-    "tronco": [
-        ((-3, 3), (-2, 2), (0, 1)),  # raíces
-        ((-2, 2), (-1.5, 1.5), (1, 5)),
-    ],
-    "sombra": [((-4, 4), (-3, 2.5), (4.5, 5.5))],
-    "copa": [
-        ((-5, 1.5), (-3.5, 3.5), (5, 7.5)),  # la de abajo, corrida a la izquierda
-        ((-1, 5), (-3, 2.5), (6.5, 9)),  # el escalón, más alto y a la derecha
-    ],
-}
-MAX_MEDIANO = 2000
-# Arbol_Rosa (Pradera, va al fondo): el mediano como un cerezo de bloques (capturas del juego):
-# tronco marrón rojizo, la caja de abajo fucsia y el escalón violeta, sombra violeta oscuro.
-ROSA_CAJAS = {
-    "tronco": MEDIANO_CAJAS["tronco"],
-    "sombra": MEDIANO_CAJAS["sombra"],
-    "fucsia": MEDIANO_CAJAS["copa"][:1],
-    "violeta": MEDIANO_CAJAS["copa"][1:],
-}
+GRANDES = [
+    {  # 1: se abre en V, la copa sobresale a la izquierda
+        "tronco": [
+            ((-4, 4), (-3, 3), (0, 1)),  # raíces
+            ((-3, 3), (-2.5, 2.5), (1, 2)),
+            ((-2, 2), (-2, 2), (2, 5)),
+            ((-3.5, -0.5), (-1.5, 1.5), (5, 6.5)),  # rama izquierda
+            ((-5, -2), (-1.5, 1.5), (6.5, 8.5)),
+            ((0.5, 3.5), (-1.5, 1.5), (5, 6.5)),  # rama derecha
+            ((2, 5), (-1.5, 1.5), (6.5, 8.5)),
+        ],
+        "sombra": [((-6, 6), (-3.5, 3), (8, 9))],
+        "copa": [
+            ((-7, 0.5), (-4, 4.5), (8.5, 13)),  # la grande de la izquierda
+            ((-1, 7.5), (-5, 3), (9, 12.5)),  # la de la derecha, más baja y corrida al frente
+            ((-4.5, 2.5), (-3, 3), (12.5, 14)),  # escalón de arriba
+            ((-10, -6), (-2.5, 2), (9.5, 12)),  # la que sobresale de costado
+        ],
+    },
+    {  # 2: el tronco se corre a la derecha, una rama sola a la izquierda, sobresale a la derecha
+        "tronco": [
+            ((-4, 4), (-3, 3), (0, 1)),
+            ((-3, 3), (-2.5, 2.5), (1, 2.5)),
+            ((-2, 2), (-2, 2), (2.5, 6)),
+            ((-1, 3), (-2, 2), (6, 8.5)),
+            ((-4, -1.5), (-1, 1), (4.5, 6.5)),  # rama izquierda
+            ((-5.5, -3), (-1, 1), (6.5, 8.5)),
+        ],
+        "sombra": [((-6, 6.5), (-3.5, 3.5), (8, 9))],
+        "copa": [
+            ((-6.5, 3), (-4.5, 4), (8.5, 12)),
+            ((1.5, 9.5), (-3.5, 3.5), (9.5, 12)),  # la que sobresale de costado
+            ((-4, 4), (-3, 3), (11.5, 14)),  # escalón de arriba
+            ((-8.5, -4.5), (-2.5, 2.5), (9, 11)),
+        ],
+    },
+    {  # 3: copa ancha y chata en dos pisos, con una caja que sale al frente
+        "tronco": [
+            ((-3.5, 3.5), (-3.5, 3.5), (0, 1)),
+            ((-2.5, 2.5), (-2, 2), (1, 6.5)),
+            ((-4, -1), (-1.5, 1.5), (6, 7.5)),  # rama izquierda
+            ((-5.5, -2.5), (-1.5, 1.5), (7.5, 9)),
+            ((1, 4), (-1.5, 1.5), (6, 7.5)),  # rama derecha
+            ((2.5, 5.5), (-1.5, 1.5), (7.5, 9)),
+        ],
+        "sombra": [((-7, 7), (-3.5, 3.5), (8.5, 9.5))],
+        "copa": [
+            ((-8, 8), (-4, 4), (9, 12)),
+            ((-5, 2.5), (-3, 3.5), (12, 14)),  # escalón de arriba, corrido a la izquierda
+            ((2.5, 6), (-2, 2.5), (11.5, 13)),
+            ((-2.5, 2.5), (-6, -3.5), (9.5, 11.5)),  # la que sale al frente
+        ],
+    },
+]
+MEDIANOS = [
+    {  # 1: abajo a la izquierda, el escalón a la derecha
+        "tronco": [((-3, 3), (-2, 2), (0, 1)), ((-2, 2), (-1.5, 1.5), (1, 5))],
+        "sombra": [((-4, 4), (-3, 2.5), (4.5, 5.5))],
+        "copa": [((-5, 1.5), (-3.5, 3.5), (5, 7.5)), ((-1, 5), (-3, 2.5), (6.5, 9))],
+    },
+    {  # 2: al revés, y el tronco con un escalón
+        "tronco": [((-3, 3), (-2, 2), (0, 1)), ((-2, 2), (-1.5, 1.5), (1, 3)), ((-1.5, 2), (-1.5, 1.5), (3, 5))],
+        "sombra": [((-4, 4.5), (-2.5, 3), (4.5, 5.5))],
+        "copa": [((-1.5, 5), (-3.5, 3.5), (5, 7.5)), ((-5, 1), (-2.5, 3), (6.5, 9))],
+    },
+    {  # 3: en pirámide, el escalón centrado y corrido atrás
+        "tronco": [((-2.5, 2.5), (-2.5, 2.5), (0, 1)), ((-1.5, 1.5), (-1.5, 1.5), (1, 5))],
+        "sombra": [((-4, 4), (-3, 3), (4.5, 5.5))],
+        "copa": [((-4.5, 4.5), (-3.5, 3.5), (5, 7.5)), ((-2.5, 2.5), (-2, 3), (7, 9))],
+    },
+]
+# el rosa: la caja de abajo fucsia y el escalón violeta
+ROSAS = [{"tronco": m["tronco"], "sombra": m["sombra"], "fucsia": m["copa"][:1], "violeta": m["copa"][1:]} for m in MEDIANOS]
+
+
+def rama_seca(base, rumbo, tramos):
+    """Rama de cajas inclinadas (arte/referencias/arbol-seco-*.png): sale de `base` (studs) hacia
+    `rumbo` (grados en el piso, 0 = +x) y cada tramo (inclinación desde la vertical, largo,
+    ancho) arranca cerca de la punta del anterior; el último, más angosto, es la punta."""
+    x, y, z = base
+    cajas = []
+    for inclinacion, largo, ancho in tramos:
+        cajas.append(("girada", (x, y, z), largo, ancho, rumbo, inclinacion))
+        t, r = math.radians(inclinacion), math.radians(rumbo)
+        sigue = largo - ancho * 0.4
+        x += sigue * math.sin(t) * math.cos(r)
+        y += sigue * math.sin(t) * math.sin(r)
+        z += sigue * math.cos(t)
+    return cajas
+
+
+SECOS = [
+    {  # 1: tronco alto en punta, una rama larga a cada lado y una chica al frente
+        "tronco": [
+            ((-4, 4), (-3.5, 3.5), (0, 2)),  # base en escalones
+            ((-5, -3), (-2, 1), (0, 1)),
+            ((3, 5), (-1, 2), (0, 1.5)),
+            ((-1, 2), (-4.5, -3.5), (0, 1)),
+            ((-3, 3), (-3, 3), (2, 5)),
+            ((-2, 2), (-2, 2), (5, 13)),
+            ((-1.5, 1.5), (-1.5, 1.5), (13, 15)),
+            ((-1, 1), (-1, 1), (15, 16)),  # punta
+            *rama_seca((-1, 0, 7), 180, [(50, 7, 2.5), (30, 5, 2)]),
+            *rama_seca((1, 0.3, 8), 0, [(45, 6, 2.2), (25, 4, 1.8)]),
+            *rama_seca((0.5, -1, 10.5), -60, [(35, 3.5, 1.6)]),
+        ],
+    },
+    {  # 2: tronco más fino, dos ramas a la derecha y una a la izquierda
+        "tronco": [
+            ((-3.5, 3.5), (-3, 3), (0, 1.5)),
+            ((-2.5, 2.5), (-2.5, 2.5), (1.5, 4.5)),
+            ((2, 4), (-2, 0), (0, 2.5)),
+            ((-4, -2.5), (0, 2), (0, 1)),
+            ((-1.5, 1.5), (-1.5, 1.5), (4.5, 14)),
+            ((-1, 1), (-1, 1), (14, 16)),  # punta
+            *rama_seca((1, 0, 6), 10, [(55, 6, 2), (30, 5, 1.6)]),
+            *rama_seca((1, 0, 10), -10, [(40, 4, 1.8)]),
+            *rama_seca((-1, 0, 8), 190, [(40, 6, 2), (20, 4, 1.6)]),
+        ],
+    },
+    {  # 3: Y: tronco corto que se abre en dos brazos gruesos, y uno chico al frente
+        "tronco": [
+            ((-4, 4), (-3.5, 3.5), (0, 1.5)),
+            ((-3, 3), (-3, 3), (1.5, 4)),
+            ((3, 4.5), (-2, 1), (0, 1)),
+            ((-1.5, 1), (-4.5, -3.5), (0, 1)),
+            ((-2, 2), (-2, 2), (4, 7)),
+            *rama_seca((-0.5, 0, 6), 180, [(20, 5, 3), (35, 4, 2.4), (15, 3, 1.8)]),
+            *rama_seca((0.5, 0, 6), 0, [(25, 5, 3), (10, 4, 2.4)]),
+            *rama_seca((0, -0.5, 8), -90, [(40, 3.5, 1.6)]),
+        ],
+    },
+]
 COLORES_VERDE = {"tronco": GRANDE_TRONCO, "sombra": GRANDE_SOMBRA, "copa": GRANDE_COPA}
 COLORES_ROSA = {"tronco": "#8E4A42", "sombra": "#8A2C9E", "fucsia": "#E05CEB", "violeta": "#B04DFF"}  # violeta del arcoíris
+COLORES_SECO = {"tronco": "#7A5A5C"}  # marrón violeta, como los árboles secos del juego
 # nombre de cada malla
 MALLAS_ARBOL = {"tronco": "Tronco", "sombra": "Sombra", "copa": "Copa", "fucsia": "CopaFucsia", "violeta": "CopaVioleta"}
-# nombre -> (cajas, alto en studs, máximo de triángulos, colores, prefijo de los materiales)
+# tipo -> (variantes, alto en studs, máximo de triángulos, colores, prefijo de los materiales)
 ARBOLES_PRADERA = {
-    "Arbol_Grande": (GRANDE_CAJAS, 14, MAX_GRANDE, COLORES_VERDE, "Grande"),
-    "Arbol_Mediano": (MEDIANO_CAJAS, 9, MAX_MEDIANO, COLORES_VERDE, "Grande"),
-    "Arbol_Rosa": (ROSA_CAJAS, 9, MAX_MEDIANO, COLORES_ROSA, "Rosa"),
+    "Arbol_Grande": (GRANDES, 14, 3000, COLORES_VERDE, "Grande"),
+    "Arbol_Mediano": (MEDIANOS, 9, 2000, COLORES_VERDE, "Grande"),
+    "Arbol_Rosa": (ROSAS, 9, 2000, COLORES_ROSA, "Rosa"),
+    "Arbol_Seco": (SECOS, 16, 2500, COLORES_SECO, "Seco"),
 }
 
 
-def arbol_pradera(mats, pieza="Arbol_Grande"):
-    """Un árbol de ARBOLES_PRADERA: una malla por clave de sus cajas (Tronco, Sombra y Copa, o
-    CopaFucsia y CopaVioleta en el rosa). Pivote en el centro de la base."""
-    cajas, _, tope, _, _ = ARBOLES_PRADERA[pieza]
+def arbol_pradera(mats, pieza="Arbol_Grande", variante=1):
+    """Una variante (1, 2 o 3) de un árbol de ARBOLES_PRADERA: una malla por clave de sus cajas
+    (Tronco, Sombra y Copa; CopaFucsia y CopaVioleta en el rosa; solo Tronco en el seco)."""
+    variantes, _, tope, _, _ = ARBOLES_PRADERA[pieza]
     piezas = []
-    for clave, lista in cajas.items():
+    for clave, lista in variantes[variante - 1].items():
         m = Malla()
-        for x, y, z in lista:
-            m.caja(x, y, z)
+        for c in lista:
+            if c[0] == "girada":
+                m.caja_girada(*c[1:])
+            else:
+                m.caja(*c)
         piezas.append((MALLAS_ARBOL[clave], m, mats[clave]))
-    objs, conteo = mallas(piezas, tope, pieza)
+    nombre = f"{pieza}_{variante}"
+    objs, conteo = mallas(piezas, tope, nombre)
     if sum(conteo.values()) > tope:
-        raise RuntimeError(f"{pieza}: {sum(conteo.values())} triángulos (máximo {tope})")
+        raise RuntimeError(f"{nombre}: {sum(conteo.values())} triángulos (máximo {tope})")
     return objs, conteo
 
 
@@ -1398,6 +1535,8 @@ REFERENCIAS = {
     "Arbol_Mediano": (("estilo-1.png", (0.18, 0.38, 0.32, 0.64)), ("mapa-1.png", (0.19, 0.40, 0.32, 0.64))),
     # la captura entera (los árboles rosas del fondo) y un acercamiento
     "Arbol_Rosa": ("estilo-1.png", ("estilo-1.png", (0.40, 0.33, 0.60, 0.58))),
+    # los árboles secos de la derecha de cada captura
+    "Arbol_Seco": ("arbol-seco-1.png", "arbol-seco-2.png"),
 }
 
 
@@ -1514,17 +1653,27 @@ def render_arbol():
 
 
 def render_arbol_pradera(pieza):
-    """Arbol_Grande o Arbol_Mediano de frente y de costado, al lado de las referencias."""
-    alto = ARBOLES_PRADERA[pieza][1] * M.STUD
+    """Las 3 variantes de un árbol de la Pradera en fila (1, 2, 3 de izquierda a derecha), de
+    frente y de costado, al lado de las referencias."""
+    variantes, alto, *_ = ARBOLES_PRADERA[pieza]
+    alto *= M.STUD
+    paso = {"Arbol_Grande": 22, "Arbol_Seco": 17}.get(pieza, 15)  # studs entre variantes
     for vista in ("frente", "costado"):
         M.limpiar_escena()
         escena = M.escena_render(1280, 720)
-        objs, conteo = arbol_pradera(mats_pradera(pieza, textura_studs()), pieza)
+        mats = mats_pradera(pieza, textura_studs())
+        conteos = []
+        for i in range(len(variantes)):
+            objs, conteo = arbol_pradera(mats, pieza, i + 1)
+            M.mover(objs, (i - 1) * paso * M.STUD)
+            conteos.append(conteo)
         giro = -18 if vista == "frente" else 72
-        camara_orto(escena, (0, 0, alto * 0.5), alto * 1.25 * 16 / 9, 10, giro)
+        ancho = max(alto * 1.25 * 16 / 9, 3.2 * paso * M.STUD)
+        camara_orto(escena, (0, 0, alto * 0.5), ancho, 10, giro)
         M.render(f"{pieza.lower()}_{vista}")
     comparar(pieza)
-    print("TRIANGULOS", pieza, conteo, "total", sum(conteo.values()))
+    for i, conteo in enumerate(conteos):
+        print("TRIANGULOS", f"{pieza}_{i + 1}", conteo, "total", sum(conteo.values()))
 
 
 def noche_abismo(escena):
@@ -1855,25 +2004,27 @@ def exportar_zona5():
     print("  FBX Deco_Zona5.fbx")
 
 
-EXPORTAR_ZONA1 = ["Arbol_Grande", "Arbol_Mediano", "Arbol_Rosa"]  # las aprobadas
+EXPORTAR_ZONA1 = ["Arbol_Grande", "Arbol_Mediano", "Arbol_Rosa"]  # los tipos aprobados
 
 
 def exportar_zona1():
     """Deco_Zona1.fbx: piezas que son solo de la Pradera. Raíz Deco_Zona1 con un vacío por
-    árbol (Arbol_Grande...) y sus mallas Arbol_Grande_Tronco, _Sombra y _Copa. Sin textura: el
-    juego pone el color y TextureID = Studs.png en las tres."""
+    variante de cada árbol (Arbol_Grande_1, _2, _3...) y sus mallas (Arbol_Grande_1_Tronco,
+    _Sombra, _Copa...). Sin textura: el juego pone el color y TextureID = Studs.png en todas."""
     M.limpiar_escena()
     raiz = bpy.data.objects.new("Deco_Zona1", None)
     bpy.context.scene.collection.objects.link(raiz)
     for pieza in EXPORTAR_ZONA1:
-        vacio = bpy.data.objects.new(pieza, None)
-        bpy.context.scene.collection.objects.link(vacio)
-        vacio.parent = raiz
-        objs, conteo = arbol_pradera(mats_pradera(pieza), pieza)
-        for o in objs:
-            o.parent = vacio
-            o.name = o.data.name = f"{pieza}_{o.name.split('.')[0]}"
-        print("TRIANGULOS", pieza, conteo, "total", sum(conteo.values()))
+        for v in range(1, len(ARBOLES_PRADERA[pieza][0]) + 1):
+            nombre = f"{pieza}_{v}"
+            vacio = bpy.data.objects.new(nombre, None)
+            bpy.context.scene.collection.objects.link(vacio)
+            vacio.parent = raiz
+            objs, conteo = arbol_pradera(mats_pradera(pieza), pieza, v)
+            for o in objs:
+                o.parent = vacio
+                o.name = o.data.name = f"{nombre}_{o.name.split('.')[0]}"
+            print("TRIANGULOS", nombre, conteo, "total", sum(conteo.values()))
     bpy.ops.object.select_all(action="DESELECT")
     for o in [raiz, *raiz.children_recursive]:
         o.select_set(True)
