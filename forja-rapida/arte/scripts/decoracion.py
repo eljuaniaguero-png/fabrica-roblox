@@ -50,7 +50,9 @@ Piezas:
   Arbol_Seco     Pradera: tronco de ladrillos marrón violeta con base en escalones y 3 ramas de
                  cajas inclinadas que terminan en punta, sin hojas (16 studs de alto; referencia
                  arte/referencias/arbol-seco-*.png). Malla Tronco.
-                 Cada árbol de la Pradera tiene 3 variantes (Arbol_Grande_1, _2 y _3...).
+  Arbusto        Pradera: arbustito de 3 a 5 bloques verdes apilados y corridos (5 studs de
+                 alto). Malla Hojas.
+                 Cada árbol de la Pradera (y el arbusto) tiene 3 variantes (Arbol_Grande_1, _2 y _3...).
   Roca_Meteorito solo Abismo: media bola chata de bloques de 2 studs azul noche, con un cráter
                  arriba (corrido a un costado) que brilla violeta en el fondo y estrellitas lilas
                  (Neon) en los costados (arte/referencias/abismo-1.png). Dos tamaños: Chico (12
@@ -1073,6 +1075,7 @@ def mats_arbol(studs=None):
 #                 4 cajas verdes corridas en escalones, alguna que sobresale.
 #   Arbol_Mediano (9) tronco recto y 2 cajas de copa en escalón.
 #   Arbol_Rosa    (9) el mediano como un cerezo de bloques: abajo fucsia, el escalón violeta.
+#   Arbusto       (5) 3 a 5 bloques verdes apilados y corridos (malla Hojas).
 #   Arbol_Seco    (16) tronco de ladrillos marrón violeta en punta, con base en escalones y 3 ramas
 #                 de cajas inclinadas que terminan en punta, sin hojas (arte/referencias/arbol-seco-*.png).
 GRANDE_TRONCO = "#B0414E"  # bordó, como los troncos del juego
@@ -1211,17 +1214,40 @@ SECOS = [
         ],
     },
 ]
+ARBUSTOS = [  # columnitas de bloques verdes de 2 studs apilados y corridos, como en las capturas
+    {  # 1: 3 bloques en una torre que se corre
+        "hojas": [((-1.5, 0.5), (-1, 1), (0, 2)), ((-1, 1), (-0.5, 1.5), (2, 4)), ((-0.5, 1.5), (-1, 1), (4, 5))],
+    },
+    {  # 2: 4 bloques en dos columnas
+        "hojas": [
+            ((-3, -1), (-1, 1), (0, 2)),
+            ((-2.5, -0.5), (-1, 1), (2, 4)),
+            ((0, 2), (-0.5, 1.5), (0, 2)),
+            ((0.5, 2.5), (-0.5, 1.5), (2, 3.5)),
+        ],
+    },
+    {  # 3: 5 bloques: dos columnas sobre un bloque bajo y uno chico al costado
+        "hojas": [
+            ((-2, 1.5), (-1.5, 1), (0, 1.5)),
+            ((-2, 0), (-1, 1), (1.5, 3.5)),
+            ((-1.5, 0.5), (-1, 1), (3.5, 5)),
+            ((0.5, 2.5), (-1, 1), (1.5, 3)),
+            ((2, 4), (-0.5, 1.5), (0, 1.5)),
+        ],
+    },
+]
 COLORES_VERDE = {"tronco": GRANDE_TRONCO, "sombra": GRANDE_SOMBRA, "copa": GRANDE_COPA}
 COLORES_ROSA = {"tronco": "#8E4A42", "sombra": "#8A2C9E", "fucsia": "#E05CEB", "violeta": "#B04DFF"}  # violeta del arcoíris
 COLORES_SECO = {"tronco": "#7A5A5C"}  # marrón violeta, como los árboles secos del juego
 # nombre de cada malla
-MALLAS_ARBOL = {"tronco": "Tronco", "sombra": "Sombra", "copa": "Copa", "fucsia": "CopaFucsia", "violeta": "CopaVioleta"}
+MALLAS_ARBOL = {"hojas": "Hojas", "tronco": "Tronco", "sombra": "Sombra", "copa": "Copa", "fucsia": "CopaFucsia", "violeta": "CopaVioleta"}
 # tipo -> (variantes, alto en studs, máximo de triángulos, colores, prefijo de los materiales)
 ARBOLES_PRADERA = {
     "Arbol_Grande": (GRANDES, 14, 3000, COLORES_VERDE, "Grande"),
     "Arbol_Mediano": (MEDIANOS, 9, 2000, COLORES_VERDE, "Grande"),
     "Arbol_Rosa": (ROSAS, 9, 2000, COLORES_ROSA, "Rosa"),
     "Arbol_Seco": (SECOS, 16, 2500, COLORES_SECO, "Seco"),
+    "Arbusto": (ARBUSTOS, 5, 600, {"hojas": GRANDE_COPA}, "Arbusto"),
 }
 
 
@@ -1537,6 +1563,8 @@ REFERENCIAS = {
     "Arbol_Rosa": ("estilo-1.png", ("estilo-1.png", (0.40, 0.33, 0.60, 0.58))),
     # los árboles secos de la derecha de cada captura
     "Arbol_Seco": ("arbol-seco-1.png", "arbol-seco-2.png"),
+    # los arbustitos de la izquierda de cada captura
+    "Arbusto": (("estilo-1.png", (0.18, 0.52, 0.36, 0.70)), ("mapa-1.png", (0.18, 0.47, 0.36, 0.62))),
 }
 
 
@@ -1657,7 +1685,7 @@ def render_arbol_pradera(pieza):
     frente y de costado, al lado de las referencias."""
     variantes, alto, *_ = ARBOLES_PRADERA[pieza]
     alto *= M.STUD
-    paso = {"Arbol_Grande": 22, "Arbol_Seco": 17}.get(pieza, 15)  # studs entre variantes
+    paso = {"Arbol_Grande": 22, "Arbol_Seco": 17, "Arbusto": 9}.get(pieza, 15)  # studs entre variantes
     for vista in ("frente", "costado"):
         M.limpiar_escena()
         escena = M.escena_render(1280, 720)
