@@ -42,6 +42,8 @@ Piezas:
   Arbol_Grande   Pradera (zona 1): tronco grueso bordó en escalones que se abre en 2 ramas, losa
                  verde oscuro de sombra y copa de 4 cajas verdes corridas en escalones, una que
                  sobresale de costado (14 studs de alto). Mallas Tronco, Sombra y Copa.
+  Arbol_Mediano  Pradera: como el grande, con tronco recto y 2 cajas de copa en escalón (9 studs
+                 de alto). Mismas mallas.
   Roca_Meteorito solo Abismo: media bola chata de bloques de 2 studs azul noche, con un cráter
                  arriba (corrido a un costado) que brilla violeta en el fondo y estrellitas lilas
                  (Neon) en los costados (arte/referencias/abismo-1.png). Dos tamaños: Chico (12
@@ -1053,19 +1055,39 @@ GRANDE_CAJAS = {
     ],
 }
 MAX_GRANDE = 3000  # por pieza (sumando sus mallas)
+# Arbol_Mediano (Pradera): como el grande, con tronco recto y 2 cajas de copa en escalón.
+# 9 studs de alto, 10 de ancho.
+MEDIANO_CAJAS = {
+    "tronco": [
+        ((-3, 3), (-2, 2), (0, 1)),  # raíces
+        ((-2, 2), (-1.5, 1.5), (1, 5)),
+    ],
+    "sombra": [((-4, 4), (-3, 2.5), (4.5, 5.5))],
+    "copa": [
+        ((-5, 1.5), (-3.5, 3.5), (5, 7.5)),  # la de abajo, corrida a la izquierda
+        ((-1, 5), (-3, 2.5), (6.5, 9)),  # el escalón, más alto y a la derecha
+    ],
+}
+MAX_MEDIANO = 2000
+# nombre -> (cajas, alto en studs, máximo de triángulos)
+ARBOLES_PRADERA = {
+    "Arbol_Grande": (GRANDE_CAJAS, 14, MAX_GRANDE),
+    "Arbol_Mediano": (MEDIANO_CAJAS, 9, MAX_MEDIANO),
+}
 
 
-def arbol_grande(mats):
-    """Arbol_Grande: mallas Tronco, Sombra y Copa. Pivote en el centro de la base."""
+def arbol_pradera(mats, pieza="Arbol_Grande"):
+    """Arbol_Grande o Arbol_Mediano: mallas Tronco, Sombra y Copa. Pivote en el centro de la base."""
+    cajas, _, tope = ARBOLES_PRADERA[pieza]
     piezas = []
     for clave, nombre in (("tronco", "Tronco"), ("sombra", "Sombra"), ("copa", "Copa")):
         m = Malla()
-        for x, y, z in GRANDE_CAJAS[clave]:
+        for x, y, z in cajas[clave]:
             m.caja(x, y, z)
         piezas.append((nombre, m, mats[clave]))
-    objs, conteo = mallas(piezas, MAX_GRANDE, "Arbol_Grande")
-    if sum(conteo.values()) > MAX_GRANDE:
-        raise RuntimeError(f"Arbol_Grande: {sum(conteo.values())} triángulos (máximo {MAX_GRANDE})")
+    objs, conteo = mallas(piezas, tope, pieza)
+    if sum(conteo.values()) > tope:
+        raise RuntimeError(f"{pieza}: {sum(conteo.values())} triángulos (máximo {tope})")
     return objs, conteo
 
 
@@ -1356,6 +1378,7 @@ REFERENCIAS = {
     "Arbol_Nebuloso": ("arbol-1.png", ("estilo-1.png", (0.40, 0.33, 0.60, 0.58))),
     # acercamientos al árbol de la izquierda de cada captura
     "Arbol_Grande": (("estilo-1.png", (0.18, 0.38, 0.32, 0.64)), ("mapa-1.png", (0.19, 0.40, 0.32, 0.64))),
+    "Arbol_Mediano": (("estilo-1.png", (0.18, 0.38, 0.32, 0.64)), ("mapa-1.png", (0.19, 0.40, 0.32, 0.64))),
 }
 
 
@@ -1471,18 +1494,18 @@ def render_arbol():
     print("TRIANGULOS Arbol_Nebuloso", conteo, "total", sum(conteo.values()))
 
 
-def render_arbol_grande():
-    """Arbol_Grande de frente y de costado, al lado de las referencias."""
-    alto = 14 * M.STUD
+def render_arbol_pradera(pieza):
+    """Arbol_Grande o Arbol_Mediano de frente y de costado, al lado de las referencias."""
+    alto = ARBOLES_PRADERA[pieza][1] * M.STUD
     for vista in ("frente", "costado"):
         M.limpiar_escena()
         escena = M.escena_render(1280, 720)
-        objs, conteo = arbol_grande(mats_grande(textura_studs()))
+        objs, conteo = arbol_pradera(mats_grande(textura_studs()), pieza)
         giro = -18 if vista == "frente" else 72
         camara_orto(escena, (0, 0, alto * 0.5), alto * 1.25 * 16 / 9, 10, giro)
-        M.render(f"arbol_grande_{vista}")
-    comparar("Arbol_Grande")
-    print("TRIANGULOS Arbol_Grande", conteo, "total", sum(conteo.values()))
+        M.render(f"{pieza.lower()}_{vista}")
+    comparar(pieza)
+    print("TRIANGULOS", pieza, conteo, "total", sum(conteo.values()))
 
 
 def noche_abismo(escena):
@@ -1813,21 +1836,26 @@ def exportar_zona5():
     print("  FBX Deco_Zona5.fbx")
 
 
+EXPORTAR_ZONA1 = ["Arbol_Grande"]  # las aprobadas
+
+
 def exportar_zona1():
-    """Deco_Zona1.fbx: piezas que son solo de la Pradera. Raíz Deco_Zona1 con un vacío
-    Arbol_Grande y sus mallas Arbol_Grande_Tronco, _Sombra y _Copa. Sin textura: el juego pone
-    el color y TextureID = Studs.png en las tres."""
+    """Deco_Zona1.fbx: piezas que son solo de la Pradera. Raíz Deco_Zona1 con un vacío por
+    árbol (Arbol_Grande...) y sus mallas Arbol_Grande_Tronco, _Sombra y _Copa. Sin textura: el
+    juego pone el color y TextureID = Studs.png en las tres."""
     M.limpiar_escena()
     raiz = bpy.data.objects.new("Deco_Zona1", None)
     bpy.context.scene.collection.objects.link(raiz)
-    vacio = bpy.data.objects.new("Arbol_Grande", None)
-    bpy.context.scene.collection.objects.link(vacio)
-    vacio.parent = raiz
-    objs, conteo = arbol_grande(mats_grande())
-    for o in objs:
-        o.parent = vacio
-        o.name = o.data.name = f"Arbol_Grande_{o.name.split('.')[0]}"
-    print("TRIANGULOS Arbol_Grande", conteo, "total", sum(conteo.values()))
+    mats = mats_grande()
+    for pieza in EXPORTAR_ZONA1:
+        vacio = bpy.data.objects.new(pieza, None)
+        bpy.context.scene.collection.objects.link(vacio)
+        vacio.parent = raiz
+        objs, conteo = arbol_pradera(mats, pieza)
+        for o in objs:
+            o.parent = vacio
+            o.name = o.data.name = f"{pieza}_{o.name.split('.')[0]}"
+        print("TRIANGULOS", pieza, conteo, "total", sum(conteo.values()))
     bpy.ops.object.select_all(action="DESELECT")
     for o in [raiz, *raiz.children_recursive]:
         o.select_set(True)
@@ -1883,8 +1911,9 @@ if __name__ == "__main__":
         render_racimo()
     if "--pieza" not in sys.argv or "Arbol_Nebuloso" in sys.argv:
         render_arbol()
-    if "--pieza" not in sys.argv or "Arbol_Grande" in sys.argv:
-        render_arbol_grande()
+    for pieza in ARBOLES_PRADERA:
+        if "--pieza" not in sys.argv or pieza in sys.argv:
+            render_arbol_pradera(pieza)
     if "--pieza" not in sys.argv or "Roca_Meteorito" in sys.argv:
         render_meteorito()
     print("Listo")
