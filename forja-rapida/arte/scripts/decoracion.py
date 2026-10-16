@@ -10,6 +10,9 @@ Piezas:
                  con juntas marcadas de los dos lados y una tapa de pasto de 2 studs que sale medio
                  stud para cada lado, con gotitas. Encaja sin costura con otro tramo igual (mismo
                  truco que el risco). Mallas Pared y Tapa (la tapa toma el color de cada bioma).
+  Losas_Piedra   montoncito de 2 o 3 losas planas de ladrillo gris azulado, apiladas un poco
+                 corridas (escombros), en tres tamaños: Chica (2 losas), Mediana y Larga (3).
+                 Una malla por tamaño, la misma para todas las zonas (arte/referencias/losas-*.png).
 
 Cada pieza tiene una variante por zona (ZONAS): sus colores y lo que tiene la tapa (pasto con
 gotitas; dunas de arena; nieve con carámbanos; ceniza con piedritas y chorros de lava; cristales
@@ -73,6 +76,19 @@ PARED_ALTO = 22  # ladrillos (11 filas)
 PARED_TAPA = 2  # tapa de pasto: 22 + 2 = 24 de alto
 PARED_ESPESOR = 4  # y, de -2 a 2
 MAX_PARED = 2000
+
+# Losas_Piedra, en studs: losas planas de ladrillo apiladas un poco corridas (escombros). Cada
+# losa es (x0, x1, y0, y1); van una encima de la otra, de abajo para arriba.
+COLOR_LOSAS = "#686C8A"  # gris azulado de las capturas
+LOSA_ALTO = 2  # grosor de cada losa
+LOSA_LADRILLO = (4, 2)  # largo (x) y ancho (y) de cada ladrillo de la losa
+LOSA_JUNTA = 0.24  # junta entre ladrillos
+MAX_LOSAS = 1500
+LOSAS = {
+    "Chica": [(-4, 4, -3, 3), (-3, 4.5, -2.5, 2.5)],
+    "Mediana": [(-5, 5, -4, 4), (-4, 5.5, -3.5, 3), (-4.5, 2.5, -3, 3.5)],
+    "Larga": [(-8, 8, -3, 3), (-7, 8.5, -2.5, 3.5), (-6, 2, -3, 2)],
+}
 
 
 class Malla:
@@ -313,6 +329,38 @@ def pared_ladrillo(mats, zona=1, semilla=23):
     return objs, conteo
 
 
+def losas_piedra(mats, tam):
+    """Una malla con el montoncito de losas de un tamaño (Chica, Mediana o Larga). Cada losa es de
+    ladrillos de LOSA_LADRILLO separados por una junta (por la junta se ve el centro de la losa,
+    un poco hundido), con las filas corridas medio ladrillo. Pivote en el centro de la base."""
+    losas = LOSAS[tam]
+    # centrar: el centro de lo que ocupa el montón queda en x = 0, y = 0
+    cx = (min(l[0] for l in losas) + max(l[1] for l in losas)) / 2
+    cy = (min(l[2] for l in losas) + max(l[3] for l in losas)) / 2
+    m = Malla()
+    j = LOSA_JUNTA / 2
+    largo, ancho = LOSA_LADRILLO
+    for i, (x0, x1, y0, y1) in enumerate(losas):
+        x0, x1, y0, y1 = x0 - cx, x1 - cx, y0 - cy, y1 - cy
+        z0, z1 = i * LOSA_ALTO, (i + 1) * LOSA_ALTO
+        # el centro de la losa (se ve por las juntas; más adentro que los ladrillos, así no se pisan)
+        h = j + 0.12
+        m.caja((x0 + h, x1 - h), (y0 + h, y1 - h), (z0, z1 - 0.15), caras="xXyY")
+        fila, y = 0, y0
+        while y < y1 - 1e-6:
+            ya, yb = y, min(y + ancho, y1)
+            x = x0 - (largo / 2 if (fila + i) % 2 else 0)
+            while x < x1 - 1e-6:
+                xa, xb = max(x, x0), min(x + largo, x1)
+                if xb - xa > 0.6:  # sin ladrillitos finitos en las puntas
+                    caras = "xXyYZ" if i == 0 else "xXyYzZ"  # la de abajo no muestra la base
+                    m.caja((xa + j, xb - j), (ya + j, yb - j), (z0, z1), caras=caras)
+                x += largo
+            y += ancho
+            fila += 1
+    return mallas([(f"Losas_{tam}", m, mats["losas"])], MAX_LOSAS, f"Losas_Piedra {tam}")
+
+
 # nombre -> (función, alto total en studs, fondo en studs)
 PIEZAS = {
     "Risco_Escalon": (risco_escalon, 30, 16),
@@ -410,9 +458,35 @@ def camara_orto(escena, centro, ancho, elevacion, giro):
 
 # capturas del juego con las que se compara cada pieza (arte/referencias/)
 REFERENCIAS = {
+    "Losas_Piedra": ("losas-1.png", "losas-2.png"),
     "Risco_Escalon": ("mapa-1.png", "mapa-3.png"),
     "Pared_Ladrillo": ("pared-1.png", "pared-2.png"),
 }
+
+
+def render_losas():
+    """Losas_Piedra: chica, mediana y larga en fila, de frente y de costado, y al lado de las
+    referencias."""
+    conteo = {}
+    paso = 18 * M.STUD
+    for vista in ("frente", "costado"):
+        M.limpiar_escena()
+        escena = M.escena_render(1280, 720)
+        mats = {"losas": material_studs("Losas", COLOR_LOSAS, textura_studs())}
+        for k, tam in enumerate(LOSAS):
+            objs, c = losas_piedra(mats, tam)
+            conteo.update(c)
+            if vista == "frente":
+                M.mover(objs, (k - 1) * paso)
+            else:
+                M.mover(objs, 0, (k - 1) * paso)
+        if vista == "frente":
+            camara_orto(escena, (0, 0, 1.6 * LOSA_ALTO * M.STUD), 3 * paso * 1.0, 26, -12)
+        else:
+            camara_orto(escena, (0, 0, 1.6 * LOSA_ALTO * M.STUD), 3 * paso * 1.0, 26, 78)
+        M.render(f"losas_piedra_{vista}")
+    comparar("Losas_Piedra")
+    print("TRIANGULOS Losas_Piedra", conteo)
 
 
 def render(pieza):
@@ -518,7 +592,8 @@ def comparar(pieza):
 
 def exportar():
     """Deco_Comun.fbx: Zona1..Zona5, cada una con un vacío por pieza (Risco_Escalon_Zona2...) y
-    sus mallas (Risco_Zona2, Risco_Tapa_Zona2, Pared_Detalle_Zona2...), sin textura: el juego
+    sus mallas (Risco_Zona2, Risco_Tapa_Zona2, Pared_Detalle_Zona2...), y Losas_Piedra (una sola
+    para todas las zonas) con Losas_Chica, Losas_Mediana y Losas_Larga. Sin textura: el juego
     pone el color y TextureID = Studs.png."""
     M.limpiar_escena()
     raiz = bpy.data.objects.new("Deco_Comun", None)
@@ -537,6 +612,14 @@ def exportar():
                 malla, pieza = o.name.split(".")[0], nombre.split("_")[0]
                 # Risco_Zona2, Risco_Tapa_Zona2, Pared_Detalle_Zona2...
                 o.name = o.data.name = f"{malla if malla == pieza else pieza + '_' + malla}_Zona{zona}"
+    losas = bpy.data.objects.new("Losas_Piedra", None)
+    bpy.context.scene.collection.objects.link(losas)
+    losas.parent = raiz
+    mats = {"losas": M.material("Losas", COLOR_LOSAS)}
+    for tam in LOSAS:
+        objs, _ = losas_piedra(mats, tam)
+        for o in objs:
+            o.parent = losas
     bpy.ops.object.select_all(action="DESELECT")
     for o in [raiz, *raiz.children_recursive]:
         o.select_set(True)
@@ -562,9 +645,12 @@ if __name__ == "__main__":
         exportar()
     # --pieza <Nombre>: solo esa (si no, todas)
     elegidas = [sys.argv[sys.argv.index("--pieza") + 1]] if "--pieza" in sys.argv else list(PIEZAS)
+    elegidas = [e for e in elegidas if e in PIEZAS]  # las Losas_Piedra van aparte (sin zonas)
     if "--zonas" in sys.argv:
         render_zonas()
         elegidas = []
     for pieza in elegidas:
         render(pieza)
+    if "--pieza" not in sys.argv or "Losas_Piedra" in sys.argv:
+        render_losas()
     print("Listo")
