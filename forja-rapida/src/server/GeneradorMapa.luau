@@ -260,13 +260,18 @@ local function armarMarcador(m: Marcador, carpeta: Instance)
 		luz.Range = 14
 		luz.Parent = orbe
 	elseif m.Tipo == "Portal" then
-		-- anillo de 8 tramos y un disco que brilla (el que se toca)
+		-- anillo de 8 tramos y un disco que brilla (el que se toca). En mapa.py el portal mira
+		-- hacia el Z del marcador (las columnas del marco van a los costados, en su X, y el
+		-- destino queda adelante): el anillo y el disco se arman mirando hacia el X de `frente`,
+		-- que es el Z del marcador. El disco es un cilindro parado (su eje es su X), así se cruza
+		-- caminando y nunca queda acostado arriba de las cabezas.
+		local frente = cf * CFrame.Angles(0, math.pi / 2, 0)
 		for k = 0, 7 do
 			local ang = k / 8 * math.pi * 2
 			local tramo = parte(
 				"Aro",
 				Vector3.new(1, 4.2, 1.2),
-				cf
+				frente
 					* CFrame.new(0, math.cos(ang) * 5.2, math.sin(ang) * 5.2)
 					* CFrame.Angles(-ang, 0, 0),
 				"#C99BFF",
@@ -278,7 +283,7 @@ local function armarMarcador(m: Marcador, carpeta: Instance)
 		p = parte(
 			"Portal",
 			Vector3.new(0.6, 9.4, 9.4),
-			cf * CFrame.Angles(0, 0, math.pi / 2),
+			frente,
 			"#9CFBFF",
 			Enum.Material.Neon,
 			carpeta

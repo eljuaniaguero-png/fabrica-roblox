@@ -221,7 +221,7 @@ local function tarjeta(d: Datos, reducidos: boolean)
 	orden.Padding = UDim.new(0, 6)
 	orden.Parent = lista
 	local titulo = Estilo.texto(
-		"¡" .. rareza.Nombre:upper() .. "!",
+		"¡" .. Formato.mayusculas(rareza.Nombre) .. "!",
 		if mitica then 72 else 60,
 		colorRareza,
 		6
@@ -253,7 +253,7 @@ local function tarjeta(d: Datos, reducidos: boolean)
 		chip(texto, Color3.fromHex(mod.Color), Reglas.partes(mod.Id)).Parent = fila
 	end
 	if d.Nueva then
-		local nueva = chip("¡NUEVA EN EL ÍNDICE!", Color3.fromHex("#FFC93C"), { "Chispa" })
+		local nueva = chip("¡NUEVA EN EL MUSEO!", Color3.fromHex("#FFC93C"), { "Chispa" })
 		nueva.LayoutOrder = 4
 		nueva.Parent = lista
 	end

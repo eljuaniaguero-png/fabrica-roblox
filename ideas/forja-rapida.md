@@ -416,3 +416,28 @@ Guía de estilo: **pendiente** (punto de control 2: elegir paleta A · Pradera, 
 ## Prueba que va a hacer Claude
 
 Jugador nuevo: rompe geodas de la zona 1, ve la revelación, vende, compra el Pico de Piedra y niveles de Fuerza, abre la Zona 2. No puede pegarle a una geoda de una zona cerrada, ni desde lejos, ni más de 8 veces por segundo. Dos jugadores rompen un Jefe juntos y los dos reciben gema. Salir y volver: sigue todo. Captura en compu y en celular.
+
+## Prueba en Studio (16/10/2026)
+
+Primera vez que el juego corre en Studio (place 97540910093969, con Rojo). Consola del servidor y del cliente sin errores del juego (solo avisos internos de Roblox).
+
+Probado y anda:
+- **Geodas y golpe**: clic real sostenido y golpes por remoto. El servidor frena todo lo que tiene que frenar: ráfaga (de 30 juntos cuentan 4), tope de unos 8 por segundo, desde lejos, zona cerrada y datos basura.
+- **Revelación**: común chica; rara o exótica grande, con suerte, "1 en N", modificador, "¡NUEVA!" y misión cumplida en cadena.
+- **Mochila y venta**: la venta da el total justo y vacía la mochila.
+- **Tienda**: Fuerza, Máximo, Pico y Amuleto con sus precios; avisa cuánto falta.
+- **Zona 2**: se abre sola con 25 de Fuerza; la puerta frena al que no la tiene y deja pasar al que sí.
+- **Grupo 3**: puerta secreta (sin llave "Suena hueca…", con llave se abre y gasta la llave), cofre (una sola vez), altar (bendición x1,5, pista y espera de 10 min), veta oculta, Dimensión Prisma y Museo con 31 minerales.
+- **Grupo 4**: renacer (pide el Glaciar; reinicia y conserva lo que dice la ficha), árbol de Esencia, Santuario, ruleta (precio, espera y mascotas que siguen) y misiones (cambio con espera de 1:30).
+- **Grupo 6**: Jefe Ancestral forzado (se rompe y premia) y Lluvia de Cristales (+25 por cristal).
+
+Arreglado en esta prueba:
+- **Portal de las Dunas**: el disco quedaba acostado arriba de las cabezas y el anillo girado contra los pilares, así que no se podía cruzar. Ahora se cruza caminando ida y vuelta (`GeneradorMapa.luau`).
+- **Cartel de los eventos**: crecía sin fin (132.000 píxeles) y tapaba la pantalla, porque las rayas de luz median 3 veces su alto (`Eventos.client.luau`).
+- **"¡COMúN!" → "¡COMÚN!"**: mayúsculas con tilde (`Formato.mayusculas`, con test en `pruebas/reglas`).
+- **"¡NUEVA EN EL ÍNDICE!" → "¡NUEVA EN EL MUSEO!"**.
+- **Herramientas de prueba** (`HerramientasPrueba.luau`): solo existen en Studio, en `ServerStorage.Prueba` (Leer, Poner, Reiniciar).
+
+Para mirar más adelante:
+- Una Geoda Renacida tiene como mínimo 400 de vida: recién renacido (Fuerza 1) son unos 400 golpes.
+- Falta la prueba con dos jugadores y en celular, y el guardado sigue en memoria (sistema 6).

@@ -55,6 +55,19 @@ function Formato.unoEn(n: number): string
 	return "1 en " .. Formato.miles(math.max(1, math.floor(n + 0.5)))
 end
 
+-- Mayúsculas que también cambian las letras con tilde y la ñ: "Común" -> "COMÚN"
+-- (string.upper solo cambia de la a a la z).
+local TILDES =
+	{ ["á"] = "Á", ["é"] = "É", ["í"] = "Í", ["ó"] = "Ó", ["ú"] = "Ú", ["ñ"] = "Ñ" }
+
+function Formato.mayusculas(texto: string): string
+	local r = texto:upper()
+	for minuscula, mayuscula in TILDES do
+		r = (r:gsub(minuscula, mayuscula))
+	end
+	return r
+end
+
 -- Segundos como reloj: 75 -> "1:15", 3700 -> "1:01:40".
 function Formato.tiempo(segundos: number): string
 	local t = math.max(0, math.ceil(segundos))

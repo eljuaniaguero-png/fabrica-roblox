@@ -296,6 +296,7 @@ end
 chequear(Formato.suerte(2.06) == "x2,06" and Formato.suerte(1) == "x1", "Formato.suerte mal: " .. Formato.suerte(2.06))
 chequear(Formato.suerte(1.5) == "x1,5", "Formato.suerte(1.5) dio " .. Formato.suerte(1.5))
 chequear(Formato.unoEn(2427.3) == "1 en 2.427", "Formato.unoEn mal: " .. Formato.unoEn(2427.3))
+chequear(Formato.mayusculas("Común y Mítica") == "COMÚN Y MÍTICA", "Formato.mayusculas mal: " .. Formato.mayusculas("Común y Mítica"))
 
 -- 12. Eventos del mundo (Grupo 6).
 local eventosVistos: { [string]: boolean } = {}

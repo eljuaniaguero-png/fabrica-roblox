@@ -63,12 +63,15 @@ end
 local pantalla = Estilo.pantalla("Evento", 8)
 pantalla.Parent = jugador:WaitForChild("PlayerGui")
 
+-- El cartel no se agranda solo: su alto copia el de `contenido` (que sí se agranda con el
+-- texto). Si el cartel tuviera AutomaticSize, las rayas (3 veces su alto) lo harían crecer sin
+-- fin (llegó a medir 132.000 píxeles y tapaba la pantalla).
+local ANCHO_CARTEL = 560
 local cartel = Instance.new("Frame")
 cartel.Name = "CartelEvento"
 cartel.AnchorPoint = Vector2.new(0.5, 0)
 cartel.Position = UDim2.new(0.5, 0, 0, 150)
-cartel.Size = UDim2.fromOffset(560, 0)
-cartel.AutomaticSize = Enum.AutomaticSize.Y
+cartel.Size = UDim2.fromOffset(ANCHO_CARTEL, 0)
 cartel.BackgroundColor3 = Color3.new(1, 1, 1)
 cartel.ClipsDescendants = true
 cartel.Visible = false
@@ -89,19 +92,36 @@ for i = 1, 4 do
 	raya.ZIndex = 0
 	raya.Parent = cartel
 end
+local contenido = Instance.new("Frame")
+contenido.Name = "Contenido"
+contenido.BackgroundTransparency = 1
+contenido.Size = UDim2.fromScale(1, 0)
+contenido.AutomaticSize = Enum.AutomaticSize.Y
+contenido.ZIndex = 1
+contenido.Parent = cartel
 local relleno = Instance.new("UIPadding")
 relleno.PaddingLeft, relleno.PaddingRight = UDim.new(0, 16), UDim.new(0, 16)
 relleno.PaddingTop, relleno.PaddingBottom = UDim.new(0, 8), UDim.new(0, 12)
-relleno.Parent = cartel
+relleno.Parent = contenido
 local listaCartel = Instance.new("UIListLayout")
 listaCartel.HorizontalAlignment = Enum.HorizontalAlignment.Center
 listaCartel.SortOrder = Enum.SortOrder.LayoutOrder
 listaCartel.Padding = UDim.new(0, 4)
-listaCartel.Parent = cartel
+listaCartel.Parent = contenido
+-- AbsoluteSize viene con la escala de pantalla aplicada: se pasa a píxeles de diseño con el
+-- ancho, que es fijo.
+local function ajustarAlto()
+	local escala = cartel.AbsoluteSize.X / ANCHO_CARTEL
+	if escala > 0 then
+		cartel.Size = UDim2.fromOffset(ANCHO_CARTEL, math.ceil(contenido.AbsoluteSize.Y / escala))
+	end
+end
+contenido:GetPropertyChangedSignal("AbsoluteSize"):Connect(ajustarAlto)
+cartel:GetPropertyChangedSignal("AbsoluteSize"):Connect(ajustarAlto)
 
 local cabecera = Estilo.fila(8)
 cabecera.LayoutOrder = 1
-cabecera.Parent = cartel
+cabecera.Parent = contenido
 local iconoEvento: GuiObject? = nil
 local tituloEvento = Estilo.texto("", 32)
 tituloEvento.LayoutOrder = 2
@@ -111,14 +131,14 @@ tiempo.LayoutOrder = 3
 tiempo.Parent = cabecera
 local descripcion = Estilo.texto("", 18)
 descripcion.LayoutOrder = 2
-descripcion.Parent = cartel
+descripcion.Parent = contenido
 local barra = Instance.new("Frame")
 barra.LayoutOrder = 3
 barra.Size = UDim2.fromOffset(500, 30)
 barra.BackgroundColor3 = Estilo.Oscuro
 Estilo.esquinas(barra, 15)
 Estilo.borde(barra, 3)
-barra.Parent = cartel
+barra.Parent = contenido
 local llenoBarra = Instance.new("Frame")
 llenoBarra.Size = UDim2.fromScale(0, 1)
 llenoBarra.BackgroundColor3 = Color3.new(1, 1, 1)
