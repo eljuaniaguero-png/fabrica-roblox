@@ -25,6 +25,11 @@ Piezas:
                  un poco torcida (cada capa se corre un bloque en una curva suave), con pie ancho
                  y punta angosta, y estrellitas blancas (cruces de cubitos, Neon) pegadas en las
                  paredes. Dos alturas: Alta (44 studs) y Baja (28). Mallas Columna y Estrellas.
+  Isla_Flotante  solo Abismo: isla chica de bloques de 2 studs, arriba plana con pasto violeta
+                 (con gotitas en el borde) y cristales rosas (Neon); abajo roca oscura en
+                 escalones hasta una punta de 2 x 2 bloques. Tres tamaños: Chica (12 studs de
+                 ancho), Mediana (20) y Grande (28). Mallas Roca, Pasto y Cristales; pivote en el
+                 centro de la punta de abajo.
 
 Cada pieza tiene una variante por zona (ZONAS): sus colores y lo que tiene la tapa (pasto con
 gotitas; dunas de arena; nieve con carámbanos; ceniza con piedritas y chorros de lava; cristales
@@ -45,7 +50,7 @@ Uso: <python de Blender> forja-rapida/arte/scripts/decoracion.py
   (sin nada: render de frente y de costado de cada pieza al lado de las referencias, y
    triángulos; --pieza <Nombre>: solo esa; --zonas: las 5 variantes de cada pieza en
    arte/renders/deco_zonas.jpg; --exportar: además arma arte/fbx/Deco_Comun.fbx;
-   --pieza Columna_Estelar: render de la columna del Abismo; --exportar-zona5: solo arma
+   --pieza Columna_Estelar / Isla_Flotante: render de esa pieza del Abismo; --exportar-zona5: solo arma
    arte/fbx/Deco_Zona5.fbx con las piezas del Abismo, sin renders)
 """
 
@@ -764,6 +769,105 @@ def columna_estelar(mats, alto="Alta"):
     return objs, conteo
 
 
+# Isla_Flotante: arriba pasto violeta (como los árboles violetas de estilo-1.png), abajo roca
+# del Abismo en escalones que terminan en punta, y cristales rosas que brillan
+ISLA_PASTO = "#8A4FD8"
+ISLA_ROCA = "#2E2A5C"  # el risco del Abismo
+ISLA_CRISTAL = "#FF3FC0"  # en Roblox, Material Neon
+ISLA_CUBO = 2  # studs de cada bloque
+# tamaño -> (radio arriba en bloques, capas de roca, cristales, semilla)
+ISLAS = {"Chica": (3, 4, 1, 3), "Mediana": (5, 6, 2, 8), "Grande": (7, 8, 3, 13)}
+CRISTAL_PX = 1.0  # studs de cada cubito del cristal
+MAX_ISLA = 3000  # por pieza (sumando sus mallas)
+
+
+def celdas_isla(radio, capas, semilla):
+    """Celdas (x, y, z) de bloques de ISLA_CUBO: la capa de arriba (z = capas) es el pasto, un
+    disco con el borde un poco mordido; abajo, capas de roca cada vez más angostas (escalones)
+    hasta una punta de 1 bloque en z = 0. Algunas gotitas de pasto cuelgan en el borde de la
+    primera capa de roca. Devuelve (roca, pasto)."""
+    rng = random.Random(semilla)
+    pasto, roca = set(), set()
+    for x in range(-radio, radio):
+        for y in range(-radio, radio):
+            d = math.hypot(x + 0.5, y + 0.5) / radio
+            if d <= 1.0 - (rng.random() < 0.25) * 0.12:
+                pasto.add((x, y, capas))
+    for k in range(capas):
+        # z = capas - 1 (bajo el pasto) hasta z = 0 (la punta)
+        z = capas - 1 - k
+        t = (k + 1) / capas
+        r = max(0.75, radio * (1 - t) ** 0.85 + 0.6)
+        for x, y, _ in pasto:
+            d = math.hypot(x + 0.5, y + 0.5)
+            if d <= r + rng.uniform(-0.45, 0.35):
+                roca.add((x, y, z))
+    for x in (-1, 0):  # la punta, siempre: 2 x 2 bloques centrados en el pivote
+        for y in (-1, 0):
+            roca |= {(x, y, 0), (x, y, 1)}
+    # gotitas: celdas del borde de la primera capa de roca que pasan a ser pasto
+    for x, y, z in list(roca):
+        if z == capas - 1 and math.hypot(x + 0.5, y + 0.5) > radio - 1.6 and rng.random() < 0.35:
+            roca.discard((x, y, z))
+            pasto.add((x, y, z))
+    return roca, pasto
+
+
+def cristal(m, x, y, z, alto):
+    """Cristal de cubitos parado en (x, y, z) (studs, centro de la base): 2 x 2 cubitos de alto
+    `alto`, y uno solo arriba de punta."""
+    c = CRISTAL_PX
+    celdas = {(i, j, k) for i in (0, 1) for j in (0, 1) for k in range(alto)} | {(0, 0, alto)}
+    voxeles_malla(m, celdas, (c, c, c), (x - c, y - c, z))
+
+
+def isla_flotante(mats, tam="Mediana"):
+    """Isla_Flotante_<tam>: mallas Roca, Pasto y Cristales. Pivote en el centro de la base (la
+    punta de abajo)."""
+    radio, capas, cristales, semilla = ISLAS[tam]
+    roca, pasto = celdas_isla(radio, capas, semilla)
+    s = (ISLA_CUBO,) * 3
+    m_roca, m_pasto, m_cris = Malla(), Malla(), Malla()
+    voxeles_malla(m_roca, roca, s, (0, 0, 0))
+    voxeles_malla(m_pasto, pasto, s, (0, 0, 0))
+    rng = random.Random(semilla * 3)
+    arriba = (capas + 1) * ISLA_CUBO
+    lugares = [(x, y) for x, y, z in pasto if z == capas and math.hypot(x + 0.5, y + 0.5) < radio - 1.2]
+    rng.shuffle(lugares)
+    usados = []
+    for x, y in lugares:
+        if len(usados) == cristales:
+            break
+        if any(abs(x - u) + abs(y - v) < 3 for u, v in usados):
+            continue
+        usados.append((x, y))
+        cristal(m_cris, (x + 0.5) * ISLA_CUBO, (y + 0.5) * ISLA_CUBO, arriba, rng.choice((3, 4, 5)))
+    objs, conteo = mallas(
+        [(f"Roca_{tam}", m_roca, mats["roca"]), (f"Pasto_{tam}", m_pasto, mats["pasto"]),
+         (f"Cristales_{tam}", m_cris, mats["cristales"])],
+        MAX_ISLA,
+        f"Isla_Flotante {tam}",
+    )
+    if sum(conteo.values()) > MAX_ISLA:
+        raise RuntimeError(f"Isla_Flotante {tam}: {sum(conteo.values())} triángulos (máximo {MAX_ISLA})")
+    return objs, conteo
+
+
+def mats_isla(studs=None):
+    """Con studs, para el render (los cristales brillan); sin, para exportar."""
+    if studs:
+        return {
+            "roca": material_studs("IslaRoca", ISLA_ROCA, studs),
+            "pasto": material_studs("IslaPasto", ISLA_PASTO, studs),
+            "cristales": M.material("IslaCristal", ISLA_CRISTAL, brillo=ISLA_CRISTAL, fuerza_brillo=1.0),
+        }
+    return {
+        "roca": M.material("IslaRoca", ISLA_ROCA),
+        "pasto": M.material("IslaPasto", ISLA_PASTO),
+        "cristales": M.material("IslaCristal", ISLA_CRISTAL),
+    }
+
+
 def mats_columna(studs=None):
     """Con studs, para el render (las estrellas brillan); sin, para exportar."""
     if studs:
@@ -925,6 +1029,7 @@ REFERENCIAS = {
     "Pared_Ladrillo": ("pared-1.png", "pared-2.png"),
     # la captura entera y un acercamiento a los árboles violetas del fondo
     "Columna_Estelar": ("estilo-1.png", ("estilo-1.png", (0.40, 0.33, 0.60, 0.58))),
+    "Isla_Flotante": ("estilo-1.png", ("estilo-1.png", (0.40, 0.33, 0.60, 0.58))),
 }
 
 
@@ -982,6 +1087,34 @@ def render_columna():
     comparar("Columna_Estelar")
     print("TRIANGULOS Columna_Estelar", conteo, "Alta", sum(v for k, v in conteo.items() if "Alta" in k),
           "Baja", sum(v for k, v in conteo.items() if "Baja" in k))
+
+
+def render_isla():
+    """Isla_Flotante Chica, Mediana y Grande en fila (flotando un poco sobre el piso) de frente
+    y de costado, al lado de la referencia."""
+    conteo = {}
+    anchos = [2 * ISLAS[t][0] * ISLA_CUBO for t in ISLAS]
+    total = sum(anchos) + 8 * (len(anchos) - 1)
+    alto = (ISLAS["Grande"][1] + 1) * ISLA_CUBO + 5
+    for vista in ("frente", "costado"):
+        M.limpiar_escena()
+        escena = M.escena_render(1280, 720)
+        mats = mats_isla(textura_studs())
+        x = -total / 2
+        for tam, ancho in zip(ISLAS, anchos):
+            objs, c = isla_flotante(mats, tam)
+            conteo[tam] = c
+            pos = (x + ancho / 2) * M.STUD
+            M.mover(objs, pos if vista == "frente" else 0, 0 if vista == "frente" else pos)
+            for o in objs:
+                o.location.z += 6 * M.STUD  # flotando
+            x += ancho + 8
+        giro = -14 if vista == "frente" else 76
+        camara_orto(escena, (0, 0, (alto / 2 + 6) * M.STUD), total * M.STUD * 1.15, 14, giro)
+        M.render(f"isla_flotante_{vista}")
+    comparar("Isla_Flotante")
+    for tam, c in conteo.items():
+        print("TRIANGULOS Isla_Flotante", tam, c, "total", sum(c.values()))
 
 
 def render_losas():
@@ -1259,4 +1392,6 @@ if __name__ == "__main__":
             render_cielo(pieza)
     if "--pieza" not in sys.argv or "Columna_Estelar" in sys.argv:
         render_columna()
+    if "--pieza" not in sys.argv or "Isla_Flotante" in sys.argv:
+        render_isla()
     print("Listo")
