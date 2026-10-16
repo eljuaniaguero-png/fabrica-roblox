@@ -52,6 +52,9 @@ Piezas:
                  arte/referencias/arbol-seco-*.png). Malla Tronco.
   Arbusto        Pradera: arbustito de 3 a 5 bloques verdes apilados y corridos (5 studs de
                  alto). Malla Hojas.
+  Racimo_Cuarzo  Pradera: 4 cristales de cuarzo violeta (cajas inclinadas con la punta más angosta
+                 y clara, Neon suave en Roblox) que salen de una base de losas de piedra gris (9 x 7
+                 studs de base, 10 de alto). Mallas Piedra, Cuarzo y CuarzoPunta.
                  Cada árbol de la Pradera (y el arbusto) tiene 3 variantes (Arbol_Grande_1, _2 y _3...).
   Roca_Meteorito solo Abismo: media bola chata de bloques de 2 studs azul noche, con un cráter
                  arriba (corrido a un costado) que brilla violeta en el fondo y estrellitas lilas
@@ -1279,6 +1282,58 @@ def mats_pradera(pieza, studs=None):
     return {k: bpy.data.materials.get(f"{prefijo}_{k}") or M.material(f"{prefijo}_{k}", c) for k, c in colores.items()}
 
 
+# Racimo_Cuarzo (Pradera): 4 cristales de cuarzo violeta (cajas inclinadas con una punta más
+# angosta y clara, Neon suave en Roblox) que salen de una base de piedra gris de losas apiladas
+CUARZO_PIEDRA = LOSAS_ZONAS[1]["piedra"]  # la piedra de las losas de la Pradera
+CUARZO = COLORES_ROSA["violeta"]  # el violeta del arcoíris
+CUARZO_PUNTA = "#D9A8FF"
+# cada cristal: (x, y, z) donde nace (adentro de la piedra), rumbo, inclinación, largo, ancho
+CRISTALES_CUARZO = [
+    ((-0.3, 0.2, 2.5), 200, 8, 7.5, 2.4),  # el del medio, casi recto
+    ((1.2, -0.6, 2.5), -20, 34, 5, 1.8),
+    ((-1.5, -1.2, 2.2), 230, 30, 4.5, 1.6),
+    ((0.6, 1.6, 2.3), 75, 40, 3.5, 1.4),
+]
+MAX_CUARZO = 1500  # por pieza (sumando sus mallas)
+
+
+def racimo_cuarzo(mats):
+    """Racimo_Cuarzo: mallas Piedra (2 losas corridas y un bloquecito al costado, con studs),
+    Cuarzo (el cuerpo de cada cristal) y CuarzoPunta (la punta, más angosta). Pivote en el
+    centro de la base."""
+    piedra, cuerpo, punta = Malla(), Malla(), Malla()
+    piedra.caja((-4, 4), (-3.5, 3.5), (0, 1.5))
+    piedra.caja((-3, 3), (-2.5, 2.5), (1.5, 3))
+    piedra.caja((2.5, 4.5), (0.5, 3), (0, 2))
+    for base, rumbo, inclinacion, largo, ancho in CRISTALES_CUARZO:
+        (b, p) = rama_seca(base, rumbo, [(inclinacion, largo, ancho), (inclinacion, ancho * 0.9, ancho * 0.6)])
+        cuerpo.caja_girada(*b[1:])
+        punta.caja_girada(*p[1:])
+    objs, conteo = mallas(
+        [("Piedra", piedra, mats["piedra"]), ("Cuarzo", cuerpo, mats["cuarzo"]), ("CuarzoPunta", punta, mats["punta"])],
+        MAX_CUARZO,
+        "Racimo_Cuarzo",
+    )
+    if sum(conteo.values()) > MAX_CUARZO:
+        raise RuntimeError(f"Racimo_Cuarzo: {sum(conteo.values())} triángulos (máximo {MAX_CUARZO})")
+    return objs, conteo
+
+
+def mats_cuarzo(studs=None):
+    """Con studs, para el render (el cuarzo brilla poquito); sin, para exportar."""
+    if studs:
+        return {
+            "piedra": material_studs("CuarzoPiedra", CUARZO_PIEDRA, studs),
+            "cuarzo": M.material("Cuarzo", CUARZO, brillo=CUARZO, fuerza_brillo=0.35),
+            "punta": M.material("CuarzoPunta", CUARZO_PUNTA, brillo=CUARZO_PUNTA, fuerza_brillo=0.35),
+        }
+    return {
+        "piedra": M.material("CuarzoPiedra", CUARZO_PIEDRA),
+        "cuarzo": M.material("Cuarzo", CUARZO),
+        "punta": M.material("CuarzoPunta", CUARZO_PUNTA),
+    }
+
+
 # Roca_Meteorito: roca azul noche de bloques con un cráter que brilla violeta adentro y
 # estrellitas lilas en los costados (como el cielo del Abismo, arte/referencias/abismo-1.png;
 # el naranja quedaba de la zona de lava)
@@ -1565,6 +1620,8 @@ REFERENCIAS = {
     "Arbol_Seco": ("arbol-seco-1.png", "arbol-seco-2.png"),
     # los arbustitos de la izquierda de cada captura
     "Arbusto": (("estilo-1.png", (0.18, 0.52, 0.36, 0.70)), ("mapa-1.png", (0.18, 0.47, 0.36, 0.62))),
+    # la captura entera y las losas de piedra gris de la izquierda
+    "Racimo_Cuarzo": ("estilo-1.png", ("mapa-1.png", (0.10, 0.45, 0.35, 0.62))),
 }
 
 
@@ -1702,6 +1759,20 @@ def render_arbol_pradera(pieza):
     comparar(pieza)
     for i, conteo in enumerate(conteos):
         print("TRIANGULOS", f"{pieza}_{i + 1}", conteo, "total", sum(conteo.values()))
+
+
+def render_cuarzo():
+    """Racimo_Cuarzo de frente y de costado, al lado de las referencias."""
+    alto = 11 * M.STUD
+    for vista in ("frente", "costado"):
+        M.limpiar_escena()
+        escena = M.escena_render(1280, 720)
+        objs, conteo = racimo_cuarzo(mats_cuarzo(textura_studs()))
+        giro = -20 if vista == "frente" else 70
+        camara_orto(escena, (0, 0, alto * 0.45), alto * 1.3 * 16 / 9, 12, giro)
+        M.render(f"racimo_cuarzo_{vista}")
+    comparar("Racimo_Cuarzo")
+    print("TRIANGULOS Racimo_Cuarzo", conteo, "total", sum(conteo.values()))
 
 
 def noche_abismo(escena):
@@ -2038,7 +2109,9 @@ EXPORTAR_ZONA1 = ["Arbol_Grande", "Arbol_Mediano", "Arbol_Rosa", "Arbol_Seco", "
 def exportar_zona1():
     """Deco_Zona1.fbx: piezas que son solo de la Pradera. Raíz Deco_Zona1 con un vacío por
     variante de cada árbol (Arbol_Grande_1, _2, _3...) y sus mallas (Arbol_Grande_1_Tronco,
-    _Sombra, _Copa...). Sin textura: el juego pone el color y TextureID = Studs.png en todas."""
+    _Sombra, _Copa...), y Racimo_Cuarzo con Racimo_Cuarzo_Piedra, _Cuarzo y _CuarzoPunta. Sin
+    textura: el juego pone el color y TextureID = Studs.png en todas, salvo el Cuarzo y la
+    CuarzoPunta, que van en Material Neon."""
     M.limpiar_escena()
     raiz = bpy.data.objects.new("Deco_Zona1", None)
     bpy.context.scene.collection.objects.link(raiz)
@@ -2053,6 +2126,14 @@ def exportar_zona1():
                 o.parent = vacio
                 o.name = o.data.name = f"{nombre}_{o.name.split('.')[0]}"
             print("TRIANGULOS", nombre, conteo, "total", sum(conteo.values()))
+    vacio = bpy.data.objects.new("Racimo_Cuarzo", None)
+    bpy.context.scene.collection.objects.link(vacio)
+    vacio.parent = raiz
+    objs, conteo = racimo_cuarzo(mats_cuarzo())
+    for o in objs:
+        o.parent = vacio
+        o.name = o.data.name = f"Racimo_Cuarzo_{o.name.split('.')[0]}"
+    print("TRIANGULOS Racimo_Cuarzo", conteo, "total", sum(conteo.values()))
     bpy.ops.object.select_all(action="DESELECT")
     for o in [raiz, *raiz.children_recursive]:
         o.select_set(True)
@@ -2113,4 +2194,6 @@ if __name__ == "__main__":
             render_arbol_pradera(pieza)
     if "--pieza" not in sys.argv or "Roca_Meteorito" in sys.argv:
         render_meteorito()
+    if "--pieza" not in sys.argv or "Racimo_Cuarzo" in sys.argv:
+        render_cuarzo()
     print("Listo")
