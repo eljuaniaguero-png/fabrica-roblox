@@ -39,6 +39,10 @@ Piezas:
                  copa de cajas fucsia y lila encimadas en escalones (32 studs de alto, 31 de
                  ancho), con estrellitas blancas (Neon) cerca de donde se juntan las cajas.
                  Mallas Tronco, Sombra, CopaFucsia, CopaLila y Estrellas.
+  Roca_Meteorito solo Abismo: media bola chata de bloques de 2 studs gris oscuro, con un cráter
+                 arriba (corrido a un costado) y manchas naranjas que brillan (Neon) en el fondo
+                 del cráter y en los costados. Dos tamaños: Chico (12 studs de ancho) y Grande
+                 (20). Mallas Roca y Brasas.
 
 Cada pieza tiene una variante por zona (ZONAS): sus colores y lo que tiene la tapa (pasto con
 gotitas; dunas de arena; nieve con carámbanos; ceniza con piedritas y chorros de lava; cristales
@@ -59,7 +63,8 @@ Uso: <python de Blender> forja-rapida/arte/scripts/decoracion.py
   (sin nada: render de frente y de costado de cada pieza al lado de las referencias, y
    triángulos; --pieza <Nombre>: solo esa; --zonas: las 5 variantes de cada pieza en
    arte/renders/deco_zonas.jpg; --exportar: además arma arte/fbx/Deco_Comun.fbx;
-   --pieza Columna_Estelar / Isla_Flotante / Cristales_Abismo / Arbol_Nebuloso: render de esa pieza del Abismo; --exportar-zona5: solo arma
+   --pieza Columna_Estelar / Isla_Flotante / Cristales_Abismo / Arbol_Nebuloso /
+   Roca_Meteorito: render de esa pieza del Abismo; --exportar-zona5: solo arma
    arte/fbx/Deco_Zona5.fbx con las piezas del Abismo, sin renders)
 """
 
@@ -1017,6 +1022,81 @@ def mats_arbol(studs=None):
     return mats
 
 
+# Roca_Meteorito: roca gris oscuro de bloques, con un cráter arriba y manchas naranjas que brillan
+METEORITO_ROCA = "#3E3E48"
+METEORITO_BRASA = ZONAS[4]["detalle"]  # el naranja de la lava del Volcán; en Roblox, Neon
+METEORITO_CUBO = 2  # studs de cada bloque
+# tamaño -> (radio en bloques, alto en bloques, manchas en los costados, semilla)
+METEORITOS = {"Chico": (3, 3, 3, 4), "Grande": (5, 5, 5, 17)}
+MAX_METEORITO = 1500  # por pieza (sumando sus mallas)
+
+
+def celdas_meteorito(radio, alto, manchas, semilla):
+    """Media bola chata de bloques (abajo plana, con el borde un poco mordido) con un cráter
+    corrido para un costado. El fondo del cráter y algunas celdas de los costados son brasas.
+    Devuelve (roca, brasas)."""
+    rng = random.Random(semilla)
+    roca = set()
+    for x in range(-radio, radio):
+        for y in range(-radio, radio):
+            for z in range(alto):
+                d = ((x + 0.5) / radio) ** 2 + ((y + 0.5) / radio) ** 2 + ((z + 0.3) / alto) ** 2
+                if d <= 1 + rng.uniform(-0.12, 0.08):
+                    roca.add((x, y, z))
+    # cráter: un tazón arriba, corrido hacia un costado
+    cx, cy = rng.uniform(-0.3, 0.3) * radio, rng.uniform(-0.3, 0.3) * radio
+    rc = radio * 0.6
+    fondo = alto - 2
+    for c in list(roca):
+        d = math.hypot(c[0] + 0.5 - cx, c[1] + 0.5 - cy) / rc
+        if d < 1 and c[2] > fondo + d * d * 2.2:
+            roca.discard(c)
+    brasas = set()
+    for x, y, z in roca:
+        d = math.hypot(x + 0.5 - cx, y + 0.5 - cy) / rc
+        if d < 0.8 and (x, y, z + 1) not in roca:
+            brasas.add((x, y, z))
+    # manchas en los costados: celdas de afuera a media altura
+    lados = [c for c in roca if 0 < c[2] < alto - 1 and c not in brasas
+             and any((c[0] + dx, c[1] + dy, c[2]) not in roca for dx, dy in ((1, 0), (-1, 0), (0, 1), (0, -1)))]
+    rng.shuffle(lados)
+    for c in lados:
+        if manchas == 0:
+            break
+        if all(abs(c[0] - b[0]) + abs(c[1] - b[1]) + abs(c[2] - b[2]) > 2 for b in brasas):
+            brasas.add(c)
+            manchas -= 1
+    return roca - brasas, brasas
+
+
+def roca_meteorito(mats, tam="Grande"):
+    """Roca_Meteorito_<tam>: mallas Roca y Brasas. Pivote en el centro de la base."""
+    radio, alto, manchas, semilla = METEORITOS[tam]
+    roca, brasas = celdas_meteorito(radio, alto, manchas, semilla)
+    s = (METEORITO_CUBO,) * 3
+    m_roca, m_brasas = Malla(), Malla()
+    voxeles_malla(m_roca, roca, s)
+    voxeles_malla(m_brasas, brasas, s)
+    objs, conteo = mallas(
+        [(f"Roca_{tam}", m_roca, mats["roca"]), (f"Brasas_{tam}", m_brasas, mats["brasas"])],
+        MAX_METEORITO,
+        f"Roca_Meteorito {tam}",
+    )
+    if sum(conteo.values()) > MAX_METEORITO:
+        raise RuntimeError(f"Roca_Meteorito {tam}: {sum(conteo.values())} triángulos (máximo {MAX_METEORITO})")
+    return objs, conteo
+
+
+def mats_meteorito(studs=None):
+    """Con studs, para el render (las brasas brillan); sin, para exportar."""
+    if studs:
+        return {
+            "roca": material_studs("MeteoritoRoca", METEORITO_ROCA, studs),
+            "brasas": M.material("MeteoritoBrasa", METEORITO_BRASA, brillo=METEORITO_BRASA, fuerza_brillo=1.2),
+        }
+    return {"roca": M.material("MeteoritoRoca", METEORITO_ROCA), "brasas": M.material("MeteoritoBrasa", METEORITO_BRASA)}
+
+
 def mats_isla(studs=None):
     """Con studs, para el render (los cristales brillan); sin, para exportar."""
     if studs:
@@ -1195,6 +1275,7 @@ REFERENCIAS = {
     "Columna_Estelar": ("estilo-1.png", ("estilo-1.png", (0.40, 0.33, 0.60, 0.58))),
     "Isla_Flotante": ("estilo-1.png", ("estilo-1.png", (0.40, 0.33, 0.60, 0.58))),
     "Cristales_Abismo": ("estilo-1.png", ("estilo-1.png", (0.40, 0.33, 0.60, 0.58))),
+    "Roca_Meteorito": ("estilo-1.png", ("estilo-1.png", (0.40, 0.33, 0.60, 0.58))),
     "Arbol_Nebuloso": ("arbol-1.png", ("estilo-1.png", (0.40, 0.33, 0.60, 0.58))),
 }
 
@@ -1309,6 +1390,31 @@ def render_arbol():
         M.render(f"arbol_nebuloso_{vista}")
     comparar("Arbol_Nebuloso")
     print("TRIANGULOS Arbol_Nebuloso", conteo, "total", sum(conteo.values()))
+
+
+def render_meteorito():
+    """Roca_Meteorito Chico y Grande en fila, de frente y de costado (un poco desde arriba, para
+    ver el cráter), al lado de la referencia."""
+    conteo = {}
+    anchos = [2 * METEORITOS[t][0] * METEORITO_CUBO for t in METEORITOS]
+    total = sum(anchos) + 6
+    for vista in ("frente", "costado"):
+        M.limpiar_escena()
+        escena = M.escena_render(1280, 720)
+        mats = mats_meteorito(textura_studs())
+        x = -total / 2
+        for tam, ancho in zip(METEORITOS, anchos):
+            objs, c = roca_meteorito(mats, tam)
+            conteo[tam] = c
+            pos = (x + ancho / 2) * M.STUD
+            M.mover(objs, pos if vista == "frente" else 0, 0 if vista == "frente" else pos)
+            x += ancho + 6
+        giro = -14 if vista == "frente" else 76
+        camara_orto(escena, (0, 0, 4 * M.STUD), total * M.STUD * 1.3, 30, giro)
+        M.render(f"roca_meteorito_{vista}")
+    comparar("Roca_Meteorito")
+    for tam, c in conteo.items():
+        print("TRIANGULOS Roca_Meteorito", tam, c, "total", sum(c.values()))
 
 
 def render_losas():
@@ -1621,4 +1727,6 @@ if __name__ == "__main__":
         render_racimo()
     if "--pieza" not in sys.argv or "Arbol_Nebuloso" in sys.argv:
         render_arbol()
+    if "--pieza" not in sys.argv or "Roca_Meteorito" in sys.argv:
+        render_meteorito()
     print("Listo")
