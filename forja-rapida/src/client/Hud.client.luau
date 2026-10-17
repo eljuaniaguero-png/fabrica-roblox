@@ -241,16 +241,19 @@ end
 
 botonMenu(1, "Tienda", "Tienda", "Tienda", "Verde")
 botonMenu(2, "Mochila", "Mochila", "Mochila", "Naranja")
-botonMenu(3, "Museo", "Museo", "Libro", "Rosa")
 botonMenu(4, "Vitrina", "Vitrina", "Corona", "Violeta")
 botonMenu(5, "Clasificacion", "Ranking", "Trofeo", "Amarillo")
 botonMenu(6, "Eventos", "Eventos", "Reloj", "Azul")
 botonMenu(7, "Misiones", "Misiones", "Mision", "Cian")
 botonMenu(8, "Mascotas", "Mascotas", "Mascota", "Rosa")
-botonMenu(9, "Renacer", "Renacer", "Renacer", "Naranja")
+-- Museo y Renacer ya no tienen botón (17/10, plan v5 del mapa): sus menús siguen en el código.
 
 local function globito(id: string, texto: string?)
-	local g = botones[id].Globito
+	local b = botones[id]
+	if not b then
+		return
+	end
+	local g = b.Globito
 	local antes = g.Visible
 	g.Visible = texto ~= nil
 	if texto then
