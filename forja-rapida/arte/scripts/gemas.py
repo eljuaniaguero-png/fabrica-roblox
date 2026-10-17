@@ -27,13 +27,13 @@ from mathutils import Matrix, Vector  # noqa: E402
 ICONOS = m.ARTE / "iconos" / "gemas"
 
 # Solo las piedras que Juani ya aprobó entran al FBX de su zona
-APROBADAS = {"Cuarzo", "Jaspe", "Amatista", "AgataMusgosa", "Esmeralda", "TurmalinaRosa"}
+APROBADAS = {"Cuarzo", "Jaspe", "Amatista", "AgataMusgosa", "Esmeralda", "TurmalinaRosa", "CorazondePradera"}
 
 # Piedras con alto propio (studs) y pivote en el centro de la base en vez del centro de la caja
-ALTO = {"Cuarzo": 2.5, "Jaspe": 2.5, "Amatista": 3.0, "AgataMusgosa": 3.0, "Esmeralda": 3.5, "TurmalinaRosa": 3.5}
-PIVOTE_BASE = {"Cuarzo", "Jaspe", "Amatista", "AgataMusgosa", "Esmeralda", "TurmalinaRosa"}
+ALTO = {"Cuarzo": 2.5, "Jaspe": 2.5, "Amatista": 3.0, "AgataMusgosa": 3.0, "Esmeralda": 3.5, "TurmalinaRosa": 3.5, "CorazondePradera": 4.0}
+PIVOTE_BASE = {"Cuarzo", "Jaspe", "Amatista", "AgataMusgosa", "Esmeralda", "TurmalinaRosa", "CorazondePradera"}
 # Topes de triángulos propios (pisan el de la rareza)
-TOPE = {"Esmeralda": 4000, "TurmalinaRosa": 4000}
+TOPE = {"Esmeralda": 4000, "TurmalinaRosa": 4000, "CorazondePradera": 6000}
 
 # Alto (studs) y tope de triángulos por rareza
 RAREZAS = {
@@ -870,6 +870,132 @@ def turmalina_rosa(nombre):
     return tallada(nombre, TALLADAS_CUBITOS["TurmalinaRosa"])
 
 
+def corazon_de_pradera(nombre):
+    """Gema legendaria de cubitos: corazón de vidrio verde parado (3 tonos, más claro arriba, con
+    los bordes en escalones como facetas claras) y un corazón que brilla fuerte adentro (malla
+    aparte). Lo rodea un marco de oro con remaches en relieve, hojitas doradas abajo y entre los
+    lóbulos y 3 gemitas cuadradas engarzadas. Se apoya en un pie de oro sobre una roca de la que
+    crecen cristales cuadrados verdes."""
+    celdas = {}
+    # roca
+    for x in range(-8, 9):
+        for y in range(-7, 8):
+            r = math.hypot(x / 8.5, y / 7.5) + (random.Random(f"r{x // 2},{y // 2}").random() - 0.5) * 0.15
+            for z in range(3):
+                if r < 1 - z * 0.12:
+                    oscura = z < 2 and random.Random(f"{x},{y},{z}").random() < 0.3
+                    celdas[(x, y, z)] = "RocaOscura" if oscura else "Roca"
+    # pie de oro
+    for z in (3, 4):
+        for x in range(-2 + (z - 3), 3 - (z - 3)):
+            for y in range(-2, 3):
+                celdas[(x, y, z)] = "Oro"
+    # silueta del corazón en el plano x-z
+    zb, alto = 5, 18
+
+    def dentro(x, z):
+        """2 lóbulos (círculos) arriba y un triángulo con la punta abajo: hendidura bien marcada."""
+        u = (x + 0.5) / 7.5
+        v = -1 + (z - zb + 0.5) / alto * 1.97
+        lobulo = min(math.hypot(u - 0.48, v - 0.45), math.hypot(u + 0.48, v - 0.45)) <= 0.52
+        return lobulo or (v <= 0.45 and abs(u) <= (v + 1) / 1.45)
+
+    plano = {(x, z) for x in range(-10, 11) for z in range(zb, zb + alto + 2) if dentro(x, z)}
+
+    def hondo(x, z):
+        """Cuántos pasos hasta salir de la silueta (máx. 4)."""
+        for k in range(1, 5):
+            if any((x + dx * k, z + dz * k) not in plano for dx, dz in ((1, 0), (-1, 0), (0, 1), (0, -1))):
+                return k
+        return 4
+
+    zmin = min(z for _, z in plano)
+    zmax = max(z for _, z in plano)
+    for x, z in plano:
+        k = hondo(x, z)
+        grosor = min(3, k)  # bordes en escalones: más fino afuera, más grueso al medio
+        t = (z - zmin) / (zmax - zmin)
+        for y in range(-grosor, grosor + 1):
+            if k >= 3 and abs(y) <= 1:
+                celdas[(x, y, z)] = "Corazon"
+                continue
+            frente = abs(y) == grosor
+            if not frente and k > 1:
+                continue  # hueco: se ve el corazón a través del vidrio
+            escalon = frente and hondo(x, z) < 3 and (k == 1 or min(3, hondo(x + 1, z), hondo(x - 1, z),
+                                                            hondo(x, z + 1), hondo(x, z - 1)) < grosor)
+            if escalon:
+                celdas[(x, y, z)] = "Faceta"
+            else:
+                v = t + (random.Random(f"c{x},{y},{z}").random() - 0.5) * 0.25
+                celdas[(x, y, z)] = "VerdeClaro" if v > 0.62 else "VerdeMedio" if v > 0.3 else "VerdeOscuro"
+    # marco de oro alrededor, con remaches en relieve
+    marco = set()
+    for x, z in plano:
+        for dx, dz in ((1, 0), (-1, 0), (0, 1), (0, -1)):
+            c = (x + dx, z + dz)
+            if c not in plano:
+                marco.add(c)
+    for x, z in marco:
+        for y in (-1, 0, 1):
+            celdas[(x, y, z)] = "Oro"
+        if (x * 3 + z) % 5 == 0:
+            celdas[(x, 2, z)] = celdas[(x, -2, z)] = "Remache"
+    # hojitas doradas: rombos chicos que salen del marco
+    def hoja(x0, z0, dx, dz):
+        for i, ancho in enumerate((0, 1, 1, 0)):
+            cx, cz = x0 + dx * i, z0 + dz * i
+            for w in range(-ancho, ancho + 1):
+                c = (cx + (-dz) * w, 0, cz + dx * w)
+                if (c[0], c[2]) not in plano:
+                    celdas[c] = "Hoja" if w == 0 or i == 0 else "HojaOscura"
+    izq = min(marco, key=lambda c: (c[0] + c[1] * 0.2) if c[1] < zb + 7 else 99)
+    der = max(marco, key=lambda c: (c[0] - c[1] * 0.2) if c[1] < zb + 7 else -99)
+    hoja(izq[0], izq[1], -1, 0)
+    hoja(der[0], der[1], 1, 0)
+    hoja(-1, zb, -1, 0)
+    hoja(1, zb, 1, 0)
+    arriba = max(z for x, z in marco if x == 0)  # la hendidura entre los lóbulos
+    hoja(0, arriba, 0, 1)
+    # 3 gemitas cuadradas engarzadas: arriba de cada lóbulo y al frente de la roca
+    for x0 in (-4, 3):
+        ztop = max(z for x, z in marco if x == x0) + 1
+        for a in range(2):
+            for b in range(2):
+                celdas[(x0 + a, b - 1, ztop + b)] = "Gemita"
+        celdas[(x0 - 1, 0, ztop)] = celdas[(x0 + 2, 0, ztop)] = "Oro"
+    for a in range(2):
+        for b in range(2):
+            celdas[(a, -6, 3 + b)] = "Gemita"
+    celdas[(-1, -6, 3)] = celdas[(2, -6, 3)] = "Oro"
+    # cristales cuadrados que crecen de la roca
+    for x, y, alto_c in ((-7, 2, 4), (-6, 3, 2), (6, -3, 3), (7, 2, 5), (-4, 5, 3), (4, 5, 2), (-5, -4, 2)):
+        z0 = max((z for z in range(3) if (x, y, z) in celdas), default=-1) + 1
+        for z in range(z0, z0 + alto_c):
+            celdas[(x, y, z)] = "Cristal" if z < z0 + alto_c - 1 else "CristalClaro"
+    for x, y in ((-3, -5), (5, 4), (-7, -1)):
+        if (x, y, 2) in celdas:
+            celdas[(x, y, 3)] = "Pasto"
+    colores = {
+        "VerdeOscuro": ("#0B6B2E", 0.05, None, 0.0, 0.7),
+        "VerdeMedio": ("#1DB04A", 0.05, None, 0.0, 0.6),
+        "VerdeClaro": ("#5BEA7A", 0.05, None, 0.0, 0.55),
+        "Faceta": ("#C9FFD6", 0.05, "#8CFFA8", 0.3, 0.8),
+        "Corazon": ("#B5FFC4", 0.2, "#5CFF84", 4.0, 1),
+        "Oro": ("#F2B92E", 0.25, None, 0.0, 1),
+        "Remache": ("#FFE58A", 0.2, None, 0.0, 1),
+        "Hoja": ("#FFD24A", 0.25, None, 0.0, 1),
+        "HojaOscura": ("#C98A12", 0.3, None, 0.0, 1),
+        "Gemita": ("#FF5FA2", 0.05, "#FF5FA2", 0.6, 1),
+        "Cristal": ("#2FBF5C", 0.15, None, 0.0, 1),
+        "CristalClaro": ("#9BFFB3", 0.15, "#7DFF9C", 0.5, 1),
+        "Roca": ("#8A8F99", 0.8, None, 0.0, 1),
+        "RocaOscura": ("#5D626C", 0.85, None, 0.0, 1),
+        "Pasto": ("#4E9A3A", 0.8, None, 0.0, 1),
+    }
+    return cubitos(nombre, celdas, colores)
+
+
 # nombre: (zona, rareza, forma, {clave: (color, brillo)})
 PIEDRAS = {
     "Cuarzo": (
@@ -888,6 +1014,7 @@ PIEDRAS = {
     "AgataMusgosa": (1, "Rara", agata_musgosa, None),
     "Esmeralda": (1, "Epica", esmeralda, None),
     "TurmalinaRosa": (1, "Epica", turmalina_rosa, None),
+    "CorazondePradera": (1, "Legendaria", corazon_de_pradera, None),
 }
 
 
@@ -987,7 +1114,9 @@ def render_piedras(nombres):
             for o in objetos:
                 o.location.z += subir
         m.etiqueta(f"{nombre} ({t} tri)", x0, -0.6, tam=0.12)
-    m.camara(escena, (0, 0, 0.25), 3.2 * max(1, len(nombres) * 0.8), 0.9, lente=50, giro=0)
+    mas_alta = max(ALTO.get(n, RAREZAS[PIEDRAS[n][1]][0]) for n in nombres) * m.STUD
+    lejos = max(3.2, mas_alta * 3.2) * max(1, len(nombres) * 0.8)
+    m.camara(escena, (0, 0, max(0.25, mas_alta * 0.45)), lejos, 0.9, lente=50, giro=0)
     m.render("gema_" + "_".join(nombres))
 
 
