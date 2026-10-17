@@ -27,13 +27,13 @@ from mathutils import Matrix, Vector  # noqa: E402
 ICONOS = m.ARTE / "iconos" / "gemas"
 
 # Solo las piedras que Juani ya aprobó entran al FBX de su zona
-APROBADAS = {"Cuarzo", "Jaspe", "Amatista", "AgataMusgosa", "Esmeralda", "TurmalinaRosa", "CorazondePradera", "DiamanteFloral", "JadeArcoiris", "TreboldeCristal", "AuroraVerde", "SemilladelMundo", "Arenisca", "Ambar", "Citrino", "OjodeTigre", "TopacioImperial", "Cornalina", "SoldelDesierto", "EscarabajodeOro", "LagrimadeFaraon", "Espejismo", "CoronadelSol", "RelojdeArenaEterno", "CristaldeRoca", "PiedraEscarcha", "Aguamarina", "Celestina", "Zafiro", "PiedraLuna", "CorazondeHielo", "DiamantePolar", "AuroraBoreal", "EstrelladeEscarcha", "CopoEterno", "TronodeHielo"}
+APROBADAS = {"Cuarzo", "Jaspe", "Amatista", "AgataMusgosa", "Esmeralda", "TurmalinaRosa", "CorazondePradera", "DiamanteFloral", "JadeArcoiris", "TreboldeCristal", "AuroraVerde", "SemilladelMundo", "Arenisca", "Ambar", "Citrino", "OjodeTigre", "TopacioImperial", "Cornalina", "SoldelDesierto", "EscarabajodeOro", "LagrimadeFaraon", "Espejismo", "CoronadelSol", "RelojdeArenaEterno", "CristaldeRoca", "PiedraEscarcha", "Aguamarina", "Celestina", "Zafiro", "PiedraLuna", "CorazondeHielo", "DiamantePolar", "AuroraBoreal", "EstrelladeEscarcha", "CopoEterno", "TronodeHielo", "Obsidiana", "BasaltoRojo", "Granate", "CristaldeAzufre", "Rubi", "OpalodeFuego", "NucleodeMagma", "PiedraFenix", "OjodeDragon", "LlamaViva", "CorazondelVolcan", "CoronaIgnea"}
 
 # Piedras con alto propio (studs) y pivote en el centro de la base en vez del centro de la caja
-ALTO = {"Cuarzo": 2.5, "Jaspe": 2.5, "Amatista": 3.0, "AgataMusgosa": 3.0, "Esmeralda": 3.5, "TurmalinaRosa": 3.5, "CorazondePradera": 4.0, "DiamanteFloral": 4.0, "JadeArcoiris": 4.5, "TreboldeCristal": 4.5, "AuroraVerde": 5.0, "SemilladelMundo": 5.0, "Arenisca": 2.5, "Ambar": 2.5, "Citrino": 3.0, "OjodeTigre": 3.0, "TopacioImperial": 3.5, "Cornalina": 3.5, "SoldelDesierto": 4.0, "EscarabajodeOro": 4.0, "LagrimadeFaraon": 4.5, "Espejismo": 4.5, "CoronadelSol": 5.0, "RelojdeArenaEterno": 5.0, "CristaldeRoca": 2.5, "PiedraEscarcha": 2.5, "Aguamarina": 3.0, "Celestina": 3.0, "Zafiro": 3.5, "PiedraLuna": 3.5, "CorazondeHielo": 4.0, "DiamantePolar": 4.0, "AuroraBoreal": 4.5, "EstrelladeEscarcha": 4.5, "CopoEterno": 5.0, "TronodeHielo": 5.0}
-PIVOTE_BASE = {"Cuarzo", "Jaspe", "Amatista", "AgataMusgosa", "Esmeralda", "TurmalinaRosa", "CorazondePradera", "DiamanteFloral", "JadeArcoiris", "TreboldeCristal", "AuroraVerde", "SemilladelMundo", "Arenisca", "Ambar", "Citrino", "OjodeTigre", "TopacioImperial", "Cornalina", "SoldelDesierto", "EscarabajodeOro", "LagrimadeFaraon", "Espejismo", "CoronadelSol", "RelojdeArenaEterno", "CristaldeRoca", "PiedraEscarcha", "Aguamarina", "Celestina", "Zafiro", "PiedraLuna", "CorazondeHielo", "DiamantePolar", "AuroraBoreal", "EstrelladeEscarcha", "CopoEterno", "TronodeHielo"}
+ALTO = {"Cuarzo": 2.5, "Jaspe": 2.5, "Amatista": 3.0, "AgataMusgosa": 3.0, "Esmeralda": 3.5, "TurmalinaRosa": 3.5, "CorazondePradera": 4.0, "DiamanteFloral": 4.0, "JadeArcoiris": 4.5, "TreboldeCristal": 4.5, "AuroraVerde": 5.0, "SemilladelMundo": 5.0, "Arenisca": 2.5, "Ambar": 2.5, "Citrino": 3.0, "OjodeTigre": 3.0, "TopacioImperial": 3.5, "Cornalina": 3.5, "SoldelDesierto": 4.0, "EscarabajodeOro": 4.0, "LagrimadeFaraon": 4.5, "Espejismo": 4.5, "CoronadelSol": 5.0, "RelojdeArenaEterno": 5.0, "CristaldeRoca": 2.5, "PiedraEscarcha": 2.5, "Aguamarina": 3.0, "Celestina": 3.0, "Zafiro": 3.5, "PiedraLuna": 3.5, "CorazondeHielo": 4.0, "DiamantePolar": 4.0, "AuroraBoreal": 4.5, "EstrelladeEscarcha": 4.5, "CopoEterno": 5.0, "TronodeHielo": 5.0, "Obsidiana": 2.5, "BasaltoRojo": 2.5, "Granate": 3.0, "CristaldeAzufre": 3.0, "Rubi": 3.5, "OpalodeFuego": 3.5, "NucleodeMagma": 4.0, "PiedraFenix": 4.0, "OjodeDragon": 4.5, "LlamaViva": 4.5, "CorazondelVolcan": 5.0, "CoronaIgnea": 5.0}
+PIVOTE_BASE = {"Cuarzo", "Jaspe", "Amatista", "AgataMusgosa", "Esmeralda", "TurmalinaRosa", "CorazondePradera", "DiamanteFloral", "JadeArcoiris", "TreboldeCristal", "AuroraVerde", "SemilladelMundo", "Arenisca", "Ambar", "Citrino", "OjodeTigre", "TopacioImperial", "Cornalina", "SoldelDesierto", "EscarabajodeOro", "LagrimadeFaraon", "Espejismo", "CoronadelSol", "RelojdeArenaEterno", "CristaldeRoca", "PiedraEscarcha", "Aguamarina", "Celestina", "Zafiro", "PiedraLuna", "CorazondeHielo", "DiamantePolar", "AuroraBoreal", "EstrelladeEscarcha", "CopoEterno", "TronodeHielo", "Obsidiana", "BasaltoRojo", "Granate", "CristaldeAzufre", "Rubi", "OpalodeFuego", "NucleodeMagma", "PiedraFenix", "OjodeDragon", "LlamaViva", "CorazondelVolcan", "CoronaIgnea"}
 # Topes de triángulos propios (pisan el de la rareza)
-TOPE = {"Esmeralda": 4000, "TurmalinaRosa": 4000, "CorazondePradera": 6000, "DiamanteFloral": 6000, "JadeArcoiris": 8000, "TreboldeCristal": 8000, "AuroraVerde": 10000, "SemilladelMundo": 10000, "TopacioImperial": 4000, "Cornalina": 4000, "SoldelDesierto": 6000, "EscarabajodeOro": 6000, "LagrimadeFaraon": 8000, "Espejismo": 8000, "CoronadelSol": 10000, "RelojdeArenaEterno": 10000, "CristaldeRoca": 1500, "PiedraEscarcha": 1500, "Aguamarina": 2500, "Celestina": 2500, "Zafiro": 4000, "PiedraLuna": 4000, "CorazondeHielo": 6000, "DiamantePolar": 6000, "AuroraBoreal": 8000, "EstrelladeEscarcha": 8000, "CopoEterno": 10000, "TronodeHielo": 10000}
+TOPE = {"Esmeralda": 4000, "TurmalinaRosa": 4000, "CorazondePradera": 6000, "DiamanteFloral": 6000, "JadeArcoiris": 8000, "TreboldeCristal": 8000, "AuroraVerde": 10000, "SemilladelMundo": 10000, "TopacioImperial": 4000, "Cornalina": 4000, "SoldelDesierto": 6000, "EscarabajodeOro": 6000, "LagrimadeFaraon": 8000, "Espejismo": 8000, "CoronadelSol": 10000, "RelojdeArenaEterno": 10000, "CristaldeRoca": 1500, "PiedraEscarcha": 1500, "Aguamarina": 2500, "Celestina": 2500, "Zafiro": 4000, "PiedraLuna": 4000, "CorazondeHielo": 6000, "DiamantePolar": 6000, "AuroraBoreal": 8000, "EstrelladeEscarcha": 8000, "CopoEterno": 10000, "TronodeHielo": 10000, "Obsidiana": 1500, "BasaltoRojo": 1500, "Granate": 2500, "CristaldeAzufre": 2500, "Rubi": 4000, "OpalodeFuego": 4000, "NucleodeMagma": 6000, "PiedraFenix": 6000, "OjodeDragon": 8000, "LlamaViva": 8000, "CorazondelVolcan": 10000, "CoronaIgnea": 10000}
 
 # Alto (studs) y tope de triángulos por rareza
 RAREZAS = {
@@ -2387,11 +2387,12 @@ def reloj_de_arena_eterno(nombre):
 # Moldes para Comunes, Raras y Legendarias (zona 3 en adelante)
 
 
-def comun(nombre, colores, semilla, velo=0.0, escarcha=0.0, tope=11):
+def comun(nombre, colores, semilla, velo=0.0, escarcha=0.0, motas=0.0, tope=11):
     """Molde común: trozo de mineral en escalones (Oscuro, Medio, Claro: más claro arriba) sobre una
     mancha de suelo (Suelo, SueloOscuro), con 2 grietas (Grieta), 3 cristalitos (uno de Vidrio con
     Nucleo, dos de Cristal) y piedritas (Piedrita). velo: cubitos sueltos adentro (Velo) que se ven
-    si el cuerpo es transparente; escarcha: parte de los cubitos de arriba pasan a Escarcha."""
+    si el cuerpo es transparente; escarcha: parte de los cubitos de arriba pasan a Escarcha;
+    motas: puntitos de otro color (Mota) salteados en la superficie."""
     rng = random.Random(semilla)
     celdas = {}
     for x in range(-8, 9):
@@ -2431,6 +2432,10 @@ def comun(nombre, colores, semilla, velo=0.0, escarcha=0.0, tope=11):
         for c in piel:
             if (c[0], c[1], c[2] + 1) not in llenas and h(*c, semilla + 5) < escarcha:
                 celdas[c] = "Escarcha"
+    if motas:
+        for c in piel:
+            if celdas[c] in ("Claro", "Medio", "Oscuro") and h(*c, semilla + 6) < motas:
+                celdas[c] = "Mota"
     for inicio in ((-3, -4, 8), (4, 1, 7)):
         c = min(piel, key=lambda p: sum((a - b) ** 2 for a, b in zip(p, inicio)))
         for _ in range(9):
@@ -2937,6 +2942,429 @@ def trono_de_hielo(nombre):
     return celestial(nombre, gema, colores)
 
 
+VOLCAN_ROCA = {
+    "Roca": ("#4A3F3C", 0.85, None, 0.0, 1),
+    "RocaOscura": ("#2A2322", 0.9, None, 0.0, 1),
+    "Veta": ("#FF5A1A", 0.4, "#FF5A1A", 1.2, 1),  # vetita de lava
+    "Suelo": ("#3A2E2C", 0.9, None, 0.0, 1),
+    "Piedra": ("#5A4A44", 0.85, None, 0.0, 1),
+}
+VOLCAN_SUELO = {
+    "Suelo": ("#3A2E2C", 0.9, None, 0.0, 1),
+    "SueloOscuro": ("#221A19", 0.9, None, 0.0, 1),
+    "Piedrita": ("#FF6A1A", 0.4, "#FF5A1A", 1.0, 1),  # brasitas
+}
+
+
+def _plano_corazon(cz, alto, ancho):
+    """Silueta de corazón en el plano x-z: 2 lóbulos arriba y punta abajo, de 'alto' cubitos."""
+    zb = cz - alto // 2
+    plano = set()
+    for x in range(-int(ancho) - 2, int(ancho) + 3):
+        for z in range(zb, zb + alto + 2):
+            u = (x + 0.5) / ancho
+            v = -1 + (z - zb + 0.5) / alto * 1.97
+            lobulo = min(math.hypot(u - 0.48, v - 0.45), math.hypot(u + 0.48, v - 0.45)) <= 0.52
+            if lobulo or (v <= 0.45 and abs(u) <= (v + 1) / 1.45):
+                plano.add((x, z))
+    return plano
+
+
+def obsidiana(nombre):
+    """Común (Volcán): trozo de obsidiana negra brillante con canto filoso en escalones, reflejos
+    gris violáceo arriba, grietas de lava, cristalitos de vidrio ahumado con brasa adentro y base
+    de ceniza con brasitas."""
+    colores = {
+        "Oscuro": ("#0C0A10", 0.05, None, 0.0, 1),
+        "Medio": ("#1C1824", 0.05, None, 0.0, 1),
+        "Claro": ("#3A3448", 0.05, None, 0.0, 1),
+        "Grieta": ("#FF5A1A", 0.4, "#FF5A1A", 1.0, 1),
+        "Cristal": ("#2A2236", 0.05, "#3A2A5A", 0.2, 1),
+        "Vidrio": ("#4A3E5A", 0.05, None, 0.0, 0.55),
+        "Nucleo": ("#FF7A1A", 0.2, "#FF6A00", 2.0, 1),
+        **VOLCAN_SUELO,
+    }
+    return comun(nombre, colores, 201)
+
+
+def basalto_rojo(nombre):
+    """Común (Volcán): piedra de basalto gris oscuro en escalones con puntitos rojos, grietas
+    negras, cristalitos rojos y base de ceniza con brasitas."""
+    colores = {
+        "Oscuro": ("#4A4A50", 0.85, None, 0.0, 1),
+        "Medio": ("#686870", 0.8, None, 0.0, 1),
+        "Claro": ("#8C8C94", 0.75, None, 0.0, 1),
+        "Mota": ("#E0262A", 0.4, "#E0262A", 0.4, 1),
+        "Grieta": ("#1A1A1E", 0.9, None, 0.0, 1),
+        "Cristal": ("#C8202A", 0.15, "#E0262A", 0.4, 1),
+        "Vidrio": ("#FF8A8A", 0.05, None, 0.0, 0.45),
+        "Nucleo": ("#FF3030", 0.2, "#FF3030", 2.0, 1),
+        **VOLCAN_SUELO,
+    }
+    return comun(nombre, colores, 211, motas=0.12)
+
+
+def granate(nombre):
+    """Rara (Volcán): 4 columnas anchas y petisas de granate rojo oscuro (puntas bajas, se ven
+    gorditas y redondeadas), centro que brilla suave, sobre roca volcánica con vetitas de lava."""
+    colores = {
+        "Oscuro": ("#4A0812", 0.05, None, 0.0, 0.9),
+        "Medio": ("#7A1020", 0.05, None, 0.0, 0.88),
+        "Claro": ("#A01828", 0.05, None, 0.0, 0.85),
+        "Arista": ("#E0505A", 0.05, "#C8303A", 0.25, 0.85),
+        "Centro": ("#FF6A70", 0.2, "#E0303A", 1.0, 1),
+        "Suelto": ("#B01E30", 0.15, "#C8303A", 0.4, 1),
+        **{k: VOLCAN_ROCA[k] for k in ("Roca", "RocaOscura", "Veta")},
+    }
+    columnas = [(0, 0, 3, 17, 0, 0), (-5, 1, 2, 12, -1, 0), (5, -1, 2, 13, 1, 0), (0, 4, 2, 9, 0, 1)]
+    return rara(nombre, colores, columnas, 221)
+
+
+def cristal_de_azufre(nombre):
+    """Rara (Volcán): racimo de 7 cristalitos finitos amarillo limón de distintas alturas, con
+    centro que brilla suave, sobre roca volcánica con vetitas de lava."""
+    colores = {
+        "Oscuro": ("#C8B000", 0.05, None, 0.0, 0.7),
+        "Medio": ("#F0DC10", 0.05, None, 0.0, 0.6),
+        "Claro": ("#FFF470", 0.05, None, 0.0, 0.55),
+        "Arista": ("#FFFDC0", 0.05, "#FFF470", 0.25, 0.85),
+        "Centro": ("#FFFBA0", 0.2, "#F0DC10", 0.9, 1),
+        "Suelto": ("#F0DC10", 0.15, "#F0DC10", 0.4, 1),
+        **{k: VOLCAN_ROCA[k] for k in ("Roca", "RocaOscura", "Veta")},
+    }
+    columnas = [(0, 0, 1, 18, 0, 0), (-3, 1, 1, 14, -1, 0), (3, -1, 1, 15, 1, 0), (-1, 3, 1, 11, 0, 1),
+                (2, 3, 1, 9, 1, 1), (-4, -3, 1, 8, -1, -1), (4, -4, 1, 10, 1, -1)]
+    return rara(nombre, colores, columnas, 231)
+
+
+VOLCAN_TALLADA = {
+    "Roca": ("#4A3F3C", 0.85, None, 0.0, 1),
+    "RocaOscura": ("#2A2322", 0.9, None, 0.0, 1),
+    "Pasto": ("#FF6A1A", 0.4, "#FF5A1A", 1.0, 1),
+}
+TALLADAS_CUBITOS["Rubi"] = {
+    "engarce": (4, 4),
+    "anchos": [(1, 0), (2, 1), (3, 2), (4, 3), (4, 3), (5, 4), (5, 4), (5, 4), (5, 4), (4, 3), (4, 3),
+               (3, 3), (3, 2), (3, 2), (2, 2), (2, 1), (1, 1), (1, 1), (1, 0), (0, 0)],
+    "garras": (4, 3, 9),
+    "tonos": ("RojoOscuro", "RojoMedio", "RojoClaro"),
+    "colores": {
+        "RojoOscuro": ("#6A0010", 0.05, None, 0.0, 0.8),
+        "RojoMedio": ("#B0001E", 0.05, None, 0.0, 0.7),
+        "RojoClaro": ("#E8102E", 0.05, None, 0.0, 0.65),
+        "Faceta": ("#E0203A", 0.05, "#FF1030", 0.3, 0.8),
+        "Corazon": ("#FF7080", 0.2, "#FF1030", 2.5, 1),
+        "Cristal": ("#C8102A", 0.15, "#E8102E", 0.4, 1),
+    },
+    "base": VOLCAN_TALLADA,
+}
+TALLADAS_CUBITOS["OpalodeFuego"] = {
+    "engarce": (5, 5),
+    "anchos": [(1, 1), (2, 2), (3, 3), (4, 4), (5, 5), (5, 5), (5, 5), (5, 5), (5, 5), (5, 5), (4, 4),
+               (4, 4), (3, 3), (2, 2), (1, 1)],
+    "garras": (5, 5, 11),
+    "tonos": ("FuegoRojo", "FuegoNaranja", "FuegoAmarillo"),
+    "colores": {
+        "FuegoRojo": ("#E83A10", 0.05, "#E83A10", 0.3, 0.65),
+        "FuegoNaranja": ("#FF8A1A", 0.05, "#FF8A1A", 0.3, 0.6),
+        "FuegoAmarillo": ("#FFD030", 0.05, "#FFD030", 0.3, 0.55),
+        "Faceta": ("#FFB060", 0.05, "#FF9A30", 0.5, 0.75),
+        "Corazon": ("#FFE070", 0.2, "#FF4A10", 3.0, 1),
+        "Cristal": ("#FF8A1A", 0.15, "#FF8A1A", 0.4, 1),
+    },
+    "base": VOLCAN_TALLADA,
+}
+
+
+def rubi(nombre):
+    return tallada(nombre, TALLADAS_CUBITOS["Rubi"])
+
+
+def opalo_de_fuego(nombre):
+    return tallada(nombre, TALLADAS_CUBITOS["OpalodeFuego"])
+
+
+def nucleo_de_magma(nombre):
+    """Legendaria (Volcán): esfera de cubitos de roca negra (3 tonos) con grietas de lava naranja
+    medio transparentes por las que se ve un centro amarillo que brilla fuerte (malla aparte),
+    cinto de oro con remaches y 3 gemitas de fuego engarzadas; tallo y pie de oro sobre roca
+    volcánica con cristales naranjas."""
+    celdas = {}
+    _base_legendaria(celdas, 241)
+    r, cz = 7.2, 14
+    _tallo(celdas, cz - 7)
+    for x in range(-8, 9):
+        for y in range(-8, 9):
+            for z in range(cz - 8, cz + 9):
+                d = math.sqrt(x * x + y * y + (z - cz) ** 2)
+                if d > r:
+                    continue
+                if d < 3.2:
+                    celdas[(x, y, z)] = "Nucleo"
+                elif d > r - 1.6:
+                    # grietas: donde una suma de ondas pasa cerca de cero
+                    onda = math.sin(x * 0.9 + z * 0.4) + math.sin(y * 0.8 - z * 0.7) + math.sin((x - y) * 0.5)
+                    if abs(onda) < 0.32:
+                        celdas[(x, y, z)] = "Lava"
+                    else:
+                        v = (z - cz + r) / (2 * r) + (h(x, y, z, 242) - 0.5) * 0.2
+                        celdas[(x, y, z)] = "RocaClara" if v > 0.62 else "RocaMedia" if v > 0.3 else "RocaNegra"
+    for x in range(-8, 9):  # cinto de oro en el ecuador
+        for y in range(-8, 9):
+            d = math.hypot(x, y)
+            if r - 0.6 <= d <= r + 0.9:
+                celdas[(x, y, cz)] = "Oro"
+                if (x + y) % 3 == 0:
+                    celdas[(x, y, cz + 1)] = celdas[(x, y, cz - 1)] = "Remache"
+    for x, y in ((0, -8), (-6, -5), (6, -5)):
+        for z in (cz, cz + 1):
+            celdas[(x, y, z)] = "Gemita"
+    colores = {
+        "RocaNegra": ("#14100E", 0.6, None, 0.0, 1),
+        "RocaMedia": ("#2A2220", 0.6, None, 0.0, 1),
+        "RocaClara": ("#463A36", 0.55, None, 0.0, 1),
+        "Lava": ("#FF6A10", 0.3, "#FF5A00", 2.0, 0.75),
+        "Nucleo": ("#FFF060", 0.2, "#FFD000", 5.0, 1),
+        "Pie": ("#F2B92E", 0.25, None, 0.0, 1),
+        "Oro": ("#F2B92E", 0.25, None, 0.0, 1),
+        "Remache": ("#FFE58A", 0.2, None, 0.0, 1),
+        "Gemita": ("#FF3A10", 0.05, "#FF3A10", 0.7, 1),
+        "Cristal": ("#E85A10", 0.15, None, 0.0, 1),
+        "CristalClaro": ("#FFB040", 0.15, "#FF9A20", 0.6, 1),
+        **{k: VOLCAN_ROCA[k] for k in ("Roca", "RocaOscura", "Veta")},
+    }
+    return cubitos(nombre, celdas, colores)
+
+
+def piedra_fenix(nombre):
+    """Legendaria (Volcán): gema roja y naranja en rombo (núcleo que brilla fuerte, aparte) con alas
+    de plumas de cubitos abiertas hacia arriba (rojo, naranja y punta amarilla), cresta y cola de 3
+    plumas; remaches de oro donde nacen las alas y 3 gemitas doradas engarzadas; tallo y pie de
+    oro sobre roca volcánica con cristales."""
+    celdas = {}
+    _base_legendaria(celdas, 251)
+    cz = 15
+    plano = {(x, z) for x in range(-6, 7) for z in range(cz - 7, cz + 8) if abs(x) * 1.15 + abs(z - cz) <= 7}
+    marco = _emblema(celdas, plano, ["Rojo", "Naranja", "Amarilla"], aro="Oro", cada=3)
+    _tallo(celdas, min(z for _, z in marco))
+    for s in (-1, 1):  # alas: 5 plumas que salen del costado y suben
+        for i in range(5):
+            largo = 6 - i
+            z0 = cz - 1 + i * 2
+            for j in range(largo):
+                x = s * (5 - i // 2 + j)
+                z = z0 + j // 2
+                if (x, z) in plano or (x, z) in marco:
+                    continue
+                clave = "Pluma3" if j >= largo - 1 else "Pluma2" if j >= largo - 3 else "Pluma1"
+                for y in (-1, 0):
+                    for dz in (0, -1):
+                        if (x, z + dz) not in plano and (x, z + dz) not in marco:
+                            celdas[(x, y, z + dz)] = clave
+            celdas[(s * (5 - i // 2), -2, z0)] = "Remache"
+    for i, (x, dz) in enumerate(((0, 0), (-1, 1), (1, 1), (0, 2))):  # cresta
+        celdas[(x, 0, cz + 8 + dz)] = "Pluma3" if dz == 2 else "Pluma2"
+    for x0 in (-2, 2):  # cola: 2 plumas que caen a los costados del tallo
+        for j in range(4):
+            celdas[(x0 + (1 if x0 > 0 else -1) * (j // 2), 0, cz - 8 - j)] = "Pluma2" if j < 3 else "Pluma3"
+    for x, z in ((0, cz), (-3, cz - 2), (3, cz - 2)):
+        celdas[(x, -4, z)] = "Gemita"
+    colores = {
+        "Rojo": ("#C8101E", 0.05, None, 0.0, 0.7),
+        "Naranja": ("#FF5A10", 0.05, None, 0.0, 0.6),
+        "Amarilla": ("#FFA020", 0.05, None, 0.0, 0.55),
+        "Faceta": ("#FFB070", 0.05, "#FF8A40", 0.4, 0.8),
+        "Nucleo": ("#FFE070", 0.2, "#FF6A10", 5.0, 1),
+        "Pluma1": ("#D8201E", 0.3, "#D8201E", 0.4, 1),
+        "Pluma2": ("#FF7A10", 0.3, "#FF7A10", 0.6, 1),
+        "Pluma3": ("#FFD030", 0.25, "#FFD030", 1.0, 1),
+        "Pie": ("#F2B92E", 0.25, None, 0.0, 1),
+        "Oro": ("#F2B92E", 0.25, None, 0.0, 1),
+        "Remache": ("#FFE58A", 0.2, None, 0.0, 1),
+        "Gemita": ("#FFD24A", 0.05, "#FFD24A", 0.7, 1),
+        "Cristal": ("#E85A10", 0.15, None, 0.0, 1),
+        "CristalClaro": ("#FFB040", 0.15, "#FF9A20", 0.6, 1),
+        **{k: VOLCAN_ROCA[k] for k in ("Roca", "RocaOscura", "Veta")},
+    }
+    return cubitos(nombre, celdas, colores)
+
+
+def ojo_de_dragon(nombre):
+    """Mítica (Volcán): gema roja en capas (cuadrados y rombos) con escamas de cubitos en dos rojos,
+    aristas de oro, núcleo naranja que brilla y un ojo de dragón al frente: iris amarillo con la
+    pupila de rendija negra. Anillo cuadrado de oro oscuro alrededor."""
+    anchos = [3, 4, 5, 5, 6, 6, 6, 6, 6, 6, 6, 5, 5, 5, 4, 4, 3, 3, 2, 1, 0]
+    zb = 4
+
+    def escamas(x, y, z):
+        if (z - zb) % 2 == 0 and (x + y + (z // 2)) % 2 == 0:
+            return "Escama"
+        return None
+
+    def cuerpo(celdas):
+        w_de = _capas_gema(celdas, zb, anchos, ["RojoOscuro", "Rojo", "RojoClaro"], arista="Oro",
+                           mancha=escamas)
+        celdas[(0, 0, zb + len(anchos))] = "Oro"
+        ojo = ["...AAA...",
+               "..AAAAA..",
+               ".AAANAAA.",
+               "AAAANAAAA",
+               "AAAANAAAA",
+               ".AAANAAA.",
+               "..AAAAA..",
+               "...AAA..."]
+        zc = zb + 11
+        for fila, linea in enumerate(ojo):
+            z = zc - fila
+            w = w_de[z]
+            for i, ch in enumerate(linea):
+                x = i - 4
+                if ch != "." and abs(x) <= w:
+                    celdas[(x, -w, z)] = {"A": "Iris", "N": "Pupila"}[ch]
+            for x in (-5, 5):  # párpado de oro a los costados
+                if abs(x) <= w:
+                    celdas[(x, -w, z)] = "Oro"
+
+    colores = {
+        "RojoOscuro": ("#5A0610", 0.05, None, 0.0, 0.85),
+        "Rojo": ("#A00E1E", 0.05, None, 0.0, 0.8),
+        "RojoClaro": ("#D81E2E", 0.05, None, 0.0, 0.75),
+        "Escama": ("#7A0A16", 0.2, None, 0.0, 0.9),
+        "Iris": ("#FFD020", 0.2, "#FFB000", 1.2, 1),
+        "Pupila": ("#0A0404", 0.3, None, 0.0, 1),
+        "Nucleo": ("#FF8A20", 0.2, "#FF5A00", 2.0, 1),
+        "Oro": ("#D8A020", 0.25, None, 0.0, 1),
+        "Zocalo": ("#2A2322", 0.6, None, 0.0, 1),
+        "Anillo": ("#C8901A", 0.25, "#FFB040", 0.3, 1),
+        **{k: VOLCAN_ROCA[k] for k in ("Roca", "RocaOscura")},
+    }
+    return mitica(nombre, cuerpo, colores, anillo_z=6)
+
+
+def llama_viva(nombre):
+    """Mítica (Volcán): cristal con forma de llama: capas que se mecen de lado a lado y arriba se
+    abren en 3 lenguas de distinta altura; cáscara en degradé rojo, naranja y amarillo, núcleo
+    blanco amarillento que brilla fuerte y anillo cuadrado de hierro oscuro con brasas."""
+    anchos = [3, 4, 5, 5, 5, 5, 5, 5, 4, 4, 4, 3, 3, 3, 2, 2]
+    zb = 4
+    tonos = ["Rojo", "Naranja", "Amarilla", "AmarillaClara"]
+
+    def vaiven(z):
+        return round(1.2 * math.sin((z - zb) * 0.6))
+
+    def cuerpo(celdas):
+        capa = {}
+        _capas_gema(capa, zb, anchos, tonos, arista=None)
+        for (x, y, z), k in capa.items():
+            celdas[(x + vaiven(z), y, z)] = k
+        ztop = zb + len(anchos)
+        for x0, y0, alto, ladeo in ((0, 0, 8, 1), (-2, 1, 5, -1), (2, -1, 4, 1)):  # lenguas
+            for i in range(alto):
+                z = ztop + i
+                x = x0 + vaiven(ztop) + ladeo * (i // 3)
+                ancho = 1 if i < alto - 2 else 0
+                for a in range(-ancho, ancho + 1):
+                    for b in range(-ancho, ancho + 1):
+                        celdas[(x + a, y0 + b, z)] = "AmarillaClara" if i >= alto - 3 else "Amarilla"
+
+    colores = {
+        "Rojo": ("#E0201A", 0.05, "#E0201A", 0.4, 0.75),
+        "Naranja": ("#FF6A10", 0.05, "#FF6A10", 0.5, 0.7),
+        "Amarilla": ("#FFB020", 0.05, "#FFB020", 0.6, 0.65),
+        "AmarillaClara": ("#FFE870", 0.05, "#FFE060", 0.9, 0.65),
+        "Nucleo": ("#FFF8C0", 0.2, "#FFE070", 3.0, 1),
+        "Zocalo": ("#2A2322", 0.6, None, 0.0, 1),
+        "Anillo": ("#3A302C", 0.5, "#FF5A10", 0.3, 1),
+        **{k: VOLCAN_ROCA[k] for k in ("Roca", "RocaOscura")},
+    }
+    return mitica(nombre, cuerpo, colores, anillo_z=7)
+
+
+def corazon_del_volcan(nombre):
+    """Celestial (Volcán): corazón de roca negra (más grueso al medio) con vetas de lava medio
+    transparentes y un núcleo de lava que late (malla aparte), flotando sobre un pedestal de roca
+    volcánica; halo de fuego, anillo de fuego y 3 gemitas de brasa que orbitan."""
+
+    def gema(celdas, zb):
+        cz = zb + 12
+        plano = _plano_corazon(cz, 21, 7.5)
+        _emblema(celdas, plano, ["RocaNegra", "RocaMedia", "RocaClara"], aro=None)
+        for (x, y, z), k in list(celdas.items()):
+            if k in ("RocaNegra", "RocaMedia", "RocaClara", "Faceta") and (x, z) in plano:
+                onda = math.sin(x * 0.9 + z * 0.5) + math.sin(x * 0.4 - z * 0.8)
+                if abs(onda) < 0.28:
+                    celdas[(x, y, z)] = "Lava"
+        return max(z for _, z in plano)
+
+    colores = {
+        "RocaNegra": ("#14100E", 0.6, None, 0.0, 1),
+        "RocaMedia": ("#2A2220", 0.6, None, 0.0, 1),
+        "RocaClara": ("#463A36", 0.55, None, 0.0, 1),
+        "Faceta": ("#5A4A44", 0.5, None, 0.0, 1),
+        "Lava": ("#FF6A10", 0.3, "#FF5A00", 2.0, 0.75),
+        "Nucleo": ("#FFB020", 0.2, "#FF7A00", 5.0, 1),
+        "Halo": ("#FF7A20", 0.1, "#FF5A10", 1.0, 0.55),
+        "Anillo": ("#FF8A20", 0.2, "#FF6A10", 1.2, 1),
+        "Gemita1": ("#FF3A10", 0.05, "#FF3A10", 0.9, 1),
+        "Gemita2": ("#FFD030", 0.05, "#FFD030", 0.9, 1),
+        "Gemita3": ("#FF7A10", 0.05, "#FF7A10", 0.9, 1),
+        "Cristalito": ("#FF6A10", 0.2, "#FF5A00", 0.8, 1),
+        **VOLCAN_ROCA,
+    }
+    return celestial(nombre, gema, colores)
+
+
+def corona_ignea(nombre):
+    """Celestial (Volcán): corona de obsidiana (aro negro brillante con remaches de oro) con 8 puntas
+    que terminan en llamitas de cubitos, y un rubí gigante en capas en el centro (núcleo que brilla
+    fuerte). Halo de llamas, anillo y 3 gemitas que orbitan; pedestal de roca volcánica."""
+
+    def gema(celdas, zb):
+        anchos = [1, 2, 3, 4, 5, 5, 6, 6, 6, 6, 6, 6, 5, 5, 4, 4, 3, 3, 2, 1, 1, 0]
+        _capas_gema(celdas, zb + 1, anchos, ["RubiOscuro", "Rubi", "RubiClaro"])
+        for z in range(zb, zb + 5):
+            for x in range(-7, 8):
+                for y in range(-7, 8):
+                    d = max(abs(x), abs(y))
+                    if d == 7 or (d == 6 and z == zb):
+                        remache = z == zb + 2 and d == 7 and (x + y) % 3 == 0
+                        celdas[(x, y, z)] = "Remache" if remache else "Obsidiana"
+        for x, y in ((-7, -7), (7, -7), (-7, 7), (7, 7), (0, -7), (0, 7), (-7, 0), (7, 0)):
+            alto = 5 if x == 0 or y == 0 else 3
+            for z in range(zb + 5, zb + 5 + alto):
+                celdas[(x, y, z)] = "Obsidiana"
+            celdas[(x, y, zb + 5 + alto)] = "Fuego"
+            celdas[(x, y, zb + 6 + alto)] = "FuegoClaro"
+        return zb + 1 + len(anchos) - 1
+
+    def halo(celdas, hz):
+        for x in range(-8, 9):
+            alto = 4 + round(3 * abs(math.sin(x * 0.9)))
+            for z in range(hz - 2, hz + alto + 2):
+                if abs(x) >= 6 or z >= hz + alto:
+                    celdas[(x, 9, z)] = "Halo"
+
+    colores = {
+        "RubiOscuro": ("#6A0010", 0.05, None, 0.0, 0.8),
+        "Rubi": ("#B0001E", 0.05, None, 0.0, 0.7),
+        "RubiClaro": ("#E8102E", 0.05, None, 0.0, 0.65),
+        "Faceta": ("#FF5A6A", 0.05, "#FF2A40", 0.3, 0.8),
+        "Nucleo": ("#FF8090", 0.2, "#FF1030", 4.0, 1),
+        "Obsidiana": ("#14101A", 0.05, None, 0.0, 1),
+        "Remache": ("#F2B92E", 0.25, None, 0.0, 1),
+        "Fuego": ("#FF6A10", 0.2, "#FF5A00", 1.5, 1),
+        "FuegoClaro": ("#FFD030", 0.2, "#FFC000", 2.0, 1),
+        "Halo": ("#FF7A20", 0.1, "#FF5A10", 1.0, 0.55),
+        "Anillo": ("#3A302C", 0.4, "#FF6A10", 0.5, 1),
+        "Gemita1": ("#E8102E", 0.05, "#E8102E", 0.9, 1),
+        "Gemita2": ("#FFD030", 0.05, "#FFD030", 0.9, 1),
+        "Gemita3": ("#FF6A10", 0.05, "#FF6A10", 0.9, 1),
+        "Cristalito": ("#FF6A10", 0.2, "#FF5A00", 0.8, 1),
+        **VOLCAN_ROCA,
+    }
+    return celestial(nombre, gema, colores, halo=halo)
+
+
 # nombre: (zona, rareza, forma, {clave: (color, brillo)})
 PIEDRAS = {
     "Cuarzo": (
@@ -2985,6 +3413,18 @@ PIEDRAS = {
     "EstrelladeEscarcha": (3, "Mitica", estrella_de_escarcha, None),
     "CopoEterno": (3, "Celestial", copo_eterno, None),
     "TronodeHielo": (3, "Celestial", trono_de_hielo, None),
+    "Obsidiana": (4, "Comun", obsidiana, None),
+    "BasaltoRojo": (4, "Comun", basalto_rojo, None),
+    "Granate": (4, "Rara", granate, None),
+    "CristaldeAzufre": (4, "Rara", cristal_de_azufre, None),
+    "Rubi": (4, "Epica", rubi, None),
+    "OpalodeFuego": (4, "Epica", opalo_de_fuego, None),
+    "NucleodeMagma": (4, "Legendaria", nucleo_de_magma, None),
+    "PiedraFenix": (4, "Legendaria", piedra_fenix, None),
+    "OjodeDragon": (4, "Mitica", ojo_de_dragon, None),
+    "LlamaViva": (4, "Mitica", llama_viva, None),
+    "CorazondelVolcan": (4, "Celestial", corazon_del_volcan, None),
+    "CoronaIgnea": (4, "Celestial", corona_ignea, None),
 }
 
 
