@@ -620,7 +620,7 @@ end
 -- flecha de la pieza en vez del puntero.
 local function ajustarConPiezas(lugares: Instance, piezas: Instance)
 	local spawn = lugares:FindFirstChild("Spawn")
-	if spawn and spawn:IsA("SpawnLocation") and piezas:FindFirstChild("Spawn") then
+	if spawn and spawn:IsA("SpawnLocation") then -- sin adorno: el spawn no se ve
 		spawn.Transparency = 1
 		spawn.CFrame = CFrame.new(spawn.Position.X, 2.5, spawn.Position.Z)
 		for _, d in spawn:GetChildren() do

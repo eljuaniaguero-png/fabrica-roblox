@@ -150,9 +150,9 @@ ROCAS = {
     5: [("PiedraEstelar", "CristalEstelar"), ("RocaNebulosa", "CristalNebulosa"), ("RocaMeteorito", "CristalMeteorito")],
 }
 
-LARGO = 240  # largo de cada bioma
+LARGO = 200  # largo de cada bioma (17/10: antes 240)
 MURO = 8  # muro entre biomas
-XMIN, XMAX = -88, 88  # zona caminable (17/10, plan v5: más angosto)
+XMIN, XMAX = -80, 80  # zona caminable (17/10: antes -88 a 88)
 X0, X1 = XMIN - 36, XMAX + 52  # la grilla: el risco derecho es más grueso (ahí van las cámaras)
 Y0, Y1 = -4, 92
 PLAZA = -136  # la plaza va de z -136 a 0
@@ -179,12 +179,12 @@ ESCALA_PARCELAS = 1.0  # parcelas de 40 x 32
 # (x, z, giro): 4 en fila contra la pared del fondo (entrada hacia +z) y 1 a cada costado
 # (entrada hacia el medio)
 PARCELAS = (
-    (-66, -118, 180),
-    (-22, -118, 180),
-    (22, -118, 180),
-    (66, -118, 180),
-    (-72, -66, 270),
-    (72, -66, 90),
+    (-60, -118, 180),
+    (-20, -118, 180),
+    (20, -118, 180),
+    (60, -118, 180),
+    (-64, -66, 270),
+    (64, -66, 90),
 )
 PATIO_X0 = -320  # patio de la izquierda: de x -320 a -136
 DX_SANTUARIO = -200  # el Santuario y el Museo se arman como antes, corridos en x
@@ -197,11 +197,11 @@ DIFICULTAD = {2: "MEDIO", 3: "DIFÍCIL", 4: "MUY DIFÍCIL", 5: "EXTRA DIFÍCIL"}
 
 # Puntos de geoda de cada bioma (15 por bioma, plan v5): (distancia desde el comienzo del bioma, columnas x)
 FILAS_GEODAS = (
-    (30, (-64, -36, 36, 64)),
-    (76, (-50, 50)),
-    (118, (-64, -36, 36, 64)),
-    (160, (-50, 50)),
-    (200, (-62, -36, 48)),
+    (26, (-58, -34, 34, 58)),
+    (64, (-46, 46)),
+    (100, (-58, -34, 34, 58)),
+    (136, (-46, 46)),
+    (170, (-56, -34, 44)),
 )
 
 
@@ -842,17 +842,13 @@ def plaza(g, s, rng):
     # sin pared adelante (17/10, Juani): solo el arco de entrada de Lobby.fbx
     s.marcar(XMIN, -2, XMAX, 8)
     s.marcar(-16, z0, 16, 0)  # camino del Santuario al arco
-    marcador("Pieza", (ARCO[0], 0, ARCO[1]), (40, 36, 6), 0, Nombre="Arco_Entrada", Escala=1.8)
     # los 2 tableros en las paredes de los costados, mirando al medio
     marcador("Tablero", (XMIN + 1, 12, -40), (16, 12, 1), 270, Tabla="Geodas")
     marcador("Tablero", (XMAX - 1, 12, -40), (16, 12, 1), 90, Tabla="Hallazgo")
 
     # spawn, con un anillo dorado en el piso
     sx, sz = SPAWN
-    losa(g, sx, sz, -2, 0, 10, 10, "Oro", 4)
-    losa(g, sx, sz, -2, 0, 8, 8, "Baldosa", 2)
     marcador("Spawn", (sx, 0.5, sz), (10, 1, 10), 0)
-    marcador("Pieza", (sx, 0, sz), (12, 8, 12), 0, Nombre="Spawn")
     s.marcar(sx - 12, sz - 12, sx + 12, sz + 12)
     marcador("Cartel", (-24, 4, -14), (8, 5, 1), mirar((-24, -14), SPAWN), Menu="Misiones", Texto="MISIONES")
     # el Banco y la Tienda a los costados, de frente al que aparece
@@ -1039,7 +1035,7 @@ def bioma(g, s, rng, n):
         marcador("PuertaZona", (0, 10, ze + 4), (24, 20, 2), 0, Zona=n + 1)
         # cartel de dificultad arriba del portón (plan v5)
         marcador("Cartel", (0, 34, ze - 1), (26, 6, 1), 0, Texto=DIFICULTAD[n + 1], SinPoste=True)
-    for x in (-80, -76, -60, -44, -28, 28, 44, 60, 76, 80):
+    for x in (-72, -56, -40, -28, 28, 40, 56, 72):
         deco("Pared_Ladrillo_Zona%d" % n, x, ze - 2, 0)
         if n < 5:
             deco("Pared_Ladrillo_Zona%d" % (n + 1), x, ze + MURO + 2, 180)
@@ -1160,7 +1156,6 @@ def deco_pradera(g, s, rng, n, area, zs, ze, zd):
     poner_deco(s, rng, area, ["Arbol_Mediano_1", "Arbol_Rosa_1", "Arbol_Mediano_2", "Arbol_Rosa_2", "Arbol_Mediano_3", "Arbol_Rosa_3"], 10)
     poner_deco(s, rng, area, ["Arbol_Seco_1", "Arbol_Seco_2", "Arbol_Seco_3"], 3)
     poner_deco(s, rng, area, ["Arbusto_1", "Arbusto_2", "Arbusto_3"], 12)
-    poner_deco(s, rng, area, "Racimo_Cuarzo", 5)
 
 
 def deco_dunas(g, s, rng, n, area, zs, ze, zd):
