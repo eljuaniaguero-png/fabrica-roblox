@@ -27,13 +27,13 @@ from mathutils import Matrix, Vector  # noqa: E402
 ICONOS = m.ARTE / "iconos" / "gemas"
 
 # Solo las piedras que Juani ya aprobó entran al FBX de su zona
-APROBADAS = {"Cuarzo", "Jaspe", "Amatista", "AgataMusgosa", "Esmeralda"}
+APROBADAS = {"Cuarzo", "Jaspe", "Amatista", "AgataMusgosa", "Esmeralda", "TurmalinaRosa"}
 
 # Piedras con alto propio (studs) y pivote en el centro de la base en vez del centro de la caja
-ALTO = {"Cuarzo": 2.5, "Jaspe": 2.5, "Amatista": 3.0, "AgataMusgosa": 3.0, "Esmeralda": 3.5}
-PIVOTE_BASE = {"Cuarzo", "Jaspe", "Amatista", "AgataMusgosa", "Esmeralda"}
+ALTO = {"Cuarzo": 2.5, "Jaspe": 2.5, "Amatista": 3.0, "AgataMusgosa": 3.0, "Esmeralda": 3.5, "TurmalinaRosa": 3.5}
+PIVOTE_BASE = {"Cuarzo", "Jaspe", "Amatista", "AgataMusgosa", "Esmeralda", "TurmalinaRosa"}
 # Topes de triángulos propios (pisan el de la rareza)
-TOPE = {"Esmeralda": 4000}
+TOPE = {"Esmeralda": 4000, "TurmalinaRosa": 4000}
 
 # Alto (studs) y tope de triángulos por rareza
 RAREZAS = {
@@ -748,11 +748,12 @@ def agata_musgosa(nombre):
     return racimo(nombre, RACIMOS["AgataMusgosa"])
 
 
-def esmeralda(nombre):
-    """Gema tallada de cubitos: esmeralda rectangular, ancha arriba y en punta escalonada abajo,
-    de vidrio verde en 3 tonos (más claro arriba) con aristas claras que hacen de facetas; adentro
-    un corazón que brilla (malla aparte). Va sentada en un engarce cuadrado de oro con 4 garras,
-    sobre una base de roca con cristalitos verdes."""
+def tallada(nombre, d):
+    """Gema tallada de cubitos: ancha arriba y en punta escalonada abajo, de vidrio en 3 tonos (más
+    claro arriba) con aristas claras que hacen de facetas; adentro un corazón que brilla (malla
+    aparte). Va sentada en un engarce cuadrado de oro con 4 garras, sobre una base de roca con
+    cristalitos. Con "punta", las últimas capas de arriba van con otros tonos (otra punta de color).
+    'd' trae los números de cada gema."""
     celdas = {}
     # base de roca
     for x in range(-8, 9):
@@ -763,16 +764,17 @@ def esmeralda(nombre):
                     oscura = z < 2 and random.Random(f"{x},{y},{z}").random() < 0.3
                     celdas[(x, y, z)] = "RocaOscura" if oscura else "Roca"
     # engarce: marco cuadrado de oro hueco
-    for x in range(-5, 6):
-        for y in range(-4, 5):
-            if max(abs(x) / 5, abs(y) / 4) >= 0.75:
+    ex, ey = d["engarce"]
+    for x in range(-ex, ex + 1):
+        for y in range(-ey, ey + 1):
+            if max(abs(x) / ex, abs(y) / ey) >= 0.75:
                 celdas[(x, y, 3)] = "Oro"
     # gema: (z, medio ancho en x, medio ancho en y): pabellón en punta abajo, corona arriba
-    anchos = [(1, 0), (1, 0), (2, 1), (2, 1), (3, 1), (3, 2), (4, 2), (4, 2), (5, 3), (5, 3), (6, 3),
-              (6, 4), (6, 4), (6, 4), (5, 3), (5, 3), (4, 2), (3, 2)]
-    capas = [(3 + i, ax, ay) for i, (ax, ay) in enumerate(anchos)]
+    capas = [(3 + i, ax, ay) for i, (ax, ay) in enumerate(d["anchos"])]
     medida = {z: (ax, ay) for z, ax, ay in capas}
     z0, zmax = capas[0][0], capas[-1][0]
+    oscuro, medio, claro = d["tonos"]
+    punta = d.get("punta", 0)
     for z, ax, ay in capas:
         t = (z - z0) / (zmax - z0)
         sig = medida.get(z + 1)
@@ -787,19 +789,23 @@ def esmeralda(nombre):
                     continue
                 if not borde and not escalon:
                     continue  # hueco por dentro: se ve el corazón a través del vidrio
-                if esquina or (escalon and borde):
+                if z > zmax - punta:  # la punta de color manda, también en las facetas
+                    claro_p = esquina or random.Random(f"p{x},{y},{z}").random() < 0.3
+                    celdas[(x, y, z)] = "PuntaClaro" if claro_p else "Punta"
+                elif esquina or (escalon and borde):
                     celdas[(x, y, z)] = "Faceta"
                 else:
                     v = t + (random.Random(f"e{x},{y},{z}").random() - 0.5) * 0.25
-                    celdas[(x, y, z)] = "VerdeClaro" if v > 0.62 else "VerdeMedio" if v > 0.3 else "VerdeOscuro"
+                    celdas[(x, y, z)] = claro if v > 0.62 else medio if v > 0.3 else oscuro
     # 4 garras de oro en las esquinas: suben pegadas a la gema y se doblan sobre ella
+    gx, gy, gz = d["garras"]  # punta doblada de cada garra y altura donde se dobla
     for sx in (-1, 1):
         for sy in (-1, 1):
-            for z in range(3, 17):
+            for z in range(3, gz):
                 ax, ay = medida.get(z, (1, 0))
                 celdas[(sx * (ax + 1), sy * (ay + 1), z)] = "Oro"
-            celdas[(sx * 6, sy * 4, 17)] = celdas[(sx * 5, sy * 4, 17)] = "Oro"
-    # cristalitos verdes en la roca
+            celdas[(sx * gx, sy * gy, gz)] = celdas[(sx * (gx - 1), sy * gy, gz)] = "Oro"
+    # cristalitos en la roca
     for x, y, alto in ((-7, 3, 3), (6, -5, 2), (-3, -7, 2), (7, 4, 2), (2, 7, 3)):
         z0 = max((z for z in range(3) if (x, y, z) in celdas), default=-1) + 1  # apoyado en la roca
         for z in range(z0, z0 + alto):
@@ -807,19 +813,61 @@ def esmeralda(nombre):
     for x, y in ((-6, -4), (4, 6), (-1, 7)):
         if (x, y, 2) in celdas:
             celdas[(x, y, 3)] = "Pasto"
-    colores = {
-        "VerdeOscuro": ("#06703A", 0.05, None, 0.0, 0.7),
-        "VerdeMedio": ("#10A651", 0.05, None, 0.0, 0.6),
-        "VerdeClaro": ("#3FE07E", 0.05, None, 0.0, 0.55),
-        "Faceta": ("#B8FFD2", 0.05, "#7DFFB0", 0.25, 0.8),
-        "Corazon": ("#7DFFB0", 0.2, "#4DFF94", 2.5, 1),
+    colores = dict(d["colores"])
+    colores.update({
         "Oro": ("#F2B92E", 0.25, None, 0.0, 1),
-        "Cristal": ("#3FE07E", 0.15, "#3FE07E", 0.4, 1),
         "Roca": ("#8A8F99", 0.8, None, 0.0, 1),
         "RocaOscura": ("#5D626C", 0.85, None, 0.0, 1),
         "Pasto": ("#4E9A3A", 0.8, None, 0.0, 1),
-    }
+    })
     return cubitos(nombre, celdas, colores)
+
+
+TALLADAS_CUBITOS = {
+    # esmeralda verde rectangular, ancha y corta
+    "Esmeralda": {
+        "engarce": (5, 4),
+        "anchos": [(1, 0), (1, 0), (2, 1), (2, 1), (3, 1), (3, 2), (4, 2), (4, 2), (5, 3), (5, 3), (6, 3),
+                   (6, 4), (6, 4), (6, 4), (5, 3), (5, 3), (4, 2), (3, 2)],
+        "garras": (6, 4, 17),
+        "tonos": ("VerdeOscuro", "VerdeMedio", "VerdeClaro"),
+        "colores": {
+            "VerdeOscuro": ("#06703A", 0.05, None, 0.0, 0.7),
+            "VerdeMedio": ("#10A651", 0.05, None, 0.0, 0.6),
+            "VerdeClaro": ("#3FE07E", 0.05, None, 0.0, 0.55),
+            "Faceta": ("#B8FFD2", 0.05, "#7DFFB0", 0.25, 0.8),
+            "Corazon": ("#7DFFB0", 0.2, "#4DFF94", 2.5, 1),
+            "Cristal": ("#3FE07E", 0.15, "#3FE07E", 0.4, 1),
+        },
+    },
+    # turmalina rosa alargada y finita, con las 4 capas de arriba verdes (punta de sandía)
+    "TurmalinaRosa": {
+        "engarce": (3, 3),
+        "anchos": [(1, 0), (1, 0), (1, 1), (1, 1), (2, 1), (2, 1), (2, 2), (3, 2), (3, 2), (3, 2), (3, 2),
+                   (3, 2), (3, 2), (3, 2), (3, 2), (3, 2), (3, 2), (2, 2), (2, 1), (1, 1)],
+        "garras": (3, 2, 17),
+        "punta": 5,
+        "tonos": ("RosaOscuro", "RosaMedio", "RosaClaro"),
+        "colores": {
+            "RosaOscuro": ("#B0205E", 0.05, None, 0.0, 0.7),
+            "RosaMedio": ("#E8478C", 0.05, None, 0.0, 0.6),
+            "RosaClaro": ("#FF85B8", 0.05, None, 0.0, 0.55),
+            "Punta": ("#1E9E4A", 0.05, None, 0.0, 0.65),
+            "PuntaClaro": ("#6BE38A", 0.05, None, 0.0, 0.55),
+            "Faceta": ("#FFD1E6", 0.05, "#FF9CC8", 0.25, 0.8),
+            "Corazon": ("#FFB3D6", 0.2, "#FF6FB0", 2.5, 1),
+            "Cristal": ("#FF85B8", 0.15, "#FF85B8", 0.4, 1),
+        },
+    },
+}
+
+
+def esmeralda(nombre):
+    return tallada(nombre, TALLADAS_CUBITOS["Esmeralda"])
+
+
+def turmalina_rosa(nombre):
+    return tallada(nombre, TALLADAS_CUBITOS["TurmalinaRosa"])
 
 
 # nombre: (zona, rareza, forma, {clave: (color, brillo)})
@@ -839,6 +887,7 @@ PIEDRAS = {
     "Amatista": (1, "Rara", amatista, None),
     "AgataMusgosa": (1, "Rara", agata_musgosa, None),
     "Esmeralda": (1, "Epica", esmeralda, None),
+    "TurmalinaRosa": (1, "Epica", turmalina_rosa, None),
 }
 
 
