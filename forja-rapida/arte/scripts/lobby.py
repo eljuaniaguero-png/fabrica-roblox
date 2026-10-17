@@ -55,7 +55,7 @@ import modelos as M  # noqa: E402
 import decoracion as D  # noqa: E402
 
 # piezas que Juani ya aprobó: son las que van a Lobby.fbx
-APROBADAS = ["Puesto_Vender", "Tienda_Forja"]
+APROBADAS = ["Puesto_Vender", "Tienda_Forja", "Pedestal_Exhibicion"]
 
 COLORES_PUESTO = {
     "ladrillo": "#9A5B3A",  # marrón ladrillo
@@ -470,12 +470,18 @@ def render(pieza):
 
 
 def exportar():
-    """Lobby.fbx: un vacío por pieza aprobada con sus mallas (Puesto_Vender_Ladrillo...)."""
+    """Lobby.fbx: un vacío por pieza aprobada (y uno por versión de pedestal) con sus mallas (Puesto_Vender_Ladrillo...)."""
     M.limpiar_escena()
     raices = []
+    # cada pedestal va solo, con su pivote (Pedestal_Madera, Pedestal_Piedra, Pedestal_Cristal)
+    armados = []
     for pieza in APROBADAS:
-        armar_pieza, mats_de = PIEZAS[pieza][:2]
-        objs, _ = armar_pieza(mats_de())
+        if pieza == "Pedestal_Exhibicion":
+            armados += [(f"Pedestal_{v}", pedestal(mats_pedestal(v), v)[0]) for v in PEDESTALES]
+        else:
+            armar_pieza, mats_de = PIEZAS[pieza][:2]
+            armados.append((pieza, armar_pieza(mats_de())[0]))
+    for pieza, objs in armados:
         raiz = bpy.data.objects.new(pieza, None)
         bpy.context.scene.collection.objects.link(raiz)
         for o in objs:
