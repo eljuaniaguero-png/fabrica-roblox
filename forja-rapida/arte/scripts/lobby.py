@@ -43,11 +43,11 @@ Piezas:
                  registradora dorada de bloques con un botón verde adelante (donde se cobra).
                  Mallas Terreno, Borde, Camino, Lugares, Madera, Cartel, Caja, CajaDetalle y
                  Boton. Los pedestales no van incluidos.
-  Ruleta_Mascotas  escenario de bloques de 16 x 10 studs y 2 de alto con 2 escalones adelante
+  Ruleta_Mascotas  escenario violeta con borde dorado de 20 x 12 studs y 2 de alto con 2 escalones adelante
                  (salen 2 studs del frente) y alfombra violeta adelante de los escalones. Arriba,
-                 una rueda parada de 12 studs de diámetro sobre un soporte de ladrillo: la rueda
+                 una rueda parada de 16 studs de diámetro sobre un soporte de ladrillo: la rueda
                  es un vacío aparte "Rueda" con el pivote en su centro (el juego la hace girar
-                 alrededor de su eje, el Y de Blender) y sus mallas Rueda_Borde (bloques blancos),
+                 alrededor de su eje, el Y de Blender) y sus mallas Rueda_Borde<Color> (franjas de 6 colores),
                  Rueda_Cara (lisa y clara, sin porciones: el juego las dibuja según la chance de
                  cada mascota) y Rueda_Centro (dorado). Arriba, una flecha roja fija que apunta
                  al premio, colgada de un brazo del soporte. Focos de colores (Neon) en el borde
@@ -573,49 +573,58 @@ def parcela_render(studs):
 
 
 # --- Ruleta_Mascotas ------------------------------------------------------------------------
-# escenario de x -8 a 8, y -5 a 5; el frente es -y
+# escenario de x -10 a 10, y -6 a 6; el frente es -y
 
 COLORES_RULETA = {
-    "escenario": "#A86A3A",  # madera
-    "escenario_borde": "#6B4226",
+    "escenario": "#6B2FB0",  # violeta
+    "escenario_borde": "#FFC83D",  # dorado
     "ladrillo": COLORES_PUESTO["ladrillo"],
     "flecha": "#E8202C",
-    "pedestal": "#4B3F8F",
+    "pedestal": "#2E9CFF",
     "pedestal_tapa": "#FFC83D",
     "alfombra": "#7A2CFF",
     "alfombra_borde": "#C08CFF",  # brilla apenas
-    "borde_rueda": "#F4F6FF",
-    "cara_rueda": "#C9C2B2",  # el juego pinta las porciones encima
+    "cara_rueda": "#F4F1EA",  # lisa: el juego pinta las porciones encima
     "centro_rueda": "#FFC83D",
 }
 FOCOS = {"FocoRojo": "#FF3B4E", "FocoAmarillo": "#FFE14D", "FocoVerde": "#3BD16F", "FocoAzul": "#3DA8FF", "FocoRosa": "#FF5FD2"}
+# el borde de la rueda va en franjas de estos colores (una malla por color)
+BORDES = {"Rojo": "#FF3B4E", "Naranja": "#FF8C1F", "Amarillo": "#FFE14D", "Verde": "#3BD16F", "Azul": "#3DA8FF", "Violeta": "#A65BFF"}
 MAX["Ruleta_Mascotas"] = 6000
+ESC_X, ESC_Y = 10, 6
 ESCENARIO_ALTO = 2
-RUEDA_RADIO = 6
+RUEDA_RADIO = 8
 RUEDA_Z = ESCENARIO_ALTO + 0.5 + RUEDA_RADIO  # centro de la rueda (queda medio stud sobre el piso)
 RUEDA_Y = (-0.5, 0.5)  # espesor de la rueda
 
 
 def rueda(mats):
     """Vacío Rueda (pivote en el centro) con sus mallas armadas alrededor de (0, 0, 0)."""
-    borde, cara, centro = D.Malla(), D.Malla(), D.Malla()
+    import math
+
+    bordes = {n: D.Malla() for n in BORDES}
+    cara, centro = D.Malla(), D.Malla()
     r = RUEDA_RADIO
-    aro, disco = set(), set()
+    nombres = list(BORDES)
+    aro, disco = {n: set() for n in nombres}, set()
     for i in range(2 * r):
         for k in range(2 * r):
-            d = ((i + 0.5 - r) ** 2 + (k + 0.5 - r) ** 2) ** 0.5
-            if r - 1 <= d < r:
-                aro.add((i, 0, k))
-            elif d < r - 1:
+            x, z = i + 0.5 - r, k + 0.5 - r
+            d = math.hypot(x, z)
+            if r - 1.2 <= d < r:
+                franja = int((math.atan2(z, x) + math.pi) / (2 * math.pi) * 12) % len(nombres)
+                aro[nombres[franja]].add((i, 0, k))
+            elif d < r - 1.2:
                 disco.add((i, 0, k))
-    D.voxeles_malla(borde, aro, (1, 1.4, 1), (-r, RUEDA_Y[0] - 0.2, -r))
-    # la cara es un solo bloque fino por celda, metido en el aro
+    todas = set().union(*aro.values())
+    for n in nombres:
+        D.voxeles_malla(bordes[n], aro[n], (1, 1.4, 1), (-r, RUEDA_Y[0] - 0.2, -r), llenas=todas)
     D.voxeles_malla(cara, disco, (1, 0.8, 1), (-r, RUEDA_Y[0] + 0.1, -r))
-    centro.caja((-1, 1), (RUEDA_Y[0] - 0.4, RUEDA_Y[1] + 0.4), (-1, 1))
-    centro.caja((-0.5, 0.5), (RUEDA_Y[0] - 0.7, RUEDA_Y[0] - 0.4), (-0.5, 0.5), caras="xXyzZ")
+    centro.caja((-1.5, 1.5), (RUEDA_Y[0] - 0.4, RUEDA_Y[1] + 0.4), (-1.5, 1.5))
+    centro.caja((-0.75, 0.75), (RUEDA_Y[0] - 0.8, RUEDA_Y[0] - 0.4), (-0.75, 0.75), caras="xXyzZ")
     objs, conteo = D.mallas(
         [
-            ("Rueda_Borde", borde, mats["borde_rueda"]),
+            *((f"Rueda_Borde{n}", bordes[n], mats[f"borde{n}"]) for n in nombres),
             ("Rueda_Cara", cara, mats["cara_rueda"]),
             ("Rueda_Centro", centro, mats["centro_rueda"]),
         ],
@@ -636,43 +645,48 @@ def ruleta(mats):
     esc, eb, lad, fle, ped, pt, alf, ab = (D.Malla() for _ in range(8))
     focos = {n: D.Malla() for n in FOCOS}
     z = ESCENARIO_ALTO
-    esc.caja((-8, 8), (-5, 5), (0, z - 0.3), caras="xXyYZ")
-    eb.caja((-8.2, 8.2), (-5.2, 5.2), (z - 0.3, z))
+    esc.caja((-ESC_X, ESC_X), (-ESC_Y, ESC_Y), (0, z - 0.3), caras="xXyYZ")
+    eb.caja((-ESC_X - 0.2, ESC_X + 0.2), (-ESC_Y - 0.2, ESC_Y + 0.2), (z - 0.3, z))
     # 2 escalones adelante
-    esc.caja((-4, 4), (-6, -5.2), (0, 1.3), caras="xXyZ")
-    esc.caja((-4, 4), (-7, -6), (0, 0.6), caras="xXyZ")
+    esc.caja((-5, 5), (-ESC_Y - 1, -ESC_Y - 0.2), (0, 1.3), caras="xXyZ")
+    esc.caja((-5, 5), (-ESC_Y - 2, -ESC_Y - 1), (0, 0.6), caras="xXyZ")
     # soporte de ladrillo: base, columna atrás de la rueda y brazo de la flecha
-    lad.caja((-3.5, 3.5), (0.8, 3.2), (z, z + 1), caras="xXyYZ")
+    tope = RUEDA_Z + RUEDA_RADIO + 2.6
+    lad.caja((-4, 4), (0.8, 3.2), (z, z + 1), caras="xXyYZ")
     zc, i = z + 1, 0
-    while zc < RUEDA_Z + RUEDA_RADIO + 2.2 - 1e-6:  # columna de bloques de 1 stud
-        r = 0.8 if i % 2 == 0 else 0.72
-        lad.caja((-r, r), (1.6 - r, 1.6 + r), (zc, zc + 1), caras="xXyYzZ")
+    while zc < tope - 1e-6:  # columna de bloques de 1 stud
+        r = 0.9 if i % 2 == 0 else 0.82
+        lad.caja((-r, r), (1.8 - r, 1.8 + r), (zc, min(zc + 1, tope)), caras="xXyYzZ")
         zc += 1
         i += 1
-    lad.caja((-0.6, 0.6), (-0.9, 0.8), (RUEDA_Z + RUEDA_RADIO + 1.2, RUEDA_Z + RUEDA_RADIO + 2.2))
-    lad.caja((-0.4, 0.4), (0.8, 0.95), (RUEDA_Z - 0.4, RUEDA_Z + 0.4), caras="xXyzZ")  # eje
+    lad.caja((-0.7, 0.7), (-1.1, 0.9), (tope - 1, tope))
+    lad.caja((-0.5, 0.5), (0.8, 0.95), (RUEDA_Z - 0.5, RUEDA_Z + 0.5), caras="xXyzZ")  # eje
     # flecha roja que apunta para abajo, al premio
-    zt = RUEDA_Z + RUEDA_RADIO + 1.2
-    fle.caja((-1.0, 1.0), (-0.8, 0.6), (zt - 0.7, zt))
-    fle.caja((-0.6, 0.6), (-0.7, 0.5), (zt - 1.2, zt - 0.7), caras="xXyYz")
-    fle.caja((-0.25, 0.25), (-0.6, 0.4), (zt - 1.6, zt - 1.2), caras="xXyYz")
+    zt = tope - 1
+    fle.caja((-1.4, 1.4), (-1.0, 0.7), (zt - 0.8, zt))
+    fle.caja((-0.9, 0.9), (-0.9, 0.6), (zt - 1.4, zt - 0.8), caras="xXyYz")
+    fle.caja((-0.4, 0.4), (-0.8, 0.5), (zt - 1.9, zt - 1.4), caras="xXyYz")
     # focos en el borde del escenario (frente y costados), los colores en ronda
     nombres = list(FOCOS)
-    puntos = [(x, -5.2, "y") for x in range(-7, 8, 2)] + [(-8.2, y, "x") for y in range(-3, 5, 2)] + [(8.2, y, "X") for y in range(-3, 5, 2)]
+    puntos = (
+        [(x, -ESC_Y - 0.2, "y") for x in range(-9, 10, 2)]
+        + [(-ESC_X - 0.2, y, "x") for y in range(-4, 6, 2)]
+        + [(ESC_X + 0.2, y, "X") for y in range(-4, 6, 2)]
+    )
     for i, (x, y, cara) in enumerate(puntos):
         m = focos[nombres[i % len(nombres)]]
-        h = 0.3
+        h = 0.35
         if cara == "y":
-            m.caja((x - h, x + h), (y - 0.3, y), (z - 0.85, z - 0.25), caras="xXyzZ")
+            m.caja((x - h, x + h), (y - 0.3, y), (z - 0.95, z - 0.25), caras="xXyzZ")
         elif cara == "x":
-            m.caja((x - 0.3, x), (y - h, y + h), (z - 0.85, z - 0.25), caras="xyYzZ")
+            m.caja((x - 0.3, x), (y - h, y + h), (z - 0.95, z - 0.25), caras="xyYzZ")
         else:
-            m.caja((x, x + 0.3), (y - h, y + h), (z - 0.85, z - 0.25), caras="XyYzZ")
+            m.caja((x, x + 0.3), (y - h, y + h), (z - 0.95, z - 0.25), caras="XyYzZ")
     # 2 pedestales chiquitos a los costados
-    for x in (-6.2, 6.2):
-        ped.caja((x - 1, x + 1), (-2.5, -0.5), (z, z + 1.3), caras="xXyY")
-        pt.caja((x - 1.15, x + 1.15), (-2.65, -0.35), (z + 1.3, z + 1.6), caras="xXyYzZ")
-    alfombra(alf, ab, -10, -7.4)
+    for x in (-8, 8):
+        ped.caja((x - 1, x + 1), (-3, -1), (z, z + 1.3), caras="xXyY")
+        pt.caja((x - 1.15, x + 1.15), (-3.15, -0.85), (z + 1.3, z + 1.6), caras="xXyYzZ")
+    alfombra(alf, ab, -11, -8.4)
     piezas = [
         ("Escenario", esc, mats["escenario"]),
         ("EscenarioBorde", eb, mats["escenario_borde"]),
@@ -699,6 +713,8 @@ def mats_ruleta(studs=None):
     mats["cara_rueda"] = M.material("Ruleta_CaraRueda", COLORES_RULETA["cara_rueda"])  # lisa, sin studs
     for n, color in FOCOS.items():
         mats[n] = M.material(f"Ruleta_{n}", color, brillo=color, fuerza_brillo=3.0 if studs else 0)
+    for n, color in BORDES.items():
+        mats[f"borde{n}"] = D.material_studs(f"Ruleta_Borde{n}", color, studs) if studs else M.material(f"Ruleta_Borde{n}", color)
     return mats
 
 
@@ -711,7 +727,7 @@ PIEZAS = {
     "Tienda_Forja": (tienda_forja, mats_tienda, (0, -1.5, 9.5), 40, 12),
     "Pedestal_Exhibicion": (lambda s: pedestales(studs=s), lambda s=None: s, (0, -1.5, 1), 24, 25),
     "Parcela_Exhibicion": (parcela_render, lambda s=None: s, (0, -2, 1), 52, 35),
-    "Ruleta_Mascotas": (ruleta, mats_ruleta, (0, -3, 7.5), 36, 15),
+    "Ruleta_Mascotas": (ruleta, mats_ruleta, (0, -3, 10.5), 46, 15),
 }
 
 
