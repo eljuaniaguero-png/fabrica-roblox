@@ -159,21 +159,27 @@ PLAZA = -136  # la plaza va de z -136 a 0
 Z0 = PLAZA - 8  # pared del fondo
 
 # Plaza
-SPAWN = (0, -36)
+SPAWN = (0, -20)
 FUENTE = (0, -70)
 SANTUARIO = (-44, -136, 44, -100)  # x0, z0, x1, z1 (z1 = cara de afuera de la pared con la puerta)
 # piezas de arte/fbx/Lobby.fbx (las pone GeneradorMapa si están en ServerStorage > Modelos > Lobby)
-PUESTO = (-32, -50)  # Puesto_Vender (el Banco), a la izquierda del Spawn, mirándolo
-TIENDA = (32, -50)  # Tienda_Forja, a la derecha
-RULETA = (86, -112)  # Ruleta_Mascotas al fondo a la derecha, mirando a la plaza
+# como el dibujo de Juani (17/10): parcelas al fondo, Ruleta en el medio, Banco y Tienda a los
+# costados y el Spawn adelante, cerca del arco. Lo demás (Museo, Santuario, tableros, vitrinas y
+# el Jefe Ancestral) va en el patio de la izquierda.
+PUESTO = (-64, -40)  # Puesto_Vender (el Banco), a la izquierda
+TIENDA = (64, -40)  # Tienda_Forja, a la derecha
+RULETA = (0, -44)  # Ruleta_Mascotas en el medio, mirando al Spawn
 RUEDA_ALTO = 10.5  # centro de su rueda (lobby.py: RUEDA_Z)
 ARCO = (0, -8)  # Arco_Entrada, adelante del arco de piedra hacia la Pradera
 # calle de las parcelas de exhibición, saliendo por un pasillo en la pared izquierda
-CALLE_Z = -68  # centro del campo de las parcelas (mismo largo que la plaza)
+PARCELAS_X = (-66, -22, 22, 66)  # centro de cada parcela (40 x 32), 2 filas de 4 al fondo
+PARCELAS_Z = (-120, -76)  # fila de atrás (entrada hacia +z) y de adelante (entrada hacia -z)
+PATIO_X0 = -320  # patio de la izquierda: de x -320 a -136
+DX_SANTUARIO = -200  # el Santuario y el Museo se arman como antes, corridos en x
+DX_MUSEO = -170
 PASILLO = (-136, 0)  # la pared izquierda se saca entera: plaza y parcelas son un solo campo
-PARCELAS_X = (-160, -204, -248, -292)  # centro de cada parcela (40 x 32), 4 de cada lado
 MUSEO = (-116, -100, -80, -52)
-ANCESTRAL = (-60, -22)
+ANCESTRAL = (-200, -40)
 
 # Puntos de geoda de cada bioma: (distancia desde el comienzo del bioma, columnas x)
 FILAS_GEODAS = (
@@ -773,36 +779,70 @@ def plaza(g, s, rng):
     losa(g, sx, sz, -2, 0, 8, 8, "Baldosa", 2)
     marcador("Spawn", (sx, 0.5, sz), (10, 1, 10), 0)
     marcador("Pieza", (sx, 0, sz), (12, 8, 12), 0, Nombre="Spawn")
-    # el Banco y la Tienda, uno a cada lado, de frente al que aparece
+    s.marcar(sx - 12, sz - 12, sx + 12, sz + 12)
+    marcador("Cartel", (-24, 4, -14), (8, 5, 1), mirar((-24, -14), SPAWN), Menu="Misiones", Texto="MISIONES")
+    # el Banco y la Tienda a los costados, de frente al que aparece
     for nombre, (px, pz) in (("Puesto_Vender", PUESTO), ("Tienda_Forja", TIENDA)):
         marcador("Pieza", (px, 0, pz), (14, 14, 12), 180, Nombre=nombre)
         s.marcar(px - 8, pz - 7, px + 8, pz + 7)
-    s.marcar(sx - 12, sz - 12, sx + 12, sz + 12)
-    marcador("Cartel", (-18, 4, -22), (8, 5, 1), mirar((-18, -22), SPAWN), Menu="Misiones", Texto="MISIONES")
-    s.marcar(-24, -26, -12, -18)
-
-    # las 8 vitrinas en fila a la derecha (plaza simple: sin fuente ni decoración)
-    for i in range(8):
-        z = -100 + 11 * i
-        losa(g, 104, z, -2, 0, 4, 4, "Oro", 2)
-        marcador("Vitrina", (104, 1, z), (2, 5, 5), 0, Numero=i + 1)
-    s.marcar(96, -106, 112, -16)
-
-    museo(g, s)
-    santuario(g, s)
     ruleta(g, s)
+    # las parcelas al fondo: 2 filas de 4, con las entradas hacia el camino del medio
+    n = 0
+    for pz, giro in zip(PARCELAS_Z, (180, 0)):
+        for px in PARCELAS_X:
+            n += 1
+            g.poner(px - 20, -2, pz - 16, px + 20, 0, pz + 16, "Arena")
+            marcador("Pieza", (px, 0, pz), (40, 8, 32), giro, Nombre="Parcela_Exhibicion", Numero=n)
+            s.marcar(px - 20, pz - 16, px + 20, pz + 16)
 
-    # tableros en la pared del fondo y el lugar del Jefe Ancestral
-    marcador("Tablero", (-76, 7, z0 + 3), (14, 10, 1), 180, Tabla="Geodas")
-    marcador("Tablero", (76, 7, z0 + 3), (14, 10, 1), 180, Tabla="Hallazgo")
-    s.marcar(-86, z0, -66, z0 + 10)
-    s.marcar(66, z0, 86, z0 + 10)
+
+class Corrido:
+    """Grilla y suelo corridos dx studs en x (para armar el Santuario y el Museo en el patio)."""
+
+    def __init__(self, g, dx):
+        self.g, self.dx = g, dx
+
+    def poner(self, x0, y0, z0, x1, y1, z1, mat):
+        self.g.poner(x0 + self.dx, y0, z0, x1 + self.dx, y1, z1, mat)
+
+    def marcar(self, *_):
+        pass
+
+
+def corrido(armar_algo, g, dx):
+    antes = len(marcadores)
+    c = Corrido(g, dx)
+    armar_algo(c, c)
+    for m in marcadores[antes:]:
+        m["Pos"][0] = round(m["Pos"][0] + dx, 2)
+
+
+def patio():
+    """Patio de la izquierda (sin pared con la plaza): el Santuario del Renacer y el Museo (los
+    mismos de antes, corridos), los 2 tableros, las 8 vitrinas en fila y el Jefe Ancestral."""
+    x0, x1 = PATIO_X0, X0
+    d = Grilla(x0 - 8, -4, PLAZA - 8, x1, 60, 8)
+    for xi in range(x0, x1, 16):  # el mismo piso de baldosas que la plaza
+        for zi in range(PLAZA, 0, 16):
+            d.poner(xi, -4, zi, xi + 16, 0, zi + 16, "Baldosa" if ((xi + zi) // 16) % 2 == 0 else "BaldosaOscura")
+    for za, zb in ((PLAZA - 8, PLAZA), (0, 8)):  # paredes
+        d.poner(x0 - 8, 0, za, x1, 28, zb, "Piedra")
+        d.poner(x0 - 8, 28, za, x1, 32, zb, "Pasto")
+    d.poner(x0 - 8, 0, PLAZA, x0, 28, 0, "Piedra")
+    d.poner(x0 - 8, 28, PLAZA, x0, 32, 0, "Pasto")
+    corrido(santuario, d, DX_SANTUARIO)
+    corrido(museo, d, DX_MUSEO)
+    marcador("Tablero", (x0 + 20, 7, PLAZA + 3), (14, 10, 1), 180, Tabla="Geodas")
+    marcador("Tablero", (x0 + 40, 7, PLAZA + 3), (14, 10, 1), 180, Tabla="Hallazgo")
+    for i in range(8):
+        z = -92 + 11 * i
+        losa(d, -148, z, -2, 0, 4, 4, "Oro", 2)
+        marcador("Vitrina", (-148, 1, z), (2, 5, 5), 0, Numero=i + 1)
     ax, az = ANCESTRAL
     marcador("PuntoAncestral", (ax, 0.1, az), (4, 0.2, 4), 0)
-    losa(g, ax, az, -2, 0, 12, 12, "BaldosaOscura", 4)
-    losa(g, ax, az, -2, 0, 10, 10, "Baldosa", 4)
-    s.marcar(ax - 16, az - 16, ax + 16, az + 16)
-
+    losa(d, ax, az, -2, 0, 12, 12, "BaldosaOscura", 4)
+    losa(d, ax, az, -2, 0, 10, 10, "Baldosa", 4)
+    return d.cajas()
 
 
 def museo(g, s):
@@ -889,33 +929,6 @@ def ruleta(g, s):
     marcador("Ruleta", (rx, RUEDA_ALTO, rz), (16, 16, 2), 0)
     marcador("Luz", (rx, RUEDA_ALTO + 4, rz + 10), (1, 1, 1), 0, Color="#FFFFFF")
     s.marcar(rx - 12, rz - 10, rx + 12, rz + 12)
-
-
-def parcelas():
-    """Calle de las parcelas de exhibición, afuera de la pared izquierda de la plaza: 4 parcelas de
-    cada lado (una por jugador del servidor, 8 como las vitrinas) con la entrada hacia la calle.
-    Las pone GeneradorMapa con la pieza Parcela_Exhibicion y sus 10 pedestales; sin la pieza
-    queda un piso de arena en cada lugar."""
-    x0, x1 = PARCELAS_X[-1] - 24, X0
-    d = Grilla(x0 - 4, -4, CALLE_Z - 76, x1, 32, CALLE_Z + 76)
-    for xi in range(x0, x1, 16):  # el mismo piso de baldosas que la plaza
-        for zi in range(CALLE_Z - 68, CALLE_Z + 68, 16):
-            d.poner(xi, -4, zi, xi + 16, 0, zi + 16, "Baldosa" if ((xi + zi) // 16) % 2 == 0 else "BaldosaOscura")
-    for za, zb in ((CALLE_Z - 76, CALLE_Z - 68), (CALLE_Z + 68, CALLE_Z + 76)):  # paredes
-        d.poner(x0 - 4, 0, za, x1, 28, zb, "Piedra")
-        d.poner(x0 - 4, 28, za, x1, 32, zb, "Pasto")
-    d.poner(x0 - 4, 0, CALLE_Z - 68, x0, 28, CALLE_Z + 68, "Piedra")
-    d.poner(x0 - 4, 28, CALLE_Z - 68, x0, 32, CALLE_Z + 68, "Pasto")
-    n = 0
-    for lado, giro in ((1, 0), (-1, 180)):
-        zc = CALLE_Z + lado * 48  # una fila contra cada pared, con la entrada hacia el medio
-        for px in PARCELAS_X:
-            n += 1
-            d.poner(px - 20, -2, zc - 16, px + 20, 0, zc + 16, "Arena")
-            marcador("Pieza", (px, 0, zc), (40, 8, 32), giro, Nombre="Parcela_Exhibicion", Numero=n)
-    for px in PARCELAS_X:
-        marcador("Luz", (px + 22, 10, CALLE_Z), (1, 1, 1), 0, Color="#FFE9B0")
-    return d.cajas()
 
 
 # --- biomas --------------------------------------------------------------------------------------
@@ -1269,7 +1282,7 @@ def armar(semilla=7):
     plaza(g, s, rng)
     for n in range(1, 6):
         bioma(g, s, rng, n)
-    return g.cajas() + parcelas() + dimension_prisma()
+    return g.cajas() + patio() + dimension_prisma()
 
 
 def escribir(cajas):
