@@ -109,6 +109,10 @@ Piezas:
                  borde y 2 ríos de lava que bajan escalón por escalón por adelante a la derecha
                  hasta un charco. Mallas Roca, RocaNegra y Lava (en Roblox, TextureID =
                  texturas/LavaLiquida.png, que ya brilla).
+  Columnas_Basalto Volcán: grupo de columnas negras de bloques pegadas entre sí, de distintas
+                 alturas, con grietas de lava al pie que suben por las paredes y salen por el
+                 piso. Dos versiones: 1 (5 columnas, 14 studs de alto) y 2 (7 columnas, 16).
+                 Cada columna termina en un bloque gris. Mallas Basalto, Tapa y Grietas (TextureID = texturas/LavaLiquida.png).
                  Cada árbol de la Pradera (y el arbusto) tiene 3 variantes (Arbol_Grande_1, _2 y _3...).
   Roca_Meteorito solo Abismo: media bola chata de bloques de 2 studs azul noche, con un cráter
                  arriba (corrido a un costado) que brilla violeta en el fondo y estrellitas lilas
@@ -2447,6 +2451,106 @@ def render_volcan():
     print("TRIANGULOS Volcan", conteo, "total", sum(conteo.values()))
 
 
+# Columnas_Basalto (Volcán): grupo de columnas negras de bloques pegadas entre sí, de distintas
+# alturas, con grietas de lava que brillan en la base (rayitas que suben por las paredes y
+# otras que salen por el piso). Mallas Basalto y Grietas (la lava, como el Volcan).
+BASALTO_COLOR = VOLCAN_NEGRO
+BASALTO_TAPA = VOLCAN_GRIS  # el bloque de arriba de cada columna: así se ve dónde termina cada una
+BASALTO_GRIETA = (0.4, 0.15)  # ancho de cada grieta y cuánto sale de la pared o del piso
+# versión -> columnas ((x0, x1), (y0, y1), alto) en studs y semilla de las grietas
+BASALTOS = {
+    1: (
+        [((-3, 0), (-2, 1), 12), ((0, 3), (-2, 0), 9), ((0, 2), (0, 2), 14), ((-5, -3), (-1, 2), 7), ((2, 5), (0, 3), 5)],
+        61,
+    ),
+    2: (
+        [
+            ((-2, 0), (-1, 1), 16), ((0, 2), (-2, 0), 13), ((0, 3), (0, 2), 10), ((-4, -2), (-2, 0), 11),
+            ((-4, -2), (0, 3), 6), ((-2, 0), (1, 3), 8), ((3, 5), (-2, 1), 4),
+        ],
+        67,
+    ),
+}
+MAX_BASALTO = 2000
+
+
+def columnas_basalto(mats, version=1):
+    """Columnas_Basalto_<version>: mallas Basalto, Tapa y Grietas. Pivote en el centro de la base."""
+    cols, semilla = BASALTOS[version]
+    rng = random.Random(semilla)
+    alto = {}
+    for (x0, x1), (y0, y1), h in cols:
+        for x in range(x0, x1):
+            for y in range(y0, y1):
+                alto[(x, y)] = max(alto.get((x, y), 0), h)
+    llenas = {(x, y, z) for (x, y), h in alto.items() for z in range(h)}
+    tapas = {(x, y, h - 1) for (x, y), h in alto.items()}
+    roca, tapa, grietas = Malla(), Malla(), Malla()
+    solo_afuera = llenas | {(x, y, -1) for x, y in alto}
+    voxeles_malla(roca, llenas - tapas, (1, 1, 1), (0, 0, 0), solo_afuera)
+    voxeles_malla(tapa, tapas, (1, 1, 1), (0, 0, 0), solo_afuera)
+    w, g = BASALTO_GRIETA
+    # grietas en las paredes de afuera, al pie: suben 1 a 3 studs y siguen por el piso
+    for (x, y) in sorted(alto):
+        for dx, dy in ((1, 0), (-1, 0), (0, 1), (0, -1)):
+            if (x + dx, y + dy) in alto or rng.random() > 0.35:
+                continue
+            sube = rng.choice((1, 1.5, 2, 2.5, 3))
+            sale = rng.choice((0, 1, 1.5, 2))
+            c = rng.uniform(0.3, 0.7)
+            if dx:
+                px = x + 1 if dx > 0 else x
+                pared = (px, px + g) if dx > 0 else (px - g, px)
+                grietas.caja(pared, (y + c - w / 2, y + c + w / 2), (0, sube), caras=("X" if dx > 0 else "x") + "yYZ")
+                if sale:
+                    piso = (px, px + sale) if dx > 0 else (px - sale, px)
+                    grietas.caja(piso, (y + c - w / 2, y + c + w / 2), (0, g), caras="xXyYZ")
+            else:
+                py = y + 1 if dy > 0 else y
+                pared = (py, py + g) if dy > 0 else (py - g, py)
+                grietas.caja((x + c - w / 2, x + c + w / 2), pared, (0, sube), caras=("Y" if dy > 0 else "y") + "xXZ")
+                if sale:
+                    piso = (py, py + sale) if dy > 0 else (py - sale, py)
+                    grietas.caja((x + c - w / 2, x + c + w / 2), piso, (0, g), caras="xXyYZ")
+    nombre = f"Columnas_Basalto_{version}"
+    objs, conteo = mallas([("Basalto", roca, mats["basalto"]), ("Tapa", tapa, mats["tapa"]), ("Grietas", grietas, mats["lava"])], MAX_BASALTO, nombre)
+    if sum(conteo.values()) > MAX_BASALTO:
+        raise RuntimeError(f"{nombre}: {sum(conteo.values())} triángulos (máximo {MAX_BASALTO})")
+    return objs, conteo
+
+
+def mats_basalto(studs=None):
+    """Con studs, para el render; sin, para exportar (Grietas con TextureID = LavaLiquida.png)."""
+    if studs:
+        return {
+            "basalto": material_studs("Basalto", BASALTO_COLOR, studs),
+            "tapa": material_studs("BasaltoTapa", BASALTO_TAPA, studs),
+            "lava": material_lava("BasaltoLava"),
+        }
+    return {"basalto": M.material("Basalto", BASALTO_COLOR), "tapa": M.material("BasaltoTapa", BASALTO_TAPA), "lava": M.material("BasaltoLava", ZONAS[4]["detalle"])}
+
+
+def render_basalto():
+    """Las 2 versiones en fila, de frente y de costado, al lado de las referencias."""
+    conteo = {}
+    for vista in ("frente", "costado"):
+        M.limpiar_escena()
+        escena = M.escena_render(1280, 720)
+        tablero = bpy.data.materials["Piso"].node_tree.nodes["Checker Texture"]
+        tablero.inputs["Color1"].default_value = (*M.hex_a_rgb("#5C5F73"), 1)
+        tablero.inputs["Color2"].default_value = (*M.hex_a_rgb("#50536A"), 1)
+        mats = mats_basalto(textura_studs())
+        for version, x in ((1, -7), (2, 7)):
+            objs, conteo[version] = columnas_basalto(mats, version)
+            M.mover(objs, x * M.STUD if vista == "frente" else 0, 0 if vista == "frente" else -x * M.STUD)
+        giro = -15 if vista == "frente" else 75
+        camara_orto(escena, (0, 0, 8 * M.STUD), 38 * M.STUD, 14, giro)
+        M.render(f"columnas_basalto_{vista}")
+    comparar("Columnas_Basalto")
+    for version, c in conteo.items():
+        print("TRIANGULOS Columnas_Basalto", version, c, "total", sum(c.values()))
+
+
 # nombre -> (función, alto total en studs, fondo en studs)
 PIEZAS = {
     "Risco_Escalon": (risco_escalon, 30, 16),
@@ -2635,6 +2739,7 @@ REFERENCIAS = {
     "Escalones_Nevados": (("glaciar-2.webp", (0.08, 0.35, 0.50, 0.70)), ("glaciar-3.webp", (0.25, 0.10, 0.80, 0.55))),
     "Pico_Hielo": (("glaciar-1.webp", (0.15, 0.50, 0.50, 0.95)), "glaciar-2.webp"),
     # la roca de lava de abajo a la derecha de mapa-1 y el volcán que hay hoy en el juego
+    "Columnas_Basalto": (("mapa-1.png", (0.86, 0.55, 1.0, 0.80)), "volcan-1.webp"),
     "Volcan": (("mapa-1.png", (0.86, 0.55, 1.0, 0.80)), "volcan-1.webp"),
     "Esqueleto": (("cactus-2.webp", (0.10, 0.42, 0.42, 0.80)), ("estilo-2.png", (0.76, 0.45, 0.98, 0.75))),
 }
@@ -3556,7 +3661,8 @@ def exportar_zona3():
 
 def exportar_zona4():
     """Deco_Zona4.fbx: piezas que son solo del Volcán. Raíz Deco_Zona4 con el vacío Volcan y sus
-    mallas Volcan_Roca, Volcan_RocaNegra y Volcan_Lava (en Roblox, la Lava con TextureID =
+    mallas Volcan_Roca, Volcan_RocaNegra y Volcan_Lava, y Columnas_Basalto_1 y _2 con
+    _Basalto, _Tapa y _Grietas (en Roblox, la Lava y las Grietas con TextureID =
     texturas/LavaLiquida.png). Sin textura: el juego pone el color y TextureID = Studs.png."""
     M.limpiar_escena()
     raiz = bpy.data.objects.new("Deco_Zona4", None)
@@ -3566,6 +3672,16 @@ def exportar_zona4():
         bpy.context.scene.collection.objects.link(vacio)
         vacio.parent = raiz
         objs, conteo = crear(mats)
+        for o in objs:
+            o.parent = vacio
+            o.name = o.data.name = f"{nombre}_{o.name.split('.')[0]}"
+        print("TRIANGULOS", nombre, conteo, "total", sum(conteo.values()))
+    for version in BASALTOS:
+        nombre = f"Columnas_Basalto_{version}"
+        vacio = bpy.data.objects.new(nombre, None)
+        bpy.context.scene.collection.objects.link(vacio)
+        vacio.parent = raiz
+        objs, conteo = columnas_basalto(mats_basalto(), version)
         for o in objs:
             o.parent = vacio
             o.name = o.data.name = f"{nombre}_{o.name.split('.')[0]}"
@@ -3670,4 +3786,6 @@ if __name__ == "__main__":
         render_lago()
     if "--pieza" not in sys.argv or "Volcan" in sys.argv:
         render_volcan()
+    if "--pieza" not in sys.argv or "Columnas_Basalto" in sys.argv:
+        render_basalto()
     print("Listo")
