@@ -162,8 +162,16 @@ Z0 = PLAZA - 8  # pared del fondo
 SPAWN = (0, -36)
 FUENTE = (0, -70)
 SANTUARIO = (-44, -136, 44, -100)  # x0, z0, x1, z1 (z1 = cara de afuera de la pared con la puerta)
-RULETA = (84, -60, 116, -12)  # escenario: x0, z0, x1, z1
-RUEDA = (104, 13, -36)  # centro de la rueda (16 de diámetro, 1 stud arriba del escenario)
+# piezas de arte/fbx/Lobby.fbx (las pone GeneradorMapa si están en ServerStorage > Modelos > Lobby)
+PUESTO = (-32, -50)  # Puesto_Vender (el Banco), a la izquierda del Spawn, mirándolo
+TIENDA = (32, -50)  # Tienda_Forja, a la derecha
+RULETA = (86, -112)  # Ruleta_Mascotas al fondo a la derecha, mirando a la plaza
+RUEDA_ALTO = 10.5  # centro de su rueda (lobby.py: RUEDA_Z)
+ARCO = (0, -8)  # Arco_Entrada, adelante del arco de piedra hacia la Pradera
+# calle de las parcelas de exhibición, saliendo por un pasillo en la pared izquierda
+CALLE_Z = -28  # centro de la calle (12 de ancho)
+PASILLO = (-40, -16)  # z0, z1 del hueco en la pared izquierda
+PARCELAS_X = (-160, -204, -248, -292)  # centro de cada parcela (40 x 32), 4 de cada lado
 MUSEO = (-116, -100, -80, -52)
 ANCESTRAL = (-60, -22)
 
@@ -752,12 +760,23 @@ def plaza(g, s, rng):
         g.poner(x + 2, 50, 2, x + 4, 54, 4, "CristalCuarzo")
     s.marcar(XMIN, -2, XMAX, 8)
     s.marcar(-16, z0, 16, 0)  # camino del Santuario al arco
+    marcador("Pieza", (ARCO[0], 0, ARCO[1]), (22, 20, 3), 0, Nombre="Arco_Entrada")
+    # pasillo a la calle de las parcelas
+    za, zb = PASILLO
+    g.poner(X0, 0, za, XMIN, 24, zb, None)
+    g.poner(X0, -2, za, XMIN, 0, zb, "Baldosa")
+    s.marcar(XMIN, za, XMIN + 8, zb)
 
     # spawn, con un anillo dorado en el piso
     sx, sz = SPAWN
     losa(g, sx, sz, -2, 0, 10, 10, "Oro", 4)
     losa(g, sx, sz, -2, 0, 8, 8, "Baldosa", 2)
     marcador("Spawn", (sx, 0.5, sz), (10, 1, 10), 0)
+    marcador("Pieza", (sx, 0, sz), (12, 8, 12), 0, Nombre="Spawn")
+    # el Banco y la Tienda, uno a cada lado, de frente al que aparece
+    for nombre, (px, pz) in (("Puesto_Vender", PUESTO), ("Tienda_Forja", TIENDA)):
+        marcador("Pieza", (px, 0, pz), (14, 14, 12), 180, Nombre=nombre)
+        s.marcar(px - 8, pz - 7, px + 8, pz + 7)
     s.marcar(sx - 12, sz - 12, sx + 12, sz + 12)
     marcador("Cartel", (-18, 4, -22), (8, 5, 1), mirar((-18, -22), SPAWN), Menu="Misiones", Texto="MISIONES")
     s.marcar(-24, -26, -12, -18)
@@ -772,7 +791,7 @@ def plaza(g, s, rng):
 
     museo(g, s)
     santuario(g, s)
-    ruleta(g, s, rng)
+    ruleta(g, s)
 
     # tableros en la pared del fondo y el lugar del Jefe Ancestral
     marcador("Tablero", (-76, 7, z0 + 3), (14, 10, 1), 180, Tabla="Geodas")
@@ -786,7 +805,7 @@ def plaza(g, s, rng):
     s.marcar(ax - 16, az - 16, ax + 16, az + 16)
 
     # vida de la plaza: faroles, bancos, canteros y árboles
-    for x, z in ((-16, -14), (14, -14), (-36, -48), (34, -48), (-36, -96), (34, -96), (-56, -118), (54, -118)):
+    for x, z in ((-16, -14), (14, -14), (-36, -96), (34, -96), (-56, -118), (54, -118)):
         farol(g, x, z)
         s.marcar(x - 4, z - 4, x + 6, z + 6)
     for x, z, mira in ((-34, -72, (1, 0)), (30, -72, (-1, 0))):
@@ -797,7 +816,7 @@ def plaza(g, s, rng):
                            (48, -134, 64, -128), (88, -134, 112, -128), (-64, -134, -48, -128), (-112, -134, -88, -128)):
         cantero(g, a0, b0, a1, b1, rng, colores)
         s.marcar(a0, b0, a1, b1)
-    for x, z in ((-98, -20), (64, -16), (-100, -116), (100, -112), (98, -84)):
+    for x, z in ((-98, -6), (64, -16), (-100, -116), (98, -84)):
         arbol(g, x, z, rng)
         s.marcar(x - 10, z - 10, x + 10, z + 10)
     for x, z in ((-70, -44), (64, -96), (-26, -92), (24, -92)):
@@ -886,37 +905,38 @@ def santuario(g, s):
     s.marcar(x0 - 4, z0, x1 + 4, z1 + 8)
 
 
-def ruleta(g, s, rng):
-    """Escenario de la Ruleta de Mascotas: tarima de tablas con borde dorado y escalones hacia el
-    Spawn, un marco dorado con fondo oscuro detrás de la rueda, canteros y faroles."""
-    x0, z0, x1, z1 = RULETA
-    wx, wy, wz = RUEDA
-    g.poner(x0, 0, z0, x1, 2, z1, "PiedraClara")
-    g.poner(x0, 2, z0, x1, 4, z1, "Tablas")
-    g.poner(x0, 2, z0, x0 + 2, 4, z1, "Oro")
-    g.poner(x0, 2, z0, x1, 4, z0 + 2, "Oro")
-    g.poner(x0, 2, z1 - 2, x1, 4, z1, "Oro")
-    g.poner(x0 - 4, 0, wz - 14, x0, 2, wz + 14, "PiedraClara")  # escalones
-    g.poner(x0 - 4, 0, wz - 14, x0 - 2, 2, wz + 14, "Oro")
-    # marco detrás de la rueda (la rueda la arma el juego en el marcador)
-    g.poner(wx + 4, 4, wz - 12, wx + 8, 30, wz + 12, "Muro")
-    for za in (wz - 16, wz + 12):
-        g.poner(wx + 2, 4, za, wx + 8, 34, za + 4, "Oro")
-        g.poner(wx + 2, 34, za, wx + 8, 36, za + 4, "OroViejo")
-    g.poner(wx + 2, 30, wz - 16, wx + 8, 34, wz + 16, "Oro")
-    g.poner(wx + 4, 34, wz - 8, wx + 6, 38, wz - 4, "PrismaRosa")
-    g.poner(wx + 4, 34, wz - 2, wx + 6, 42, wz + 2, "CristalAmbar")
-    g.poner(wx + 4, 34, wz + 4, wx + 6, 38, wz + 8, "PrismaCian")
-    marcador("Ruleta", (wx, wy, wz), (16, 16, 2), 90)
-    # canteros con flores en las esquinas del frente y faroles atrás
-    colores = ["FlorRosa", "FlorAmarilla", "FlorRoja", "FlorBlanca"]
-    with g.subir(4):
-        cantero(g, x0 + 4, z0 + 4, x0 + 14, z0 + 10, rng, colores)
-        cantero(g, x0 + 4, z1 - 10, x0 + 14, z1 - 4, rng, colores)
-        farol(g, x1 - 6, z0 + 2)
-        farol(g, x1 - 6, z1 - 6)
-    marcador("Luz", (wx - 6, wy + 10, wz), (1, 1, 1), 0, Color="#FFFFFF")
-    s.marcar(x0 - 8, z0, x1, z1)
+def ruleta(g, s):
+    """Ruleta de Mascotas al fondo: el escenario es la pieza Ruleta_Mascotas de Lobby.fbx; la rueda
+    que gira (y abre el menú) la arma el juego en el marcador, donde va la rueda de la pieza."""
+    rx, rz = RULETA
+    marcador("Pieza", (rx, 0, rz), (20, 20, 16), 180, Nombre="Ruleta_Mascotas")
+    marcador("Ruleta", (rx, RUEDA_ALTO, rz), (16, 16, 2), 0)
+    marcador("Luz", (rx, RUEDA_ALTO + 4, rz + 10), (1, 1, 1), 0, Color="#FFFFFF")
+    s.marcar(rx - 12, rz - 10, rx + 12, rz + 12)
+
+
+def parcelas():
+    """Calle de las parcelas de exhibición, afuera de la pared izquierda de la plaza: 4 parcelas de
+    cada lado (una por jugador del servidor, 8 como las vitrinas) con la entrada hacia la calle.
+    Las pone GeneradorMapa con la pieza Parcela_Exhibicion y sus 10 pedestales; sin la pieza
+    queda un piso de arena en cada lugar."""
+    x0, x1 = PARCELAS_X[-1] - 24, X0
+    d = Grilla(x0 - 4, -4, CALLE_Z - 52, x1, 20, CALLE_Z + 52)
+    d.poner(x0, -4, CALLE_Z - 48, x1, 0, CALLE_Z + 48, "Pasto")
+    d.poner(x0, -2, CALLE_Z - 6, x1, 0, CALLE_Z + 6, "Baldosa")  # la calle
+    for za, zb in ((CALLE_Z - 52, CALLE_Z - 48), (CALLE_Z + 48, CALLE_Z + 52)):  # paredes
+        d.poner(x0 - 4, 0, za, x1, 16, zb, "Piedra")
+    d.poner(x0 - 4, 0, CALLE_Z - 48, x0, 16, CALLE_Z + 48, "Piedra")
+    n = 0
+    for lado, giro in ((1, 0), (-1, 180)):
+        zc = CALLE_Z + lado * 24  # la entrada queda a 8 de la calle
+        for px in PARCELAS_X:
+            n += 1
+            d.poner(px - 20, -2, zc - 16, px + 20, 0, zc + 16, "Arena")
+            marcador("Pieza", (px, 0, zc), (40, 8, 32), giro, Nombre="Parcela_Exhibicion", Numero=n)
+    for px in PARCELAS_X:
+        marcador("Luz", (px + 22, 10, CALLE_Z), (1, 1, 1), 0, Color="#FFE9B0")
+    return d.cajas()
 
 
 # --- biomas --------------------------------------------------------------------------------------
@@ -1270,7 +1290,7 @@ def armar(semilla=7):
     plaza(g, s, rng)
     for n in range(1, 6):
         bioma(g, s, rng, n)
-    return g.cajas() + dimension_prisma()
+    return g.cajas() + parcelas() + dimension_prisma()
 
 
 def escribir(cajas):

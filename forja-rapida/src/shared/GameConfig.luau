@@ -2589,8 +2589,12 @@ local GameConfig = {
 	-- Geodas > Ancestral (como las demás geodas) y Estatuas > <rareza> (la gema grande).
 	-- Las 60 piedras: ServerStorage > Modelos > Gemas > <Id de la gema> (un Model con sus mallas
 	-- de arte/fbx/Gemas_Zona<N>.fbx); la vitrina la usa en vez de la estatua de la rareza.
+	-- Piezas del lobby (arte/fbx/Lobby.fbx) en ServerStorage > Modelos > Lobby: llegan en metros
+	-- (1 stud = 0,28 m) y el mapa las agranda con EscalaLobby. Si no están, la plaza queda greybox.
 	Modelos = {
 		Carpeta = "Modelos",
+		Lobby = "Lobby",
+		EscalaLobby = 1 / 0.28,
 	},
 }
 

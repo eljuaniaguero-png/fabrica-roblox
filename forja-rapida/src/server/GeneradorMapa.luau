@@ -12,6 +12,10 @@
 local CollectionService = game:GetService("CollectionService")
 local Workspace = game:GetService("Workspace")
 
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local ServerStorage = game:GetService("ServerStorage")
+
+local GameConfig = require(ReplicatedStorage.Shared.GameConfig)
 local MapaDatos = require(script.Parent.MapaDatos)
 
 local GeneradorMapa = {}
@@ -434,6 +438,122 @@ local function armarMarcador(m: Marcador, carpeta: Instance)
 	end
 end
 
+-- Piezas del lobby (Lobby.fbx) --------------------------------------------------------------
+
+-- Pedestal de cada lugar de la parcela (como el render de lobby.py).
+local function versionPedestal(n: number): string
+	return if n % 5 == 0
+		then "Pedestal_Cristal"
+		elseif n % 5 >= 3 then "Pedestal_Piedra"
+		else "Pedestal_Madera"
+end
+
+-- Lugares de los 10 pedestales en la parcela (lobby.py: LUGARES_X y LUGARES_Y; Blender y = -z).
+local LUGARES_X = 12
+local LUGARES_Z = { 11, 5, -1, -7, -13 }
+
+-- Copia una pieza, la agranda y la apoya en el piso del marcador. Todas las piezas tienen el
+-- pivote en el centro de su base y el frente hacia -Z.
+local function copiarPieza(molde: Instance, nombre: string, cf: CFrame, padre: Instance): Model?
+	local m = molde:FindFirstChild(nombre)
+	if not (m and m:IsA("Model")) then
+		return nil
+	end
+	local copia = m:Clone()
+	copia:ScaleTo(copia:GetScale() * GameConfig.Modelos.EscalaLobby)
+	copia:PivotTo(cf)
+	for _, d in copia:GetDescendants() do
+		if d:IsA("BasePart") then
+			d.Anchored = true
+		end
+	end
+	copia.Parent = padre
+	return copia
+end
+
+local function alfombraConMenu(m: Model, menu: string, texto: string)
+	for _, d in m:GetDescendants() do
+		if d:IsA("BasePart") and d.Name:match("_Alfombra$") then
+			abreMenu(d, menu, "Abrir", texto)
+			return
+		end
+	end
+end
+
+-- Letrero flotante arriba del cartel de la pieza (el cartel de Blender viene sin texto).
+local function cartelPieza(m: Model, texto: string, color: string, alto: number)
+	for _, d in m:GetDescendants() do
+		if d:IsA("BasePart") and d.Name:match("_Cartel") then
+			letrero(d, texto, color, alto)
+			return
+		end
+	end
+end
+
+local function armarPieza(m: Marcador, molde: Instance, carpeta: Instance)
+	local nombre = m.Atributos.Nombre
+	if typeof(nombre) ~= "string" then
+		return
+	end
+	local cf = CFrame.new(m.Pos[1], m.Pos[2], m.Pos[3]) * CFrame.Angles(0, math.rad(m.Giro), 0)
+	local p = copiarPieza(molde, nombre, cf, carpeta)
+	if not p then
+		return
+	end
+	for k, v in m.Atributos do
+		p:SetAttribute(k, v)
+	end
+	if nombre == "Puesto_Vender" then
+		alfombraConMenu(p, "Mochila", "Banco")
+		cartelPieza(p, "BANCO", "#FFE45C", 3)
+	elseif nombre == "Tienda_Forja" then
+		alfombraConMenu(p, "Tienda", "Tienda")
+		cartelPieza(p, "TIENDA", "#B8FF6A", 3)
+	elseif nombre == "Ruleta_Mascotas" then
+		-- la rueda que gira la arma el marcador Ruleta en el mismo lugar
+		local rueda = p:FindFirstChild("Rueda")
+		if rueda then
+			rueda:Destroy()
+		end
+	elseif nombre == "Parcela_Exhibicion" then
+		CollectionService:AddTag(p, "Parcela")
+		for i = 1, 10 do
+			local lado = if i <= 5 then -1 else 1
+			local z = LUGARES_Z[(i - 1) % 5 + 1]
+			local lugar = cf
+				* CFrame.new(lado * LUGARES_X, 1, z)
+				* CFrame.Angles(0, -lado * math.pi / 2, 0)
+			local ped = copiarPieza(molde, versionPedestal(i), lugar, p)
+			if ped then
+				ped.Name = ("Pedestal%02d"):format(i)
+				ped:SetAttribute("Lugar", i)
+			end
+		end
+	end
+end
+
+-- Si están las piezas, el Spawn queda invisible arriba de la plataforma y la ruleta usa la
+-- flecha de la pieza en vez del puntero.
+local function ajustarConPiezas(lugares: Instance, piezas: Instance)
+	local spawn = lugares:FindFirstChild("Spawn")
+	if spawn and spawn:IsA("SpawnLocation") and piezas:FindFirstChild("Spawn") then
+		spawn.Transparency = 1
+		spawn.CFrame = CFrame.new(spawn.Position.X, 2.5, spawn.Position.Z)
+		for _, d in spawn:GetChildren() do
+			if d:IsA("Decal") then
+				d:Destroy()
+			end
+		end
+	end
+	local ruleta = lugares:FindFirstChild("Ruleta")
+	if ruleta and piezas:FindFirstChild("Ruleta_Mascotas") then
+		local puntero = ruleta:FindFirstChild("Puntero")
+		if puntero then
+			puntero:Destroy()
+		end
+	end
+end
+
 -- Arma el mapa si no hay uno. Devuelve true si lo armó.
 function GeneradorMapa.armar(): boolean
 	if Workspace:FindFirstChild("Mapa") then
@@ -448,9 +568,19 @@ function GeneradorMapa.armar(): boolean
 	local lugares = Instance.new("Folder")
 	lugares.Name = "Lugares"
 	lugares.Parent = mapa
+	local modelos = ServerStorage:FindFirstChild(GameConfig.Modelos.Carpeta)
+	local molde = modelos and modelos:FindFirstChild(GameConfig.Modelos.Lobby)
+	local piezas = Instance.new("Folder")
+	piezas.Name = "Piezas"
+	piezas.Parent = mapa
 	for _, m in MapaDatos.Marcadores :: { Marcador } do
-		armarMarcador(m, lugares)
+		if m.Tipo ~= "Pieza" then
+			armarMarcador(m, lugares)
+		elseif molde then
+			armarPieza(m, molde, piezas)
+		end
 	end
+	ajustarConPiezas(lugares, piezas)
 	mapa.Parent = Workspace
 	return true
 end
