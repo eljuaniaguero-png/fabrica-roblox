@@ -27,11 +27,11 @@ from mathutils import Matrix, Vector  # noqa: E402
 ICONOS = m.ARTE / "iconos" / "gemas"
 
 # Solo las piedras que Juani ya aprobó entran al FBX de su zona
-APROBADAS = {"Cuarzo", "Jaspe", "Amatista"}
+APROBADAS = {"Cuarzo", "Jaspe", "Amatista", "AgataMusgosa"}
 
 # Piedras con alto propio (studs) y pivote en el centro de la base en vez del centro de la caja
-ALTO = {"Cuarzo": 2.5, "Jaspe": 2.5, "Amatista": 3.0}
-PIVOTE_BASE = {"Cuarzo", "Jaspe", "Amatista"}
+ALTO = {"Cuarzo": 2.5, "Jaspe": 2.5, "Amatista": 3.0, "AgataMusgosa": 3.0}
+PIVOTE_BASE = {"Cuarzo", "Jaspe", "Amatista", "AgataMusgosa"}
 
 # Alto (studs) y tope de triángulos por rareza
 RAREZAS = {
@@ -626,11 +626,12 @@ TALLADOS = {
 }
 
 
-def amatista(nombre):
-    """Cristal de cubitos: racimo de 5 columnas cuadradas de amatista (3 tonos de violeta, más
-    claro arriba) que terminan en punta escalonada; la grande es de vidrio con un núcleo claro que
-    brilla adentro y las otras muestran el núcleo en la punta. Salen de una base de roca de 2 tonos
-    con esquirlas sueltas y pasto. Alto y en punta para no confundirse con las piedras en bruto."""
+def racimo(nombre, d):
+    """Cristal de cubitos: racimo de columnas cuadradas (3 tonos, más claro arriba, aristas claras
+    y líneas de crecimiento oscuras) que terminan en punta escalonada; la grande es de vidrio con
+    un núcleo claro que brilla adentro y las otras muestran el núcleo en la punta. Salen de una base
+    de roca de 2 tonos con esquirlas sueltas y pasto. Con "musgo", manchitas oscuras en grupitos
+    sobre las columnas y flotando dentro del vidrio. 'd' trae los números de cada piedra."""
     celdas = {}
     for x in range(-7, 8):
         for y in range(-7, 8):
@@ -638,6 +639,13 @@ def amatista(nombre):
             for z in range(3):
                 if r < 1 - z * 0.18:
                     celdas[(x, y, z)] = "Roca" if z == 2 or h(x, y, z, 32) > 0.75 else "RocaOscura"
+    musgo = d.get("musgo", 0)
+
+    def manchita(c):
+        x, y, z = c
+        # h() casi no cambia entre celdas vecinas: para manchas sueltas conviene un azar de verdad
+        grupo = random.Random(f"musgo{x // 2},{y // 2},{z // 2}").random()
+        return musgo and grupo < musgo and random.Random(f"m{c}").random() < 0.7
 
     def columna(x0, y0, z0, lado, alto, vidrio, corre):
         """Columna cuadrada con punta escalonada: se achica 1 por lado cada 2 cubitos al final."""
@@ -654,9 +662,11 @@ def amatista(nombre):
                     borde = a in (achica, achica + ancho - 1) or b in (achica, achica + ancho - 1)
                     c = (x0 + dx + a, y0 + dy + b, z0 + i)
                     if not borde and i < alto + punta - 2:
-                        celdas[c] = "Nucleo"
+                        celdas[c] = "Musgo" if vidrio and manchita(c) else "Nucleo"
                     elif vidrio:
                         celdas[c] = "Vidrio"
+                    elif manchita(c):
+                        celdas[c] = "Musgo"
                     else:
                         esquina = a in (achica, achica + ancho - 1) and b in (achica, achica + ancho - 1)
                         v = t + (h(*c, 33) - 0.5) * 0.3
@@ -668,29 +678,72 @@ def amatista(nombre):
             if ancho == 1 and i >= alto:
                 break
 
-    columna(-2, -2, 2, 5, 12, True, (0.0, 0.0))  # la grande, al medio, de vidrio
-    columna(2, -5, 2, 4, 8, False, (0.15, -0.08))  # derecha adelante
-    columna(-6, -1, 2, 4, 6, False, (-0.15, 0.0))  # izquierda
-    columna(0, 3, 2, 3, 4, False, (0.0, 0.2))  # chica atrás
-    columna(4, 1, 2, 3, 3, False, (0.2, 0.1))  # chiquita a la derecha
+    for col in d["columnas"]:
+        columna(*col)
     # esquirlas sueltas y pasto en la roca
-    for x, y, z in ((5, 3, 3), (6, 3, 3), (-5, -4, 3), (-4, 5, 3)):
-        celdas[(x, y, z)] = "Esquirla"
-    celdas[(5, 3, 4)] = "Esquirla"
+    for c in d["esquirlas"]:
+        celdas[c] = "Esquirla"
     for x, y in ((6, -2), (-6, 3), (2, 6), (-3, -6)):
         celdas[(x, y, 2)] = "Pasto"
-    colores = {
-        "Oscuro": ("#4A1A9E", 0.3, None, 0.0, 1),
-        "Medio": ("#7A35E0", 0.25, None, 0.0, 1),
-        "Claro": ("#B07DFF", 0.2, "#9B5CFF", 0.2, 1),
-        "Vidrio": ("#9E6BFF", 0.05, None, 0.0, 0.5),
-        "Nucleo": ("#EBD6FF", 0.2, "#D9B8FF", 1.2, 1),
-        "Esquirla": ("#A86BFF", 0.2, "#A86BFF", 0.3, 1),
+    colores = dict(d["colores"])
+    colores.update({
         "Roca": ("#8C6448", 0.75, None, 0.0, 1),
         "RocaOscura": ("#5E3F2C", 0.85, None, 0.0, 1),
         "Pasto": ("#4E9A3A", 0.8, None, 0.0, 1),
-    }
+    })
     return cubitos(nombre, celdas, colores)
+
+
+RACIMOS = {
+    # 5 columnas violetas altas y finitas, la grande al medio de vidrio
+    "Amatista": {
+        "columnas": [
+            (-2, -2, 2, 5, 12, True, (0.0, 0.0)),  # la grande, al medio, de vidrio
+            (2, -5, 2, 4, 8, False, (0.15, -0.08)),  # derecha adelante
+            (-6, -1, 2, 4, 6, False, (-0.15, 0.0)),  # izquierda
+            (0, 3, 2, 3, 4, False, (0.0, 0.2)),  # chica atrás
+            (4, 1, 2, 3, 3, False, (0.2, 0.1)),  # chiquita a la derecha
+        ],
+        "esquirlas": [(5, 3, 3), (6, 3, 3), (-5, -4, 3), (-4, 5, 3), (5, 3, 4)],
+        "colores": {
+            "Oscuro": ("#4A1A9E", 0.3, None, 0.0, 1),
+            "Medio": ("#7A35E0", 0.25, None, 0.0, 1),
+            "Claro": ("#B07DFF", 0.2, "#9B5CFF", 0.2, 1),
+            "Vidrio": ("#9E6BFF", 0.05, None, 0.0, 0.5),
+            "Nucleo": ("#EBD6FF", 0.2, "#D9B8FF", 1.2, 1),
+            "Esquirla": ("#A86BFF", 0.2, "#A86BFF", 0.3, 1),
+        },
+    },
+    # ágata verde clara con musgo: 4 columnas gordas y abiertas en abanico, de vidrio la del medio
+    # con musgo flotando adentro; más ancha y verde para no confundirse con la Amatista
+    "AgataMusgosa": {
+        "musgo": 0.3,
+        "columnas": [
+            (-3, -3, 2, 6, 9, True, (0.0, 0.0)),  # la grande, gorda, de vidrio con musgo
+            (2, -6, 2, 5, 6, False, (0.35, -0.1)),  # derecha adelante, bien inclinada
+            (-7, -2, 2, 5, 5, False, (-0.3, 0.05)),  # izquierda, inclinada
+            (-1, 3, 2, 4, 5, False, (0.0, 0.3)),  # atrás
+        ],
+        "esquirlas": [(5, 3, 3), (5, 4, 3), (-5, 5, 3), (-4, -6, 3), (5, 3, 4)],
+        "colores": {
+            "Oscuro": ("#4FA05A", 0.35, None, 0.0, 1),
+            "Medio": ("#7FD08A", 0.3, None, 0.0, 1),
+            "Claro": ("#BDF2C2", 0.25, "#9BE8A6", 0.15, 1),
+            "Musgo": ("#1F5A2A", 0.6, None, 0.0, 1),
+            "Vidrio": ("#C8F5CF", 0.05, None, 0.0, 0.45),
+            "Nucleo": ("#F0FFE8", 0.2, "#D8FFD0", 1.0, 1),
+            "Esquirla": ("#9BE8A6", 0.2, "#9BE8A6", 0.3, 1),
+        },
+    },
+}
+
+
+def amatista(nombre):
+    return racimo(nombre, RACIMOS["Amatista"])
+
+
+def agata_musgosa(nombre):
+    return racimo(nombre, RACIMOS["AgataMusgosa"])
 
 
 # nombre: (zona, rareza, forma, {clave: (color, brillo)})
@@ -708,6 +761,7 @@ PIEDRAS = {
         None,
     ),
     "Amatista": (1, "Rara", amatista, None),
+    "AgataMusgosa": (1, "Rara", agata_musgosa, None),
 }
 
 
