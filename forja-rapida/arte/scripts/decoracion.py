@@ -109,6 +109,9 @@ Piezas:
                  borde y 2 ríos de lava que bajan escalón por escalón por adelante a la derecha
                  hasta un charco. Mallas Roca, RocaNegra y Lava (en Roblox, TextureID =
                  texturas/LavaLiquida.png, que ya brilla).
+  Arbol_Quemado  Volcán: el Arbol_Seco en Y de la Pradera (variante 3) quemado: tronco negro con
+                 base en escalones, 4 ramas gris carbón y una brasa naranja (Neon) en la punta de
+                 cada una (unos 15 studs de alto). Mallas Tronco, Ramas y Brasas.
   Columnas_Basalto Volcán: grupo de columnas negras de bloques pegadas entre sí, de distintas
                  alturas, con grietas de lava al pie que suben por las paredes y salen por el
                  piso. Dos versiones: 1 (5 columnas, 14 studs de alto) y 2 (7 columnas, 16).
@@ -2551,6 +2554,85 @@ def render_basalto():
         print("TRIANGULOS Columnas_Basalto", version, c, "total", sum(c.values()))
 
 
+# Arbol_Quemado (Volcán): el árbol seco en Y de la Pradera (SECOS[2]) quemado: tronco negro, ramas
+# gris carbón y una brasa naranja que brilla en la punta de cada rama (en Roblox, Material Neon).
+QUEMADO_TRONCO = VOLCAN_NEGRO
+QUEMADO_CARBON = "#3F3B40"
+QUEMADO_BRASA = ZONAS[4]["detalle"]
+QUEMADO_BRASA_LARGO = 1.4  # studs de la brasa que sigue a la punta
+# (base, rumbo, tramos) de cada rama, como en rama_seca
+QUEMADO_RAMAS = [
+    ((-0.5, 0, 6), 180, [(20, 5, 3), (35, 4, 2.4), (15, 3, 1.8)]),
+    ((0.5, 0, 6), 0, [(25, 5, 3), (10, 4, 2.4), (30, 2.5, 1.8)]),
+    ((0, -0.5, 8), -90, [(40, 3.5, 1.6)]),
+    ((0, 0.5, 7), 100, [(45, 3, 1.5)]),
+]
+MAX_QUEMADO = 2500
+
+
+def punta_rama(base, rumbo, tramos):
+    """Dónde termina la rama (el centro de la punta del último tramo) y su inclinación y ancho."""
+    x, y, z = base
+    r = math.radians(rumbo)
+    for n, (inclinacion, largo, ancho) in enumerate(tramos):
+        t = math.radians(inclinacion)
+        sigue = largo if n == len(tramos) - 1 else largo - ancho * 0.4
+        x += sigue * math.sin(t) * math.cos(r)
+        y += sigue * math.sin(t) * math.sin(r)
+        z += sigue * math.cos(t)
+    return (x, y, z), tramos[-1][0], tramos[-1][2]
+
+
+def arbol_quemado(mats):
+    """Arbol_Quemado: mallas Tronco (negro), Ramas (gris carbón) y Brasas. Pivote en el centro de
+    la base."""
+    tronco, ramas, brasas = Malla(), Malla(), Malla()
+    for c in SECOS[2]["tronco"][:5]:  # base en escalones y tronco corto
+        tronco.caja(*c)
+    for base, rumbo, tramos in QUEMADO_RAMAS:
+        for c in rama_seca(base, rumbo, tramos):
+            ramas.caja_girada(*c[1:])
+        punta, inclinacion, ancho = punta_rama(base, rumbo, tramos)
+        brasas.caja_girada(punta, QUEMADO_BRASA_LARGO, ancho * 0.85, rumbo, inclinacion)
+    piezas = [("Tronco", tronco, mats["tronco"]), ("Ramas", ramas, mats["ramas"]), ("Brasas", brasas, mats["brasas"])]
+    objs, conteo = mallas(piezas, MAX_QUEMADO, "Arbol_Quemado")
+    if sum(conteo.values()) > MAX_QUEMADO:
+        raise RuntimeError(f"Arbol_Quemado: {sum(conteo.values())} triángulos (máximo {MAX_QUEMADO})")
+    return objs, conteo
+
+
+def mats_quemado(studs=None):
+    """Con studs, para el render (las brasas brillan); sin, para exportar."""
+    if studs:
+        return {
+            "tronco": material_studs("QuemadoTronco", QUEMADO_TRONCO, studs),
+            "ramas": material_studs("QuemadoRamas", QUEMADO_CARBON, studs),
+            "brasas": M.material("QuemadoBrasa", QUEMADO_BRASA, brillo=QUEMADO_BRASA, fuerza_brillo=2.0),
+        }
+    return {
+        "tronco": M.material("QuemadoTronco", QUEMADO_TRONCO),
+        "ramas": M.material("QuemadoRamas", QUEMADO_CARBON),
+        "brasas": M.material("QuemadoBrasa", QUEMADO_BRASA),
+    }
+
+
+def render_quemado():
+    """Arbol_Quemado de frente y de costado, sobre el piso del Volcán, al lado de las referencias."""
+    conteo = {}
+    for vista in ("frente", "costado"):
+        M.limpiar_escena()
+        escena = M.escena_render(1280, 720)
+        tablero = bpy.data.materials["Piso"].node_tree.nodes["Checker Texture"]
+        tablero.inputs["Color1"].default_value = (*M.hex_a_rgb("#5C5F73"), 1)
+        tablero.inputs["Color2"].default_value = (*M.hex_a_rgb("#50536A"), 1)
+        objs, conteo = arbol_quemado(mats_quemado(textura_studs()))
+        giro = -18 if vista == "frente" else 72
+        camara_orto(escena, (0, 0, 9 * M.STUD), 36 * M.STUD, 10, giro)
+        M.render(f"arbol_quemado_{vista}")
+    comparar("Arbol_Quemado")
+    print("TRIANGULOS Arbol_Quemado", conteo, "total", sum(conteo.values()))
+
+
 # nombre -> (función, alto total en studs, fondo en studs)
 PIEZAS = {
     "Risco_Escalon": (risco_escalon, 30, 16),
@@ -2740,6 +2822,8 @@ REFERENCIAS = {
     "Pico_Hielo": (("glaciar-1.webp", (0.15, 0.50, 0.50, 0.95)), "glaciar-2.webp"),
     # la roca de lava de abajo a la derecha de mapa-1 y el volcán que hay hoy en el juego
     "Columnas_Basalto": (("mapa-1.png", (0.86, 0.55, 1.0, 0.80)), "volcan-1.webp"),
+    # el árbol seco de la Pradera (la Y de la derecha) y el volcán de hoy
+    "Arbol_Quemado": ("arbol-seco-1.png", "volcan-1.webp"),
     "Volcan": (("mapa-1.png", (0.86, 0.55, 1.0, 0.80)), "volcan-1.webp"),
     "Esqueleto": (("cactus-2.webp", (0.10, 0.42, 0.42, 0.80)), ("estilo-2.png", (0.76, 0.45, 0.98, 0.75))),
 }
@@ -3661,13 +3745,14 @@ def exportar_zona3():
 
 def exportar_zona4():
     """Deco_Zona4.fbx: piezas que son solo del Volcán. Raíz Deco_Zona4 con el vacío Volcan y sus
-    mallas Volcan_Roca, Volcan_RocaNegra y Volcan_Lava, y Columnas_Basalto_1 y _2 con
+    mallas Volcan_Roca, Volcan_RocaNegra y Volcan_Lava, Arbol_Quemado con _Tronco, _Ramas y _Brasas (Neon),
+    y Columnas_Basalto_1 y _2 con
     _Basalto, _Tapa y _Grietas (en Roblox, la Lava y las Grietas con TextureID =
     texturas/LavaLiquida.png). Sin textura: el juego pone el color y TextureID = Studs.png."""
     M.limpiar_escena()
     raiz = bpy.data.objects.new("Deco_Zona4", None)
     bpy.context.scene.collection.objects.link(raiz)
-    for nombre, crear, mats in (("Volcan", volcan, mats_volcan()),):
+    for nombre, crear, mats in (("Volcan", volcan, mats_volcan()), ("Arbol_Quemado", arbol_quemado, mats_quemado())):
         vacio = bpy.data.objects.new(nombre, None)
         bpy.context.scene.collection.objects.link(vacio)
         vacio.parent = raiz
@@ -3788,4 +3873,6 @@ if __name__ == "__main__":
         render_volcan()
     if "--pieza" not in sys.argv or "Columnas_Basalto" in sys.argv:
         render_basalto()
+    if "--pieza" not in sys.argv or "Arbol_Quemado" in sys.argv:
+        render_quemado()
     print("Listo")
