@@ -169,8 +169,8 @@ RULETA = (86, -112)  # Ruleta_Mascotas al fondo a la derecha, mirando a la plaza
 RUEDA_ALTO = 10.5  # centro de su rueda (lobby.py: RUEDA_Z)
 ARCO = (0, -8)  # Arco_Entrada, adelante del arco de piedra hacia la Pradera
 # calle de las parcelas de exhibición, saliendo por un pasillo en la pared izquierda
-CALLE_Z = -28  # centro de la calle (12 de ancho)
-PASILLO = (-40, -16)  # z0, z1 del hueco en la pared izquierda
+CALLE_Z = -68  # centro del campo de las parcelas (mismo largo que la plaza)
+PASILLO = (-136, 0)  # la pared izquierda se saca entera: plaza y parcelas son un solo campo
 PARCELAS_X = (-160, -204, -248, -292)  # centro de cada parcela (40 x 32), 4 de cada lado
 MUSEO = (-116, -100, -80, -52)
 ANCESTRAL = (-60, -22)
@@ -761,9 +761,9 @@ def plaza(g, s, rng):
     s.marcar(XMIN, -2, XMAX, 8)
     s.marcar(-16, z0, 16, 0)  # camino del Santuario al arco
     marcador("Pieza", (ARCO[0], 0, ARCO[1]), (22, 20, 3), 0, Nombre="Arco_Entrada")
-    # pasillo a la calle de las parcelas
+    # sin pared a la izquierda: sigue el campo de las parcelas
     za, zb = PASILLO
-    g.poner(X0, 0, za, XMIN, 24, zb, None)
+    g.poner(X0, 0, za, XMIN, 40, zb, None)
     g.poner(X0, -2, za, XMIN, 0, zb, "Baldosa")
     s.marcar(XMIN, za, XMIN + 8, zb)
 
@@ -897,15 +897,18 @@ def parcelas():
     Las pone GeneradorMapa con la pieza Parcela_Exhibicion y sus 10 pedestales; sin la pieza
     queda un piso de arena en cada lugar."""
     x0, x1 = PARCELAS_X[-1] - 24, X0
-    d = Grilla(x0 - 4, -4, CALLE_Z - 52, x1, 20, CALLE_Z + 52)
-    d.poner(x0, -4, CALLE_Z - 48, x1, 0, CALLE_Z + 48, "Pasto")
-    d.poner(x0, -2, CALLE_Z - 6, x1, 0, CALLE_Z + 6, "Baldosa")  # la calle
-    for za, zb in ((CALLE_Z - 52, CALLE_Z - 48), (CALLE_Z + 48, CALLE_Z + 52)):  # paredes
-        d.poner(x0 - 4, 0, za, x1, 16, zb, "Piedra")
-    d.poner(x0 - 4, 0, CALLE_Z - 48, x0, 16, CALLE_Z + 48, "Piedra")
+    d = Grilla(x0 - 4, -4, CALLE_Z - 76, x1, 32, CALLE_Z + 76)
+    for xi in range(x0, x1, 16):  # el mismo piso de baldosas que la plaza
+        for zi in range(CALLE_Z - 68, CALLE_Z + 68, 16):
+            d.poner(xi, -4, zi, xi + 16, 0, zi + 16, "Baldosa" if ((xi + zi) // 16) % 2 == 0 else "BaldosaOscura")
+    for za, zb in ((CALLE_Z - 76, CALLE_Z - 68), (CALLE_Z + 68, CALLE_Z + 76)):  # paredes
+        d.poner(x0 - 4, 0, za, x1, 28, zb, "Piedra")
+        d.poner(x0 - 4, 28, za, x1, 32, zb, "Pasto")
+    d.poner(x0 - 4, 0, CALLE_Z - 68, x0, 28, CALLE_Z + 68, "Piedra")
+    d.poner(x0 - 4, 28, CALLE_Z - 68, x0, 32, CALLE_Z + 68, "Pasto")
     n = 0
     for lado, giro in ((1, 0), (-1, 180)):
-        zc = CALLE_Z + lado * 24  # la entrada queda a 8 de la calle
+        zc = CALLE_Z + lado * 48  # una fila contra cada pared, con la entrada hacia el medio
         for px in PARCELAS_X:
             n += 1
             d.poner(px - 20, -2, zc - 16, px + 20, 0, zc + 16, "Arena")
