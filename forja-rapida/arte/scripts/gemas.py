@@ -27,13 +27,13 @@ from mathutils import Matrix, Vector  # noqa: E402
 ICONOS = m.ARTE / "iconos" / "gemas"
 
 # Solo las piedras que Juani ya aprobó entran al FBX de su zona
-APROBADAS = {"Cuarzo", "Jaspe", "Amatista", "AgataMusgosa", "Esmeralda", "TurmalinaRosa", "CorazondePradera", "DiamanteFloral", "JadeArcoiris", "TreboldeCristal", "AuroraVerde", "SemilladelMundo", "Arenisca", "Ambar", "Citrino", "OjodeTigre"}
+APROBADAS = {"Cuarzo", "Jaspe", "Amatista", "AgataMusgosa", "Esmeralda", "TurmalinaRosa", "CorazondePradera", "DiamanteFloral", "JadeArcoiris", "TreboldeCristal", "AuroraVerde", "SemilladelMundo", "Arenisca", "Ambar", "Citrino", "OjodeTigre", "TopacioImperial"}
 
 # Piedras con alto propio (studs) y pivote en el centro de la base en vez del centro de la caja
-ALTO = {"Cuarzo": 2.5, "Jaspe": 2.5, "Amatista": 3.0, "AgataMusgosa": 3.0, "Esmeralda": 3.5, "TurmalinaRosa": 3.5, "CorazondePradera": 4.0, "DiamanteFloral": 4.0, "JadeArcoiris": 4.5, "TreboldeCristal": 4.5, "AuroraVerde": 5.0, "SemilladelMundo": 5.0, "Arenisca": 2.5, "Ambar": 2.5, "Citrino": 3.0, "OjodeTigre": 3.0}
-PIVOTE_BASE = {"Cuarzo", "Jaspe", "Amatista", "AgataMusgosa", "Esmeralda", "TurmalinaRosa", "CorazondePradera", "DiamanteFloral", "JadeArcoiris", "TreboldeCristal", "AuroraVerde", "SemilladelMundo", "Arenisca", "Ambar", "Citrino", "OjodeTigre"}
+ALTO = {"Cuarzo": 2.5, "Jaspe": 2.5, "Amatista": 3.0, "AgataMusgosa": 3.0, "Esmeralda": 3.5, "TurmalinaRosa": 3.5, "CorazondePradera": 4.0, "DiamanteFloral": 4.0, "JadeArcoiris": 4.5, "TreboldeCristal": 4.5, "AuroraVerde": 5.0, "SemilladelMundo": 5.0, "Arenisca": 2.5, "Ambar": 2.5, "Citrino": 3.0, "OjodeTigre": 3.0, "TopacioImperial": 3.5}
+PIVOTE_BASE = {"Cuarzo", "Jaspe", "Amatista", "AgataMusgosa", "Esmeralda", "TurmalinaRosa", "CorazondePradera", "DiamanteFloral", "JadeArcoiris", "TreboldeCristal", "AuroraVerde", "SemilladelMundo", "Arenisca", "Ambar", "Citrino", "OjodeTigre", "TopacioImperial"}
 # Topes de triángulos propios (pisan el de la rareza)
-TOPE = {"Esmeralda": 4000, "TurmalinaRosa": 4000, "CorazondePradera": 6000, "DiamanteFloral": 6000, "JadeArcoiris": 8000, "TreboldeCristal": 8000, "AuroraVerde": 10000, "SemilladelMundo": 10000}
+TOPE = {"Esmeralda": 4000, "TurmalinaRosa": 4000, "CorazondePradera": 6000, "DiamanteFloral": 6000, "JadeArcoiris": 8000, "TreboldeCristal": 8000, "AuroraVerde": 10000, "SemilladelMundo": 10000, "TopacioImperial": 4000}
 
 # Alto (studs) y tope de triángulos por rareza
 RAREZAS = {
@@ -859,11 +859,31 @@ TALLADAS_CUBITOS = {
             "Cristal": ("#FF85B8", 0.15, "#FF85B8", 0.4, 1),
         },
     },
+    # topacio imperial ovalado (más largo en x), naranja dorado con reflejos rosados en las facetas
+    "TopacioImperial": {
+        "engarce": (5, 4),
+        "anchos": [(1, 0), (1, 1), (2, 1), (3, 2), (3, 2), (4, 3), (5, 3), (5, 3), (6, 4), (6, 4), (6, 4),
+                   (6, 4), (6, 4), (5, 4), (5, 3), (4, 3), (3, 2), (2, 1)],
+        "garras": (5, 3, 15),
+        "tonos": ("NaranjaOscuro", "NaranjaMedio", "NaranjaClaro"),
+        "colores": {
+            "NaranjaOscuro": ("#C2501A", 0.05, None, 0.0, 0.7),
+            "NaranjaMedio": ("#EE8A2A", 0.05, None, 0.0, 0.6),
+            "NaranjaClaro": ("#FFC05A", 0.05, None, 0.0, 0.55),
+            "Faceta": ("#FFB37A", 0.05, "#FF8F5A", 0.25, 0.75),
+            "Corazon": ("#FFC870", 0.2, "#FF9A30", 2.5, 1),
+            "Cristal": ("#FFB04A", 0.15, "#FFA030", 0.4, 1),
+        },
+    },
 }
 
 
 def esmeralda(nombre):
     return tallada(nombre, TALLADAS_CUBITOS["Esmeralda"])
+
+
+def topacio_imperial(nombre):
+    return tallada(nombre, TALLADAS_CUBITOS["TopacioImperial"])
 
 
 def turmalina_rosa(nombre):
@@ -1822,6 +1842,7 @@ PIEDRAS = {
     "Ambar": (2, "Comun", ambar, None),
     "Citrino": (2, "Rara", citrino, None),
     "OjodeTigre": (2, "Rara", ojo_de_tigre, None),
+    "TopacioImperial": (2, "Epica", topacio_imperial, None),
 }
 
 
