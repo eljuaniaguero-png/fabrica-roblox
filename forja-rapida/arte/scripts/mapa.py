@@ -839,24 +839,13 @@ def plaza(g, s, rng):
         if i % 2 == 0:
             deco(arboles[i // 2 % 5], XMIN - 12, z + 8, rng.choice([0, 90, 180, 270]), y=32)
             deco(arboles[(i // 2 + 2) % 5], XMAX + 12, z + 8, rng.choice([0, 90, 180, 270]), y=32)
-    # arco hacia la Pradera, con pilares y cristales
-    # puerta grande (17/10): 64 de ancho y 36 de alto
-    g.poner(XMIN, 0, 0, -32, 40, 8, "Muro")
-    g.poner(32, 0, 0, XMAX, 40, 8, "Muro")
-    g.poner(-32, 36, 0, 32, 40, 8, "Muro")
-    g.poner(XMIN, 40, 0, XMAX, 42, 8, "Oro")
-    g.poner(-36, 40, -2, 36, 44, 10, "Oro")
-    for x in (-40, 32):
-        g.poner(x, 0, -2, x + 8, 46, 10, "PiedraClara")
-        g.poner(x, 46, -2, x + 8, 48, 10, "Oro")
-        g.poner(x + 2, 48, 2, x + 6, 58, 6, "CristalCuarzo")
-        g.poner(x + 2, 58, 2, x + 4, 62, 4, "CristalCuarzo")
+    # sin pared adelante (17/10, Juani): solo el arco de entrada de Lobby.fbx
     s.marcar(XMIN, -2, XMAX, 8)
     s.marcar(-16, z0, 16, 0)  # camino del Santuario al arco
     marcador("Pieza", (ARCO[0], 0, ARCO[1]), (40, 36, 6), 0, Nombre="Arco_Entrada", Escala=1.8)
-    # los 2 tableros en la pared de adelante, a los lados de la puerta, mirando a la plaza
-    marcador("Tablero", (-68, 9, -1), (16, 12, 1), 0, Tabla="Geodas")
-    marcador("Tablero", (68, 9, -1), (16, 12, 1), 0, Tabla="Hallazgo")
+    # los 2 tableros en las paredes de los costados, mirando al medio
+    marcador("Tablero", (XMIN + 1, 12, -40), (16, 12, 1), 270, Tabla="Geodas")
+    marcador("Tablero", (XMAX - 1, 12, -40), (16, 12, 1), 90, Tabla="Hallazgo")
 
     # spawn, con un anillo dorado en el piso
     sx, sz = SPAWN

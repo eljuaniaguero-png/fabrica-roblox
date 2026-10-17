@@ -605,6 +605,13 @@ local function armarDeco(m: Marcador, carpetaDeco: Instance, padre: Instance)
 			end
 		end
 	end
+	if nombre:match("^Nube") or nombre:match("^Arcoiris") then -- el cielo no hace sombra
+		for _, d in copia:GetDescendants() do
+			if d:IsA("BasePart") then
+				d.CastShadow = false
+			end
+		end
+	end
 	copia.Name = nombre
 	copia.Parent = padre
 end
