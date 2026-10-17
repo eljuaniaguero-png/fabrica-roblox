@@ -87,7 +87,7 @@ import modelos as M  # noqa: E402
 import decoracion as D  # noqa: E402
 
 # piezas que Juani ya aprobó: son las que van a Lobby.fbx
-APROBADAS = ["Puesto_Vender", "Tienda_Forja", "Pedestal_Exhibicion", "Parcela_Exhibicion", "Ruleta_Mascotas"]
+APROBADAS = ["Puesto_Vender", "Tienda_Forja", "Pedestal_Exhibicion", "Parcela_Exhibicion", "Ruleta_Mascotas", "Arco_Entrada", "Spawn"]
 
 COLORES_PUESTO = {
     "ladrillo": "#9A5B3A",  # marrón ladrillo
@@ -881,6 +881,10 @@ def exportar():
     for pieza in APROBADAS:
         if pieza == "Pedestal_Exhibicion":
             armados += [(f"Pedestal_{v}", pedestal(mats_pedestal(v), v)[0]) for v in PEDESTALES]
+        elif pieza == "Arco_Entrada":  # sin el spawn del render
+            armados.append((pieza, arco_entrada(materiales("Arco", COLORES_ARCO))[0]))
+        elif pieza == "Spawn":
+            armados.append((pieza, spawn(materiales("Spawn", COLORES_SPAWN))[0]))
         elif pieza == "Parcela_Exhibicion":  # sin los pedestales de muestra del render
             armados.append((pieza, parcela(materiales("Parcela", COLORES_PARCELA))[0]))
         else:
@@ -890,7 +894,7 @@ def exportar():
         raiz = bpy.data.objects.new(pieza, None)
         bpy.context.scene.collection.objects.link(raiz)
         for o in objs:
-            if not o.name.startswith(("Pico_", "Amuleto_", "Lugar", "Rueda")):
+            if not o.name.startswith(("Pico_", "Amuleto_", "Lugar", "Rueda", "Spawn_Cristal")):
                 o.name = f"{pieza}_{o.name}"
             if o.parent is None:  # las mallas de la Rueda siguen colgadas de su vacío
                 o.parent = raiz
