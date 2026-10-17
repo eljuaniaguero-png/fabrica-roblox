@@ -29,6 +29,10 @@ ICONOS = m.ARTE / "iconos" / "gemas"
 # Solo las piedras que Juani ya aprobó entran al FBX de su zona
 APROBADAS = {"Cuarzo"}
 
+# Piedras con alto propio (studs) y pivote en el centro de la base en vez del centro de la caja
+ALTO = {"Cuarzo": 2.5}
+PIVOTE_BASE = {"Cuarzo"}
+
 # Alto (studs) y tope de triángulos por rareza
 RAREZAS = {
     "Comun": (1.5, 1500),
@@ -288,8 +292,151 @@ BRUTAS = {
 }
 
 
+def cubitos(nombre, celdas, colores):
+    """Una malla por color con solo las caras de afuera (las tapadas por otro cubito no se hacen;
+    detrás del vidrio sí, porque se ven). colores = {clave: (color, rugoso, brillo, fuerza, alfa)}."""
+    vidrio = {c for c, k in celdas.items() if colores[k][4] < 1}
+    # caras de afuera agrupadas por (color, dirección, plano): {clave: {(u, v)}}
+    planos = {}
+    for (x, y, z), k in celdas.items():
+        for (dx, dy, dz), _ in m.CARAS:
+            vecino = (x + dx, y + dy, z + dz)
+            if vecino in celdas and (vecino not in vidrio or (x, y, z) in vidrio):
+                continue
+            if dz == -1 and z == 0:
+                continue  # apoyada en el piso: no se ve
+            n = (dx, dy, dz)
+            eje = [i for i in range(3) if n[i]][0]
+            u, v = [i for i in range(3) if i != eje]
+            c = (x, y, z)
+            plano = c[eje] + (1 if n[eje] > 0 else 0)
+            planos.setdefault((k, n, plano), set()).add((c[u], c[v]))
+    # juntar cuadraditos vecinos en rectángulos (2 triángulos cada uno)
+    bms = {k: bmesh.new() for k in colores}
+    for (k, n, plano), libres in planos.items():
+        eje = [i for i in range(3) if n[i]][0]
+        u, v = [i for i in range(3) if i != eje]
+        for celda in sorted(libres):
+            if celda not in libres:
+                continue
+            u0, v0 = celda
+            u1 = u0
+            while (u1 + 1, v0) in libres:
+                u1 += 1
+            v1 = v0
+            while all((uu, v1 + 1) in libres for uu in range(u0, u1 + 1)):
+                v1 += 1
+            for uu in range(u0, u1 + 1):
+                for vv in range(v0, v1 + 1):
+                    libres.discard((uu, vv))
+            esquinas = []
+            for a, bb in ((u0, v0), (u1 + 1, v0), (u1 + 1, v1 + 1), (u0, v1 + 1)):
+                p = [0, 0, 0]
+                p[eje], p[u], p[v] = plano, a, bb
+                esquinas.append(bms[k].verts.new(p))
+            cara = bms[k].faces.new(esquinas)
+            cara.normal_update()
+            if cara.normal.dot(Vector(n)) < 0:
+                cara.normal_flip()
+    objetos = []
+    for k, (color, rug, br, fu, alfa) in colores.items():
+        if not bms[k].faces:
+            continue
+        obj = _objeto(f"{nombre}_{k}", bms[k], color, rug, br, fu, alfa)
+        for cara in obj.data.polygons:
+            cara.use_smooth = False  # cubitos: cada cara plana, sin sombras raras
+        objetos.append(obj)
+    return objetos
+
+
 def cuarzo(nombre):
-    return bruto(nombre, BRUTAS["Cuarzo"])
+    """Piedra en bruto de cubitos: trozo de cuarzo lechoso en escalones, más claro arriba, con
+    reflejos lila, 2 grietas oscuras, 3 cristalitos cuadrados (uno de vidrio con núcleo que brilla)
+    y tierra con piedritas y pasto pegados en la base."""
+    rng = random.Random(7)
+    celdas = {}
+    # base de tierra: mancha irregular de 2 capas
+    for x in range(-8, 9):
+        for y in range(-7, 8):
+            r = math.hypot(x / 8, y / 6.5) + (h(x // 2, y // 2, 0, 3) - 0.5) * 0.35
+            if r < 1:
+                celdas[(x, y, 0)] = "TierraOscura"
+            if r < 0.85:
+                celdas[(x, y, 1)] = "Tierra" if h(x, y, 1, 4) > 0.08 else "TierraOscura"
+    # cuerpo: capas que se achican y se corren al subir, con bordes en escalones
+    tope = 11
+    for z in range(1, tope + 1):
+        t = (z - 1) / (tope - 1)
+        cx, cy = round(1.8 * t), round(-0.8 * t)
+        rx, ry = 6.2 * (1 - 0.5 * t**1.6), 5.0 * (1 - 0.45 * t**1.4)
+        for x in range(-8, 9):
+            for y in range(-7, 8):
+                ruido = (h(x // 3, y // 3, z // 2, 7) - 0.5) * 0.55
+                if ((x - cx) / rx) ** 2 + ((y - cy) / ry) ** 2 > 1 + ruido:
+                    continue
+                if x - y > 9 - z * 0.4:  # corte en diagonal: canto de mineral partido
+                    continue
+                v = t + (h(x, y, z, 9) - 0.5) * 0.1
+                celdas[(x, y, z)] = "Claro" if v > 0.62 else "Medio" if v > 0.3 else "Oscuro"
+    llenas = set(celdas)
+
+    def afuera(c):
+        x, y, z = c
+        return any((x + dx, y + dy, z + dz) not in llenas for (dx, dy, dz), _ in m.CARAS[:5])
+
+    cuerpo = sorted(c for c, k in celdas.items() if k in ("Claro", "Medio", "Oscuro") and afuera(c))
+    # reflejos lila sueltos en la superficie
+    for c in cuerpo:
+        if h(*c, 11) < 0.04:
+            celdas[c] = "Lila"
+    # grietas: caminos de cubitos oscuros que bajan por la superficie
+    for inicio in ((-3, -4, 8), (4, 1, 7)):
+        c = min(cuerpo, key=lambda p: sum((a - b) ** 2 for a, b in zip(p, inicio)))
+        for _ in range(9):
+            celdas[c] = "Grieta"
+            vecinos = [
+                p for p in cuerpo
+                if p[2] <= c[2] and sum(abs(a - b) for a, b in zip(p, c)) == 1 and celdas[p] != "Grieta"
+            ]
+            if not vecinos:
+                break
+            c = rng.choice(vecinos)
+
+    def columna(x0, y0, z0, lado, alto, clave, corre=(0, 0)):
+        for i in range(alto):
+            dx, dy = corre[0] * (i // 2), corre[1] * (i // 2)
+            ancho = lado if i < alto - 1 else max(1, lado - 2)
+            off = (lado - ancho) // 2
+            for a in range(ancho):
+                for b in range(ancho):
+                    celdas[(x0 + dx + off + a, y0 + dy + off + b, z0 + i)] = clave
+
+    # cristalitos: uno de vidrio grande arriba con núcleo, uno lila al costado, uno chico adelante
+    columna(0, -2, 9, 3, 6, "Vidrio", corre=(1, 0))
+    for i in range(4):
+        celdas[(1 + i // 2, -1, 10 + i)] = "Nucleo"
+    columna(-5, 0, 5, 2, 5, "Cristal", corre=(-1, 1))
+    columna(3, -5, 3, 2, 3, "Cristal", corre=(1, -1))
+    # piedritas y matas de pasto en la tierra
+    for x, y in ((-7, 2), (6, 4), (-2, 6)):
+        celdas[(x, y, 1)] = celdas[(x, y, 2)] = "Piedrita"
+    for x, y in ((5, -5), (-6, -3), (7, 0), (0, 6)):
+        celdas[(x, y, 2)] = "Pasto"
+    colores = {
+        "Oscuro": ("#B9A4DC", 0.5, None, 0.0, 1),
+        "Medio": ("#E4D9F5", 0.4, None, 0.0, 1),
+        "Claro": ("#FBF8FF", 0.35, None, 0.0, 1),
+        "Lila": ("#C7A2FF", 0.2, "#B98CFF", 0.3, 1),
+        "Grieta": ("#6F4FAE", 0.6, None, 0.0, 1),
+        "Cristal": ("#A06BFF", 0.2, "#8A4DFF", 0.35, 1),
+        "Vidrio": ("#E3D2FF", 0.05, None, 0.0, 0.45),
+        "Nucleo": ("#C77DFF", 0.2, "#C77DFF", 2.0, 1),
+        "Tierra": ("#A8693D", 0.85, None, 0.0, 1),
+        "TierraOscura": ("#7A4A2A", 0.9, None, 0.0, 1),
+        "Piedrita": ("#6B6B73", 0.8, None, 0.0, 1),
+        "Pasto": ("#4E9A3A", 0.8, None, 0.0, 1),
+    }
+    return cubitos(nombre, celdas, colores)
 
 
 def jaspe(nombre):
@@ -436,6 +583,7 @@ def juntar_caras(obj):
 def armar(nombre):
     zona, rareza, forma, colores = PIEDRAS[nombre]
     alto, tope = RAREZAS[rareza]
+    alto = ALTO.get(nombre, alto)
     if colores is None:
         return armar_tallada(nombre, forma, alto, tope, zona)
     celdas = forma()
@@ -475,6 +623,8 @@ def armar_tallada(nombre, forma, alto, tope, zona):
     hi = Vector([max(v[i] for v in vs) for i in range(3)])
     k = alto * m.STUD / (hi.z - lo.z)
     centro = (lo + hi) / 2
+    if nombre in PIVOTE_BASE:
+        centro.z = lo.z
     total = 0
     for o in objetos:
         for v in o.data.vertices:
@@ -502,12 +652,13 @@ def render_piedras(nombres):
     ancho = 0.9
     for i, nombre in enumerate(nombres):
         x0 = (i - (len(nombres) - 1) / 2) * ancho * 2.2
-        alto = RAREZAS[PIEDRAS[nombre][1]][0] * m.STUD
+        alto = ALTO.get(nombre, RAREZAS[PIEDRAS[nombre][1]][0]) * m.STUD
+        subir = 0 if nombre in PIVOTE_BASE else alto / 2
         for j, giro in enumerate((0.0, math.radians(90))):
             objetos, t, _ = armar(nombre)
             m.mover(objetos, x0 + (j - 0.5) * ancho, giro=giro)
             for o in objetos:
-                o.location.z += alto / 2
+                o.location.z += subir
         m.etiqueta(f"{nombre} ({t} tri)", x0, -0.6, tam=0.12)
     m.camara(escena, (0, 0, 0.25), 3.2 * max(1, len(nombres) * 0.8), 0.9, lente=50, giro=0)
     m.render("gema_" + "_".join(nombres))
@@ -517,8 +668,8 @@ def icono(nombre):
     m.limpiar_escena()
     escena = escena_render_gema(transparente=True, cuadrado=True)
     objetos, _, _ = armar(nombre)
-    alto = RAREZAS[PIEDRAS[nombre][1]][0] * m.STUD
-    m.camara(escena, (0, 0, 0), alto * 2.6, alto * 0.7, lente=50, giro=-30)
+    alto = ALTO.get(nombre, RAREZAS[PIEDRAS[nombre][1]][0]) * m.STUD
+    m.camara(escena, (0, 0, alto / 2 if nombre in PIVOTE_BASE else 0), alto * 2.6, alto * 0.7, lente=50, giro=-30)
     ICONOS.mkdir(parents=True, exist_ok=True)
     ajustes = escena.render.image_settings
     ajustes.file_format = "PNG"
@@ -546,8 +697,10 @@ if __name__ == "__main__":
     nombres = [a for a in args if not a.startswith("--")] or list(PIEDRAS)
     for n in nombres:
         m.limpiar_escena()
-        _, t, _ = armar(n)
-        print(f"  {n}: {t} triángulos")
+        objs, t, _ = armar(n)
+        vs = [o.matrix_world @ v.co for o in objs for v in o.data.vertices]
+        med = [(max(v[i] for v in vs) - min(v[i] for v in vs)) / m.STUD for i in range(3)]
+        print(f"  {n}: {t} triángulos, {med[0]:.2f} x {med[1]:.2f} x {med[2]:.2f} studs")
     if "--icono" in args:
         for n in nombres:
             icono(n)
