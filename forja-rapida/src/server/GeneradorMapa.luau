@@ -462,9 +462,24 @@ local function copiarPieza(molde: Instance, nombre: string, cf: CFrame, padre: I
 	local copia = m:Clone()
 	copia:ScaleTo(copia:GetScale() * GameConfig.Modelos.EscalaLobby)
 	copia:PivotTo(cf)
+	local colores = GameConfig.Modelos.ColoresLobby[nombre] or {}
 	for _, d in copia:GetDescendants() do
 		if d:IsA("BasePart") then
 			d.Anchored = true
+			-- "Tienda_Forja_Techo.001" -> "Techo"; "Pico_1_Cabeza" -> "Cabeza"
+			local malla = d.Name:gsub("%.%d+$", "")
+			malla = malla:gsub("^" .. nombre .. "_", "")
+			malla = malla:gsub("^Pico_%d_", "")
+			local color = colores[malla]
+			if color then
+				d.Color = Color3.fromHex(color)
+				d.Material = Enum.Material.SmoothPlastic
+			end
+			if GameConfig.Modelos.BrillanLobby[malla] then
+				d.Material = Enum.Material.Neon
+				d.Transparency = if malla == "AlfombraBorde" then 0.4 else 0
+				d.CastShadow = false
+			end
 		end
 	end
 	copia.Parent = padre
@@ -522,7 +537,7 @@ local function armarPieza(m: Marcador, molde: Instance, carpeta: Instance)
 			local z = LUGARES_Z[(i - 1) % 5 + 1]
 			local lugar = cf
 				* CFrame.new(lado * LUGARES_X, 1, z)
-				* CFrame.Angles(0, -lado * math.pi / 2, 0)
+				* CFrame.Angles(0, lado * math.pi / 2, 0)
 			local ped = copiarPieza(molde, versionPedestal(i), lugar, p)
 			if ped then
 				ped.Name = ("Pedestal%02d"):format(i)
