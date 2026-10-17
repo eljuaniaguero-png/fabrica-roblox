@@ -32,6 +32,17 @@ Piezas:
                  desbloqueables) y Pedestal_Cristal (cristal celeste con borde blanco y una franja
                  de luz en el medio, en Roblox Neon; los mejores). Mallas Cuerpo, Borde, Tapa,
                  Boton y (el de cristal) Luz. Pivote en el centro de la base del pedestal.
+  Parcela_Exhibicion  terreno de cada jugador: 40 x 32 studs, un escalón (1 stud) más alto que el
+                 piso, color arena con studs; camino naranja en el medio de la entrada (-y) al
+                 fondo; a cada lado una fila de 5 lugares marcados (6 studs entre uno y otro) con
+                 un punto vacío Lugar01..Lugar10 donde va cada pedestal, ya girado para que su
+                 botón quede del lado del camino (Lugar01..05 a la izquierda, 06..10 a la
+                 derecha, de la entrada al fondo). Borde de ladrillo marrón oscuro alrededor
+                 (abierto en la entrada), arco de entrada chiquito, cartel de madera grande al
+                 lado de la entrada para el nombre del dueño (sin texto) y al fondo una caja
+                 registradora dorada de bloques con un botón verde adelante (donde se cobra).
+                 Mallas Terreno, Borde, Camino, Lugares, Madera, Cartel, Caja, CajaDetalle y
+                 Boton. Los pedestales no van incluidos.
 
 Reglas (GUIA, sección 5): studs como textura (texturas/Studs.png), un color plano por malla,
 escala real (1 stud = 0,28 m), pivote en el centro de la base, frente hacia -Y de Blender (-Z de
@@ -426,6 +437,131 @@ def pedestales(mats=None, studs=None):
     return objs, conteo
 
 
+# --- Parcela_Exhibicion ---------------------------------------------------------------------
+# x de -20 a 20, y de -16 a 16; la entrada es -y
+
+COLORES_PARCELA = {
+    "terreno": "#E8C98A",  # arena
+    "borde": "#6B3A26",  # ladrillo marrón oscuro
+    "camino": "#FF8C42",
+    "lugares": "#D2AE6E",  # marca de cada lugar, un poco más oscura que la arena
+    "madera": "#7A4A2A",
+    "cartel": "#C98A4E",
+    "caja": "#FFC83D",  # dorado
+    "caja_detalle": "#C8901E",
+    "boton": PEDESTAL_BOTON,
+}
+MAX["Parcela_Exhibicion"] = 6000
+PARCELA_ALTO = 1
+LUGARES_Y = (-11, -5, 1, 7, 13)
+LUGARES_X = 12  # a cada lado del camino
+
+
+def ladrillos_borde(b, x0, x1, y0, y1, z0, z1):
+    """Tramo del borde en hiladas de ladrillos de 2 studs, corridas medio ladrillo."""
+    largo_x = x1 - x0 >= y1 - y0
+    z, fila = z0, 0
+    while z < z1 - 1e-6:
+        a0, a1 = (x0, x1) if largo_x else (y0, y1)
+        a = a0 + (1 if fila % 2 else 0)
+        tramos = [(a0, a)] if fila % 2 else []
+        while a < a1 - 1e-6:
+            tramos.append((a, min(a + 2, a1)))
+            a += 2
+        for t0, t1 in tramos:
+            if t1 - t0 < 1e-6:
+                continue
+            r = (t0 + 0.04, t1 - 0.04)
+            if largo_x:
+                b.caja(r, (y0, y1), (z, z + 1), caras="xXyYzZ")
+            else:
+                b.caja((x0, x1), r, (z, z + 1), caras="xXyYzZ")
+        z += 1
+        fila += 1
+
+
+def parcela(mats):
+    """Parcela_Exhibicion: devuelve (objetos, triángulos por malla). Pivote en el centro de la base."""
+    ter, bor, cam, lug, mad, car, caja, det, bot = (D.Malla() for _ in range(9))
+    z = PARCELA_ALTO
+    ter.caja((-20, 20), (-16, 16), (0, z), caras="xXyYZ")
+    cam.caja((-3, 3), (-16, 10), (z, z + 0.1), caras="xXyZ")
+    # borde: 1 stud de ancho y 2 de alto sobre el terreno, abierto en la entrada (x de -3 a 3)
+    zb = (z, z + 2)
+    ladrillos_borde(bor, -20, 20, 15, 16, *zb)
+    ladrillos_borde(bor, -20, -19, -15, 15, *zb)
+    ladrillos_borde(bor, 19, 20, -15, 15, *zb)
+    ladrillos_borde(bor, -20, -4, -16, -15, *zb)
+    ladrillos_borde(bor, 4, 20, -16, -15, *zb)
+    # arco de entrada: dos pilares y un dintel con un escalón arriba
+    for x in (-4, 3):
+        poste(bor, x + 0.5, -15.5, 1.4, z + 6, bloque=1)
+    bor.caja((-4.6, 4.6), (-16.2, -14.8), (z + 6, z + 7))
+    bor.caja((-2.5, 2.5), (-16, -15), (z + 7, z + 7.8))
+    # lugares marcados (5 x 5) y el punto de cada pedestal
+    lugares = []
+    for lado, x in ((-1, -LUGARES_X), (1, LUGARES_X)):
+        for y in LUGARES_Y:
+            lug.caja((x - 2.5, x + 2.5), (y - 2.5, y + 2.5), (z, z + 0.08), caras="xXyYZ")
+            lugares.append((x, y, lado))
+    # cartel grande del dueño a la izquierda de la entrada, mirando afuera
+    for x in (-12.5, -6.5):
+        poste(mad, x, -17.2, 0.6, 6.5, bloque=1)
+    car.caja((-13.5, -5.5), (-17.6, -17.0), (3.2, 6.8))
+    mad.caja((-13.8, -5.2), (-17.7, -16.9), (6.8, 7.2))
+    # caja registradora dorada al fondo, sobre el camino, con el botón adelante
+    caja.caja((-2.5, 2.5), (11.5, 14.5), (z, z + 2.5), caras="xXyYZ")
+    caja.caja((-2, 2), (12.8, 14.3), (z + 2.5, z + 4.2), caras="xXyYZ")
+    det.caja((-2.6, 2.6), (11.4, 14.6), (z, z + 0.4), caras="xXyYZ")
+    det.caja((-1.6, 1.6), (11.3, 11.5), (z + 1.0, z + 1.8), caras="xXyZ")  # cajón
+    det.caja((-1.6, 1.6), (12.6, 12.8), (z + 2.9, z + 3.9), caras="xXyzZ")  # pantallita
+    for i in range(3):
+        for j in range(2):
+            det.caja((-1.4 + i * 1.0, -0.8 + i * 1.0), (12.0 + j * 0.4, 12.3 + j * 0.4), (z + 2.5, z + 2.7), caras="xXyYZ")
+    bot.caja((-1.5, 1.5), (8, 10), (z + 0.1, z + 0.3), caras="xXyYZ")
+    objs, conteo = armar(
+        "Parcela_Exhibicion",
+        [
+            ("Terreno", ter, mats["terreno"]),
+            ("Borde", bor, mats["borde"]),
+            ("Camino", cam, mats["camino"]),
+            ("Lugares", lug, mats["lugares"]),
+            ("Madera", mad, mats["madera"]),
+            ("Cartel", car, mats["cartel"]),
+            ("Caja", caja, mats["caja"]),
+            ("CajaDetalle", det, mats["caja_detalle"]),
+            ("Boton", bot, mats["boton"]),
+        ],
+    )
+    total = sum(conteo.values())
+    if total > MAX["Parcela_Exhibicion"]:
+        raise RuntimeError(f"Parcela_Exhibicion: {total} triángulos (máximo {MAX['Parcela_Exhibicion']})")
+    # puntos vacíos: el pedestal mira con su botón (-y) hacia el camino
+    import math
+
+    for n, (x, y, lado) in enumerate(lugares, 1):
+        p = bpy.data.objects.new(f"Lugar{n:02d}", None)
+        p.empty_display_type = "ARROWS"
+        p.location = (x * M.STUD, y * M.STUD, z * M.STUD)
+        p.rotation_euler.z = math.radians(90 if lado < 0 else -90)
+        bpy.context.scene.collection.objects.link(p)
+        objs.append(p)
+    return objs, conteo
+
+
+def parcela_render(studs):
+    """Para el render: la parcela con los pedestales de muestra puestos en cada lugar."""
+    objs, conteo = parcela(materiales("Parcela", COLORES_PARCELA, studs))
+    versiones = list(PEDESTALES)
+    for o in [o for o in objs if o.type == "EMPTY"]:
+        n = int(o.name[5:])
+        v = versiones[0 if n in (1, 2, 6, 7) else 1 if n in (3, 4, 8, 9) else 2]
+        ped, _ = pedestal(mats_pedestal(v, studs), v)
+        for p in ped:
+            p.parent = o
+    return objs, conteo
+
+
 # --- render y exportación --------------------------------------------------------------------
 
 # nombre -> (armar, materiales, centro de la cámara en studs, ancho de la cámara en studs,
@@ -434,6 +570,7 @@ PIEZAS = {
     "Puesto_Vender": (puesto_vender, lambda s=None: materiales("Puesto", COLORES_PUESTO, s), (0, -1.5, 7), 30, 22),
     "Tienda_Forja": (tienda_forja, mats_tienda, (0, -1.5, 9.5), 40, 12),
     "Pedestal_Exhibicion": (lambda s: pedestales(studs=s), lambda s=None: s, (0, -1.5, 1), 24, 25),
+    "Parcela_Exhibicion": (parcela_render, lambda s=None: s, (0, -2, 1), 52, 35),
 }
 
 
@@ -485,7 +622,7 @@ def exportar():
         raiz = bpy.data.objects.new(pieza, None)
         bpy.context.scene.collection.objects.link(raiz)
         for o in objs:
-            if not o.name.startswith(("Pico_", "Amuleto_")):
+            if not o.name.startswith(("Pico_", "Amuleto_", "Lugar")):
                 o.name = f"{pieza}_{o.name}"
             o.parent = raiz
         raices.append((raiz, objs))
