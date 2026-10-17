@@ -27,11 +27,11 @@ from mathutils import Matrix, Vector  # noqa: E402
 ICONOS = m.ARTE / "iconos" / "gemas"
 
 # Solo las piedras que Juani ya aprobó entran al FBX de su zona
-APROBADAS = {"Cuarzo", "Jaspe"}
+APROBADAS = {"Cuarzo", "Jaspe", "Amatista"}
 
 # Piedras con alto propio (studs) y pivote en el centro de la base en vez del centro de la caja
-ALTO = {"Cuarzo": 2.5, "Jaspe": 2.5}
-PIVOTE_BASE = {"Cuarzo", "Jaspe"}
+ALTO = {"Cuarzo": 2.5, "Jaspe": 2.5, "Amatista": 3.0}
+PIVOTE_BASE = {"Cuarzo", "Jaspe", "Amatista"}
 
 # Alto (studs) y tope de triángulos por rareza
 RAREZAS = {
@@ -627,7 +627,70 @@ TALLADOS = {
 
 
 def amatista(nombre):
-    return cristal_tallado(nombre, TALLADOS["Amatista"])
+    """Cristal de cubitos: racimo de 5 columnas cuadradas de amatista (3 tonos de violeta, más
+    claro arriba) que terminan en punta escalonada; la grande es de vidrio con un núcleo claro que
+    brilla adentro y las otras muestran el núcleo en la punta. Salen de una base de roca de 2 tonos
+    con esquirlas sueltas y pasto. Alto y en punta para no confundirse con las piedras en bruto."""
+    celdas = {}
+    for x in range(-7, 8):
+        for y in range(-7, 8):
+            r = math.hypot(x / 7.5, y / 7) + (h(x // 2, y // 2, 0, 31) - 0.5) * 0.3
+            for z in range(3):
+                if r < 1 - z * 0.18:
+                    celdas[(x, y, z)] = "Roca" if z == 2 or h(x, y, z, 32) > 0.75 else "RocaOscura"
+
+    def columna(x0, y0, z0, lado, alto, vidrio, corre):
+        """Columna cuadrada con punta escalonada: se achica 1 por lado cada 2 cubitos al final."""
+        punta = lado  # cubitos de punta (achicando)
+        for i in range(alto + punta):
+            dx, dy = round(corre[0] * i), round(corre[1] * i)
+            achica = max(0, (i - alto) // 2 + 1) if i >= alto else 0
+            ancho = lado - 2 * achica
+            if ancho <= 0:
+                ancho = 1
+            t = i / (alto + punta)
+            for a in range(achica, achica + ancho):
+                for b in range(achica, achica + ancho):
+                    borde = a in (achica, achica + ancho - 1) or b in (achica, achica + ancho - 1)
+                    c = (x0 + dx + a, y0 + dy + b, z0 + i)
+                    if not borde and i < alto + punta - 2:
+                        celdas[c] = "Nucleo"
+                    elif vidrio:
+                        celdas[c] = "Vidrio"
+                    else:
+                        esquina = a in (achica, achica + ancho - 1) and b in (achica, achica + ancho - 1)
+                        v = t + (h(*c, 33) - 0.5) * 0.3
+                        if esquina and ancho > 2:
+                            v += 0.35  # aristas más claras: marcan la columna
+                        elif i % 4 == 3:
+                            v -= 0.3  # líneas de crecimiento más oscuras
+                        celdas[c] = "Claro" if v > 0.6 else "Medio" if v > 0.3 else "Oscuro"
+            if ancho == 1 and i >= alto:
+                break
+
+    columna(-2, -2, 2, 5, 12, True, (0.0, 0.0))  # la grande, al medio, de vidrio
+    columna(2, -5, 2, 4, 8, False, (0.15, -0.08))  # derecha adelante
+    columna(-6, -1, 2, 4, 6, False, (-0.15, 0.0))  # izquierda
+    columna(0, 3, 2, 3, 4, False, (0.0, 0.2))  # chica atrás
+    columna(4, 1, 2, 3, 3, False, (0.2, 0.1))  # chiquita a la derecha
+    # esquirlas sueltas y pasto en la roca
+    for x, y, z in ((5, 3, 3), (6, 3, 3), (-5, -4, 3), (-4, 5, 3)):
+        celdas[(x, y, z)] = "Esquirla"
+    celdas[(5, 3, 4)] = "Esquirla"
+    for x, y in ((6, -2), (-6, 3), (2, 6), (-3, -6)):
+        celdas[(x, y, 2)] = "Pasto"
+    colores = {
+        "Oscuro": ("#4A1A9E", 0.3, None, 0.0, 1),
+        "Medio": ("#7A35E0", 0.25, None, 0.0, 1),
+        "Claro": ("#B07DFF", 0.2, "#9B5CFF", 0.2, 1),
+        "Vidrio": ("#9E6BFF", 0.05, None, 0.0, 0.5),
+        "Nucleo": ("#EBD6FF", 0.2, "#D9B8FF", 1.2, 1),
+        "Esquirla": ("#A86BFF", 0.2, "#A86BFF", 0.3, 1),
+        "Roca": ("#8C6448", 0.75, None, 0.0, 1),
+        "RocaOscura": ("#5E3F2C", 0.85, None, 0.0, 1),
+        "Pasto": ("#4E9A3A", 0.8, None, 0.0, 1),
+    }
+    return cubitos(nombre, celdas, colores)
 
 
 # nombre: (zona, rareza, forma, {clave: (color, brillo)})
