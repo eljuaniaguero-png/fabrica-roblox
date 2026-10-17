@@ -421,6 +421,12 @@ local function agregar(m: Instance)
 		m:GetAttributeChangedSignal("Rota"):Connect(function()
 			if m:GetAttribute("Rota") == true then
 				polvo(roca)
+				-- la geoda desaparece ya: el servidor la deja un rato más por la revelación
+				for _, p in m:GetDescendants() do
+					if p:IsA("BasePart") then
+						p.LocalTransparencyModifier = 1
+					end
+				end
 				-- SONIDO: geoda que se rompe (para todos los que están cerca)
 				Sonidos.tocar(GameConfig.Sonidos.Romper, 0.9 + rng:NextNumber() * 0.2, 0.5, roca)
 				quitar(m)
