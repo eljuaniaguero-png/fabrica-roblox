@@ -21,7 +21,7 @@ Simulador de minería con gacha. En el mapa nacen geodas con vida. Les pegás co
 2. **Revelación y efectos** (cliente; hecho en código con el Grupo 1, falta probar en Studio): número flotante por golpe (BillboardGui con TweenService, salta y se desvanece), cartel de la geoda con nombre, modificador y barra de vida, aura del modificador, y al romperse: temblor de la roca, temblor de cámara, destello blanco, la gema girando con su color y rareza, y un cartel de suerte. Las míticas y las del Vacío con algo más grande.
 3. **Mochila, Banco y Tienda** (hecho en código: `Economia.luau` en el servidor y los menús Mochila y Tienda; falta probar en Studio): mochila sin límite; Banco con "Vender todo" (muestra el total antes); Tienda con tres pestañas: Fuerza (de a un nivel, muestra "+X Fuerza"), Amuletos (en orden, se suman) y Picos (en orden, siempre usás el mejor, se ve en la mano).
 4. **Zonas y puertas**: 5 biomas en fila, separados por barreras con la Fuerza pedida escrita arriba. Si llegás con la Fuerza suficiente se abre para siempre (no se gasta). Si no, te frena y dice "Te faltan X de Fuerza". El mapa se genera por código desde GameConfig. (Hecho: la zona se abre sola apenas tu Fuerza llega, con un cartel "¡Zona nueva!". Falta el mapa con las barreras.)
-5. **HUD y guía** (diseñado en Figma, rehecho en código con piezas de ForgeGUI: ver "HUD y menús v3"): Monedas, Suerte y Fuerza arriba a la derecha; barra "Próxima zona" abajo al centro; botones de menús a la izquierda; Índice con las 25 gemas y la tabla de probabilidades con tu suerte actual; flecha en el piso para el jugador nuevo: geoda → banco → tienda → puerta.
+5. **HUD y guía** (diseñado en Figma, rehecho en código con piezas de ForgeGUI: ver "HUD y menús v3"): Monedas, Suerte y Fuerza arriba a la derecha; barra "Próxima zona" abajo al centro; botones de menús a la izquierda; Índice con las 60 gemas y la tabla de probabilidades con tu suerte actual; flecha en el piso para el jugador nuevo: geoda → banco → tienda → puerta.
 6. **Guardado**: ProfileStore (bloqueo de sesión, autoguardado, al salir y al cerrar el servidor). Guarda Monedas, nivel de Fuerza, pico, amuletos, mochila, Índice, zonas abiertas y geodas rotas.
 
 ## Grupo 1 — Efectos visuales y descubrimientos épicos (pedido del 14/10/2026)
@@ -50,7 +50,7 @@ Se suma a lo de arriba sin cambiar el loop: el servidor sigue decidiendo todo y 
 | Leyenda | primera Legendaria | 1.000 Monedas |
 | ¡Mítico! | primera Mítica | +0,2 Suerte |
 | Minero Imparable | 2.000 geodas | +0,15 Suerte |
-| Colecciones 1 a 5 | las 5 gemas de una zona | 500 / 8.000 / 250K / 4M / 60M Monedas y +0,1 a +0,3 Suerte |
+| Colecciones 1 a 5 | las 12 gemas de una zona | 500 / 8.000 / 250K / 4M / 60M Monedas y +0,1 a +0,3 Suerte |
 
 4. **Pulido.** Número que salta con rebote y se desvanece; destello blanco, temblor y cubitos al pegar; revelación con rayos que giran (arcoíris en las Míticas). Opción "Efectos reducidos" en el panel de Ajustes, abajo a la derecha (se guarda); si nunca se tocó, arranca reducido con la calidad gráfica de Roblox en 3 o menos. Reducido = sin destello ni temblor de cámara, sin anillo ni cubitos neón, 30 % de las partículas y auras solo a 40 studs. Siempre: un solo bucle para todas las animaciones y nada anima lejos de la cámara.
 
@@ -131,7 +131,7 @@ Estado de ForgeGUI (14/10/2026):
 La regla: los secretos premian al curioso pero **nunca hacen falta para avanzar**. Las zonas se siguen abriendo solo con Fuerza; ninguna colección ni secreto da Fuerza ni abre zonas.
 
 **Museo de minerales** (reemplaza al Índice: botón "Museo" del HUD y un cartel dorado en la plaza, a la izquierda del spawn):
-- **Minerales**: los 31 (25 de los biomas y 6 secretos), agrupados por bioma. De cada uno muestra rareza, cuántos encontraste, de dónde sale y tu **primer hallazgo** (fecha). Los que no encontraste se ven como una silueta oscura con "???" y una pista de dónde salen.
+- **Minerales**: los 66 (60 de los biomas y 6 secretos; cada uno con su ícono de Blender), agrupados por bioma. De cada uno muestra rareza, cuántos encontraste, de dónde sale y tu **primer hallazgo** (fecha). Los que no encontraste se ven como una silueta oscura con "???" y una pista de dónde salen.
 - **Colecciones**: completas e incompletas, con barra de progreso, dificultad (Fácil, Media, Difícil, Leyenda) y premio.
 - **Cosméticos**: lo que ganaste, para equiparlo. Lo bloqueado dice qué colección lo da.
 - **Probabilidades**: la tabla con tu suerte actual, que suma 100 % (GUIA, sección 6).
@@ -336,6 +336,9 @@ Fórmulas (en `Reglas.luau`):
 | Épica | 1 en 40 (2,5 %) | ×12 |
 | Legendaria | 1 en 400 (0,25 %) | ×60 |
 | Mítica | 1 en 5.000 (0,02 %) | ×500 |
+| Celestial | 1 en 50.000 (0,002 %) | ×4.000 |
+
+Cada rareza tiene **2 gemas por zona**: al salir la rareza, toca una de las dos con la misma chance (50 %). La tabla de probabilidades del Museo muestra la rareza; cada gema es la mitad.
 
 | Modificador | Nace | Gemas |
 |---|---|---|
@@ -386,7 +389,7 @@ Ritmo medido con `lune run forja-rapida/pruebas/simular` (un jugador que no para
 - **Fuerza = daño por golpe.** Es un solo número: las mejoras de Fuerza lo suben, el pico lo multiplica y las puertas lo piden. Cada nivel suma +1 y además un 2,5 % de todo (si no, no alcanza para zonas que piden 10 veces más).
 - **Las geodas son compartidas.** Si varios le pegan a la misma, cada uno que hizo al menos el 10 % de la vida se lleva su propia gema con su suerte. Así nadie te "roba" un Jefe y jugar juntos conviene.
 - **El modificador exótico multiplica la cantidad de gemas** (una Dorada da 10 gemas en vez de 1), no el valor. Así la mochila guarda solo "gema → cantidad" (25 tipos como máximo).
-- **Cada zona tiene sus 5 gemas** (25 en total) y mejor suerte. Las zonas altas dan gemas más valiosas y más raras.
+- **Cada zona tiene sus 12 gemas** (60 en total: 2 por rareza, con 6 rarezas; 17 oct 2026) y mejor suerte. Las zonas altas dan gemas más valiosas y más raras.
 - **Los modificadores no dependen de tu suerte**: la geoda ya nace exótica y la ven todos.
 - **La gema entra a la mochila antes de la animación**: si salís en medio, no la perdés.
 - **Los picos y amuletos se compran en orden**, y siempre usás el mejor pico.
@@ -443,3 +446,12 @@ Arreglado en esta prueba:
 Para mirar más adelante:
 - Una Geoda Renacida tiene como mínimo 400 de vida: recién renacido (Fuerza 1) son unos 400 golpes.
 - Falta la prueba con dos jugadores y en celular, y el guardado sigue en memoria (sistema 6).
+
+## 12 piedras por zona (17 oct 2026)
+
+- 60 gemas (tabla en `forja-rapida/arte/prompts-piedras.md`), Ids = nombre del modelo (`CorazondePradera`). Rareza nueva **Celestial** (1 en 50.000, valor ×4.000) y logro "¡Celestial!" (+0,3 Suerte).
+- Revelación de la Celestial: tarjeta 25 % más grande, 18 rayos arcoíris, halo blanco que late, temblor más fuerte y 2 s más.
+- Íconos subidos a Roblox (`GameConfig.IconosGemas`): Museo, mochila y revelación los usan.
+- Vitrina: usa la piedra de Blender si está en ServerStorage > Modelos > Gemas > <Id>; si no, la estatua de antes.
+- Datos guardados: todavía no hay guardado (ProfileStore pendiente), así que cambiar Ids no rompe nada. Si alguna vez hubo datos, las gemas viejas que ya no existen se ignoran en Museo y mochila.
+- Museo completo pasa a 66 minerales.

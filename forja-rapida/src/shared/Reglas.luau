@@ -59,7 +59,7 @@ for _, l in GameConfig.Logros do
 	logros[l.Id] = l
 end
 local gemas: { [string]: Gema } = {}
-local gemaPorZona: { [number]: { [string]: Gema } } = {}
+local gemaPorZona: { [number]: { [string]: { Gema } } } = {}
 local secretaPorZona: { [number]: Gema } = {}
 for _, g in GameConfig.Gemas do
 	gemas[g.Id] = g
@@ -69,8 +69,11 @@ for _, g in GameConfig.Gemas do
 			secretaPorZona[g.Zona] = g
 		end
 	else
+		-- cada zona tiene varias gemas por rareza (hoy 2): al tirar sale una de ellas al azar
 		gemaPorZona[g.Zona] = gemaPorZona[g.Zona] or {}
-		gemaPorZona[g.Zona][g.Rareza] = g
+		local lista = gemaPorZona[g.Zona][g.Rareza] or {}
+		table.insert(lista, g)
+		gemaPorZona[g.Zona][g.Rareza] = lista
 	end
 end
 
@@ -113,9 +116,21 @@ function Reglas.partes(modificador: string): { string }
 end
 
 -- La gema de una zona y rareza (hay exactamente una por pareja).
-function Reglas.gemaDe(zona: number, rareza: string): Gema?
+-- Las gemas de esa zona y rareza (las secretas no cuentan).
+function Reglas.gemasDe(zona: number, rareza: string): { Gema }
 	local deZona = gemaPorZona[zona]
-	return deZona and deZona[rareza]
+	return deZona and deZona[rareza] or {}
+end
+
+-- Una gema de esa zona y rareza, todas con la misma chance. `azar` da un número en [0, 1);
+-- sin azar devuelve la primera.
+function Reglas.gemaDe(zona: number, rareza: string, azar: (() -> number)?): Gema?
+	local lista = Reglas.gemasDe(zona, rareza)
+	if #lista == 0 then
+		return nil
+	end
+	local i = if azar then math.min(#lista, math.floor(azar() * #lista) + 1) else 1
+	return lista[i]
 end
 
 -- Fuerza = daño por golpe. Es el número grande del HUD y lo que piden las puertas.

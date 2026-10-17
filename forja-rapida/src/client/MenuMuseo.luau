@@ -242,7 +242,7 @@ local function crear()
 		local conocida = indice[g.Id] == true
 		local ficha = fichas[g.Id]
 		local DW = W - 762
-		local dibujo = Estilo.gema(if conocida then g.Color else "#0E1230", 150)
+		local dibujo = Estilo.dibujoGema(g, 150, conocida)
 		dibujo.AnchorPoint = Vector2.new(0.5, 0)
 		dibujo.Position = UDim2.new(0.5, 0, 0, 14)
 		dibujo.ZIndex = 3

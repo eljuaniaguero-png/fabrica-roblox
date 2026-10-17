@@ -148,7 +148,9 @@ local function tarjeta(d: Datos, reducidos: boolean)
 	end
 	local colorRareza = Color3.fromHex(rareza.Color)
 	local colorGema = Color3.fromHex(gema.Color)
-	local mitica = d.Rareza == "Mitico"
+	-- Mítica o mejor: arcoíris. Celestial: además más grande, más rayos, halo y más tiempo.
+	local celestial = d.Rareza == "Celestial"
+	local mitica = indiceRareza(d.Rareza) >= indiceRareza("Mitico")
 
 	local raiz = Instance.new("Frame")
 	raiz.AnchorPoint = Vector2.new(0.5, 0.5)
@@ -159,6 +161,28 @@ local function tarjeta(d: Datos, reducidos: boolean)
 	local escala = Instance.new("UIScale")
 	escala.Scale = 0.2
 	escala.Parent = raiz
+	local tamFinal = if celestial then E.EscalaCelestial else 1
+
+	-- Celestial: halo blanco que late detrás de todo
+	local halo: Frame? = nil
+	if celestial and not reducidos then
+		local h = Instance.new("Frame")
+		h.AnchorPoint = Vector2.new(0.5, 0.5)
+		h.Position = UDim2.fromScale(0.5, 0.38)
+		h.Size = UDim2.fromOffset(330, 330)
+		h.BackgroundColor3 = Color3.fromHex("#E8FFFF")
+		h.BackgroundTransparency = 0.35
+		Estilo.esquinas(h, 165)
+		local brilloHalo = Instance.new("UIGradient")
+		brilloHalo.Transparency = NumberSequence.new({
+			NumberSequenceKeypoint.new(0, 0),
+			NumberSequenceKeypoint.new(0.6, 0.4),
+			NumberSequenceKeypoint.new(1, 1),
+		})
+		brilloHalo.Parent = h
+		h.Parent = raiz
+		halo = h
+	end
 
 	-- rayos que giran detrás de la gema (arcoíris para las míticas)
 	local rayos = Instance.new("Frame")
@@ -167,13 +191,14 @@ local function tarjeta(d: Datos, reducidos: boolean)
 	rayos.Size = UDim2.fromOffset(460, 460)
 	rayos.BackgroundTransparency = 1
 	rayos.Parent = raiz
-	for i = 1, if reducidos then 0 else 10 do
+	local cuantos = if reducidos then 0 elseif celestial then 18 else 10
+	for i = 1, cuantos do
 		local r = Instance.new("Frame")
 		r.AnchorPoint = Vector2.new(0.5, 0.5)
 		r.Position = UDim2.fromScale(0.5, 0.5)
 		r.Size = UDim2.fromOffset(46, 460)
-		r.Rotation = i * 18
-		r.BackgroundColor3 = if mitica then Color3.fromHSV(i / 10, 0.7, 1) else colorRareza
+		r.Rotation = i * 180 / cuantos
+		r.BackgroundColor3 = if mitica then Color3.fromHSV(i / cuantos, 0.7, 1) else colorRareza
 		r.BackgroundTransparency = 0.55
 		r.BorderSizePixel = 0
 		local degradado = Instance.new("UIGradient")
@@ -187,8 +212,20 @@ local function tarjeta(d: Datos, reducidos: boolean)
 		r.Parent = rayos
 	end
 
-	-- la gema: un rombo del color de la gema, con brillo y borde
+	-- la gema: su ícono si está subido (GameConfig.IconosGemas); si no, un rombo de su color
+	local icono = (GameConfig.IconosGemas :: { [string]: string })[gema.Id]
+	if icono and icono ~= "" then
+		local img = Instance.new("ImageLabel")
+		img.AnchorPoint = Vector2.new(0.5, 0.5)
+		img.Position = UDim2.fromScale(0.5, 0.38)
+		img.Size = UDim2.fromOffset(240, 240)
+		img.BackgroundTransparency = 1
+		img.Image = icono
+		img.ScaleType = Enum.ScaleType.Fit
+		img.Parent = raiz
+	end
 	local piedra = Instance.new("Frame")
+	piedra.Visible = not (icono and icono ~= "")
 	piedra.AnchorPoint = Vector2.new(0.5, 0.5)
 	piedra.Position = UDim2.fromScale(0.5, 0.38)
 	piedra.Size = UDim2.fromOffset(150, 150)
@@ -222,13 +259,15 @@ local function tarjeta(d: Datos, reducidos: boolean)
 	orden.Parent = lista
 	local titulo = Estilo.texto(
 		"¡" .. Formato.mayusculas(rareza.Nombre) .. "!",
-		if mitica then 72 else 60,
+		if celestial then 84 elseif mitica then 72 else 60,
 		colorRareza,
 		6
 	)
 	titulo.LayoutOrder = 1
 	titulo.Parent = lista
-	if mitica then
+	if celestial then
+		Estilo.degradado(titulo, { "#FFFFFF", "#7DF9FF", "#FFE9A8", "#FFFFFF" }, 0)
+	elseif mitica then
 		Estilo.degradado(titulo, { "#FF4D5E", "#FFC93C", "#4CD964", "#2EF2FF", "#9B4DFF" }, 0)
 	else
 		Estilo.degradado(titulo, { "#FFFFFF", rareza.Color, rareza.Color })
@@ -262,12 +301,19 @@ local function tarjeta(d: Datos, reducidos: boolean)
 	TweenService:Create(
 		escala,
 		TweenInfo.new(0.35, Enum.EasingStyle.Back, Enum.EasingDirection.Out),
-		{ Scale = 1 }
+		{ Scale = tamFinal }
 	):Play()
+	local reloj = 0
 	local girar = RunService.RenderStepped:Connect(function(dt: number)
-		rayos.Rotation += dt * 40
+		rayos.Rotation += dt * (if celestial then 25 else 40)
+		reloj += dt
+		if halo then
+			halo.Size =
+				UDim2.fromOffset(330 + math.sin(reloj * 4) * 30, 330 + math.sin(reloj * 4) * 30)
+		end
 	end)
-	local duracion = E.DuracionRevelacion + (if mitica then 1 else 0)
+	local duracion = E.DuracionRevelacion
+		+ (if celestial then E.ExtraCelestial elseif mitica then 1 else 0)
 	task.wait(duracion)
 	TweenService:Create(escala, TweenInfo.new(0.2), { Scale = 0 }):Play()
 	task.wait(0.22)
@@ -319,7 +365,16 @@ local function procesar(d: Datos)
 		if not reducidos then
 			temblarGeoda(d.Geoda, 0.35)
 			destelloBlanco()
-			temblarCamara(0.4, E.TemblorCamara * (if nivel >= 4 then 1.6 else 1))
+			temblarCamara(
+				if d.Rareza == "Celestial" then 0.8 else 0.4,
+				E.TemblorCamara
+					* (
+						if d.Rareza == "Celestial"
+							then 2.4
+							elseif nivel >= indiceRareza("Legendario") then 1.6
+							else 1
+					)
+			)
 		end
 		if nivel >= indiceRareza("Epico") then
 			-- SONIDO: extra para Épica o mejor

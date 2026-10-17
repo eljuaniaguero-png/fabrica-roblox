@@ -30,7 +30,7 @@ local function tarjeta(gema: GameConfig.Gema, abajo: string, tam: number, conoci
 	nombre.Position = UDim2.new(0.5, 0, 0, 6)
 	nombre.ZIndex = 3
 	nombre.Parent = f
-	local g = Estilo.gema(if conocida then gema.Color else "#0E1230", math.floor(tam * 0.62))
+	local g = Estilo.dibujoGema(gema, math.floor(tam * 0.62), conocida)
 	g.AnchorPoint = Vector2.new(0.5, 0.5)
 	g.Position = UDim2.fromScale(0.5, 0.52)
 	g.ZIndex = 3

@@ -143,7 +143,7 @@ local function premiar(jugador: Player, e: Estado): boolean
 	local rareza = if esSecreta and secreta
 		then secreta.Rareza
 		else Reglas.tirar(GameConfig.Rarezas, suerte, azar)
-	local gema = if esSecreta then secreta else Reglas.gemaDe(zonaGema, rareza)
+	local gema = if esSecreta then secreta else Reglas.gemaDe(zonaGema, rareza, azar)
 	if not gema then
 		warn(("[Geodas] no hay gema %s en la zona %d"):format(rareza, zonaGema))
 		return false

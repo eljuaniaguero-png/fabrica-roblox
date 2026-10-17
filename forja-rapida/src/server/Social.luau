@@ -55,14 +55,46 @@ local function vitrinaLibre(): BasePart?
 	return libres[1]
 end
 
--- La estatua: la malla de Blender de esa rareza (ServerStorage > Modelos > Estatuas) o un
--- cristal de partes simples.
+-- La piedra de Blender de esa gema (ServerStorage > Modelos > Gemas > <Id>, importada de
+-- arte/fbx/Gemas_Zona<N>.fbx) soldada a una parte invisible "Estatua", que es la que gira.
+local function piedraDeBlender(molde: Model): BasePart
+	local copia = molde:Clone()
+	local _, tam = copia:GetBoundingBox()
+	local raiz = Instance.new("Part")
+	raiz.Name = "Estatua"
+	raiz.Size = tam
+	raiz.CFrame = copia:GetBoundingBox()
+	raiz.Transparency = 1
+	raiz.Anchored = true
+	raiz.CanCollide, raiz.CanTouch, raiz.CanQuery = false, false, false
+	for _, parte in copia:GetDescendants() do
+		if parte:IsA("BasePart") then
+			parte.Anchored = false
+			parte.CanCollide, parte.CanTouch, parte.CanQuery = false, false, false
+			parte.Massless = true
+			local soldadura = Instance.new("WeldConstraint")
+			soldadura.Part0 = raiz
+			soldadura.Part1 = parte
+			soldadura.Parent = parte
+		end
+	end
+	copia.Parent = raiz
+	return raiz
+end
+
+-- La estatua: la piedra de Blender de esa gema; si no está, la malla de su rareza
+-- (ServerStorage > Modelos > Estatuas) o un cristal de partes simples.
 local function estatua(gemaId: string): BasePart?
 	local gema = Reglas.gema(gemaId)
 	if not gema then
 		return nil
 	end
 	local carpeta = ServerStorage:FindFirstChild(GameConfig.Modelos.Carpeta)
+	local piedras = carpeta and carpeta:FindFirstChild("Gemas")
+	local piedra = piedras and piedras:FindFirstChild(gema.Id)
+	if piedra and piedra:IsA("Model") then
+		return piedraDeBlender(piedra)
+	end
 	local estatuas = carpeta and carpeta:FindFirstChild("Estatuas")
 	local molde = estatuas and estatuas:FindFirstChild(gema.Rareza)
 	local p: BasePart

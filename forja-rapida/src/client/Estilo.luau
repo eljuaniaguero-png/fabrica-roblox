@@ -46,6 +46,7 @@ Estilo.Rarezas = {
 	Epico = { "#D9A8FF", "#7A2FE0" },
 	Legendario = { "#FFE45C", "#E8890C" },
 	Mitico = { "#FF9ED8", "#9B4DFF" },
+	Celestial = { "#F2FFFF", "#2EC8FF" },
 }
 
 -- Color de la insignia de cada ícono mientras no haya imagen.
@@ -477,6 +478,23 @@ function Estilo.gema(color: string, tam: number): Frame
 	destello.BorderSizePixel = 0
 	destello.Parent = caja
 	return caja
+end
+
+-- Dibujo de una gema del Índice: su ícono (GameConfig.IconosGemas, render de Blender) si ya
+-- está subido; si no, el rombo de su color. Si no la conocés, se ve la silueta oscura.
+function Estilo.dibujoGema(g: GameConfig.Gema, tam: number, conocida: boolean): GuiObject
+	local id = (GameConfig.IconosGemas :: { [string]: string })[g.Id]
+	if not id or id == "" then
+		return Estilo.gema(if conocida then g.Color else "#0E1230", tam)
+	end
+	local img = Instance.new("ImageLabel")
+	img.Name = "Gema"
+	img.BackgroundTransparency = 1
+	img.Size = UDim2.fromOffset(tam, tam)
+	img.Image = id
+	img.ScaleType = Enum.ScaleType.Fit
+	img.ImageColor3 = if conocida then Color3.new(1, 1, 1) else Color3.fromHex("#0E1230")
+	return img
 end
 
 -- Globito rojo de aviso ("!" o un número) para la esquina de un botón.
