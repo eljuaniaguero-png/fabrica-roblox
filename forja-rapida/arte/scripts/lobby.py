@@ -24,6 +24,14 @@ Piezas:
                  Cartel, Cadenas, Alfombra y AlfombraBorde; cada pico (Pico_1..3, mallas Mango y
                  Cabeza) y cada amuleto (Amuleto_1..3) es un objeto aparte para que el juego
                  muestre solo los que se pueden comprar.
+  Pedestal_Exhibicion  pedestal de la parcela de cada jugador (se repite): base de 4 x 4 studs y
+                 1,5 de alto con borde abajo y arriba y tapa crema donde se apoya la gema; adelante,
+                 separado, un botón verde plano de 3 x 2 studs en el piso (donde el jugador pisa
+                 para poner o sacar la gema). Tres versiones: Pedestal_Madera (madera clara y
+                 borde marrón oscuro, los primeros), Pedestal_Piedra (piedra gris y borde dorado,
+                 desbloqueables) y Pedestal_Cristal (cristal celeste con borde blanco y una franja
+                 de luz en el medio, en Roblox Neon; los mejores). Mallas Cuerpo, Borde, Tapa,
+                 Boton y (el de cristal) Luz. Pivote en el centro de la base del pedestal.
 
 Reglas (GUIA, sección 5): studs como textura (texturas/Studs.png), un color plano por malla,
 escala real (1 stud = 0,28 m), pivote en el centro de la base, frente hacia -Y de Blender (-Z de
@@ -47,7 +55,7 @@ import modelos as M  # noqa: E402
 import decoracion as D  # noqa: E402
 
 # piezas que Juani ya aprobó: son las que van a Lobby.fbx
-APROBADAS = ["Puesto_Vender"]
+APROBADAS = ["Puesto_Vender", "Tienda_Forja"]
 
 COLORES_PUESTO = {
     "ladrillo": "#9A5B3A",  # marrón ladrillo
@@ -354,6 +362,70 @@ def mats_tienda(studs=None):
     return mats
 
 
+# --- Pedestal_Exhibicion --------------------------------------------------------------------
+
+PEDESTALES = {
+    "Madera": {"cuerpo": "#D9B07A", "borde": "#6B4226"},
+    "Piedra": {"cuerpo": "#9A9EA8", "borde": "#FFC83D"},
+    "Cristal": {"cuerpo": "#8FE3FF", "borde": "#E8F8FF", "luz": "#7CF5FF"},
+}
+PEDESTAL_TAPA = "#F2E6C8"  # crema
+PEDESTAL_BOTON = "#3BD16F"
+MAX["Pedestal"] = 800
+
+
+def pedestal(mats, version="Madera"):
+    """Pedestal_<version>: devuelve (objetos, triángulos por malla). Pivote en el centro de la
+    base del pedestal (el botón queda adelante, en y de -5 a -3)."""
+    cue, bor, tap, bot, luz = (D.Malla() for _ in range(5))
+    bor.caja((-2, 2), (-2, 2), (0, 0.3), caras="xXyYZ")
+    cue.caja((-1.8, 1.8), (-1.8, 1.8), (0.3, 1.2), caras="xXyY")
+    bor.caja((-2, 2), (-2, 2), (1.2, 1.35), caras="xXyYzZ")
+    tap.caja((-1.7, 1.7), (-1.7, 1.7), (1.35, 1.5), caras="xXyYZ")
+    if version == "Cristal":
+        luz.caja((-1.85, 1.85), (-1.85, 1.85), (0.65, 0.85), caras="xXyY")
+    else:
+        # tablas o bloques marcados en el cuerpo: listones que salen un poquito
+        for i in range(-1, 2):
+            for eje in ("x", "y"):
+                if eje == "x":
+                    cue.caja((i * 1.2 - 0.05, i * 1.2 + 0.05), (-1.85, 1.85), (0.3, 1.2), caras="xXyY")
+                else:
+                    cue.caja((-1.85, 1.85), (i * 1.2 - 0.05, i * 1.2 + 0.05), (0.3, 1.2), caras="xXyY")
+    bot.caja((-1.5, 1.5), (-5, -3), (0, 0.2), caras="xXyYZ")
+    piezas = [
+        ("Cuerpo", cue, mats["cuerpo"]),
+        ("Borde", bor, mats["borde"]),
+        ("Tapa", tap, mats["tapa"]),
+        ("Boton", bot, mats["boton"]),
+        ("Luz", luz, mats.get("luz")),
+    ]
+    objs, conteo = D.mallas(piezas, MAX["Pedestal"], f"Pedestal_{version}")
+    if sum(conteo.values()) > MAX["Pedestal"]:
+        raise RuntimeError(f"Pedestal_{version}: {sum(conteo.values())} triángulos (máximo 800)")
+    return objs, conteo
+
+
+def mats_pedestal(version, studs=None):
+    colores = dict(PEDESTALES[version], tapa=PEDESTAL_TAPA, boton=PEDESTAL_BOTON)
+    mats = materiales(f"Pedestal{version}", {k: v for k, v in colores.items() if k != "luz"}, studs)
+    if version == "Cristal":
+        mats["cuerpo"] = M.material("PedestalCristal_Cuerpo", colores["cuerpo"], brillo=colores["cuerpo"], fuerza_brillo=0.4 if studs else 0)
+        mats["luz"] = M.material("PedestalCristal_Luz", colores["luz"], brillo=colores["luz"], fuerza_brillo=3.0 if studs else 0)
+    return mats
+
+
+def pedestales(mats=None, studs=None):
+    """Los 3 pedestales en fila (x = -7, 0, 7), para el render."""
+    objs, conteo = [], {}
+    for version, x in zip(PEDESTALES, (-7, 0, 7)):
+        o, c = pedestal(mats_pedestal(version, studs), version)
+        M.mover(o, x * M.STUD, 0)
+        objs += o
+        conteo[version] = sum(c.values())
+    return objs, conteo
+
+
 # --- render y exportación --------------------------------------------------------------------
 
 # nombre -> (armar, materiales, centro de la cámara en studs, ancho de la cámara en studs,
@@ -361,6 +433,7 @@ def mats_tienda(studs=None):
 PIEZAS = {
     "Puesto_Vender": (puesto_vender, lambda s=None: materiales("Puesto", COLORES_PUESTO, s), (0, -1.5, 7), 30, 22),
     "Tienda_Forja": (tienda_forja, mats_tienda, (0, -1.5, 9.5), 40, 12),
+    "Pedestal_Exhibicion": (lambda s: pedestales(studs=s), lambda s=None: s, (0, -1.5, 1), 24, 25),
 }
 
 
