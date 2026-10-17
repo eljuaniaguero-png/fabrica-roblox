@@ -32,7 +32,7 @@ APROBADAS = {"Cuarzo"}
 # Alto (studs) y tope de triángulos por rareza
 RAREZAS = {
     "Comun": (1.5, 1500),
-    "Rara": (2.0, 800),
+    "Rara": (2.0, 2500),
     "Epica": (2.5, 1200),
     "Legendaria": (3.0, 2000),
     "Mitica": (3.5, 3000),
@@ -88,7 +88,7 @@ def _cristalito(bm, base, direccion, radio, largo, giro):
     _sumar(bm, tmp)
 
 
-def _grieta(bm, centro, normal, tangente, largo, semilla):
+def _grieta(bm, centro, normal, tangente, largo, semilla, ancho=0.035):
     """Zigzag de 3 tramos finitos pegado a una cara."""
     rng = random.Random(semilla)
     b = normal.cross(tangente).normalized()
@@ -100,7 +100,7 @@ def _grieta(bm, centro, normal, tangente, largo, semilla):
         eje_x = d.normalized()
         eje_y = normal.cross(eje_x).normalized()
         rot = Matrix((eje_x, eje_y, normal)).transposed().to_4x4()
-        esc = Matrix.Diagonal((d.length + 0.03, 0.035, 0.03, 1))
+        esc = Matrix.Diagonal((d.length + 0.03, ancho, 0.03, 1))
         tmp = bmesh.new()
         bmesh.ops.create_cube(tmp, size=1)
         bmesh.ops.transform(
@@ -109,26 +109,25 @@ def _grieta(bm, centro, normal, tangente, largo, semilla):
         _sumar(bm, tmp)
 
 
-def cuarzo(nombre):
-    """Piedra en bruto: trozo irregular con 5 caras talladas que brillan, bisel claro en los bordes,
-    3 tonos (claro arriba, oscuro abajo), 2 grietas, 3 cristalitos (uno transparente con un núcleo
-    lila adentro) y tierra pegada en la base. Medidas libres: armar_tallada() la escala."""
-    rng = random.Random(7)
-    centro = Vector((0, 0, 1.25))
+def bruto(nombre, d):
+    """Piedra en bruto: trozo irregular con caras talladas que brillan, bisel claro en los bordes,
+    3 tonos (claro arriba, oscuro abajo), grietas, vetas, cristalitos (uno transparente con un
+    núcleo que brilla adentro) y tierra pegada en la base. 'd' trae los números de cada piedra.
+    Medidas libres: armar_tallada() la escala."""
+    rng = random.Random(d["semilla"])
+    ax, ay, az, inclina = d["cuerpo"]
+    zc = d.get("zc", 1.2)  # altura del centro del cuerpo (más bajo = apoya en la tierra)
+    centro = Vector((0, 0, zc + 0.05))
     puntos = []
     for _ in range(16):
         a = rng.uniform(0, 2 * math.pi)
         z = rng.uniform(-1, 1)
         r = math.sqrt(1 - z * z)
-        puntos.append(Vector((1.2 * r * math.cos(a), 0.9 * r * math.sin(a), 1.2 + 0.85 * z + 0.35 * r * math.cos(a))))
-    # 5 cortes planos: cada punto que se pasa del plano se aplasta sobre él -> cara grande y plana
-    cortes = [
-        Vector((0.15, -1, 0.55)).normalized() * 0.62,  # frente
-        Vector((1, 0.2, 0.45)).normalized() * 0.70,  # costado derecho
-        Vector((-0.9, 0.45, 0.6)).normalized() * 0.66,  # izquierdo de atrás
-        Vector((0.1, 0.25, 1)).normalized() * 0.82,  # arriba
-        Vector((-0.6, -0.7, 0.2)).normalized() * 0.72,  # frente izquierdo
-    ]
+        puntos.append(
+            Vector((ax * r * math.cos(a), ay * r * math.sin(a), zc + az * z + inclina * r * math.cos(a)))
+        )
+    # cortes planos: cada punto que se pasa del plano se aplasta sobre él -> cara grande y plana
+    cortes = [Vector(n).normalized() * dist for n, dist in d["cortes"]]
     for i, p in enumerate(puntos):
         for c in cortes:
             n = c.normalized()
@@ -162,13 +161,8 @@ def cuarzo(nombre):
     for f in r["faces"]:
         f[tono] = 2 if f.normal.z > -0.2 else 0  # bisel claro: marca los bordes
     objetos = []
-    tonos = [
-        ("Oscuro", "#9C74EA", 0.5, None, 0.0),
-        ("Medio", "#D8C2FF", 0.4, None, 0.0),
-        ("Claro", "#FCF8FF", 0.35, None, 0.0),
-        ("Brillo", "#F3E8FF", 0.12, "#B98CFF", 0.45),
-    ]
-    for i, (sufijo, color, rug, br, fu) in enumerate(tonos):
+    for i, sufijo in enumerate(("Oscuro", "Medio", "Claro", "Brillo")):
+        color, rug, br, fu = d["tonos"][i]
         copia = bm.copy()
         capa = copia.faces.layers.int["tono"]
         bmesh.ops.delete(copia, geom=[f for f in copia.faces if f[capa] != i], context="FACES")
@@ -182,31 +176,39 @@ def cuarzo(nombre):
         if t.length < 0.1:
             t = Vector((1, 0, 0))
         _grieta(bm, c + t.normalized().cross(n) * 0.05, n, t.normalized(), math.sqrt(area) * 0.55, 10 + k)
-    objetos.append(_objeto(f"{nombre}_Grieta", bm, "#6B3FC4", 0.6))
+    objetos.append(_objeto(f"{nombre}_Grieta", bm, d["grieta"], 0.6))
 
-    # cristalitos asomando: 2 lila fuerte y 1 transparente con un núcleo que brilla adentro
+    # vetas: bandas anchas que cruzan las caras talladas en diagonal
+    if d.get("veta"):
+        bm = bmesh.new()
+        for k, (c, n, area) in enumerate(talladas[: d["vetas"]]):
+            t = n.cross(Vector((0.3, -0.5, 1)))
+            if t.length < 0.1:
+                t = Vector((1, 0, 0))
+            _grieta(bm, c, n, t.normalized(), math.sqrt(area) * 1.15, 20 + k, ancho=0.11)
+        objetos.append(_objeto(f"{nombre}_Veta", bm, d["veta"], 0.4))
+
+    # cristalitos asomando y 1 transparente con un núcleo que brilla adentro
     def punto_en(direccion):
-        d = direccion.normalized()
-        mejor = max(puntos, key=lambda p: (p - centro).normalized().dot(d))
-        return mejor.lerp(centro, 0.25), d
+        dd = direccion.normalized()
+        mejor = max(puntos, key=lambda p: (p - centro).normalized().dot(dd))
+        return mejor.lerp(centro, 0.25), dd
 
     bm = bmesh.new()
-    for direccion, radio, largo, giro in (
-        (Vector((0.9, -0.7, 0.55)), 0.16, 0.5, 0.3),
-        (Vector((0.5, -1, 0.25)), 0.12, 0.36, 0.9),
-    ):
-        base, d = punto_en(direccion)
-        _cristalito(bm, base, d, radio, largo, giro)
-    objetos.append(_objeto(f"{nombre}_Cristal", bm, "#A06BFF", 0.2, "#8A4DFF", 0.4))
-    base, d = punto_en(Vector((0.7, 0.05, 1)))
+    for direccion, radio, largo, giro in d["cristales"]:
+        base, dd = punto_en(Vector(direccion))
+        _cristalito(bm, base, dd, radio, largo, giro)
+    color, br, fu = d["cristal"]
+    objetos.append(_objeto(f"{nombre}_Cristal", bm, color, 0.2, br, fu))
+    base, dd = punto_en(Vector(d["vidrio"]))
     bm = bmesh.new()
-    _cristalito(bm, base, d, 0.17, 0.55, 0.0)
-    objetos.append(_objeto(f"{nombre}_Vidrio", bm, "#EBDDFF", 0.05, alfa=0.45))
+    _cristalito(bm, base, dd, 0.17, 0.55, 0.0)
+    objetos.append(_objeto(f"{nombre}_Vidrio", bm, d["color_vidrio"], 0.05, alfa=0.45))
     bm = bmesh.new()
-    _cristalito(bm, base + d * 0.12, d, 0.07, 0.3, 0.5)
-    objetos.append(_objeto(f"{nombre}_Nucleo", bm, "#C77DFF", 0.2, "#C77DFF", 2.0))
+    _cristalito(bm, base + dd * 0.12, dd, 0.07, 0.3, 0.5)
+    objetos.append(_objeto(f"{nombre}_Nucleo", bm, d["nucleo"], 0.2, d["nucleo"], 2.0))
 
-    # tierra pegada en la base y 3 piedritas oscuras
+    # tierra pegada en la base y 3 piedritas
     bm = bmesh.new()
     pts = []
     for i in range(14):
@@ -225,27 +227,177 @@ def cuarzo(nombre):
             [c + Vector((rng.uniform(-1, 1), rng.uniform(-1, 1), rng.uniform(-0.6, 0.8))) * 0.17 for _ in range(10)],
         )
         _sumar(bm, tmp)
-    objetos.append(_objeto(f"{nombre}_Piedrita", bm, "#6E4128", 0.8))
+    objetos.append(_objeto(f"{nombre}_Piedrita", bm, d["piedrita"], 0.8))
     return objetos
 
 
-def jaspe():
-    # canto rodado ancho y bajo, rojo ladrillo con 2 vetas crema que lo cruzan
-    celdas = {}
-    for z in range(4):
-        for x in range(-3, 4):
-            for y in range(-2, 3):
-                if (x / 3.6) ** 2 + (y / 2.6) ** 2 + ((z - 1.2) / 2.6) ** 2 <= 1:
-                    celdas[(x, y, z)] = "piedra"
-    for c in list(celdas):
-        x, y, z = c
-        if x - z in (-2, 2):
-            celdas[c] = "veta"
-    for c in list(celdas):
-        x, y, z = c
-        if z == 3 and abs(x) <= 1 and celdas[c] == "piedra":
-            celdas[c] = "brillo"
-    return celdas
+BRUTAS = {
+    # cuarzo blanco lechoso con reflejos lila: trozo alto y torcido, cristales agrupados a un costado
+    "Cuarzo": {
+        "semilla": 7,
+        "cuerpo": (1.2, 0.9, 0.85, 0.35),
+        "cortes": [
+            ((0.15, -1, 0.55), 0.62),  # frente
+            ((1, 0.2, 0.45), 0.70),  # costado derecho
+            ((-0.9, 0.45, 0.6), 0.66),  # izquierdo de atrás
+            ((0.1, 0.25, 1), 0.82),  # arriba
+            ((-0.6, -0.7, 0.2), 0.72),  # frente izquierdo
+        ],
+        "tonos": [
+            ("#9C74EA", 0.5, None, 0.0),
+            ("#D8C2FF", 0.4, None, 0.0),
+            ("#FCF8FF", 0.35, None, 0.0),
+            ("#F3E8FF", 0.12, "#B98CFF", 0.45),
+        ],
+        "grieta": "#6B3FC4",
+        "cristales": [((0.9, -0.7, 0.55), 0.16, 0.5, 0.3), ((0.5, -1, 0.25), 0.12, 0.36, 0.9)],
+        "cristal": ("#A06BFF", "#8A4DFF", 0.4),
+        "vidrio": (0.7, 0.05, 1),
+        "color_vidrio": "#EBDDFF",
+        "nucleo": "#C77DFF",
+        "piedrita": "#6E4128",
+    },
+    # jaspe rojo ladrillo con vetas crema: canto ancho y bajo, cristalitos crema arriba
+    "Jaspe": {
+        "semilla": 23,
+        "zc": 0.85,
+        "cuerpo": (1.55, 1.1, 0.6, -0.15),
+        "cortes": [
+            ((0.1, -1, 0.35), 0.72),  # frente
+            ((1, -0.15, 0.5), 1.05),  # costado derecho
+            ((-1, 0.1, 0.45), 1.0),  # costado izquierdo
+            ((-0.15, 0.1, 1), 0.48),  # arriba, bien plana
+            ((0.3, 1, 0.4), 0.75),  # atrás
+        ],
+        "tonos": [
+            ("#7E1F14", 0.55, None, 0.0),
+            ("#B83A25", 0.45, None, 0.0),
+            ("#E2603F", 0.4, None, 0.0),
+            ("#EE7350", 0.15, "#FF7A4A", 0.35),
+        ],
+        "grieta": "#4A0F08",
+        "veta": "#F6E2BC",
+        "vetas": 3,
+        "cristales": [((-0.8, -0.6, 0.7), 0.13, 0.36, 0.2), ((-0.4, -0.9, 0.5), 0.1, 0.28, 0.8)],
+        "cristal": ("#F6E2BC", "#FFD9A0", 0.25),
+        "vidrio": (0.55, -0.3, 1),
+        "color_vidrio": "#FFE6C7",
+        "nucleo": "#FF5A2E",
+        "piedrita": "#4E9A3A",  # matitas de pasto en vez de piedritas: es de la Pradera
+    },
+}
+
+
+def cuarzo(nombre):
+    return bruto(nombre, BRUTAS["Cuarzo"])
+
+
+def jaspe(nombre):
+    return bruto(nombre, BRUTAS["Jaspe"])
+
+
+def _punta(bms, base, direccion, radio, largo, giro):
+    """Punta de cristal de 6 caras con hombro y punta tallada, partida en 3 tonos
+    (bms = [oscuro abajo, medio, claro arriba]). Se apoya en 'base' mirando hacia 'direccion'."""
+    anillos = [(0.0, 1.0), (0.45, 1.06), (0.78, 0.96), (0.93, 0.42)]  # (alto, radio) relativos
+    rot = Vector((0, 0, 1)).rotation_difference(direccion.normalized()).to_matrix().to_4x4()
+    mat = Matrix.Translation(base) @ rot
+
+    def v(alto, rr, i):
+        a = giro + 2 * math.pi * i / 6
+        return mat @ Vector((radio * rr * math.cos(a), radio * rr * math.sin(a), largo * alto))
+
+    for seg in range(3):
+        bm = bms[seg]
+        (h0, r0), (h1, r1) = anillos[seg], anillos[seg + 1]
+        abajo = [bm.verts.new(v(h0, r0, i)) for i in range(6)]
+        arriba = [bm.verts.new(v(h1, r1, i)) for i in range(6)]
+        for i in range(6):
+            j = (i + 1) % 6
+            bm.faces.new([abajo[i], abajo[j], arriba[j], arriba[i]])
+        if seg == 0:
+            bm.faces.new(list(reversed(abajo)))
+    # punta tallada: anillo chico + vértice, en el tono claro
+    bm = bms[2]
+    h0, r0 = anillos[3]
+    anillo = [bm.verts.new(v(h0, r0, i)) for i in range(6)]
+    pico = bm.verts.new(mat @ Vector((0, 0, largo)))
+    for i in range(6):
+        bm.faces.new([anillo[i], anillo[(i + 1) % 6], pico])
+
+
+def cristal_tallado(nombre, d):
+    """Racimo de puntas de cristal (6 caras, punta tallada, 3 tonos, vidrio con un núcleo claro que
+    brilla adentro) saliendo de una base de roca biselada, con esquirlas sueltas y pasto."""
+    rng = random.Random(d["semilla"])
+    objetos = []
+    oscuro, medio, claro = d["tonos"]
+    bms = [bmesh.new() for _ in range(3)]
+    nucleos = bmesh.new()
+    for direccion, radio, largo, giro in d["puntas"]:
+        dd = Vector(direccion).normalized()
+        base = Vector((dd.x * 0.25, dd.y * 0.25, 0.45))
+        _punta(bms, base, dd, radio, largo, giro)
+        _cristalito(nucleos, base + dd * 0.1, dd, radio * 0.4, largo * 0.6, giro)
+    for bm, sufijo, (color, alfa) in zip(bms, ("Oscuro", "Medio", "Claro"), (oscuro, medio, claro)):
+        bmesh.ops.remove_doubles(bm, verts=bm.verts, dist=1e-5)
+        bmesh.ops.recalc_face_normals(bm, faces=bm.faces)
+        bmesh.ops.bevel(bm, geom=list(bm.edges), offset=0.012, segments=1, affect="EDGES", clamp_overlap=True)
+        objetos.append(_objeto(f"{nombre}_{sufijo}", bm, color, 0.1, color, 0.15, alfa=alfa))
+    objetos.append(_objeto(f"{nombre}_Nucleo", nucleos, d["nucleo"], 0.2, d["nucleo"], 1.2))
+
+    # base de roca biselada, más oscura abajo
+    pts = []
+    for i in range(12):
+        a = 2 * math.pi * i / 12 + rng.uniform(-0.2, 0.2)
+        rr = rng.uniform(0.85, 1.1)
+        pts.append(Vector((rr * 0.85 * math.cos(a), rr * 0.75 * math.sin(a), rng.uniform(0.45, 0.65))))
+        pts.append(Vector((rr * 1.05 * math.cos(a), rr * 0.9 * math.sin(a), rng.uniform(0.0, 0.15))))
+    bm = bmesh.new()
+    _casco(bm, pts)
+    bmesh.ops.recalc_face_normals(bm, faces=bm.faces)
+    bmesh.ops.bevel(bm, geom=list(bm.edges), offset=0.05, segments=1, affect="EDGES", clamp_overlap=True)
+    abajo = bm.copy()
+    bmesh.ops.delete(bm, geom=[f for f in bm.faces if f.normal.z < 0.3], context="FACES")
+    bmesh.ops.delete(abajo, geom=[f for f in abajo.faces if f.normal.z >= 0.3], context="FACES")
+    objetos.append(_objeto(f"{nombre}_RocaArriba", bm, d["roca"][0], 0.7))
+    objetos.append(_objeto(f"{nombre}_RocaAbajo", abajo, d["roca"][1], 0.8))
+
+    # esquirlas sueltas apoyadas en la base y matitas de pasto
+    bm = bmesh.new()
+    for x, y, dx, dy in d["esquirlas"]:
+        _cristalito(bm, Vector((x, y, 0.55)), Vector((dx, dy, 0.35)), 0.06, 0.16, 0.4)
+    objetos.append(_objeto(f"{nombre}_Esquirla", bm, d["esquirla"], 0.15, d["esquirla"], 0.3))
+    bm = bmesh.new()
+    for a in (1.2, 3.3, 5.2):
+        c = Vector((1.0 * math.cos(a), 0.85 * math.sin(a), 0.12))
+        tmp = bmesh.new()
+        _casco(tmp, [c + Vector((rng.uniform(-1, 1), rng.uniform(-1, 1), rng.uniform(0, 1.2))) * 0.12 for _ in range(8)])
+        _sumar(bm, tmp)
+    objetos.append(_objeto(f"{nombre}_Pasto", bm, "#4E9A3A", 0.8))
+    return objetos
+
+
+TALLADOS = {
+    # racimo de 3 puntas de amatista violeta de distintos largos, inclinadas hacia afuera
+    "Amatista": {
+        "semilla": 31,
+        "puntas": [
+            ((0.05, 0.1, 1), 0.3, 2.0, 0.1),  # la grande, al medio
+            ((0.7, -0.35, 0.8), 0.22, 1.3, 0.5),  # derecha
+            ((-0.65, -0.25, 0.85), 0.18, 1.0, 0.9),  # izquierda, la chica
+        ],
+        "tonos": [("#5B22B8", 0.8), ("#8A3FF0", 0.7), ("#C394FF", 0.65)],
+        "nucleo": "#F2DDFF",
+        "roca": ("#8C6448", "#5E3F2C"),
+        "esquirlas": [(0.45, 0.45, 1, 0.6), (-0.4, 0.4, -0.8, 1)],
+        "esquirla": "#A86BFF",
+    },
+}
+
+
+def amatista(nombre):
+    return cristal_tallado(nombre, TALLADOS["Amatista"])
 
 
 # nombre: (zona, rareza, forma, {clave: (color, brillo)})
@@ -260,8 +412,9 @@ PIEDRAS = {
         1,
         "Comun",
         jaspe,
-        {"piedra": ("#B23A26", 0.0), "veta": ("#F3DDB5", 0.0), "brillo": ("#E8664D", 0.35)},
+        None,
     ),
+    "Amatista": (1, "Rara", amatista, None),
 }
 
 
