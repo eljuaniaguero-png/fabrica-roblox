@@ -27,11 +27,11 @@ from mathutils import Matrix, Vector  # noqa: E402
 ICONOS = m.ARTE / "iconos" / "gemas"
 
 # Solo las piedras que Juani ya aprobó entran al FBX de su zona
-APROBADAS = {"Cuarzo", "Jaspe", "Amatista", "AgataMusgosa", "Esmeralda", "TurmalinaRosa", "CorazondePradera", "DiamanteFloral", "JadeArcoiris", "TreboldeCristal", "AuroraVerde", "SemilladelMundo", "Arenisca", "Ambar", "Citrino"}
+APROBADAS = {"Cuarzo", "Jaspe", "Amatista", "AgataMusgosa", "Esmeralda", "TurmalinaRosa", "CorazondePradera", "DiamanteFloral", "JadeArcoiris", "TreboldeCristal", "AuroraVerde", "SemilladelMundo", "Arenisca", "Ambar", "Citrino", "OjodeTigre"}
 
 # Piedras con alto propio (studs) y pivote en el centro de la base en vez del centro de la caja
-ALTO = {"Cuarzo": 2.5, "Jaspe": 2.5, "Amatista": 3.0, "AgataMusgosa": 3.0, "Esmeralda": 3.5, "TurmalinaRosa": 3.5, "CorazondePradera": 4.0, "DiamanteFloral": 4.0, "JadeArcoiris": 4.5, "TreboldeCristal": 4.5, "AuroraVerde": 5.0, "SemilladelMundo": 5.0, "Arenisca": 2.5, "Ambar": 2.5, "Citrino": 3.0}
-PIVOTE_BASE = {"Cuarzo", "Jaspe", "Amatista", "AgataMusgosa", "Esmeralda", "TurmalinaRosa", "CorazondePradera", "DiamanteFloral", "JadeArcoiris", "TreboldeCristal", "AuroraVerde", "SemilladelMundo", "Arenisca", "Ambar", "Citrino"}
+ALTO = {"Cuarzo": 2.5, "Jaspe": 2.5, "Amatista": 3.0, "AgataMusgosa": 3.0, "Esmeralda": 3.5, "TurmalinaRosa": 3.5, "CorazondePradera": 4.0, "DiamanteFloral": 4.0, "JadeArcoiris": 4.5, "TreboldeCristal": 4.5, "AuroraVerde": 5.0, "SemilladelMundo": 5.0, "Arenisca": 2.5, "Ambar": 2.5, "Citrino": 3.0, "OjodeTigre": 3.0}
+PIVOTE_BASE = {"Cuarzo", "Jaspe", "Amatista", "AgataMusgosa", "Esmeralda", "TurmalinaRosa", "CorazondePradera", "DiamanteFloral", "JadeArcoiris", "TreboldeCristal", "AuroraVerde", "SemilladelMundo", "Arenisca", "Ambar", "Citrino", "OjodeTigre"}
 # Topes de triángulos propios (pisan el de la rareza)
 TOPE = {"Esmeralda": 4000, "TurmalinaRosa": 4000, "CorazondePradera": 6000, "DiamanteFloral": 6000, "JadeArcoiris": 8000, "TreboldeCristal": 8000, "AuroraVerde": 10000, "SemilladelMundo": 10000}
 
@@ -1744,6 +1744,56 @@ def citrino(nombre):
     return cubitos(nombre, celdas, colores)
 
 
+def ojo_de_tigre(nombre):
+    """Cristal de cubitos (Dunas): 3 columnas anchas y macizas de ojo de tigre pulido, de distintas
+    alturas y punta escalonada. Rayas que cruzan cada columna: marrón oscuro, miel y dorado, con una
+    raya fina que brilla (el reflejo de la piedra) y puntos claros sueltos en las rayas doradas.
+    Salen de una base de roca oscura y hay cubitos dorados sueltos en la base."""
+    celdas = {}
+    for x in range(-9, 10):
+        for y in range(-8, 9):
+            r = math.hypot(x / 9, y / 8) + (h(x // 2, y // 2, 0, 51) - 0.5) * 0.3
+            for z in range(3):
+                if r < 1 - z * 0.12:
+                    v = h(x, y, z, 52)
+                    celdas[(x, y, z)] = "RocaOscura" if z == 0 or v < 0.3 else "Roca"
+    # columnas: (x, y, medio ancho, alto, inclinación x, inclinación y)
+    columnas = [(-1, 0, 3, 19, 0, 0), (4, -2, 2, 13, 1, -1), (-5, 3, 2, 11, -1, 1)]
+    rayas = ["Oscuro", "Oscuro", "Medio", "Dorado", "Brillo", "Dorado", "Medio"]
+    for cx, cy, a, alto, ix, iy in columnas:
+        punta = a + 3
+        for i in range(alto):
+            z = 2 + i
+            ox, oy = cx + ix * (i // 6), cy + iy * (i // 6)
+            ancho = a if i < alto - punta else max(0, a - (i - (alto - punta) + 1) // 2)
+            raya = rayas[(i + cx) % len(rayas)]
+            for x in range(-ancho, ancho + 1):
+                for y in range(-ancho, ancho + 1):
+                    c = (ox + x, oy + y, z)
+                    if abs(x) < ancho and abs(y) < ancho and i < alto - punta:
+                        celdas[c] = "Medio"  # relleno que no se ve (las caras se juntan)
+                        continue
+                    if raya == "Dorado" and h(*c, 53) < 0.35:
+                        celdas[c] = "Claro"  # reflejo que corre por la raya
+                    else:
+                        celdas[c] = raya
+    for x, y, alto in ((-8, -2, 2), (7, 4, 2), (1, -6, 1), (-3, 6, 2)):
+        z0 = max((z for z in range(3) if (x, y, z) in celdas), default=-1) + 1
+        for z in range(z0, z0 + alto):
+            celdas[(x, y, z)] = "Suelto"
+    colores = {
+        "Oscuro": ("#4A2410", 0.3, None, 0.0, 1),
+        "Medio": ("#8A4E1C", 0.25, None, 0.0, 1),
+        "Dorado": ("#C98A2E", 0.2, None, 0.0, 1),
+        "Claro": ("#E8B456", 0.15, "#E8B456", 0.15, 1),
+        "Brillo": ("#FFD77A", 0.1, "#FFC94A", 0.8, 1),
+        "Suelto": ("#E0A040", 0.2, "#D9952A", 0.3, 1),
+        "Roca": ("#5E534C", 0.85, None, 0.0, 1),
+        "RocaOscura": ("#3E3632", 0.9, None, 0.0, 1),
+    }
+    return cubitos(nombre, celdas, colores)
+
+
 # nombre: (zona, rareza, forma, {clave: (color, brillo)})
 PIEDRAS = {
     "Cuarzo": (
@@ -1771,6 +1821,7 @@ PIEDRAS = {
     "Arenisca": (2, "Comun", arenisca, None),
     "Ambar": (2, "Comun", ambar, None),
     "Citrino": (2, "Rara", citrino, None),
+    "OjodeTigre": (2, "Rara", ojo_de_tigre, None),
 }
 
 
