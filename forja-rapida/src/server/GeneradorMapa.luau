@@ -454,13 +454,19 @@ local LUGARES_Z = { 11, 5, -1, -7, -13 }
 
 -- Copia una pieza, la agranda y la apoya en el piso del marcador. Todas las piezas tienen el
 -- pivote en el centro de su base y el frente hacia -Z.
-local function copiarPieza(molde: Instance, nombre: string, cf: CFrame, padre: Instance): Model?
+local function copiarPieza(
+	molde: Instance,
+	nombre: string,
+	cf: CFrame,
+	padre: Instance,
+	escala: number
+): Model?
 	local m = molde:FindFirstChild(nombre)
 	if not (m and m:IsA("Model")) then
 		return nil
 	end
 	local copia = m:Clone()
-	copia:ScaleTo(copia:GetScale() * GameConfig.Modelos.EscalaLobby)
+	copia:ScaleTo(copia:GetScale() * GameConfig.Modelos.EscalaLobby * escala)
 	copia:PivotTo(cf)
 	local colores = GameConfig.Modelos.ColoresLobby[nombre] or {}
 	for _, d in copia:GetDescendants() do
@@ -511,7 +517,8 @@ local function armarPieza(m: Marcador, molde: Instance, carpeta: Instance)
 		return
 	end
 	local cf = CFrame.new(m.Pos[1], m.Pos[2], m.Pos[3]) * CFrame.Angles(0, math.rad(m.Giro), 0)
-	local p = copiarPieza(molde, nombre, cf, carpeta)
+	local escala = if typeof(m.Atributos.Escala) == "number" then m.Atributos.Escala else 1
+	local p = copiarPieza(molde, nombre, cf, carpeta, escala)
 	if not p then
 		return
 	end
@@ -536,9 +543,9 @@ local function armarPieza(m: Marcador, molde: Instance, carpeta: Instance)
 			local lado = if i <= 5 then -1 else 1
 			local z = LUGARES_Z[(i - 1) % 5 + 1]
 			local lugar = cf
-				* CFrame.new(lado * LUGARES_X, 1, z)
+				* CFrame.new(lado * LUGARES_X * escala, escala, z * escala)
 				* CFrame.Angles(0, lado * math.pi / 2, 0)
-			local ped = copiarPieza(molde, versionPedestal(i), lugar, p)
+			local ped = copiarPieza(molde, versionPedestal(i), lugar, p, escala)
 			if ped then
 				ped.Name = ("Pedestal%02d"):format(i)
 				ped:SetAttribute("Lugar", i)

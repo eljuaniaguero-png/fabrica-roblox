@@ -159,21 +159,23 @@ PLAZA = -136  # la plaza va de z -136 a 0
 Z0 = PLAZA - 8  # pared del fondo
 
 # Plaza
-SPAWN = (0, -20)
+SPAWN = (0, -14)
 FUENTE = (0, -70)
 SANTUARIO = (-44, -136, 44, -100)  # x0, z0, x1, z1 (z1 = cara de afuera de la pared con la puerta)
 # piezas de arte/fbx/Lobby.fbx (las pone GeneradorMapa si están en ServerStorage > Modelos > Lobby)
 # como el dibujo de Juani (17/10): parcelas al fondo, Ruleta en el medio, Banco y Tienda a los
 # costados y el Spawn adelante, cerca del arco. Lo demás (Museo, Santuario, tableros, vitrinas y
 # el Jefe Ancestral) va en el patio de la izquierda.
-PUESTO = (-64, -40)  # Puesto_Vender (el Banco), a la izquierda
-TIENDA = (64, -40)  # Tienda_Forja, a la derecha
-RULETA = (0, -44)  # Ruleta_Mascotas en el medio, mirando al Spawn
+ESCALA_TIENDAS = 1.3  # el Banco y la Tienda, un poco más grandes que la pieza
+PUESTO = (-107, -30)  # Puesto_Vender (el Banco), pegado a la pared izquierda, mirando al medio
+TIENDA = (105, -30)  # Tienda_Forja, pegada a la pared derecha
+RULETA = (0, -34)  # Ruleta_Mascotas en el medio, mirando al Spawn
 RUEDA_ALTO = 10.5  # centro de su rueda (lobby.py: RUEDA_Z)
-ARCO = (0, -8)  # Arco_Entrada, adelante del arco de piedra hacia la Pradera
+ARCO = (0, -2)  # Arco_Entrada, adelante del arco de piedra hacia la Pradera
 # calle de las parcelas de exhibición, saliendo por un pasillo en la pared izquierda
-PARCELAS_X = (-66, -22, 22, 66)  # centro de cada parcela (40 x 32), 2 filas de 4 al fondo
-PARCELAS_Z = (-120, -76)  # fila de atrás (entrada hacia +z) y de adelante (entrada hacia -z)
+ESCALA_PARCELAS = 1.2  # parcelas de 48 x 38,4
+PARCELAS_X = (-81, -27, 27, 81)  # centro de cada parcela, 2 filas de 4 al fondo
+PARCELAS_Z = (-116.8, -66.4)  # fila de atrás (entrada hacia +z) y de adelante (entrada hacia -z)
 PATIO_X0 = -320  # patio de la izquierda: de x -320 a -136
 DX_SANTUARIO = -200  # el Santuario y el Museo se arman como antes, corridos en x
 DX_MUSEO = -170
@@ -782,8 +784,8 @@ def plaza(g, s, rng):
     s.marcar(sx - 12, sz - 12, sx + 12, sz + 12)
     marcador("Cartel", (-24, 4, -14), (8, 5, 1), mirar((-24, -14), SPAWN), Menu="Misiones", Texto="MISIONES")
     # el Banco y la Tienda a los costados, de frente al que aparece
-    for nombre, (px, pz) in (("Puesto_Vender", PUESTO), ("Tienda_Forja", TIENDA)):
-        marcador("Pieza", (px, 0, pz), (14, 14, 12), 180, Nombre=nombre)
+    for nombre, (px, pz), giro in (("Puesto_Vender", PUESTO, 270), ("Tienda_Forja", TIENDA, 90)):
+        marcador("Pieza", (px, 0, pz), (14, 14, 12), giro, Nombre=nombre, Escala=ESCALA_TIENDAS)
         s.marcar(px - 8, pz - 7, px + 8, pz + 7)
     ruleta(g, s)
     # las parcelas al fondo: 2 filas de 4, con las entradas hacia el camino del medio
@@ -791,9 +793,8 @@ def plaza(g, s, rng):
     for pz, giro in zip(PARCELAS_Z, (180, 0)):
         for px in PARCELAS_X:
             n += 1
-            g.poner(px - 20, -2, pz - 16, px + 20, 0, pz + 16, "Arena")
-            marcador("Pieza", (px, 0, pz), (40, 8, 32), giro, Nombre="Parcela_Exhibicion", Numero=n)
-            s.marcar(px - 20, pz - 16, px + 20, pz + 16)
+            marcador("Pieza", (px, 0, pz), (48, 8, 38.4), giro, Nombre="Parcela_Exhibicion", Numero=n, Escala=ESCALA_PARCELAS)
+            s.marcar(px - 24, pz - 20, px + 24, pz + 20)
 
 
 class Corrido:
@@ -819,7 +820,8 @@ def corrido(armar_algo, g, dx):
 
 def patio():
     """Patio de la izquierda (sin pared con la plaza): el Santuario del Renacer y el Museo (los
-    mismos de antes, corridos), los 2 tableros, las 8 vitrinas en fila y el Jefe Ancestral."""
+    mismos de antes, corridos) y los 2 tableros. Sin vitrinas ni lugar del Jefe Ancestral (17/10:
+    el evento usa el punto del Jefe de la zona 1)."""
     x0, x1 = PATIO_X0, X0
     d = Grilla(x0 - 8, -4, PLAZA - 8, x1, 60, 8)
     for xi in range(x0, x1, 16):  # el mismo piso de baldosas que la plaza
@@ -834,14 +836,6 @@ def patio():
     corrido(museo, d, DX_MUSEO)
     marcador("Tablero", (x0 + 20, 7, PLAZA + 3), (14, 10, 1), 180, Tabla="Geodas")
     marcador("Tablero", (x0 + 40, 7, PLAZA + 3), (14, 10, 1), 180, Tabla="Hallazgo")
-    for i in range(8):
-        z = -92 + 11 * i
-        losa(d, -148, z, -2, 0, 4, 4, "Oro", 2)
-        marcador("Vitrina", (-148, 1, z), (2, 5, 5), 0, Numero=i + 1)
-    ax, az = ANCESTRAL
-    marcador("PuntoAncestral", (ax, 0.1, az), (4, 0.2, 4), 0)
-    losa(d, ax, az, -2, 0, 12, 12, "BaldosaOscura", 4)
-    losa(d, ax, az, -2, 0, 10, 10, "Baldosa", 4)
     return d.cajas()
 
 
