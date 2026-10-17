@@ -27,13 +27,13 @@ from mathutils import Matrix, Vector  # noqa: E402
 ICONOS = m.ARTE / "iconos" / "gemas"
 
 # Solo las piedras que Juani ya aprobó entran al FBX de su zona
-APROBADAS = {"Cuarzo", "Jaspe", "Amatista", "AgataMusgosa", "Esmeralda", "TurmalinaRosa", "CorazondePradera", "DiamanteFloral", "JadeArcoiris", "TreboldeCristal", "AuroraVerde", "SemilladelMundo", "Arenisca", "Ambar", "Citrino", "OjodeTigre", "TopacioImperial", "Cornalina", "SoldelDesierto", "EscarabajodeOro"}
+APROBADAS = {"Cuarzo", "Jaspe", "Amatista", "AgataMusgosa", "Esmeralda", "TurmalinaRosa", "CorazondePradera", "DiamanteFloral", "JadeArcoiris", "TreboldeCristal", "AuroraVerde", "SemilladelMundo", "Arenisca", "Ambar", "Citrino", "OjodeTigre", "TopacioImperial", "Cornalina", "SoldelDesierto", "EscarabajodeOro", "LagrimadeFaraon", "Espejismo", "CoronadelSol", "RelojdeArenaEterno"}
 
 # Piedras con alto propio (studs) y pivote en el centro de la base en vez del centro de la caja
-ALTO = {"Cuarzo": 2.5, "Jaspe": 2.5, "Amatista": 3.0, "AgataMusgosa": 3.0, "Esmeralda": 3.5, "TurmalinaRosa": 3.5, "CorazondePradera": 4.0, "DiamanteFloral": 4.0, "JadeArcoiris": 4.5, "TreboldeCristal": 4.5, "AuroraVerde": 5.0, "SemilladelMundo": 5.0, "Arenisca": 2.5, "Ambar": 2.5, "Citrino": 3.0, "OjodeTigre": 3.0, "TopacioImperial": 3.5, "Cornalina": 3.5, "SoldelDesierto": 4.0, "EscarabajodeOro": 4.0}
-PIVOTE_BASE = {"Cuarzo", "Jaspe", "Amatista", "AgataMusgosa", "Esmeralda", "TurmalinaRosa", "CorazondePradera", "DiamanteFloral", "JadeArcoiris", "TreboldeCristal", "AuroraVerde", "SemilladelMundo", "Arenisca", "Ambar", "Citrino", "OjodeTigre", "TopacioImperial", "Cornalina", "SoldelDesierto", "EscarabajodeOro"}
+ALTO = {"Cuarzo": 2.5, "Jaspe": 2.5, "Amatista": 3.0, "AgataMusgosa": 3.0, "Esmeralda": 3.5, "TurmalinaRosa": 3.5, "CorazondePradera": 4.0, "DiamanteFloral": 4.0, "JadeArcoiris": 4.5, "TreboldeCristal": 4.5, "AuroraVerde": 5.0, "SemilladelMundo": 5.0, "Arenisca": 2.5, "Ambar": 2.5, "Citrino": 3.0, "OjodeTigre": 3.0, "TopacioImperial": 3.5, "Cornalina": 3.5, "SoldelDesierto": 4.0, "EscarabajodeOro": 4.0, "LagrimadeFaraon": 4.5, "Espejismo": 4.5, "CoronadelSol": 5.0, "RelojdeArenaEterno": 5.0}
+PIVOTE_BASE = {"Cuarzo", "Jaspe", "Amatista", "AgataMusgosa", "Esmeralda", "TurmalinaRosa", "CorazondePradera", "DiamanteFloral", "JadeArcoiris", "TreboldeCristal", "AuroraVerde", "SemilladelMundo", "Arenisca", "Ambar", "Citrino", "OjodeTigre", "TopacioImperial", "Cornalina", "SoldelDesierto", "EscarabajodeOro", "LagrimadeFaraon", "Espejismo", "CoronadelSol", "RelojdeArenaEterno"}
 # Topes de triángulos propios (pisan el de la rareza)
-TOPE = {"Esmeralda": 4000, "TurmalinaRosa": 4000, "CorazondePradera": 6000, "DiamanteFloral": 6000, "JadeArcoiris": 8000, "TreboldeCristal": 8000, "AuroraVerde": 10000, "SemilladelMundo": 10000, "TopacioImperial": 4000, "Cornalina": 4000, "SoldelDesierto": 6000, "EscarabajodeOro": 6000}
+TOPE = {"Esmeralda": 4000, "TurmalinaRosa": 4000, "CorazondePradera": 6000, "DiamanteFloral": 6000, "JadeArcoiris": 8000, "TreboldeCristal": 8000, "AuroraVerde": 10000, "SemilladelMundo": 10000, "TopacioImperial": 4000, "Cornalina": 4000, "SoldelDesierto": 6000, "EscarabajodeOro": 6000, "LagrimadeFaraon": 8000, "Espejismo": 8000, "CoronadelSol": 10000, "RelojdeArenaEterno": 10000}
 
 # Alto (studs) y tope de triángulos por rareza
 RAREZAS = {
@@ -2087,6 +2087,298 @@ def escarabajo_de_oro(nombre):
     return cubitos(nombre, celdas, colores)
 
 
+# ---------------------------------------------------------------------------------------------
+# Moldes para Míticas y Celestiales (zona 2 en adelante): la base, el anillo, el halo y las
+# gemitas salen del molde; cada piedra solo dibuja su cuerpo.
+
+
+def _capas_gema(celdas, zb, anchos, tonos, nucleo="Nucleo", arista="Faceta", forma=None, mancha=None):
+    """Gema hueca en capas cuadradas (o rombos si forma(z) es True): cáscara en degradé de abajo
+    hacia arriba (tonos = lista de claves) con aristas claras y núcleo macizo adentro.
+    mancha(x, y, z) puede devolver otra clave para un cubito de la cáscara. Devuelve {z: medio ancho}."""
+    w_de = {zb + i: w for i, w in enumerate(anchos)}
+    zmax = zb + len(anchos) - 1
+    for z, w in w_de.items():
+        t = (z - zb) / max(1, zmax - zb)
+        rombo = forma(z) if forma else False
+        arriba, abajo = w_de.get(z + 1, -1), w_de.get(z - 1, -1)
+        for x in range(-w, w + 1):
+            for y in range(-w, w + 1):
+                d = abs(x) + abs(y) if rombo else max(abs(x), abs(y))
+                if d > w:
+                    continue
+                if d <= w - 2 and zb < z < zmax:
+                    celdas[(x, y, z)] = nucleo
+                    continue
+                if d < w and d <= arriba and d <= abajo:
+                    continue  # hueco: se ve el núcleo a través del vidrio
+                otra = mancha(x, y, z) if mancha else None
+                if otra:
+                    celdas[(x, y, z)] = otra
+                elif arista and d == w and ((x == 0 or y == 0) if rombo else abs(x) == abs(y)):
+                    celdas[(x, y, z)] = arista
+                else:
+                    v = t + (h(x, y, z, 81) - 0.5) * 0.22
+                    celdas[(x, y, z)] = tonos[max(0, min(len(tonos) - 1, int(v * len(tonos))))]
+    return w_de
+
+
+def mitica(nombre, cuerpo, colores, anillo_z, radio=9):
+    """Molde mítico: roca de 3 capas, zócalo de metal ("Zocalo"), el cuerpo que dibuja cuerpo(celdas)
+    desde z = 4, y un anillo cuadrado ("Anillo", malla aparte para que gire) con dientes."""
+    celdas = {}
+    for x in range(-7, 8):
+        for y in range(-7, 8):
+            r = math.hypot(x / 7.5, y / 7.5) + (h(x // 2, y // 2, 0, 82) - 0.5) * 0.3
+            for z in range(3):
+                if r < 1 - z * 0.1:
+                    celdas[(x, y, z)] = "RocaOscura" if z == 0 or h(x, y, z, 83) < 0.3 else "Roca"
+    for x in range(-5, 6):
+        for y in range(-5, 6):
+            celdas[(x, y, 3)] = "Zocalo"
+    cuerpo(celdas)
+    for x in range(-radio, radio + 1):
+        for y in range(-radio, radio + 1):
+            if max(abs(x), abs(y)) == radio:
+                celdas[(x, y, anillo_z)] = celdas[(x, y, anillo_z + 1)] = "Anillo"
+                if (x + y) % 4 == 0:
+                    celdas[(x, y, anillo_z + 2)] = celdas[(x, y, anillo_z - 1)] = "Anillo"
+    return cubitos(nombre, celdas, colores)
+
+
+def celestial(nombre, gema, colores, halo=None, anillo_z=None, gemitas=None):
+    """Molde celestial: pedestal chiquito en escalones (Roca, Suelo, Piedra) con cristalitos, la gema
+    que dibuja gema(celdas, zb) -> zmax flotando arriba, un halo de luz atrás ("Halo"), un anillo
+    grande cuadrado ("Anillo") y 3 gemitas ("Gemita1..3"); lo que se mueve va en mallas aparte."""
+    celdas = {}
+    for z, r, clave in ((0, 6, "Roca"), (1, 5, "Roca"), (2, 4, "Suelo"), (3, 3, "Piedra")):
+        for x in range(-r, r + 1):
+            for y in range(-r, r + 1):
+                if not (abs(x) == r and abs(y) == r):
+                    oscura = clave == "Roca" and h(x, y, z, 84) < 0.3
+                    celdas[(x, y, z)] = "RocaOscura" if oscura else clave
+    for x, y, z0, alto in ((-5, 2, 2, 2), (5, -3, 2, 3), (2, 5, 2, 2), (-3, -5, 2, 2), (4, 4, 3, 1)):
+        for z in range(z0, z0 + alto):
+            celdas[(x, y, z)] = "Cristalito"
+    zb = 7
+    zmax = gema(celdas, zb)
+    hz = (zb + zmax) // 2
+    if halo:
+        halo(celdas, hz)
+    else:
+        for x in range(-7, 8):
+            for z in range(hz - 7, hz + 8):
+                d = max(abs(x), abs(z - hz))
+                if d == 7 or (d == 6 and (x + z) % 2 == 0):
+                    celdas[(x, 9, z)] = "Halo"
+    az = anillo_z if anillo_z is not None else hz - 3
+    for x in range(-9, 10):
+        for y in range(-9, 10):
+            if max(abs(x), abs(y)) == 9 and y != 9:
+                celdas[(x, y, az)] = "Anillo"
+                if (x + y) % 4 == 0:
+                    celdas[(x, y, az + 1)] = "Anillo"
+    for (gx, gy, gz), clave in gemitas or (((-9, -3, zb + 2), "Gemita1"), ((7, -6, hz + 3), "Gemita2"),
+                                           ((-6, 6, zmax - 1), "Gemita3")):
+        for a in range(2):
+            for b in range(2):
+                for c in range(2):
+                    celdas[(gx + a, gy + b, gz + c)] = clave
+    return cubitos(nombre, celdas, colores)
+
+
+DUNA_ROCA = {
+    "Roca": ("#C4975E", 0.85, None, 0.0, 1),
+    "RocaOscura": ("#8E6A40", 0.9, None, 0.0, 1),
+    "Suelo": ("#E8C88A", 0.85, None, 0.0, 1),
+    "Piedra": ("#D9B27A", 0.75, None, 0.0, 1),
+}
+
+
+def lagrima_de_faraon(nombre):
+    """Mítica (Dunas): gota de lapislázuli parada con la punta arriba, cáscara de vidrio azul en
+    degradé (marino abajo, cobalto arriba) con motitas de oro, aristas de oro, núcleo de oro que
+    brilla y un ojo dibujado con cubitos al frente. Anillo cuadrado de oro alrededor."""
+    anchos = [3, 4, 5, 5, 6, 6, 6, 6, 6, 5, 5, 5, 4, 4, 3, 3, 2, 2, 1, 1, 0]
+    zb = 4
+
+    def motas(x, y, z):
+        return "Pirita" if h(x, y, z, 85) < 0.06 else None
+
+    def cuerpo(celdas):
+        w_de = _capas_gema(celdas, zb, anchos, ["AzulOscuro", "AzulMedio", "AzulClaro"], arista="Oro",
+                           mancha=motas)
+        celdas[(0, 0, zb + len(anchos))] = "Oro"
+        # ojo al frente: O = delineado de oro, B = blanco, N = pupila
+        ojo = ["..OOOOO..",
+               ".OBBBBBO.",
+               "OBBNNNBBO",
+               ".OBBNBBO.",
+               "..OOOOO..",
+               "....O....",
+               "....OO..."]
+        zc = zb + 10
+        for fila, linea in enumerate(ojo):
+            z = zc - fila
+            w = w_de[z]
+            for i, ch in enumerate(linea):
+                x = i - 4
+                if ch != "." and abs(x) <= w:
+                    celdas[(x, -w, z)] = {"O": "Oro", "B": "OjoBlanco", "N": "OjoNegro"}[ch]
+
+    colores = {
+        "AzulOscuro": ("#0E2A7A", 0.08, None, 0.0, 0.92),
+        "AzulMedio": ("#1E46B8", 0.06, None, 0.0, 0.88),
+        "AzulClaro": ("#3F6EF0", 0.05, None, 0.0, 0.85),
+        "Pirita": ("#FFD24A", 0.2, "#FFC21A", 0.4, 1),
+        "Nucleo": ("#FFD24A", 0.2, "#FFB000", 2.0, 1),
+        "Oro": ("#F2B92E", 0.25, None, 0.0, 1),
+        "OjoBlanco": ("#FFF6E0", 0.4, None, 0.0, 1),
+        "OjoNegro": ("#101828", 0.4, None, 0.0, 1),
+        "Zocalo": ("#F2B92E", 0.25, None, 0.0, 1),
+        "Anillo": ("#F2C24A", 0.2, "#FFD86A", 0.3, 1),
+    }
+    colores.update({k: DUNA_ROCA[k] for k in ("Roca", "RocaOscura")})
+    return mitica(nombre, cuerpo, colores, anillo_z=6)
+
+
+def espejismo(nombre):
+    """Mítica (Dunas): cristal en capas que se corren de lado a lado como el aire caliente del
+    desierto (cuadrados y rombos alternados), cáscara medio transparente en degradé de naranja
+    (abajo) a celeste (arriba), núcleo blanco que brilla, filetes de plata salteados y un anillo
+    cuadrado de plata alrededor."""
+    anchos = [2, 3, 4, 5, 5, 5, 5, 5, 4, 4, 4, 4, 4, 4, 4, 3, 3, 3, 2, 1, 0]
+    zb = 4
+    tonos = ["Naranja", "Durazno", "Crema", "CelesteClaro", "Celeste"]
+
+    def vaiven(z):
+        return round(1.4 * math.sin((z - zb) * 0.55))
+
+    def cuerpo(celdas):
+        capa = {}
+        _capas_gema(capa, zb, anchos, tonos, arista="Plata", forma=lambda z: (z // 3) % 2 == 1)
+        for (x, y, z), k in capa.items():
+            if k in tonos and (z - zb) % 4 == 3 and h(x, y, z, 86) < 0.5:
+                k = "Plata"
+            celdas[(x + vaiven(z), y, z)] = k
+        celdas[(vaiven(zb + len(anchos)), 0, zb + len(anchos))] = "Plata"
+
+    colores = {
+        "Naranja": ("#FF7A2A", 0.05, None, 0.0, 0.7),
+        "Durazno": ("#FFA060", 0.05, None, 0.0, 0.65),
+        "Crema": ("#FFD2A0", 0.05, None, 0.0, 0.6),
+        "CelesteClaro": ("#7FD6FF", 0.05, None, 0.0, 0.6),
+        "Celeste": ("#2FA8F0", 0.05, None, 0.0, 0.65),
+        "Nucleo": ("#FFD9B0", 0.2, "#FFB07A", 0.7, 1),
+        "Plata": ("#E6ECF2", 0.2, None, 0.0, 1),
+        "Zocalo": ("#C9D2DC", 0.25, None, 0.0, 1),
+        "Anillo": ("#E6F0F7", 0.2, "#C8ECFF", 0.35, 1),
+    }
+    colores.update({k: DUNA_ROCA[k] for k in ("Roca", "RocaOscura")})
+    return mitica(nombre, cuerpo, colores, anillo_z=11)
+
+
+def corona_del_sol(nombre):
+    """Celestial (Dunas): corona de oro cuadrada (aro con remaches y 8 puntas con rubíes) con una
+    gema-sol naranja en el centro que asoma por arriba (capas, núcleo que brilla fuerte). Atrás, un
+    halo de rayos de luz; anillo grande y 3 gemitas que orbitan; pedestal de arena."""
+
+    def gema(celdas, zb):
+        anchos = [1, 2, 3, 4, 4, 5, 5, 5, 5, 5, 5, 4, 4, 3, 3, 2, 1, 1, 0]
+        _capas_gema(celdas, zb + 2, anchos, ["NaranjaOscuro", "Naranja", "Amarilla"])
+        for z in range(zb, zb + 5):
+            for x in range(-7, 8):
+                for y in range(-7, 8):
+                    d = max(abs(x), abs(y))
+                    if d == 7 or (d == 6 and z == zb):
+                        remache = z == zb + 2 and d == 7 and (x + y) % 3 == 0
+                        celdas[(x, y, z)] = "Remache" if remache else "Oro"
+        for x, y in ((-7, -7), (7, -7), (-7, 7), (7, 7), (0, -7), (0, 7), (-7, 0), (7, 0)):
+            alto = 5 if x == 0 or y == 0 else 3
+            for z in range(zb + 5, zb + 5 + alto):
+                celdas[(x, y, z)] = "Oro"
+            celdas[(x, y, zb + 5 + alto)] = "Rubi"
+        return zb + 2 + len(anchos) - 1
+
+    def halo(celdas, hz):
+        hz += 2
+        for i in range(12):
+            ang = i * math.pi / 6
+            largo = 9 if i % 2 == 0 else 7
+            for d in range(4, largo + 1):
+                celdas[(round(math.sin(ang) * d), 9, hz + round(math.cos(ang) * d))] = "Halo"
+
+    colores = {
+        "NaranjaOscuro": ("#D9500F", 0.05, None, 0.0, 0.7),
+        "Naranja": ("#FF7A1A", 0.05, None, 0.0, 0.6),
+        "Amarilla": ("#FFB833", 0.05, None, 0.0, 0.55),
+        "Faceta": ("#FFE0A0", 0.05, "#FFC860", 0.3, 0.8),
+        "Nucleo": ("#FFE9A0", 0.2, "#FF9A1A", 3.5, 1),
+        "Oro": ("#F2B92E", 0.25, None, 0.0, 1),
+        "Remache": ("#FFE58A", 0.2, None, 0.0, 1),
+        "Rubi": ("#E8202A", 0.05, "#FF3030", 0.6, 1),
+        "Halo": ("#FFD86A", 0.1, "#FFC233", 1.0, 0.6),
+        "Anillo": ("#F7E2A8", 0.2, "#FFE08A", 0.4, 1),
+        "Gemita1": ("#FF7A1A", 0.05, "#FF7A1A", 0.8, 1),
+        "Gemita2": ("#FFD24A", 0.05, "#FFD24A", 0.8, 1),
+        "Gemita3": ("#22C7C0", 0.05, "#2AE0D6", 0.8, 1),
+        "Cristalito": ("#FFC85A", 0.1, "#FFB020", 0.4, 1),
+    }
+    colores.update(DUNA_ROCA)
+    return celestial(nombre, gema, colores, halo=halo)
+
+
+def reloj_de_arena_eterno(nombre):
+    """Celestial (Dunas): reloj de arena con tapas de oro (remaches) y 4 columnas, dos ampollas de
+    vidrio en escalones y arena dorada que brilla adentro (abajo llena, arriba a medias, y un hilito
+    cayendo por el cuello). Halo, anillo y 3 gemitas que orbitan; pedestal de arena."""
+
+    def gema(celdas, zb):
+        perfil = [4, 4, 4, 4, 3, 3, 2, 2, 1, 1, 1, 2, 2, 3, 3, 4, 4, 4, 4]
+        z0 = zb + 1
+        zt = z0 + len(perfil)
+        for x in range(-5, 6):
+            for y in range(-5, 6):
+                for z in (zb, zt):
+                    borde = max(abs(x), abs(y)) == 5
+                    celdas[(x, y, z)] = "Remache" if borde and (x + y) % 3 == 0 else "Oro"
+        for x in (-5, 5):
+            for y in (-5, 5):
+                for z in range(z0, zt):
+                    celdas[(x, y, z)] = "Oro" if (z - z0) % 4 else "Remache"
+        n = len(perfil)
+        for i, w in enumerate(perfil):
+            z = z0 + i
+            for x in range(-w, w + 1):
+                for y in range(-w, w + 1):
+                    d = max(abs(x), abs(y))
+                    if d < w and (i <= 4 or i in (n - 5, n - 4)):
+                        celdas[(x, y, z)] = "Arena" if h(x, y, z, 87) > 0.15 else "ArenaClara"
+                    elif d == w or i in (0, n - 1):
+                        v = (h(x, y, z, 88) - 0.5) * 0.3 + i / n
+                        celdas[(x, y, z)] = "VidrioClaro" if v > 0.5 else "Vidrio"
+        for i in range(5, 14):
+            celdas[(0, 0, z0 + i)] = "ArenaClara"  # hilito que cae por el cuello
+        return zt
+
+    colores = {
+        "Vidrio": ("#E8F4FF", 0.03, None, 0.0, 0.3),
+        "VidrioClaro": ("#FFFFFF", 0.03, None, 0.0, 0.25),
+        "Arena": ("#FFC233", 0.3, "#FFB000", 1.2, 1),
+        "ArenaClara": ("#FFE58A", 0.25, "#FFD24A", 2.0, 1),
+        "Oro": ("#F2B92E", 0.25, None, 0.0, 1),
+        "Remache": ("#FFE58A", 0.2, None, 0.0, 1),
+        "Halo": ("#FFE08A", 0.1, "#FFD24A", 0.8, 0.5),
+        "Anillo": ("#F7E2A8", 0.2, "#FFE08A", 0.4, 1),
+        "Gemita1": ("#22C7C0", 0.05, "#2AE0D6", 0.8, 1),
+        "Gemita2": ("#FFD24A", 0.05, "#FFD24A", 0.8, 1),
+        "Gemita3": ("#FF7A1A", 0.05, "#FF7A1A", 0.8, 1),
+        "Cristalito": ("#FFC85A", 0.1, "#FFB020", 0.4, 1),
+    }
+    colores.update(DUNA_ROCA)
+    return celestial(nombre, gema, colores)
+
+
 # nombre: (zona, rareza, forma, {clave: (color, brillo)})
 PIEDRAS = {
     "Cuarzo": (
@@ -2119,6 +2411,10 @@ PIEDRAS = {
     "Cornalina": (2, "Epica", cornalina, None),
     "SoldelDesierto": (2, "Legendaria", sol_del_desierto, None),
     "EscarabajodeOro": (2, "Legendaria", escarabajo_de_oro, None),
+    "LagrimadeFaraon": (2, "Mitica", lagrima_de_faraon, None),
+    "Espejismo": (2, "Mitica", espejismo, None),
+    "CoronadelSol": (2, "Celestial", corona_del_sol, None),
+    "RelojdeArenaEterno": (2, "Celestial", reloj_de_arena_eterno, None),
 }
 
 
