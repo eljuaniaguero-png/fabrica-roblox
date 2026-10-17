@@ -76,7 +76,7 @@ import modelos as M  # noqa: E402
 import decoracion as D  # noqa: E402
 
 # piezas que Juani ya aprobó: son las que van a Lobby.fbx
-APROBADAS = ["Puesto_Vender", "Tienda_Forja", "Pedestal_Exhibicion", "Parcela_Exhibicion"]
+APROBADAS = ["Puesto_Vender", "Tienda_Forja", "Pedestal_Exhibicion", "Parcela_Exhibicion", "Ruleta_Mascotas"]
 
 COLORES_PUESTO = {
     "ladrillo": "#9A5B3A",  # marrón ladrillo
