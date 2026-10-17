@@ -27,13 +27,13 @@ from mathutils import Matrix, Vector  # noqa: E402
 ICONOS = m.ARTE / "iconos" / "gemas"
 
 # Solo las piedras que Juani ya aprobó entran al FBX de su zona
-APROBADAS = {"Cuarzo", "Jaspe", "Amatista", "AgataMusgosa", "Esmeralda", "TurmalinaRosa", "CorazondePradera", "DiamanteFloral", "JadeArcoiris", "TreboldeCristal", "AuroraVerde", "SemilladelMundo", "Arenisca", "Ambar", "Citrino", "OjodeTigre", "TopacioImperial", "Cornalina", "SoldelDesierto", "EscarabajodeOro", "LagrimadeFaraon", "Espejismo", "CoronadelSol", "RelojdeArenaEterno", "CristaldeRoca", "PiedraEscarcha", "Aguamarina", "Celestina", "Zafiro", "PiedraLuna", "CorazondeHielo", "DiamantePolar", "AuroraBoreal", "EstrelladeEscarcha", "CopoEterno", "TronodeHielo", "Obsidiana", "BasaltoRojo", "Granate", "CristaldeAzufre", "Rubi", "OpalodeFuego", "NucleodeMagma", "PiedraFenix", "OjodeDragon", "LlamaViva", "CorazondelVolcan", "CoronaIgnea"}
+APROBADAS = {"Cuarzo", "Jaspe", "Amatista", "AgataMusgosa", "Esmeralda", "TurmalinaRosa", "CorazondePradera", "DiamanteFloral", "JadeArcoiris", "TreboldeCristal", "AuroraVerde", "SemilladelMundo", "Arenisca", "Ambar", "Citrino", "OjodeTigre", "TopacioImperial", "Cornalina", "SoldelDesierto", "EscarabajodeOro", "LagrimadeFaraon", "Espejismo", "CoronadelSol", "RelojdeArenaEterno", "CristaldeRoca", "PiedraEscarcha", "Aguamarina", "Celestina", "Zafiro", "PiedraLuna", "CorazondeHielo", "DiamantePolar", "AuroraBoreal", "EstrelladeEscarcha", "CopoEterno", "TronodeHielo", "Obsidiana", "BasaltoRojo", "Granate", "CristaldeAzufre", "Rubi", "OpalodeFuego", "NucleodeMagma", "PiedraFenix", "OjodeDragon", "LlamaViva", "CorazondelVolcan", "CoronaIgnea", "Meteorita", "PolvoEstelar", "Iolita", "FluoritaNocturna", "OpaloNegro", "Alejandrita", "FragmentodeNebulosa", "OjodelVacio", "CometaErrante", "GalaxiaEspiral", "Supernova", "AgujeroNegro"}
 
 # Piedras con alto propio (studs) y pivote en el centro de la base en vez del centro de la caja
-ALTO = {"Cuarzo": 2.5, "Jaspe": 2.5, "Amatista": 3.0, "AgataMusgosa": 3.0, "Esmeralda": 3.5, "TurmalinaRosa": 3.5, "CorazondePradera": 4.0, "DiamanteFloral": 4.0, "JadeArcoiris": 4.5, "TreboldeCristal": 4.5, "AuroraVerde": 5.0, "SemilladelMundo": 5.0, "Arenisca": 2.5, "Ambar": 2.5, "Citrino": 3.0, "OjodeTigre": 3.0, "TopacioImperial": 3.5, "Cornalina": 3.5, "SoldelDesierto": 4.0, "EscarabajodeOro": 4.0, "LagrimadeFaraon": 4.5, "Espejismo": 4.5, "CoronadelSol": 5.0, "RelojdeArenaEterno": 5.0, "CristaldeRoca": 2.5, "PiedraEscarcha": 2.5, "Aguamarina": 3.0, "Celestina": 3.0, "Zafiro": 3.5, "PiedraLuna": 3.5, "CorazondeHielo": 4.0, "DiamantePolar": 4.0, "AuroraBoreal": 4.5, "EstrelladeEscarcha": 4.5, "CopoEterno": 5.0, "TronodeHielo": 5.0, "Obsidiana": 2.5, "BasaltoRojo": 2.5, "Granate": 3.0, "CristaldeAzufre": 3.0, "Rubi": 3.5, "OpalodeFuego": 3.5, "NucleodeMagma": 4.0, "PiedraFenix": 4.0, "OjodeDragon": 4.5, "LlamaViva": 4.5, "CorazondelVolcan": 5.0, "CoronaIgnea": 5.0}
-PIVOTE_BASE = {"Cuarzo", "Jaspe", "Amatista", "AgataMusgosa", "Esmeralda", "TurmalinaRosa", "CorazondePradera", "DiamanteFloral", "JadeArcoiris", "TreboldeCristal", "AuroraVerde", "SemilladelMundo", "Arenisca", "Ambar", "Citrino", "OjodeTigre", "TopacioImperial", "Cornalina", "SoldelDesierto", "EscarabajodeOro", "LagrimadeFaraon", "Espejismo", "CoronadelSol", "RelojdeArenaEterno", "CristaldeRoca", "PiedraEscarcha", "Aguamarina", "Celestina", "Zafiro", "PiedraLuna", "CorazondeHielo", "DiamantePolar", "AuroraBoreal", "EstrelladeEscarcha", "CopoEterno", "TronodeHielo", "Obsidiana", "BasaltoRojo", "Granate", "CristaldeAzufre", "Rubi", "OpalodeFuego", "NucleodeMagma", "PiedraFenix", "OjodeDragon", "LlamaViva", "CorazondelVolcan", "CoronaIgnea"}
+ALTO = {"Cuarzo": 2.5, "Jaspe": 2.5, "Amatista": 3.0, "AgataMusgosa": 3.0, "Esmeralda": 3.5, "TurmalinaRosa": 3.5, "CorazondePradera": 4.0, "DiamanteFloral": 4.0, "JadeArcoiris": 4.5, "TreboldeCristal": 4.5, "AuroraVerde": 5.0, "SemilladelMundo": 5.0, "Arenisca": 2.5, "Ambar": 2.5, "Citrino": 3.0, "OjodeTigre": 3.0, "TopacioImperial": 3.5, "Cornalina": 3.5, "SoldelDesierto": 4.0, "EscarabajodeOro": 4.0, "LagrimadeFaraon": 4.5, "Espejismo": 4.5, "CoronadelSol": 5.0, "RelojdeArenaEterno": 5.0, "CristaldeRoca": 2.5, "PiedraEscarcha": 2.5, "Aguamarina": 3.0, "Celestina": 3.0, "Zafiro": 3.5, "PiedraLuna": 3.5, "CorazondeHielo": 4.0, "DiamantePolar": 4.0, "AuroraBoreal": 4.5, "EstrelladeEscarcha": 4.5, "CopoEterno": 5.0, "TronodeHielo": 5.0, "Obsidiana": 2.5, "BasaltoRojo": 2.5, "Granate": 3.0, "CristaldeAzufre": 3.0, "Rubi": 3.5, "OpalodeFuego": 3.5, "NucleodeMagma": 4.0, "PiedraFenix": 4.0, "OjodeDragon": 4.5, "LlamaViva": 4.5, "CorazondelVolcan": 5.0, "CoronaIgnea": 5.0, "Meteorita": 2.5, "PolvoEstelar": 2.5, "Iolita": 3.0, "FluoritaNocturna": 3.0, "OpaloNegro": 3.5, "Alejandrita": 3.5, "FragmentodeNebulosa": 4.0, "OjodelVacio": 4.0, "CometaErrante": 4.5, "GalaxiaEspiral": 4.5, "Supernova": 5.0, "AgujeroNegro": 5.0}
+PIVOTE_BASE = {"Cuarzo", "Jaspe", "Amatista", "AgataMusgosa", "Esmeralda", "TurmalinaRosa", "CorazondePradera", "DiamanteFloral", "JadeArcoiris", "TreboldeCristal", "AuroraVerde", "SemilladelMundo", "Arenisca", "Ambar", "Citrino", "OjodeTigre", "TopacioImperial", "Cornalina", "SoldelDesierto", "EscarabajodeOro", "LagrimadeFaraon", "Espejismo", "CoronadelSol", "RelojdeArenaEterno", "CristaldeRoca", "PiedraEscarcha", "Aguamarina", "Celestina", "Zafiro", "PiedraLuna", "CorazondeHielo", "DiamantePolar", "AuroraBoreal", "EstrelladeEscarcha", "CopoEterno", "TronodeHielo", "Obsidiana", "BasaltoRojo", "Granate", "CristaldeAzufre", "Rubi", "OpalodeFuego", "NucleodeMagma", "PiedraFenix", "OjodeDragon", "LlamaViva", "CorazondelVolcan", "CoronaIgnea", "Meteorita", "PolvoEstelar", "Iolita", "FluoritaNocturna", "OpaloNegro", "Alejandrita", "FragmentodeNebulosa", "OjodelVacio", "CometaErrante", "GalaxiaEspiral", "Supernova", "AgujeroNegro"}
 # Topes de triángulos propios (pisan el de la rareza)
-TOPE = {"Esmeralda": 4000, "TurmalinaRosa": 4000, "CorazondePradera": 6000, "DiamanteFloral": 6000, "JadeArcoiris": 8000, "TreboldeCristal": 8000, "AuroraVerde": 10000, "SemilladelMundo": 10000, "TopacioImperial": 4000, "Cornalina": 4000, "SoldelDesierto": 6000, "EscarabajodeOro": 6000, "LagrimadeFaraon": 8000, "Espejismo": 8000, "CoronadelSol": 10000, "RelojdeArenaEterno": 10000, "CristaldeRoca": 1500, "PiedraEscarcha": 1500, "Aguamarina": 2500, "Celestina": 2500, "Zafiro": 4000, "PiedraLuna": 4000, "CorazondeHielo": 6000, "DiamantePolar": 6000, "AuroraBoreal": 8000, "EstrelladeEscarcha": 8000, "CopoEterno": 10000, "TronodeHielo": 10000, "Obsidiana": 1500, "BasaltoRojo": 1500, "Granate": 2500, "CristaldeAzufre": 2500, "Rubi": 4000, "OpalodeFuego": 4000, "NucleodeMagma": 6000, "PiedraFenix": 6000, "OjodeDragon": 8000, "LlamaViva": 8000, "CorazondelVolcan": 10000, "CoronaIgnea": 10000}
+TOPE = {"Esmeralda": 4000, "TurmalinaRosa": 4000, "CorazondePradera": 6000, "DiamanteFloral": 6000, "JadeArcoiris": 8000, "TreboldeCristal": 8000, "AuroraVerde": 10000, "SemilladelMundo": 10000, "TopacioImperial": 4000, "Cornalina": 4000, "SoldelDesierto": 6000, "EscarabajodeOro": 6000, "LagrimadeFaraon": 8000, "Espejismo": 8000, "CoronadelSol": 10000, "RelojdeArenaEterno": 10000, "CristaldeRoca": 1500, "PiedraEscarcha": 1500, "Aguamarina": 2500, "Celestina": 2500, "Zafiro": 4000, "PiedraLuna": 4000, "CorazondeHielo": 6000, "DiamantePolar": 6000, "AuroraBoreal": 8000, "EstrelladeEscarcha": 8000, "CopoEterno": 10000, "TronodeHielo": 10000, "Obsidiana": 1500, "BasaltoRojo": 1500, "Granate": 2500, "CristaldeAzufre": 2500, "Rubi": 4000, "OpalodeFuego": 4000, "NucleodeMagma": 6000, "PiedraFenix": 6000, "OjodeDragon": 8000, "LlamaViva": 8000, "CorazondelVolcan": 10000, "CoronaIgnea": 10000, "Meteorita": 1500, "PolvoEstelar": 1500, "Iolita": 2500, "FluoritaNocturna": 2500, "OpaloNegro": 4000, "Alejandrita": 4000, "FragmentodeNebulosa": 6000, "OjodelVacio": 6000, "CometaErrante": 8000, "GalaxiaEspiral": 8000, "Supernova": 10000, "AgujeroNegro": 10000}
 
 # Alto (studs) y tope de triángulos por rareza
 RAREZAS = {
@@ -774,6 +774,7 @@ def tallada(nombre, d):
     medida = {z: (ax, ay) for z, ax, ay in capas}
     z0, zmax = capas[0][0], capas[-1][0]
     oscuro, medio, claro = d["tonos"]
+    izq = d.get("tonos_izq")  # otros tonos para la mitad izquierda (gema de dos colores)
     punta = d.get("punta", 0)
     for z, ax, ay in capas:
         t = (z - z0) / (zmax - z0)
@@ -796,7 +797,8 @@ def tallada(nombre, d):
                     celdas[(x, y, z)] = "Faceta"
                 else:
                     v = t + (random.Random(f"e{x},{y},{z}").random() - 0.5) * 0.25
-                    celdas[(x, y, z)] = claro if v > 0.62 else medio if v > 0.3 else oscuro
+                    o, me, cl = izq if izq and x < 0 else (oscuro, medio, claro)
+                    celdas[(x, y, z)] = cl if v > 0.62 else me if v > 0.3 else o
     # 4 garras de oro en las esquinas: suben pegadas a la gema y se doblan sobre ella
     gx, gy, gz = d["garras"]  # punta doblada de cada garra y altura donde se dobla
     for sx in (-1, 1):
@@ -3365,6 +3367,371 @@ def corona_ignea(nombre):
     return celestial(nombre, gema, colores, halo=halo)
 
 
+ABISMO_ROCA = {
+    "Roca": ("#2A2440", 0.8, None, 0.0, 1),
+    "RocaOscura": ("#16122A", 0.85, None, 0.0, 1),
+    "Veta": ("#B98CFF", 0.3, "#B98CFF", 1.0, 1),  # vetita que brilla
+    "Suelo": ("#221C38", 0.85, None, 0.0, 1),
+    "Piedra": ("#3A3258", 0.8, None, 0.0, 1),
+}
+ABISMO_SUELO = {
+    "Suelo": ("#2A2440", 0.85, None, 0.0, 1),
+    "SueloOscuro": ("#16122A", 0.9, None, 0.0, 1),
+    "Piedrita": ("#B98CFF", 0.3, "#B98CFF", 0.8, 1),
+}
+ESTRELLA = ("#FFFFFF", 0.1, "#FFFFFF", 2.0, 1)
+
+
+def meteorita(nombre):
+    """Común (Abismo): trozo de meteorito gris oscuro en escalones con puntitos metálicos, grietas
+    negras, cristalitos de metal azulado y base de suelo del abismo con piedritas que brillan."""
+    colores = {
+        "Oscuro": ("#2E2E34", 0.75, None, 0.0, 1),
+        "Medio": ("#46464E", 0.7, None, 0.0, 1),
+        "Claro": ("#64646E", 0.65, None, 0.0, 1),
+        "Mota": ("#D8DCE6", 0.15, None, 0.0, 1),
+        "Grieta": ("#121216", 0.9, None, 0.0, 1),
+        "Cristal": ("#8C9CB8", 0.15, "#8C9CB8", 0.2, 1),
+        "Vidrio": ("#B8C4D8", 0.05, None, 0.0, 0.5),
+        "Nucleo": ("#9FC0FF", 0.2, "#7FA8FF", 2.0, 1),
+        **ABISMO_SUELO,
+    }
+    return comun(nombre, colores, 301, motas=0.15)
+
+
+def polvo_estelar(nombre):
+    """Común (Abismo): piedrita violeta oscuro en escalones con brillitos blancos salteados, grietas
+    negras, cristalitos violeta y base de suelo del abismo."""
+    colores = {
+        "Oscuro": ("#2A1450", 0.6, None, 0.0, 1),
+        "Medio": ("#3E1E72", 0.55, None, 0.0, 1),
+        "Claro": ("#58309A", 0.5, None, 0.0, 1),
+        "Mota": ESTRELLA,
+        "Grieta": ("#120828", 0.9, None, 0.0, 1),
+        "Cristal": ("#9A5CFF", 0.15, "#9A5CFF", 0.4, 1),
+        "Vidrio": ("#C8A8FF", 0.05, None, 0.0, 0.45),
+        "Nucleo": ("#FFFFFF", 0.2, "#E0D0FF", 2.0, 1),
+        **ABISMO_SUELO,
+    }
+    return comun(nombre, colores, 317, motas=0.08)
+
+
+def iolita(nombre):
+    """Rara (Abismo): 3 columnas de iolita azul violeta con punta escalonada y centro que brilla
+    suave, sobre roca del abismo con vetitas que brillan."""
+    colores = {
+        "Oscuro": ("#2A2A8C", 0.05, None, 0.0, 0.75),
+        "Medio": ("#4848C8", 0.05, None, 0.0, 0.65),
+        "Claro": ("#7A72F0", 0.05, None, 0.0, 0.6),
+        "Arista": ("#B8B0FF", 0.05, "#9A90FF", 0.25, 0.85),
+        "Centro": ("#C8C0FF", 0.2, "#7A72F0", 1.0, 1),
+        "Suelto": ("#7A72F0", 0.15, "#7A72F0", 0.4, 1),
+        **{k: ABISMO_ROCA[k] for k in ("Roca", "RocaOscura", "Veta")},
+    }
+    return rara(nombre, colores, [(0, 0, 2, 19, 0, 0), (-4, 2, 2, 14, -1, 1), (4, -2, 2, 12, 1, -1)], 321)
+
+
+def fluorita_nocturna(nombre):
+    """Rara (Abismo): 3 columnas anchas de fluorita casi cúbicas con franjas violeta, verde y violeta
+    claro de abajo hacia arriba, centro que brilla suave, sobre roca del abismo."""
+    colores = {
+        "Oscuro": ("#6A2AC8", 0.05, None, 0.0, 0.7),
+        "Medio": ("#2EC87A", 0.05, None, 0.0, 0.65),
+        "Claro": ("#B07AFF", 0.05, None, 0.0, 0.6),
+        "Arista": ("#C8A8FF", 0.05, "#B08CFF", 0.25, 0.85),
+        "Centro": ("#D8FFE8", 0.2, "#5CFFA8", 1.0, 1),
+        "Suelto": ("#2EC87A", 0.15, "#2EC87A", 0.4, 1),
+        **{k: ABISMO_ROCA[k] for k in ("Roca", "RocaOscura", "Veta")},
+    }
+    return rara(nombre, colores, [(0, 0, 3, 18, 0, 0), (-5, 2, 2, 12, -1, 0), (5, -1, 2, 10, 1, 0)], 331)
+
+
+ABISMO_TALLADA = {
+    "Roca": ("#2A2440", 0.8, None, 0.0, 1),
+    "RocaOscura": ("#16122A", 0.85, None, 0.0, 1),
+    "Pasto": ("#B98CFF", 0.3, "#B98CFF", 0.8, 1),
+    "Oro": ("#D9E2EC", 0.2, None, 0.0, 1),  # engarce de plata
+}
+TALLADAS_CUBITOS["OpaloNegro"] = {
+    "engarce": (5, 5),
+    "anchos": [(1, 1), (2, 2), (3, 3), (4, 4), (5, 5), (5, 5), (5, 5), (5, 5), (5, 5), (5, 5), (4, 4),
+               (4, 4), (3, 3), (2, 2), (1, 1)],
+    "garras": (5, 5, 11),
+    "tonos": ("DestelloVioleta", "DestelloVerde", "DestelloAzul"),
+    "colores": {
+        "DestelloVioleta": ("#120A1E", 0.05, "#9A3CFF", 0.15, 0.95),
+        "DestelloVerde": ("#08140E", 0.05, "#2EFF8A", 0.12, 0.95),
+        "DestelloAzul": ("#080E1E", 0.05, "#2E9CFF", 0.15, 0.95),
+        "Faceta": ("#0C0812", 0.05, "#FF5CC8", 0.2, 0.95),
+        "Corazon": ("#FFD24A", 0.2, "#FF8A2E", 2.5, 1),
+        "Cristal": ("#9A3CFF", 0.15, "#9A3CFF", 0.4, 1),
+    },
+    "base": ABISMO_TALLADA,
+}
+TALLADAS_CUBITOS["Alejandrita"] = {
+    "engarce": (5, 4),
+    "anchos": [(1, 0), (1, 1), (2, 1), (3, 2), (3, 2), (4, 3), (5, 3), (5, 3), (6, 4), (6, 4), (6, 4),
+               (6, 4), (6, 4), (5, 4), (5, 3), (4, 3), (3, 2), (2, 1)],
+    "garras": (5, 3, 15),
+    "tonos": ("VerdeOscuro", "VerdeMedio", "VerdeClaro"),
+    "tonos_izq": ("VioletaOscuro", "VioletaMedio", "VioletaClaro"),
+    "colores": {
+        "VerdeOscuro": ("#0A5A3A", 0.05, None, 0.0, 0.75),
+        "VerdeMedio": ("#16905C", 0.05, None, 0.0, 0.65),
+        "VerdeClaro": ("#3CD08A", 0.05, None, 0.0, 0.6),
+        "VioletaOscuro": ("#3A0E6A", 0.05, None, 0.0, 0.75),
+        "VioletaMedio": ("#6A22B0", 0.05, None, 0.0, 0.65),
+        "VioletaClaro": ("#A05CF0", 0.05, None, 0.0, 0.6),
+        "Faceta": ("#A898D8", 0.05, "#8C7CC8", 0.2, 0.75),
+        "Corazon": ("#F0E8FF", 0.2, "#C8A8FF", 2.5, 1),
+        "Cristal": ("#6A22B0", 0.15, "#3CD08A", 0.4, 1),
+    },
+    "base": ABISMO_TALLADA,
+}
+
+
+def opalo_negro(nombre):
+    return tallada(nombre, TALLADAS_CUBITOS["OpaloNegro"])
+
+
+def alejandrita(nombre):
+    return tallada(nombre, TALLADAS_CUBITOS["Alejandrita"])
+
+
+def fragmento_de_nebulosa(nombre):
+    """Legendaria (Abismo): esquirla de cristal transparente alta y despareja con una nube rosa y
+    violeta adentro (núcleo que brilla, aparte), estrellitas blancas en la superficie, marco de
+    plata con remaches y 3 gemitas rosas engarzadas; tallo y pie de plata sobre roca del abismo."""
+    celdas = {}
+    _base_legendaria(celdas, 341)
+    cz = 16
+    plano = {(x, z) for x in range(-6, 7) for z in range(cz - 9, cz + 10)
+             if abs(x + (z - cz) * 0.15) * 1.25 + abs(z - cz) * 0.55 <= 5.6 + (h(x // 2, z // 3, 0, 342) - 0.5)}
+    marco = _emblema(celdas, plano, ["Vidrio", "VidrioClaro"], aro="Plata", cada=3)
+    _tallo(celdas, min(z for _, z in marco))
+    for c, k in list(celdas.items()):
+        if k == "Nucleo" and h(*c, 343) < 0.45:
+            celdas[c] = "Nube"
+        elif k in ("Vidrio", "VidrioClaro") and h(*c, 344) < 0.07:
+            celdas[c] = "Estrella"
+    for x, z in ((0, cz + 7), (-3, cz - 4), (3, cz - 1)):
+        celdas[(x, -4, z)] = "Gemita"
+    colores = {
+        "Vidrio": ("#E8E4FF", 0.03, None, 0.0, 0.3),
+        "VidrioClaro": ("#FFFFFF", 0.03, None, 0.0, 0.25),
+        "Faceta": ("#F0ECFF", 0.03, "#D8C8FF", 0.2, 0.5),
+        "Nucleo": ("#FF8AD8", 0.3, "#FF5CC8", 2.5, 1),
+        "Nube": ("#9A5CFF", 0.3, "#9A5CFF", 2.0, 1),
+        "Estrella": ESTRELLA,
+        "Pie": ("#D9E2EC", 0.2, None, 0.0, 1),
+        "Plata": ("#E6ECF2", 0.2, None, 0.0, 1),
+        "Remache": ("#FFFFFF", 0.2, None, 0.0, 1),
+        "Gemita": ("#FF5CC8", 0.05, "#FF5CC8", 0.7, 1),
+        "Cristal": ("#9A5CFF", 0.15, None, 0.0, 1),
+        "CristalClaro": ("#FF8AD8", 0.15, "#FF5CC8", 0.6, 1),
+        **{k: ABISMO_ROCA[k] for k in ("Roca", "RocaOscura", "Veta")},
+    }
+    return cubitos(nombre, celdas, colores)
+
+
+def ojo_del_vacio(nombre):
+    """Legendaria (Abismo): disco de cubitos de vidrio negro parado, con un aro violeta brillante
+    de marco (remaches claros), y al frente un ojo: iris violeta y centro blanco que brilla (el
+    núcleo, aparte); 3 gemitas violetas engarzadas, tallo y pie de plata sobre roca del abismo."""
+    celdas = {}
+    _base_legendaria(celdas, 351)
+    cz = 15
+    plano = {(x, z) for x in range(-8, 9) for z in range(cz - 8, cz + 9) if math.hypot(x, z - cz) <= 7.4}
+    marco = _emblema(celdas, plano, ["Negro", "NegroClaro"], aro="Aro", remache="Remache", cada=3)
+    _tallo(celdas, min(z for _, z in marco))
+    for x, z in plano:  # ojo al frente: iris y centro
+        d = math.hypot(x, z - cz)
+        y = -min(3, _hondo(plano, x, z))
+        if d <= 1.6:
+            celdas[(x, y, z)] = "Nucleo"
+        elif d <= 3.6:
+            celdas[(x, y, z)] = "Iris"
+    for x, z in ((0, cz + 9), (-7, cz - 4), (7, cz - 4)):
+        celdas[(x, -2, z)] = "Gemita"
+    colores = {
+        "Negro": ("#08060E", 0.05, None, 0.0, 0.92),
+        "NegroClaro": ("#1A1428", 0.05, None, 0.0, 0.9),
+        "Faceta": ("#2A2040", 0.05, "#6A3CC8", 0.3, 0.9),
+        "Nucleo": ("#FFFFFF", 0.2, "#F0E8FF", 4.0, 1),
+        "Iris": ("#9A3CFF", 0.1, "#B05CFF", 1.5, 1),
+        "Aro": ("#B05CFF", 0.15, "#B05CFF", 1.5, 1),
+        "Remache": ("#E8D8FF", 0.2, None, 0.0, 1),
+        "Pie": ("#D9E2EC", 0.2, None, 0.0, 1),
+        "Gemita": ("#9A3CFF", 0.05, "#9A3CFF", 0.7, 1),
+        "Cristal": ("#6A2AC8", 0.15, None, 0.0, 1),
+        "CristalClaro": ("#C8A8FF", 0.15, "#B98CFF", 0.6, 1),
+        **{k: ABISMO_ROCA[k] for k in ("Roca", "RocaOscura", "Veta")},
+    }
+    return cubitos(nombre, celdas, colores)
+
+
+def cometa_errante(nombre):
+    """Mítica (Abismo): cometa de cubitos: cabeza de cristal celeste en capas (cáscara en degradé,
+    aristas de plata, núcleo blanco que brilla) arriba a un costado, y una cola de cubitos que
+    brillan (blanco, celeste y violeta) que baja en diagonal y se abre hasta el zócalo. Anillo
+    cuadrado de plata alrededor."""
+    def cuerpo(celdas):
+        zb = 17
+        capa = {}
+        _capas_gema(capa, zb, [1, 2, 3, 4, 4, 4, 4, 3, 2, 1], ["CelesteOscuro", "Celeste", "CelesteClaro"],
+                    arista="Plata", forma=lambda z: (z - zb) in (0, 9))
+        for (x, y, z), k in capa.items():
+            celdas[(x + 3, y + 1, z)] = k
+        for i in range(18):  # cola: baja hacia la izquierda y se abre
+            t = i / 17
+            cx, cz2 = 3 - 7 * t, zb + 3 - 13 * t
+            ancho = 1 + 2.4 * t
+            for x in range(-4, 5):
+                for y in range(-4, 5):
+                    for dz in range(-2, 3):
+                        px, pz = round(cx + x), round(cz2 + dz)
+                        if pz < 4 or math.hypot(x, y) > ancho or abs(dz) > 1:
+                            continue
+                        if h(px, y, pz, 361) > 0.55 - 0.3 * (1 - t):
+                            continue
+                        celdas.setdefault((px, y + 1, pz), "Cola1" if t < 0.35 else "Cola2" if t < 0.7 else "Cola3")
+
+    colores = {
+        "CelesteOscuro": ("#1E8CD8", 0.05, None, 0.0, 0.65),
+        "Celeste": ("#4FC3F7", 0.05, None, 0.0, 0.6),
+        "CelesteClaro": ("#A8E6FF", 0.05, None, 0.0, 0.55),
+        "Nucleo": ("#FFFFFF", 0.2, "#E0F6FF", 3.0, 1),
+        "Plata": ("#E6ECF2", 0.2, None, 0.0, 1),
+        "Cola1": ("#FFFFFF", 0.1, "#E0F6FF", 1.8, 1),
+        "Cola2": ("#7FD8FF", 0.1, "#4FC3F7", 1.4, 1),
+        "Cola3": ("#9A7CFF", 0.1, "#9A5CFF", 1.0, 1),
+        "Zocalo": ("#D9E2EC", 0.2, None, 0.0, 1),
+        "Anillo": ("#E6F0F7", 0.2, "#C8ECFF", 0.35, 1),
+        **{k: ABISMO_ROCA[k] for k in ("Roca", "RocaOscura")},
+    }
+    return mitica(nombre, cuerpo, colores, anillo_z=6)
+
+
+def galaxia_espiral(nombre):
+    """Mítica (Abismo): disco de cristal violeta parado (cáscara en degradé, bordes como facetas) con
+    una galaxia en espiral de estrellitas de cubitos en las dos caras y un centro blanco que brilla
+    fuerte; marco de plata con remaches y anillo cuadrado de plata alrededor."""
+    cz = 15
+
+    def cuerpo(celdas):
+        plano = {(x, z) for x in range(-9, 10) for z in range(cz - 10, cz + 11) if math.hypot(x, z - cz) <= 8.4}
+        _emblema(celdas, plano, ["VioletaOscuro", "Violeta", "VioletaClaro"], aro="Plata", cada=3)
+        for brazo in (0, math.pi):
+            for i in range(60):
+                a = brazo + i * 0.11
+                r = 1.2 + i * 0.115
+                x, z = round(math.cos(a) * r), cz + round(math.sin(a) * r)
+                if (x, z) in plano:
+                    g = min(3, _hondo(plano, x, z))
+                    for y in (-g, g):
+                        celdas[(x, y, z)] = "Estrella" if i % 3 else "EstrellaRosa"
+
+    colores = {
+        "VioletaOscuro": ("#2A0E5A", 0.05, None, 0.0, 0.75),
+        "Violeta": ("#4A1E96", 0.05, None, 0.0, 0.7),
+        "VioletaClaro": ("#7A3CD8", 0.05, None, 0.0, 0.65),
+        "Faceta": ("#B08CFF", 0.05, "#9A6CFF", 0.3, 0.8),
+        "Nucleo": ("#FFFFFF", 0.2, "#F0E0FF", 4.0, 1),
+        "Estrella": ESTRELLA,
+        "EstrellaRosa": ("#FF8AD8", 0.1, "#FF5CC8", 1.5, 1),
+        "Plata": ("#E6ECF2", 0.2, None, 0.0, 1),
+        "Remache": ("#FFFFFF", 0.2, None, 0.0, 1),
+        "Zocalo": ("#D9E2EC", 0.2, None, 0.0, 1),
+        "Anillo": ("#E6F0F7", 0.2, "#D8C8FF", 0.35, 1),
+        **{k: ABISMO_ROCA[k] for k in ("Roca", "RocaOscura")},
+    }
+    return mitica(nombre, cuerpo, colores, anillo_z=6)
+
+
+def supernova(nombre):
+    """Celestial (Abismo): esfera blanca de cubitos que brilla fuerte, con rayos de cubitos rosa,
+    violeta y dorado que salen para todos lados como una explosión. Flota sobre un pedestal del
+    abismo; halo, anillo y 3 gemitas que orbitan."""
+
+    def gema(celdas, zb):
+        cz = zb + 11
+        for x in range(-5, 6):
+            for y in range(-5, 6):
+                for z in range(cz - 5, cz + 6):
+                    d = math.sqrt(x * x + y * y + (z - cz) ** 2)
+                    if d <= 2.6:
+                        celdas[(x, y, z)] = "Nucleo"
+                    elif d <= 4.6:
+                        celdas[(x, y, z)] = "Blanco" if h(x, y, z, 371) > 0.3 else "BlancoRosa"
+        rayos = ["RayoRosa", "RayoVioleta", "RayoOro"]
+        for i in range(18):  # direcciones repartidas en la esfera
+            zz = 1 - 2 * (i + 0.5) / 18
+            rr = math.sqrt(1 - zz * zz)
+            a = i * 2.4
+            d = (math.cos(a) * rr, math.sin(a) * rr, zz)
+            largo = 8 if i % 2 else 6.5
+            for k in range(5, int(largo * 2) + 1):
+                s = k / 2
+                c = (round(d[0] * s), round(d[1] * s), cz + round(d[2] * s))
+                if max(abs(c[0]), abs(c[1])) <= 8 and c[2] >= zb - 2:
+                    celdas[c] = rayos[i % 3]
+        return cz + 10
+
+    colores = {
+        "Blanco": ("#FFFFFF", 0.1, "#FFF8F0", 1.2, 0.9),
+        "BlancoRosa": ("#FFE0F4", 0.1, "#FFC8EC", 1.2, 0.9),
+        "Nucleo": ("#FFFFFF", 0.2, "#FFFFFF", 6.0, 1),
+        "RayoRosa": ("#FF5CC8", 0.1, "#FF5CC8", 1.5, 1),
+        "RayoVioleta": ("#9A5CFF", 0.1, "#9A5CFF", 1.5, 1),
+        "RayoOro": ("#FFD24A", 0.1, "#FFC233", 1.5, 1),
+        "Halo": ("#FFC8EC", 0.1, "#FF8AD8", 0.8, 0.5),
+        "Anillo": ("#F0E8FF", 0.2, "#D8C8FF", 0.4, 1),
+        "Gemita1": ("#FF5CC8", 0.05, "#FF5CC8", 0.9, 1),
+        "Gemita2": ("#FFD24A", 0.05, "#FFD24A", 0.9, 1),
+        "Gemita3": ("#9A5CFF", 0.05, "#9A5CFF", 0.9, 1),
+        "Cristalito": ("#B98CFF", 0.1, "#B98CFF", 0.5, 1),
+        **ABISMO_ROCA,
+    }
+    return celestial(nombre, gema, colores, anillo_z=12)
+
+
+def agujero_negro(nombre):
+    """Celestial (Abismo): esfera negra de cubitos con un borde de luz blanca finita, rodeada por un
+    disco de luz naranja y dorado (pegado a la esfera) y, por fuera, el anillo grande violeta que gira.
+    Flota sobre un pedestal del abismo; halo violeta y 3 gemitas que orbitan."""
+
+    def gema(celdas, zb):
+        cz = zb + 12
+        for x in range(-6, 7):
+            for y in range(-6, 7):
+                for z in range(cz - 6, cz + 7):
+                    d = math.sqrt(x * x + y * y + (z - cz) ** 2)
+                    if d <= 5.4:
+                        celdas[(x, y, z)] = "Borde" if d > 4.7 and abs(y) <= 1 and abs(x) > 3 else "Negro"
+        for x in range(-8, 9):  # disco de luz, un poco inclinado
+            for y in range(-8, 9):
+                d = math.hypot(x, y)
+                if 5.6 <= d <= 8.2:
+                    z = cz + round(x * 0.25)
+                    celdas[(x, y, z)] = "DiscoOro" if d < 6.8 else "DiscoNaranja"
+        return cz + 8
+
+    colores = {
+        "Negro": ("#040208", 0.3, None, 0.0, 1),
+        "Borde": ("#2A1A40", 0.2, "#9A5CFF", 0.8, 1),
+        "DiscoOro": ("#FFD24A", 0.1, "#FFC233", 2.0, 1),
+        "DiscoNaranja": ("#FF7A1A", 0.1, "#FF6A10", 1.6, 1),
+        "Halo": ("#9A5CFF", 0.1, "#9A5CFF", 1.0, 0.5),
+        "Anillo": ("#B05CFF", 0.15, "#B05CFF", 1.5, 1),
+        "Gemita1": ("#9A5CFF", 0.05, "#9A5CFF", 0.9, 1),
+        "Gemita2": ("#FF7A1A", 0.05, "#FF7A1A", 0.9, 1),
+        "Gemita3": ("#FFFFFF", 0.05, "#F0E8FF", 0.9, 1),
+        "Cristalito": ("#B98CFF", 0.1, "#B98CFF", 0.5, 1),
+        **ABISMO_ROCA,
+    }
+    return celestial(nombre, gema, colores, anillo_z=17)
+
+
 # nombre: (zona, rareza, forma, {clave: (color, brillo)})
 PIEDRAS = {
     "Cuarzo": (
@@ -3425,6 +3792,18 @@ PIEDRAS = {
     "LlamaViva": (4, "Mitica", llama_viva, None),
     "CorazondelVolcan": (4, "Celestial", corazon_del_volcan, None),
     "CoronaIgnea": (4, "Celestial", corona_ignea, None),
+    "Meteorita": (5, "Comun", meteorita, None),
+    "PolvoEstelar": (5, "Comun", polvo_estelar, None),
+    "Iolita": (5, "Rara", iolita, None),
+    "FluoritaNocturna": (5, "Rara", fluorita_nocturna, None),
+    "OpaloNegro": (5, "Epica", opalo_negro, None),
+    "Alejandrita": (5, "Epica", alejandrita, None),
+    "FragmentodeNebulosa": (5, "Legendaria", fragmento_de_nebulosa, None),
+    "OjodelVacio": (5, "Legendaria", ojo_del_vacio, None),
+    "CometaErrante": (5, "Mitica", cometa_errante, None),
+    "GalaxiaEspiral": (5, "Mitica", galaxia_espiral, None),
+    "Supernova": (5, "Celestial", supernova, None),
+    "AgujeroNegro": (5, "Celestial", agujero_negro, None),
 }
 
 
