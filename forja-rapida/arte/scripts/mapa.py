@@ -781,13 +781,12 @@ def plaza(g, s, rng):
     marcador("Cartel", (-18, 4, -22), (8, 5, 1), mirar((-18, -22), SPAWN), Menu="Misiones", Texto="MISIONES")
     s.marcar(-24, -26, -12, -18)
 
-    # fuente con las 8 vitrinas alrededor
-    fx, fz = FUENTE
-    fuente(g, fx, fz)
+    # las 8 vitrinas en fila a la derecha (plaza simple: sin fuente ni decoración)
     for i in range(8):
-        a = math.radians(22.5 + 45 * i)
-        marcador("Vitrina", (round(fx + 20 * math.cos(a), 1), 1, round(fz + 20 * math.sin(a), 1)), (2, 5, 5), 0, Numero=i + 1)
-    s.marcar(fx - 26, fz - 26, fx + 26, fz + 26)
+        z = -100 + 11 * i
+        losa(g, 104, z, -2, 0, 4, 4, "Oro", 2)
+        marcador("Vitrina", (104, 1, z), (2, 5, 5), 0, Numero=i + 1)
+    s.marcar(96, -106, 112, -16)
 
     museo(g, s)
     santuario(g, s)
@@ -804,29 +803,6 @@ def plaza(g, s, rng):
     losa(g, ax, az, -2, 0, 10, 10, "Baldosa", 4)
     s.marcar(ax - 16, az - 16, ax + 16, az + 16)
 
-    # vida de la plaza: faroles, bancos, canteros y árboles
-    for x, z in ((-16, -14), (14, -14), (-36, -96), (34, -96), (-56, -118), (54, -118)):
-        farol(g, x, z)
-        s.marcar(x - 4, z - 4, x + 6, z + 6)
-    for x, z, mira in ((-34, -72, (1, 0)), (30, -72, (-1, 0))):
-        banco(g, x, z, mira)
-        s.marcar(x - 2, z - 8, x + 8, z + 8)
-    colores = ["FlorRosa", "FlorAmarilla", "FlorBlanca", "FlorRoja"]
-    for a0, b0, a1, b1 in ((-110, -6, -82, 0), (-44, -6, -34, 0), (34, -6, 60, 0), (84, -6, 112, 0),
-                           (48, -134, 64, -128), (88, -134, 112, -128), (-64, -134, -48, -128), (-112, -134, -88, -128)):
-        cantero(g, a0, b0, a1, b1, rng, colores)
-        s.marcar(a0, b0, a1, b1)
-    for x, z in ((-98, -6), (64, -16), (-100, -116), (98, -84)):
-        arbol(g, x, z, rng)
-        s.marcar(x - 10, z - 10, x + 10, z + 10)
-    for x, z in ((-70, -44), (64, -96), (-26, -92), (24, -92)):
-        arbusto(g, x, z, rng, colores)
-    for x, z in ((-50, -64), (50, -64)):  # árboles en maceteros redondos a los costados de la fuente
-        losa(g, x, z, 0, 2, 6, 6, "PiedraClara", 2)
-        losa(g, x, z, 0, 2, 4, 4, "PastoOscuro", 2)
-        with g.subir(2):
-            arbol(g, x, z, rng)
-        s.marcar(x - 10, z - 10, x + 10, z + 10)
 
 
 def museo(g, s):
