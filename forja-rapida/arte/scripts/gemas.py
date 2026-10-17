@@ -27,13 +27,13 @@ from mathutils import Matrix, Vector  # noqa: E402
 ICONOS = m.ARTE / "iconos" / "gemas"
 
 # Solo las piedras que Juani ya aprobó entran al FBX de su zona
-APROBADAS = {"Cuarzo", "Jaspe", "Amatista", "AgataMusgosa", "Esmeralda", "TurmalinaRosa", "CorazondePradera", "DiamanteFloral", "JadeArcoiris", "TreboldeCristal", "AuroraVerde", "SemilladelMundo", "Arenisca", "Ambar", "Citrino", "OjodeTigre", "TopacioImperial", "Cornalina", "SoldelDesierto"}
+APROBADAS = {"Cuarzo", "Jaspe", "Amatista", "AgataMusgosa", "Esmeralda", "TurmalinaRosa", "CorazondePradera", "DiamanteFloral", "JadeArcoiris", "TreboldeCristal", "AuroraVerde", "SemilladelMundo", "Arenisca", "Ambar", "Citrino", "OjodeTigre", "TopacioImperial", "Cornalina", "SoldelDesierto", "EscarabajodeOro"}
 
 # Piedras con alto propio (studs) y pivote en el centro de la base en vez del centro de la caja
-ALTO = {"Cuarzo": 2.5, "Jaspe": 2.5, "Amatista": 3.0, "AgataMusgosa": 3.0, "Esmeralda": 3.5, "TurmalinaRosa": 3.5, "CorazondePradera": 4.0, "DiamanteFloral": 4.0, "JadeArcoiris": 4.5, "TreboldeCristal": 4.5, "AuroraVerde": 5.0, "SemilladelMundo": 5.0, "Arenisca": 2.5, "Ambar": 2.5, "Citrino": 3.0, "OjodeTigre": 3.0, "TopacioImperial": 3.5, "Cornalina": 3.5, "SoldelDesierto": 4.0}
-PIVOTE_BASE = {"Cuarzo", "Jaspe", "Amatista", "AgataMusgosa", "Esmeralda", "TurmalinaRosa", "CorazondePradera", "DiamanteFloral", "JadeArcoiris", "TreboldeCristal", "AuroraVerde", "SemilladelMundo", "Arenisca", "Ambar", "Citrino", "OjodeTigre", "TopacioImperial", "Cornalina", "SoldelDesierto"}
+ALTO = {"Cuarzo": 2.5, "Jaspe": 2.5, "Amatista": 3.0, "AgataMusgosa": 3.0, "Esmeralda": 3.5, "TurmalinaRosa": 3.5, "CorazondePradera": 4.0, "DiamanteFloral": 4.0, "JadeArcoiris": 4.5, "TreboldeCristal": 4.5, "AuroraVerde": 5.0, "SemilladelMundo": 5.0, "Arenisca": 2.5, "Ambar": 2.5, "Citrino": 3.0, "OjodeTigre": 3.0, "TopacioImperial": 3.5, "Cornalina": 3.5, "SoldelDesierto": 4.0, "EscarabajodeOro": 4.0}
+PIVOTE_BASE = {"Cuarzo", "Jaspe", "Amatista", "AgataMusgosa", "Esmeralda", "TurmalinaRosa", "CorazondePradera", "DiamanteFloral", "JadeArcoiris", "TreboldeCristal", "AuroraVerde", "SemilladelMundo", "Arenisca", "Ambar", "Citrino", "OjodeTigre", "TopacioImperial", "Cornalina", "SoldelDesierto", "EscarabajodeOro"}
 # Topes de triángulos propios (pisan el de la rareza)
-TOPE = {"Esmeralda": 4000, "TurmalinaRosa": 4000, "CorazondePradera": 6000, "DiamanteFloral": 6000, "JadeArcoiris": 8000, "TreboldeCristal": 8000, "AuroraVerde": 10000, "SemilladelMundo": 10000, "TopacioImperial": 4000, "Cornalina": 4000, "SoldelDesierto": 6000}
+TOPE = {"Esmeralda": 4000, "TurmalinaRosa": 4000, "CorazondePradera": 6000, "DiamanteFloral": 6000, "JadeArcoiris": 8000, "TreboldeCristal": 8000, "AuroraVerde": 10000, "SemilladelMundo": 10000, "TopacioImperial": 4000, "Cornalina": 4000, "SoldelDesierto": 6000, "EscarabajodeOro": 6000}
 
 # Alto (studs) y tope de triángulos por rareza
 RAREZAS = {
@@ -1954,6 +1954,139 @@ def sol_del_desierto(nombre):
     return cubitos(nombre, celdas, colores)
 
 
+def escarabajo_de_oro(nombre):
+    """Gema legendaria de cubitos (Dunas): escarabajo de oro parado de frente, sobre un pie de oro y
+    una roca de arena con cristales turquesa. Cuerpo de oro en 3 tonos con borde oscuro en relieve,
+    remaches por el lomo y 6 patas; alas abiertas de vidrio turquesa (más claras arriba, bordes en
+    escalones como facetas) con un corazón que brilla fuerte adentro (malla aparte). Gemitas: 2 ojos
+    rojos y un solcito naranja que sostiene arriba de la cabeza."""
+    celdas = {}
+    # roca de arena
+    for x in range(-8, 9):
+        for y in range(-7, 8):
+            r = math.hypot(x / 8.5, y / 7.5) + (h(x // 2, y // 2, 0, 71) - 0.5) * 0.3
+            for z in range(3):
+                if r < 1 - z * 0.12:
+                    v = h(x, y, z, 72)
+                    celdas[(x, y, z)] = "Veta" if v < 0.05 else "RocaOscura" if z == 0 or v < 0.3 else "Roca"
+    # pie de oro
+    for z in (3, 4):
+        for x in range(-2 + (z - 3), 3 - (z - 3)):
+            for y in range(-2, 3):
+                celdas[(x, y, z)] = "OroOscuro"
+    zb = 5
+    # alas en el plano x-z: dos óvalos inclinados hacia afuera y arriba
+    alas = set()
+    for x in range(-10, 11):
+        for z in range(zb, zb + 18):
+            for s in (-1, 1):
+                u, v = x - s * 5.0, z - (zb + 9.5)
+                a, b = u * 0.9 - s * v * 0.42, s * u * 0.42 + v * 0.9
+                if (a / 4.3) ** 2 + (b / 7.2) ** 2 <= 1:
+                    alas.add((x, z))
+
+    def hondo(plano, x, z):
+        for k in range(1, 5):
+            if any((x + dx * k, z + dz * k) not in plano for dx, dz in ((1, 0), (-1, 0), (0, 1), (0, -1))):
+                return k
+        return 4
+
+    zmin = min(z for _, z in alas)
+    zmax = max(z for _, z in alas)
+    for x, z in alas:
+        k = hondo(alas, x, z)
+        grosor = min(2, k)
+        t = (z - zmin) / (zmax - zmin)
+        for y in range(-grosor + 1, grosor + 2):  # un poco más atrás que el cuerpo
+            if k >= 3 and y in (1, 2):
+                celdas[(x, y, z)] = "Corazon"
+                continue
+            frente = y in (-grosor + 1, grosor + 1)
+            if not frente and k > 1:
+                continue  # hueco: se ve el corazón a través del vidrio
+            if k == 1:
+                celdas[(x, y, z)] = "Faceta"
+            else:
+                v = t + (h(x, y, z, 73) - 0.5) * 0.25
+                celdas[(x, y, z)] = "AlaClaro" if v > 0.62 else "AlaMedio" if v > 0.3 else "AlaOscuro"
+    # nervaduras de oro en las alas (diagonales)
+    for s in (-1, 1):
+        for i in range(1, 9):
+            for x, z in ((s * (2 + i * 0.8), zb + 4 + i * 1.3), (s * (3 + i * 0.4), zb + 3 + i * 1.6)):
+                c = (round(x), round(z))
+                if c in alas and hondo(alas, *c) > 1:
+                    celdas[(c[0], 0, c[1])] = "Oro"
+    # cuerpo: abdomen ovalado, tórax y cabeza (todo de oro, adelante de las alas)
+    cuerpo = set()
+    for x in range(-5, 6):
+        for z in range(zb, zb + 20):
+            if ((x / 4.4) ** 2 + ((z - (zb + 5.5)) / 5.4) ** 2 <= 1
+                    or (abs(x) <= 4 - (z == zb + 12) and zb + 10 <= z <= zb + 12)
+                    or (abs(x) <= 2 - (z == zb + 15) and zb + 13 <= z <= zb + 15)):
+                cuerpo.add((x, z))
+    czmin, czmax = min(z for _, z in cuerpo), max(z for _, z in cuerpo)
+    for x, z in cuerpo:
+        k = hondo(cuerpo, x, z)
+        t = (z - czmin) / (czmax - czmin)
+        prof = -1 - min(2, k)  # más abultado al medio
+        for y in range(prof, 2):
+            if k == 1 or z in (zb + 10, zb + 13):
+                clave = "Borde"  # borde y cortes entre partes en relieve oscuro
+            else:
+                v = t + (h(x, y, z, 74) - 0.5) * 0.2
+                clave = "OroClaro" if v > 0.62 else "Oro" if v > 0.3 else "OroOscuro"
+            celdas[(x, y, z)] = clave
+    # línea del lomo con remaches
+    for z in range(zb + 1, zb + 10):
+        if (0, z) in cuerpo:
+            celdas[(0, -1 - min(2, hondo(cuerpo, 0, z)) - 1, z)] = "Remache" if z % 2 else "Borde"
+    # 6 patas: escalones de oro que salen del cuerpo hacia afuera y abajo, por delante de las alas
+    for s in (-1, 1):
+        for z0, dz in ((zb + 11, 1), (zb + 7, 0), (zb + 3, -1)):
+            x, z = s * 4, z0
+            for i in range(4):
+                x += s
+                z += dz if i < 2 else -1
+                celdas[(x, -2, z)] = "OroOscuro" if i == 3 else "Oro"
+    # antenas / patas delanteras que sostienen el solcito
+    for s in (-1, 1):
+        for i, (x, z) in enumerate(((s * 2, zb + 16), (s * 2, zb + 17), (s * 2, zb + 18))):
+            celdas[(x, -1, z)] = "Oro"
+    for x in (-1, 0, 1):
+        for z in (zb + 18, zb + 19, zb + 20):
+            if not (abs(x) == 1 and z in (zb + 18, zb + 20)):
+                celdas[(x, -1, z)] = "Sol"
+                celdas[(x, 0, z)] = "Oro"
+    # ojos: gemitas rojas en la cabeza
+    for s in (-1, 1):
+        celdas[(s * 1, -4, zb + 14)] = "Ojo"
+    # cristales turquesa que crecen de la roca
+    for x, y, alto_c in ((-7, 2, 4), (-6, 3, 2), (6, -3, 3), (7, 2, 5), (-4, 5, 3), (4, 5, 2), (-5, -4, 2)):
+        z0 = max((z for z in range(3) if (x, y, z) in celdas), default=-1) + 1
+        for z in range(z0, z0 + alto_c):
+            celdas[(x, y, z)] = "Cristal" if z < z0 + alto_c - 1 else "CristalClaro"
+    colores = {
+        "AlaOscuro": ("#0B7F86", 0.05, None, 0.0, 0.7),
+        "AlaMedio": ("#18B5B0", 0.05, None, 0.0, 0.6),
+        "AlaClaro": ("#5FE6D8", 0.05, None, 0.0, 0.55),
+        "Faceta": ("#BFFFF6", 0.05, "#7DFFEE", 0.3, 0.8),
+        "Corazon": ("#B8FFF4", 0.2, "#3FF5E0", 4.0, 1),
+        "OroOscuro": ("#B87A10", 0.3, None, 0.0, 1),
+        "Oro": ("#E8A61E", 0.25, None, 0.0, 1),
+        "OroClaro": ("#FFD24A", 0.2, None, 0.0, 1),
+        "Borde": ("#8A5A0A", 0.35, None, 0.0, 1),
+        "Remache": ("#FFE58A", 0.2, None, 0.0, 1),
+        "Ojo": ("#E8202A", 0.05, "#FF3030", 0.6, 1),
+        "Sol": ("#FF7A1A", 0.05, "#FF8A2A", 0.8, 1),
+        "Cristal": ("#1FA9A6", 0.15, None, 0.0, 1),
+        "CristalClaro": ("#7FF2E6", 0.15, "#5FE6D8", 0.5, 1),
+        "Roca": ("#C4975E", 0.85, None, 0.0, 1),
+        "RocaOscura": ("#8E6A40", 0.9, None, 0.0, 1),
+        "Veta": ("#F0D9A8", 0.7, None, 0.0, 1),
+    }
+    return cubitos(nombre, celdas, colores)
+
+
 # nombre: (zona, rareza, forma, {clave: (color, brillo)})
 PIEDRAS = {
     "Cuarzo": (
@@ -1985,6 +2118,7 @@ PIEDRAS = {
     "TopacioImperial": (2, "Epica", topacio_imperial, None),
     "Cornalina": (2, "Epica", cornalina, None),
     "SoldelDesierto": (2, "Legendaria", sol_del_desierto, None),
+    "EscarabajodeOro": (2, "Legendaria", escarabajo_de_oro, None),
 }
 
 
