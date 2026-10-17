@@ -153,7 +153,7 @@ ROCAS = {
 LARGO = 240  # largo de cada bioma
 MURO = 8  # muro entre biomas
 XMIN, XMAX = -88, 88  # zona caminable (17/10, plan v5: más angosto)
-X0, X1 = XMIN - 20, XMAX + 52  # la grilla: el risco derecho es más grueso (ahí van las cámaras)
+X0, X1 = XMIN - 36, XMAX + 52  # la grilla: el risco derecho es más grueso (ahí van las cámaras)
 Y0, Y1 = -4, 92
 PLAZA = -136  # la plaza va de z -136 a 0
 Z0 = PLAZA - 8  # pared del fondo
@@ -320,6 +320,66 @@ class Suelo:
     def libre(self, x0, z0, x1, z1):
         i0, i1, k0, k1 = self._r(x0, z0, x1, z1)
         return not self.o[i0:i1, k0:k1].any()
+
+
+# Piezas de Blender (arte/fbx/Deco_Comun y Deco_Zona1..5): ancho x alto x fondo en studs (de los
+# FBX). GeneradorMapa las copia de ServerStorage.Modelos.Deco y las apoya con el centro de su base en
+# el marcador; el frente mira a -z con giro 0.
+PIEZAS = {
+    "Arbol_Grande": (17, 14, 10), "Arbol_Mediano": (10, 9, 7), "Arbol_Rosa": (10, 9, 7),
+    "Arbol_Seco": (16, 16, 8), "Arbusto": (6, 5, 3), "Racimo_Cuarzo": (9, 11, 9),
+    "Cascada_Cristal": (10, 14, 13),
+    "Arbol_Seco_Desierto": (18, 22, 8), "Cactus_Chico": (3, 4, 2), "Cactus_Mediano": (6, 7, 3),
+    "Cactus_Grande": (9, 11, 4), "Duna_Chica": (16, 3, 10), "Duna_Mediana": (28, 5, 16),
+    "Duna_Grande": (44, 9, 24), "Esqueleto": (16, 11, 9), "Piramide": (64, 30, 64),
+    "Racimo_Ambar": (9, 4, 7),
+    "Escalones_Nevados_1": (12, 10, 9), "Escalones_Nevados_2": (11, 5, 7), "Hielo_Suelto": (8, 3, 5),
+    "Lago_Congelado": (24, 2, 16), "Monte_Nevado_Chico": (16, 10, 10),
+    "Monte_Nevado_Mediano": (28, 18, 16), "Monte_Nevado_Grande": (40, 24, 24),
+    "Pico_Hielo": (11, 11, 8), "Pino_Nevado_Chico": (10, 11, 10), "Pino_Nevado_Grande": (15, 19, 14),
+    "Arbol_Quemado": (11, 17, 9), "Columnas_Basalto_1": (10, 14, 7), "Columnas_Basalto_2": (13, 16, 7),
+    "Rio_Lava_Curva": (14, 3, 14), "Rio_Lava_Recto": (16, 3, 12), "Roca_Lava_Chica": (9, 8, 8),
+    "Roca_Lava_Mediana": (12, 10, 12), "Roca_Lava_Grande": (20, 12, 21), "Volcan": (60, 40, 56),
+    "Arbol_Nebuloso": (31, 32, 19), "Columna_Estelar_Alta": (14, 44, 12),
+    "Columna_Estelar_Baja": (14, 28, 13), "Cristales_Abismo": (10, 14, 10),
+    "Isla_Flotante_Chica": (12, 16, 12), "Isla_Flotante_Mediana": (20, 20, 20),
+    "Isla_Flotante_Grande": (28, 24, 28), "Roca_Meteorito_Chico": (12, 6, 12),
+    "Roca_Meteorito_Grande": (20, 10, 21),
+    "Losas_Chica": (8, 5, 6), "Losas_Mediana": (10, 7, 8), "Losas_Larga": (16, 7, 6),
+    "Pared_Ladrillo": (16, 24, 5), "Risco_Escalon": (16, 30, 17), "Arcoiris": (72, 30, 16),
+    "Nube_Bloques": (56, 20, 32),
+}
+# las que no se atraviesan (lo chico y las plantas no traban al caminar)
+CHOCAN = ("Piramide", "Volcan", "Monte_Nevado", "Pared_Ladrillo", "Risco_Escalon", "Columna",
+          "Roca_Lava_Grande", "Roca_Meteorito_Grande", "Escalones_Nevados", "Duna_Grande")
+
+
+def tipo_pieza(nombre):
+    """"Arbol_Grande_2" -> "Arbol_Grande"; "Pared_Ladrillo_Zona3" -> "Pared_Ladrillo"."""
+    for k in sorted(PIEZAS, key=len, reverse=True):
+        if nombre.startswith(k):
+            return k
+    raise KeyError(nombre)
+
+
+def deco(nombre, x, z, giro=0, y=0, escala=1):
+    tam = PIEZAS[tipo_pieza(nombre)]
+    choca = any(nombre.startswith(c) for c in CHOCAN)
+    marcador("Deco", (x, y, z), tuple(round(v * escala, 1) for v in tam), giro, Nombre=nombre, Escala=escala, Choca=choca)
+
+
+def radio(nombre, escala=1):
+    tam = PIEZAS[tipo_pieza(nombre)]
+    return int(max(tam[0], tam[2]) * escala / 2) + 2
+
+
+def poner_deco(s, rng, area, nombres, cuantas, valido=None, escala=1, intentos=120):
+    """Reparte piezas al azar por el piso libre del bioma (cada una ocupa su lugar)."""
+    for i in range(cuantas):
+        nombre = nombres[i % len(nombres)] if isinstance(nombres, list) else nombres
+        p = lugar(s, rng, area, radio(nombre, escala), intentos=intentos, valido=valido)
+        if p:
+            deco(nombre, p[0], p[1], rng.choice([0, 90, 180, 270]), escala=escala)
 
 
 def lugar(s, rng, area, r, intentos=80, valido=None, rz=None):
@@ -651,13 +711,17 @@ def volcan(g, cx, cz, rng):
 
 
 def rio(g, s, puntos, mat="Lava", ancho=4):
-    """Río a ras del piso que une los puntos con tramos rectos (en x o en z)."""
-    m = ancho // 2
+    """Río de lava que une los puntos con tramos rectos (en x o en z), hecho con la pieza
+    Rio_Lava_Recto (16 de largo) y Rio_Lava_Curva en cada esquina."""
     for (xa, za), (xb, zb) in zip(puntos, puntos[1:]):
-        x0, x1 = min(xa, xb) - m, max(xa, xb) + m
-        z0, z1 = min(za, zb) - m, max(za, zb) + m
-        g.poner(x0, -4, z0, x1, 0, z1, mat)
-        s.marcar(x0, z0, x1, z1)
+        largo = abs(xb - xa) + abs(zb - za)
+        pasos = max(1, round(largo / 16))
+        for i in range(pasos):
+            f = (i + 0.5) / pasos
+            deco("Rio_Lava_Recto", xa + (xb - xa) * f, za + (zb - za) * f, 0 if za == zb else 90)
+        s.marcar(min(xa, xb) - 7, min(za, zb) - 7, max(xa, xb) + 7, max(za, zb) + 7)
+    for x, z in puntos[1:-1]:
+        deco("Rio_Lava_Curva", x, z, 0)
 
 
 def columna_cristal(g, x, z, rng, cristal):
@@ -767,6 +831,14 @@ def plaza(g, s, rng):
         g.poner(xa, 0, z0, xb, 28, 8, "Piedra")
         g.poner(xa, 28, z0, xb, 32, 8, "Pasto")
     s.marcar(XMIN, z0, XMAX, z0 + 2)
+    # paredes de ladrillo en los costados y árboles arriba (piezas de Blender)
+    arboles = ["Arbol_Grande_1", "Arbol_Rosa_1", "Arbol_Grande_2", "Arbol_Mediano_2", "Arbol_Grande_3"]
+    for i, z in enumerate(range(z0, 0, 16)):
+        deco("Pared_Ladrillo_Zona1", XMIN - 2, z + 8, 270)
+        deco("Pared_Ladrillo_Zona1", XMAX + 2, z + 8, 90)
+        if i % 2 == 0:
+            deco(arboles[i // 2 % 5], XMIN - 12, z + 8, rng.choice([0, 90, 180, 270]), y=32)
+            deco(arboles[(i // 2 + 2) % 5], XMAX + 12, z + 8, rng.choice([0, 90, 180, 270]), y=32)
     # arco hacia la Pradera, con pilares y cristales
     # puerta grande (17/10): 64 de ancho y 36 de alto
     g.poner(XMIN, 0, 0, -32, 40, 8, "Muro")
@@ -951,16 +1023,19 @@ def bioma(g, s, rng, n):
     for z in range(zs - MURO, ze + MURO, V):
         hi = 7 + int(3 * (math.sin(z * 0.035 + n) + 1) / 2) + rng.randint(0, 1)
         hd = 10 + int(3 * (math.sin(z * 0.03 + n * 2) + 1) / 2) + rng.randint(0, 1)
-        g.poner(X0, 0, z, XMIN, hi * V, z + V, b["Risco"])
-        g.poner(X0, hi * V, z, XMIN, hi * V + V, z + V, b["Tapa"])
-        g.poner(XMAX, 0, z, X1, hd * V, z + V, b["Risco"])
-        g.poner(XMAX, hd * V, z, X1, hd * V + V, z + V, b["Tapa"])
+        g.poner(X0, 0, z, XMIN - 16, hi * V, z + V, b["Risco"])
+        g.poner(X0, hi * V, z, XMIN - 16, hi * V + V, z + V, b["Tapa"])
+        g.poner(XMAX + 16, 0, z, X1, hd * V, z + V, b["Risco"])
+        g.poner(XMAX + 16, hd * V, z, X1, hd * V + V, z + V, b["Tapa"])
         alto_izq[z], alto_der[z] = hi * V + V, hd * V + V
-        # escalones en el borde de adentro, para que no sea una pared lisa
-        if zs <= z < ze and rng.random() < 0.35:
-            g.poner(XMIN, 0, z, XMIN + V, rng.randint(1, 3) * V, z + V, b["Risco"])
-        if zs <= z < ze and rng.random() < 0.35:
-            g.poner(XMAX - V, 0, z, XMAX, rng.randint(1, 3) * V, z + V, b["Risco"])
+    # adelante, los riscos de ladrillo en escalones (piezas de 16 de largo, mirando al camino);
+    # en el derecho queda el hueco del túnel de la cámara secreta
+    for z in range(zs, ze, 16):
+        deco("Risco_Escalon_Zona%d" % n, XMIN - 8, z + 8, 270)
+        if abs(z + 8 - (zd + 2)) > 14:
+            deco("Risco_Escalon_Zona%d" % n, XMAX + 8, z + 8, 90)
+        else:
+            g.poner(XMAX, 0, z, XMAX + 16, 28, z + 16, b["Risco"])
     s.marcar(XMIN, zs, XMIN + 6, ze)
     s.marcar(XMAX - 6, zs, XMAX, ze)
     # muro con portón al final del bioma (el último no tiene portón)
@@ -975,6 +1050,10 @@ def bioma(g, s, rng, n):
         marcador("PuertaZona", (0, 10, ze + 4), (24, 20, 2), 0, Zona=n + 1)
         # cartel de dificultad arriba del portón (plan v5)
         marcador("Cartel", (0, 34, ze - 1), (26, 6, 1), 0, Texto=DIFICULTAD[n + 1], SinPoste=True)
+    for x in (-80, -76, -60, -44, -28, 28, 44, 60, 76, 80):
+        deco("Pared_Ladrillo_Zona%d" % n, x, ze - 2, 0)
+        if n < 5:
+            deco("Pared_Ladrillo_Zona%d" % (n + 1), x, ze + MURO + 2, 180)
     s.marcar(XMIN, ze - 8, XMAX, ze)
     s.marcar(-18, zs, 18, ze)  # el camino al portón queda libre
 
@@ -985,15 +1064,14 @@ def bioma(g, s, rng, n):
     volcan_c = (XMIN + 32, ze - 44)
     portal = (XMIN + 18, ze - 30)
     if n == 4:
-        volcan(g, volcan_c[0], volcan_c[1], rng)
+        deco("Volcan", volcan_c[0], volcan_c[1], 0)
         s.marcar(volcan_c[0] - 32, volcan_c[1] - 32, volcan_c[0] + 32, volcan_c[1] + 32)
         cx = volcan_c[0]
         rio(g, s, [(cx + 6, volcan_c[1] - 30), (cx + 6, zs + 136), (XMAX - 30, zs + 136), (XMAX - 30, zs + 128)])
         rio(g, s, [(XMIN + 6, zs + 50), (-40, zs + 50), (-40, zs + 54), (-22, zs + 54)])
     if n == 2:
         px, pz = portal
-        duna(g, px + 28, pz, rng, 16, 16, viento=-1)
-        g.poner(px - 8, 0, pz - 12, px + 10, 24, pz + 12, None)
+        deco("Duna_Grande", px + 30, pz, 90)
         for dz in (-8, 6):  # pilares de arenisca con cristales del prisma
             g.poner(px - 2, 0, pz + dz, px + 2, 14, pz + dz + 2, "Arenisca")
             g.poner(px - 2, 14, pz + dz, px + 2, 18, pz + dz + 2, "PrismaRosa" if dz < 0 else "PrismaCian")
@@ -1030,11 +1108,7 @@ def bioma(g, s, rng, n):
 
     # decoración de cada bioma y rocas con los colores de sus 3 variantes de geoda
     DECORACION[n](g, s, rng, n, area, zs, ze, zd)
-    for estilo in ROCAS[n]:
-        for _ in range(3):
-            p = lugar(s, rng, area, 8)
-            if p:
-                roca(g, p[0], p[1], rng, estilo)
+    poner_deco(s, rng, area, ["Losas_%s_Zona%d" % (t, n) for t in ("Chica", "Mediana", "Larga")], 9)
     cimas(g, rng, n, zs, ze, alto_izq, alto_der)
 
 
@@ -1093,151 +1167,76 @@ def lejos_de_la_puerta(n, zd):
 
 
 def deco_pradera(g, s, rng, n, area, zs, ze, zd):
-    colores = ["FlorRosa", "FlorAmarilla", "FlorBlanca", "FlorRoja"]
-    for _ in range(12):
-        p = lugar(s, rng, area, 10)
-        if p:
-            arbol(g, p[0], p[1], rng)
-    for _ in range(6):
-        p = lugar(s, rng, area, 10)
-        if p:
-            pino(g, p[0], p[1], rng)
-    for _ in range(14):
-        p = lugar(s, rng, area, 4)
-        if p:
-            arbusto(g, p[0], p[1], rng, colores if rng.random() < 0.6 else ())
-    for _ in range(12):
-        p = lugar(s, rng, area, 6)
-        if p:
-            flores(g, p[0], p[1], rng, colores)
-    for _ in range(8):
-        p = lugar(s, rng, area, 6)
-        if p:
-            racimo(g, p[0], p[1], rng, BIOMAS[n]["Cristal"])
+    poner_deco(s, rng, area, ["Arbol_Grande_1", "Arbol_Grande_2", "Arbol_Grande_3"], 6)
+    poner_deco(s, rng, area, ["Arbol_Mediano_1", "Arbol_Rosa_1", "Arbol_Mediano_2", "Arbol_Rosa_2", "Arbol_Mediano_3", "Arbol_Rosa_3"], 10)
+    poner_deco(s, rng, area, ["Arbol_Seco_1", "Arbol_Seco_2", "Arbol_Seco_3"], 3)
+    poner_deco(s, rng, area, ["Arbusto_1", "Arbusto_2", "Arbusto_3"], 12)
+    poner_deco(s, rng, area, "Racimo_Cuarzo", 5)
 
 
 def deco_dunas(g, s, rng, n, area, zs, ze, zd):
-    p = lugar(s, rng, area, 28, intentos=400, rz=12)
-    if p:
-        oasis(g, s, p[0], p[1], rng)
-    for _ in range(6):
-        largo, alto = rng.choice([12, 14]), rng.choice([8, 12])
-        p = lugar(s, rng, area, largo + 2 + par((alto // 4 - 1) * 3), intentos=300, rz=12)
-        if p:
-            duna(g, p[0], p[1], rng, largo, alto, viento=rng.choice([-1, 1]))
-    for _ in range(3):
-        p = lugar(s, rng, area, 16, intentos=300, rz=6)
-        if p:
-            arco(g, p[0], p[1], rng)
-    for _ in range(6):
-        p = lugar(s, rng, area, 12)
-        if p:
-            palmera(g, p[0], p[1], rng)
-    for _ in range(12):
-        p = lugar(s, rng, area, 10)
-        if p:
-            cactus(g, p[0], p[1], rng)
-    for _ in range(8):
-        p = lugar(s, rng, area, 4)
-        if p:
-            cactus_bola(g, p[0], p[1], rng)
-    for _ in range(6):
-        p = lugar(s, rng, area, 6)
-        if p:
-            racimo(g, p[0], p[1], rng, BIOMAS[n]["Cristal"])
+    poner_deco(s, rng, area, "Piramide", 1, intentos=600)
+    poner_deco(s, rng, area, ["Duna_Mediana", "Duna_Chica"], 6, intentos=300)
+    poner_deco(s, rng, area, ["Cactus_Grande", "Cactus_Mediano", "Cactus_Chico"], 14)
+    poner_deco(s, rng, area, ["Arbol_Seco_Desierto_1", "Arbol_Seco_Desierto_2"], 4)
+    poner_deco(s, rng, area, "Esqueleto", 2)
+    poner_deco(s, rng, area, "Racimo_Ambar", 6)
 
 
 def deco_glaciar(g, s, rng, n, area, zs, ze, zd):
-    p = lugar(s, rng, area, 22, intentos=400, rz=12)
-    if p:
-        lago_helado(g, p[0], p[1], rng)
-    for _ in range(14):
-        p = lugar(s, rng, area, 10)
-        if p:
-            pino(g, p[0], p[1], rng, nevado=True)
-    for _ in range(12):
-        p = lugar(s, rng, area, 6)
-        if p:
-            pico_hielo(g, p[0], p[1], rng)
-    for _ in range(10):
-        p = lugar(s, rng, area, 8)
-        if p:
-            ventisquero(g, p[0], p[1], rng)
-    for _ in range(6):
-        p = lugar(s, rng, area, 6)
-        if p:
-            racimo(g, p[0], p[1], rng, BIOMAS[n]["Cristal"])
+    poner_deco(s, rng, area, "Lago_Congelado", 1, intentos=400)
+    poner_deco(s, rng, area, ["Monte_Nevado_Grande", "Monte_Nevado_Mediano", "Monte_Nevado_Chico"], 3, intentos=300)
+    poner_deco(s, rng, area, ["Pino_Nevado_Grande", "Pino_Nevado_Chico"], 12)
+    poner_deco(s, rng, area, "Pico_Hielo", 8)
+    poner_deco(s, rng, area, ["Escalones_Nevados_1", "Escalones_Nevados_2"], 3)
+    poner_deco(s, rng, area, "Hielo_Suelto", 8)
 
 
 def deco_volcan(g, s, rng, n, area, zs, ze, zd):
-    for _ in range(5):
-        p = lugar(s, rng, area, 10)
-        if p:
-            charco_lava(g, p[0], p[1], rng)
-    for _ in range(10):
-        p = lugar(s, rng, area, 6)
-        if p:
-            arbol_quemado(g, p[0], p[1], rng)
-    for _ in range(7):
-        p = lugar(s, rng, area, 8)
-        if p:
-            basalto(g, p[0], p[1], rng)
-    for _ in range(8):
-        p = lugar(s, rng, area, 6)
-        if p:
-            racimo(g, p[0], p[1], rng, BIOMAS[n]["Cristal"])
+    poner_deco(s, rng, area, ["Roca_Lava_Grande", "Roca_Lava_Mediana", "Roca_Lava_Chica"], 6)
+    poner_deco(s, rng, area, "Arbol_Quemado", 8)
+    poner_deco(s, rng, area, ["Columnas_Basalto_1", "Columnas_Basalto_2"], 6)
 
 
 def deco_abismo(g, s, rng, n, area, zs, ze, zd):
     lejos = lejos_de_la_puerta(n, zd)
-    cristales = ["CristalEstelar", "CristalNebulosa", "CristalMeteorito"]
-    for i in range(12):
-        p = lugar(s, rng, area, 6, valido=lejos)
-        if p:
-            columna_cristal(g, p[0], p[1], rng, cristales[i % 3])
-    for _ in range(10):
-        p = lugar(s, rng, area, 10, valido=lejos)
-        if p:
-            hongos(g, p[0], p[1], rng)
-    for _ in range(6):
-        p = lugar(s, rng, area, 6, valido=lejos)
-        if p:
-            racimo(g, p[0], p[1], rng, BIOMAS[n]["Cristal"])
-    for _ in range(16):  # puntitos que brillan en el piso
-        p = lugar(s, rng, area, 2, valido=lejos)
-        if p:
-            g.poner(p[0], -2, p[1], p[0] + 2, 0, p[1] + 2, rng.choice(cristales))
+    poner_deco(s, rng, area, "Arbol_Nebuloso", 3, valido=lejos)
+    poner_deco(s, rng, area, ["Columna_Estelar_Alta", "Columna_Estelar_Baja"], 6, valido=lejos)
+    poner_deco(s, rng, area, "Cristales_Abismo", 8, valido=lejos)
+    poner_deco(s, rng, area, ["Roca_Meteorito_Grande", "Roca_Meteorito_Chico"], 5, valido=lejos)
     # islas que flotan (no ocupan piso)
-    for i in range(8):
-        x = rng.randrange(XMIN + 20, XMAX - 40, 2)
+    islas = ["Isla_Flotante_Chica", "Isla_Flotante_Mediana", "Isla_Flotante_Grande"]
+    for i in range(6):
+        x = rng.randrange(XMIN + 20, XMAX - 20, 2)
         z = rng.randrange(zs + 20, ze - 24, 2)
         if lejos(x, z):
-            isla(g, x, 32 + (i % 3) * 6, z, rng, cristales[i % 3])
+            deco(islas[i % 3], x, z, rng.choice([0, 90, 180, 270]), y=36 + (i % 3) * 8)
 
 
 DECORACION = {1: deco_pradera, 2: deco_dunas, 3: deco_glaciar, 4: deco_volcan, 5: deco_abismo}
 
 
+CIMAS = {
+    1: ["Arbol_Grande_1", "Arbol_Rosa_2", "Arbol_Grande_3", "Arbol_Mediano_1"],
+    2: ["Cactus_Grande", "Arbol_Seco_Desierto_1", "Cactus_Mediano", "Arbol_Seco_Desierto_2"],
+    3: ["Pino_Nevado_Grande", "Pino_Nevado_Chico"],
+    4: ["Columnas_Basalto_1", "Arbol_Quemado", "Columnas_Basalto_2"],
+    5: ["Columna_Estelar_Baja", "Arbol_Nebuloso", "Cristales_Abismo"],
+}
+
+
 def cimas(g, rng, n, zs, ze, alto_izq, alto_der):
-    """Decoración arriba de los riscos (se ve desde el bioma): árboles, cactus, pinos nevados,
-    columnas de basalto o de cristal."""
-    for lado, x, altos in ((-1, (X0 + XMIN) // 2, alto_izq), (1, XMAX + 30, alto_der)):
-        for i in range(4):
-            z = par(zs + 30 + i * 60 + rng.randint(-8, 8))
+    """Piezas arriba de los riscos (se ven desde el bioma, como en las referencias), y en el cielo
+    un arcoíris y nubes de bloques."""
+    for lado, x, altos in ((-1, (X0 + XMIN - 16) // 2, alto_izq), (1, XMAX + 30, alto_der)):
+        for i in range(6):
+            z = par(zs + 20 + i * 40 + rng.randint(-6, 6))
             filas = [altos[f] for f in altos if z - 8 <= f <= z + 8]
-            if not filas:
-                continue
-            with g.subir(min(filas)):
-                if n == 1:
-                    arbol(g, x, z, rng) if i % 2 == 0 else pino(g, x, z, rng)
-                elif n == 2:
-                    cactus(g, x, z, rng) if i % 2 == 0 else palmera(g, x, z, rng)
-                elif n == 3:
-                    pino(g, x, z, rng, nevado=True)
-                elif n == 4:
-                    basalto(g, x, z, rng)
-                else:
-                    columna_cristal(g, x, z, rng, ["CristalEstelar", "CristalNebulosa", "CristalMeteorito"][i % 3])
+            if filas:
+                deco(CIMAS[n][i % len(CIMAS[n])], x, z, rng.choice([0, 90, 180, 270]), y=min(filas))
+    deco("Arcoiris", rng.choice([-1, 1]) * 40, ze - 60, 0, y=70)
+    for i in range(2):
+        deco("Nube_Bloques", rng.randint(-60, 60), zs + 60 + i * 110, rng.choice([0, 180]), y=80 + i * 12)
 
 
 # --- Dimensión Prisma ------------------------------------------------------------------------------

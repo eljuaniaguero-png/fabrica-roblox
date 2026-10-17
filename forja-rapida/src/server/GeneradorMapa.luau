@@ -7,6 +7,8 @@
 --              portales, el cartel del Museo y luces de las cámaras secretas).
 --              Grupo 4: la Ruleta de Mascotas, la puerta del Santuario del Renacer y los
 --              carteles que abren un menú (Misiones, Renacer).
+--   Deco       piezas de Blender (Deco_Comun y Deco_Zona1..5 en ServerStorage.Modelos.Deco):
+--              árboles, cactus, paredes de ladrillo, riscos, volcán... pintadas con DecoColores.
 -- Si ya hay un workspace.Mapa (por ejemplo armado a mano en Studio), no hace nada.
 
 local CollectionService = game:GetService("CollectionService")
@@ -16,6 +18,7 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local ServerStorage = game:GetService("ServerStorage")
 
 local GameConfig = require(ReplicatedStorage.Shared.GameConfig)
+local DecoColores = require(script.Parent.DecoColores)
 local MapaDatos = require(script.Parent.MapaDatos)
 
 local GeneradorMapa = {}
@@ -556,6 +559,56 @@ local function armarPieza(m: Marcador, molde: Instance, carpeta: Instance)
 	end
 end
 
+-- Decoración (Deco_Comun y Deco_Zona1..5) ------------------------------------------------------
+
+-- Busca la pieza por nombre en la carpeta Deco (el paquete puede traer grupos intermedios).
+local function moldeDeco(carpeta: Instance, nombre: string): Model?
+	local m = carpeta:FindFirstChild(nombre, true)
+	return if m and m:IsA("Model") then m else nil
+end
+
+-- Copia la pieza, la agranda, la apoya con el centro de su base en el marcador y la pinta.
+local function armarDeco(m: Marcador, carpetaDeco: Instance, padre: Instance)
+	local nombre = m.Atributos.Nombre
+	if typeof(nombre) ~= "string" then
+		return
+	end
+	local molde = moldeDeco(carpetaDeco, nombre)
+	if not molde then
+		return
+	end
+	local escala = if typeof(m.Atributos.Escala) == "number" then m.Atributos.Escala else 1
+	local choca = m.Atributos.Choca == true
+	local copia = molde:Clone()
+	copia:ScaleTo(copia:GetScale() * GameConfig.Modelos.EscalaDeco * escala)
+	-- el FBX llega acostado: se para girándolo en x (lo de arriba queda en +z de la pieza)
+	copia:PivotTo(CFrame.new())
+	local caja, tam = copia:GetBoundingBox()
+	local base = Vector3.new(caja.X, caja.Y, caja.Z + tam.Z / 2)
+	local parar = CFrame.Angles(math.rad(GameConfig.Modelos.GiroDeco), 0, 0)
+	local cf = CFrame.new(m.Pos[1], m.Pos[2], m.Pos[3]) * CFrame.Angles(0, math.rad(m.Giro), 0)
+	copia:PivotTo(cf * parar * CFrame.new(-base))
+	for _, d in copia:GetDescendants() do
+		if d:IsA("BasePart") then
+			d.Anchored = true
+			d.CanCollide = choca
+			d.CanTouch = false
+			d.CanQuery = choca
+			local c = DecoColores[(d.Name:gsub("%.%d+$", ""))]
+			if c then
+				d.Color = Color3.fromHex(c.Color)
+				d.Material = if c.Neon then Enum.Material.Neon else Enum.Material.SmoothPlastic
+				d.Transparency = c.Transparencia
+				if c.Neon or c.Transparencia > 0 then
+					d.CastShadow = false
+				end
+			end
+		end
+	end
+	copia.Name = nombre
+	copia.Parent = padre
+end
+
 -- Si están las piezas, el Spawn queda invisible arriba de la plataforma y la ruleta usa la
 -- flecha de la pieza en vez del puntero.
 local function ajustarConPiezas(lugares: Instance, piezas: Instance)
@@ -597,11 +650,22 @@ function GeneradorMapa.armar(): boolean
 	local piezas = Instance.new("Folder")
 	piezas.Name = "Piezas"
 	piezas.Parent = mapa
-	for _, m in MapaDatos.Marcadores :: { Marcador } do
-		if m.Tipo ~= "Pieza" then
+	local carpetaDeco = modelos and modelos:FindFirstChild(GameConfig.Modelos.Deco)
+	local deco = Instance.new("Folder")
+	deco.Name = "Deco"
+	deco.Parent = mapa
+	for i, m in MapaDatos.Marcadores :: { Marcador } do
+		if m.Tipo == "Deco" then
+			if carpetaDeco then
+				armarDeco(m, carpetaDeco, deco)
+			end
+		elseif m.Tipo ~= "Pieza" then
 			armarMarcador(m, lugares)
 		elseif molde then
 			armarPieza(m, molde, piezas)
+		end
+		if i % 200 == 0 then
+			task.wait() -- que el servidor no se trabe armando cientos de piezas
 		end
 	end
 	ajustarConPiezas(lugares, piezas)

@@ -2595,6 +2595,11 @@ local GameConfig = {
 		Carpeta = "Modelos",
 		Lobby = "Lobby",
 		EscalaLobby = 1 / 0.28,
+		-- Decoración del mapa (Deco_Comun y Deco_Zona1..5): carpeta adentro de Modelos. Las piezas
+		-- se buscan por nombre en cualquier nivel; los colores salen de DecoColores.luau.
+		Deco = "Deco",
+		EscalaDeco = 1 / 0.28,
+		GiroDeco = 90, -- grados en x: Importar 3D deja las piezas de decoración acostadas
 		-- El FBX llega sin colores: cada malla se pinta con el de lobby.py (pieza -> malla -> color).
 		-- Las de BrillanLobby van en Neon (las alfombras con 0,4 de transparencia).
 		ColoresLobby = {
