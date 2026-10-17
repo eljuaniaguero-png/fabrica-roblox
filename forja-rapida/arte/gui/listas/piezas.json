@@ -1,0 +1,202 @@
+{
+ "BotonBlanco": {
+  "Ancho": 389,
+  "Alto": 160,
+  "Corte": [
+   46,
+   64,
+   343,
+   96
+  ],
+  "Tinte": true
+ },
+ "BotonVerde": {
+  "Ancho": 352,
+  "Alto": 160,
+  "Corte": [
+   46,
+   64,
+   306,
+   96
+  ],
+  "Tinte": false
+ },
+ "BotonAmarillo": {
+  "Ancho": 405,
+  "Alto": 160,
+  "Corte": [
+   46,
+   64,
+   359,
+   96
+  ],
+  "Tinte": false
+ },
+ "BotonNaranja": {
+  "Ancho": 405,
+  "Alto": 160,
+  "Corte": [
+   46,
+   64,
+   359,
+   96
+  ],
+  "Tinte": false
+ },
+ "BotonRojo": {
+  "Ancho": 405,
+  "Alto": 160,
+  "Corte": [
+   46,
+   64,
+   359,
+   96
+  ],
+  "Tinte": false
+ },
+ "BotonRosa": {
+  "Ancho": 405,
+  "Alto": 160,
+  "Corte": [
+   46,
+   64,
+   359,
+   96
+  ],
+  "Tinte": false
+ },
+ "BotonVioleta": {
+  "Ancho": 405,
+  "Alto": 160,
+  "Corte": [
+   46,
+   64,
+   359,
+   96
+  ],
+  "Tinte": false
+ },
+ "BotonAzul": {
+  "Ancho": 405,
+  "Alto": 160,
+  "Corte": [
+   46,
+   64,
+   359,
+   96
+  ],
+  "Tinte": false
+ },
+ "BotonCian": {
+  "Ancho": 405,
+  "Alto": 160,
+  "Corte": [
+   46,
+   64,
+   359,
+   96
+  ],
+  "Tinte": false
+ },
+ "BotonGris": {
+  "Ancho": 405,
+  "Alto": 160,
+  "Corte": [
+   46,
+   64,
+   359,
+   96
+  ],
+  "Tinte": false
+ },
+ "Cabecera": {
+  "Ancho": 438,
+  "Alto": 160,
+  "Corte": [
+   46,
+   64,
+   392,
+   96
+  ],
+  "Tinte": true
+ },
+ "Pildora": {
+  "Ancho": 438,
+  "Alto": 160,
+  "Corte": [
+   82,
+   64,
+   356,
+   96
+  ],
+  "Tinte": true
+ },
+ "BarraFondo": {
+  "Ancho": 438,
+  "Alto": 160,
+  "Corte": [
+   82,
+   64,
+   356,
+   96
+  ],
+  "Tinte": false
+ },
+ "BarraRelleno": {
+  "Ancho": 438,
+  "Alto": 160,
+  "Corte": [
+   82,
+   64,
+   356,
+   96
+  ],
+  "Tinte": true
+ },
+ "Panel": {
+  "Ancho": 256,
+  "Alto": 256,
+  "Tinte": false,
+  "Corte": [
+   48,
+   48,
+   208,
+   208
+  ],
+  "Escala": 0.583
+ },
+ "Baldosa": {
+  "Ancho": 256,
+  "Alto": 256,
+  "Tinte": true,
+  "Corte": [
+   48,
+   48,
+   208,
+   208
+  ],
+  "Escala": 0.438
+ },
+ "MarcoDestacado": {
+  "Ancho": 256,
+  "Alto": 256,
+  "Tinte": false,
+  "Corte": [
+   48,
+   48,
+   208,
+   208
+  ],
+  "Escala": 0.5
+ },
+ "Cerrar": {
+  "Ancho": 256,
+  "Alto": 256,
+  "Tinte": false
+ },
+ "Globito": {
+  "Ancho": 128,
+  "Alto": 128,
+  "Tinte": false
+ }
+}

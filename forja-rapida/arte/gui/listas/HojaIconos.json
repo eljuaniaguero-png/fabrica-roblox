@@ -5,31 +5,39 @@
    0,
    0
   ],
-  "Fuerza": [
+  "Trebol": [
    128,
    0
   ],
-  "Trebol": [
+  "Fuerza": [
    256,
    0
   ],
-  "Lava": [
+  "Esencia": [
    384,
    0
   ],
-  "Neon": [
+  "Banco": [
    512,
    0
   ],
-  "Midas": [
+  "Engranaje": [
    640,
    0
   ],
-  "Vacio": [
+  "Tienda": [
+   768,
+   0
+  ],
+  "Mochila": [
+   896,
+   0
+  ],
+  "Libro": [
    0,
    128
   ],
-  "Chispa": [
+  "Corona": [
    128,
    128
   ],
@@ -37,73 +45,149 @@
    256,
    128
   ],
-  "Corona": [
-   384,
-   128
-  ],
   "Reloj": [
-   512,
-   128
-  ],
-  "Jefe": [
-   640,
-   128
-  ],
-  "Cristal": [
-   0,
-   256
-  ],
-  "Gema": [
-   128,
-   256
-  ],
-  "Tienda": [
-   256,
-   256
-  ],
-  "Mochila": [
    384,
-   256
+   128
   ],
-  "Libro": [
+  "Mision": [
    512,
-   256
+   128
   ],
-  "Engranaje": [
+  "Mascota": [
    640,
-   256
+   128
   ],
-  "Banco": [
+  "Renacer": [
+   768,
+   128
+  ],
+  "Amuleto": [
+   896,
+   128
+  ],
+  "Candado": [
    0,
-   384
+   256
   ],
   "Pico": [
    128,
+   256
+  ],
+  "Gema": [
+   256,
+   256
+  ],
+  "Cristal": [
+   384,
+   256
+  ],
+  "Chispa": [
+   512,
+   256
+  ],
+  "Lava": [
+   640,
+   256
+  ],
+  "Neon": [
+   768,
+   256
+  ],
+  "Midas": [
+   896,
+   256
+  ],
+  "Vacio": [
+   0,
    384
   ],
-  "Candado": [
+  "Jefe": [
+   128,
+   384
+  ],
+  "Llave": [
    256,
    384
   ],
-  "Amuleto": [
+  "Cofre": [
    384,
    384
   ],
-  "Mascota": [
+  "Altar": [
    512,
    384
   ],
-  "Mision": [
+  "Portal": [
    640,
    384
   ],
-  "Renacer": [
+  "Ruleta": [
+   768,
+   384
+  ],
+  "Arbol": [
+   896,
+   384
+  ],
+  "Pico_Madera": [
    0,
    512
   ],
-  "Esencia": [
+  "Pico_Piedra": [
    128,
    512
+  ],
+  "Pico_Hierro": [
+   256,
+   512
+  ],
+  "Pico_Oro": [
+   384,
+   512
+  ],
+  "Pico_Cosmico": [
+   512,
+   512
+  ],
+  "Amuleto_Trebol": [
+   640,
+   512
+  ],
+  "Amuleto_Herradura": [
+   768,
+   512
+  ],
+  "Amuleto_Estrella": [
+   896,
+   512
+  ],
+  "Amuleto_Dragon": [
+   0,
+   640
+  ],
+  "Amuleto_Corona": [
+   128,
+   640
+  ],
+  "Gema_Comun": [
+   256,
+   640
+  ],
+  "Gema_Rara": [
+   384,
+   640
+  ],
+  "Gema_Epica": [
+   512,
+   640
+  ],
+  "Gema_Legendaria": [
+   640,
+   640
+  ],
+  "Gema_Mitica": [
+   768,
+   640
   ]
  }
 }
