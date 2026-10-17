@@ -66,7 +66,7 @@ import modelos as M  # noqa: E402
 import decoracion as D  # noqa: E402
 
 # piezas que Juani ya aprobó: son las que van a Lobby.fbx
-APROBADAS = ["Puesto_Vender", "Tienda_Forja", "Pedestal_Exhibicion"]
+APROBADAS = ["Puesto_Vender", "Tienda_Forja", "Pedestal_Exhibicion", "Parcela_Exhibicion"]
 
 COLORES_PUESTO = {
     "ladrillo": "#9A5B3A",  # marrón ladrillo
@@ -615,6 +615,8 @@ def exportar():
     for pieza in APROBADAS:
         if pieza == "Pedestal_Exhibicion":
             armados += [(f"Pedestal_{v}", pedestal(mats_pedestal(v), v)[0]) for v in PEDESTALES]
+        elif pieza == "Parcela_Exhibicion":  # sin los pedestales de muestra del render
+            armados.append((pieza, parcela(materiales("Parcela", COLORES_PARCELA))[0]))
         else:
             armar_pieza, mats_de = PIEZAS[pieza][:2]
             armados.append((pieza, armar_pieza(mats_de())[0]))
