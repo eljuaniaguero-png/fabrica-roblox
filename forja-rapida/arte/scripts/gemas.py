@@ -27,13 +27,13 @@ from mathutils import Matrix, Vector  # noqa: E402
 ICONOS = m.ARTE / "iconos" / "gemas"
 
 # Solo las piedras que Juani ya aprobó entran al FBX de su zona
-APROBADAS = {"Cuarzo", "Jaspe", "Amatista", "AgataMusgosa", "Esmeralda", "TurmalinaRosa", "CorazondePradera", "DiamanteFloral", "JadeArcoiris", "TreboldeCristal", "AuroraVerde", "SemilladelMundo", "Arenisca", "Ambar", "Citrino", "OjodeTigre", "TopacioImperial", "Cornalina", "SoldelDesierto", "EscarabajodeOro", "LagrimadeFaraon", "Espejismo", "CoronadelSol", "RelojdeArenaEterno"}
+APROBADAS = {"Cuarzo", "Jaspe", "Amatista", "AgataMusgosa", "Esmeralda", "TurmalinaRosa", "CorazondePradera", "DiamanteFloral", "JadeArcoiris", "TreboldeCristal", "AuroraVerde", "SemilladelMundo", "Arenisca", "Ambar", "Citrino", "OjodeTigre", "TopacioImperial", "Cornalina", "SoldelDesierto", "EscarabajodeOro", "LagrimadeFaraon", "Espejismo", "CoronadelSol", "RelojdeArenaEterno", "CristaldeRoca", "PiedraEscarcha", "Aguamarina", "Celestina", "Zafiro", "PiedraLuna", "CorazondeHielo", "DiamantePolar", "AuroraBoreal", "EstrelladeEscarcha", "CopoEterno", "TronodeHielo"}
 
 # Piedras con alto propio (studs) y pivote en el centro de la base en vez del centro de la caja
-ALTO = {"Cuarzo": 2.5, "Jaspe": 2.5, "Amatista": 3.0, "AgataMusgosa": 3.0, "Esmeralda": 3.5, "TurmalinaRosa": 3.5, "CorazondePradera": 4.0, "DiamanteFloral": 4.0, "JadeArcoiris": 4.5, "TreboldeCristal": 4.5, "AuroraVerde": 5.0, "SemilladelMundo": 5.0, "Arenisca": 2.5, "Ambar": 2.5, "Citrino": 3.0, "OjodeTigre": 3.0, "TopacioImperial": 3.5, "Cornalina": 3.5, "SoldelDesierto": 4.0, "EscarabajodeOro": 4.0, "LagrimadeFaraon": 4.5, "Espejismo": 4.5, "CoronadelSol": 5.0, "RelojdeArenaEterno": 5.0}
-PIVOTE_BASE = {"Cuarzo", "Jaspe", "Amatista", "AgataMusgosa", "Esmeralda", "TurmalinaRosa", "CorazondePradera", "DiamanteFloral", "JadeArcoiris", "TreboldeCristal", "AuroraVerde", "SemilladelMundo", "Arenisca", "Ambar", "Citrino", "OjodeTigre", "TopacioImperial", "Cornalina", "SoldelDesierto", "EscarabajodeOro", "LagrimadeFaraon", "Espejismo", "CoronadelSol", "RelojdeArenaEterno"}
+ALTO = {"Cuarzo": 2.5, "Jaspe": 2.5, "Amatista": 3.0, "AgataMusgosa": 3.0, "Esmeralda": 3.5, "TurmalinaRosa": 3.5, "CorazondePradera": 4.0, "DiamanteFloral": 4.0, "JadeArcoiris": 4.5, "TreboldeCristal": 4.5, "AuroraVerde": 5.0, "SemilladelMundo": 5.0, "Arenisca": 2.5, "Ambar": 2.5, "Citrino": 3.0, "OjodeTigre": 3.0, "TopacioImperial": 3.5, "Cornalina": 3.5, "SoldelDesierto": 4.0, "EscarabajodeOro": 4.0, "LagrimadeFaraon": 4.5, "Espejismo": 4.5, "CoronadelSol": 5.0, "RelojdeArenaEterno": 5.0, "CristaldeRoca": 2.5, "PiedraEscarcha": 2.5, "Aguamarina": 3.0, "Celestina": 3.0, "Zafiro": 3.5, "PiedraLuna": 3.5, "CorazondeHielo": 4.0, "DiamantePolar": 4.0, "AuroraBoreal": 4.5, "EstrelladeEscarcha": 4.5, "CopoEterno": 5.0, "TronodeHielo": 5.0}
+PIVOTE_BASE = {"Cuarzo", "Jaspe", "Amatista", "AgataMusgosa", "Esmeralda", "TurmalinaRosa", "CorazondePradera", "DiamanteFloral", "JadeArcoiris", "TreboldeCristal", "AuroraVerde", "SemilladelMundo", "Arenisca", "Ambar", "Citrino", "OjodeTigre", "TopacioImperial", "Cornalina", "SoldelDesierto", "EscarabajodeOro", "LagrimadeFaraon", "Espejismo", "CoronadelSol", "RelojdeArenaEterno", "CristaldeRoca", "PiedraEscarcha", "Aguamarina", "Celestina", "Zafiro", "PiedraLuna", "CorazondeHielo", "DiamantePolar", "AuroraBoreal", "EstrelladeEscarcha", "CopoEterno", "TronodeHielo"}
 # Topes de triángulos propios (pisan el de la rareza)
-TOPE = {"Esmeralda": 4000, "TurmalinaRosa": 4000, "CorazondePradera": 6000, "DiamanteFloral": 6000, "JadeArcoiris": 8000, "TreboldeCristal": 8000, "AuroraVerde": 10000, "SemilladelMundo": 10000, "TopacioImperial": 4000, "Cornalina": 4000, "SoldelDesierto": 6000, "EscarabajodeOro": 6000, "LagrimadeFaraon": 8000, "Espejismo": 8000, "CoronadelSol": 10000, "RelojdeArenaEterno": 10000}
+TOPE = {"Esmeralda": 4000, "TurmalinaRosa": 4000, "CorazondePradera": 6000, "DiamanteFloral": 6000, "JadeArcoiris": 8000, "TreboldeCristal": 8000, "AuroraVerde": 10000, "SemilladelMundo": 10000, "TopacioImperial": 4000, "Cornalina": 4000, "SoldelDesierto": 6000, "EscarabajodeOro": 6000, "LagrimadeFaraon": 8000, "Espejismo": 8000, "CoronadelSol": 10000, "RelojdeArenaEterno": 10000, "CristaldeRoca": 1500, "PiedraEscarcha": 1500, "Aguamarina": 2500, "Celestina": 2500, "Zafiro": 4000, "PiedraLuna": 4000, "CorazondeHielo": 6000, "DiamantePolar": 6000, "AuroraBoreal": 8000, "EstrelladeEscarcha": 8000, "CopoEterno": 10000, "TronodeHielo": 10000}
 
 # Alto (studs) y tope de triángulos por rareza
 RAREZAS = {
@@ -820,6 +820,7 @@ def tallada(nombre, d):
         "RocaOscura": ("#5D626C", 0.85, None, 0.0, 1),
         "Pasto": ("#4E9A3A", 0.8, None, 0.0, 1),
     })
+    colores.update(d.get("base", {}))  # roca y pasto de otra zona
     return cubitos(nombre, celdas, colores)
 
 
@@ -910,7 +911,7 @@ def turmalina_rosa(nombre):
     return tallada(nombre, TALLADAS_CUBITOS["TurmalinaRosa"])
 
 
-def corazon_de_pradera(nombre):
+def corazon_de_pradera(nombre, paleta=None, extra=None):
     """Gema legendaria de cubitos: corazón de vidrio verde parado (3 tonos, más claro arriba, con
     los bordes en escalones como facetas claras) y un corazón que brilla fuerte adentro (malla
     aparte). Lo rodea un marco de oro con remaches en relieve, hojitas doradas abajo y entre los
@@ -1033,6 +1034,9 @@ def corazon_de_pradera(nombre):
         "RocaOscura": ("#5D626C", 0.85, None, 0.0, 1),
         "Pasto": ("#4E9A3A", 0.8, None, 0.0, 1),
     }
+    colores.update(paleta or {})  # la misma forma con colores de otra zona
+    if extra:
+        extra(celdas)
     return cubitos(nombre, celdas, colores)
 
 
@@ -2379,6 +2383,560 @@ def reloj_de_arena_eterno(nombre):
     return celestial(nombre, gema, colores)
 
 
+# ---------------------------------------------------------------------------------------------
+# Moldes para Comunes, Raras y Legendarias (zona 3 en adelante)
+
+
+def comun(nombre, colores, semilla, velo=0.0, escarcha=0.0, tope=11):
+    """Molde común: trozo de mineral en escalones (Oscuro, Medio, Claro: más claro arriba) sobre una
+    mancha de suelo (Suelo, SueloOscuro), con 2 grietas (Grieta), 3 cristalitos (uno de Vidrio con
+    Nucleo, dos de Cristal) y piedritas (Piedrita). velo: cubitos sueltos adentro (Velo) que se ven
+    si el cuerpo es transparente; escarcha: parte de los cubitos de arriba pasan a Escarcha."""
+    rng = random.Random(semilla)
+    celdas = {}
+    for x in range(-8, 9):
+        for y in range(-7, 8):
+            r = math.hypot(x / 8, y / 6.5) + (h(x // 2, y // 2, 0, semilla) - 0.5) * 0.35
+            if r < 1:
+                celdas[(x, y, 0)] = "SueloOscuro"
+            if r < 0.85:
+                celdas[(x, y, 1)] = "Suelo" if h(x, y, 1, semilla + 1) > 0.1 else "SueloOscuro"
+    cx1, cy1 = rng.choice((1.8, -1.8)), rng.choice((0.8, -0.8))
+    for z in range(1, tope + 1):
+        t = (z - 1) / (tope - 1)
+        cx, cy = round(cx1 * t), round(cy1 * t)
+        rx, ry = 6.2 * (1 - 0.5 * t**1.6), 5.0 * (1 - 0.45 * t**1.4)
+        for x in range(-8, 9):
+            for y in range(-7, 8):
+                ruido = (h(x // 3, y // 3, z // 2, semilla + 2) - 0.5) * 0.55
+                if ((x - cx) / rx) ** 2 + ((y - cy) / ry) ** 2 > 1 + ruido:
+                    continue
+                if (x if cx1 > 0 else -x) - y > 9 - z * 0.4:  # canto partido
+                    continue
+                v = t + (h(x, y, z, semilla + 3) - 0.5) * 0.1
+                celdas[(x, y, z)] = "Claro" if v > 0.62 else "Medio" if v > 0.3 else "Oscuro"
+    llenas = set(celdas)
+
+    def afuera(c):
+        x, y, z = c
+        return any((x + dx, y + dy, z + dz) not in llenas for (dx, dy, dz), _ in m.CARAS[:5])
+
+    cuerpo = [c for c, k in celdas.items() if k in ("Claro", "Medio", "Oscuro")]
+    piel = sorted(c for c in cuerpo if afuera(c))
+    if velo:
+        for c in cuerpo:
+            if not afuera(c) and h(*c, semilla + 4) < velo:
+                celdas[c] = "Velo"
+    if escarcha:
+        for c in piel:
+            if (c[0], c[1], c[2] + 1) not in llenas and h(*c, semilla + 5) < escarcha:
+                celdas[c] = "Escarcha"
+    for inicio in ((-3, -4, 8), (4, 1, 7)):
+        c = min(piel, key=lambda p: sum((a - b) ** 2 for a, b in zip(p, inicio)))
+        for _ in range(9):
+            celdas[c] = "Grieta"
+            vec = [p for p in piel
+                   if p[2] <= c[2] and sum(abs(a - b) for a, b in zip(p, c)) == 1 and celdas[p] != "Grieta"]
+            if not vec:
+                break
+            c = rng.choice(vec)
+
+    def columna(x0, y0, z0, lado, alto, clave, corre=(0, 0)):
+        for i in range(alto):
+            dx, dy = corre[0] * (i // 2), corre[1] * (i // 2)
+            ancho = lado if i < alto - 1 else max(1, lado - 2)
+            off = (lado - ancho) // 2
+            for a in range(ancho):
+                for b in range(ancho):
+                    celdas[(x0 + dx + off + a, y0 + dy + off + b, z0 + i)] = clave
+
+    columna(round(cx1 * 0.6), -2, 9, 3, 6, "Vidrio", corre=(1 if cx1 > 0 else -1, 0))
+    for i in range(4):
+        celdas[(round(cx1 * 0.6) + 1 + (1 if cx1 > 0 else -1) * (i // 2), -1, 10 + i)] = "Nucleo"
+    columna(-5 if cx1 > 0 else 4, 0, 5, 2, 5, "Cristal", corre=(-1 if cx1 > 0 else 1, 1))
+    columna(3 if cx1 > 0 else -4, -5, 3, 2, 3, "Cristal", corre=(1 if cx1 > 0 else -1, -1))
+    for x, y in ((-7, 2), (6, 4), (-2, 6)):
+        celdas[(x, y, 1)] = celdas[(x, y, 2)] = "Piedrita"
+    return cubitos(nombre, celdas, colores)
+
+
+def rara(nombre, colores, columnas, semilla, sueltos=None):
+    """Molde raro: columnas de vidrio en 3 tonos (Oscuro, Medio, Claro) con aristas (Arista), centro
+    que brilla suave (Centro) y punta escalonada, saliendo de una roca (Roca, RocaOscura, Veta), con
+    cubitos sueltos en la base (Suelto). columnas = [(x, y, medio ancho, alto, incl. x, incl. y)]."""
+    celdas = {}
+    for x in range(-9, 10):
+        for y in range(-8, 9):
+            r = math.hypot(x / 9, y / 8) + (h(x // 2, y // 2, 0, semilla) - 0.5) * 0.3
+            for z in range(3):
+                if r < 1 - z * 0.12:
+                    v = h(x, y, z, semilla + 1)
+                    celdas[(x, y, z)] = "Veta" if v < 0.05 else "RocaOscura" if z == 0 or v < 0.25 else "Roca"
+    for cx, cy, a, alto, ix, iy in columnas:
+        punta = a + 2
+        for i in range(alto):
+            z = 2 + i
+            ox, oy = cx + ix * (i // 5), cy + iy * (i // 5)
+            ancho = a if i < alto - punta else max(0, a - (i - (alto - punta)) // 2 - 1)
+            t = i / (alto - 1)
+            for x in range(-ancho, ancho + 1):
+                for y in range(-ancho, ancho + 1):
+                    c = (ox + x, oy + y, z)
+                    borde = abs(x) == ancho or abs(y) == ancho
+                    if not borde and i < alto - punta:
+                        celdas[c] = "Centro"
+                    elif abs(x) == ancho and abs(y) == ancho and ancho > 0:
+                        celdas[c] = "Arista"
+                    else:
+                        v = t + (h(*c, semilla + 2) - 0.5) * 0.2
+                        celdas[c] = "Claro" if v > 0.62 else "Medio" if v > 0.3 else "Oscuro"
+    for x, y, alto in sueltos or ((-7, -3, 2), (7, 4, 3), (-2, -6, 2), (5, -5, 1), (-6, 5, 2)):
+        z0 = max((z for z in range(3) if (x, y, z) in celdas), default=-1) + 1
+        for z in range(z0, z0 + alto):
+            celdas[(x, y, z)] = "Suelto"
+    return cubitos(nombre, celdas, colores)
+
+
+def _hondo(plano, x, z):
+    """Cuántos pasos hasta salir de una silueta en el plano x-z (máx. 4)."""
+    for k in range(1, 5):
+        if any((x + dx * k, z + dz * k) not in plano for dx, dz in ((1, 0), (-1, 0), (0, 1), (0, -1))):
+            return k
+    return 4
+
+
+def _emblema(celdas, plano, tonos, grosor_max=3, aro="Oro", remache="Remache", cada=4):
+    """Silueta parada en el plano x-z hecha gema: vidrio en degradé (tonos, de abajo hacia arriba),
+    más gruesa al medio, bordes como facetas (Faceta) y núcleo que brilla (Nucleo, malla aparte).
+    Con aro, la rodea un marco de metal con remaches en relieve. Devuelve el marco."""
+    zmin = min(z for _, z in plano)
+    zmax = max(z for _, z in plano)
+    for x, z in plano:
+        k = _hondo(plano, x, z)
+        grosor = min(grosor_max, k)
+        t = (z - zmin) / max(1, zmax - zmin)
+        for y in range(-grosor, grosor + 1):
+            if k >= 3 and abs(y) <= 1:
+                celdas[(x, y, z)] = "Nucleo"
+                continue
+            if abs(y) != grosor and k > 1:
+                continue  # hueco: se ve el núcleo
+            if k == 1:
+                celdas[(x, y, z)] = "Faceta"
+            else:
+                v = t + (h(x, y, z, 91) - 0.5) * 0.25
+                celdas[(x, y, z)] = tonos[max(0, min(len(tonos) - 1, int(v * len(tonos))))]
+    marco = set()
+    if aro:
+        for x, z in plano:
+            for dx, dz in ((1, 0), (-1, 0), (0, 1), (0, -1)):
+                if (x + dx, z + dz) not in plano:
+                    marco.add((x + dx, z + dz))
+        for x, z in marco:
+            for y in (-1, 0, 1):
+                celdas[(x, y, z)] = aro
+            if (x * 3 + z) % cada == 0:
+                celdas[(x, 2, z)] = celdas[(x, -2, z)] = remache
+    return marco
+
+
+def _base_legendaria(celdas, semilla, cristales=True):
+    """Roca (Roca, RocaOscura, Veta), pie de metal (Pie) y cristales (Cristal, CristalClaro)."""
+    for x in range(-8, 9):
+        for y in range(-7, 8):
+            r = math.hypot(x / 8.5, y / 7.5) + (h(x // 2, y // 2, 0, semilla) - 0.5) * 0.3
+            for z in range(3):
+                if r < 1 - z * 0.12:
+                    v = h(x, y, z, semilla + 1)
+                    celdas[(x, y, z)] = "Veta" if v < 0.05 else "RocaOscura" if z == 0 or v < 0.3 else "Roca"
+    for z in (3, 4):
+        for x in range(-2 + (z - 3), 3 - (z - 3)):
+            for y in range(-2, 3):
+                celdas[(x, y, z)] = "Pie"
+    if cristales:
+        for x, y, alto_c in ((-7, 2, 4), (-6, 3, 2), (6, -3, 3), (7, 2, 5), (-4, 5, 3), (4, 5, 2), (-5, -4, 2)):
+            z0 = max((z for z in range(3) if (x, y, z) in celdas), default=-1) + 1
+            for z in range(z0, z0 + alto_c):
+                celdas[(x, y, z)] = "Cristal" if z < z0 + alto_c - 1 else "CristalClaro"
+
+
+def _tallo(celdas, hasta, clave="Pie", anillo="Remache"):
+    """Tallo de metal desde el pie (z = 5) hasta 'hasta', con un anillo en relieve al medio."""
+    for z in range(5, hasta):
+        for x in (-1, 0, 1):
+            for y in (-1, 0, 1):
+                celdas[(x, y, z)] = clave
+        if z == (5 + hasta) // 2:
+            for a in (-2, 2):
+                for b in (-1, 0, 1):
+                    celdas[(a, b, z)] = celdas[(b, a, z)] = anillo
+
+
+def _copo(cz, radio, grueso=1.0):
+    """Silueta de copo de nieve de 6 brazos con ramitas, centrada en (0, cz) del plano x-z."""
+    plano = set()
+    brazos = []
+    for i in range(6):
+        a = i * math.pi / 3
+        dx, dz = math.sin(a), math.cos(a)
+        brazos.append(((0, 0), (dx * radio, dz * radio)))
+        for f in (0.5, 0.75):
+            bx, bz = dx * radio * f, dz * radio * f
+            for g in (-1, 1):
+                a2 = a + g * math.pi / 4
+                largo = radio * (0.35 if f == 0.5 else 0.22)
+                brazos.append(((bx, bz), (bx + math.sin(a2) * largo, bz + math.cos(a2) * largo)))
+
+    def cerca(px, pz, p, q, r):
+        (ax, az), (bx, bz) = p, q
+        lx, lz = bx - ax, bz - az
+        t = max(0, min(1, ((px - ax) * lx + (pz - az) * lz) / (lx * lx + lz * lz)))
+        return math.hypot(px - ax - lx * t, pz - az - lz * t) <= r
+
+    r0 = int(radio) + 1
+    for x in range(-r0, r0 + 1):
+        for z in range(-r0, r0 + 1):
+            if math.hypot(x, z) <= radio * 0.3 or any(cerca(x, z, p, q, grueso) for p, q in brazos):
+                plano.add((x, cz + z))
+    return plano
+
+
+GLACIAR_ROCA = {
+    "Roca": ("#9FB4C8", 0.7, None, 0.0, 1),
+    "RocaOscura": ("#6E8296", 0.8, None, 0.0, 1),
+    "Veta": ("#FFFFFF", 0.5, None, 0.0, 1),
+    "Suelo": ("#F2F8FF", 0.6, None, 0.0, 1),
+    "Piedra": ("#C8D8E8", 0.6, None, 0.0, 1),
+}
+GLACIAR_SUELO = {
+    "Suelo": ("#F2F8FF", 0.6, None, 0.0, 1),
+    "SueloOscuro": ("#C8D8E8", 0.7, None, 0.0, 1),
+    "Piedrita": ("#6E8296", 0.8, None, 0.0, 1),
+}
+
+
+def cristal_de_roca(nombre):
+    """Común (Glaciar): trozo de cristal de roca transparente en escalones, con velos blancos
+    adentro, grietas plateadas, cristalitos y base de nieve con piedritas."""
+    colores = {
+        "Oscuro": ("#C9DCEB", 0.05, None, 0.0, 0.45),
+        "Medio": ("#E2EEF8", 0.05, None, 0.0, 0.4),
+        "Claro": ("#FFFFFF", 0.05, None, 0.0, 0.35),
+        "Velo": ("#FFFFFF", 0.6, None, 0.0, 1),
+        "Grieta": ("#A9B8C6", 0.3, None, 0.0, 1),
+        "Cristal": ("#E8F6FF", 0.05, "#CFEFFF", 0.2, 1),
+        "Vidrio": ("#F4FBFF", 0.05, None, 0.0, 0.4),
+        "Nucleo": ("#BFE8FF", 0.2, "#9FDCFF", 1.5, 1),
+        **GLACIAR_SUELO,
+    }
+    return comun(nombre, colores, 101, velo=0.12)
+
+
+def piedra_escarcha(nombre):
+    """Común (Glaciar): piedra blanca grisácea en escalones con escarcha celeste encima, grietas
+    azul grisáceo, cristalitos celestes y base de nieve."""
+    colores = {
+        "Oscuro": ("#8C949C", 0.85, None, 0.0, 1),
+        "Medio": ("#B4BBC2", 0.8, None, 0.0, 1),
+        "Claro": ("#E2E6EA", 0.75, None, 0.0, 1),
+        "Escarcha": ("#BFF0FF", 0.3, "#8FD8FF", 0.25, 1),
+        "Grieta": ("#5E7488", 0.8, None, 0.0, 1),
+        "Cristal": ("#7FD0FF", 0.15, "#7FD0FF", 0.35, 1),
+        "Vidrio": ("#CFEFFF", 0.05, None, 0.0, 0.45),
+        "Nucleo": ("#5CC8FF", 0.2, "#5CC8FF", 2.0, 1),
+        **GLACIAR_SUELO,
+    }
+    return comun(nombre, colores, 111, escarcha=0.4)
+
+
+def aguamarina(nombre):
+    """Rara (Glaciar): 3 columnas gruesas de aguamarina celeste verdoso con punta escalonada y centro
+    que brilla suave, sobre roca helada con cubitos sueltos."""
+    colores = {
+        "Oscuro": ("#2E9C9A", 0.05, None, 0.0, 0.7),
+        "Medio": ("#5CCBC4", 0.05, None, 0.0, 0.6),
+        "Claro": ("#A8F0E6", 0.05, None, 0.0, 0.55),
+        "Arista": ("#E0FFF8", 0.05, "#B8FFF2", 0.25, 0.8),
+        "Centro": ("#D8FFF6", 0.2, "#8AF5E2", 1.0, 1),
+        "Suelto": ("#7FE6D8", 0.15, "#5CD8C8", 0.4, 1),
+        **{k: GLACIAR_ROCA[k] for k in ("Roca", "RocaOscura", "Veta")},
+    }
+    return rara(nombre, colores, [(0, 0, 3, 19, 0, 0), (-5, 2, 2, 13, -1, 1), (4, -2, 2, 11, 1, -1)], 121)
+
+
+def celestina(nombre):
+    """Rara (Glaciar): racimo de 7 cristalitos finitos celeste pálido de distintas alturas, con
+    centro que brilla suave, sobre roca helada con cubitos sueltos."""
+    colores = {
+        "Oscuro": ("#8DB8E8", 0.05, None, 0.0, 0.65),
+        "Medio": ("#B5D6F7", 0.05, None, 0.0, 0.55),
+        "Claro": ("#E2F0FF", 0.05, None, 0.0, 0.5),
+        "Arista": ("#FFFFFF", 0.05, "#E2F0FF", 0.25, 0.8),
+        "Centro": ("#F0F8FF", 0.2, "#B5D6F7", 0.9, 1),
+        "Suelto": ("#B5D6F7", 0.15, "#B5D6F7", 0.4, 1),
+        **{k: GLACIAR_ROCA[k] for k in ("Roca", "RocaOscura", "Veta")},
+    }
+    columnas = [(0, 0, 1, 18, 0, 0), (-3, 1, 1, 14, -1, 0), (3, -1, 1, 15, 1, 0), (-1, 3, 1, 11, 0, 1),
+                (2, 3, 1, 9, 1, 1), (-4, -3, 1, 8, -1, -1), (4, -4, 1, 10, 1, -1)]
+    return rara(nombre, colores, columnas, 131)
+
+
+def zafiro(nombre):
+    return tallada(nombre, TALLADAS_CUBITOS["Zafiro"])
+
+
+def piedra_luna(nombre):
+    return tallada(nombre, TALLADAS_CUBITOS["PiedraLuna"])
+
+
+GLACIAR_TALLADA = {
+    "Roca": ("#9FB4C8", 0.7, None, 0.0, 1),
+    "RocaOscura": ("#6E8296", 0.8, None, 0.0, 1),
+    "Pasto": ("#F2F8FF", 0.6, None, 0.0, 1),
+    "Oro": ("#D9E2EC", 0.2, None, 0.0, 1),  # engarce de plata
+}
+TALLADAS_CUBITOS["Zafiro"] = {
+    "engarce": (5, 4),
+    "anchos": [(1, 0), (1, 1), (2, 1), (3, 2), (3, 2), (4, 3), (5, 3), (5, 3), (6, 4), (6, 4), (6, 4),
+               (6, 4), (6, 4), (5, 4), (5, 3), (4, 3), (3, 2), (2, 1)],
+    "garras": (5, 3, 15),
+    "tonos": ("AzulOscuro", "AzulMedio", "AzulClaro"),
+    "colores": {
+        "AzulOscuro": ("#0A2A8C", 0.05, None, 0.0, 0.8),
+        "AzulMedio": ("#1446D8", 0.05, None, 0.0, 0.7),
+        "AzulClaro": ("#3C78FF", 0.05, None, 0.0, 0.65),
+        "Faceta": ("#7FA8FF", 0.05, "#5C8CFF", 0.25, 0.8),
+        "Corazon": ("#9CC0FF", 0.2, "#3C78FF", 2.5, 1),
+        "Cristal": ("#3C78FF", 0.15, "#3C78FF", 0.4, 1),
+    },
+    "base": GLACIAR_TALLADA,
+}
+TALLADAS_CUBITOS["PiedraLuna"] = {
+    "engarce": (5, 5),
+    "anchos": [(1, 1), (2, 2), (3, 3), (4, 4), (5, 5), (5, 5), (5, 5), (5, 5), (5, 5), (5, 5), (4, 4),
+               (4, 4), (3, 3), (2, 2), (1, 1)],
+    "garras": (5, 5, 11),
+    "tonos": ("LunaOscuro", "LunaMedio", "LunaClaro"),
+    "colores": {
+        "LunaOscuro": ("#D8E2F0", 0.1, None, 0.0, 0.5),
+        "LunaMedio": ("#EEF3FA", 0.1, None, 0.0, 0.45),
+        "LunaClaro": ("#FFFFFF", 0.1, None, 0.0, 0.4),
+        "Faceta": ("#C8E2FF", 0.05, "#7FB8FF", 0.6, 0.8),
+        "Corazon": ("#5C9CFF", 0.2, "#2E7CFF", 3.5, 1),
+        "Cristal": ("#E8F2FF", 0.15, "#BFE0FF", 0.4, 1),
+    },
+    "base": GLACIAR_TALLADA,
+}
+
+
+def corazon_de_hielo(nombre):
+    """Legendaria (Glaciar): la forma del Corazón de Pradera en hielo azul, marco de plata con
+    remaches, esquirlas blancas en vez de hojitas, gemitas celestes, cristales de hielo en la roca y
+    cubitos de escarcha flotando alrededor."""
+    paleta = {
+        "VerdeOscuro": ("#1A5FB0", 0.05, None, 0.0, 0.7),
+        "VerdeMedio": ("#3C8CE8", 0.05, None, 0.0, 0.6),
+        "VerdeClaro": ("#8CC8FF", 0.05, None, 0.0, 0.55),
+        "Faceta": ("#E0F2FF", 0.05, "#BFE4FF", 0.3, 0.8),
+        "Corazon": ("#D8F0FF", 0.2, "#7FD0FF", 4.0, 1),
+        "Oro": ("#D9E2EC", 0.2, None, 0.0, 1),
+        "Remache": ("#FFFFFF", 0.2, None, 0.0, 1),
+        "Hoja": ("#FFFFFF", 0.1, "#E0F4FF", 0.3, 1),
+        "HojaOscura": ("#CFE8FF", 0.1, None, 0.0, 1),
+        "Gemita": ("#5CE0FF", 0.05, "#5CE0FF", 0.6, 1),
+        "Cristal": ("#8CC8FF", 0.15, None, 0.0, 1),
+        "CristalClaro": ("#E0F4FF", 0.15, "#BFE4FF", 0.5, 1),
+        "Pasto": ("#F2F8FF", 0.6, None, 0.0, 1),
+        "Escarcha": ("#E8F6FF", 0.1, "#BFE4FF", 0.6, 1),
+        **{k: GLACIAR_ROCA[k] for k in ("Roca", "RocaOscura")},
+    }
+
+    def escarcha(celdas):
+        for x, y, z in ((-9, -1, 8), (8, 1, 11), (-8, 0, 17), (9, -1, 20), (-5, -3, 22), (5, -2, 23)):
+            if (x, y, z) not in celdas:
+                celdas[(x, y, z)] = "Escarcha"
+
+    return corazon_de_pradera(nombre, paleta, escarcha)
+
+
+def diamante_polar(nombre):
+    """Legendaria (Glaciar): diamante blanco celeste con forma de copo de nieve de 6 brazos con
+    ramitas, más grueso al centro con un núcleo que brilla fuerte (malla aparte), remaches de plata
+    en la punta de cada brazo y 3 gemitas azules engarzadas; tallo y pie de plata sobre roca helada
+    con cristales."""
+    celdas = {}
+    _base_legendaria(celdas, 141)
+    cz = 17
+    plano = _copo(cz, 9.2, grueso=1.1)
+    _emblema(celdas, plano, ["Hielo", "HieloMedio", "HieloClaro"], aro=None)
+    _tallo(celdas, min(z for x, z in plano if x == 0))
+    for i in range(6):
+        a = i * math.pi / 3
+        x, z = round(math.sin(a) * 9.6), cz + round(math.cos(a) * 9.6)
+        for y in (-1, 0, 1):
+            celdas[(x, y, z)] = "Plata"
+        celdas[(x, -2, z)] = "Remache"
+    for x, z in ((0, cz + 5), (-4, cz - 3), (4, cz - 3)):
+        for a in (0, 1):
+            for b in (0, 1):
+                celdas[(x + a - (x > 0), -3, z + b)] = "Gemita"
+    colores = {
+        "Hielo": ("#A8D8FF", 0.05, None, 0.0, 0.6),
+        "HieloMedio": ("#D0ECFF", 0.05, None, 0.0, 0.55),
+        "HieloClaro": ("#F4FBFF", 0.05, None, 0.0, 0.5),
+        "Faceta": ("#FFFFFF", 0.05, "#E0F4FF", 0.3, 0.85),
+        "Nucleo": ("#E8F8FF", 0.2, "#9FDCFF", 4.0, 1),
+        "Pie": ("#D9E2EC", 0.2, None, 0.0, 1),
+        "Plata": ("#E6ECF2", 0.2, None, 0.0, 1),
+        "Remache": ("#FFFFFF", 0.2, None, 0.0, 1),
+        "Gemita": ("#2E6BFF", 0.05, "#3C78FF", 0.6, 1),
+        "Cristal": ("#8CC8FF", 0.15, None, 0.0, 1),
+        "CristalClaro": ("#E0F4FF", 0.15, "#BFE4FF", 0.5, 1),
+        **{k: GLACIAR_ROCA[k] for k in ("Roca", "RocaOscura", "Veta")},
+    }
+    return cubitos(nombre, celdas, colores)
+
+
+def aurora_boreal(nombre):
+    """Mítica (Glaciar): cristal alto y transparente en capas (cuadrados y rombos) con franjas verde,
+    celeste y violeta onduladas como una aurora, núcleo blanco que brilla, aristas de plata y
+    anillo cuadrado de plata alrededor; base de roca helada."""
+    anchos = [2, 3, 4, 4, 5, 5, 5, 5, 5, 5, 5, 5, 4, 4, 4, 3, 3, 2, 2, 1, 0]
+    zb = 4
+    franjas = ["Verde", "Celeste", "Violeta"]
+
+    def onda(x, y, z):
+        return franjas[int(((z - zb) + 2.2 * math.sin((x + y) * 0.6)) / 3) % 3]
+
+    def cuerpo(celdas):
+        _capas_gema(celdas, zb, anchos, franjas, arista="Plata", forma=lambda z: (z // 4) % 2 == 1, mancha=onda)
+        celdas[(0, 0, zb + len(anchos))] = "Plata"
+
+    colores = {
+        "Verde": ("#2EE88A", 0.05, "#2EE88A", 0.25, 0.6),
+        "Celeste": ("#2EC8F0", 0.05, "#2EC8F0", 0.25, 0.6),
+        "Violeta": ("#9A5CFF", 0.05, "#9A5CFF", 0.25, 0.6),
+        "Nucleo": ("#F0FFFA", 0.2, "#C8FFF0", 1.5, 1),
+        "Plata": ("#E6ECF2", 0.2, None, 0.0, 1),
+        "Zocalo": ("#D9E2EC", 0.2, None, 0.0, 1),
+        "Anillo": ("#E6F0F7", 0.2, "#C8ECFF", 0.35, 1),
+        **{k: GLACIAR_ROCA[k] for k in ("Roca", "RocaOscura")},
+    }
+    return mitica(nombre, cuerpo, colores, anillo_z=12)
+
+
+def estrella_de_escarcha(nombre):
+    """Mítica (Glaciar): estrella de 6 puntas parada, de hielo celeste en capas (cáscara de vidrio en
+    degradé, bordes como facetas) con un centro blanco que brilla fuerte, marco de plata con
+    remaches y anillo cuadrado de plata alrededor; base de roca helada."""
+    cz = 14
+
+    def cuerpo(celdas):
+        plano = set()
+        for x in range(-10, 11):
+            for z in range(-11, 12):
+                a = math.atan2(x, z) % (math.pi / 3)
+                f = abs(a - math.pi / 6) / (math.pi / 6)  # 1 en las puntas, 0 entre puntas
+                if math.hypot(x, z) <= 4.6 + 5.4 * f**1.5:
+                    plano.add((x, cz + z))
+        _emblema(celdas, plano, ["HieloOscuro", "Hielo", "HieloClaro"], aro="Plata", cada=3)
+
+    colores = {
+        "HieloOscuro": ("#3CA8F0", 0.05, None, 0.0, 0.65),
+        "Hielo": ("#7FD0FF", 0.05, None, 0.0, 0.6),
+        "HieloClaro": ("#C8ECFF", 0.05, None, 0.0, 0.55),
+        "Faceta": ("#F0FAFF", 0.05, "#C8ECFF", 0.3, 0.85),
+        "Nucleo": ("#FFFFFF", 0.2, "#E0F6FF", 3.0, 1),
+        "Plata": ("#E6ECF2", 0.2, None, 0.0, 1),
+        "Remache": ("#FFFFFF", 0.2, None, 0.0, 1),
+        "Zocalo": ("#D9E2EC", 0.2, None, 0.0, 1),
+        "Anillo": ("#E6F0F7", 0.2, "#C8ECFF", 0.35, 1),
+        **{k: GLACIAR_ROCA[k] for k in ("Roca", "RocaOscura")},
+    }
+    return mitica(nombre, cuerpo, colores, anillo_z=6)
+
+
+def copo_eterno(nombre):
+    """Celestial (Glaciar): copo de nieve grande de cristal azul y blanco (6 brazos con ramitas, más
+    grueso al centro, núcleo celeste que brilla fuerte) flotando sobre un pedestal de nieve; halo,
+    anillo y 3 gemitas que orbitan."""
+
+    def gema(celdas, zb):
+        cz = zb + 10
+        plano = _copo(cz, 9.0, grueso=1.1)
+        _emblema(celdas, plano, ["Azul", "AzulClaro", "Blanco"], aro=None)
+        return max(z for _, z in plano)
+
+    colores = {
+        "Azul": ("#3C78FF", 0.05, None, 0.0, 0.65),
+        "AzulClaro": ("#8CC8FF", 0.05, None, 0.0, 0.55),
+        "Blanco": ("#F4FBFF", 0.05, None, 0.0, 0.5),
+        "Faceta": ("#FFFFFF", 0.05, "#E0F4FF", 0.3, 0.85),
+        "Nucleo": ("#C8F0FF", 0.2, "#5CD0FF", 4.0, 1),
+        "Halo": ("#9FDCFF", 0.1, "#7FD0FF", 0.8, 0.5),
+        "Anillo": ("#E6F0F7", 0.2, "#C8ECFF", 0.4, 1),
+        "Gemita1": ("#5CE0FF", 0.05, "#5CE0FF", 0.8, 1),
+        "Gemita2": ("#FFFFFF", 0.05, "#E0F4FF", 0.8, 1),
+        "Gemita3": ("#3C78FF", 0.05, "#3C78FF", 0.8, 1),
+        "Cristalito": ("#BFE4FF", 0.1, "#BFE4FF", 0.4, 1),
+        **GLACIAR_ROCA,
+    }
+    return celestial(nombre, gema, colores)
+
+
+def trono_de_hielo(nombre):
+    """Celestial (Glaciar): tronito de hielo (asiento, respaldo con almenas, apoyabrazos y patas)
+    con filetes de plata, y una gema azul con núcleo que brilla flotando arriba del asiento; flota
+    sobre un pedestal de nieve con halo, anillo y 3 gemitas que orbitan."""
+
+    def gema(celdas, zb):
+        def hielo(x, y, z):
+            v = (z - zb) / 16 + (h(x, y, z, 151) - 0.5) * 0.2
+            return "HieloClaro" if v > 0.6 else "Hielo" if v > 0.3 else "HieloOscuro"
+
+        for x in range(-5, 6):
+            for y in range(-4, 5):
+                for z in range(zb, zb + 4):
+                    pata = abs(x) >= 4 and abs(y) >= 3
+                    if z < zb + 2 and not pata:
+                        continue
+                    borde = z == zb + 3 and (abs(x) == 5 or abs(y) == 4)
+                    celdas[(x, y, z)] = "Plata" if borde else hielo(x, y, z)
+        for x in range(-5, 6):  # respaldo con almenas
+            for y in (3, 4):
+                for z in range(zb + 4, zb + 15):
+                    if z >= zb + 13 and x % 2:
+                        continue
+                    celdas[(x, y, z)] = "Plata" if abs(x) == 5 else hielo(x, y, z)
+        for x in (-5, 5):  # apoyabrazos
+            for y in range(-4, 3):
+                for z in (zb + 4, zb + 5, zb + 6):
+                    celdas[(x, y, z)] = "Plata" if z == zb + 6 else hielo(x, y, z)
+        _capas_gema(celdas, zb + 16, [0, 1, 2, 3, 3, 3, 2, 1, 0], ["Azul", "AzulMedio", "AzulClaro"],
+                    arista="Faceta")
+        return zb + 24
+
+    colores = {
+        "HieloOscuro": ("#9FD0F0", 0.05, None, 0.0, 0.75),
+        "Hielo": ("#C8E8FA", 0.05, None, 0.0, 0.7),
+        "HieloClaro": ("#EEF8FF", 0.05, None, 0.0, 0.65),
+        "Plata": ("#E6ECF2", 0.2, None, 0.0, 1),
+        "Azul": ("#0A2A8C", 0.05, None, 0.0, 0.8),
+        "AzulMedio": ("#1446D8", 0.05, None, 0.0, 0.7),
+        "AzulClaro": ("#3C78FF", 0.05, None, 0.0, 0.65),
+        "Faceta": ("#9CC0FF", 0.05, "#7FA8FF", 0.3, 0.85),
+        "Nucleo": ("#BFE0FF", 0.2, "#3C78FF", 4.0, 1),
+        "Halo": ("#9FDCFF", 0.1, "#7FD0FF", 0.8, 0.5),
+        "Anillo": ("#E6F0F7", 0.2, "#C8ECFF", 0.4, 1),
+        "Gemita1": ("#5CE0FF", 0.05, "#5CE0FF", 0.8, 1),
+        "Gemita2": ("#FFFFFF", 0.05, "#E0F4FF", 0.8, 1),
+        "Gemita3": ("#3C78FF", 0.05, "#3C78FF", 0.8, 1),
+        "Cristalito": ("#BFE4FF", 0.1, "#BFE4FF", 0.4, 1),
+        **GLACIAR_ROCA,
+    }
+    return celestial(nombre, gema, colores)
+
+
 # nombre: (zona, rareza, forma, {clave: (color, brillo)})
 PIEDRAS = {
     "Cuarzo": (
@@ -2415,6 +2973,18 @@ PIEDRAS = {
     "Espejismo": (2, "Mitica", espejismo, None),
     "CoronadelSol": (2, "Celestial", corona_del_sol, None),
     "RelojdeArenaEterno": (2, "Celestial", reloj_de_arena_eterno, None),
+    "CristaldeRoca": (3, "Comun", cristal_de_roca, None),
+    "PiedraEscarcha": (3, "Comun", piedra_escarcha, None),
+    "Aguamarina": (3, "Rara", aguamarina, None),
+    "Celestina": (3, "Rara", celestina, None),
+    "Zafiro": (3, "Epica", zafiro, None),
+    "PiedraLuna": (3, "Epica", piedra_luna, None),
+    "CorazondeHielo": (3, "Legendaria", corazon_de_hielo, None),
+    "DiamantePolar": (3, "Legendaria", diamante_polar, None),
+    "AuroraBoreal": (3, "Mitica", aurora_boreal, None),
+    "EstrelladeEscarcha": (3, "Mitica", estrella_de_escarcha, None),
+    "CopoEterno": (3, "Celestial", copo_eterno, None),
+    "TronodeHielo": (3, "Celestial", trono_de_hielo, None),
 }
 
 
