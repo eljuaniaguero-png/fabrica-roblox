@@ -27,11 +27,11 @@ from mathutils import Matrix, Vector  # noqa: E402
 ICONOS = m.ARTE / "iconos" / "gemas"
 
 # Solo las piedras que Juani ya aprobó entran al FBX de su zona
-APROBADAS = {"Cuarzo"}
+APROBADAS = {"Cuarzo", "Jaspe"}
 
 # Piedras con alto propio (studs) y pivote en el centro de la base en vez del centro de la caja
-ALTO = {"Cuarzo": 2.5}
-PIVOTE_BASE = {"Cuarzo"}
+ALTO = {"Cuarzo": 2.5, "Jaspe": 2.5}
+PIVOTE_BASE = {"Cuarzo", "Jaspe"}
 
 # Alto (studs) y tope de triángulos por rareza
 RAREZAS = {
@@ -440,7 +440,90 @@ def cuarzo(nombre):
 
 
 def jaspe(nombre):
-    return bruto(nombre, BRUTAS["Jaspe"])
+    """Piedra en bruto de cubitos: canto ancho y chato de jaspe rojo ladrillo (más claro arriba),
+    cruzado por 2 vetas crema en diagonal, grietas oscuras, 2 cristalitos crema y 1 de vidrio con
+    brasa naranja adentro, y tierra con pasto en la base. Ancho y bajo para no confundirse con
+    el Cuarzo, que es alto, blanco y torcido."""
+    rng = random.Random(23)
+    celdas = {}
+    for x in range(-8, 9):
+        for y in range(-7, 8):
+            r = math.hypot(x / 8.5, y / 7) + (h(x // 2, y // 2, 0, 5) - 0.5) * 0.3
+            if r < 1:
+                celdas[(x, y, 0)] = "TierraOscura"
+            if r < 0.88:
+                celdas[(x, y, 1)] = "Tierra" if h(x, y, 1, 6) > 0.08 else "TierraOscura"
+    # cuerpo: losa ancha que se achica en escalones grandes, techo casi plano
+    tope = 8
+    for z in range(1, tope + 1):
+        t = (z - 1) / (tope - 1)
+        rx, ry = 7.4 * (1 - 0.35 * t**2), 5.6 * (1 - 0.4 * t**2)
+        for x in range(-8, 9):
+            for y in range(-7, 8):
+                ruido = (h(x // 3, y // 3, z // 3, 21) - 0.5) * 0.5
+                if ((x + 0.5 * t) / rx) ** 2 + (y / ry) ** 2 > 1 + ruido:
+                    continue
+                if -x - y > 10 - z * 0.6:  # canto partido adelante a la izquierda
+                    continue
+                v = t + (h(x, y, z, 22) - 0.5) * 0.1
+                clave = "Claro" if v > 0.62 else "Medio" if v > 0.28 else "Oscuro"
+                # vetas crema: 2 bandas en diagonal que atraviesan toda la piedra
+                if abs((x + z * 0.8) - 3) < 0.9 or abs((x - y * 0.5 + z * 0.8) + 5) < 0.7:
+                    clave = "Veta"
+                celdas[(x, y, z)] = clave
+    llenas = set(celdas)
+
+    def afuera(c):
+        x, y, z = c
+        return any((x + dx, y + dy, z + dz) not in llenas for (dx, dy, dz), _ in m.CARAS[:5])
+
+    cuerpo = sorted(c for c, k in celdas.items() if k in ("Claro", "Medio", "Oscuro") and afuera(c))
+    for inicio in ((2, -6, 6), (-5, 3, 7), (6, 2, 5)):
+        c = min(cuerpo, key=lambda p: sum((a - b) ** 2 for a, b in zip(p, inicio)))
+        for _ in range(8):
+            celdas[c] = "Grieta"
+            vecinos = [
+                p for p in cuerpo
+                if p[2] <= c[2] and sum(abs(a - b) for a, b in zip(p, c)) == 1 and celdas[p] != "Grieta"
+            ]
+            if not vecinos:
+                break
+            c = rng.choice(vecinos)
+
+    def columna(x0, y0, z0, lado, alto, clave, corre=(0, 0)):
+        for i in range(alto):
+            dx, dy = corre[0] * (i // 2), corre[1] * (i // 2)
+            ancho = lado if i < alto - 1 else max(1, lado - 2)
+            off = (lado - ancho) // 2
+            for a in range(ancho):
+                for b in range(ancho):
+                    celdas[(x0 + dx + off + a, y0 + dy + off + b, z0 + i)] = clave
+
+    # cristalitos: vidrio con brasa arriba a la derecha, 2 crema chicos del otro lado
+    columna(2, -1, 7, 3, 6, "Vidrio", corre=(1, 0))
+    for i in range(4):
+        celdas[(3 + i // 2, 0, 8 + i)] = "Nucleo"
+    columna(-4, -2, 7, 2, 4, "Cristal", corre=(-1, -1))
+    columna(-1, 2, 8, 2, 3, "Cristal", corre=(0, 1))
+    for x, y in ((-7, 3), (7, -3), (1, 6)):
+        celdas[(x, y, 1)] = celdas[(x, y, 2)] = "Piedrita"
+    for x, y in ((6, 4), (-7, -2), (3, -6), (-3, 6)):
+        celdas[(x, y, 2)] = "Pasto"
+    colores = {
+        "Oscuro": ("#7E1F14", 0.55, None, 0.0, 1),
+        "Medio": ("#B83A25", 0.45, None, 0.0, 1),
+        "Claro": ("#E2603F", 0.4, None, 0.0, 1),
+        "Veta": ("#F6E2BC", 0.35, None, 0.0, 1),
+        "Grieta": ("#4A0F08", 0.6, None, 0.0, 1),
+        "Cristal": ("#F6E2BC", 0.2, "#FFD9A0", 0.3, 1),
+        "Vidrio": ("#FFE6C7", 0.05, None, 0.0, 0.45),
+        "Nucleo": ("#FF5A2E", 0.2, "#FF5A2E", 2.0, 1),
+        "Tierra": ("#A8693D", 0.85, None, 0.0, 1),
+        "TierraOscura": ("#7A4A2A", 0.9, None, 0.0, 1),
+        "Piedrita": ("#6B6B73", 0.8, None, 0.0, 1),
+        "Pasto": ("#4E9A3A", 0.8, None, 0.0, 1),
+    }
+    return cubitos(nombre, celdas, colores)
 
 
 def _punta(bms, base, direccion, radio, largo, giro):
