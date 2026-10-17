@@ -27,11 +27,13 @@ from mathutils import Matrix, Vector  # noqa: E402
 ICONOS = m.ARTE / "iconos" / "gemas"
 
 # Solo las piedras que Juani ya aprobó entran al FBX de su zona
-APROBADAS = {"Cuarzo", "Jaspe", "Amatista", "AgataMusgosa"}
+APROBADAS = {"Cuarzo", "Jaspe", "Amatista", "AgataMusgosa", "Esmeralda"}
 
 # Piedras con alto propio (studs) y pivote en el centro de la base en vez del centro de la caja
-ALTO = {"Cuarzo": 2.5, "Jaspe": 2.5, "Amatista": 3.0, "AgataMusgosa": 3.0}
-PIVOTE_BASE = {"Cuarzo", "Jaspe", "Amatista", "AgataMusgosa"}
+ALTO = {"Cuarzo": 2.5, "Jaspe": 2.5, "Amatista": 3.0, "AgataMusgosa": 3.0, "Esmeralda": 3.5}
+PIVOTE_BASE = {"Cuarzo", "Jaspe", "Amatista", "AgataMusgosa", "Esmeralda"}
+# Topes de triángulos propios (pisan el de la rareza)
+TOPE = {"Esmeralda": 4000}
 
 # Alto (studs) y tope de triángulos por rareza
 RAREZAS = {
@@ -746,6 +748,80 @@ def agata_musgosa(nombre):
     return racimo(nombre, RACIMOS["AgataMusgosa"])
 
 
+def esmeralda(nombre):
+    """Gema tallada de cubitos: esmeralda rectangular, ancha arriba y en punta escalonada abajo,
+    de vidrio verde en 3 tonos (más claro arriba) con aristas claras que hacen de facetas; adentro
+    un corazón que brilla (malla aparte). Va sentada en un engarce cuadrado de oro con 4 garras,
+    sobre una base de roca con cristalitos verdes."""
+    celdas = {}
+    # base de roca
+    for x in range(-8, 9):
+        for y in range(-8, 9):
+            r = math.hypot(x / 8.5, y / 8) + (random.Random(f"r{x // 2},{y // 2}").random() - 0.5) * 0.15
+            for z in range(3):
+                if r < 1 - z * 0.07:  # loma ancha y chata: el engarce apoya entero arriba
+                    oscura = z < 2 and random.Random(f"{x},{y},{z}").random() < 0.3
+                    celdas[(x, y, z)] = "RocaOscura" if oscura else "Roca"
+    # engarce: marco cuadrado de oro hueco
+    for x in range(-5, 6):
+        for y in range(-4, 5):
+            if max(abs(x) / 5, abs(y) / 4) >= 0.75:
+                celdas[(x, y, 3)] = "Oro"
+    # gema: (z, medio ancho en x, medio ancho en y): pabellón en punta abajo, corona arriba
+    anchos = [(1, 0), (1, 0), (2, 1), (2, 1), (3, 1), (3, 2), (4, 2), (4, 2), (5, 3), (5, 3), (6, 3),
+              (6, 4), (6, 4), (6, 4), (5, 3), (5, 3), (4, 2), (3, 2)]
+    capas = [(3 + i, ax, ay) for i, (ax, ay) in enumerate(anchos)]
+    medida = {z: (ax, ay) for z, ax, ay in capas}
+    z0, zmax = capas[0][0], capas[-1][0]
+    for z, ax, ay in capas:
+        t = (z - z0) / (zmax - z0)
+        sig = medida.get(z + 1)
+        for x in range(-ax, ax + 1):
+            for y in range(-ay, ay + 1):
+                borde = abs(x) == ax or abs(y) == ay
+                esquina = abs(x) == ax and abs(y) == ay
+                # escalón: la celda queda al aire arriba (faceta horizontal de la corona)
+                escalon = sig is None or abs(x) > sig[0] or abs(y) > sig[1]
+                if abs(x) <= min(2, ax - 2) and abs(y) <= min(1, ay - 1) and z < zmax - 1:
+                    celdas[(x, y, z)] = "Corazon"
+                    continue
+                if not borde and not escalon:
+                    continue  # hueco por dentro: se ve el corazón a través del vidrio
+                if esquina or (escalon and borde):
+                    celdas[(x, y, z)] = "Faceta"
+                else:
+                    v = t + (random.Random(f"e{x},{y},{z}").random() - 0.5) * 0.25
+                    celdas[(x, y, z)] = "VerdeClaro" if v > 0.62 else "VerdeMedio" if v > 0.3 else "VerdeOscuro"
+    # 4 garras de oro en las esquinas: suben pegadas a la gema y se doblan sobre ella
+    for sx in (-1, 1):
+        for sy in (-1, 1):
+            for z in range(3, 17):
+                ax, ay = medida.get(z, (1, 0))
+                celdas[(sx * (ax + 1), sy * (ay + 1), z)] = "Oro"
+            celdas[(sx * 6, sy * 4, 17)] = celdas[(sx * 5, sy * 4, 17)] = "Oro"
+    # cristalitos verdes en la roca
+    for x, y, alto in ((-7, 3, 3), (6, -5, 2), (-3, -7, 2), (7, 4, 2), (2, 7, 3)):
+        z0 = max((z for z in range(3) if (x, y, z) in celdas), default=-1) + 1  # apoyado en la roca
+        for z in range(z0, z0 + alto):
+            celdas[(x, y, z)] = "Cristal"
+    for x, y in ((-6, -4), (4, 6), (-1, 7)):
+        if (x, y, 2) in celdas:
+            celdas[(x, y, 3)] = "Pasto"
+    colores = {
+        "VerdeOscuro": ("#06703A", 0.05, None, 0.0, 0.7),
+        "VerdeMedio": ("#10A651", 0.05, None, 0.0, 0.6),
+        "VerdeClaro": ("#3FE07E", 0.05, None, 0.0, 0.55),
+        "Faceta": ("#B8FFD2", 0.05, "#7DFFB0", 0.25, 0.8),
+        "Corazon": ("#7DFFB0", 0.2, "#4DFF94", 2.5, 1),
+        "Oro": ("#F2B92E", 0.25, None, 0.0, 1),
+        "Cristal": ("#3FE07E", 0.15, "#3FE07E", 0.4, 1),
+        "Roca": ("#8A8F99", 0.8, None, 0.0, 1),
+        "RocaOscura": ("#5D626C", 0.85, None, 0.0, 1),
+        "Pasto": ("#4E9A3A", 0.8, None, 0.0, 1),
+    }
+    return cubitos(nombre, celdas, colores)
+
+
 # nombre: (zona, rareza, forma, {clave: (color, brillo)})
 PIEDRAS = {
     "Cuarzo": (
@@ -762,6 +838,7 @@ PIEDRAS = {
     ),
     "Amatista": (1, "Rara", amatista, None),
     "AgataMusgosa": (1, "Rara", agata_musgosa, None),
+    "Esmeralda": (1, "Epica", esmeralda, None),
 }
 
 
@@ -784,6 +861,7 @@ def armar(nombre):
     zona, rareza, forma, colores = PIEDRAS[nombre]
     alto, tope = RAREZAS[rareza]
     alto = ALTO.get(nombre, alto)
+    tope = TOPE.get(nombre, tope)
     if colores is None:
         return armar_tallada(nombre, forma, alto, tope, zona)
     celdas = forma()
