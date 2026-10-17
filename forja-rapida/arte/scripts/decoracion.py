@@ -116,6 +116,10 @@ Piezas:
                  lava que suben por los costados y cristalitos rojos (Neon) arriba. Tres tamaños:
                  Chica (8 studs de ancho), Mediana (12) y Grande (20). Mallas Roca, Grietas
                  (TextureID = texturas/LavaLiquida.png) y Cristales.
+  Rio_Lava       Volcán (la pista de la puerta secreta de la zona 4): río de bloques de 2 studs
+                 naranjas y amarillos (Neon) con orilla de bloques negros de alturas distintas,
+                 12 studs de ancho. Dos tramos: Recto (16 de largo) y Curva (un cuarto de vuelta
+                 alrededor de la esquina -x -y). Mallas Orilla, LavaNaranja y LavaAmarilla.
   Columnas_Basalto Volcán: grupo de columnas negras de bloques pegadas entre sí, de distintas
                  alturas, con grietas de lava al pie que suben por las paredes y salen por el
                  piso. Dos versiones: 1 (5 columnas, 14 studs de alto) y 2 (7 columnas, 16).
@@ -2748,6 +2752,95 @@ def render_roca_lava():
         print("TRIANGULOS Roca_Lava", tam, c, "total", sum(c.values()))
 
 
+# Rio_Lava (Volcán, la pista de la puerta secreta de la zona 4): río de lava de bloques de 2 x 2
+# studs naranjas y amarillos (Neon), un poco más bajos que la orilla de bloques negros de alturas
+# distintas. Dos tramos: Recto (16 studs de largo en x) y Curva (un cuarto de vuelta). El río
+# mide 12 studs de ancho: 2 de orilla, 8 de lava y 2 de orilla.
+RIO_ORILLA = VOLCAN_NEGRO
+RIO_NARANJA = ZONAS[4]["detalle"]
+RIO_AMARILLO = "#FFC21A"
+RIO_CELDA = 2  # studs de cada bloque
+RIO_ALTOS_ORILLA = (1, 1.5, 2, 2.5)
+RIO_ALTOS_LAVA = (0.4, 0.6)  # los amarillos van un poco más arriba (+0.2)
+RIO_AMARILLOS = 0.3  # fracción de bloques amarillos
+MAX_RIO = 2000
+
+
+def celdas_rio(tramo):
+    """(i, j) -> "lava" u "orilla", con la celda 0 en -8 studs. Recto: lava de y = -4 a 4 y orilla
+    de 2 studs a cada lado. Curva: anillo alrededor de la esquina (-8, -8) (radio 2 a 14: orilla,
+    lava de 4 a 12, orilla), así sus dos puntas (en x = -8 y en y = -8) miden lo mismo que el recto."""
+    celdas = {}
+    for i in range(8):
+        for j in range(8):
+            x, y = -8 + (i + 0.5) * RIO_CELDA, -8 + (j + 0.5) * RIO_CELDA
+            # el recto: distancia al borde de y = -8, como si fuera una curva de radio infinito
+            d = abs(y) + 8 if tramo == "Recto" else math.hypot(x + 8, y + 8)
+            if 4 <= d < 12:
+                celdas[(i, j)] = "lava"
+            elif 2 <= d < 14:
+                celdas[(i, j)] = "orilla"
+    return celdas
+
+
+def rio_lava(mats, tramo="Recto"):
+    """Rio_Lava_<tramo>: mallas Orilla, LavaNaranja y LavaAmarilla. Pivote en el centro de la base."""
+    rng = random.Random(83 if tramo == "Recto" else 89)
+    orilla, naranja, amarilla = Malla(), Malla(), Malla()
+    s = RIO_CELDA
+    for (i, j), tipo in sorted(celdas_rio(tramo).items()):
+        x, y = -8 + i * s, -8 + j * s
+        if tipo == "orilla":
+            orilla.caja((x, x + s), (y, y + s), (0, rng.choice(RIO_ALTOS_ORILLA)), caras="xXyYZ")
+        elif rng.random() < RIO_AMARILLOS:
+            amarilla.caja((x, x + s), (y, y + s), (0, rng.choice(RIO_ALTOS_LAVA) + 0.2), caras="xXyYZ")
+        else:
+            naranja.caja((x, x + s), (y, y + s), (0, rng.choice(RIO_ALTOS_LAVA)), caras="xXyYZ")
+    nombre = f"Rio_Lava_{tramo}"
+    piezas = [("Orilla", orilla, mats["orilla"]), ("LavaNaranja", naranja, mats["naranja"]), ("LavaAmarilla", amarilla, mats["amarilla"])]
+    objs, conteo = mallas(piezas, MAX_RIO, nombre)
+    if sum(conteo.values()) > MAX_RIO:
+        raise RuntimeError(f"{nombre}: {sum(conteo.values())} triángulos (máximo {MAX_RIO})")
+    return objs, conteo
+
+
+def mats_rio(studs=None):
+    """Con studs, para el render (la lava brilla); sin, para exportar (en Roblox, Neon)."""
+    if studs:
+        return {
+            "orilla": material_studs("RioOrilla", RIO_ORILLA, studs),
+            "naranja": M.material("RioNaranja", RIO_NARANJA, brillo=RIO_NARANJA, fuerza_brillo=1.5),
+            "amarilla": M.material("RioAmarilla", RIO_AMARILLO, brillo=RIO_AMARILLO, fuerza_brillo=1.5),
+        }
+    return {
+        "orilla": M.material("RioOrilla", RIO_ORILLA),
+        "naranja": M.material("RioNaranja", RIO_NARANJA),
+        "amarilla": M.material("RioAmarilla", RIO_AMARILLO),
+    }
+
+
+def render_rio():
+    """Rio_Lava Recto y Curva en fila, de frente y de costado (desde arriba, para ver el río), al
+    lado de las referencias."""
+    conteo = {}
+    for vista in ("frente", "costado"):
+        M.limpiar_escena()
+        escena = M.escena_render(1280, 720)
+        tablero = bpy.data.materials["Piso"].node_tree.nodes["Checker Texture"]
+        tablero.inputs["Color1"].default_value = (*M.hex_a_rgb("#5C5F73"), 1)
+        tablero.inputs["Color2"].default_value = (*M.hex_a_rgb("#50536A"), 1)
+        mats = mats_rio(textura_studs())
+        for tramo, x in (("Recto", -10), ("Curva", 10)):
+            objs, conteo[tramo] = rio_lava(mats, tramo)
+            M.mover(objs, x * M.STUD if vista == "frente" else 0, 0 if vista == "frente" else -x * M.STUD)
+        giro = -15 if vista == "frente" else 75
+        camara_orto(escena, (0, 0, 0), 46 * M.STUD, 40, giro)
+        M.render(f"rio_lava_{vista}")
+    comparar("Rio_Lava")
+    for tramo, c in conteo.items():
+        print("TRIANGULOS Rio_Lava", tramo, c, "total", sum(c.values()))
+
+
 # nombre -> (función, alto total en studs, fondo en studs)
 PIEZAS = {
     "Risco_Escalon": (risco_escalon, 30, 16),
@@ -2940,6 +3033,7 @@ REFERENCIAS = {
     # el árbol seco de la Pradera (la Y de la derecha) y el volcán de hoy
     "Arbol_Quemado": ("arbol-seco-1.png", "volcan-1.webp"),
     "Roca_Lava": (("mapa-1.png", (0.86, 0.55, 1.0, 0.80)), "volcan-1.webp"),
+    "Rio_Lava": (("mapa-1.png", (0.86, 0.55, 1.0, 0.80)), "volcan-1.webp"),
     "Volcan": (("mapa-1.png", (0.86, 0.55, 1.0, 0.80)), "volcan-1.webp"),
     "Esqueleto": (("cactus-2.webp", (0.10, 0.42, 0.42, 0.80)), ("estilo-2.png", (0.76, 0.45, 0.98, 0.75))),
 }
@@ -3862,6 +3956,7 @@ def exportar_zona3():
 def exportar_zona4():
     """Deco_Zona4.fbx: piezas que son solo del Volcán. Raíz Deco_Zona4 con el vacío Volcan y sus
     mallas Volcan_Roca, Volcan_RocaNegra y Volcan_Lava, Arbol_Quemado con _Tronco, _Ramas y _Brasas (Neon),
+    Rio_Lava_Recto y _Curva con _Orilla, _LavaNaranja y _LavaAmarilla (Neon),
     Roca_Lava_Chica, _Mediana y _Grande con _Roca, _Grietas y _Cristales (Neon),
     y Columnas_Basalto_1 y _2 con
     _Basalto, _Tapa y _Grietas (en Roblox, la Lava y las Grietas con TextureID =
@@ -3874,6 +3969,16 @@ def exportar_zona4():
         bpy.context.scene.collection.objects.link(vacio)
         vacio.parent = raiz
         objs, conteo = crear(mats)
+        for o in objs:
+            o.parent = vacio
+            o.name = o.data.name = f"{nombre}_{o.name.split('.')[0]}"
+        print("TRIANGULOS", nombre, conteo, "total", sum(conteo.values()))
+    for tramo in ("Recto", "Curva"):
+        nombre = f"Rio_Lava_{tramo}"
+        vacio = bpy.data.objects.new(nombre, None)
+        bpy.context.scene.collection.objects.link(vacio)
+        vacio.parent = raiz
+        objs, conteo = rio_lava(mats_rio(), tramo)
         for o in objs:
             o.parent = vacio
             o.name = o.data.name = f"{nombre}_{o.name.split('.')[0]}"
@@ -4004,4 +4109,6 @@ if __name__ == "__main__":
         render_quemado()
     if "--pieza" not in sys.argv or "Roca_Lava" in sys.argv:
         render_roca_lava()
+    if "--pieza" not in sys.argv or "Rio_Lava" in sys.argv:
+        render_rio()
     print("Listo")
