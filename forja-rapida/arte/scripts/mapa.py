@@ -747,7 +747,7 @@ def plaza(g, s, rng):
     # piso de baldosas
     for xi in range(XMIN, XMAX, 16):
         for zi in range(z0, 0, 16):
-            g.poner(xi, -4, zi, xi + 16, 0, zi + 16, "Baldosa" if ((xi + zi) // 16) % 2 == 0 else "BaldosaOscura")
+            g.poner(xi, -4, zi, xi + 16, 0, zi + 16, "Pasto" if ((xi + zi) // 16) % 2 == 0 else "PastoOscuro")
     # paredes: fondo y costados, con pasto arriba
     g.poner(X0, 0, Z0, X1, 40, z0, "Piedra")
     g.poner(X0, 40, Z0, X1, 44, z0, "Pasto")
@@ -756,24 +756,23 @@ def plaza(g, s, rng):
         g.poner(xa, 28, z0, xb, 32, 8, "Pasto")
     s.marcar(XMIN, z0, XMAX, z0 + 2)
     # arco hacia la Pradera, con pilares y cristales
-    g.poner(XMIN, 0, 0, -24, 32, 8, "Muro")
-    g.poner(24, 0, 0, XMAX, 32, 8, "Muro")
-    g.poner(-24, 24, 0, 24, 32, 8, "Muro")
-    g.poner(XMIN, 32, 0, XMAX, 34, 8, "Oro")
-    g.poner(-28, 32, -2, 28, 36, 10, "Oro")
-    for x in (-32, 24):
-        g.poner(x, 0, -2, x + 8, 38, 10, "PiedraClara")
-        g.poner(x, 38, -2, x + 8, 40, 10, "Oro")
-        g.poner(x + 2, 40, 2, x + 6, 50, 6, "CristalCuarzo")
-        g.poner(x + 2, 50, 2, x + 4, 54, 4, "CristalCuarzo")
+    # puerta grande (17/10): 64 de ancho y 36 de alto
+    g.poner(XMIN, 0, 0, -32, 40, 8, "Muro")
+    g.poner(32, 0, 0, XMAX, 40, 8, "Muro")
+    g.poner(-32, 36, 0, 32, 40, 8, "Muro")
+    g.poner(XMIN, 40, 0, XMAX, 42, 8, "Oro")
+    g.poner(-36, 40, -2, 36, 44, 10, "Oro")
+    for x in (-40, 32):
+        g.poner(x, 0, -2, x + 8, 46, 10, "PiedraClara")
+        g.poner(x, 46, -2, x + 8, 48, 10, "Oro")
+        g.poner(x + 2, 48, 2, x + 6, 58, 6, "CristalCuarzo")
+        g.poner(x + 2, 58, 2, x + 4, 62, 4, "CristalCuarzo")
     s.marcar(XMIN, -2, XMAX, 8)
     s.marcar(-16, z0, 16, 0)  # camino del Santuario al arco
-    marcador("Pieza", (ARCO[0], 0, ARCO[1]), (22, 20, 3), 0, Nombre="Arco_Entrada")
-    # sin pared a la izquierda: sigue el campo de las parcelas
-    za, zb = PASILLO
-    g.poner(X0, 0, za, XMIN, 40, zb, None)
-    g.poner(X0, -2, za, XMIN, 0, zb, "Baldosa")
-    s.marcar(XMIN, za, XMIN + 8, zb)
+    marcador("Pieza", (ARCO[0], 0, ARCO[1]), (40, 36, 6), 0, Nombre="Arco_Entrada", Escala=1.8)
+    # los 2 tableros en la pared de adelante, a los lados de la puerta, mirando a la plaza
+    marcador("Tablero", (-72, 9, -1), (16, 12, 1), 0, Tabla="Geodas")
+    marcador("Tablero", (72, 9, -1), (16, 12, 1), 0, Tabla="Hallazgo")
 
     # spawn, con un anillo dorado en el piso
     sx, sz = SPAWN
@@ -1276,7 +1275,7 @@ def armar(semilla=7):
     plaza(g, s, rng)
     for n in range(1, 6):
         bioma(g, s, rng, n)
-    return g.cajas() + patio() + dimension_prisma()
+    return g.cajas() + dimension_prisma()
 
 
 def escribir(cajas):
