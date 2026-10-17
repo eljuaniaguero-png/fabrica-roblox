@@ -27,13 +27,13 @@ from mathutils import Matrix, Vector  # noqa: E402
 ICONOS = m.ARTE / "iconos" / "gemas"
 
 # Solo las piedras que Juani ya aprobó entran al FBX de su zona
-APROBADAS = {"Cuarzo", "Jaspe", "Amatista", "AgataMusgosa", "Esmeralda", "TurmalinaRosa", "CorazondePradera", "DiamanteFloral", "JadeArcoiris", "TreboldeCristal", "AuroraVerde"}
+APROBADAS = {"Cuarzo", "Jaspe", "Amatista", "AgataMusgosa", "Esmeralda", "TurmalinaRosa", "CorazondePradera", "DiamanteFloral", "JadeArcoiris", "TreboldeCristal", "AuroraVerde", "SemilladelMundo"}
 
 # Piedras con alto propio (studs) y pivote en el centro de la base en vez del centro de la caja
-ALTO = {"Cuarzo": 2.5, "Jaspe": 2.5, "Amatista": 3.0, "AgataMusgosa": 3.0, "Esmeralda": 3.5, "TurmalinaRosa": 3.5, "CorazondePradera": 4.0, "DiamanteFloral": 4.0, "JadeArcoiris": 4.5, "TreboldeCristal": 4.5, "AuroraVerde": 5.0}
-PIVOTE_BASE = {"Cuarzo", "Jaspe", "Amatista", "AgataMusgosa", "Esmeralda", "TurmalinaRosa", "CorazondePradera", "DiamanteFloral", "JadeArcoiris", "TreboldeCristal", "AuroraVerde"}
+ALTO = {"Cuarzo": 2.5, "Jaspe": 2.5, "Amatista": 3.0, "AgataMusgosa": 3.0, "Esmeralda": 3.5, "TurmalinaRosa": 3.5, "CorazondePradera": 4.0, "DiamanteFloral": 4.0, "JadeArcoiris": 4.5, "TreboldeCristal": 4.5, "AuroraVerde": 5.0, "SemilladelMundo": 5.0}
+PIVOTE_BASE = {"Cuarzo", "Jaspe", "Amatista", "AgataMusgosa", "Esmeralda", "TurmalinaRosa", "CorazondePradera", "DiamanteFloral", "JadeArcoiris", "TreboldeCristal", "AuroraVerde", "SemilladelMundo"}
 # Topes de triángulos propios (pisan el de la rareza)
-TOPE = {"Esmeralda": 4000, "TurmalinaRosa": 4000, "CorazondePradera": 6000, "DiamanteFloral": 6000, "JadeArcoiris": 8000, "TreboldeCristal": 8000, "AuroraVerde": 10000}
+TOPE = {"Esmeralda": 4000, "TurmalinaRosa": 4000, "CorazondePradera": 6000, "DiamanteFloral": 6000, "JadeArcoiris": 8000, "TreboldeCristal": 8000, "AuroraVerde": 10000, "SemilladelMundo": 10000}
 
 # Alto (studs) y tope de triángulos por rareza
 RAREZAS = {
@@ -1384,6 +1384,121 @@ def aurora_verde(nombre):
     return cubitos(nombre, celdas, colores)
 
 
+def semilla_del_mundo(nombre):
+    """Gema celestial de cubitos: semilla dorada gigante en capas (punta abajo, 3 tonos de oro,
+    surcos oscuros, 2 grietas de ámbar transparente) con un núcleo que brilla fuerte y se asoma por
+    arriba, de donde sale un brote: tallo verde y 3 hojas de cristal verde con venas que brillan.
+    Flota sobre un pedestal chiquito de la Pradera. Atrás, un halo cuadrado de luz; alrededor, un
+    anillo grande cuadrado y 3 gemitas que orbitan, cada una en su malla para animarla."""
+    celdas = {}
+    for z, r, clave in ((0, 6, "Roca"), (1, 5, "Roca"), (2, 4, "Pasto"), (3, 3, "Piedra")):
+        for x in range(-r, r + 1):
+            for y in range(-r, r + 1):
+                if not (abs(x) == r and abs(y) == r):
+                    oscura = clave == "Roca" and random.Random(f"{x},{y},{z}").random() < 0.3
+                    celdas[(x, y, z)] = "RocaOscura" if oscura else clave
+    for x, y, z0, alto in ((-5, 2, 2, 2), (5, -3, 2, 3), (2, 5, 2, 2), (-3, -5, 2, 2), (4, 4, 3, 1)):
+        for z in range(z0, z0 + alto):
+            celdas[(x, y, z)] = "Cristalito"
+    # semilla: medio ancho del cuadrado en cada capa
+    anchos = [0, 1, 2, 3, 4, 4, 5, 5, 5, 5, 4, 4, 3]
+    zb = 6
+    w_de = {zb + i: w for i, w in enumerate(anchos)}
+    ztop = zb + len(anchos) - 1
+    for z, w in w_de.items():
+        t = (z - zb) / (ztop - zb)
+        arriba, abajo = w_de.get(z + 1, -1), w_de.get(z - 1, -1)
+        for x in range(-w, w + 1):
+            for y in range(-w, w + 1):
+                d = max(abs(x), abs(y))
+                if d <= w - 2 and z > zb:
+                    celdas[(x, y, z)] = "Nucleo"
+                    continue
+                if d < w and d <= arriba and d <= abajo:
+                    continue
+                if z == ztop and d <= 1:
+                    celdas[(x, y, z)] = "Nucleo"  # la semilla se abre arriba: se ve el brillo
+                    continue
+                cara = y if abs(x) == w else x  # coordenada a lo largo de la cara
+                if d == w and abs(cara) == 2 and abs(x) != abs(y):
+                    celdas[(x, y, z)] = "Surco"
+                elif d == w and ((x == w and y == 0) or (y == -w and x == 1)) and zb + 3 <= z <= ztop - 2:
+                    celdas[(x, y, z)] = "Ambar"  # grietas por donde se ve el núcleo
+                else:
+                    v = t + (random.Random(f"s{x},{y},{z}").random() - 0.5) * 0.25
+                    celdas[(x, y, z)] = "OroClaro" if v > 0.62 else "OroMedio" if v > 0.3 else "OroOscuro"
+    celdas[(0, 0, zb - 1)] = "OroOscuro"
+    # brote: tallo y 3 hojas de cristal con vena que brilla
+    for z in range(ztop + 1, ztop + 6):
+        for x in (-1, 0):
+            for y in (-1, 0):
+                celdas[(x, y, z)] = "Tallo"
+
+    def hoja(base_z, sx, sy, largo):
+        """Hoja en diagonal hacia arriba y afuera, en rombo de cubitos, con la vena al medio."""
+        for u in range(1, largo + 1):
+            ancho = min(u, largo + 1 - u) // 2 + 1
+            centro = base_z + round(u * 0.7)
+            for dz in range(-ancho, ancho + 1):
+                for grosor in (-1, 0):
+                    x = sx * u + (grosor if sy else 0) - (1 if sx < 0 else 0)
+                    y = sy * u + (grosor if sx else 0) - (1 if sy < 0 else 0)
+                    if sx and sy:
+                        continue
+                    celdas[(x, y, centro + dz)] = "Vena" if dz == 0 and grosor == 0 else "Hoja"
+
+    hoja(ztop + 3, -1, 0, 7)
+    hoja(ztop + 4, 1, 0, 7)
+    hoja(ztop + 5, 0, -1, 5)
+    for x in (-1, 0):  # yema de arriba
+        for y in (-1, 0):
+            celdas[(x, y, ztop + 6)] = celdas[(x, y, ztop + 7)] = "Hoja"
+    celdas[(0, 0, ztop + 8)] = "Vena"
+    zmax = max(c[2] for c in celdas)
+    # halo cuadrado de luz atrás
+    hz = (zb + zmax) // 2
+    for x in range(-7, 8):
+        for z in range(hz - 7, hz + 8):
+            m_ = max(abs(x), abs(z - hz))
+            if m_ == 7 or (m_ == 6 and (x + z) % 2 == 0):
+                celdas[(x, 9, z)] = "Halo"
+    # anillo grande cuadrado
+    for x in range(-9, 10):
+        for y in range(-9, 10):
+            if max(abs(x), abs(y)) == 9 and y != 9:
+                celdas[(x, y, zb + 6)] = "Anillo"
+                if (x + y) % 4 == 0:
+                    celdas[(x, y, zb + 7)] = "Anillo"
+    for (gx, gy, gz), clave in (((-9, -3, zb + 2), "Gemita1"), ((7, -6, zb + 10), "Gemita2"),
+                                ((-6, 6, zmax - 3), "Gemita3")):
+        for a in range(2):
+            for b in range(2):
+                for c in range(2):
+                    celdas[(gx + a, gy + b, gz + c)] = clave
+    colores = {
+        "OroOscuro": ("#B07A12", 0.3, None, 0.0, 1),
+        "OroMedio": ("#E0A82A", 0.25, None, 0.0, 1),
+        "OroClaro": ("#FFD45C", 0.2, "#FFD45C", 0.1, 1),
+        "Surco": ("#7A5008", 0.4, None, 0.0, 1),
+        "Ambar": ("#FFB830", 0.05, None, 0.0, 0.5),
+        "Nucleo": ("#FFF6C0", 0.2, "#FFE680", 4.0, 1),
+        "Tallo": ("#2E8B3E", 0.6, None, 0.0, 1),
+        "Hoja": ("#3CE07A", 0.05, None, 0.0, 0.6),
+        "Vena": ("#C8FFB0", 0.1, "#9CFF80", 2.0, 1),
+        "Halo": ("#FFE9A0", 0.1, "#FFD860", 0.8, 0.5),
+        "Anillo": ("#FFE58A", 0.2, None, 0.0, 1),
+        "Gemita1": ("#3CE07A", 0.05, "#3CE07A", 0.8, 1),
+        "Gemita2": ("#FFD45C", 0.05, "#FFD45C", 0.8, 1),
+        "Gemita3": ("#5CE6FF", 0.05, "#5CE6FF", 0.8, 1),
+        "Cristalito": ("#8CEBA8", 0.1, "#8CEBA8", 0.4, 1),
+        "Pasto": ("#4E9A3A", 0.8, None, 0.0, 1),
+        "Piedra": ("#B8BCC4", 0.7, None, 0.0, 1),
+        "Roca": ("#8A8F99", 0.8, None, 0.0, 1),
+        "RocaOscura": ("#5D626C", 0.85, None, 0.0, 1),
+    }
+    return cubitos(nombre, celdas, colores)
+
+
 # nombre: (zona, rareza, forma, {clave: (color, brillo)})
 PIEDRAS = {
     "Cuarzo": (
@@ -1407,6 +1522,7 @@ PIEDRAS = {
     "JadeArcoiris": (1, "Mitica", jade_arcoiris, None),
     "TreboldeCristal": (1, "Mitica", trebol_de_cristal, None),
     "AuroraVerde": (1, "Celestial", aurora_verde, None),
+    "SemilladelMundo": (1, "Celestial", semilla_del_mundo, None),
 }
 
 
