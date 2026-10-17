@@ -10,6 +10,7 @@
 --   cadena), cada uno con su premio.
 -- Con "Efectos reducidos" no hay destello ni temblor y la tarjeta es más simple.
 
+local ContentProvider = game:GetService("ContentProvider")
 local Lighting = game:GetService("Lighting")
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
@@ -40,6 +41,17 @@ blanco.BackgroundColor3 = Color3.new(1, 1, 1)
 blanco.BackgroundTransparency = 1
 blanco.ZIndex = 10
 blanco.Parent = pantalla
+
+-- Precarga los íconos de las gemas para que no salga la tarjeta vacía la primera vez.
+task.spawn(function()
+	local lista = {}
+	for _, id in GameConfig.IconosGemas :: { [string]: string } do
+		if id ~= "" then
+			table.insert(lista, id)
+		end
+	end
+	ContentProvider:PreloadAsync(lista)
+end)
 
 local function indiceRareza(id: string): number
 	for i, r in GameConfig.Rarezas do
