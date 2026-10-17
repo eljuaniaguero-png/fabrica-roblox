@@ -53,6 +53,17 @@ Piezas:
                  al premio, colgada de un brazo del soporte. Focos de colores (Neon) en el borde
                  del escenario (una malla por color: FocoRojo, FocoAmarillo...) y 2 pedestales
                  chiquitos a los costados para mostrar mascotas.
+  Arco_Entrada   arco grande de 20 studs de ancho (3 de fondo, 20 de alto) por donde se pasa del
+                 lobby a la zona 1: 2 columnas de ladrillo gris de 4 studs con zócalo oscuro, dintel
+                 y arriba 2 escalones más angostos; en el medio del frente, una tabla lisa para el
+                 cartel (sin texto). Una antorcha de bloques en la cara de afuera de cada columna
+                 (palo, copa y fuego naranja y amarillo, Neon en Roblox). Mallas Ladrillo,
+                 Zocalo, Cartel, Madera, Copa, Fuego y FuegoClaro.
+  Spawn          plataforma redonda de 12 studs en 3 anillos de escalones (1 stud cada uno), de
+                 piedra clara con el borde del anillo de abajo dorado, y un cristal celeste que brilla
+                 flotando arriba: el cristal es un objeto aparte "Spawn_Cristal" con el pivote en
+                 su centro (el juego lo puede hacer girar o subir y bajar). Mallas Piedra, Oro y
+                 Spawn_Cristal.
 
 Reglas (GUIA, sección 5): studs como textura (texturas/Studs.png), un color plano por malla,
 escala real (1 stud = 0,28 m), pivote en el centro de la base, frente hacia -Y de Blender (-Z de
@@ -718,6 +729,103 @@ def mats_ruleta(studs=None):
     return mats
 
 
+# --- Arco_Entrada y Spawn --------------------------------------------------------------------
+
+COLORES_ARCO = {
+    "ladrillo": "#7E828C",  # ladrillo gris
+    "zocalo": "#4E525C",
+    "cartel": COLORES_PUESTO["cartel"],
+    "madera": "#6B4226",
+    "copa": "#3A3A42",
+    "fuego": "#FF8A1F",
+    "fuego_claro": "#FFE14D",
+}
+COLORES_SPAWN = {"piedra": "#D8D4CC", "oro": "#FFC83D", "cristal": "#7CF5FF"}
+BRILLAN.update({"fuego_claro": 3.0, "cristal": 2.5})
+SIN_STUDS.update({"fuego_claro", "cristal", "copa"})
+MAX["Arco_Entrada"] = 4000
+MAX["Spawn"] = 4000
+
+
+def arco_entrada(mats):
+    """Arco_Entrada: devuelve (objetos, triángulos por malla). Pivote en el centro de la base."""
+    lad, zoc, car, mad, copa, fue, fcl = (D.Malla() for _ in range(7))
+    y0, y1 = -1.5, 1.5
+    for x0, x1 in ((-10, -6), (6, 10)):
+        zoc.caja((x0 - 0.3, x1 + 0.3), (y0 - 0.3, y1 + 0.3), (0, 1.5))
+        ladrillos_borde(lad, x0, x1, y0, y1, 1.5, 14)
+    zoc.caja((-10.3, 10.3), (y0 - 0.3, y1 + 0.3), (14, 14.6))
+    ladrillos_borde(lad, -10, 10, y0, y1, 14.6, 16.6)
+    ladrillos_borde(lad, -8, 8, y0 + 0.25, y1 - 0.25, 16.6, 18.6)
+    ladrillos_borde(lad, -4.5, 4.5, y0 + 0.5, y1 - 0.5, 18.6, 19.6)
+    zoc.caja((-5, 5), (y0 + 0.3, y1 - 0.3), (19.6, 20))
+    # tabla del cartel al frente, en el medio del dintel y el primer escalón
+    car.caja((-4.5, 4.5), (y0 - 0.5, y0), (14.9, 17.9))
+    mad.caja((-4.8, 4.8), (y0 - 0.6, y0), (14.6, 14.9), caras="xXyzZ")
+    mad.caja((-4.8, 4.8), (y0 - 0.6, y0), (17.9, 18.2), caras="xXyzZ")
+    # antorchas en la cara de afuera de cada columna
+    for lado in (-1, 1):
+        x = lado * 10.6
+        mad.caja((x - 0.3, x + 0.3), (-0.3, 0.3), (7.5, 10.5), caras="xXyYz")
+        mad.caja((lado * 10, x + lado * 0.3) if lado > 0 else (x - 0.3, -10), (-0.25, 0.25), (8.2, 8.7), caras="xXyYzZ")
+        copa.caja((x - 0.6, x + 0.6), (-0.6, 0.6), (10.5, 11.2))
+        fue.caja((x - 0.45, x + 0.45), (-0.45, 0.45), (11.2, 12.2), caras="xXyYZ")
+        fcl.caja((x - 0.22, x + 0.22), (-0.22, 0.22), (12.2, 12.9), caras="xXyYZ")
+    return armar(
+        "Arco_Entrada",
+        [
+            ("Ladrillo", lad, mats["ladrillo"]),
+            ("Zocalo", zoc, mats["zocalo"]),
+            ("Cartel", car, mats["cartel"]),
+            ("Madera", mad, mats["madera"]),
+            ("Copa", copa, mats["copa"]),
+            ("Fuego", fue, mats["fuego"]),
+            ("FuegoClaro", fcl, mats["fuego_claro"]),
+        ],
+    )
+
+
+SPAWN_ANILLOS = (6, 4.5, 3)  # radio de cada anillo, de abajo para arriba
+SPAWN_CRISTAL_Z = 6.5
+
+
+def spawn(mats):
+    """Spawn: devuelve (objetos, triángulos por malla). Pivote en el centro de la base."""
+    import math
+
+    piedra, oro, cris = D.Malla(), D.Malla(), D.Malla()
+    r0 = SPAWN_ANILLOS[0]
+    todas, dorado = set(), set()
+    for k, radio in enumerate(SPAWN_ANILLOS):
+        for i in range(2 * r0):
+            for j in range(2 * r0):
+                d = math.hypot(i + 0.5 - r0, j + 0.5 - r0)
+                if d < radio:
+                    todas.add((i, j, k))
+                    if k == 0 and d >= radio - 1:  # el borde dorado va en el anillo de abajo
+                        dorado.add((i, j, k))
+    D.voxeles_malla(piedra, todas - dorado, (1, 1, 1), (-r0, -r0, 0), llenas=todas)
+    D.voxeles_malla(oro, dorado, (1, 1, 1), (-r0, -r0, 0), llenas=todas)
+    # cristal: rombo de cajas apiladas alrededor de (0, 0, 0)
+    for z0, z1, h in ((-1.6, -1.0, 0.3), (-1.0, -0.4, 0.65), (-0.4, 0.4, 0.95), (0.4, 1.0, 0.65), (1.0, 1.6, 0.3)):
+        cris.caja((-h, h), (-h, h), (z0, z1))
+    objs, conteo = armar("Spawn", [("Piedra", piedra, mats["piedra"]), ("Oro", oro, mats["oro"])])
+    o, c = D.mallas([("Spawn_Cristal", cris, mats["cristal"])], MAX["Spawn"], "Spawn")
+    o[0].location.z = SPAWN_CRISTAL_Z * M.STUD
+    o[0].rotation_euler.z = math.radians(45)
+    conteo.update(c)
+    return objs + o, conteo
+
+
+def arco_y_spawn(studs):
+    """Para el render: el arco atrás y el spawn adelante."""
+    objs, conteo = arco_entrada(materiales("Arco", COLORES_ARCO, studs))
+    o, c = spawn(materiales("Spawn", COLORES_SPAWN, studs))
+    M.mover(o, 18 * M.STUD, -4 * M.STUD)
+    print("TRIANGULOS Arco_Entrada", sum(conteo.values()), "Spawn", sum(c.values()))
+    return objs + o, {**{f"Arco_{k}": v for k, v in conteo.items()}, **{f"Spawn_{k}": v for k, v in c.items()}}
+
+
 # --- render y exportación --------------------------------------------------------------------
 
 # nombre -> (armar, materiales, centro de la cámara en studs, ancho de la cámara en studs,
@@ -727,6 +835,7 @@ PIEZAS = {
     "Tienda_Forja": (tienda_forja, mats_tienda, (0, -1.5, 9.5), 40, 12),
     "Pedestal_Exhibicion": (lambda s: pedestales(studs=s), lambda s=None: s, (0, -1.5, 1), 24, 25),
     "Parcela_Exhibicion": (parcela_render, lambda s=None: s, (0, -2, 1), 52, 35),
+    "Arco_Entrada": (arco_y_spawn, lambda s=None: s, (6, -2, 9), 50, 15),
     "Ruleta_Mascotas": (ruleta, mats_ruleta, (0, -3, 10.5), 46, 15),
 }
 
