@@ -27,13 +27,13 @@ from mathutils import Matrix, Vector  # noqa: E402
 ICONOS = m.ARTE / "iconos" / "gemas"
 
 # Solo las piedras que Juani ya aprobó entran al FBX de su zona
-APROBADAS = {"Cuarzo", "Jaspe", "Amatista", "AgataMusgosa", "Esmeralda", "TurmalinaRosa", "CorazondePradera", "DiamanteFloral", "JadeArcoiris", "TreboldeCristal"}
+APROBADAS = {"Cuarzo", "Jaspe", "Amatista", "AgataMusgosa", "Esmeralda", "TurmalinaRosa", "CorazondePradera", "DiamanteFloral", "JadeArcoiris", "TreboldeCristal", "AuroraVerde"}
 
 # Piedras con alto propio (studs) y pivote en el centro de la base en vez del centro de la caja
-ALTO = {"Cuarzo": 2.5, "Jaspe": 2.5, "Amatista": 3.0, "AgataMusgosa": 3.0, "Esmeralda": 3.5, "TurmalinaRosa": 3.5, "CorazondePradera": 4.0, "DiamanteFloral": 4.0, "JadeArcoiris": 4.5, "TreboldeCristal": 4.5}
-PIVOTE_BASE = {"Cuarzo", "Jaspe", "Amatista", "AgataMusgosa", "Esmeralda", "TurmalinaRosa", "CorazondePradera", "DiamanteFloral", "JadeArcoiris", "TreboldeCristal"}
+ALTO = {"Cuarzo": 2.5, "Jaspe": 2.5, "Amatista": 3.0, "AgataMusgosa": 3.0, "Esmeralda": 3.5, "TurmalinaRosa": 3.5, "CorazondePradera": 4.0, "DiamanteFloral": 4.0, "JadeArcoiris": 4.5, "TreboldeCristal": 4.5, "AuroraVerde": 5.0}
+PIVOTE_BASE = {"Cuarzo", "Jaspe", "Amatista", "AgataMusgosa", "Esmeralda", "TurmalinaRosa", "CorazondePradera", "DiamanteFloral", "JadeArcoiris", "TreboldeCristal", "AuroraVerde"}
 # Topes de triángulos propios (pisan el de la rareza)
-TOPE = {"Esmeralda": 4000, "TurmalinaRosa": 4000, "CorazondePradera": 6000, "DiamanteFloral": 6000, "JadeArcoiris": 8000, "TreboldeCristal": 8000}
+TOPE = {"Esmeralda": 4000, "TurmalinaRosa": 4000, "CorazondePradera": 6000, "DiamanteFloral": 6000, "JadeArcoiris": 8000, "TreboldeCristal": 8000, "AuroraVerde": 10000}
 
 # Alto (studs) y tope de triángulos por rareza
 RAREZAS = {
@@ -1281,6 +1281,109 @@ def trebol_de_cristal(nombre):
     return cubitos(nombre, celdas, colores)
 
 
+def aurora_verde(nombre):
+    """Gema celestial de cubitos: cristal verde claro en capas (punta escalonada arriba y abajo,
+    3 tonos, aristas claras, cinto de oro con remaches) con un núcleo que brilla fuerte, rodeado
+    por 2 cintas de luz verde y celeste en espiral. Flota sobre un pedestal chiquito de la
+    Pradera (escalones de piedra y pasto con cristalitos). Atrás, un halo cuadrado de luz; alrededor,
+    un anillo grande cuadrado y 3 gemitas que orbitan. Lo que se mueve va en mallas aparte:
+    Anillo, Halo y cada Gemita."""
+    celdas = {}
+    # pedestal chiquito en escalones
+    for z, r, clave in ((0, 6, "Roca"), (1, 5, "Roca"), (2, 4, "Pasto"), (3, 3, "Piedra")):
+        for x in range(-r, r + 1):
+            for y in range(-r, r + 1):
+                if max(abs(x), abs(y)) <= r and not (abs(x) == r and abs(y) == r):
+                    oscura = clave == "Roca" and random.Random(f"{x},{y},{z}").random() < 0.3
+                    celdas[(x, y, z)] = "RocaOscura" if oscura else clave
+    for x, y, z0, alto in ((-5, 2, 2, 2), (5, -3, 2, 3), (2, 5, 2, 2), (-3, -5, 2, 2), (4, 4, 3, 1)):
+        for z in range(z0, z0 + alto):
+            celdas[(x, y, z)] = "Cristalito"
+    # gema en capas: medio ancho del cuadrado en cada capa
+    anchos = [0, 1, 1, 2, 3, 3, 4, 4, 5, 5, 5, 5, 5, 4, 4, 3, 2, 2, 1, 0]
+    zb = 7
+    w_de = {zb + i: w for i, w in enumerate(anchos)}
+    zmax = zb + len(anchos) - 1
+    wmax = max(anchos)
+    cinto = [z for z, w in w_de.items() if w == wmax][1]
+    for z, w in w_de.items():
+        t = (z - zb) / (zmax - zb)
+        arriba, abajo = w_de.get(z + 1, -1), w_de.get(z - 1, -1)
+        for x in range(-w, w + 1):
+            for y in range(-w, w + 1):
+                d = max(abs(x), abs(y))
+                if d <= w - 2 and 0 < z - zb < len(anchos) - 1:
+                    celdas[(x, y, z)] = "Nucleo"
+                    continue
+                if d < w and d <= arriba and d <= abajo:
+                    continue  # hueco: se ve el núcleo
+                if z == cinto and d == w:
+                    celdas[(x, y, z)] = "Remache" if (x + y) % 3 == 0 else "Oro"
+                elif d == w and abs(x) == abs(y) or d > arriba or d > abajo:
+                    celdas[(x, y, z)] = "Faceta"
+                else:
+                    v = t + (random.Random(f"a{x},{y},{z}").random() - 0.5) * 0.25
+                    celdas[(x, y, z)] = "VerdeClaro" if v > 0.6 else "VerdeMedio" if v > 0.3 else "VerdeOscuro"
+    celdas[(0, 0, zmax + 1)] = "Oro"  # puntita de oro arriba
+    celdas[(0, 0, zb - 1)] = "Oro"
+
+    # cintas de luz en espiral alrededor de la gema
+    def borde(i, r):
+        """Punto i del contorno de un cuadrado de medio ancho r (recorrido en vueltas)."""
+        lado = 2 * r
+        i %= 4 * lado
+        tramo, k = divmod(i, lado)
+        return [(-r + k, -r), (r, -r + k), (r - k, r), (-r, r - k)][tramo]
+
+    for fase, clave in ((0, "CintaVerde"), (14, "CintaCeleste")):
+        for z in range(zb + 1, zmax):
+            for paso in range(3):
+                x, y = borde(fase + (z - zb) * 3 + paso, wmax + 2)
+                celdas[(x, y, z)] = clave
+    # halo cuadrado de luz atrás (vertical)
+    hz = (zb + zmax) // 2
+    for x in range(-7, 8):
+        for z in range(hz - 7, hz + 8):
+            if max(abs(x), abs(z - hz)) == 7 or (max(abs(x), abs(z - hz)) == 6 and (x + z) % 2 == 0):
+                celdas[(x, 9, z)] = "Halo"
+    # anillo grande cuadrado alrededor (horizontal)
+    for x in range(-9, 10):
+        for y in range(-9, 10):
+            if max(abs(x), abs(y)) == 9 and y != 9:
+                celdas[(x, y, cinto - 3)] = "Anillo"
+                if (x + y) % 4 == 0:
+                    celdas[(x, y, cinto - 2)] = "Anillo"
+    # 3 gemitas que orbitan (cubitos de 2 x 2 x 2)
+    for (gx, gy, gz), clave in (((-9, -3, zb + 2), "Gemita1"), ((7, -6, cinto + 3), "Gemita2"),
+                                ((-6, 6, zmax - 1), "Gemita3")):
+        for a in range(2):
+            for b in range(2):
+                for c in range(2):
+                    celdas[(gx + a, gy + b, gz + c)] = clave
+    colores = {
+        "VerdeOscuro": ("#139A4A", 0.05, None, 0.0, 0.75),
+        "VerdeMedio": ("#3CCB6E", 0.05, None, 0.0, 0.65),
+        "VerdeClaro": ("#8AF0A8", 0.05, None, 0.0, 0.55),
+        "Faceta": ("#C8FFD8", 0.05, "#8AF0A8", 0.2, 0.8),
+        "Nucleo": ("#B8FFD0", 0.2, "#5CFF8A", 2.5, 1),
+        "Oro": ("#F2B92E", 0.25, None, 0.0, 1),
+        "Remache": ("#FFE58A", 0.2, None, 0.0, 1),
+        "CintaVerde": ("#2EE86A", 0.1, "#2EE86A", 1.2, 0.85),
+        "CintaCeleste": ("#2EC8F0", 0.1, "#2EC8F0", 1.2, 0.85),
+        "Halo": ("#7DFFB0", 0.1, "#5CFF8A", 0.8, 0.5),
+        "Anillo": ("#E6F0F2", 0.2, "#C8F0FF", 0.4, 1),
+        "Gemita1": ("#5CE6FF", 0.05, "#5CE6FF", 0.8, 1),
+        "Gemita2": ("#5CFF8A", 0.05, "#5CFF8A", 0.8, 1),
+        "Gemita3": ("#FFFFFF", 0.05, "#E0FFF0", 0.8, 1),
+        "Cristalito": ("#8CEBA8", 0.1, "#8CEBA8", 0.4, 1),
+        "Pasto": ("#4E9A3A", 0.8, None, 0.0, 1),
+        "Piedra": ("#B8BCC4", 0.7, None, 0.0, 1),
+        "Roca": ("#8A8F99", 0.8, None, 0.0, 1),
+        "RocaOscura": ("#5D626C", 0.85, None, 0.0, 1),
+    }
+    return cubitos(nombre, celdas, colores)
+
+
 # nombre: (zona, rareza, forma, {clave: (color, brillo)})
 PIEDRAS = {
     "Cuarzo": (
@@ -1303,6 +1406,7 @@ PIEDRAS = {
     "DiamanteFloral": (1, "Legendaria", diamante_floral, None),
     "JadeArcoiris": (1, "Mitica", jade_arcoiris, None),
     "TreboldeCristal": (1, "Mitica", trebol_de_cristal, None),
+    "AuroraVerde": (1, "Celestial", aurora_verde, None),
 }
 
 
