@@ -112,6 +112,10 @@ Piezas:
   Arbol_Quemado  Volcán: el Arbol_Seco en Y de la Pradera (variante 3) quemado: tronco negro con
                  base en escalones, 4 ramas gris carbón y una brasa naranja (Neon) en la punta de
                  cada una (unos 15 studs de alto). Mallas Tronco, Ramas y Brasas.
+  Roca_Lava      Volcán: roca negra de bloques de 2 studs (bola chata y mordida) con grietas de
+                 lava que suben por los costados y cristalitos rojos (Neon) arriba. Tres tamaños:
+                 Chica (8 studs de ancho), Mediana (12) y Grande (20). Mallas Roca, Grietas
+                 (TextureID = texturas/LavaLiquida.png) y Cristales.
   Columnas_Basalto Volcán: grupo de columnas negras de bloques pegadas entre sí, de distintas
                  alturas, con grietas de lava al pie que suben por las paredes y salen por el
                  piso. Dos versiones: 1 (5 columnas, 14 studs de alto) y 2 (7 columnas, 16).
@@ -2633,6 +2637,117 @@ def render_quemado():
     print("TRIANGULOS Arbol_Quemado", conteo, "total", sum(conteo.values()))
 
 
+# Roca_Lava (Volcán): roca negra de bloques de 2 studs (bola chata y mordida, como la de abajo a la
+# derecha de mapa-1.png) con grietas de lava que suben por los costados y cristalitos rojos
+# (Neon) que salen de arriba.
+ROCA_LAVA_COLOR = VOLCAN_NEGRO
+ROCA_LAVA_CRISTAL = "#E0201A"  # en Roblox, Neon
+ROCA_LAVA_CUBO = 2  # studs de cada bloque
+ROCA_LAVA_GRIETA = (0.7, 0.12)  # ancho y cuánto sale de la pared
+# tamaño -> (radio en bloques, alto en bloques, grietas, cristales, semilla)
+ROCAS_LAVA = {"Chica": (2, 3, 4, 2, 71), "Mediana": (3, 4, 6, 3, 73), "Grande": (5, 5, 9, 5, 79)}
+MAX_ROCA_LAVA = 1500  # por pieza (sumando sus mallas)
+
+
+def celdas_roca_lava(radio, alto, semilla):
+    """Bola chata de bloques, plana abajo y con el borde mordido."""
+    rng = random.Random(semilla)
+    celdas = set()
+    for x in range(-radio, radio):
+        for y in range(-radio, radio):
+            for z in range(alto):
+                d = ((x + 0.5) / radio) ** 2 + ((y + 0.5) / radio) ** 2 + ((z + 0.3) / alto) ** 2
+                if d <= 1 + rng.uniform(-0.15, 0.1):
+                    celdas.add((x, y, z))
+    return celdas
+
+
+def roca_lava(mats, tam="Mediana"):
+    """Roca_Lava_<tam>: mallas Roca, Grietas y Cristales. Pivote en el centro de la base."""
+    radio, alto, n_grietas, n_cristales, semilla = ROCAS_LAVA[tam]
+    rng = random.Random(semilla + 1)
+    s = ROCA_LAVA_CUBO
+    celdas = celdas_roca_lava(radio, alto, semilla)
+    roca, grietas, cristales = Malla(), Malla(), Malla()
+    voxeles_malla(roca, celdas, (s, s, s), (0, 0, 0), celdas | {(x, y, -1) for x, y, _ in celdas})
+    w, g = ROCA_LAVA_GRIETA
+    # grietas: en paredes que se ven desde el piso, suben de abajo y terminan en una raya de costado
+    paredes = sorted(
+        (c, d) for c in celdas if c[2] == 0 for d in ((1, 0), (-1, 0), (0, 1), (0, -1)) if (c[0] + d[0], c[1] + d[1], 0) not in celdas
+    )
+    for (x, y, _), (dx, dy) in rng.sample(paredes, min(n_grietas, len(paredes))):
+        sube = 1  # cuántos bloques sube mientras la pared siga
+        while (x, y, sube) in celdas and (x + dx, y + dy, sube) not in celdas and sube < alto - 1 and rng.random() < 0.7:
+            sube += 1
+        c = rng.uniform(0.3, 0.7) * s
+        tope = sube * s - rng.uniform(0.3, 0.8)
+        if dx:
+            px = (x + 1) * s if dx > 0 else x * s
+            capa = (px, px + g) if dx > 0 else (px - g, px)
+            grietas.caja(capa, (y * s + c - w / 2, y * s + c + w / 2), (0, tope), caras=("X" if dx > 0 else "x") + "yYZ")
+            lado = rng.choice((-1, 1))  # la raya de costado, arriba de la grieta
+            y0 = y * s + c + (w / 2 if lado > 0 else -w / 2)
+            y1 = min(max(y0 + lado * 0.8, y * s), (y + 1) * s)
+            grietas.caja(capa, (min(y0, y1), max(y0, y1)), (tope - w, tope), caras=("X" if dx > 0 else "x") + "yYzZ")
+        else:
+            py = (y + 1) * s if dy > 0 else y * s
+            capa = (py, py + g) if dy > 0 else (py - g, py)
+            grietas.caja((x * s + c - w / 2, x * s + c + w / 2), capa, (0, tope), caras=("Y" if dy > 0 else "y") + "xXZ")
+            lado = rng.choice((-1, 1))
+            x0 = x * s + c + (w / 2 if lado > 0 else -w / 2)
+            x1 = min(max(x0 + lado * 0.8, x * s), (x + 1) * s)
+            grietas.caja((min(x0, x1), max(x0, x1)), capa, (tope - w, tope), caras=("Y" if dy > 0 else "y") + "xXzZ")
+    # cristales: salen de la tapa de bloques de arriba, inclinados hacia afuera
+    tapas = sorted(c for c in celdas if (c[0], c[1], c[2] + 1) not in celdas)
+    for x, y, z in rng.sample(tapas, min(n_cristales, len(tapas))):
+        base = ((x + rng.uniform(0.3, 0.7)) * s, (y + rng.uniform(0.3, 0.7)) * s, (z + 1) * s - 0.3)
+        rumbo = math.degrees(math.atan2(y + 0.5, x + 0.5)) + rng.uniform(-30, 30)
+        cristales.caja_girada(base, rng.uniform(1.6, 2.8), rng.choice((0.8, 1.0)), rumbo, rng.uniform(10, 35))
+    nombre = f"Roca_Lava_{tam}"
+    piezas = [("Roca", roca, mats["roca"]), ("Grietas", grietas, mats["lava"]), ("Cristales", cristales, mats["cristal"])]
+    objs, conteo = mallas(piezas, MAX_ROCA_LAVA, nombre)
+    if sum(conteo.values()) > MAX_ROCA_LAVA:
+        raise RuntimeError(f"{nombre}: {sum(conteo.values())} triángulos (máximo {MAX_ROCA_LAVA})")
+    return objs, conteo
+
+
+def mats_roca_lava(studs=None):
+    """Con studs, para el render (grietas de lava y cristales que brillan); sin, para exportar."""
+    if studs:
+        return {
+            "roca": material_studs("RocaLava", ROCA_LAVA_COLOR, studs),
+            "lava": material_lava("RocaLavaGrieta"),
+            "cristal": M.material("RocaLavaCristal", ROCA_LAVA_CRISTAL, brillo=ROCA_LAVA_CRISTAL, fuerza_brillo=1.5),
+        }
+    return {
+        "roca": M.material("RocaLava", ROCA_LAVA_COLOR),
+        "lava": M.material("RocaLavaGrieta", ZONAS[4]["detalle"]),
+        "cristal": M.material("RocaLavaCristal", ROCA_LAVA_CRISTAL),
+    }
+
+
+def render_roca_lava():
+    """Roca_Lava Chica, Mediana y Grande en fila, de frente y de costado, al lado de las referencias."""
+    conteo = {}
+    xs = {"Chica": -19, "Mediana": -5, "Grande": 14}
+    for vista in ("frente", "costado"):
+        M.limpiar_escena()
+        escena = M.escena_render(1280, 720)
+        tablero = bpy.data.materials["Piso"].node_tree.nodes["Checker Texture"]
+        tablero.inputs["Color1"].default_value = (*M.hex_a_rgb("#5C5F73"), 1)
+        tablero.inputs["Color2"].default_value = (*M.hex_a_rgb("#50536A"), 1)
+        mats = mats_roca_lava(textura_studs())
+        for tam, x in xs.items():
+            objs, conteo[tam] = roca_lava(mats, tam)
+            M.mover(objs, x * M.STUD if vista == "frente" else 0, 0 if vista == "frente" else -x * M.STUD)
+        giro = -15 if vista == "frente" else 75
+        camara_orto(escena, (0, 0, 4 * M.STUD), 50 * M.STUD, 18, giro)
+        M.render(f"roca_lava_{vista}")
+    comparar("Roca_Lava")
+    for tam, c in conteo.items():
+        print("TRIANGULOS Roca_Lava", tam, c, "total", sum(c.values()))
+
+
 # nombre -> (función, alto total en studs, fondo en studs)
 PIEZAS = {
     "Risco_Escalon": (risco_escalon, 30, 16),
@@ -2824,6 +2939,7 @@ REFERENCIAS = {
     "Columnas_Basalto": (("mapa-1.png", (0.86, 0.55, 1.0, 0.80)), "volcan-1.webp"),
     # el árbol seco de la Pradera (la Y de la derecha) y el volcán de hoy
     "Arbol_Quemado": ("arbol-seco-1.png", "volcan-1.webp"),
+    "Roca_Lava": (("mapa-1.png", (0.86, 0.55, 1.0, 0.80)), "volcan-1.webp"),
     "Volcan": (("mapa-1.png", (0.86, 0.55, 1.0, 0.80)), "volcan-1.webp"),
     "Esqueleto": (("cactus-2.webp", (0.10, 0.42, 0.42, 0.80)), ("estilo-2.png", (0.76, 0.45, 0.98, 0.75))),
 }
@@ -3746,6 +3862,7 @@ def exportar_zona3():
 def exportar_zona4():
     """Deco_Zona4.fbx: piezas que son solo del Volcán. Raíz Deco_Zona4 con el vacío Volcan y sus
     mallas Volcan_Roca, Volcan_RocaNegra y Volcan_Lava, Arbol_Quemado con _Tronco, _Ramas y _Brasas (Neon),
+    Roca_Lava_Chica, _Mediana y _Grande con _Roca, _Grietas y _Cristales (Neon),
     y Columnas_Basalto_1 y _2 con
     _Basalto, _Tapa y _Grietas (en Roblox, la Lava y las Grietas con TextureID =
     texturas/LavaLiquida.png). Sin textura: el juego pone el color y TextureID = Studs.png."""
@@ -3757,6 +3874,16 @@ def exportar_zona4():
         bpy.context.scene.collection.objects.link(vacio)
         vacio.parent = raiz
         objs, conteo = crear(mats)
+        for o in objs:
+            o.parent = vacio
+            o.name = o.data.name = f"{nombre}_{o.name.split('.')[0]}"
+        print("TRIANGULOS", nombre, conteo, "total", sum(conteo.values()))
+    for tam in ROCAS_LAVA:
+        nombre = f"Roca_Lava_{tam}"
+        vacio = bpy.data.objects.new(nombre, None)
+        bpy.context.scene.collection.objects.link(vacio)
+        vacio.parent = raiz
+        objs, conteo = roca_lava(mats_roca_lava(), tam)
         for o in objs:
             o.parent = vacio
             o.name = o.data.name = f"{nombre}_{o.name.split('.')[0]}"
@@ -3875,4 +4002,6 @@ if __name__ == "__main__":
         render_basalto()
     if "--pieza" not in sys.argv or "Arbol_Quemado" in sys.argv:
         render_quemado()
+    if "--pieza" not in sys.argv or "Roca_Lava" in sys.argv:
+        render_roca_lava()
     print("Listo")
