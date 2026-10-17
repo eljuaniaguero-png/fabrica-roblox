@@ -27,11 +27,11 @@ from mathutils import Matrix, Vector  # noqa: E402
 ICONOS = m.ARTE / "iconos" / "gemas"
 
 # Solo las piedras que Juani ya aprobó entran al FBX de su zona
-APROBADAS = {"Cuarzo", "Jaspe", "Amatista", "AgataMusgosa", "Esmeralda", "TurmalinaRosa", "CorazondePradera", "DiamanteFloral", "JadeArcoiris", "TreboldeCristal", "AuroraVerde", "SemilladelMundo"}
+APROBADAS = {"Cuarzo", "Jaspe", "Amatista", "AgataMusgosa", "Esmeralda", "TurmalinaRosa", "CorazondePradera", "DiamanteFloral", "JadeArcoiris", "TreboldeCristal", "AuroraVerde", "SemilladelMundo", "Arenisca"}
 
 # Piedras con alto propio (studs) y pivote en el centro de la base en vez del centro de la caja
-ALTO = {"Cuarzo": 2.5, "Jaspe": 2.5, "Amatista": 3.0, "AgataMusgosa": 3.0, "Esmeralda": 3.5, "TurmalinaRosa": 3.5, "CorazondePradera": 4.0, "DiamanteFloral": 4.0, "JadeArcoiris": 4.5, "TreboldeCristal": 4.5, "AuroraVerde": 5.0, "SemilladelMundo": 5.0}
-PIVOTE_BASE = {"Cuarzo", "Jaspe", "Amatista", "AgataMusgosa", "Esmeralda", "TurmalinaRosa", "CorazondePradera", "DiamanteFloral", "JadeArcoiris", "TreboldeCristal", "AuroraVerde", "SemilladelMundo"}
+ALTO = {"Cuarzo": 2.5, "Jaspe": 2.5, "Amatista": 3.0, "AgataMusgosa": 3.0, "Esmeralda": 3.5, "TurmalinaRosa": 3.5, "CorazondePradera": 4.0, "DiamanteFloral": 4.0, "JadeArcoiris": 4.5, "TreboldeCristal": 4.5, "AuroraVerde": 5.0, "SemilladelMundo": 5.0, "Arenisca": 2.5}
+PIVOTE_BASE = {"Cuarzo", "Jaspe", "Amatista", "AgataMusgosa", "Esmeralda", "TurmalinaRosa", "CorazondePradera", "DiamanteFloral", "JadeArcoiris", "TreboldeCristal", "AuroraVerde", "SemilladelMundo", "Arenisca"}
 # Topes de triángulos propios (pisan el de la rareza)
 TOPE = {"Esmeralda": 4000, "TurmalinaRosa": 4000, "CorazondePradera": 6000, "DiamanteFloral": 6000, "JadeArcoiris": 8000, "TreboldeCristal": 8000, "AuroraVerde": 10000, "SemilladelMundo": 10000}
 
@@ -1499,6 +1499,103 @@ def semilla_del_mundo(nombre):
     return cubitos(nombre, celdas, colores)
 
 
+def arenisca(nombre):
+    """Piedra en bruto de cubitos (Dunas): trozo de arenisca en capas que se escalonan como una
+    meseta chica, franjas naranja, arena y crema (cada una más clara arriba), vetas claras,
+    2 grietas marrones, 3 cristalitos de ámbar (uno de vidrio con núcleo) y base de tierra
+    rojiza con piedritas."""
+    rng = random.Random(21)
+    celdas = {}
+    for x in range(-9, 10):
+        for y in range(-7, 8):
+            r = math.hypot(x / 8.5, y / 6.5) + (h(x // 2, y // 2, 0, 5) - 0.5) * 0.35
+            if r < 1:
+                celdas[(x, y, 0)] = "TierraOscura"
+            if r < 0.85:
+                celdas[(x, y, 1)] = "Tierra" if h(x, y, 1, 6) > 0.1 else "TierraOscura"
+    # franjas (desde abajo): cada capa de 2 cubitos se achica y se corre, así quedan escalones
+    franjas = ["Naranja", "Arena", "Crema", "Naranja", "Arena", "Crema"]
+    capas = [(1 + 2 * i + j, i, f) for i, f in enumerate(franjas) for j in range(2)]
+    tope = capas[-1][0]
+    for z, i, f in capas:
+        t = i / (len(franjas) - 1)
+        cx, cy = round(1.5 * t), round(-1.0 * t)
+        rx, ry = 7.0 * (1 - 0.55 * t**1.3), 5.4 * (1 - 0.5 * t**1.2)
+        for x in range(-9, 10):
+            for y in range(-7, 8):
+                ruido = (h(x // 3, y // 3, i, 8) - 0.5) * 0.5
+                if ((x - cx) / rx) ** 2 + ((y - cy) / ry) ** 2 > 1 + ruido:
+                    continue
+                if x + y > 10 - i * 1.2:  # canto partido en diagonal
+                    continue
+                tono = z / tope + (h(x, y, z, 9) - 0.5) * 0.15
+                celdas[(x, y, z)] = f + ("Claro" if tono > 0.6 else "" if tono > 0.3 else "Oscuro")
+    llenas = set(celdas)
+
+    def afuera(c):
+        x, y, z = c
+        return any((x + dx, y + dy, z + dz) not in llenas for (dx, dy, dz), _ in m.CARAS[:5])
+
+    roca = sorted(c for c, k in celdas.items() if not k.startswith("Tierra") and afuera(c))
+    # vetas: puntitos claros sueltos que cortan las franjas
+    for c in roca:
+        if h(*c, 12) < 0.05:
+            celdas[c] = "Veta"
+    # grietas: caminos de cubitos marrones que bajan por la superficie
+    for inicio in ((-4, -4, 10), (5, 2, 8)):
+        c = min(roca, key=lambda p: sum((a - b) ** 2 for a, b in zip(p, inicio)))
+        for _ in range(8):
+            celdas[c] = "Grieta"
+            vec = [
+                p for p in roca
+                if p[2] <= c[2] and sum(abs(a - b) for a, b in zip(p, c)) == 1 and celdas[p] != "Grieta"
+            ]
+            if not vec:
+                break
+            c = rng.choice(vec)
+
+    def columna(x0, y0, z0, lado, alto, clave, corre=(0, 0)):
+        for i in range(alto):
+            dx, dy = corre[0] * (i // 2), corre[1] * (i // 2)
+            ancho = lado if i < alto - 1 else max(1, lado - 2)
+            off = (lado - ancho) // 2
+            for a in range(ancho):
+                for b in range(ancho):
+                    celdas[(x0 + dx + off + a, y0 + dy + off + b, z0 + i)] = clave
+
+    # cristalitos de ámbar: uno de vidrio arriba con núcleo, dos macizos a los costados
+    columna(0, -2, tope - 1, 3, 3, "Vidrio", corre=(1, 0))
+    celdas[(1, -1, tope)] = celdas[(1, -1, tope + 1)] = "Nucleo"
+    columna(-6, 1, 4, 2, 4, "Ambar", corre=(-1, 1))
+    columna(4, -5, 2, 2, 3, "Ambar", corre=(1, -1))
+    # piedritas y montoncitos de arena en la tierra
+    for x, y in ((-8, 2), (7, 3), (-3, 6), (2, 6)):
+        celdas[(x, y, 1)] = celdas[(x, y, 2)] = "Piedrita"
+    for x, y in ((6, -4), (-7, -3)):
+        celdas[(x, y, 2)] = "Arenita"
+    colores = {
+        "NaranjaOscuro": ("#B8561E", 0.75, None, 0.0, 1),
+        "Naranja": ("#E07A2E", 0.7, None, 0.0, 1),
+        "NaranjaClaro": ("#F29A4A", 0.7, None, 0.0, 1),
+        "ArenaOscuro": ("#C99A55", 0.75, None, 0.0, 1),
+        "Arena": ("#E3B86E", 0.7, None, 0.0, 1),
+        "ArenaClaro": ("#F2D08C", 0.7, None, 0.0, 1),
+        "CremaOscuro": ("#E2CFA6", 0.7, None, 0.0, 1),
+        "Crema": ("#F4E6C4", 0.65, None, 0.0, 1),
+        "CremaClaro": ("#FFF6E0", 0.6, None, 0.0, 1),
+        "Veta": ("#FFFBEF", 0.5, None, 0.0, 1),
+        "Grieta": ("#6E3A18", 0.85, None, 0.0, 1),
+        "Ambar": ("#FFB347", 0.2, "#FF9A2E", 0.35, 1),
+        "Vidrio": ("#FFE1A8", 0.05, None, 0.0, 0.45),
+        "Nucleo": ("#FF8C1A", 0.2, "#FF8C1A", 2.0, 1),
+        "Tierra": ("#9C4F2C", 0.85, None, 0.0, 1),
+        "TierraOscura": ("#6E3420", 0.9, None, 0.0, 1),
+        "Piedrita": ("#7A6A5C", 0.8, None, 0.0, 1),
+        "Arenita": ("#D9B27A", 0.8, None, 0.0, 1),
+    }
+    return cubitos(nombre, celdas, colores)
+
+
 # nombre: (zona, rareza, forma, {clave: (color, brillo)})
 PIEDRAS = {
     "Cuarzo": (
@@ -1523,6 +1620,7 @@ PIEDRAS = {
     "TreboldeCristal": (1, "Mitica", trebol_de_cristal, None),
     "AuroraVerde": (1, "Celestial", aurora_verde, None),
     "SemilladelMundo": (1, "Celestial", semilla_del_mundo, None),
+    "Arenisca": (2, "Comun", arenisca, None),
 }
 
 
