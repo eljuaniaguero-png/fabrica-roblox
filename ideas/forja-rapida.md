@@ -185,6 +185,13 @@ Decisiones del Grupo 3:
   - Abismo: columnas con estrellas e islas flotantes.
 - Fotos: `arte/renders/mapa_*.jpg` (general, plaza, cada bioma, una cámara secreta por dentro y la Dimensión Prisma).
 
+- **Plan v5 (17/10/2026, aprobado por Juani)**: dibujo en `forja-rapida/arte/plan-mapa.svg`.
+  - Más angosto: la zona caminable va de x -88 a 88 (antes -116 a 116).
+  - Lobby sin Museo ni Santuario. Hay 6 parcelas: 4 en fila contra la pared del fondo y 1 a cada costado, todas con la entrada hacia el medio. Banco y Tienda al frente, la Ruleta en el centro y los 2 tableros en la pared de adelante.
+  - Cada zona tiene 15 puntos de geoda, más el Jefe y las 2 Ocultas de la cámara secreta.
+  - Arriba de cada portón va un cartel de dificultad: MEDIO, DIFÍCIL, MUY DIFÍCIL y EXTRA DIFÍCIL.
+  - Decisión: "4 horizontal, 1 vertical por lado" se entendió como 4 parcelas al fondo y 1 en cada costado. Los sistemas del Museo y del Renacer siguen en el código; solo se sacaron del mapa.
+
 ## Rocas por bioma (Blender, 14/10/2026)
 
 Cada bioma tiene 5 rocas (`arte/scripts/rocas.py`, foto en `arte/renders/geodas_biomas.jpg`). Cada geoda nace con una al azar; solo cambia cómo se ve, no lo que da. Nombres y colores en `GameConfig.Zonas[n].Variantes`.

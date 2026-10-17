@@ -369,15 +369,17 @@ local function armarMarcador(m: Marcador, carpeta: Instance)
 			p
 		)
 		decorativa(marco)
-		local poste = parte(
-			"Poste",
-			Vector3.new(0.8, cf.Position.Y, 0.8),
-			CFrame.new(cf.Position.X, cf.Position.Y / 2, cf.Position.Z),
-			"#8A5A2B",
-			Enum.Material.Wood,
-			p
-		)
-		poste.CanCollide = false
+		if a.SinPoste ~= true then -- los carteles de dificultad van pegados al muro
+			local poste = parte(
+				"Poste",
+				Vector3.new(0.8, cf.Position.Y, 0.8),
+				CFrame.new(cf.Position.X, cf.Position.Y / 2, cf.Position.Z),
+				"#8A5A2B",
+				Enum.Material.Wood,
+				p
+			)
+			poste.CanCollide = false
+		end
 		local menu = if typeof(a.Menu) == "string" then a.Menu else ""
 		local texto = if typeof(a.Texto) == "string" then a.Texto else menu
 		local sg = Instance.new("SurfaceGui")

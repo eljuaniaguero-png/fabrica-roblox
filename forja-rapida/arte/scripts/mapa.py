@@ -152,7 +152,7 @@ ROCAS = {
 
 LARGO = 240  # largo de cada bioma
 MURO = 8  # muro entre biomas
-XMIN, XMAX = -116, 116  # zona caminable
+XMIN, XMAX = -88, 88  # zona caminable (17/10, plan v5: más angosto)
 X0, X1 = XMIN - 20, XMAX + 52  # la grilla: el risco derecho es más grueso (ahí van las cámaras)
 Y0, Y1 = -4, 92
 PLAZA = -136  # la plaza va de z -136 a 0
@@ -167,15 +167,25 @@ SANTUARIO = (-44, -136, 44, -100)  # x0, z0, x1, z1 (z1 = cara de afuera de la p
 # costados y el Spawn adelante, cerca del arco. Lo demás (Museo, Santuario, tableros, vitrinas y
 # el Jefe Ancestral) va en el patio de la izquierda.
 ESCALA_TIENDAS = 1.3  # el Banco y la Tienda, un poco más grandes que la pieza
-PUESTO = (-107, -30)  # Puesto_Vender (el Banco), pegado a la pared izquierda, mirando al medio
-TIENDA = (105, -30)  # Tienda_Forja, pegada a la pared derecha
-RULETA = (0, -34)  # Ruleta_Mascotas en el medio, mirando al Spawn
+# plan v5 (17/10): Banco y Tienda al frente (cerca de la puerta) mirando al medio, la Ruleta en
+# el centro del lobby, 4 parcelas en fila al fondo y 1 a cada costado. Sin Museo ni Santuario.
+PUESTO = (-50, -24)  # Puesto_Vender (el Banco)
+TIENDA = (50, -24)  # Tienda_Forja
+RULETA = (0, -70)  # Ruleta_Mascotas en el centro, mirando al Spawn
 RUEDA_ALTO = 10.5  # centro de su rueda (lobby.py: RUEDA_Z)
 ARCO = (0, -2)  # Arco_Entrada, adelante del arco de piedra hacia la Pradera
 # calle de las parcelas de exhibición, saliendo por un pasillo en la pared izquierda
-ESCALA_PARCELAS = 1.2  # parcelas de 48 x 38,4
-PARCELAS_X = (-81, -27, 27, 81)  # centro de cada parcela, 2 filas de 4 al fondo
-PARCELAS_Z = (-116.8, -66.4)  # fila de atrás (entrada hacia +z) y de adelante (entrada hacia -z)
+ESCALA_PARCELAS = 1.0  # parcelas de 40 x 32
+# (x, z, giro): 4 en fila contra la pared del fondo (entrada hacia +z) y 1 a cada costado
+# (entrada hacia el medio)
+PARCELAS = (
+    (-66, -118, 180),
+    (-22, -118, 180),
+    (22, -118, 180),
+    (66, -118, 180),
+    (-72, -66, 270),
+    (72, -66, 90),
+)
 PATIO_X0 = -320  # patio de la izquierda: de x -320 a -136
 DX_SANTUARIO = -200  # el Santuario y el Museo se arman como antes, corridos en x
 DX_MUSEO = -170
@@ -183,13 +193,15 @@ PASILLO = (-136, 0)  # la pared izquierda se saca entera: plaza y parcelas son u
 MUSEO = (-116, -100, -80, -52)
 ANCESTRAL = (-200, -40)
 
-# Puntos de geoda de cada bioma: (distancia desde el comienzo del bioma, columnas x)
+DIFICULTAD = {2: "MEDIO", 3: "DIFÍCIL", 4: "MUY DIFÍCIL", 5: "EXTRA DIFÍCIL"}
+
+# Puntos de geoda de cada bioma (15 por bioma, plan v5): (distancia desde el comienzo del bioma, columnas x)
 FILAS_GEODAS = (
-    (30, (-94, -62, -30, 30, 62, 94)),
-    (72, (-78, -46, 46, 78)),
-    (114, (-94, -62, -30, 30, 62, 94)),
-    (156, (-78, -46, 46, 78)),
-    (194, (-94, -54, 54, 94)),
+    (30, (-64, -36, 36, 64)),
+    (76, (-50, 50)),
+    (118, (-64, -36, 36, 64)),
+    (160, (-50, 50)),
+    (200, (-62, -36, 48)),
 )
 
 
@@ -771,8 +783,8 @@ def plaza(g, s, rng):
     s.marcar(-16, z0, 16, 0)  # camino del Santuario al arco
     marcador("Pieza", (ARCO[0], 0, ARCO[1]), (40, 36, 6), 0, Nombre="Arco_Entrada", Escala=1.8)
     # los 2 tableros en la pared de adelante, a los lados de la puerta, mirando a la plaza
-    marcador("Tablero", (-72, 9, -1), (16, 12, 1), 0, Tabla="Geodas")
-    marcador("Tablero", (72, 9, -1), (16, 12, 1), 0, Tabla="Hallazgo")
+    marcador("Tablero", (-68, 9, -1), (16, 12, 1), 0, Tabla="Geodas")
+    marcador("Tablero", (68, 9, -1), (16, 12, 1), 0, Tabla="Hallazgo")
 
     # spawn, con un anillo dorado en el piso
     sx, sz = SPAWN
@@ -783,17 +795,14 @@ def plaza(g, s, rng):
     s.marcar(sx - 12, sz - 12, sx + 12, sz + 12)
     marcador("Cartel", (-24, 4, -14), (8, 5, 1), mirar((-24, -14), SPAWN), Menu="Misiones", Texto="MISIONES")
     # el Banco y la Tienda a los costados, de frente al que aparece
-    for nombre, (px, pz), giro in (("Puesto_Vender", PUESTO, 270), ("Tienda_Forja", TIENDA, 90)):
+    for nombre, (px, pz), giro in (("Puesto_Vender", PUESTO, 0), ("Tienda_Forja", TIENDA, 0)):
         marcador("Pieza", (px, 0, pz), (14, 14, 12), giro, Nombre=nombre, Escala=ESCALA_TIENDAS)
         s.marcar(px - 8, pz - 7, px + 8, pz + 7)
     ruleta(g, s)
-    # las parcelas al fondo: 2 filas de 4, con las entradas hacia el camino del medio
-    n = 0
-    for pz, giro in zip(PARCELAS_Z, (180, 0)):
-        for px in PARCELAS_X:
-            n += 1
-            marcador("Pieza", (px, 0, pz), (48, 8, 38.4), giro, Nombre="Parcela_Exhibicion", Numero=n, Escala=ESCALA_PARCELAS)
-            s.marcar(px - 24, pz - 20, px + 24, pz + 20)
+    # las parcelas: 4 al fondo y 1 a cada costado, con la entrada hacia el medio
+    for n, (px, pz, giro) in enumerate(PARCELAS, 1):
+        marcador("Pieza", (px, 0, pz), (40, 8, 32), giro, Nombre="Parcela_Exhibicion", Numero=n, Escala=ESCALA_PARCELAS)
+        s.marcar(px - 20, pz - 20, px + 20, pz + 20)
 
 
 class Corrido:
@@ -964,6 +973,8 @@ def bioma(g, s, rng, n):
             g.poner(x, 0, ze - 4, x + 4, 28, ze, b["Cristal"])
             g.poner(x, 28, ze - 4, x + 4, 30, ze, "Oro")
         marcador("PuertaZona", (0, 10, ze + 4), (24, 20, 2), 0, Zona=n + 1)
+        # cartel de dificultad arriba del portón (plan v5)
+        marcador("Cartel", (0, 34, ze - 1), (26, 6, 1), 0, Texto=DIFICULTAD[n + 1], SinPoste=True)
     s.marcar(XMIN, ze - 8, XMAX, ze)
     s.marcar(-18, zs, 18, ze)  # el camino al portón queda libre
 
