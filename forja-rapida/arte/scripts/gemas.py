@@ -27,13 +27,13 @@ from mathutils import Matrix, Vector  # noqa: E402
 ICONOS = m.ARTE / "iconos" / "gemas"
 
 # Solo las piedras que Juani ya aprobó entran al FBX de su zona
-APROBADAS = {"Cuarzo", "Jaspe", "Amatista", "AgataMusgosa", "Esmeralda", "TurmalinaRosa", "CorazondePradera", "DiamanteFloral", "JadeArcoiris", "TreboldeCristal", "AuroraVerde", "SemilladelMundo", "Arenisca", "Ambar", "Citrino", "OjodeTigre", "TopacioImperial"}
+APROBADAS = {"Cuarzo", "Jaspe", "Amatista", "AgataMusgosa", "Esmeralda", "TurmalinaRosa", "CorazondePradera", "DiamanteFloral", "JadeArcoiris", "TreboldeCristal", "AuroraVerde", "SemilladelMundo", "Arenisca", "Ambar", "Citrino", "OjodeTigre", "TopacioImperial", "Cornalina"}
 
 # Piedras con alto propio (studs) y pivote en el centro de la base en vez del centro de la caja
-ALTO = {"Cuarzo": 2.5, "Jaspe": 2.5, "Amatista": 3.0, "AgataMusgosa": 3.0, "Esmeralda": 3.5, "TurmalinaRosa": 3.5, "CorazondePradera": 4.0, "DiamanteFloral": 4.0, "JadeArcoiris": 4.5, "TreboldeCristal": 4.5, "AuroraVerde": 5.0, "SemilladelMundo": 5.0, "Arenisca": 2.5, "Ambar": 2.5, "Citrino": 3.0, "OjodeTigre": 3.0, "TopacioImperial": 3.5}
-PIVOTE_BASE = {"Cuarzo", "Jaspe", "Amatista", "AgataMusgosa", "Esmeralda", "TurmalinaRosa", "CorazondePradera", "DiamanteFloral", "JadeArcoiris", "TreboldeCristal", "AuroraVerde", "SemilladelMundo", "Arenisca", "Ambar", "Citrino", "OjodeTigre", "TopacioImperial"}
+ALTO = {"Cuarzo": 2.5, "Jaspe": 2.5, "Amatista": 3.0, "AgataMusgosa": 3.0, "Esmeralda": 3.5, "TurmalinaRosa": 3.5, "CorazondePradera": 4.0, "DiamanteFloral": 4.0, "JadeArcoiris": 4.5, "TreboldeCristal": 4.5, "AuroraVerde": 5.0, "SemilladelMundo": 5.0, "Arenisca": 2.5, "Ambar": 2.5, "Citrino": 3.0, "OjodeTigre": 3.0, "TopacioImperial": 3.5, "Cornalina": 3.5}
+PIVOTE_BASE = {"Cuarzo", "Jaspe", "Amatista", "AgataMusgosa", "Esmeralda", "TurmalinaRosa", "CorazondePradera", "DiamanteFloral", "JadeArcoiris", "TreboldeCristal", "AuroraVerde", "SemilladelMundo", "Arenisca", "Ambar", "Citrino", "OjodeTigre", "TopacioImperial", "Cornalina"}
 # Topes de triángulos propios (pisan el de la rareza)
-TOPE = {"Esmeralda": 4000, "TurmalinaRosa": 4000, "CorazondePradera": 6000, "DiamanteFloral": 6000, "JadeArcoiris": 8000, "TreboldeCristal": 8000, "AuroraVerde": 10000, "SemilladelMundo": 10000, "TopacioImperial": 4000}
+TOPE = {"Esmeralda": 4000, "TurmalinaRosa": 4000, "CorazondePradera": 6000, "DiamanteFloral": 6000, "JadeArcoiris": 8000, "TreboldeCristal": 8000, "AuroraVerde": 10000, "SemilladelMundo": 10000, "TopacioImperial": 4000, "Cornalina": 4000}
 
 # Alto (studs) y tope de triángulos por rareza
 RAREZAS = {
@@ -875,6 +875,22 @@ TALLADAS_CUBITOS = {
             "Cristal": ("#FFB04A", 0.15, "#FFA030", 0.4, 1),
         },
     },
+    # cornalina en gota: panza abajo y punta escalonada larga arriba, rojo anaranjado
+    "Cornalina": {
+        "engarce": (4, 4),
+        "anchos": [(1, 0), (2, 1), (3, 2), (4, 3), (4, 3), (5, 4), (5, 4), (5, 4), (5, 4), (4, 3), (4, 3),
+                   (3, 3), (3, 2), (3, 2), (2, 2), (2, 1), (1, 1), (1, 1), (1, 0), (0, 0)],
+        "garras": (4, 3, 9),
+        "tonos": ("RojoOscuro", "RojoMedio", "RojoClaro"),
+        "colores": {
+            "RojoOscuro": ("#A3200F", 0.05, None, 0.0, 0.7),
+            "RojoMedio": ("#D9431C", 0.05, None, 0.0, 0.6),
+            "RojoClaro": ("#F2552A", 0.05, None, 0.0, 0.55),
+            "Faceta": ("#F2603A", 0.05, "#FF5A2E", 0.25, 0.75),
+            "Corazon": ("#FF8A5C", 0.2, "#FF4A1A", 2.5, 1),
+            "Cristal": ("#E8552A", 0.15, "#E8552A", 0.4, 1),
+        },
+    },
 }
 
 
@@ -884,6 +900,10 @@ def esmeralda(nombre):
 
 def topacio_imperial(nombre):
     return tallada(nombre, TALLADAS_CUBITOS["TopacioImperial"])
+
+
+def cornalina(nombre):
+    return tallada(nombre, TALLADAS_CUBITOS["Cornalina"])
 
 
 def turmalina_rosa(nombre):
@@ -1843,6 +1863,7 @@ PIEDRAS = {
     "Citrino": (2, "Rara", citrino, None),
     "OjodeTigre": (2, "Rara", ojo_de_tigre, None),
     "TopacioImperial": (2, "Epica", topacio_imperial, None),
+    "Cornalina": (2, "Epica", cornalina, None),
 }
 
 
