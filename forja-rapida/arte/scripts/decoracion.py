@@ -103,6 +103,12 @@ Piezas:
   Lago_Congelado Glaciar: lago plano de 24 x 16 studs: un óvalo de lajas de hielo celeste (4 x 4
                  studs, cada una apenas más alta o más baja) con un borde de bloques de nieve de
                  alturas distintas y 2 grietas blancas en zigzag. Mallas Hielo, Nieve y Grieta.
+  Volcan         Volcán (zona 4), la montaña del fondo: cono de bloques de roca gris oscuro y
+                 negro en escalones (columnas de 4 x 4 studs que suben de a 2), 60 x 52 studs de
+                 base y 40 de alto, con un cráter lleno de lava que se derrama por una mella del
+                 borde y 2 ríos de lava que bajan escalón por escalón por adelante a la derecha
+                 hasta un charco. Mallas Roca, RocaNegra y Lava (en Roblox, TextureID =
+                 texturas/LavaLiquida.png, que ya brilla).
                  Cada árbol de la Pradera (y el arbusto) tiene 3 variantes (Arbol_Grande_1, _2 y _3...).
   Roca_Meteorito solo Abismo: media bola chata de bloques de 2 studs azul noche, con un cráter
                  arriba (corrido a un costado) que brilla violeta en el fondo y estrellitas lilas
@@ -133,7 +139,8 @@ Uso: <python de Blender> forja-rapida/arte/scripts/decoracion.py
    arte/fbx/Deco_Zona5.fbx con las piezas del Abismo, sin renders; --pieza Arbol_Grande y
    --exportar-zona1: lo mismo con las piezas de la Pradera y arte/fbx/Deco_Zona1.fbx;
    --exportar-zona2: arte/fbx/Deco_Zona2.fbx con las piezas de las Dunas; --exportar-zona3:
-   arte/fbx/Deco_Zona3.fbx con las del Glaciar)
+   arte/fbx/Deco_Zona3.fbx con las del Glaciar; --exportar-zona4: arte/fbx/Deco_Zona4.fbx con
+   las del Volcán)
 """
 
 import math
@@ -2260,6 +2267,186 @@ def mats_columna(studs=None):
     return {"columna": M.material("Columna", COLUMNA_COLOR), "estrellas": M.material("Estrellas", ESTRELLA_COLOR)}
 
 
+# Volcan (Volcán, zona 4): la montaña del fondo. Cono de bloques de roca gris oscuro y negro en
+# escalones (columnas de 4 x 4 studs que suben de a 2 studs), con un cráter arriba lleno de lava
+# que se ve por una mella del borde, y 2 ríos de lava que se derraman por la mella y bajan
+# escalón por escalón por el costado de adelante a la derecha hasta un charco en el piso.
+VOLCAN_GRIS = ZONAS[4]["tapa"]
+VOLCAN_NEGRO = "#1E1A1D"  # el risco de la zona 4 (#3A2E33) casi no se distinguía del gris
+VOLCAN_LADO = 4  # studs de cada columna
+VOLCAN_PISO = 2  # studs de cada escalón
+VOLCAN_CELDAS = 15  # 15 x 15 columnas: 60 x 60 studs de base
+VOLCAN_PISOS = 20  # 20 x 2 = 40 studs de alto
+VOLCAN_RADIOS = (7.5, 6.8)  # radio de la base en columnas (x, y): apenas ovalado
+VOLCAN_BORDE = 2.4  # radio del borde del cráter en columnas
+VOLCAN_CRATER = 1.5  # radio del hueco del cráter (3 x 3 columnas)
+VOLCAN_FONDO = 16  # pisos llenos en el fondo del cráter (z = 32)
+VOLCAN_MELLA = 19  # pisos del borde de adelante, más bajo: por ahí se ve la lava y se derrama (z = 38)
+VOLCAN_MELLAS = [(6, 5), (7, 5), (8, 5)]  # las columnas del borde de adelante
+VOLCAN_LAVA_ALTO = 0.3  # grosor de la capa de lava sobre la roca
+VOLCAN_RIO = 2.5  # ancho de los ríos
+VOLCAN_NEGROS = 0.3  # fracción de bloques negros (de a tandas de 3 pisos)
+VOLCAN_SEMILLA = 53
+# cada río: columnas (i, j) desde la mella hacia afuera (j baja = hacia adelante, -y)
+VOLCAN_RIOS = [
+    [(8, 5), (8, 4), (9, 3), (9, 2), (9, 1), (9, 0)],
+    [(8, 5), (9, 5), (10, 4), (11, 4), (12, 3), (13, 3)],
+]
+MAX_VOLCAN = 6000
+
+
+def alturas_volcan():
+    """Pisos de cada columna (i, j): cono cóncavo (más empinado arriba), con escalones irregulares,
+    el cráter hueco y la mella. A lo largo de los ríos la altura nunca sube."""
+    rng = random.Random(VOLCAN_SEMILLA)
+    c = (VOLCAN_CELDAS - 1) / 2
+    rx, ry = VOLCAN_RADIOS
+    alto = {}
+    for i in range(VOLCAN_CELDAS):
+        for j in range(VOLCAN_CELDAS):
+            dx, dy = i - c, j - c
+            d = math.hypot(dx, dy * rx / ry)  # distancia en columnas (escala de x)
+            if d > rx:
+                continue
+            if d < VOLCAN_CRATER:
+                alto[(i, j)] = VOLCAN_FONDO
+                continue
+            h = min(1.0, ((rx - d) / (rx - VOLCAN_BORDE)) ** 1.5)
+            salto = rng.choice((-1, 1)) if rng.random() < 0.3 and h < 1 else 0
+            alto[(i, j)] = max(1, min(VOLCAN_PISOS, round(h * VOLCAN_PISOS) + salto))
+    for cel in VOLCAN_MELLAS:
+        alto[cel] = VOLCAN_MELLA
+    for rio in VOLCAN_RIOS:
+        for a, b in zip(rio, rio[1:]):
+            if b in alto:
+                alto[b] = min(alto[b], max(1, alto[a] - 1))
+    return alto
+
+
+def lava_rio(lava, rio, alto, origen):
+    """Capa de lava sobre la tapa de cada columna del río y bajando por la cara que da a la
+    siguiente; al final cae al piso y hace un charco."""
+    g, w, h = VOLCAN_LAVA_ALTO, VOLCAN_RIO / 2, VOLCAN_LADO / 2
+    for n, a in enumerate(rio):
+        cx, cy = origen[0] + (a[0] + 0.5) * VOLCAN_LADO, origen[1] + (a[1] + 0.5) * VOLCAN_LADO
+        z = alto[a] * VOLCAN_PISO
+        sig = rio[n + 1] if n + 1 < len(rio) else None
+        ant = rio[n - 1] if n > 0 else (a[0], a[1] + 1)  # la mella: hacia el cráter
+        # tapa: del centro hacia la columna de antes y hacia la de después
+        lava.caja((cx - w, cx + w), (cy - w, cy + w), (z, z + g), caras="xXyYZ")
+        for otra in (ant, sig):
+            if otra is None:
+                continue
+            di, dj = otra[0] - a[0], otra[1] - a[1]
+            if di:
+                x = (cx + w, cx + h) if di > 0 else (cx - h, cx - w)
+                lava.caja(x, (cy - w, cy + w), (z, z + g), caras="yYZ")
+            if dj:
+                y = (cy + w, cy + h) if dj > 0 else (cy - h, cy - w)
+                lava.caja((cx - w, cx + w), y, (z, z + g), caras="xXZ")
+        # cascada por la cara que da a la siguiente (o al piso, si es la última)
+        if sig is not None and sig in alto:
+            di, dj = sig[0] - a[0], sig[1] - a[1]
+            z0 = alto[sig] * VOLCAN_PISO
+        else:
+            di, dj = (sig[0] - a[0], sig[1] - a[1]) if sig else (0, -1)
+            z0 = 0
+        if z0 >= z:
+            continue
+        if di:
+            x = (cx + h, cx + h + g) if di > 0 else (cx - h - g, cx - h)
+            lava.caja(x, (cy - w, cy + w), (z0, z + g), caras=("X" if di > 0 else "x") + "yYZ")
+        else:
+            y = (cy + h, cy + h + g) if dj > 0 else (cy - h - g, cy - h)
+            lava.caja((cx - w, cx + w), y, (z0, z + g), caras=("Y" if dj > 0 else "y") + "xXZ")
+        if z0 == 0:  # charco en el piso, que se desparrama
+            px, py = cx + di * (h + 1.5), cy + dj * (h + 1.5)
+            lava.caja((px - w - 1, px + w + 1), (py - w - 1, py + w + 1), (0, 0.15), caras="xXyYZ")
+            break
+
+
+def volcan(mats):
+    """Volcan: mallas Roca (gris), RocaNegra y Lava (sin las caras de abajo ni las que se tocan).
+    Pivote en el centro de la base; los ríos bajan hacia -y (el frente) y +x."""
+    rng = random.Random(VOLCAN_SEMILLA + 1)
+    alto = alturas_volcan()
+    llenas = {(i, j, k) for (i, j), n in alto.items() for k in range(n)}
+    tandas, negras = {}, set()
+    for i, j, k in sorted(llenas):
+        t = (i, j, k // 3)
+        if t not in tandas:
+            tandas[t] = rng.random() < VOLCAN_NEGROS
+        if tandas[t]:
+            negras.add((i, j, k))
+    lado = VOLCAN_CELDAS * VOLCAN_LADO
+    origen = (-lado / 2, -lado / 2, 0)
+    tam = (VOLCAN_LADO, VOLCAN_LADO, VOLCAN_PISO)
+    solo_afuera = llenas | {(i, j, -1) for i, j, _ in llenas}
+    gris, negra, lava = Malla(), Malla(), Malla()
+    voxeles_malla(gris, llenas - negras, tam, origen, solo_afuera)
+    voxeles_malla(negra, negras, tam, origen, solo_afuera)
+    # el lago del cráter: llega justo a la mella, así se derrama
+    c = (VOLCAN_CELDAS - 1) / 2
+    zl = VOLCAN_MELLA * VOLCAN_PISO + VOLCAN_LAVA_ALTO
+    for (i, j), n in alto.items():
+        if math.hypot(i - c, (j - c) * VOLCAN_RADIOS[0] / VOLCAN_RADIOS[1]) < VOLCAN_CRATER:
+            x0, y0 = origen[0] + i * VOLCAN_LADO, origen[1] + j * VOLCAN_LADO
+            lava.caja((x0, x0 + VOLCAN_LADO), (y0, y0 + VOLCAN_LADO), (n * VOLCAN_PISO, zl), caras="Z")
+            # las paredes de adentro del borde brillan (se ven de frente por la mella)
+            g = VOLCAN_LAVA_ALTO
+            for di, dj in ((1, 0), (-1, 0), (0, 1), (0, -1)):
+                tope = alto.get((i + di, j + dj), 0) * VOLCAN_PISO - 0.5
+                if alto.get((i + di, j + dj), 0) == VOLCAN_FONDO or tope <= zl:
+                    continue
+                if di:
+                    x = (x0 + VOLCAN_LADO - g, x0 + VOLCAN_LADO) if di > 0 else (x0, x0 + g)
+                    lava.caja(x, (y0, y0 + VOLCAN_LADO), (zl, tope), caras=("x" if di > 0 else "X") + "Z")
+                else:
+                    y = (y0 + VOLCAN_LADO - g, y0 + VOLCAN_LADO) if dj > 0 else (y0, y0 + g)
+                    lava.caja((x0, x0 + VOLCAN_LADO), y, (zl, tope), caras=("y" if dj > 0 else "Y") + "Z")
+    for rio in VOLCAN_RIOS:
+        lava_rio(lava, rio, alto, origen)
+    piezas = [("Roca", gris, mats["gris"]), ("RocaNegra", negra, mats["negro"]), ("Lava", lava, mats["lava"])]
+    objs, conteo = mallas(piezas, MAX_VOLCAN, "Volcan")
+    if sum(conteo.values()) > MAX_VOLCAN:
+        raise RuntimeError(f"Volcan: {sum(conteo.values())} triángulos (máximo {MAX_VOLCAN})")
+    return objs, conteo
+
+
+def mats_volcan(studs=None):
+    """Con studs, para el render (la lava con su textura, que brilla); sin, para exportar. En
+    Roblox la Lava lleva TextureID = texturas/LavaLiquida.png (como el Detalle de la zona 4)."""
+    if studs:
+        return {
+            "gris": material_studs("VolcanGris", VOLCAN_GRIS, studs),
+            "negro": material_studs("VolcanNegro", VOLCAN_NEGRO, studs),
+            "lava": material_lava("VolcanLava"),
+        }
+    return {
+        "gris": M.material("VolcanGris", VOLCAN_GRIS),
+        "negro": M.material("VolcanNegro", VOLCAN_NEGRO),
+        "lava": M.material("VolcanLava", ZONAS[4]["detalle"]),
+    }
+
+
+def render_volcan():
+    """Volcan de frente y de costado, sobre el piso del Volcán, al lado de las referencias."""
+    conteo = {}
+    alto = VOLCAN_PISOS * VOLCAN_PISO * M.STUD
+    for vista in ("frente", "costado"):
+        M.limpiar_escena()
+        escena = M.escena_render(1280, 720)
+        tablero = bpy.data.materials["Piso"].node_tree.nodes["Checker Texture"]
+        tablero.inputs["Color1"].default_value = (*M.hex_a_rgb("#5C5F73"), 1)
+        tablero.inputs["Color2"].default_value = (*M.hex_a_rgb("#50536A"), 1)
+        objs, conteo = volcan(mats_volcan(textura_studs()))
+        giro = -12 if vista == "frente" else 75
+        camara_orto(escena, (0, 0, alto * 0.48), 100 * M.STUD, 12, giro)
+        M.render(f"volcan_{vista}")
+    comparar("Volcan")
+    print("TRIANGULOS Volcan", conteo, "total", sum(conteo.values()))
+
+
 # nombre -> (función, alto total en studs, fondo en studs)
 PIEZAS = {
     "Risco_Escalon": (risco_escalon, 30, 16),
@@ -2447,6 +2634,8 @@ REFERENCIAS = {
     # los escalones grises con nieve de las capturas del Glaciar
     "Escalones_Nevados": (("glaciar-2.webp", (0.08, 0.35, 0.50, 0.70)), ("glaciar-3.webp", (0.25, 0.10, 0.80, 0.55))),
     "Pico_Hielo": (("glaciar-1.webp", (0.15, 0.50, 0.50, 0.95)), "glaciar-2.webp"),
+    # la roca de lava de abajo a la derecha de mapa-1 y el volcán que hay hoy en el juego
+    "Volcan": (("mapa-1.png", (0.86, 0.55, 1.0, 0.80)), "volcan-1.webp"),
     "Esqueleto": (("cactus-2.webp", (0.10, 0.42, 0.42, 0.80)), ("estilo-2.png", (0.76, 0.45, 0.98, 0.75))),
 }
 
@@ -3365,7 +3554,46 @@ def exportar_zona3():
     print("  FBX Deco_Zona3.fbx")
 
 
+def exportar_zona4():
+    """Deco_Zona4.fbx: piezas que son solo del Volcán. Raíz Deco_Zona4 con el vacío Volcan y sus
+    mallas Volcan_Roca, Volcan_RocaNegra y Volcan_Lava (en Roblox, la Lava con TextureID =
+    texturas/LavaLiquida.png). Sin textura: el juego pone el color y TextureID = Studs.png."""
+    M.limpiar_escena()
+    raiz = bpy.data.objects.new("Deco_Zona4", None)
+    bpy.context.scene.collection.objects.link(raiz)
+    for nombre, crear, mats in (("Volcan", volcan, mats_volcan()),):
+        vacio = bpy.data.objects.new(nombre, None)
+        bpy.context.scene.collection.objects.link(vacio)
+        vacio.parent = raiz
+        objs, conteo = crear(mats)
+        for o in objs:
+            o.parent = vacio
+            o.name = o.data.name = f"{nombre}_{o.name.split('.')[0]}"
+        print("TRIANGULOS", nombre, conteo, "total", sum(conteo.values()))
+    bpy.ops.object.select_all(action="DESELECT")
+    for o in [raiz, *raiz.children_recursive]:
+        o.select_set(True)
+    bpy.context.view_layer.objects.active = raiz
+    bpy.ops.export_scene.fbx(
+        filepath=str(M.FBX / "Deco_Zona4.fbx"),
+        use_selection=True,
+        object_types={"MESH", "EMPTY"},
+        apply_unit_scale=True,
+        apply_scale_options="FBX_SCALE_ALL",
+        axis_forward="-Z",
+        axis_up="Y",
+        mesh_smooth_type="FACE",
+        bake_space_transform=True,
+        add_leaf_bones=False,
+    )
+    print("  FBX Deco_Zona4.fbx")
+
+
 if __name__ == "__main__":
+    if "--exportar-zona4" in sys.argv:
+        M.FBX.mkdir(parents=True, exist_ok=True)
+        exportar_zona4()
+        sys.argv.append("--solo-fbx")
     if "--exportar-zona3" in sys.argv:
         M.FBX.mkdir(parents=True, exist_ok=True)
         exportar_zona3()
@@ -3440,4 +3668,6 @@ if __name__ == "__main__":
         render_hielo_suelto()
     if "--pieza" not in sys.argv or "Lago_Congelado" in sys.argv:
         render_lago()
+    if "--pieza" not in sys.argv or "Volcan" in sys.argv:
+        render_volcan()
     print("Listo")
