@@ -85,21 +85,38 @@ local function crear()
 		Ventanas.vaciar(lista)
 		local mochila = Datos.mochila()
 		local ids = {}
-		for id, n in mochila do
-			if n > 0 and Reglas.gema(id) then
-				table.insert(ids, id)
+		-- La Forja: las gemas con efecto vienen como "Id|Efecto" (van después de la misma sin efecto)
+		for clave, n in mochila do
+			if n > 0 and Reglas.gema((Reglas.separarClave(clave))) then
+				table.insert(ids, clave)
 			end
 		end
 		table.sort(ids, function(a, b)
-			local ga, gb = Reglas.gema(a) :: GameConfig.Gema, Reglas.gema(b) :: GameConfig.Gema
+			local ia, ea = Reglas.separarClave(a)
+			local ib, eb = Reglas.separarClave(b)
+			local ga, gb = Reglas.gema(ia) :: GameConfig.Gema, Reglas.gema(ib) :: GameConfig.Gema
 			if ga.Zona ~= gb.Zona then
 				return ga.Zona > gb.Zona
 			end
-			return (ORDEN_RAREZA[ga.Rareza] or 0) > (ORDEN_RAREZA[gb.Rareza] or 0)
+			if ga.Rareza ~= gb.Rareza then
+				return (ORDEN_RAREZA[ga.Rareza] or 0) > (ORDEN_RAREZA[gb.Rareza] or 0)
+			end
+			return (ea or "") < (eb or "")
 		end)
-		for i, id in ids do
+		for i, clave in ids do
+			local id, efecto = Reglas.separarClave(clave)
 			local g = Reglas.gema(id) :: GameConfig.Gema
-			local t = tarjeta(g, "x" .. Formato.corto(mochila[id]), 138, true)
+			local e = if efecto then Reglas.efectoForja(efecto) else nil
+			local abajo = (if e then e.Nombre .. " " else "")
+				.. "x"
+				.. Formato.corto(mochila[clave])
+			local t = tarjeta(g, abajo, 138, true)
+			if e then
+				local borde = Instance.new("UIStroke")
+				borde.Color = Color3.fromHex(e.Color)
+				borde.Thickness = 4
+				borde.Parent = t
+			end
 			t.LayoutOrder = i
 			t.Parent = lista
 		end

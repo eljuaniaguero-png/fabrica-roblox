@@ -80,6 +80,8 @@ type Datos = {
 	UnoEn: number,
 	Nueva: boolean,
 	Hitos: { Avisos.Hito }?,
+	Efecto: string?, -- La Forja
+	Subio: number?,
 }
 
 -- Efectos de pantalla -----------------------------------------------------------------------
@@ -299,6 +301,19 @@ local function tarjeta(d: Datos, reducidos: boolean)
 	fila.Parent = lista
 	local suerte = Formato.suerte(d.Suerte) .. " Suerte · " .. Formato.unoEn(d.UnoEn)
 	chip(suerte, Color3.fromHex("#2DBA2D"), { "Trebol" }).Parent = fila
+	-- La Forja: efecto que ganó y si subió de rareza
+	local efecto = if d.Efecto then Reglas.efectoForja(d.Efecto) else nil
+	if efecto then
+		chip(
+			"Efecto " .. efecto.Nombre .. " x" .. efecto.Multiplicador,
+			Color3.fromHex(efecto.Color),
+			{ "Chispa" }
+		).Parent =
+			fila
+	end
+	if (d.Subio or 0) > 0 then
+		chip("¡Forjada! +" .. d.Subio, Color3.fromHex("#3FD96B"), { "Chispa" }).Parent = fila
+	end
 	if mod and Reglas.esExotica(mod.Id) then
 		local texto = mod.Nombre .. " x" .. mod.Premio
 		chip(texto, Color3.fromHex(mod.Color), Reglas.partes(mod.Id)).Parent = fila
@@ -409,6 +424,10 @@ RemotoRevelacion.OnClientEvent:Connect(function(d: Datos)
 	end
 	ocupado = true
 	task.spawn(function()
+		-- La Forja: la tarjeta sale cuando termina su escena
+		while Players.LocalPlayer:GetAttribute("EnForja") == true do
+			task.wait(0.1)
+		end
 		while #cola > 0 do
 			procesar(table.remove(cola, 1) :: Datos)
 		end

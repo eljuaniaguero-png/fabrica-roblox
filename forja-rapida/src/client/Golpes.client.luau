@@ -65,54 +65,56 @@ end
 -- Tres tiempos: el brazo derecho se levanta hacia atrás, baja con fuerza y rebota al pegar; el
 -- torso acompaña un poco. Cada GolpeFuerteCada golpes seguidos sale uno fuerte (más alto, más
 -- rebote y un "¡CRACK!" grave). Si el pico toca la geoda al bajar, se frena ahí (no la
--- atraviesa). Al caminar con el pico, el brazo se balancea suave. Se mueve el C0 de las
--- uniones (el Animator no lo pisa): lo propio al hacer clic; lo de los demás, cuando el
--- servidor marca el golpe en su pico (atributo "Golpe"). Anda igual con todos los picos.
+-- atraviesa). Al caminar con el pico, el brazo se balancea suave. Se anima lo propio al
+-- hacer clic y lo de los demás cuando el servidor marca el golpe en su pico (atributo "Golpe"). Anda igual con todos los picos.
 
--- Una unión es un Motor6D (se mueve su C0) o, con las uniones nuevas de Roblox, un
--- AnimationConstraint (su C0 es de solo lectura: se mueve el Attachment0, que es lo mismo).
+-- Una unión es un Motor6D o, con las uniones nuevas de Roblox, un AnimationConstraint. Los dos
+-- tienen Transform, que es lo que escribe el Animator (la pose de sostener la herramienta, el
+-- caminar). Se le suma el giro propio en PreSimulation, después del Animator y antes de la
+-- física. (Mover el C0 o el Attachment0 no sirve con AnimationConstraint: el brazo no se mueve.)
 local function union(personaje: Model, partes: { string }, nombres: { string }): any
 	for _, nombreParte in partes do
 		local parte = personaje:FindFirstChild(nombreParte)
 		for _, nombre in nombres do
 			local m = parte and parte:FindFirstChild(nombre)
-			if m and m:IsA("Motor6D") then
+			if m and (m:IsA("Motor6D") or m:IsA("AnimationConstraint")) then
 				return m
-			elseif m and m:IsA("AnimationConstraint") and m.Attachment0 then
-				return m.Attachment0
 			end
 		end
 	end
 	return nil
 end
 
-local bases: { [Instance]: CFrame } = setmetatable({}, { __mode = "k" }) :: any
+-- Giro pedido por unión, y lo último que se escribió: si el Animator no tocó esa unión en este
+-- cuadro (el Transform sigue igual), se parte de la base anterior para no acumular el giro.
+-- Tablas normales (no débiles): Roblox puede soltar la referencia de Lua a una Instance viva.
+-- Se limpian a mano en el Heartbeat cuando la unión ya no está en el mundo.
+local giros: { [Instance]: number } = {}
+local escritos: { [Instance]: { base: CFrame, puesto: CFrame } } = {}
 
 local function poner(u: any, grados: number)
-	local base = bases[u]
-	if not base then
-		base = if u:IsA("Motor6D") then u.C0 else u.CFrame
-		bases[u] = base
-	end
-	local cf = (base :: CFrame) * CFrame.Angles(math.rad(grados), 0, 0)
-	if u:IsA("Motor6D") then
-		u.C0 = cf
-	else
-		u.CFrame = cf
-	end
+	giros[u] = grados
 end
 
 local function soltar(u: any)
-	local base = bases[u]
-	if base then
-		if u:IsA("Motor6D") then
-			u.C0 = base
-		else
-			u.CFrame = base
-		end
-		bases[u] = nil
+	giros[u] = nil
+	local e = escritos[u]
+	if e and u.Transform == e.puesto then
+		u.Transform = e.base
 	end
+	escritos[u] = nil
 end
+
+RunService.PreSimulation:Connect(function()
+	for u, grados in giros do
+		local actual: CFrame = u.Transform
+		local e = escritos[u]
+		local base = if e and actual == e.puesto then e.base else actual
+		local puesto = base * CFrame.Angles(math.rad(grados), 0, 0)
+		u.Transform = puesto
+		escritos[u] = { base = base, puesto = puesto }
+	end
+end)
 
 type Golpe = {
 	inicio: number,
@@ -125,9 +127,9 @@ type Golpe = {
 	torso: number, -- última inclinación puesta
 	tocaba: boolean?, -- el pico ya estaba metido en la geoda en el cuadro anterior
 }
-local golpes: { [Model]: Golpe } = setmetatable({}, { __mode = "k" }) :: any
-local combos: { [Model]: { n: number, ultimo: number } } = setmetatable({}, { __mode = "k" }) :: any
-local animados: { [Model]: boolean } = setmetatable({}, { __mode = "k" }) :: any
+local golpes: { [Model]: Golpe } = {}
+local combos: { [Model]: { n: number, ultimo: number } } = {}
+local animados: { [Model]: boolean } = {}
 
 local G = GameConfig.Golpe
 local function suave(t: number, estilo: Enum.EasingStyle, dir: Enum.EasingDirection): number
@@ -310,6 +312,16 @@ local function animar(personaje: Model)
 end
 
 RunService.Heartbeat:Connect(function()
+	for personaje in animados do
+		if not personaje.Parent then
+			animados[personaje], golpes[personaje], combos[personaje] = nil, nil, nil
+		end
+	end
+	for u in escritos do
+		if not u:IsDescendantOf(Workspace) then
+			giros[u], escritos[u] = nil, nil
+		end
+	end
 	for _, p in Players:GetPlayers() do
 		if p.Character then
 			animar(p.Character)

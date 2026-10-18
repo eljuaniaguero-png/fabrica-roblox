@@ -18,6 +18,7 @@ local Misiones = require(script.Parent.Misiones)
 local Renacer = require(script.Parent.Renacer)
 local Secretos = require(script.Parent.Secretos)
 local Social = require(script.Parent.Social)
+local Forja = require(script.Parent.Forja)
 
 Iluminacion.aplicar()
 GeneradorMapa.armar() -- antes que todo lo que busca puntos, vitrinas y puertas del mapa
@@ -34,6 +35,7 @@ for _, jugador in Players:GetPlayers() do
 end
 Players.PlayerRemoving:Connect(function(jugador: Player)
 	Social.alSalir(jugador) -- antes de borrar sus datos (sube sus puntos de la semana)
+	Forja.alSalir(jugador) -- la piedra que estaba forjando entra a la mochila
 	Jugadores.quitar(jugador)
 end)
 
@@ -41,6 +43,7 @@ Jugadores.iniciar()
 Economia.iniciar()
 CampoPrueba.armarSiFalta()
 GeodeServerService.iniciar()
+Forja.iniciar()
 Social.iniciar()
 Eventos.iniciar()
 Secretos.iniciar()

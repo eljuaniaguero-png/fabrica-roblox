@@ -16,8 +16,8 @@
 -- su zona esté abierta para él y que esté a menos de GameConfig.Golpe.Alcance. El daño sale de
 -- sus datos (Fuerza), nunca del cliente.
 -- Al romperse, cada jugador que hizo al menos ParteParaPremio de la vida (y siempre el que la
--- rompió) tira su gema con su propia suerte; la gema va a su mochila en el acto y después se
--- le manda la revelación para la animación.
+-- rompió) tira su gema con su propia suerte. La Forja: la gema queda pendiente y el jugador
+-- puede mejorarla con monedas "?"; Forja.luau la entrega (una sola vez) y manda la revelación.
 -- Grupo 1: el modificador puede ser una combinación (dos exóticas juntas, mucho más rara). Al
 -- romper, Descubrimientos anota lo encontrado y cobra los logros nuevos (una sola vez), que
 -- viajan en la misma revelación para mostrarse en cadena. Lo rarísimo se anuncia a todos.
@@ -32,24 +32,14 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local GameConfig = require(ReplicatedStorage.Shared.GameConfig)
 local Reglas = require(ReplicatedStorage.Shared.Reglas)
 local Anuncios = require(script.Parent.Anuncios)
-local Descubrimientos = require(script.Parent.Descubrimientos)
+local Forja = require(script.Parent.Forja)
 local Jugadores = require(script.Parent.Jugadores)
 local ModeloGeoda = require(script.Parent.ModeloGeoda)
 local Mundo = require(script.Parent.Mundo)
 local Remotos = require(script.Parent.Remotos)
 
--- Lo que se le manda a cada jugador al romper una geoda (Remotos.Revelacion).
-export type Revelacion = {
-	Geoda: Model, -- para ubicar la animación (puede llegar ya borrada si el cliente tarda)
-	Gema: string,
-	Rareza: string,
-	Unidades: number,
-	Modificador: string,
-	Suerte: number, -- la suerte con la que se tiró (jugador x zona x tamaño)
-	UnoEn: number, -- qué tan rara fue con esa suerte: "1 en N"
-	Nueva: boolean, -- primera vez que la consigue (Índice)
-	Hitos: { Descubrimientos.Hito }, -- logros y colecciones que se completaron con esta gema
-}
+-- Lo que se le manda a cada jugador al romper una geoda (ahora lo arma Forja.luau).
+export type Revelacion = Forja.Revelacion
 
 type Estado = {
 	Modelo: Model,
@@ -76,16 +66,6 @@ local rng = Random.new()
 local function azar(): number
 	return rng:NextNumber()
 end
-
-local function rarezaIndice(id: string): number
-	for i, r in GameConfig.Rarezas do
-		if r.Id == id then
-			return i
-		end
-	end
-	return 0
-end
-local RAREZA_ANUNCIO = rarezaIndice(GameConfig.Anuncios.RarezaMinima)
 
 local carpeta = Instance.new("Folder")
 carpeta.Name = "Geodas"
@@ -125,7 +105,7 @@ end
 
 local nacer: (punto: BasePart) -> ()
 
--- Tira la gema de un jugador para esta geoda, la suma a su mochila y le avisa.
+-- Tira la gema de un jugador para esta geoda y se la pasa a La Forja (que se la entrega).
 local function premiar(jugador: Player, e: Estado): boolean
 	local d = Jugadores.obtener(jugador)
 	if not d then
@@ -152,45 +132,24 @@ local function premiar(jugador: Player, e: Estado): boolean
 		1,
 		math.floor(Reglas.unidades(e.Tamano, e.Modificador) * Mundo.unidades(e.Modificador) + 0.5)
 	)
-	local nueva = Jugadores.agregarGema(jugador, gema.Id, unidades)
 	-- Grupo 4: la Geoda Renacida a veces suelta Esencia
 	if e.Tamano == "Renacida" and azar() < 1 / GameConfig.Renacer.EsenciaUnoEn then
 		d.Esencia += 1
 		Jugadores.publicar(jugador)
 		Remotos.Aviso:FireClient(jugador, "¡La Geoda Renacida soltó 1 de Esencia!")
 	end
-	local hitos = Descubrimientos.registrar(jugador, e.Modificador, rareza)
-	local chance = if esSecreta
-		then 1 / unoEnSecreta
-		else Reglas.probabilidades(GameConfig.Rarezas, suerte)[rareza]
-	local r = Reglas.rareza(rareza)
-	if r and rarezaIndice(rareza) >= RAREZA_ANUNCIO then
-		Anuncios.enviar(
-			("¡%s encontró %s (%s)!"):format(jugador.DisplayName, gema.Nombre, r.Nombre),
-			r.Color,
-			"Hallazgo",
-			jugador
-		)
-	end
-	local revelacion: Revelacion = {
-		Geoda = e.Modelo,
+	-- La Forja: la piedra queda pendiente y el jugador intenta mejorarla; al entregarla pasa
+	-- lo de siempre (mochila, logros, anuncio, tarjeta). Ver Forja.luau.
+	Forja.empezar(jugador, {
 		Gema = gema.Id,
 		Rareza = rareza,
+		Zona = zonaGema,
+		Secreta = esSecreta,
 		Unidades = unidades,
+		Intentos = Reglas.intentosForja(rareza, e.Tamano, e.Modificador),
+		Geoda = e.Modelo,
 		Modificador = e.Modificador,
 		Suerte = suerte,
-		UnoEn = if chance > 0 then math.max(1, math.floor(1 / chance + 0.5)) else 0,
-		Nueva = nueva,
-		Hitos = hitos,
-	}
-	Remotos.Revelacion:FireClient(jugador, revelacion)
-	Mundo.avisarRevelacion({
-		Jugador = jugador,
-		Gema = gema.Id,
-		Rareza = rareza,
-		UnoEn = revelacion.UnoEn,
-		Modificador = e.Modificador,
-		Unidades = unidades,
 	})
 	return true
 end

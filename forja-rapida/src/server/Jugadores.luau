@@ -65,6 +65,28 @@ export type Datos = {
 	Ramas: { [string]: number }, -- rama del árbol de Esencia -> nivel
 	Mascotas: { [string]: number }, -- mascota -> cuántas tiene
 	MascotasEquipadas: { string }, -- las que lo acompañan (puede repetir si tiene copias)
+	-- La Forja
+	FichasForja: number, -- monedas "?" guardadas (tope GameConfig.Forja.Tope)
+	ForjaPendiente: Pendiente?, -- la piedra que está forjando (se entrega una sola vez)
+}
+
+-- La Forja: piedra de una geoda rota que todavía no entró a la mochila (Forja.luau).
+export type Pendiente = {
+	Id: number,
+	Gema: string,
+	Rareza: string,
+	Efecto: string?,
+	Zona: number,
+	Secreta: boolean, -- mineral secreto: no sube de rareza
+	Unidades: number,
+	Quedan: number, -- monedas "?" de esta geoda sin usar
+	Usados: number,
+	Subio: number, -- cuántas rarezas subió
+	Vence: number, -- os.clock() en que se entrega sola
+	Ultimo: number, -- os.clock() del último intento
+	Geoda: Model?,
+	Modificador: string,
+	Suerte: number,
 }
 
 -- Lo que el Museo guarda de cada mineral.
@@ -129,6 +151,8 @@ local function nuevos(): Datos
 		Ramas = {},
 		Mascotas = {},
 		MascotasEquipadas = {},
+		FichasForja = 0,
+		ForjaPendiente = nil,
 	}
 end
 
@@ -206,12 +230,19 @@ function Jugadores.titulo(d: Datos): string
 end
 
 -- Suma gemas a la mochila. Devuelve true si es la primera vez que consigue esa gema (Índice).
-function Jugadores.agregarGema(jugador: Player, gema: string, cantidad: number): boolean
+-- La Forja: con efecto, en la mochila va como "Id|Efecto" (Museo e Índice cuentan la gema).
+function Jugadores.agregarGema(
+	jugador: Player,
+	gema: string,
+	cantidad: number,
+	efecto: string?
+): boolean
 	local d = datosDe[jugador]
 	if not d or cantidad <= 0 then
 		return false
 	end
-	d.Mochila[gema] = (d.Mochila[gema] or 0) + cantidad
+	local clave = Reglas.claveGema(gema, efecto)
+	d.Mochila[clave] = (d.Mochila[clave] or 0) + cantidad
 	local nueva = not d.Indice[gema]
 	d.Indice[gema] = true
 	local ficha = d.Museo[gema]
@@ -238,6 +269,7 @@ function Jugadores.publicar(jugador: Player)
 	jugador:SetAttribute("Pico", d.Pico)
 	jugador:SetAttribute("Amuletos", claves(d.Amuletos))
 	jugador:SetAttribute("GeodasRotas", d.GeodasRotas)
+	jugador:SetAttribute("FichasForja", d.FichasForja)
 	jugador:SetAttribute("Mochila", HttpService:JSONEncode(d.Mochila))
 	jugador:SetAttribute("Indice", claves(d.Indice))
 	jugador:SetAttribute("Zonas", claves(d.Zonas))

@@ -256,13 +256,14 @@ local GameConfig = {
 		-- vida (o el que la rompió) se lleva su propia revelación, con su propia suerte.
 		ParteParaPremio = 0.1,
 		-- Animación del pico en tres tiempos (segundos): levanta hacia atrás, baja con fuerza y
-		-- rebota al pegar. Ángulos del hombro en grados (arriba de la cabeza / golpe adelante).
+		-- rebota al pegar. Ángulos del hombro en grados: 0 = brazo estirado adelante (como se
+		-- sostiene la herramienta), positivo = hacia arriba, negativo = hacia el piso.
 		Levanta = 0.08,
 		Baja = 0.06,
 		Rebote = 0.1,
 		Vuelve = 0.12, -- después del rebote, vuelve a la pose de reposo
 		BrazoArriba = 120,
-		BrazoGolpe = 35,
+		BrazoGolpe = -35,
 		ReboteGrados = 12,
 		Torso = 7, -- cuánto se inclina el torso hacia adelante al bajar (grados)
 		-- Cada 3 golpes seguidos (sin cortar más de PausaCombo s) sale uno fuerte.
@@ -2113,6 +2114,42 @@ local GameConfig = {
 
 	-- Grupo 4: Renacer (prestigio). Reinicia una parte del progreso a cambio de Esencia y bonos
 	-- que no se pierden nunca. Cada renacer desbloquea algo (Desbloqueos y los logros Renacer*).
+	-- La Forja (plan del 18/10/2026, ideas/forja-rapida.md): al romper una geoda la piedra queda
+	-- "pendiente" y el jugador gasta monedas "?" para mejorarla. Cada intento: primero prueba subir
+	-- 1 rareza; si no sube y la piedra no tiene efecto, prueba ponerle uno; si no, nada. Lo tira
+	-- el servidor. Las monedas "?" son gratis: no se compran con Robux ni con Monedas.
+	Forja = {
+		Subir = { Comun = 0.12, Raro = 0.05, Epico = 0.02, Legendario = 0.007, Mitico = 0.002 },
+		ChanceEfecto = 0.05,
+		Efectos = { -- Peso = de cada 100; Multiplicador = cuánto más vale la gema al venderla
+			{ Id = "Oro", Nombre = "Oro", Peso = 50, Multiplicador = 1.5, Color = "#FFCF3F" },
+			{ Id = "Sombra", Nombre = "Sombra", Peso = 25, Multiplicador = 2, Color = "#7A3FBF" },
+			{ Id = "Fuego", Nombre = "Fuego", Peso = 14, Multiplicador = 2.5, Color = "#FF6A1F" },
+			{
+				Id = "Diamante",
+				Nombre = "Diamante",
+				Peso = 8,
+				Multiplicador = 4,
+				Color = "#E8FBFF",
+			},
+			{
+				Id = "Arcoiris",
+				Nombre = "Arcoíris",
+				Peso = 3,
+				Multiplicador = 6,
+				Color = "#FF3DD2",
+			},
+		},
+		-- Monedas "?" por geoda: Común 1, Rara o mejor 3; la Jefe y la exótica suman.
+		Intentos = { Comun = 1, Resto = 3, Jefe = 2, Exotica = 1 },
+		-- Monedas "?" guardadas (se usan cuando se acaban las de la geoda).
+		Tope = 20,
+		PorMision = { Facil = 0, Media = 1, Dificil = 2, Leyenda = 2, Prestigio = 3 },
+		PorRenacer = 5,
+		Vence = 15, -- segundos sin apretar hasta que se entrega sola
+		Espera = 0.4, -- segundos mínimos entre dos intentos
+	},
+
 	Renacer = {
 		-- Zona que hay que tener abierta para el renacer número n (del 3° en adelante, la última).
 		Requisito = { 3, 4, 5 },
@@ -2535,6 +2572,9 @@ local GameConfig = {
 		AplastaY = 0.92,
 		AplastaLados = 1.05,
 		AplastaDuracion = 0.12,
+		-- Al romperse: se infla y se pone blanca antes de explotar (segundos y escala final).
+		InflaDuracion = 0.5,
+		InflaEscala = 1.3,
 		-- Grietas por vida que le queda: Grietas, después Grietas2, y al final las dos laten.
 		GrietaEtapas = { 0.75, 0.5, 0.25 },
 		-- Chispas y cubitos del color de la zona (en orden: Pradera, Dunas, Glaciar, Volcán,
@@ -2564,6 +2604,10 @@ local GameConfig = {
 		Click = "", -- tocar un botón de la interfaz
 		AbrirMenu = "",
 		Secreto = "", -- Grupo 3: abrir una puerta secreta, un cofre, un altar o cruzar un portal
+		ForjaIntento = "", -- La Forja: apretar "¡Intentar!" (con el tono de cada tic)
+		ForjaSube = "", -- La Forja: la piedra sube de rareza
+		ForjaEfecto = "", -- La Forja: la piedra gana un efecto
+		ForjaExplota = "", -- La Forja: la geoda explota
 		-- Grupo 4
 		Mision = "", -- misión cumplida
 		Ruleta = "", -- cada "tic" de la ruleta (se sube el tono al frenar)

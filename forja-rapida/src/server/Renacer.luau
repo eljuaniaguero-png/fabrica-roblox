@@ -65,6 +65,7 @@ local function renacer(jugador: Player)
 	d.Zonas = { [1] = true }
 	d.Renacimientos += 1
 	d.Esencia += esencia
+	d.FichasForja = math.min(GameConfig.Forja.Tope, d.FichasForja + GameConfig.Forja.PorRenacer)
 	d.NivelFuerza = math.min(GameConfig.Fuerza.NivelMaximo, Jugadores.bonos(d).NivelInicial)
 	Jugadores.publicar(jugador)
 	aLaPlaza(jugador)

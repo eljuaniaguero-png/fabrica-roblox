@@ -17,6 +17,7 @@ local Formato = require(ReplicatedStorage.Shared.Formato)
 local GameConfig = require(ReplicatedStorage.Shared.GameConfig)
 local Reglas = require(ReplicatedStorage.Shared.Reglas)
 local Descubrimientos = require(script.Parent.Descubrimientos)
+local Forja = require(script.Parent.Forja)
 local Jugadores = require(script.Parent.Jugadores)
 local Mundo = require(script.Parent.Mundo)
 local Remotos = require(script.Parent.Remotos)
@@ -83,6 +84,11 @@ local function cumplir(jugador: Player, d: Jugadores.Datos, m: Reglas.Mision)
 	d.MisionesHechas += 1
 	d.Monedas += m.Monedas
 	d.Esencia += m.Esencia
+	-- La Forja: monedas "?" guardadas según la dificultad
+	Forja.sumarFichas(
+		jugador,
+		(GameConfig.Forja.PorMision :: { [string]: number })[m.Dificultad] or 0
+	)
 	Jugadores.publicar(jugador)
 	Remotos.Mision:FireClient(jugador, m.Texto, m.Monedas, m.Esencia)
 	Remotos.Premio:FireClient(jugador, m.Monedas)

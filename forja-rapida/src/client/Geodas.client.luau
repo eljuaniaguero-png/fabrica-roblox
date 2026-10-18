@@ -461,6 +461,36 @@ local function agregar(m: Instance)
 		v.Conexiones,
 		m:GetAttributeChangedSignal("Rota"):Connect(function()
 			if m:GetAttribute("Rota") == true then
+				-- La Forja: antes de explotar se infla y se pone blanca
+				local reducidos = Efectos.reducidos()
+				soltarAplaston(v)
+				v.Aplasta = nil
+				local blanco = Instance.new("Highlight")
+				blanco.FillColor = Color3.new(1, 1, 1)
+				blanco.OutlineTransparency = 1
+				blanco.FillTransparency = 1
+				blanco.DepthMode = Enum.HighlightDepthMode.Occluded
+				blanco.Adornee = m
+				blanco.Parent = m
+				local dura = if reducidos then 0.2 else GameConfig.Efectos.InflaDuracion
+				local inicio = os.clock()
+				while os.clock() - inicio < dura and m.Parent do
+					local u = (os.clock() - inicio) / dura
+					blanco.FillTransparency = 1 - u
+					if not reducidos then
+						local k = u * u * (GameConfig.Efectos.InflaEscala - 1)
+						local temblor = Vector3.new(rng:NextNumber(-1, 1), 0, rng:NextNumber(-1, 1))
+							* 0.08
+							* u
+						for _, pz in v.Piezas do
+							pz.Parte.Size = pz.Tam * (1 + k)
+							pz.Parte.CFrame = (v.Pivote + temblor)
+								* (CFrame.new(pz.Rel.Position * (1 + k)) * pz.Rel.Rotation)
+						end
+					end
+					RunService.RenderStepped:Wait()
+				end
+				blanco:Destroy()
 				polvo(roca)
 				-- la geoda desaparece ya: el servidor la deja un rato más por la revelación
 				for _, p in m:GetDescendants() do
@@ -468,7 +498,7 @@ local function agregar(m: Instance)
 						p.LocalTransparencyModifier = 1
 					end
 				end
-				-- SONIDO: geoda que se rompe (para todos los que están cerca)
+				-- SONIDO: geoda que se rompe y explota (para todos los que están cerca)
 				Sonidos.tocar(GameConfig.Sonidos.Romper, 0.9 + rng:NextNumber() * 0.2, 0.5, roca)
 				quitar(m)
 			end

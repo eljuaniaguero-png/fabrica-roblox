@@ -333,14 +333,99 @@ function Reglas.unidades(tamano: string, modificador: string): number
 	return (if t then t.Unidades else 1) * (if m then m.Premio else 1)
 end
 
-function Reglas.valorGema(id: string): number
+-- La Forja: en la mochila, una gema con efecto se guarda como "Id|Efecto".
+function Reglas.claveGema(id: string, efecto: string?): string
+	return if efecto then id .. "|" .. efecto else id
+end
+
+function Reglas.separarClave(clave: string): (string, string?)
+	local id, efecto = string.match(clave, "^([^|]+)|(.+)$")
+	if id then
+		return id, efecto
+	end
+	return clave, nil
+end
+
+function Reglas.efectoForja(id: string): {
+	Id: string,
+	Nombre: string,
+	Peso: number,
+	Multiplicador: number,
+	Color: string,
+}?
+	for _, e in GameConfig.Forja.Efectos do
+		if e.Id == id then
+			return e
+		end
+	end
+	return nil
+end
+
+-- Monedas "?" que trae una geoda según la rareza que salió, su tamaño y su modificador.
+function Reglas.intentosForja(rareza: string, tamano: string, modificador: string): number
+	local I = GameConfig.Forja.Intentos
+	local n = if rareza == "Comun" then I.Comun else I.Resto
+	if tamano == "Jefe" then
+		n += I.Jefe
+	end
+	if modificador ~= "Normal" then
+		n += I.Exotica
+	end
+	return n
+end
+
+-- Un intento de la forja. Devuelve "Sube", "Efecto" (con su Id) o "Nada".
+-- puedeSubir = false para los minerales secretos (no tienen rareza siguiente en su zona).
+function Reglas.intentoForja(
+	rareza: string,
+	conEfecto: boolean,
+	puedeSubir: boolean,
+	azar: () -> number
+): (string, string?)
+	local F = GameConfig.Forja
+	local sube = (F.Subir :: { [string]: number })[rareza] or 0
+	if puedeSubir and azar() < sube then
+		return "Sube", nil
+	end
+	if not conEfecto and azar() < F.ChanceEfecto then
+		local total = 0
+		for _, e in F.Efectos do
+			total += e.Peso
+		end
+		local x = azar() * total
+		for _, e in F.Efectos do
+			x -= e.Peso
+			if x < 0 then
+				return "Efecto", e.Id
+			end
+		end
+		return "Efecto", F.Efectos[#F.Efectos].Id
+	end
+	return "Nada", nil
+end
+
+-- La rareza que sigue (nil si es la última).
+function Reglas.rarezaSiguiente(id: string): string?
+	for i, r in GameConfig.Rarezas do
+		if r.Id == id then
+			local s = GameConfig.Rarezas[i + 1]
+			return if s then s.Id else nil
+		end
+	end
+	return nil
+end
+
+function Reglas.valorGema(clave: string): number
+	local id, efecto = Reglas.separarClave(clave)
+	local e = if efecto then Reglas.efectoForja(efecto) else nil
+	local mult = if e then e.Multiplicador else 1
 	local g = gemas[id]
 	if not g then
 		return 0
 	end
 	local z = GameConfig.Zonas[g.Zona]
 	local r = rarezas[g.Rareza]
-	return (if z then z.Valor else 0) * (if r then r.Valor else 0)
+	return (if z then z.Valor else 0) * (if r then r.Valor else 0) * mult
 end
 
 -- Chance de que salga cada fila con esa suerte: se prueba de la más rara a la más común y
