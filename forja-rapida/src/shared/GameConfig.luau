@@ -1482,7 +1482,8 @@ local GameConfig = {
 		Cola = 4,
 	},
 
-	-- Luz del juego (día brillante como la referencia). La aplica server/Iluminacion.luau.
+	-- Luz del juego (día brillante como la referencia). Ajustada mirando capturas: menos niebla
+	-- y más saturación que lo pedido, porque con 0,25 / 0,5 el pasto quedaba lavado. La aplica server/Iluminacion.luau.
 	-- Technology no se puede cambiar por script: va a mano en Lighting (ShadowMap).
 	Luz = {
 		Lighting = {
@@ -1494,16 +1495,17 @@ local GameConfig = {
 			EnvironmentSpecularScale = 0.3,
 			GlobalShadows = true,
 			ShadowSoftness = 0.2,
+			ExposureCompensation = -0.1,
 		},
-		ColorCorrection = { Saturacion = 0.25, Contraste = 0.1, Brillo = 0.02, Color = "#FFFFFF" },
+		ColorCorrection = { Saturacion = 0.35, Contraste = 0.15, Brillo = 0.02, Color = "#FFFFFF" },
 		Bloom = { Intensity = 0.6, Size = 24, Threshold = 1.8 },
 		Atmosphere = {
-			Density = 0.25,
-			Offset = 0.1,
+			Density = 0.15,
+			Offset = 0.25,
 			Color = "#C7E9FF",
 			Decay = "#9CC9FF",
 			Glare = 0,
-			Haze = 0.5,
+			Haze = 0.3,
 		},
 		SunRays = { Intensity = 0.05, Spread = 0.6 },
 		-- Cielo: el Sky de fábrica de Roblox (celeste con nubes de dibujo).
@@ -2616,6 +2618,38 @@ local GameConfig = {
 	-- de arte/fbx/Gemas_Zona<N>.fbx); la vitrina la usa en vez de la estatua de la rareza.
 	-- Piezas del lobby (arte/fbx/Lobby.fbx) en ServerStorage > Modelos > Lobby: llegan en metros
 	-- (1 stud = 0,28 m) y el mapa las agranda con EscalaLobby. Si no están, la plaza queda greybox.
+	-- Piso con studs (MaterialVariant en MaterialService). Cada textura es un damero de 8 x 8
+	-- studs (dos baldosas de 4 x 4 cruzadas; arte/texturas/Piso_<Zona>_Damero.png, hechas con
+	-- decoracion.py --pisos). Liso solo tiene los studs en gris: lo tiñe el color de la parte.
+	Pisos = {
+		StudsPorTeja = 8,
+		StudsPorTejaLiso = 4,
+		Texturas = {
+			Pradera = "rbxassetid://131005297571173",
+			Dunas = "rbxassetid://126643885484855",
+			Glaciar = "rbxassetid://129401478154532",
+			Volcan = "rbxassetid://110353988890265",
+			Abismo = "rbxassetid://88981550634300",
+			Camino = "rbxassetid://80690464597039",
+			Liso = "rbxassetid://72139898020694",
+		} :: { [string]: string },
+		-- material de MapaDatos -> textura; los que no están (salvo vidrio, neón y oro) van Liso
+		PorMaterial = {
+			Pasto = "Pradera",
+			PastoOscuro = "Pradera",
+			Arena = "Dunas",
+			ArenaOscura = "Dunas",
+			Nieve = "Glaciar",
+			HieloClaro = "Glaciar",
+			Basalto = "Volcan",
+			BasaltoClaro = "Volcan",
+			PiedraEstelar = "Abismo",
+			PolvoEstelar = "Abismo",
+			PiedraClara = "Camino",
+			BaldosaOscura = "Camino",
+		} :: { [string]: string },
+	},
+
 	Modelos = {
 		Carpeta = "Modelos",
 		Lobby = "Lobby",

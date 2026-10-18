@@ -33,6 +33,7 @@ function Iluminacion.aplicar()
 	Lighting.EnvironmentSpecularScale = base.EnvironmentSpecularScale
 	Lighting.GlobalShadows = base.GlobalShadows
 	Lighting.ShadowSoftness = base.ShadowSoftness
+	Lighting.ExposureCompensation = base.ExposureCompensation
 
 	local cc = efecto("ColorCorrectionEffect", "ColorCorrection") :: ColorCorrectionEffect
 	cc.Brightness = L.ColorCorrection.Brillo

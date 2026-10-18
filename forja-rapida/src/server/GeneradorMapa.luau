@@ -117,12 +117,25 @@ end
 
 -- Terreno -----------------------------------------------------------------------------------
 
+-- Un MaterialVariant "Studs_<Zona>" por textura (es textura, no geometría: no suma partes).
+-- Viven en MaterialService del place (un script no puede crearlos): se arman en Studio con
+-- BaseMaterial Plastic, ColorMap = GameConfig.Pisos.Texturas y StudsPerTile de GameConfig.
+local SIN_STUDS = { Glass = true, Neon = true, Foil = true, Ice = true, ForceField = true }
+
 local function terreno(carpeta: Instance)
 	local mats = {}
 	for i, m in MapaDatos.Materiales do
+		local base = material(m.Material)
+		local zona = GameConfig.Pisos.PorMaterial[m.Nombre]
+		local variante = if zona
+			then "Studs_" .. zona
+			elseif SIN_STUDS[m.Material] then nil
+			else "Studs_Liso"
 		mats[i] = {
-			Color = Color3.fromHex(m.Color),
-			Material = material(m.Material),
+			-- con textura de zona el color ya viene en la imagen: la parte va blanca
+			Color = if zona then Color3.new(1, 1, 1) else Color3.fromHex(m.Color),
+			Material = if variante then Enum.Material.Plastic else base,
+			Variante = variante,
 			Transparencia = m.Transparencia,
 			Choca = m.Choca,
 		}
@@ -142,6 +155,9 @@ local function terreno(carpeta: Instance)
 			p.Anchored = true
 			p.Color = m.Color
 			p.Material = m.Material
+			if m.Variante then
+				p.MaterialVariant = m.Variante
+			end
 			p.Transparency = m.Transparencia
 			p.CanCollide = m.Choca
 			p.CanTouch = false
