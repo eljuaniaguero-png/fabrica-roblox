@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1100" height="560" font-family="Segoe UI,Arial">
+<defs><linearGradient id="c" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#4FA8FF"/><stop offset="1" stop-color="#BFE6FF"/></linearGradient><pattern id="st" width="14" height="14" patternUnits="userSpaceOnUse"><rect width="14" height="14" fill="#B5524A"/><rect x="3" y="3" width="8" height="8" rx="2" fill="#c4635a"/><rect x="3" y="10" width="8" height="1.5" fill="#8f3c35"/></pattern><pattern id="st2" width="10" height="10" patternUnits="userSpaceOnUse"><rect width="10" height="10" fill="#D9A05B"/><rect x="2" y="2" width="6" height="6" rx="1.5" fill="#e6b06d"/></pattern></defs>
+<rect width="100%" height="100%" fill="url(#c)"/>
+<polygon points="420,310 560,95 700,310" fill="#E8B96A" stroke="#a87a3a" stroke-width="2"/>
+<polygon points="380,215 470,232 470,300 380,300" fill="url(#st2)"/><polygon points="720,215 630,232 630,300 720,300" fill="url(#st2)"/>
+<rect x="401" y="205" width="10" height="16" fill="#3a8a2a"/><rect x="395" y="191" width="22" height="16" fill="#3DB02A"/>
+<rect x="446" y="214" width="10" height="16" fill="#3a8a2a"/><rect x="440" y="200" width="22" height="16" fill="#3DB02A"/>
+<rect x="711" y="205" width="10" height="16" fill="#3a8a2a"/><rect x="705" y="191" width="22" height="16" fill="#3DB02A"/>
+<rect x="666" y="214" width="10" height="16" fill="#3a8a2a"/><rect x="660" y="200" width="22" height="16" fill="#3DB02A"/>
+<rect x="300" y="232" width="500" height="118" fill="url(#st)"/><rect x="300" y="226" width="500" height="8" fill="#3DB02A"/>
+<rect x="510" y="262" width="80" height="88" fill="#FFD23F" stroke="#7a5b00" stroke-width="3"/><text x="550" y="312" text-anchor="middle" font-size="16" font-weight="800" fill="#7a3b00">DUNAS</text>
+<rect x="512" y="240" width="76" height="18" rx="4" fill="#fff"/><text x="550" y="254" text-anchor="middle" font-size="11" font-weight="700" fill="#c0392b">MEDIO</text>
+<rect x="500" y="350" width="100" height="8" fill="#9c463f"/>
+<rect x="486" y="358" width="128" height="8" fill="#9c463f"/>
+<rect x="472" y="366" width="156" height="8" fill="#9c463f"/>
+<polygon points="0,40 300,226 300,374 0,560" fill="url(#st)"/><polygon points="1100,40 800,226 800,374 1100,560" fill="url(#st)"/>
+<polygon points="0,40 300,226 300,232 0,52" fill="#3DB02A"/><polygon points="1100,40 800,226 800,232 1100,52" fill="#3DB02A"/>
+<rect x="24" y="12" width="12" height="36" fill="#6b4a2b"/><rect x="0" y="-36" width="60" height="54" fill="#3DB02A" stroke="#2b7d1e"/>
+<rect x="105" y="70" width="9" height="27" fill="#6b4a2b"/><rect x="87" y="33" width="46" height="41" fill="#3DB02A" stroke="#2b7d1e"/>
+<rect x="186" y="127" width="6" height="20" fill="#6b4a2b"/><rect x="173" y="100" width="34" height="30" fill="#3DB02A" stroke="#2b7d1e"/>
+<rect x="247" y="169" width="5" height="15" fill="#6b4a2b"/><rect x="237" y="148" width="26" height="23" fill="#3DB02A" stroke="#2b7d1e"/>
+<rect x="1034" y="12" width="12" height="36" fill="#6b4a2b"/><rect x="1010" y="-36" width="60" height="54" fill="#3DB02A" stroke="#2b7d1e"/>
+<rect x="955" y="70" width="9" height="27" fill="#6b4a2b"/><rect x="937" y="33" width="46" height="41" fill="#3DB02A" stroke="#2b7d1e"/>
+<rect x="876" y="127" width="6" height="20" fill="#6b4a2b"/><rect x="863" y="100" width="34" height="30" fill="#3DB02A" stroke="#2b7d1e"/>
+<rect x="817" y="169" width="5" height="15" fill="#6b4a2b"/><rect x="807" y="148" width="26" height="23" fill="#3DB02A" stroke="#2b7d1e"/>
+<polygon points="300,374 800,374 1100,560 0,560" fill="#7BC86C"/>
+<rect x="530" y="440" width="40" height="70" rx="8" fill="#e53935"/><circle cx="550" cy="425" r="20" fill="#222"/>
+<g font-size="14" font-weight="700" fill="#fff" stroke="#000" stroke-width="3" paint-order="stroke"><text x="20" y="30">A la altura del jugador, en la Pradera mirando al portón</text><text x="590" y="120">pirámide de las Dunas agrandada (se ve por arriba)</text><text x="740" y="200">cresta de las Dunas (6 más arriba)</text><text x="620" y="400">rampa suave al portón (+6)</text><text x="40" y="320">pared terracota 24 de alto</text><text x="40" y="340">con studs + árboles arriba</text></g></svg>

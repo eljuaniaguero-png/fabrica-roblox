@@ -73,6 +73,7 @@ MATERIALES = {
     "Baldosa": ("#E3E8F2", "Pavement", 0, True),
     "BaldosaOscura": ("#AEB6C4", "Pavement", 0, True),
     "Oro": ("#FFC83D", "Foil", 0, True),
+    "Barrera": ("#FFFFFF", "SmoothPlastic", 1, True),  # invisible: no se trepa ni se sale
     "Agua": ("#7CC8FF", "Glass", 0.45, False),
     "Muro": ("#3A3F66", "Slate", 0, True),
     "PrismaBlanco": ("#F2F7FF", "Glass", 0.05, True),
@@ -402,7 +403,14 @@ def lugar(s, rng, area, r, intentos=80, valido=None, rz=None):
 marcadores = []
 
 
+SUBA = 6  # 18/10: cada zona queda 6 studs más arriba que la anterior
+PARED = 24  # alto de las paredes de ladrillo de los costados (con su tapa de pasto)
+BARRERA = 60  # hasta dónde sube la barrera invisible arriba de las paredes
+dy_marcadores = [0]  # lo suma marcador() mientras se arma un bioma (ver bioma())
+
+
 def marcador(tipo, pos, tam=(2, 0.2, 2), giro=0, **atributos):
+    pos = (pos[0], pos[1] + dy_marcadores[0], pos[2])
     marcadores.append({"Tipo": tipo, "Pos": [round(p, 2) for p in pos], "Tam": list(tam), "Giro": giro, "Atributos": atributos})
 
 
@@ -988,29 +996,60 @@ def ruleta(g, s):
 
 
 def bioma(g, s, rng, n):
+    """Cada bioma va SUBA studs más arriba que el anterior (18/10)."""
+    h = (n - 1) * SUBA
+    g.poner(XMIN, 0, inicio_zona(n), XMAX, h, fin_zona(n) + MURO, "Tierra")
+    dy_marcadores[0] = h
+    with g.subir(h):
+        bioma_plano(g, s, rng, n)
+    dy_marcadores[0] = 0
+
+
+def bioma_plano(g, s, rng, n):
     b = BIOMAS[n]
     zs, ze = inicio_zona(n), fin_zona(n)
     zd = puerta_secreta_z(n)
     # piso liso (17/10: sin manchas ni riscos de bloques; las paredes son piezas de los FBX)
     g.poner(XMIN, -4, zs, XMAX, 0, ze + MURO, b["Piso"])
-    # adelante, los riscos de ladrillo en escalones (piezas de 16 de largo, mirando al camino);
-    # en el derecho queda el hueco del túnel de la cámara secreta
-    for z in range(zs, ze, 16):
-        deco("Risco_Escalon_Zona%d" % n, XMIN - 8, z + 8, 270)
+    # 18/10: pasillo encerrado por paredes de ladrillo de 24 (piezas de 16 de largo, mirando al
+    # camino), con barrera invisible arriba; en la derecha queda el hueco del túnel de la cámara
+    for z in range(zs - 8, ze + MURO, 16):
+        deco("Pared_Ladrillo_Zona%d" % n, XMIN - 2, z + 8, 270)
         if abs(z + 8 - (zd + 2)) > 14:
-            deco("Risco_Escalon_Zona%d" % n, XMAX + 8, z + 8, 90)
+            deco("Pared_Ladrillo_Zona%d" % n, XMAX + 2, z + 8, 90)
+    g.poner(XMIN - 6, PARED, zs - 8, XMIN, BARRERA, ze + MURO, "Barrera")
+    g.poner(XMAX, PARED, zs - 8, XMAX + 6, BARRERA, ze + MURO, "Barrera")
+    # el hueco del túnel y la cámara secreta, encerrados con barrera invisible
+    g.poner(XMAX, 0, zd - 24, XMAX + 6, BARRERA, zd - 4, "Barrera")
+    g.poner(XMAX, 0, zd + 8, XMAX + 6, BARRERA, zd + 28, "Barrera")
+    g.poner(XMAX, 12, zd - 4, XMAX + 16, BARRERA, zd + 8, "Barrera")
+    g.poner(XMAX + 6, 0, zd - 6, XMAX + 16, BARRERA, zd - 4, "Barrera")
+    g.poner(XMAX + 6, 0, zd + 8, XMAX + 16, BARRERA, zd + 10, "Barrera")
+    g.poner(XMAX + 16, 0, zd - 14, XMAX + 46, BARRERA, zd - 12, "Barrera")
+    g.poner(XMAX + 16, 0, zd + 16, XMAX + 46, BARRERA, zd + 18, "Barrera")
+    g.poner(XMAX + 44, 0, zd - 12, XMAX + 46, BARRERA, zd + 16, "Barrera")
+    g.poner(XMAX + 16, 16, zd - 12, XMAX + 44, BARRERA, zd + 16, "Barrera")
     s.marcar(XMIN, zs, XMIN + 6, ze)
     s.marcar(XMAX - 6, zs, XMAX, ze)
     # muro al final del bioma: solo paredes de ladrillo (Deco_Comun), con el hueco del portón
     xs = (-72, -60, -44, -28, -20, 20, 28, 44, 60, 72) if n < 5 else range(-72, 73, 16)
+    if n < 5:  # el muro va arriba de un escalón de SUBA (el piso de la zona siguiente)
+        g.poner(XMIN, 0, ze, XMAX, SUBA, ze + MURO, b["Piso"])
+        for i in range(SUBA // 2):  # rampa de escalones de 2 hasta el portón
+            g.poner(-14, 0, ze - 4 * (SUBA // 2 - i), 14, 2 * (i + 1), ze, b["Piso2"])
+    alto = SUBA if n < 5 else 0
     for x in xs:
-        deco("Pared_Ladrillo_Zona%d" % n, x, ze + 2, 0)
+        deco("Pared_Ladrillo_Zona%d" % n, x, ze + 2, 0, y=alto)
+    g.poner(XMIN, alto + PARED, ze, XMAX, BARRERA, ze + MURO, "Barrera")
     if n < 5:
-        marcador("PuertaZona", (0, 10, ze + 2), (24, 20, 2), 0, Zona=n + 1)
+        marcador("PuertaZona", (0, SUBA + 10, ze + 2), (24, 20, 2), 0, Zona=n + 1)
         # cartel de dificultad arriba del portón
-        marcador("Cartel", (0, 27, ze - 1), (24, 6, 1), 0, Texto=DIFICULTAD[n + 1], SinPoste=True)
+        marcador("Cartel", (0, SUBA + 27, ze - 1), (24, 6, 1), 0, Texto=DIFICULTAD[n + 1], SinPoste=True)
     s.marcar(XMIN, ze - 8, XMAX, ze)
     s.marcar(-18, zs, 18, ze)  # el camino al portón queda libre
+    # montaña de fondo agrandada afuera del pasillo, al fondo: se ve desde la zona anterior
+    for nombre, escala, lado in FONDO[n]:
+        deco(nombre, lado * (XMAX + 56), ze - 40, 0, y=20, escala=escala)  # la base queda tapada por las paredes
 
     camara_secreta(g, s, n, zs, zd)
     pista(g, s, rng, n, zd)
@@ -1170,6 +1209,15 @@ def deco_abismo(g, s, rng, n, area, zs, ze, zd):
 DECORACION = {1: deco_pradera, 2: deco_dunas, 3: deco_glaciar, 4: deco_volcan, 5: deco_abismo}
 
 
+# 18/10: la montaña de fondo de cada zona (nombre, escala, lado), copia solo decorativa
+FONDO = {
+    1: [("Arbol_Grande_1", 3, -1), ("Arbol_Grande_2", 2.6, 1)],
+    2: [("Piramide", 1.7, 1)],
+    3: [("Monte_Nevado_Grande", 2.3, -1), ("Monte_Nevado_Mediano", 2.4, 1)],
+    4: [("Volcan", 1.3, 1)],
+    5: [("Columna_Estelar_Alta", 1.3, -1), ("Arbol_Nebuloso", 1.7, 1)],
+}
+
 CIMAS = {
     1: ["Arbol_Grande_1", "Arbol_Rosa_2", "Arbol_Grande_3", "Arbol_Mediano_1"],
     2: ["Cactus_Grande", "Arbol_Seco_Desierto_1", "Cactus_Mediano", "Arbol_Seco_Desierto_2"],
@@ -1180,12 +1228,12 @@ CIMAS = {
 
 
 def cimas(g, rng, n, zs, ze, alto_izq=None, alto_der=None):
-    """Piezas arriba de los riscos de ladrillo (en el escalón de atrás, a 29 de alto), y en el
-    cielo un arcoíris y nubes de bloques."""
-    for x in (XMIN - 13, XMAX + 13):
-        for i in range(5):
-            z = par(zs + 20 + i * 40 + rng.randint(-6, 6))
-            deco(CIMAS[n][i % len(CIMAS[n])], x, z, rng.choice([0, 90, 180, 270]), y=29)
+    """La cresta: una fila de piezas arriba de las paredes de ladrillo (a PARED de alto, un poco
+    hacia afuera para que no se vea el borde), y en el cielo un arcoíris y nubes de bloques."""
+    for x in (XMIN - 6, XMAX + 6):
+        for i in range(11):
+            z = par(zs + 4 + i * 19 + rng.randint(-3, 3))
+            deco(CIMAS[n][i % len(CIMAS[n])], x, z, rng.choice([0, 90, 180, 270]), y=PARED - 1)
     deco("Arcoiris", rng.choice([-1, 1]) * 40, ze - 60, 0, y=70)
     for i in range(2):
         deco("Nube_Bloques", rng.randint(-60, 60), zs + 60 + i * 110, rng.choice([0, 180]), y=80 + i * 12)

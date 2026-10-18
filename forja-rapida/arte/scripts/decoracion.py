@@ -178,7 +178,7 @@ TEJA = 4  # studs que mide la textura de studs (4 x 4 studs en 256 px)
 #   estilo: pasto (gotitas), arena (dunas arriba, chorritos anchos), nieve (montoncitos y
 #   carámbanos), ceniza (piedritas arriba y ríos de lava líquida), estelar (cristales arriba)
 ZONAS = {
-    1: {"nombre": "Pradera", "risco": "#C96F5C", "tapa": "#3DB02A", "detalle": None, "neon": False, "estilo": "pasto"},
+    1: {"nombre": "Pradera", "risco": "#B5524A", "tapa": "#3DB02A", "detalle": None, "neon": False, "estilo": "pasto"},
     2: {"nombre": "Dunas", "risco": "#D9A05B", "tapa": "#F2D27A", "detalle": None, "neon": False, "estilo": "arena"},
     3: {"nombre": "Glaciar", "risco": "#7FA6C9", "tapa": "#F4FAFF", "detalle": "#A8E6FF", "neon": False, "estilo": "nieve"},
     4: {"nombre": "Volcán", "risco": "#3A2E33", "tapa": "#5A4A50", "detalle": "#FF5A00", "neon": True, "estilo": "ceniza"},

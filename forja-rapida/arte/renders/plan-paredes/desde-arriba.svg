@@ -1,0 +1,113 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1250" height="420" font-family="Segoe UI,Arial">
+<rect width="100%" height="100%" fill="#1d2b3a"/>
+<text x="20" y="30" fill="#fff" font-size="20" font-weight="700">Plan desde arriba (se avanza hacia la derecha)</text>
+<rect x="20" y="120" width="110" height="176" fill="#7BC86C"/>
+<rect x="20" y="108" width="114" height="12" fill="#B5524A" stroke="#000" stroke-width=".5"/>
+<circle cx="30" cy="114" r="4" fill="#2E8B3A"/>
+<circle cx="48" cy="114" r="4" fill="#2E8B3A"/>
+<circle cx="67" cy="114" r="4" fill="#2E8B3A"/>
+<circle cx="85" cy="114" r="4" fill="#2E8B3A"/>
+<circle cx="103" cy="114" r="4" fill="#2E8B3A"/>
+<circle cx="122" cy="114" r="4" fill="#2E8B3A"/>
+<rect x="20" y="296" width="114" height="12" fill="#B5524A" stroke="#000" stroke-width=".5"/>
+<circle cx="30" cy="302" r="4" fill="#2E8B3A"/>
+<circle cx="48" cy="302" r="4" fill="#2E8B3A"/>
+<circle cx="67" cy="302" r="4" fill="#2E8B3A"/>
+<circle cx="85" cy="302" r="4" fill="#2E8B3A"/>
+<circle cx="103" cy="302" r="4" fill="#2E8B3A"/>
+<circle cx="122" cy="302" r="4" fill="#2E8B3A"/>
+<text x="26" y="110" fill="#fff" font-size="15" font-weight="700">Pradera</text>
+<text x="26" y="326" fill="#fff" font-size="12">piso +0</text>
+<rect x="130" y="108" width="4" height="200" fill="#B5524A"/>
+<rect x="128" y="201" width="8" height="15" fill="#FFD23F" stroke="#000"/>
+<rect x="116" y="201" width="4" height="13" fill="#000" opacity=".35"/>
+<rect x="121" y="201" width="4" height="13" fill="#000" opacity=".35"/>
+<rect x="126" y="201" width="4" height="13" fill="#000" opacity=".35"/>
+<rect x="144" y="120" width="110" height="176" fill="#F2D27A"/>
+<rect x="144" y="108" width="114" height="12" fill="#D9A05B" stroke="#000" stroke-width=".5"/>
+<circle cx="154" cy="114" r="4" fill="#2E8B3A"/>
+<circle cx="172" cy="114" r="4" fill="#2E8B3A"/>
+<circle cx="190" cy="114" r="4" fill="#2E8B3A"/>
+<circle cx="209" cy="114" r="4" fill="#2E8B3A"/>
+<circle cx="227" cy="114" r="4" fill="#2E8B3A"/>
+<circle cx="245" cy="114" r="4" fill="#2E8B3A"/>
+<rect x="144" y="296" width="114" height="12" fill="#D9A05B" stroke="#000" stroke-width=".5"/>
+<circle cx="154" cy="302" r="4" fill="#2E8B3A"/>
+<circle cx="172" cy="302" r="4" fill="#2E8B3A"/>
+<circle cx="190" cy="302" r="4" fill="#2E8B3A"/>
+<circle cx="209" cy="302" r="4" fill="#2E8B3A"/>
+<circle cx="227" cy="302" r="4" fill="#2E8B3A"/>
+<circle cx="245" cy="302" r="4" fill="#2E8B3A"/>
+<text x="150" y="110" fill="#fff" font-size="15" font-weight="700">Dunas</text>
+<text x="150" y="326" fill="#fff" font-size="12">piso +6</text>
+<rect x="254" y="108" width="4" height="200" fill="#D9A05B"/>
+<rect x="252" y="201" width="8" height="15" fill="#FFD23F" stroke="#000"/>
+<rect x="240" y="201" width="4" height="13" fill="#000" opacity=".35"/>
+<rect x="245" y="201" width="4" height="13" fill="#000" opacity=".35"/>
+<rect x="250" y="201" width="4" height="13" fill="#000" opacity=".35"/>
+<polygon points="218,258 246,258 232,228" fill="#fff" opacity=".85" stroke="#000"/>
+<rect x="267" y="120" width="110" height="176" fill="#EAF4FF"/>
+<rect x="267" y="108" width="114" height="12" fill="#7FA6C9" stroke="#000" stroke-width=".5"/>
+<circle cx="277" cy="114" r="4" fill="#2E8B3A"/>
+<circle cx="295" cy="114" r="4" fill="#2E8B3A"/>
+<circle cx="314" cy="114" r="4" fill="#2E8B3A"/>
+<circle cx="332" cy="114" r="4" fill="#2E8B3A"/>
+<circle cx="350" cy="114" r="4" fill="#2E8B3A"/>
+<circle cx="369" cy="114" r="4" fill="#2E8B3A"/>
+<rect x="267" y="296" width="114" height="12" fill="#7FA6C9" stroke="#000" stroke-width=".5"/>
+<circle cx="277" cy="302" r="4" fill="#2E8B3A"/>
+<circle cx="295" cy="302" r="4" fill="#2E8B3A"/>
+<circle cx="314" cy="302" r="4" fill="#2E8B3A"/>
+<circle cx="332" cy="302" r="4" fill="#2E8B3A"/>
+<circle cx="350" cy="302" r="4" fill="#2E8B3A"/>
+<circle cx="369" cy="302" r="4" fill="#2E8B3A"/>
+<text x="273" y="110" fill="#fff" font-size="15" font-weight="700">Glaciar</text>
+<text x="273" y="326" fill="#fff" font-size="12">piso +12</text>
+<rect x="377" y="108" width="4" height="200" fill="#7FA6C9"/>
+<rect x="375" y="201" width="8" height="15" fill="#FFD23F" stroke="#000"/>
+<rect x="363" y="201" width="4" height="13" fill="#000" opacity=".35"/>
+<rect x="368" y="201" width="4" height="13" fill="#000" opacity=".35"/>
+<rect x="373" y="201" width="4" height="13" fill="#000" opacity=".35"/>
+<polygon points="341,258 369,258 355,228" fill="#fff" opacity=".85" stroke="#000"/>
+<rect x="391" y="120" width="110" height="176" fill="#6A5A60"/>
+<rect x="391" y="108" width="114" height="12" fill="#3A2E33" stroke="#000" stroke-width=".5"/>
+<circle cx="401" cy="114" r="4" fill="#2E8B3A"/>
+<circle cx="419" cy="114" r="4" fill="#2E8B3A"/>
+<circle cx="437" cy="114" r="4" fill="#2E8B3A"/>
+<circle cx="456" cy="114" r="4" fill="#2E8B3A"/>
+<circle cx="474" cy="114" r="4" fill="#2E8B3A"/>
+<circle cx="492" cy="114" r="4" fill="#2E8B3A"/>
+<rect x="391" y="296" width="114" height="12" fill="#3A2E33" stroke="#000" stroke-width=".5"/>
+<circle cx="401" cy="302" r="4" fill="#2E8B3A"/>
+<circle cx="419" cy="302" r="4" fill="#2E8B3A"/>
+<circle cx="437" cy="302" r="4" fill="#2E8B3A"/>
+<circle cx="456" cy="302" r="4" fill="#2E8B3A"/>
+<circle cx="474" cy="302" r="4" fill="#2E8B3A"/>
+<circle cx="492" cy="302" r="4" fill="#2E8B3A"/>
+<text x="397" y="110" fill="#fff" font-size="15" font-weight="700">Volcán</text>
+<text x="397" y="326" fill="#fff" font-size="12">piso +18</text>
+<rect x="501" y="108" width="4" height="200" fill="#3A2E33"/>
+<rect x="499" y="201" width="8" height="15" fill="#FFD23F" stroke="#000"/>
+<rect x="487" y="201" width="4" height="13" fill="#000" opacity=".35"/>
+<rect x="492" y="201" width="4" height="13" fill="#000" opacity=".35"/>
+<rect x="497" y="201" width="4" height="13" fill="#000" opacity=".35"/>
+<polygon points="465,258 493,258 479,228" fill="#fff" opacity=".85" stroke="#000"/>
+<rect x="514" y="120" width="110" height="176" fill="#4B3F8F"/>
+<rect x="514" y="108" width="114" height="12" fill="#2E2A5C" stroke="#000" stroke-width=".5"/>
+<circle cx="524" cy="114" r="4" fill="#2E8B3A"/>
+<circle cx="543" cy="114" r="4" fill="#2E8B3A"/>
+<circle cx="561" cy="114" r="4" fill="#2E8B3A"/>
+<circle cx="579" cy="114" r="4" fill="#2E8B3A"/>
+<circle cx="598" cy="114" r="4" fill="#2E8B3A"/>
+<circle cx="616" cy="114" r="4" fill="#2E8B3A"/>
+<rect x="514" y="296" width="114" height="12" fill="#2E2A5C" stroke="#000" stroke-width=".5"/>
+<circle cx="524" cy="302" r="4" fill="#2E8B3A"/>
+<circle cx="543" cy="302" r="4" fill="#2E8B3A"/>
+<circle cx="561" cy="302" r="4" fill="#2E8B3A"/>
+<circle cx="579" cy="302" r="4" fill="#2E8B3A"/>
+<circle cx="598" cy="302" r="4" fill="#2E8B3A"/>
+<circle cx="616" cy="302" r="4" fill="#2E8B3A"/>
+<text x="520" y="110" fill="#fff" font-size="15" font-weight="700">Abismo</text>
+<text x="520" y="326" fill="#fff" font-size="12">piso +24</text>
+<polygon points="588,258 616,258 602,228" fill="#fff" opacity=".85" stroke="#000"/>
+<g font-size="13" fill="#fff"><text x="20" y="330">▬ pared de ladrillo de color de la zona, 24 de alto, con cresta de árboles (●) encima</text><text x="20" y="352">■ amarillo: portón (PuertaZona) arriba de una rampa de 3 escalones de 2 (sube 6 por zona)</text><text x="20" y="374">▲ montaña de fondo agrandada al final de cada zona (pirámide, monte nevado, volcán, columna estelar)</text><text x="20" y="396">Barrera invisible arriba de cada pared hasta 60 de alto: no se trepa ni se sale del mapa</text></g></svg>
