@@ -44,7 +44,7 @@ import decoracion as D  # noqa: E402
 import lobby as L  # noqa: E402
 
 # piezas que Juani ya aprobó: son las que van a Piezas_Juego.fbx
-APROBADAS = []
+APROBADAS = ["Cerca_Madera", "Cerca_Esquina", "Cerca_Puerta", "Linea_ZonaSegura", "Cartel_Colgante", "Toldo_Puesto", "Toldo_Tienda"]
 
 COLORES_CERCA = {"poste": "#7A4A2A", "tablon": "#C98A4E"}
 COLORES_LINEA = {"linea": "#FF3B4E", "marco": "#F2F2F2", "escudo": "#2F6FD8"}
