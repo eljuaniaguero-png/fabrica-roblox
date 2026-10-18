@@ -2,7 +2,8 @@
 -- Golpear geodas: clic o toque sobre una geoda (mantener apretado sigue pegando). El cliente
 -- solo avisa "le pegué a esta"; el servidor decide si cuenta y cuánto daño hace.
 -- Cuando el servidor confirma el golpe (Remotos.Golpe): número que salta y se desvanece,
--- destello blanco en la geoda, temblor cortito y cubitos que saltan (Grupo 1, pulido).
+-- destello blanco, chispas y cubitos del color de la zona (más grandes en el golpe fuerte del
+-- pico). El aplastón y las grietas por vida los hace Geodas.client (los ven todos).
 
 local CollectionService = game:GetService("CollectionService")
 local Debris = game:GetService("Debris")
@@ -402,7 +403,13 @@ destello.FillTransparency = 1
 destello.DepthMode = Enum.HighlightDepthMode.Occluded
 destello.Parent = Workspace
 
-local function numeroFlotante(roca: BasePart, punto: Vector3, danio: number, grande: boolean)
+local function numeroFlotante(
+	roca: BasePart,
+	punto: Vector3,
+	danio: number,
+	grande: boolean,
+	fuerte: boolean
+)
 	if numeros >= GameConfig.Efectos.NumerosMaximos then
 		return
 	end
@@ -419,8 +426,8 @@ local function numeroFlotante(roca: BasePart, punto: Vector3, danio: number, gra
 	b.Parent = ancla
 	local t = Estilo.texto(
 		"-" .. Formato.corto(danio),
-		if grande then 44 else 34,
-		if grande then Color3.fromHex("#FFE14D") else nil
+		if grande or fuerte then 44 else 34,
+		if grande or fuerte then Color3.fromHex("#FFE14D") else nil
 	)
 	t.AnchorPoint = Vector2.new(0.5, 0.5)
 	t.Position = UDim2.fromScale(0.5, 0.5)
@@ -428,13 +435,13 @@ local function numeroFlotante(roca: BasePart, punto: Vector3, danio: number, gra
 	local escala = Instance.new("UIScale")
 	escala.Scale = 1.7
 	escala.Parent = t
-	-- salta, se achica a su tamaño y sube desvaneciéndose
+	-- salta con un rebote, se achica a su tamaño y sube desvaneciéndose
 	TweenService:Create(
 		escala,
-		TweenInfo.new(0.18, Enum.EasingStyle.Back, Enum.EasingDirection.Out),
+		TweenInfo.new(0.3, Enum.EasingStyle.Bounce, Enum.EasingDirection.Out),
 		{ Scale = 1 }
 	):Play()
-	TweenService:Create(b, TweenInfo.new(0.8, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+	TweenService:Create(b, TweenInfo.new(0.8, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
 		StudsOffsetWorldSpace = Vector3.new(0, 3, 0),
 	}):Play()
 	local trazo = t:FindFirstChildOfClass("UIStroke")
@@ -450,23 +457,49 @@ local function numeroFlotante(roca: BasePart, punto: Vector3, danio: number, gra
 	end)
 end
 
-local function temblor(geoda: Model)
-	local original = geoda:GetPivot()
-	geoda:PivotTo(
-		original * CFrame.new(rng:NextNumber(-0.12, 0.12), 0, rng:NextNumber(-0.12, 0.12))
-	)
-	task.delay(0.05, function()
-		if geoda.Parent then
-			geoda:PivotTo(original)
-		end
-	end)
+-- Chispas: un solo emisor que se mueve al punto del golpe y suelta una tanda.
+local ancla = Instance.new("Attachment")
+ancla.Parent = Workspace.Terrain
+local chispas = Instance.new("ParticleEmitter")
+chispas.Enabled = false
+chispas.LightEmission = 1
+chispas.Lifetime = NumberRange.new(0.2, 0.4)
+chispas.Speed = NumberRange.new(12, 22)
+chispas.SpreadAngle = Vector2.new(70, 70)
+chispas.Acceleration = Vector3.new(0, -40, 0)
+chispas.Drag = 3
+chispas.Texture = "rbxasset://textures/particles/sparkles_main.dds"
+chispas.Parent = ancla
+
+local function colorZona(geoda: Model): Color3
+	local lista = GameConfig.Efectos.ColorZona
+	local zona = math.max(1, tonumber(geoda:GetAttribute("Zona")) or 1)
+	return Color3.fromHex(lista[(zona - 1) % #lista + 1])
 end
 
-local function cubitos(roca: BasePart, punto: Vector3, cantidad: number)
+local function tirarChispas(punto: Vector3, color: Color3, cantidad: number, grandes: boolean)
+	ancla.WorldPosition = punto
+	chispas.Color = ColorSequence.new(color)
+	local t = if grandes then 0.7 else 0.4
+	chispas.Size = NumberSequence.new({
+		NumberSequenceKeypoint.new(0, t),
+		NumberSequenceKeypoint.new(1, 0),
+	})
+	chispas:Emit(cantidad)
+end
+
+local function cubitos(
+	roca: BasePart,
+	punto: Vector3,
+	cantidad: number,
+	color: Color3,
+	grandes: boolean
+)
 	for _ = 1, cantidad do
 		local p = Instance.new("Part")
-		p.Size = Vector3.one * rng:NextNumber(0.2, 0.4)
-		p.Color = roca.Color
+		p.Size = Vector3.one
+			* (if grandes then rng:NextNumber(0.35, 0.6) else rng:NextNumber(0.2, 0.4))
+		p.Color = if rng:NextNumber() < 0.5 then color else roca.Color
 		p.Material = roca.Material
 		p.CanCollide, p.CanQuery, p.CanTouch = false, false, false
 		p.CFrame = CFrame.new(punto)
@@ -488,14 +521,22 @@ Golpe.OnClientEvent:Connect(function(geoda: Model, danio: number, _vida: number)
 	local punto = ultimoPunto[geoda] or roca.Position
 	local maxima = tonumber(geoda:GetAttribute("VidaMax")) or 1
 	local reducidos = Efectos.reducidos()
-	numeroFlotante(roca, punto, danio, danio >= maxima * 0.5)
+	-- ¿este golpe es el fuerte del pico? (el que está bajando o acaba de pegar)
+	local personaje = jugador.Character
+	local g = personaje and golpes[personaje]
+	local fuerte = g ~= nil and g.fuerte and os.clock() - g.inicio < 0.6
+	numeroFlotante(roca, punto, danio, danio >= maxima * 0.5, fuerte)
 	-- SONIDO: golpe del pico (cambia un poco el tono en cada golpe)
 	Sonidos.tocar(GameConfig.Sonidos.Golpe, 0.9 + rng:NextNumber() * 0.25, 0.5, roca)
 	destello.Adornee = geoda
 	destello.FillTransparency = 0.45
 	TweenService:Create(destello, TweenInfo.new(0.15), { FillTransparency = 1 }):Play()
-	if not reducidos then
-		temblor(geoda)
-		cubitos(roca, punto, 4)
+	local E = GameConfig.Efectos
+	local color = colorZona(geoda)
+	if reducidos then
+		tirarChispas(punto, color, math.ceil(E.Chispas / 2), false)
+	else
+		tirarChispas(punto, color, if fuerte then E.ChispasFuerte else E.Chispas, fuerte)
+		cubitos(roca, punto, if fuerte then E.CubitosFuerte else E.Cubitos, color, fuerte)
 	end
 end)

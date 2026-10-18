@@ -35,6 +35,15 @@ type Vista = {
 	Anillo: { BasePart }, -- cubitos (o la malla) del anillo de lava
 	Pixeles: { BasePart }, -- cubitos neón que titilan
 	Grietas: { BasePart },
+	-- Golpes: grietas que aparecen al perder vida (las que no se ven por su modificador) y
+	-- las piezas con su tamaño y lugar originales, para aplastarla un poquito en cada golpe.
+	Danio1: { BasePart },
+	Danio2: { BasePart },
+	Etapa: number, -- 0 sana, 1 Grietas, 2 + Grietas2, 3 las dos laten
+	Piezas: { { Parte: BasePart, Tam: Vector3, Rel: CFrame } },
+	Pivote: CFrame,
+	Aplasta: number?, -- os.clock() del último aplastón
+	VidaAntes: number,
 	Conexiones: { RBXScriptConnection },
 	Fase: number,
 	Cerca: boolean,
@@ -89,6 +98,49 @@ local function actualizarVida(v: Vista)
 	local parte = math.clamp(vida / maxima, 0, 1)
 	TweenService:Create(v.Relleno, TweenInfo.new(0.12), { Size = UDim2.fromScale(parte, 1) }):Play()
 	v.TextoVida.Text = Formato.corto(vida) .. "/" .. Formato.corto(maxima) .. " PV"
+	-- perdió vida: se aplasta un poquito y vuelve (no con efectos reducidos)
+	if vida < v.VidaAntes and vida > 0 and not Efectos.reducidos() then
+		v.Aplasta = os.clock()
+	end
+	v.VidaAntes = vida
+	-- grietas según la vida que le queda
+	local etapas = GameConfig.Efectos.GrietaEtapas
+	local etapa = 0
+	for i, limite in etapas do
+		if parte <= limite then
+			etapa = i
+		end
+	end
+	if etapa ~= v.Etapa then
+		v.Etapa = etapa
+		for _, g in v.Danio1 do
+			g.Transparency = if etapa >= 1 then 0.15 else 1
+		end
+		for _, g in v.Danio2 do
+			g.Transparency = if etapa >= 2 then 0.15 else 1
+		end
+	end
+end
+
+local function soltarAplaston(v: Vista)
+	v.Aplasta = nil
+	for _, pz in v.Piezas do
+		pz.Parte.Size = pz.Tam
+		pz.Parte.CFrame = v.Pivote * pz.Rel
+	end
+end
+
+-- Aplasta la geoda: más baja y más ancha, con el pie en el piso. k va de 0 a 1.
+local function aplastar(v: Vista, k: number)
+	local E = GameConfig.Efectos
+	local sy = 1 + (E.AplastaY - 1) * k
+	local sl = 1 + (E.AplastaLados - 1) * k
+	for _, pz in v.Piezas do
+		local rel = pz.Rel
+		local x, y, z = rel.Position.X * sl, rel.Position.Y * sy, rel.Position.Z * sl
+		pz.Parte.Size = pz.Tam * Vector3.new(sl, sy, sl)
+		pz.Parte.CFrame = v.Pivote * (CFrame.new(x, y, z) * rel.Rotation)
+	end
 end
 
 -- Aura --------------------------------------------------------------------------------------
@@ -363,6 +415,19 @@ local function agregar(m: Instance)
 			table.insert(grietas, p)
 		end
 	end
+	-- las grietas que su modificador no muestra son las del daño
+	local danio1, danio2, piezas = {}, {}, {}
+	local pivote = m:GetPivot()
+	for _, p in m:GetDescendants() do
+		if p:IsA("BasePart") then
+			if p.Transparency >= 1 and p.Name == "Grietas" then
+				table.insert(danio1, p)
+			elseif p.Transparency >= 1 and p.Name == "Grietas2" then
+				table.insert(danio2, p)
+			end
+			table.insert(piezas, { Parte = p, Tam = p.Size, Rel = pivote:ToObjectSpace(p.CFrame) })
+		end
+	end
 	local v: Vista = {
 		Modelo = m,
 		Roca = roca,
@@ -374,6 +439,13 @@ local function agregar(m: Instance)
 		Anillo = {},
 		Pixeles = {},
 		Grietas = grietas,
+		Danio1 = danio1,
+		Danio2 = danio2,
+		Etapa = 0,
+		Piezas = piezas,
+		Pivote = pivote,
+		Aplasta = nil,
+		VidaAntes = tonumber(m:GetAttribute("Vida")) or 0,
 		Conexiones = {},
 		Fase = rng:NextNumber() * 10,
 		Cerca = true,
@@ -470,6 +542,24 @@ RunService.RenderStepped:Connect(function()
 		-- grietas que laten
 		for _, g in v.Grietas do
 			g.Transparency = 0.1 + 0.4 * (0.5 + 0.5 * math.sin(t * 3 + v.Fase))
+		end
+		-- poca vida: las grietas del daño brillan y laten rápido
+		if v.Etapa >= 3 then
+			local brillo = 0.5 + 0.5 * math.sin(t * 9 + v.Fase)
+			for _, lista in { v.Danio1, v.Danio2 } do
+				for _, g in lista do
+					g.Transparency = 0.45 * (1 - brillo)
+				end
+			end
+		end
+		-- aplastón del golpe: baja y vuelve en AplastaDuracion
+		if v.Aplasta then
+			local u = (t - v.Aplasta) / GameConfig.Efectos.AplastaDuracion
+			if u >= 1 then
+				soltarAplaston(v)
+			else
+				aplastar(v, math.sin(u * math.pi))
+			end
 		end
 		-- anillo de lava que gira, un poco inclinado
 		local n = #v.Anillo

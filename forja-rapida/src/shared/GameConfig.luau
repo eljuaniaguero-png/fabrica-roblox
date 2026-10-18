@@ -2531,6 +2531,19 @@ local GameConfig = {
 		EscalaCelestial = 1.25, -- la tarjeta de la Celestial sale más grande que la de la Mítica
 		ExtraCelestial = 2, -- segundos de más que se queda la Celestial (la Mítica suma 1)
 		NumerosMaximos = 12, -- números flotantes a la vez
+		-- Cada golpe: la geoda se aplasta y vuelve (escala en Y y en los costados, segundos).
+		AplastaY = 0.92,
+		AplastaLados = 1.05,
+		AplastaDuracion = 0.12,
+		-- Grietas por vida que le queda: Grietas, después Grietas2, y al final las dos laten.
+		GrietaEtapas = { 0.75, 0.5, 0.25 },
+		-- Chispas y cubitos del color de la zona (en orden: Pradera, Dunas, Glaciar, Volcán,
+		-- Abismo; las zonas que vengan después repiten la lista).
+		ColorZona = { "#B072FF", "#FFB23F", "#8FE3FF", "#FF7A2E", "#FFFFFF" },
+		Chispas = 8,
+		ChispasFuerte = 20,
+		Cubitos = 4,
+		CubitosFuerte = 8,
 	},
 
 	-- Sonidos (los usa el cliente; cada uso está marcado con "-- SONIDO:"). Vacíos = sin sonido.
