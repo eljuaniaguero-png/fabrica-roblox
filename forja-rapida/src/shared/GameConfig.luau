@@ -1482,12 +1482,32 @@ local GameConfig = {
 		Cola = 4,
 	},
 
-	-- Luz pedida por Juani: ColorCorrection en Lighting.
+	-- Luz del juego (día brillante como la referencia). La aplica server/Iluminacion.luau.
+	-- Technology no se puede cambiar por script: va a mano en Lighting (ShadowMap).
 	Luz = {
-		Brillo = 0.05,
-		Contraste = 0.15,
-		Saturacion = 0.1,
-		Color = "#FFFFFF",
+		Lighting = {
+			ClockTime = 14,
+			Brightness = 3,
+			Ambient = "#8C8C8C",
+			OutdoorAmbient = "#A0A0A0",
+			EnvironmentDiffuseScale = 0.5,
+			EnvironmentSpecularScale = 0.3,
+			GlobalShadows = true,
+			ShadowSoftness = 0.2,
+		},
+		ColorCorrection = { Saturacion = 0.25, Contraste = 0.1, Brillo = 0.02, Color = "#FFFFFF" },
+		Bloom = { Intensity = 0.6, Size = 24, Threshold = 1.8 },
+		Atmosphere = {
+			Density = 0.25,
+			Offset = 0.1,
+			Color = "#C7E9FF",
+			Decay = "#9CC9FF",
+			Glare = 0,
+			Haze = 0.5,
+		},
+		SunRays = { Intensity = 0.05, Spread = 0.6 },
+		-- Cielo: el Sky de fábrica de Roblox (celeste con nubes de dibujo).
+		CieloDeFabrica = true,
 	},
 
 	-- Eventos del mundo (Grupo 6). Uno por vez: se anuncia AvisoPrevio segundos antes, dura su
