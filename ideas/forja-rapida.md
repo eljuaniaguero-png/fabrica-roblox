@@ -192,6 +192,28 @@ Decisiones del Grupo 3:
   - Arriba de cada portón va un cartel de dificultad: MEDIO, DIFÍCIL, MUY DIFÍCIL y EXTRA DIFÍCIL.
   - Decisión: "4 horizontal, 1 vertical por lado" se entendió como 4 parcelas al fondo y 1 en cada costado. Los sistemas del Museo y del Renacer siguen en el código; solo se sacaron del mapa.
 
+## Modelos que faltan (17/10/2026)
+
+El mapa ya no usa bloques de adorno: paredes, riscos, árboles y demás salen de `arte/fbx`. Esto todavía se arma con partes simples o no tiene modelo:
+
+| # | Qué | Dónde | Hoy |
+|---|---|---|---|
+| 1 | Ruleta de Mascotas (nueva, la de Lobby.fbx no gustó) | Lobby, al centro | Sacada |
+| 2 | Altar de ofrendas (uno por zona, con el color de la zona) | Cada zona | Losa y cristales de bloques |
+| 3 | Cofre de la cámara secreta | Cámara secreta de cada zona | Caja simple |
+| 4 | Puerta secreta (se abre con la llave) | Risco derecho de cada zona | Bloque del color del risco |
+| 5 | Sala de la cámara secreta (túnel y paredes) | Atrás del risco derecho | Bloques |
+| 6 | Portón entre zonas (marco y barrera) | Muro al final de cada zona | Campo de fuerza celeste |
+| 7 | Cartel de dificultad y cartel de Misiones | Arriba del portón y al lado del spawn | Tabla simple con texto |
+| 8 | Portal a la Dimensión Prisma | Dunas | Marco simple y pilares de bloques |
+| 9 | Isla de la Dimensión Prisma | Flotando arriba del mapa | Bloques |
+| 10 | Piso de cada zona (losas o textura) | Todo el mapa | Un color liso |
+| 11 | Spawn (plataforma) | Lobby | Sacado (invisible) |
+| 12 | Arco de entrada a la Pradera | Entre lobby y Pradera | Sacado |
+| 13 | Mascotas (Topito, Piedrín, Chispa, Musgo, Cuarcito, Glaciel, Magmo, Nébula) | Siguen al jugador | Bolitas y cajas |
+
+Ya están en `arte/fbx` pero el juego todavía no los usa: `Pico_*.fbx` (el pico en la mano se arma con partes), `Tablero.fbx` (los tableros se arman con partes) y `Vitrina.fbx`.
+
 ## Rocas por bioma (Blender, 14/10/2026)
 
 Cada bioma tiene 5 rocas (`arte/scripts/rocas.py`, foto en `arte/renders/geodas_biomas.jpg`). Cada geoda nace con una al azar; solo cambia cómo se ve, no lo que da. Nombres y colores en `GameConfig.Zonas[n].Variantes`.

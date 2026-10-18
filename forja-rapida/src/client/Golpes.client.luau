@@ -8,6 +8,7 @@ local CollectionService = game:GetService("CollectionService")
 local Debris = game:GetService("Debris")
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local RunService = game:GetService("RunService")
 local TweenService = game:GetService("TweenService")
 local UserInputService = game:GetService("UserInputService")
 local Workspace = game:GetService("Workspace")
@@ -59,6 +60,118 @@ local function geodaEn(posicion: Vector2, conBarra: boolean): (Model?, Vector3?)
 	return nil, nil
 end
 
+-- Animación del pico ------------------------------------------------------------------------
+-- El brazo derecho sube por arriba de la cabeza y baja de golpe hacia adelante (se mueve el C0
+-- del hombro; el Animator no lo pisa). Lo propio se anima al hacer clic; lo de los demás, cuando
+-- el servidor marca el golpe en su pico (atributo "Golpe").
+
+-- El hombro es un Motor6D (se mueve su C0) o, con las uniones nuevas de Roblox, un
+-- AnimationConstraint (su C0 es de solo lectura: se mueve el Attachment0, que es lo mismo).
+local basesHombro: { [Instance]: CFrame } = setmetatable({}, { __mode = "k" }) :: any
+local turnoHombro: { [Instance]: number } = setmetatable({}, { __mode = "k" }) :: any
+
+local function hombro(personaje: Model): any
+	local brazo = personaje:FindFirstChild("RightUpperArm") or personaje:FindFirstChild("Torso")
+	local m = brazo
+		and (brazo:FindFirstChild("RightShoulder") or brazo:FindFirstChild("Right Shoulder"))
+	if m and m:IsA("Motor6D") then
+		return m
+	elseif m and m:IsA("AnimationConstraint") and m.Attachment0 then
+		return m.Attachment0
+	end
+	return nil
+end
+
+local function girarHombro(h: any, cf: CFrame)
+	if h:IsA("Motor6D") then
+		h.C0 = cf
+	else
+		h.CFrame = cf
+	end
+end
+
+local function golpeDePico(personaje: Model)
+	if not personaje:FindFirstChild("Pico") then
+		return
+	end
+	local motor = hombro(personaje)
+	if not motor then
+		return
+	end
+	local base = basesHombro[motor] or (if motor:IsA("Motor6D") then motor.C0 else motor.CFrame)
+	basesHombro[motor] = base
+	local turno = (turnoHombro[motor] or 0) + 1
+	turnoHombro[motor] = turno
+	local duracion = GameConfig.Golpe.Animacion
+	local arriba = math.rad(GameConfig.Golpe.BrazoArriba)
+	local abajo = math.rad(GameConfig.Golpe.BrazoGolpe)
+	local inicio = os.clock()
+	local conexion: RBXScriptConnection
+	conexion = RunService.Heartbeat:Connect(function()
+		if turnoHombro[motor] ~= turno or not motor.Parent then
+			conexion:Disconnect()
+			return
+		end
+		local t = (os.clock() - inicio) / duracion
+		local angulo
+		if t < 0.35 then -- sube
+			angulo = arriba
+				* TweenService:GetValue(t / 0.35, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
+		elseif t < 0.6 then -- baja de golpe
+			local f = TweenService:GetValue(
+				(t - 0.35) / 0.25,
+				Enum.EasingStyle.Quad,
+				Enum.EasingDirection.In
+			)
+			angulo = arriba + (abajo - arriba) * f
+		elseif t < 1 then -- vuelve
+			angulo = abajo
+				* (
+					1
+					- TweenService:GetValue(
+						(t - 0.6) / 0.4,
+						Enum.EasingStyle.Sine,
+						Enum.EasingDirection.Out
+					)
+				)
+		else
+			girarHombro(motor, base)
+			conexion:Disconnect()
+			return
+		end
+		girarHombro(motor, base * CFrame.Angles(angulo, 0, 0))
+	end)
+end
+
+local function vigilarPicos(otro: Player)
+	if otro == jugador then
+		return
+	end
+	local function conPersonaje(personaje: Model)
+		local function conHerramienta(h: Instance)
+			if h:IsA("Tool") and h.Name == "Pico" then
+				h:GetAttributeChangedSignal("Golpe"):Connect(function()
+					if h.Parent == personaje then
+						golpeDePico(personaje)
+					end
+				end)
+			end
+		end
+		personaje.ChildAdded:Connect(conHerramienta)
+		for _, h in personaje:GetChildren() do
+			conHerramienta(h)
+		end
+	end
+	if otro.Character then
+		conPersonaje(otro.Character)
+	end
+	otro.CharacterAdded:Connect(conPersonaje)
+end
+for _, p in Players:GetPlayers() do
+	vigilarPicos(p)
+end
+Players.PlayerAdded:Connect(vigilarPicos)
+
 local function intentar(posicion: Vector2, conBarra: boolean)
 	local ahora = os.clock()
 	if ahora - ultimoGolpe < INTERVALO then
@@ -71,6 +184,9 @@ local function intentar(posicion: Vector2, conBarra: boolean)
 	ultimoGolpe = ahora
 	ultimoPunto[geoda] = punto :: Vector3
 	Golpear:FireServer(geoda)
+	if jugador.Character then
+		golpeDePico(jugador.Character)
+	end
 end
 
 UserInputService.InputBegan:Connect(function(entrada: InputObject, usadoPorUI: boolean)

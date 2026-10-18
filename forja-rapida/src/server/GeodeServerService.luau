@@ -266,6 +266,11 @@ local function alGolpear(jugador: Player, geoda: unknown)
 	e.Vida -= hecho
 	e.Danio[jugador] = (e.Danio[jugador] or 0) + hecho
 	e.Modelo:SetAttribute("Vida", e.Vida)
+	-- cada cliente anima el pico de los demás cuando cambia esto (Golpes.client)
+	local pico = jugador.Character and jugador.Character:FindFirstChild("Pico")
+	if pico then
+		pico:SetAttribute("Golpe", os.clock())
+	end
 	-- El número flotante muestra toda la Fuerza del golpe, aunque a la geoda le quedara menos.
 	Remotos.Golpe:FireClient(jugador, e.Modelo, fuerza, e.Vida)
 	if e.Vida <= 0 then

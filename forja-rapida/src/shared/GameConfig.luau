@@ -255,6 +255,11 @@ local GameConfig = {
 		-- Si varios le pegan a la misma geoda, cada uno que hizo al menos este porcentaje de su
 		-- vida (o el que la rompió) se lleva su propia revelación, con su propia suerte.
 		ParteParaPremio = 0.1,
+		-- Animación del pico (el brazo derecho sube y baja): segundos que dura y ángulos del
+		-- hombro en grados (arriba de la cabeza y el golpe hacia adelante).
+		Animacion = 0.22,
+		BrazoArriba = 150,
+		BrazoGolpe = 40,
 		ParteParaPremioAncestral = 0.02, -- en la Geoda Ancestral alcanza con menos (son muchos)
 	},
 
