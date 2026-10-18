@@ -2877,6 +2877,75 @@ def textura_studs(px=256):
     return imagen
 
 
+PISOS = {  # zona: (tono A, tono B) del damero del piso
+    "Pradera": ("#7BE33A", "#6BD12E"),
+    "Dunas": ("#F2D58A", "#E6C46E"),
+    "Glaciar": ("#DDF3FF", "#C6E6FA"),
+    "Volcan": ("#5A4E4E", "#4A3F3F"),
+    "Abismo": ("#4B3A78", "#3E2F66"),
+    "Camino": ("#B9C2CC", "#A9B2BC"),
+    "Liso": ("#E6E6E6", "#E6E6E6"),
+}
+
+
+def baldosa_piso(color, px=512):
+    """Una baldosa de TEJA x TEJA studs (arriba = fila 0): studs con brillo arriba y sombrita
+    abajo, y un borde de ladrillo apenas más oscuro que hace de junta al repetirse."""
+    import numpy as np
+
+    base = np.array([int(color[i : i + 2], 16) / 255 for i in (1, 3, 5)], dtype=np.float32)
+    lado = px / TEJA
+    v, u = np.mgrid[0:px, 0:px].astype(np.float32) + 0.5
+    cu, cv = (u % lado) - lado / 2, (v % lado) - lado / 2
+    luz = np.ones((px, px), dtype=np.float32)
+    # sombrita del stud corrida hacia abajo, después el stud con brillo arriba
+    sombra = np.hypot(cu, cv - lado * 0.06) / lado < 0.31
+    luz[sombra] = 0.8
+    stud = np.hypot(cu, cv) / lado < 0.27
+    brillo = np.clip(-cv / (lado * 0.27), -1, 1)  # 1 arriba, -1 abajo
+    luz = np.where(stud, 1.04 + 0.1 * brillo, luz)
+    aro = stud & (np.hypot(cu, cv) / lado > 0.22)
+    luz = np.where(aro & (cv < 0), 1.2, luz)
+    luz = np.where(aro & (cv >= 0), 0.88, luz)
+    borde = px * 0.012  # junta de ladrillo: 1/80 de la baldosa en cada lado
+    junta = (u < borde) | (u > px - borde) | (v < borde) | (v > px - borde)
+    luz[junta] *= 0.86
+    img = np.ones((px, px, 4), dtype=np.float32)
+    img[..., :3] = np.clip(base * luz[..., None], 0, 1)
+    return img
+
+
+def guardar_png(nombre, img):
+    import numpy as np
+
+    alto, ancho = img.shape[:2]
+    imagen = bpy.data.images.new(nombre, ancho, alto)
+    imagen.pixels.foreach_set(np.flipud(img).ravel())  # Blender guarda de abajo hacia arriba
+    imagen.filepath_raw = str(M.TEXTURAS / f"{nombre}.png")
+    imagen.file_format = "PNG"
+    imagen.save()
+
+
+def texturas_piso():
+    """Piso_<Zona>_A.png y _B.png (512 px = 4 x 4 studs) y Piso_<Zona>_Damero.png (512 px =
+    8 x 8 studs con las dos baldosas cruzadas: el juego usa esta, así el damero sale de la
+    textura y no hacen falta más partes)."""
+    import numpy as np
+
+    for zona, (a, b) in PISOS.items():
+        ta, tb = baldosa_piso(a), baldosa_piso(b)
+        if zona == "Liso":
+            guardar_png("Studs_Liso", ta)
+            continue
+        guardar_png(f"Piso_{zona}_A", ta)
+        guardar_png(f"Piso_{zona}_B", tb)
+        chicas = [t[::2, ::2] for t in (ta, tb)]
+        damero = np.concatenate(
+            [np.concatenate([chicas[0], chicas[1]], 1), np.concatenate([chicas[1], chicas[0]], 1)], 0
+        )
+        guardar_png(f"Piso_{zona}_Damero", damero)
+
+
 def textura_lava(px=256):
     """LavaLiquida.png: lava derretida que se repite sin costura (TEJA x TEJA studs): manchas
     naranjas y rojas con vetas amarillas brillantes entre ellas (como la lava de las capturas)."""
@@ -4023,6 +4092,10 @@ def exportar_zona4():
 
 
 if __name__ == "__main__":
+    if "--pisos" in sys.argv:
+        texturas_piso()
+        print("Listo")
+        sys.exit(0)
     if "--exportar-zona4" in sys.argv:
         M.FBX.mkdir(parents=True, exist_ok=True)
         exportar_zona4()
