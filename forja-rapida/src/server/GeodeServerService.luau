@@ -150,6 +150,7 @@ local function premiar(jugador: Player, e: Estado): boolean
 		Geoda = e.Modelo,
 		Modificador = e.Modificador,
 		Suerte = suerte,
+		Tamano = e.Tamano,
 	})
 	return true
 end

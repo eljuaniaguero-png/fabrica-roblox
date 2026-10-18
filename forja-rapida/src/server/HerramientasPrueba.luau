@@ -7,6 +7,9 @@
 --     Zonas, Llaves y Secretos van como lista de números: { Zonas = { 1, 2, 3 } }.
 --     Mochila, Amuletos, Logros, Ramas, Mascotas, etc. van como tabla: { Mochila = { Cuarzo = 5 } }.
 --   game.ServerStorage.Prueba.Reiniciar:Invoke("Nombre") -> vuelve a jugador nuevo
+--   game.ServerStorage.Prueba.Forjar:Invoke("Nombre", "Amatista", "Epico", 1, "Pequena")
+--     -> empieza La Forja con esa piedra, como si hubiera roto una geoda (zona y tamaño)
+--   game.ServerStorage.Prueba.Entregar:Invoke("Nombre") -> entrega la piedra pendiente
 
 local HttpService = game:GetService("HttpService")
 local Players = game:GetService("Players")
@@ -14,6 +17,7 @@ local RunService = game:GetService("RunService")
 local ServerStorage = game:GetService("ServerStorage")
 
 local Economia = require(script.Parent.Economia)
+local Forja = require(script.Parent.Forja)
 local Jugadores = require(script.Parent.Jugadores)
 local Misiones = require(script.Parent.Misiones)
 
@@ -81,6 +85,45 @@ function HerramientasPrueba.iniciar()
 		Jugadores.quitar(jugador)
 		Jugadores.crear(jugador)
 		Misiones.reiniciar(jugador)
+		return true
+	end)
+
+	funcion(
+		carpeta,
+		"Forjar",
+		function(
+			nombre: string,
+			gema: string,
+			rareza: string,
+			zona: number,
+			tamano: string
+		): boolean
+			local jugador = Players:FindFirstChild(nombre) :: Player?
+			if not jugador then
+				return false
+			end
+			Forja.empezar(jugador, {
+				Gema = gema,
+				Rareza = rareza,
+				Zona = zona,
+				Secreta = false,
+				Unidades = 1,
+				Intentos = 3,
+				Geoda = nil,
+				Modificador = "Normal",
+				Suerte = 1,
+				Tamano = tamano,
+			})
+			return true
+		end
+	)
+
+	funcion(carpeta, "Entregar", function(nombre: string): boolean
+		local jugador = Players:FindFirstChild(nombre) :: Player?
+		if not jugador then
+			return false
+		end
+		Forja.entregar(jugador)
 		return true
 	end)
 

@@ -514,3 +514,10 @@ Animación aprobada: `ideas/la-forja-animacion.html` (demo jugable). La geoda se
 - Mochila: las piedras con efecto se guardan como "Id|Efecto" y valen el valor de la gema × el multiplicador del efecto.
 - Geodas exóticas: +1 "?". Los eventos podrían tener una "Forja Caliente" (chances ×2) más adelante.
 - Efectos reducidos: sin inflado, sin confeti, menos chispas y giro más lento.
+
+**Hecho (18/10/2026):** `server/Forja.luau`, `client/Forja.client.luau`, números en `GameConfig.Forja`, reglas en `Reglas.luau` (probadas con `lune run forja-rapida/pruebas/reglas`). Cambios respecto del plan, según `pruebas/simular`:
+- **La escena es solo para Épica o mejor, la Geoda Jefe y la Ancestral** (`GameConfig.Forja.EscenaDesde`). En las demás, las monedas "?" se usan solas al romper y la piedra llega al toque. Con escena en cada Rara el juego iba 2 veces más lento (cada escena dura ~4 s y una geoda chica se rompe en 1 o 2).
+- **No hizo falta subir los precios de la Tienda:** con la forja, el ritmo queda parecido al de hoy (Zona 3 a los 10 min en vez de 11, Zona 4 a los 28 en vez de 32, Zona 5 a los 74 en vez de 69).
+- La geoda se infla y se pone blanca antes de explotar para todos (`Geodas.client`); la escena muestra el dibujo de las piedras de la zona en negro como silueta.
+- Herramientas de Studio: `ServerStorage.Prueba.Forjar` y `Entregar`.
+- Falta: probar en celular (el MCP no emula pantalla de celular) y que el guardado (ProfileStore) no guarde la geoda de `ForjaPendiente` (es un Model).

@@ -50,7 +50,7 @@ pantalla.Parent = jugador:WaitForChild("PlayerGui")
 local fondo = Instance.new("Frame")
 fondo.Size = UDim2.fromScale(1, 1)
 fondo.BackgroundColor3 = Color3.fromHex("#0B0816")
-fondo.BackgroundTransparency = 0.35
+fondo.BackgroundTransparency = 0.15
 fondo.BorderSizePixel = 0
 fondo.Parent = pantalla
 
@@ -80,17 +80,22 @@ rayos.Size = UDim2.fromOffset(10, 10)
 rayos.BackgroundTransparency = 1
 rayos.Parent = lienzo
 local listaRayos: { Frame } = {}
-for i = 1, 14 do
+-- cada barra cruza todo el centro (dos rayos opuestos): así gira alrededor del centro
+for i = 1, 7 do
 	local r = Instance.new("Frame")
-	r.AnchorPoint = Vector2.new(0.5, 1)
+	r.AnchorPoint = Vector2.new(0.5, 0.5)
 	r.Position = UDim2.fromScale(0.5, 0.5)
-	r.Size = UDim2.fromOffset(70, 620)
-	r.Rotation = i * 360 / 14
+	r.Size = UDim2.fromOffset(70, 1300)
+	r.Rotation = i * 180 / 7
 	r.BorderSizePixel = 0
-	r.BackgroundTransparency = 0.9
+	r.BackgroundTransparency = 0.7
 	local deg = Instance.new("UIGradient")
 	deg.Rotation = 90
-	deg.Transparency = NumberSequence.new(1, 0)
+	deg.Transparency = NumberSequence.new({
+		NumberSequenceKeypoint.new(0, 1),
+		NumberSequenceKeypoint.new(0.5, 0),
+		NumberSequenceKeypoint.new(1, 1),
+	})
 	deg.Parent = r
 	r.Parent = rayos
 	table.insert(listaRayos, r)
@@ -100,13 +105,13 @@ end
 local luz = Instance.new("ImageLabel")
 luz.AnchorPoint = Vector2.new(0.5, 0.5)
 luz.Position = CENTRO
-luz.Size = UDim2.fromOffset(300, 300)
+luz.Size = UDim2.fromOffset(600, 600)
 luz.BackgroundTransparency = 1
 luz.ScaleType = Enum.ScaleType.Fit
 luz.ImageTransparency = 0.25
 luz.Parent = lienzo
 local silueta = luz:Clone()
-silueta.Size = UDim2.fromOffset(270, 270)
+silueta.Size = UDim2.fromOffset(540, 540)
 silueta.ImageColor3 = Color3.new(0, 0, 0)
 silueta.ImageTransparency = 0
 silueta.Parent = lienzo
@@ -210,6 +215,10 @@ local function pintarMonedas(e: Estado)
 	end
 	for i = 1, e.Quedan do
 		local m = Estilo.texto("?", 34, Color3.fromHex("#5A3D00"))
+		local trazo = m:FindFirstChildOfClass("UIStroke")
+		if trazo then
+			trazo:Destroy()
+		end
 		m.Size = UDim2.fromOffset(50, 50)
 		m.BackgroundTransparency = 0
 		m.BackgroundColor3 = Color3.fromHex("#FFCF3F")
@@ -485,8 +494,9 @@ RunService.RenderStepped:Connect(function(dt: number)
 	end
 	-- girar = achicar el ancho con el coseno (como una moneda)
 	local ancho = math.abs(math.cos(giro))
-	silueta.Size = UDim2.fromOffset(270 * escala * ancho, 270 * escala)
-	luz.Size = UDim2.fromOffset(300 * escala * ancho, 300 * escala)
+	-- los dibujos de las piedras tienen mucho margen vacío: por eso tan grandes
+	silueta.Size = UDim2.fromOffset(540 * escala * ancho, 540 * escala)
+	luz.Size = UDim2.fromOffset(600 * escala * ancho, 600 * escala)
 	rayos.Rotation += dt * (if fase == "tirando" or fase == "final" then 90 else 20)
 	-- temblor del lienzo
 	if temblor > 0.3 and not reducidos then

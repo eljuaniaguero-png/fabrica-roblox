@@ -3,6 +3,7 @@
 -- números de GameConfig. Se corre desde la raíz del repositorio:
 --   lune run forja-rapida/pruebas/simular            (4 golpes por segundo)
 --   lune run forja-rapida/pruebas/simular 6          (otro ritmo de golpes)
+--   lune run forja-rapida/pruebas/simular 4 sin-forja (sin La Forja, para comparar)
 -- El jugador: le pega a geodas de su mejor zona (tamaño al azar, como en el mapa), vende
 -- todo apenas rompe (con un 15 % de tiempo extra por los viajes al Banco) y compra lo que más
 -- le rinde por moneda entre: el próximo nivel de Fuerza, el próximo pico y el próximo amuleto.
@@ -14,6 +15,8 @@ local GameConfig = cargar("GameConfig")
 local Reglas = cargar("Reglas")
 
 local GOLPES_POR_SEGUNDO = tonumber(process.args[1]) or 4
+local CON_FORJA = process.args[2] ~= "sin-forja"
+local ESCENA_FORJA = 4 -- segundos que dura la escena de La Forja (Rara o mejor)
 local CAMINATA = 1.2 -- segundos para ir de una geoda a otra
 local VIAJES_BANCO = 1.15
 local DURACION = 3 * 3600 -- segundos simulados
@@ -69,7 +72,27 @@ for semilla = 1, SEMILLAS do
 		local suerte = Reglas.suerteGeoda(Reglas.suerteJugador(amuletos), zona, tamano)
 		local rareza = Reglas.tirar(GameConfig.Rarezas, suerte, azar)
 		local gema = Reglas.gemaDe(zona, rareza)
-		monedas += Reglas.unidades(tamano, modificador) * Reglas.valorGema(gema.Id)
+		local clave = gema.Id
+		local rarezaInicial = rareza
+		-- La Forja: usa todas sus monedas "?" (las guardadas no se cuentan)
+		if CON_FORJA then
+			local efecto: string? = nil
+			for _ = 1, Reglas.intentosForja(rareza, tamano, modificador) do
+				local siguiente = Reglas.rarezaSiguiente(rareza)
+				local r, e = Reglas.intentoForja(rareza, efecto ~= nil, siguiente ~= nil, azar)
+				if r == "Sube" and siguiente and Reglas.gemaDe(zona, siguiente) then
+					rareza = siguiente
+					gema = Reglas.gemaDe(zona, rareza)
+				elseif r == "Efecto" then
+					efecto = e
+				end
+			end
+			clave = Reglas.claveGema(gema.Id, efecto)
+			if Reglas.forjaConEscena(rarezaInicial, tamano) then
+				t += ESCENA_FORJA
+			end
+		end
+		monedas += Reglas.unidades(tamano, modificador) * Reglas.valorGema(clave)
 
 		-- Compras: lo que más sube el ingreso por moneda gastada.
 		while true do

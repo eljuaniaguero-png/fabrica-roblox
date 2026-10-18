@@ -896,23 +896,19 @@ chequear(
 	Reglas.avanceMision(mj, { Tipo = "Geoda", Tamano = "Ancestral" }) == 1,
 	"la ancestral no cuenta como jefe"
 )
-local mz = Reglas.nuevaMision(
-	"Facil",
-	{
-		Indice = {},
-		Exoticas = {},
-		Rarezas = {},
-		GeodasRotas = 0,
-		JefesDerrotados = 0,
-		EventosJugados = 0,
-		Logros = {},
-		Zonas = { [1] = true, [2] = true },
-		Secretos = {},
-	},
-	function()
-		return 0.4
-	end
-) :: any
+local mz = Reglas.nuevaMision("Facil", {
+	Indice = {},
+	Exoticas = {},
+	Rarezas = {},
+	GeodasRotas = 0,
+	JefesDerrotados = 0,
+	EventosJugados = 0,
+	Logros = {},
+	Zonas = { [1] = true, [2] = true },
+	Secretos = {},
+}, function()
+	return 0.4
+end) :: any
 if mz.Id == "GeodasZona" then
 	chequear(
 		mz.Zona == 2 and Reglas.avanceMision(mz, { Tipo = "Geoda", Zona = 1 }) == 0,
@@ -957,6 +953,56 @@ if mc then
 	chequear(Reglas.progresoMision(mc, jm) == 0, "colección arranca hecha")
 	jm.Logros[mc.Logro] = true
 	chequear(Reglas.progresoMision(mc, jm) == 1, "colección no se completa")
+end
+
+-- La Forja ---------------------------------------------------------------------------------
+-- Claves de la mochila con efecto y su valor.
+chequear(Reglas.claveGema("Cuarzo", "Oro") == "Cuarzo|Oro", "clave con efecto")
+local idF, efF = Reglas.separarClave("Cuarzo|Oro")
+chequear(idF == "Cuarzo" and efF == "Oro", "separar clave con efecto")
+local idS, efS = Reglas.separarClave("Cuarzo")
+chequear(idS == "Cuarzo" and efS == nil, "separar clave sin efecto")
+chequear(
+	cerca(Reglas.valorGema("Cuarzo|Oro"), Reglas.valorGema("Cuarzo") * 1.5, 1e-9),
+	"el Oro tiene que valer x1,5"
+)
+chequear(
+	cerca(Reglas.valorMochila({ ["Cuarzo|Arcoiris"] = 2 }), Reglas.valorGema("Cuarzo") * 12, 1e-9),
+	"mochila con efecto"
+)
+-- Monedas "?" por geoda.
+chequear(Reglas.intentosForja("Comun", "Pequena", "Normal") == 1, "Común: 1 moneda ?")
+chequear(Reglas.intentosForja("Raro", "Pequena", "Normal") == 3, "Rara: 3 monedas ?")
+chequear(Reglas.intentosForja("Raro", "Jefe", "Lava") == 6, "Jefe exótica: 3 + 2 + 1")
+chequear(Reglas.rarezaSiguiente("Comun") == "Raro", "rareza siguiente")
+chequear(Reglas.rarezaSiguiente("Celestial") == nil, "la Celestial no sube")
+-- Las chances del intento salen como dice GameConfig (200.000 tiradas).
+math.randomseed(3)
+local veces, sube, efecto, nada = 200000, 0, 0, 0
+local pesos: { [string]: number } = {}
+for _ = 1, veces do
+	local r, e = Reglas.intentoForja("Comun", false, true, math.random)
+	if r == "Sube" then
+		sube += 1
+	elseif r == "Efecto" then
+		efecto += 1
+		pesos[e :: string] = (pesos[e :: string] or 0) + 1
+	else
+		nada += 1
+	end
+end
+local F = GameConfig.Forja
+chequear(cerca(sube / veces, F.Subir.Comun, 0.004), "chance de subir de la Común")
+chequear(cerca(efecto / veces, (1 - F.Subir.Comun) * F.ChanceEfecto, 0.003), "chance de efecto")
+chequear(cerca(pesos.Oro / efecto, 0.5, 0.03), "el Oro sale la mitad de las veces")
+-- Con efecto ya puesto no sale otro; sin poder subir, no sube; la Celestial nunca sube.
+for _ = 1, 5000 do
+	local r = Reglas.intentoForja("Raro", true, true, math.random)
+	chequear(r ~= "Efecto", "no puede salir un segundo efecto")
+	local r2 = Reglas.intentoForja("Raro", false, false, math.random)
+	chequear(r2 ~= "Sube", "un mineral secreto no sube")
+	local r3 = Reglas.intentoForja("Celestial", true, true, math.random)
+	chequear(r3 == "Nada", "la Celestial con efecto no cambia")
 end
 
 if errores > 0 then

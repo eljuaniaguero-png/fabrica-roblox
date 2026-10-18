@@ -2147,6 +2147,10 @@ local GameConfig = {
 		PorMision = { Facil = 0, Media = 1, Dificil = 2, Leyenda = 2, Prestigio = 3 },
 		PorRenacer = 5,
 		Vence = 15, -- segundos sin apretar hasta que se entrega sola
+		-- Rareza desde la que se abre la escena (también la Jefe y la Ancestral). Las demás gastan
+		-- sus monedas "?" solas al romperse: con la escena en cada Rara, el juego iba 2 veces
+		-- más lento (pruebas/simular).
+		EscenaDesde = "Epico",
 		Espera = 0.4, -- segundos mínimos entre dos intentos
 	},
 

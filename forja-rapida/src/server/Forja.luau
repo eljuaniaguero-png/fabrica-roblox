@@ -11,8 +11,9 @@
 -- Se entrega UNA sola vez (primero se borra la pendiente, después se suma a la mochila) cuando:
 -- se gastan todas las monedas, aprieta Listo, pasan GameConfig.Forja.Vence segundos sin
 -- apretar, rompe otra geoda, o se va del juego. Así no se duplica ni se pierde.
--- La Común trae 1 sola moneda: se tira sola al romper y se entrega enseguida (sin escena),
--- para no frenar la minería.
+-- La escena es solo para Épica o mejor, la Jefe y la Ancestral (Reglas.forjaConEscena). En las
+-- demás las monedas "?" se usan solas al romper y se entrega enseguida, para no frenar la
+-- minería (con escena en cada Rara el juego iba 2 veces más lento; pruebas/simular).
 -- Al entregar pasa todo lo de antes con la piedra final: mochila, Museo, logros, anuncio a
 -- todos, misiones y eventos (Mundo.avisarRevelacion), y la tarjeta (Remotos.Revelacion).
 
@@ -74,6 +75,7 @@ export type Inicio = {
 	Geoda: Model?,
 	Modificador: string,
 	Suerte: number,
+	Tamano: string,
 }
 
 local function rarezaIndice(id: string): number
@@ -211,9 +213,9 @@ function Forja.empezar(jugador: Player, i: Inicio)
 		Suerte = i.Suerte,
 	}
 	d.ForjaPendiente = p
-	if i.Rareza == "Comun" and i.Intentos <= 1 then
-		-- versión corta: la moneda se usa sola, sin escena
-		if p.Quedan > 0 then
+	if not Reglas.forjaConEscena(i.Rareza, i.Tamano) then
+		-- sin escena (Común, Rara): sus monedas "?" se usan solas y se entrega al toque
+		while p.Quedan > 0 do
 			p.Quedan -= 1
 			tirar(p)
 		end

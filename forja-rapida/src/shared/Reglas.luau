@@ -374,6 +374,22 @@ function Reglas.intentosForja(rareza: string, tamano: string, modificador: strin
 	return n
 end
 
+-- ¿Esta geoda abre la escena de La Forja? Las demás usan sus monedas "?" solas, al toque
+-- (la escena dura unos segundos y romper una geoda chica, uno o dos: frenaría la minería).
+function Reglas.forjaConEscena(rareza: string, tamano: string): boolean
+	local minima = 0
+	local actual = 0
+	for i, r in GameConfig.Rarezas do
+		if r.Id == GameConfig.Forja.EscenaDesde then
+			minima = i
+		end
+		if r.Id == rareza then
+			actual = i
+		end
+	end
+	return actual >= minima or tamano == "Jefe" or tamano == "Ancestral"
+end
+
 -- Un intento de la forja. Devuelve "Sube", "Efecto" (con su Id) o "Nada".
 -- puedeSubir = false para los minerales secretos (no tienen rareza siguiente en su zona).
 function Reglas.intentoForja(
