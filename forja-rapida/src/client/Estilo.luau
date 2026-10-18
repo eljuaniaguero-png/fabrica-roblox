@@ -732,13 +732,13 @@ end
 -- Cada nivel va a otra altura y con otro alcance, así no se pisan.
 
 Estilo.Carteles = {
-	Geoda = { Distancia = 60, Nombre = 20, Rareza = 15, Barra = { 120, 12 } },
+	Geoda = { Distancia = 60, Nombre = 28, Rareza = 22, Barra = { 150, 12 } },
 	Jefe = { Distancia = 150, Nombre = 36, Icono = 44, Barra = { 280, 26 } },
 	Lugar = { Distancia = 600, Nombre = 26, Icono = 34, Detalle = 20 },
 }
 
 local function cartelBase(
-	adornee: BasePart,
+	adornee: Instance,
 	alto: number,
 	ancho: number,
 	altoPx: number,
@@ -748,6 +748,12 @@ local function cartelBase(
 	b.Name = "Cartel"
 	b.Adornee = adornee
 	b.Size = UDim2.fromOffset(ancho, altoPx)
+	if adornee:IsA("Model") then
+		-- arriba de todo el modelo (aunque crezca o sobresalgan cristales), con la base del
+		-- cartel apoyada ahí: el centro sube media altura del cartel
+		b.ExtentsOffsetWorldSpace = Vector3.new(0, 1, 0)
+		b.SizeOffset = Vector2.new(0, 0.5)
+	end
 	b.StudsOffsetWorldSpace = Vector3.new(0, alto, 0)
 	b.MaxDistance = distancia
 	b.LightInfluence = 0
@@ -789,7 +795,7 @@ end
 
 -- Geoda: nombre y rareza (con los íconos del modificador si es exótica) y una barrita de vida.
 function Estilo.cartelGeoda(
-	adornee: BasePart,
+	adornee: Instance,
 	alto: number,
 	nombre: string,
 	rareza: string,
@@ -797,7 +803,7 @@ function Estilo.cartelGeoda(
 	iconos: { string }?
 ): (BillboardGui, Frame, TextLabel)
 	local c = Estilo.Carteles.Geoda
-	local b = cartelBase(adornee, alto, 220, 62, c.Distancia)
+	local b = cartelBase(adornee, alto, 320, 74, c.Distancia)
 	b.Name = "CartelGeoda"
 	local n = Estilo.texto(nombre, c.Nombre)
 	n.LayoutOrder = 1
@@ -816,7 +822,7 @@ end
 
 -- Jefe o evento: ícono grande + nombre, y debajo la barra (vida o contador).
 function Estilo.cartelJefe(
-	adornee: BasePart,
+	adornee: Instance,
 	alto: number,
 	nombre: string,
 	icono: string,

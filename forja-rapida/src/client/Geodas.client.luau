@@ -58,14 +58,12 @@ local function crearCartel(m: Model, roca: BasePart): (BillboardGui, Frame, Text
 	local tam = Reglas.tamano(tostring(m:GetAttribute("Tamano")))
 	local mod = Reglas.modificador(tostring(m:GetAttribute("Modificador")))
 	local nombre = if tam then tam.Nombre else "Geoda"
-	-- arriba de todo el modelo (los cristales sobresalen de la roca)
-	local caja, tamCaja = m:GetBoundingBox()
-	local alto = math.max(roca.Size.Y / 2, caja.Position.Y + tamCaja.Y / 2 - roca.Position.Y) + 1.2
+	local alto = 0.6 -- studs por encima de la geoda (el cartel se apoya arriba del modelo)
 	local b, relleno, texto
 	-- Jefes y eventos: cartel grande con calavera (jefes) o estrella (eventos)
 	if tam and (tam.Id == "Jefe" or tam.Id == "Ancestral" or tam.Id == "Renacida") then
 		local icono = if tam.Id == "Renacida" then "Chispa" else "Jefe"
-		b, relleno, texto = Estilo.cartelJefe(roca, alto + 2, nombre, icono)
+		b, relleno, texto = Estilo.cartelJefe(m, alto + 1, nombre, icono)
 	else
 		-- la rareza de la geoda es su modificador ("Común" si no tiene)
 		local exotica = mod ~= nil and Reglas.esExotica(mod.Id)
@@ -79,7 +77,7 @@ local function crearCartel(m: Model, roca: BasePart): (BillboardGui, Frame, Text
 			rareza ..= " · " .. variante
 		end
 		b, relleno, texto = Estilo.cartelGeoda(
-			roca,
+			m,
 			alto,
 			nombre,
 			rareza,
