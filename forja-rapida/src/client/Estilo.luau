@@ -732,9 +732,9 @@ end
 -- Cada nivel va a otra altura y con otro alcance, así no se pisan.
 
 Estilo.Carteles = {
-	Geoda = { Distancia = 60, Nombre = 28, Rareza = 22, Barra = { 150, 12 } },
-	Jefe = { Distancia = 150, Nombre = 36, Icono = 44, Barra = { 280, 26 } },
-	Lugar = { Distancia = 600, Nombre = 26, Icono = 34, Detalle = 20 },
+	Geoda = { Distancia = 50, Nombre = 28, Rareza = 22, Barra = { 150, 12 } },
+	Jefe = { Distancia = 120, Nombre = 36, Icono = 44, Barra = { 280, 26 } },
+	Lugar = { Distancia = 110, Nombre = 26, Icono = 34, Detalle = 20 },
 }
 
 local function cartelBase(
