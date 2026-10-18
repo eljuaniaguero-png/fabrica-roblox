@@ -96,11 +96,23 @@ end
 
 local function revisarPuertasZona()
 	local zonas = Datos.zonas()
+	-- la próxima zona es la primera que todavía no abrió: su cartel se ve siempre, desde
+	-- cualquier lado, hasta que la abra (los demás solo de cerca)
+	local siguiente = 1
+	while zonas[siguiente] do
+		siguiente += 1
+	end
 	for _, p in CollectionService:GetTagged("PuertaZona") do
 		local n = p:GetAttribute("Zona")
 		local zona = if typeof(n) == "number" then GameConfig.Zonas[n] else nil
 		if p:IsA("BasePart") and zona then
 			cartelPuerta(p, zona)
+			local cartel = p:FindFirstChild("CartelZona")
+			if cartel and cartel:IsA("BillboardGui") then
+				local proxima = zona.Numero == siguiente
+				cartel.MaxDistance = if proxima then math.huge else Estilo.Carteles.Lugar.Distancia
+				cartel.AlwaysOnTop = proxima
+			end
 			abrir(p, zonas[zona.Numero] == true)
 		end
 	end
