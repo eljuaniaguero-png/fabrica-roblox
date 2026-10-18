@@ -484,3 +484,33 @@ Para mirar más adelante:
 - Vitrina: usa la piedra de Blender si está en ServerStorage > Modelos > Gemas > <Id>; si no, la estatua de antes.
 - Datos guardados: todavía no hay guardado (ProfileStore pendiente), así que cambiar Ids no rompe nada. Si alguna vez hubo datos, las gemas viejas que ya no existen se ignoran en Museo y mochila.
 - Museo completo pasa a 66 minerales.
+
+## La Forja — mejorar la piedra al romper la geoda (plan aprobado 18/10/2026)
+
+Animación aprobada: `ideas/la-forja-animacion.html` (demo jugable). La geoda se rompe a toques, se infla y se pone blanca, explota, aparece una silueta negra que se acerca girando y cambia de forma, el jugador gasta sus monedas "?" con el botón verde ("¡Intentar!"), y al final la silueta gira cada vez más rápido y se muestra la piedra con su rareza y "🍀 1 en X".
+
+**Números** (en `GameConfig.Forja`; simulados con 400.000 tiradas):
+- Cada intento hace una sola cosa: primero prueba subir 1 rareza; si no sube y la piedra no tiene efecto, prueba ponerle uno; si no, nada.
+- Chance de subir: Común 12 % · Rara 5 % · Épica 2 % · Legendaria 0,7 % · Mítica 0,2 % · Celestial no sube.
+- Chance de efecto: 5 %. Qué efecto sale (de cada 100) y cuánto multiplica el valor: Oro 50 (×1,5) · Sombra 25 (×2) · Fuego 14 (×2,5) · Diamante 8 (×4) · Arcoíris 3 (×6). Una piedra tiene un efecto como máximo.
+- Monedas "?" por geoda: Común 1, Rara o mejor 3. Geoda Jefe +2 (5 en total), exótica +1.
+- Monedas "?" guardadas (tope 20), para usar en cualquier forja: misión Media +1, Difícil +2, Prestigio +3; cada renacer +5. Más adelante, una mascota con "chance de +1 ?".
+- Resultado simulado: la plata por geoda sube ×1,5 con cualquier suerte, y pasar de suerte ×1 a ×2 sigue rindiendo lo mismo (+50 % sin forja, +51 % con forja). La suerte no se vuelve inútil.
+- Para no romper la economía: al implementar, sumo la forja a `pruebas/simular.luau` y subo los precios de la Tienda (unos ×1,5) hasta que los hitos de la tabla de ritmo queden a ±10 % de los de hoy.
+
+**Servidor** (decide todo; el cliente solo muestra):
+- Al romper, el servidor tira la piedra como hoy, pero en vez de meterla en la mochila la guarda en `ForjaPendiente` (en los datos del jugador): Id, gema, rareza, efecto, intentos que quedan y hora límite.
+- El botón manda `ForjaIntentar(Id)`. El servidor revisa que el Id sea del jugador, que queden intentos, que no se haya pasado la hora y que no apriete más de una vez cada 0,4 s. Tira él, descuenta el intento y le contesta el resultado.
+- Se entrega una sola vez (primero se marca como entregada y después se suma a la mochila) cuando: se gastan los intentos, el jugador aprieta "Listo", pasan 15 s sin apretar, rompe otra geoda, o se va del juego (antes de guardar). Si al cargar hay una pendiente (se cayó el servidor), se entrega con lo que tenga. Así no se duplica ni se pierde.
+- Las monedas "?" guardadas se descuentan en el servidor en el mismo paso que el intento.
+- El guardado real (ProfileStore) todavía no existe: `ForjaPendiente` va dentro de la misma tabla, así que va a guardarse cuando se haga.
+
+**Gratis:** las monedas "?" no se compran con Robux ni con Monedas. Si algún día se venden intentos: chances a la vista antes de comprar (en %, que sumen 100), botón con texto y `PolicyService` (`ArePaidRandomItemsRestricted`) para bloquearlo en los países que lo piden, como dice `ideas/monetizacion.md`.
+
+**Cómo encaja:**
+- Común con 1 "?": versión corta (1 s, sin silueta), para no frenar la minería. La escena entera es para Rara o mejor, Jefe y exóticas.
+- Tarjeta de la gema: se muestra al final con la rareza final, el efecto y "1 en X".
+- Anuncios a todos, logros, Museo, misiones y eventos usan el resultado final (una Mítica forjada se anuncia igual, con "¡forjada!").
+- Mochila: las piedras con efecto se guardan como "Id|Efecto" y valen el valor de la gema × el multiplicador del efecto.
+- Geodas exóticas: +1 "?". Los eventos podrían tener una "Forja Caliente" (chances ×2) más adelante.
+- Efectos reducidos: sin inflado, sin confeti, menos chispas y giro más lento.
