@@ -1,0 +1,277 @@
+<title>La Forja</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Lilita+One&family=Nunito:wght@600;800&display=swap">
+<style>
+/* Escena de juego: cueva oscura, escenario al centro, HUD abajo, controles debajo. */
+:root{
+  --cueva:#14101f; --cueva2:#241a38; --texto:#f4efff; --tenue:#a99cc4;
+  --verde:#3fd96b; --verdeOsc:#1f9a43; --oro:#ffcf3f;
+  --display:"Lilita One","Arial Rounded MT Bold",system-ui,sans-serif;
+  --cuerpo:"Nunito",system-ui,sans-serif;
+  color-scheme:dark;
+}
+html,body{height:100%}
+body{background:var(--cueva);color:var(--texto);font-family:var(--cuerpo);
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));
+  padding-block:16px;box-sizing:border-box;display:flex;flex-direction:column;align-items:center;gap:12px}
+h1{font-family:var(--display);font-weight:400;font-size:clamp(28px,6vw,40px);margin:0;letter-spacing:.02em}
+.sub{margin:0;color:var(--tenue);font-size:14px;text-align:center;max-width:60ch}
+.escena{position:relative;width:100%;max-width:720px;aspect-ratio:4/3;border-radius:18px;overflow:hidden;
+  background:radial-gradient(ellipse at 50% 60%,var(--cueva2),var(--cueva) 70%);box-shadow:0 0 0 3px #00000066 inset;
+  touch-action:manipulation;user-select:none;-webkit-user-select:none}
+canvas{width:100%;height:100%;display:block;cursor:pointer}
+.hud{position:absolute;left:0;right:0;bottom:14px;display:flex;flex-direction:column;align-items:center;gap:10px;pointer-events:none}
+.monedas{display:flex;gap:10px}
+.moneda{width:44px;height:44px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#fff3a8,var(--oro) 55%,#b8860b);
+  border:3px solid #7a5a00;display:grid;place-items:center;font-family:var(--display);font-size:24px;color:#5a3d00;
+  box-shadow:0 4px 0 #5a3d00;transition:transform .25s,opacity .25s;animation:flota 1.6s ease-in-out infinite}
+.moneda:nth-child(2){animation-delay:.2s}.moneda:nth-child(3){animation-delay:.4s}.moneda:nth-child(4){animation-delay:.6s}.moneda:nth-child(5){animation-delay:.8s}
+.moneda.usada{opacity:.15;transform:scale(.6);animation:none}
+@keyframes flota{50%{transform:translateY(-5px) rotate(-6deg)}}
+#intentar{pointer-events:auto;position:relative;font-family:var(--display);font-size:26px;color:#fff;background:linear-gradient(#5cf084,var(--verde));border:0;
+  border-radius:16px;padding:12px 34px;box-shadow:0 6px 0 var(--verdeOsc),0 0 24px #3fd96b88;cursor:pointer;text-shadow:0 2px 0 #0004;
+  animation:late 1s ease-in-out infinite}
+@keyframes late{50%{transform:scale(1.07);box-shadow:0 6px 0 var(--verdeOsc),0 0 40px #3fd96bcc}}
+#intentar:active{transform:translateY(4px) scale(.95);box-shadow:0 2px 0 var(--verdeOsc)}
+#intentar:focus-visible{outline:3px solid #fff;outline-offset:3px}
+#intentar:disabled{filter:grayscale(1);opacity:.5;cursor:default;animation:none}
+.cartel{position:absolute;top:14px;left:50%;transform:translateX(-50%);font-family:var(--display);font-size:clamp(18px,4vw,26px);
+  text-align:center;text-shadow:0 3px 0 #000a;white-space:nowrap;pointer-events:none}
+.controles{display:flex;flex-wrap:wrap;gap:10px;justify-content:center}
+.controles button,.controles label{font-family:var(--cuerpo);font-weight:800;font-size:14px;background:var(--cueva2);color:var(--texto);
+  border:2px solid #ffffff22;border-radius:10px;padding:8px 14px;cursor:pointer;display:flex;align-items:center;gap:6px}
+.chances{width:100%;max-width:720px;font-size:13px;color:var(--tenue);display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:4px 18px}
+.chances b{color:var(--texto);font-variant-numeric:tabular-nums}
+@media (prefers-reduced-motion:reduce){.moneda,#intentar{animation:none}}
+</style>
+
+<h1>La Forja</h1>
+<p class="sub">Tocá la geoda hasta romperla y después usá tus monedas "?" para mejorar la piedra. Los intentos se tiran acá con los números del plan; en el juego los tira el servidor.</p>
+
+<div class="escena">
+  <canvas id="c" width="960" height="720"></canvas>
+  <div class="cartel" id="cartel"></div>
+  <div class="hud">
+    <div class="monedas" id="monedas" hidden></div>
+    <button id="intentar" hidden>¡Intentar!</button>
+  </div>
+</div>
+
+<div class="controles">
+  <button id="repetir">Otra geoda</button>
+  <label for="geoda">Geoda
+    <select id="geoda">
+      <option value="Comun">sale Común (1 ?)</option>
+      <option value="Raro" selected>sale Rara (3 ?)</option>
+      <option value="Epico">sale Épica (3 ?)</option>
+      <option value="Jefe">Geoda Jefe, Rara (5 ?)</option>
+    </select>
+  </label>
+  <label for="suerteDemo"><input type="checkbox" id="suerteDemo"> Suerte de demo (chances ×6)</label>
+  <label for="sonido"><input type="checkbox" id="sonido" checked> Sonido</label>
+  <label for="reducidos"><input type="checkbox" id="reducidos"> Efectos reducidos</label>
+</div>
+
+<div class="chances">
+  <div>Subir 1 rareza: Común <b>12 %</b> · Rara <b>5 %</b> · Épica <b>2 %</b> · Legendaria <b>0,7 %</b> · Mítica <b>0,2 %</b></div>
+  <div>Si no sube, efecto <b>5 %</b>: Oro 50 · Sombra 25 · Fuego 14 · Diamante 8 · Arcoíris 3 (de cada 100)</div>
+</div>
+
+<script>
+const RAREZAS=[
+  {n:"Común",c:"#B9C2CC",sube:.12,uno:1},{n:"Rara",c:"#3FA9FF",sube:.05,uno:5},{n:"Épica",c:"#B04DFF",sube:.02,uno:40},
+  {n:"Legendaria",c:"#FFB21E",sube:.007,uno:400},{n:"Mítica",c:"#FF3D7F",sube:.002,uno:5000},{n:"Celestial",c:"#7DF9FF",sube:0,uno:50000}];
+const unoEn=r=>"1 en "+r.uno.toLocaleString("es-AR");
+const EFECTOS=[{id:"Oro",p:50,c:"#FFCF3F"},{id:"Sombra",p:25,c:"#7a3fbf"},{id:"Fuego",p:14,c:"#FF6A1F"},{id:"Diamante",p:8,c:"#E8FBFF"},{id:"Arcoíris",p:3,c:"rainbow"}];
+const ZONA="#B072FF";
+const cv=document.getElementById("c"),g=cv.getContext("2d"),W=cv.width,H=cv.height,CX=W/2,CY=H*.44;
+const $=id=>document.getElementById(id);
+const red=()=>$("reducidos").checked||matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+// Sonidos sintetizados (arrancan con el primer toque) --------------------------------------
+let ac=null;
+function tono(f,dur,tipo="square",vol=.12,desliz=0,cuando=0){
+  if(!$("sonido").checked)return;try{ac=ac||new AudioContext();const t=ac.currentTime+cuando,o=ac.createOscillator(),v=ac.createGain();
+  o.type=tipo;o.frequency.setValueAtTime(f,t);if(desliz)o.frequency.exponentialRampToValueAtTime(Math.max(30,f*desliz),t+dur);
+  v.gain.setValueAtTime(vol,t);v.gain.exponentialRampToValueAtTime(.001,t+dur);o.connect(v).connect(ac.destination);o.start(t);o.stop(t+dur)}catch(e){}}
+function ruido(dur,vol=.3){if(!$("sonido").checked)return;try{ac=ac||new AudioContext();const b=ac.createBuffer(1,ac.sampleRate*dur,ac.sampleRate),d=b.getChannelData(0);
+  for(let i=0;i<d.length;i++)d[i]=(Math.random()*2-1)*(1-i/d.length)**2;const s=ac.createBufferSource(),v=ac.createGain();v.gain.value=vol;s.buffer=b;s.connect(v).connect(ac.destination);s.start()}catch(e){}}
+const sGolpe=k=>{tono(180+k*30,.08,"square",.1,.5);ruido(.06,.15)};
+const sBoom=()=>{ruido(.6,.5);tono(90,.5,"sawtooth",.2,.3)};
+const sMoneda=()=>{tono(988,.08,"square",.08);tono(1319,.18,"square",.08,1,.07)};
+const sTic=k=>tono(400+k*40,.04,"triangle",.07);
+const sSube=()=>[523,659,784,1047].forEach((f,i)=>tono(f,.25,"square",.09,1,i*.08));
+const sEfecto=()=>[784,988,1175,1568,1976].forEach((f,i)=>tono(f,.3,"triangle",.1,1,i*.06));
+const sNada=()=>tono(300,.25,"triangle",.08,.6);
+const sFinal=()=>{[523,659,784,1047,1319,1568].forEach((f,i)=>tono(f,.4,"square",.08,1,i*.07));ruido(.4,.25)};
+
+// Siluetas de piedras ----------------------------------------------------------------------
+const FORMAS=[
+  [[0,-1],[.62,-.35],[.45,.8],[-.45,.8],[-.62,-.35]],
+  [[0,-1],[.7,0],[0,1],[-.7,0]],
+  [[-.3,-1],[.3,-1],[.75,-.2],[.4,.85],[-.4,.85],[-.75,-.2]],
+  [[0,-1],[.25,-.25],[.95,-.2],[.4,.25],[.6,.95],[0,.55],[-.6,.95],[-.4,.25],[-.95,-.2],[-.25,-.25]],
+  [[-.5,-.9],[.5,-.9],[.8,0],[.5,.9],[-.5,.9],[-.8,0]]];
+
+let est,part=[],textos=[],anillos=[];
+function nuevo(){
+  const sel=$("geoda").value,jefe=sel==="Jefe",r=jefe?1:["Comun","Raro","Epico"].indexOf(sel),n=r===0?1:(jefe?5:3);
+  est={fase:"golpear",t:0,rareza:r,efecto:null,quedan:n,total:n,vida:jefe?12:7,vidaMax:jefe?12:7,aplasta:0,grietas:0,
+    forma:0,giro:0,vel:2,radio:jefe?150:115,flash:0,flashCol:"255,255,255",shake:0,zoom:1,combo:0,pulso:0,resultado:null};
+  part=[];textos=[];anillos=[];$("cartel").style.color="";$("cartel").textContent="¡Tocá la geoda!";
+  $("monedas").hidden=true;$("intentar").hidden=true;pintarMonedas();
+}
+function pintarMonedas(){const m=$("monedas");m.innerHTML="";
+  for(let i=0;i<est.total;i++){const d=document.createElement("div");d.className="moneda"+(i>=est.quedan?" usada":"");d.textContent="?";m.appendChild(d)}
+  $("intentar").disabled=est.quedan<=0||est.fase!=="espera"}
+function chispas(x,y,n,col,vel,tam,grav=.25){if(red())n=Math.ceil(n/3);
+  for(let i=0;i<n;i++){const a=Math.random()*6.28,v=vel*(.3+Math.random());
+  part.push({x,y,vx:Math.cos(a)*v,vy:Math.sin(a)*v-vel*.35,v:1,c:col,s:tam*(.5+Math.random()),cubo:Math.random()<.5,rot:Math.random()*6,gr:grav})}}
+function confeti(n){if(red())n=Math.ceil(n/4);const cols=["#FF3D7F","#3FA9FF","#FFCF3F","#3fd96b","#B04DFF","#fff"];
+  for(let i=0;i<n;i++)part.push({x:Math.random()*W,y:-20-Math.random()*200,vx:(Math.random()-.5)*3,vy:2+Math.random()*3,v:2.5,c:cols[i%6],s:10,cubo:true,rot:Math.random()*6,gr:.05})}
+function texto(s,x,y,col,tam,vida=1.2){textos.push({s,x,y,col,tam,t:0,vida})}
+function anillo(col,vel=900){if(!red())anillos.push({r:20,col,v:1,vel})}
+function colorDe(c,t){return c==="rainbow"?`hsl(${(t*240)%360} 95% 60%)`:c}
+function flash(a,col="255,255,255"){est.flash=red()?Math.min(a,.25):a;est.flashCol=col}
+function temblar(s){if(!red())est.shake=Math.max(est.shake,s)}
+
+// Tocar la geoda ---------------------------------------------------------------------------
+cv.addEventListener("pointerdown",e=>{
+  if(est.fase!=="golpear")return;const b=cv.getBoundingClientRect(),x=(e.clientX-b.left)/b.width*W,y=(e.clientY-b.top)/b.height*H;
+  if(Math.hypot(x-CX,(y-CY-40)/.85)>est.radio*1.25)return;
+  est.vida--;est.combo++;est.aplasta=1;est.grietas=1-est.vida/est.vidaMax;temblar(6);
+  const fuerte=est.combo%3===0;sGolpe(est.combo%5);if(fuerte)tono(70,.25,"sawtooth",.18,.5);
+  chispas(x,y,fuerte?26:12,ZONA,fuerte?11:7,fuerte?11:7);chispas(x,y,6,"#fff",8,5);
+  texto(fuerte?"¡CRACK! -3":"-1",x,y-20,fuerte?"#FFE14D":"#fff",fuerte?54:40,.9);
+  if(fuerte)est.vida=Math.max(0,est.vida-2);
+  if(est.vida<=0){est.fase="infla";est.t=0;$("cartel").textContent=""}
+});
+
+// Botón intentar ---------------------------------------------------------------------------
+$("intentar").onclick=()=>{
+  if(est.fase!=="espera"||est.quedan<=0)return;
+  est.quedan--;pintarMonedas();sMoneda();
+  // la moneda vuela hasta la silueta
+  est.vuelo={t:0,x:CX+(est.quedan-(est.total-1)/2)*54,y:H-110};
+  est.fase="tirando";est.t=0;est.vel=4;est.tics=0;$("cartel").textContent="…";
+  const mult=$("suerteDemo").checked?6:1,r=RAREZAS[est.rareza];
+  if(Math.random()<r.sube*mult)est.resultado="sube";
+  else if(!est.efecto&&Math.random()<.05*mult){let x=Math.random()*100;for(const e of EFECTOS){x-=e.p;if(x<=0){est.resultado=e;break}}}
+  else est.resultado="nada";
+};
+function resolver(){
+  const res=est.resultado,t=performance.now()/1000;
+  if(res==="sube"){est.rareza++;const nr=RAREZAS[est.rareza];sSube();flash(.8,hexRgb(nr.c));temblar(16);est.zoom=1.25;anillo(nr.c);anillo("#fff",1300);
+    chispas(CX,CY,60,nr.c,15,12);confeti(60);texto("¡SUBIÓ!",CX,CY-170,"#fff",86,1.6);texto(nr.n.toUpperCase(),CX,CY+200,nr.c,64,1.8);$("cartel").textContent="¡Ahora es "+nr.n+"! ("+unoEn(nr)+")";$("cartel").style.color=nr.c}
+  else if(res&&res.id){est.efecto=res;sEfecto();const c=res.c==="rainbow"?"#ffffff":res.c;flash(.7,hexRgb(c));temblar(12);est.zoom=1.2;anillo(colorDe(res.c,t));
+    chispas(CX,CY,50,c,13,11);if(res.c==="rainbow")confeti(80);texto("¡EFECTO!",CX,CY-170,"#fff",80,1.6);texto(res.id.toUpperCase(),CX,CY+200,colorDe(res.c,t),64,1.8);$("cartel").textContent="¡Efecto "+res.id+"!";$("cartel").style.color=c}
+  else{sNada();texto("Casi…",CX,CY+200,"#a99cc4",48,1);est.zoom=.97;$("cartel").textContent="Seguí intentando"}
+  est.fase="espera";est.t=0;pintarMonedas();
+  if(est.quedan<=0)setTimeout(()=>{if(est.fase==="espera"){est.fase="final";est.t=0;$("intentar").hidden=true;$("cartel").textContent="¡Forjando!";$("cartel").style.color=""}},1100);
+}
+function hexRgb(h){const n=parseInt(h.slice(1),16);return`${n>>16},${(n>>8)&255},${n&255}`}
+$("repetir").onclick=nuevo;
+
+// Dibujo -----------------------------------------------------------------------------------
+function geoda(rad,blanco,t){
+  const k=est.aplasta,sy=1-.12*k,sx=1+.08*k;
+  g.save();g.translate(CX,CY+40+rad*.85*(1-sy));g.scale(sx,sy);
+  const n=11;g.beginPath();
+  for(let i=0;i<n;i++){const a=i/n*6.28-1.57,rr=rad*(i%2?.86:1)*(1+.04*blanco*Math.sin(t*40+i));g.lineTo(Math.cos(a)*rr,Math.sin(a)*rr*.85)}
+  g.closePath();g.fillStyle=`color-mix(in srgb,#ffffff ${blanco*100}%,#4f7a3c)`;g.fill();
+  g.lineWidth=6;g.strokeStyle=`color-mix(in srgb,#ffffff ${blanco*100}%,#2d4a22)`;g.stroke();
+  for(let k2=-1;k2<=1;k2++){g.beginPath();g.moveTo(k2*40-14,-rad*.75);g.lineTo(k2*40,-rad*1.18+Math.abs(k2)*20);g.lineTo(k2*40+14,-rad*.75);
+    g.fillStyle=`color-mix(in srgb,#ffffff ${blanco*100}%,${ZONA})`;g.fill()}
+  // grietas que brillan según el daño
+  const gr=est.grietas;if(gr>0){const lat=gr>.7?.6+.4*Math.sin(t*14):1;g.strokeStyle=ZONA;g.globalAlpha=lat;g.lineWidth=5;g.shadowColor=ZONA;g.shadowBlur=red()?0:18;
+    const lineas=[[[-40,-30],[-15,0],[-35,30],[-10,55]],[[30,-50],[50,-10],[30,20]],[[-70,10],[-50,40],[-75,70]],[[60,30],[80,60],[55,80]]];
+    lineas.slice(0,Math.ceil(gr*4)).forEach(L=>{g.beginPath();L.forEach(([x,y])=>g.lineTo(x*rad/115,y*rad/115));g.stroke()});g.shadowBlur=0;g.globalAlpha=1}
+  g.restore();
+  // barra de vida
+  if(est.fase==="golpear"){const w=180,p=est.vida/est.vidaMax;g.fillStyle="#000a";g.fillRect(CX-w/2-4,CY-rad-30,w+8,22);
+    g.fillStyle=p>.3?"#3fd96b":"#ff4d4d";g.fillRect(CX-w/2,CY-rad-26,w*p,14)}
+}
+function silueta(escala,giro,forma,relleno,borde,brillo){
+  g.save();g.translate(CX,CY);g.scale(Math.cos(giro)*escala,escala);
+  if(brillo&&!red()){g.shadowColor=brillo;g.shadowBlur=50}
+  g.beginPath();for(const [x,y] of FORMAS[forma])g.lineTo(x*110,y*110);g.closePath();
+  g.fillStyle=relleno;g.fill();g.shadowBlur=0;if(borde){g.lineWidth=8/Math.max(.2,escala);g.strokeStyle=borde;g.stroke()}
+  g.restore();
+}
+function rayos(col,alfa,vel,t,n=14){g.save();g.translate(CX,CY);g.rotate(t*vel);g.globalAlpha=alfa;
+  for(let i=0;i<n;i++){g.rotate(6.28/n);g.beginPath();g.moveTo(0,0);g.lineTo(-45,-560);g.lineTo(45,-560);g.fillStyle=colorDe(col,t+i*.1);g.fill()}g.restore()}
+
+let antes=performance.now();
+function cuadro(ahora){
+  const dt=Math.min(.05,(ahora-antes)/1000);antes=ahora;est.t+=dt;const t=ahora/1000,R=red(),f=est.fase;
+  est.aplasta=Math.max(0,est.aplasta-dt*9);est.zoom+=(1-est.zoom)*Math.min(1,dt*6);
+  g.clearRect(0,0,W,H);g.save();
+  g.translate(CX,CY);g.scale(est.zoom,est.zoom);g.translate(-CX,-CY);
+  if(est.shake>.3){g.translate((Math.random()-.5)*est.shake,(Math.random()-.5)*est.shake);est.shake*=.86}
+  // rayos de fondo
+  if(f==="espera"||f==="tirando")rayos(RAREZAS[est.rareza].c,.07+(f==="tirando"?.08:0),f==="tirando"?1.5:.3,t);
+  if(f==="final")rayos("#ffffff",.05+.25*Math.min(1,est.t/1.8),.5+4*est.t,t,18);
+  if(f==="listo")rayos(est.efecto?est.efecto.c:RAREZAS[est.rareza].c,.35,.4,t,est.rareza>=4?22:14);
+
+  if(f==="golpear"){geoda(est.radio,0,t);
+    // mano que indica tocar
+    if(est.combo===0&&!R){g.save();g.globalAlpha=.6+.4*Math.sin(t*6);g.font="64px sans-serif";g.textAlign="center";g.fillText("👆",CX+est.radio*.9,CY+120+10*Math.sin(t*6));g.restore()}}
+  else if(f==="infla"){const u=Math.min(1,est.t/1);geoda(est.radio*(1+.3*u*u),u,t);
+    if(!R&&Math.random()<u)chispas(CX+(Math.random()-.5)*est.radio*2,CY+40+(Math.random()-.5)*est.radio,1,"#fff",4,6);
+    if(Math.random()<.3)tono(200+u*600,.05,"sine",.05);
+    if(u>=1){est.fase="explota";est.t=0;flash(1);temblar(26);sBoom();anillo("#fff",1400);anillo(ZONA,1000);
+      chispas(CX,CY+40,90,"#ffffff",17,14);chispas(CX,CY+40,50,ZONA,14,12);chispas(CX,CY+40,30,"#4f7a3c",12,16,.4)}}
+  else if(f==="explota"){if(est.t>.45){est.fase="acerca";est.t=0}}
+  else if(f==="acerca"){const u=Math.min(1,est.t/1.3);est.giro+=dt*(10-6*u);const fo=Math.floor(t*7)%5;if(fo!==est.forma){est.forma=fo;sTic(fo)}
+    silueta(.15+.85*(1-Math.pow(1-u,3)),est.giro,est.forma,"#000","#ffffff33","#ffffff66");
+    if(u>=1){est.fase="espera";est.t=0;temblar(8);tono(120,.2,"square",.12,.5);$("monedas").hidden=false;$("intentar").hidden=false;$("cartel").textContent=RAREZAS[est.rareza].n+" ("+unoEn(RAREZAS[est.rareza])+") · ¡Probá mejorarla!";pintarMonedas()}}
+  else if(f==="espera"){est.vel+=(1.6-est.vel)*dt*3;est.giro+=dt*est.vel;
+    const r=RAREZAS[est.rareza];silueta(1+.04*Math.sin(t*4),est.giro,est.forma,"#000",r.c,r.c);
+    if(est.efecto&&!R&&Math.random()<.3)part.push({x:CX+(Math.random()-.5)*180,y:CY+(Math.random()-.5)*180,vx:0,vy:-1.5,v:1,c:colorDe(est.efecto.c,t),s:7,cubo:false,gr:0})}
+  else if(f==="tirando"){ // 1,3 s de suspenso: gira, cambia de forma cada vez más lento, tics
+    const u=Math.min(1,est.t/1.3);est.vel=(R?6:16)*(1-u)+1.5;est.giro+=dt*est.vel;
+    const paso=Math.floor(est.t*(14-10*u));if(paso!==est.tics){est.tics=paso;est.forma=(est.forma+1)%5;sTic(paso%8);est.pulso=1}
+    est.pulso=Math.max(0,est.pulso-dt*6);const r=RAREZAS[est.rareza];
+    silueta(1.05+.08*est.pulso+.1*u,est.giro,est.forma,"#000",r.c,r.c);
+    // moneda volando
+    if(est.vuelo&&est.vuelo.t<1){est.vuelo.t+=dt*3;const v=est.vuelo,k=Math.min(1,v.t),x=v.x+(CX-v.x)*k,y=v.y+(CY-v.y)*k-Math.sin(k*3.14)*120;
+      g.save();g.translate(x,y);g.scale(1-.5*k,1-.5*k);g.fillStyle="#FFCF3F";g.beginPath();g.arc(0,0,24,0,6.28);g.fill();g.fillStyle="#5a3d00";g.font="28px 'Lilita One'";g.textAlign="center";g.fillText("?",0,10);g.restore();
+      if(k>=1){chispas(CX,CY,20,"#FFCF3F",9,8);anillo("#FFCF3F",700)}}
+    if(u>=1)resolver()}
+  else if(f==="final"){ // 1,8 s: gira cada vez más rápido, se agranda y brilla
+    const u=Math.min(1,est.t/1.8);est.giro+=dt*(3+(R?12:45)*u*u);est.forma=Math.floor(est.giro/1.3)%5;
+    if(Math.random()<.1+u*.5)sTic(Math.floor(u*10));temblar(u*8);
+    silueta(1+.25*u,est.giro,est.forma,`color-mix(in srgb,#ffffff ${u*u*90}%,#000)`,RAREZAS[est.rareza].c,"#ffffff");
+    if(u>=1){est.fase="listo";est.t=0;est.forma=2;const r=RAREZAS[est.rareza],c=est.efecto?(est.efecto.c==="rainbow"?"#ffffff":est.efecto.c):r.c;
+      flash(1,hexRgb(c));temblar(24);est.zoom=1.35;sFinal();anillo(c,1500);anillo("#fff",900);
+      chispas(CX,CY,100,r.c,18,13);if(est.efecto)chispas(CX,CY,60,c,14,11);confeti(est.rareza>=2||est.efecto?150:50);
+      $("monedas").hidden=true;$("cartel").textContent="Cuarzo"+(est.efecto?" "+est.efecto.id:"")+" · "+r.n+" · "+unoEn(r);$("cartel").style.color=c}}
+  else if(f==="listo"){const r=RAREZAS[est.rareza],u=Math.min(1,est.t/.35),rebote=1+(R?0:.25*Math.exp(-est.t*6)*Math.cos(est.t*25));
+    est.giro+=dt*.9;const fill=est.efecto?colorDe(est.efecto.c,t):r.c;
+    silueta(1.2*rebote*(.5+.5*u),est.giro,est.forma,fill,"#ffffffdd",fill);
+    g.save();g.translate(CX-25,CY-35);g.globalAlpha=.7;g.fillStyle="#fff";g.beginPath();g.ellipse(0,0,14,28,-.5,0,6.28);g.fill();g.restore();
+    if(!R&&Math.random()<.5){const e=est.efecto,c=e?(e.id==="Fuego"?(Math.random()<.5?"#FF8A2E":"#FFD23F"):colorDe(e.c,t)):r.c;
+      part.push({x:CX+(Math.random()-.5)*200,y:CY+(Math.random()-.5)*200,vx:0,vy:e&&e.id==="Fuego"?-4:-1,v:1,c,s:e&&e.id==="Diamante"?10:7,cubo:!!(e&&e.id==="Diamante"),rot:t,gr:0})}
+    g.save();g.font="64px 'Lilita One',sans-serif";g.textAlign="center";g.lineWidth=10;g.strokeStyle="#000";const k=Math.min(1,est.t*3);
+    g.translate(CX,CY+210);g.scale(k,k);g.strokeText(r.n.toUpperCase(),0,0);g.fillStyle=fill;g.fillText(r.n.toUpperCase(),0,0);
+    g.font="38px 'Lilita One',sans-serif";g.lineWidth=7;g.strokeText("🍀 "+unoEn(r),0,52);g.fillStyle="#fff";g.fillText("🍀 "+unoEn(r),0,52);g.restore()}
+
+  // anillos de choque
+  for(const a of anillos){a.r+=a.vel*dt;a.v-=dt*1.6;g.save();g.globalAlpha=Math.max(0,a.v);g.strokeStyle=a.col;g.lineWidth=14*a.v;g.beginPath();g.arc(CX,CY,a.r,0,6.28);g.stroke();g.restore()}
+  anillos=anillos.filter(a=>a.v>0);
+  // partículas
+  for(const p of part){p.x+=p.vx;p.y+=p.vy;p.vy+=p.gr;p.vx*=.985;p.v-=dt*1.3;p.rot=(p.rot||0)+.2;
+    g.save();g.globalAlpha=Math.max(0,Math.min(1,p.v));g.fillStyle=p.c;g.translate(p.x,p.y);
+    if(p.cubo){g.rotate(p.rot);g.fillRect(-p.s/2,-p.s/2,p.s,p.s)}else{g.beginPath();g.arc(0,0,p.s/2,0,6.28);g.fill()}g.restore()}
+  part=part.filter(p=>p.v>0&&p.y<H+40);
+  // textos que saltan
+  for(const x of textos){x.t+=dt;const u=x.t/x.vida,pop=u<.15?.4+u/.15*.9:1.3-Math.min(.3,(u-.15)*2);
+    g.save();g.globalAlpha=Math.max(0,1-Math.max(0,u-.7)/.3);g.translate(x.x,x.y-u*60);g.scale(pop,pop);g.rotate(Math.sin(x.t*20)*.03);
+    g.font=x.tam+"px 'Lilita One',sans-serif";g.textAlign="center";g.lineWidth=x.tam/5;g.strokeStyle="#000";g.strokeText(x.s,0,0);g.fillStyle=x.col;g.fillText(x.s,0,0);g.restore()}
+  textos=textos.filter(x=>x.t<x.vida);
+  g.restore();
+  if(est.flash>0){g.fillStyle=`rgba(${est.flashCol},${est.flash})`;g.fillRect(0,0,W,H);est.flash=Math.max(0,est.flash-dt*2.2)}
+  requestAnimationFrame(cuadro);
+}
+nuevo();requestAnimationFrame(cuadro);
+</script>
