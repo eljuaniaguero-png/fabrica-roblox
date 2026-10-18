@@ -61,87 +61,260 @@ local function geodaEn(posicion: Vector2, conBarra: boolean): (Model?, Vector3?)
 end
 
 -- Animación del pico ------------------------------------------------------------------------
--- El brazo derecho sube por arriba de la cabeza y baja de golpe hacia adelante (se mueve el C0
--- del hombro; el Animator no lo pisa). Lo propio se anima al hacer clic; lo de los demás, cuando
--- el servidor marca el golpe en su pico (atributo "Golpe").
+-- Tres tiempos: el brazo derecho se levanta hacia atrás, baja con fuerza y rebota al pegar; el
+-- torso acompaña un poco. Cada GolpeFuerteCada golpes seguidos sale uno fuerte (más alto, más
+-- rebote y un "¡CRACK!" grave). Si el pico toca la geoda al bajar, se frena ahí (no la
+-- atraviesa). Al caminar con el pico, el brazo se balancea suave. Se mueve el C0 de las
+-- uniones (el Animator no lo pisa): lo propio al hacer clic; lo de los demás, cuando el
+-- servidor marca el golpe en su pico (atributo "Golpe"). Anda igual con todos los picos.
 
--- El hombro es un Motor6D (se mueve su C0) o, con las uniones nuevas de Roblox, un
+-- Una unión es un Motor6D (se mueve su C0) o, con las uniones nuevas de Roblox, un
 -- AnimationConstraint (su C0 es de solo lectura: se mueve el Attachment0, que es lo mismo).
-local basesHombro: { [Instance]: CFrame } = setmetatable({}, { __mode = "k" }) :: any
-local turnoHombro: { [Instance]: number } = setmetatable({}, { __mode = "k" }) :: any
-
-local function hombro(personaje: Model): any
-	local brazo = personaje:FindFirstChild("RightUpperArm") or personaje:FindFirstChild("Torso")
-	local m = brazo
-		and (brazo:FindFirstChild("RightShoulder") or brazo:FindFirstChild("Right Shoulder"))
-	if m and m:IsA("Motor6D") then
-		return m
-	elseif m and m:IsA("AnimationConstraint") and m.Attachment0 then
-		return m.Attachment0
+local function union(personaje: Model, partes: { string }, nombres: { string }): any
+	for _, nombreParte in partes do
+		local parte = personaje:FindFirstChild(nombreParte)
+		for _, nombre in nombres do
+			local m = parte and parte:FindFirstChild(nombre)
+			if m and m:IsA("Motor6D") then
+				return m
+			elseif m and m:IsA("AnimationConstraint") and m.Attachment0 then
+				return m.Attachment0
+			end
+		end
 	end
 	return nil
 end
 
-local function girarHombro(h: any, cf: CFrame)
-	if h:IsA("Motor6D") then
-		h.C0 = cf
-	else
-		h.CFrame = cf
+local bases: { [Instance]: CFrame } = setmetatable({}, { __mode = "k" }) :: any
+
+local function poner(u: any, grados: number)
+	local base = bases[u]
+	if not base then
+		base = if u:IsA("Motor6D") then u.C0 else u.CFrame
+		bases[u] = base
 	end
+	local cf = (base :: CFrame) * CFrame.Angles(math.rad(grados), 0, 0)
+	if u:IsA("Motor6D") then
+		u.C0 = cf
+	else
+		u.CFrame = cf
+	end
+end
+
+local function soltar(u: any)
+	local base = bases[u]
+	if base then
+		if u:IsA("Motor6D") then
+			u.C0 = base
+		else
+			u.CFrame = base
+		end
+		bases[u] = nil
+	end
+end
+
+type Golpe = {
+	inicio: number,
+	desde: number, -- ángulo del brazo al empezar (puede venir de otro golpe a medias)
+	fuerte: boolean,
+	contacto: number?, -- segundos desde el inicio en que pegó
+	impacto: number, -- ángulo en que pegó
+	angulo: number, -- último ángulo puesto
+	torsoDesde: number, -- inclinación del torso al empezar
+	torso: number, -- última inclinación puesta
+	tocaba: boolean?, -- el pico ya estaba metido en la geoda en el cuadro anterior
+}
+local golpes: { [Model]: Golpe } = setmetatable({}, { __mode = "k" }) :: any
+local combos: { [Model]: { n: number, ultimo: number } } = setmetatable({}, { __mode = "k" }) :: any
+local animados: { [Model]: boolean } = setmetatable({}, { __mode = "k" }) :: any
+
+local G = GameConfig.Golpe
+local function suave(t: number, estilo: Enum.EasingStyle, dir: Enum.EasingDirection): number
+	return TweenService:GetValue(math.clamp(t, 0, 1), estilo, dir)
 end
 
 local function golpeDePico(personaje: Model)
 	if not personaje:FindFirstChild("Pico") then
 		return
 	end
-	local motor = hombro(personaje)
-	if not motor then
+	local ahora = os.clock()
+	local actual = golpes[personaje]
+	-- mantener apretado: no corta un golpe que todavía no pegó ni su rebote (los golpes
+	-- igual cuentan; solo la animación va a su ritmo)
+	if actual then
+		local contacto = actual.contacto
+		if not contacto or ahora - actual.inicio - contacto < G.Rebote then
+			return
+		end
+	end
+	local combo = combos[personaje] or { n = 0, ultimo = 0 }
+	combos[personaje] = combo
+	combo.n = if ahora - combo.ultimo <= G.PausaCombo then combo.n + 1 else 1
+	combo.ultimo = ahora
+	local desde = if actual then actual.angulo else 0
+	golpes[personaje] = {
+		inicio = ahora,
+		desde = desde,
+		fuerte = combo.n % G.GolpeFuerteCada == 0,
+		contacto = nil,
+		impacto = G.BrazoGolpe,
+		angulo = desde,
+		torsoDesde = if actual then actual.torso else 0,
+		torso = if actual then actual.torso else 0,
+	}
+end
+
+-- ¿Alguna parte del pico está metida en una geoda?
+local filtroGeodas = OverlapParams.new()
+filtroGeodas.FilterType = Enum.RaycastFilterType.Include
+local function picoTocaGeoda(pico: Instance): boolean
+	filtroGeodas.FilterDescendantsInstances = CollectionService:GetTagged("Geoda")
+	for _, p in pico:GetDescendants() do
+		if p:IsA("BasePart") and #Workspace:GetPartsInPart(p, filtroGeodas) > 0 then
+			return true
+		end
+	end
+	return false
+end
+
+local function crack(personaje: Model, pico: Instance)
+	local cabeza = pico:FindFirstChild("Handle") or pico:FindFirstChildWhichIsA("BasePart", true)
+	-- SONIDO: golpe fuerte (el mismo del pico, más grave)
+	Sonidos.tocar(GameConfig.Sonidos.Golpe, G.FuerteTono, 0.9, cabeza)
+	if personaje ~= jugador.Character or not cabeza or not cabeza:IsA("BasePart") then
 		return
 	end
-	local base = basesHombro[motor] or (if motor:IsA("Motor6D") then motor.C0 else motor.CFrame)
-	basesHombro[motor] = base
-	local turno = (turnoHombro[motor] or 0) + 1
-	turnoHombro[motor] = turno
-	local duracion = GameConfig.Golpe.Animacion
-	local arriba = math.rad(GameConfig.Golpe.BrazoArriba)
-	local abajo = math.rad(GameConfig.Golpe.BrazoGolpe)
-	local inicio = os.clock()
-	local conexion: RBXScriptConnection
-	conexion = RunService.Heartbeat:Connect(function()
-		if turnoHombro[motor] ~= turno or not motor.Parent then
-			conexion:Disconnect()
-			return
+	local ancla = Instance.new("Attachment")
+	ancla.WorldPosition = cabeza.Position + Vector3.new(0, 2, 0)
+	ancla.Parent = Workspace.Terrain
+	local b = Instance.new("BillboardGui")
+	b.Adornee = ancla
+	b.Size = UDim2.fromOffset(200, 70)
+	b.AlwaysOnTop = true
+	b.LightInfluence = 0
+	b.Parent = ancla
+	local t = Estilo.texto("¡CRACK!", 40, Color3.fromHex("#FF8A3D"))
+	t.AnchorPoint = Vector2.new(0.5, 0.5)
+	t.Position = UDim2.fromScale(0.5, 0.5)
+	t.Rotation = rng:NextNumber(-10, 10)
+	t.Parent = b
+	local escala = Instance.new("UIScale")
+	escala.Scale = 1.8
+	escala.Parent = t
+	TweenService:Create(
+		escala,
+		TweenInfo.new(0.15, Enum.EasingStyle.Back, Enum.EasingDirection.Out),
+		{ Scale = 1 }
+	):Play()
+	task.delay(0.3, function()
+		TweenService:Create(t, TweenInfo.new(0.3), { TextTransparency = 1 }):Play()
+		local trazo = t:FindFirstChildOfClass("UIStroke")
+		if trazo then
+			TweenService:Create(trazo, TweenInfo.new(0.3), { Transparency = 1 }):Play()
 		end
-		local t = (os.clock() - inicio) / duracion
-		local angulo
-		if t < 0.35 then -- sube
-			angulo = arriba
-				* TweenService:GetValue(t / 0.35, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
-		elseif t < 0.6 then -- baja de golpe
-			local f = TweenService:GetValue(
-				(t - 0.35) / 0.25,
-				Enum.EasingStyle.Quad,
-				Enum.EasingDirection.In
-			)
-			angulo = arriba + (abajo - arriba) * f
-		elseif t < 1 then -- vuelve
-			angulo = abajo
-				* (
-					1
-					- TweenService:GetValue(
-						(t - 0.6) / 0.4,
-						Enum.EasingStyle.Sine,
-						Enum.EasingDirection.Out
-					)
-				)
-		else
-			girarHombro(motor, base)
-			conexion:Disconnect()
-			return
-		end
-		girarHombro(motor, base * CFrame.Angles(angulo, 0, 0))
 	end)
+	Debris:AddItem(ancla, 0.7)
 end
+
+-- Ángulos (brazo, torso) del golpe en curso; brazo nil cuando terminó.
+local function poseGolpe(personaje: Model, g: Golpe, pico: Instance): (number?, number)
+	local t = os.clock() - g.inicio
+	local arriba = if g.fuerte then G.FuerteArriba else G.BrazoArriba
+	local torso = if g.fuerte then G.FuerteTorso else G.Torso
+	local rebote = if g.fuerte then G.FuerteRebote else G.ReboteGrados
+	if t < G.Levanta then -- se levanta hacia atrás (el torso se echa un poco atrás)
+		local f = suave(t / G.Levanta, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
+		return g.desde + (arriba - g.desde) * f, g.torsoDesde + (-torso * 0.4 - g.torsoDesde) * f
+	end
+	if not g.contacto then -- baja con fuerza
+		local f = suave((t - G.Levanta) / G.Baja, Enum.EasingStyle.Quad, Enum.EasingDirection.In)
+		local angulo = arriba + (G.BrazoGolpe - arriba) * f
+		local pego = t >= G.Levanta + G.Baja
+		-- Se frena justo cuando el pico entra en la geoda (no la atraviesa). Si ya estaba
+		-- adentro desde arriba (el jugador pegado a la roca), no hay dónde frenar: baja entero.
+		local toca = picoTocaGeoda(pico)
+		if toca and g.tocaba == false then
+			angulo = g.angulo
+			pego = true
+		end
+		g.tocaba = toca
+		if not pego then
+			return angulo, -torso * 0.4 + torso * 1.4 * f
+		end
+		g.contacto = t
+		g.impacto = angulo
+		if g.fuerte then
+			crack(personaje, pico)
+		end
+	end
+	local desde = t - (g.contacto :: number)
+	if desde < G.Rebote then -- rebota apenas
+		return g.impacto + rebote * math.sin(desde / G.Rebote * math.pi), torso
+	end
+	desde -= G.Rebote
+	if desde < G.Vuelve then -- vuelve al reposo
+		local f = suave(desde / G.Vuelve, Enum.EasingStyle.Sine, Enum.EasingDirection.Out)
+		return g.impacto * (1 - f), torso * (1 - f)
+	end
+	return nil, 0
+end
+
+local function animar(personaje: Model)
+	local brazo = union(
+		personaje,
+		{ "RightUpperArm", "Torso" },
+		{ "RightShoulder", "Right Shoulder" }
+	)
+	local cintura = union(personaje, { "UpperTorso" }, { "Waist" })
+	local pico = personaje:FindFirstChild("Pico")
+	if not pico or not pico:IsA("Tool") then
+		if animados[personaje] then
+			animados[personaje] = nil
+			golpes[personaje] = nil
+			if brazo then
+				soltar(brazo)
+			end
+			if cintura then
+				soltar(cintura)
+			end
+		end
+		return
+	end
+	animados[personaje] = true
+	local angulo, torso = 0, 0
+	local g = golpes[personaje]
+	if g then
+		local a, b = poseGolpe(personaje, g, pico)
+		if a then
+			g.angulo, g.torso = a, b
+			angulo, torso = a, b
+		else
+			golpes[personaje] = nil
+		end
+	end
+	if not golpes[personaje] then -- caminando: balanceo suave en la mano
+		local raiz = personaje:FindFirstChild("HumanoidRootPart")
+		if raiz and raiz:IsA("BasePart") then
+			local v = raiz.AssemblyLinearVelocity
+			local rapidez = math.min(Vector3.new(v.X, 0, v.Z).Magnitude / 16, 1)
+			angulo = G.Balanceo * rapidez * math.sin(os.clock() * G.BalanceoVelocidad * math.pi * 2)
+		end
+	end
+	if brazo then
+		poner(brazo, angulo)
+	end
+	if cintura then
+		poner(cintura, -torso) -- negativo = hacia adelante
+	end
+end
+
+RunService.Heartbeat:Connect(function()
+	for _, p in Players:GetPlayers() do
+		if p.Character then
+			animar(p.Character)
+		end
+	end
+end)
 
 local function vigilarPicos(otro: Player)
 	if otro == jugador then

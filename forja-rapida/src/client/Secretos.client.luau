@@ -81,23 +81,16 @@ local function cartelPuerta(p: BasePart, zona: GameConfig.Zona)
 	if p:FindFirstChild("CartelZona") then
 		return
 	end
-	local b = Instance.new("BillboardGui")
-	b.Name = "CartelZona"
-	b.Size = UDim2.fromOffset(340, 110)
-	b.StudsOffsetWorldSpace = Vector3.new(0, p.Size.Y / 2 + 3, 0)
-	b.MaxDistance = 140
-	b.LightInfluence = 0
-	local col = Estilo.contenido(b :: any, 2, true)
-	local n = Estilo.texto(zona.Nombre, 34, Color3.fromHex(zona.ColorCristal))
-	n.LayoutOrder = 1
-	n.Parent = col
-	local f = Estilo.conIconos(
-		{ "Fuerza" },
+	local b = Estilo.cartelLugar(
+		p,
+		p.Size.Y / 2 + 3,
+		zona.Nombre,
+		"Portal",
+		Color3.fromHex(zona.ColorCristal),
 		"Necesitás " .. Formato.corto(zona.FuerzaParaAbrir) .. " de Fuerza",
-		26
+		"Fuerza"
 	)
-	f.LayoutOrder = 2
-	f.Parent = col
+	b.Name = "CartelZona"
 	b.Parent = p
 end
 
@@ -124,26 +117,19 @@ local function revisarSantuario()
 		local pide = p:GetAttribute("Renacer")
 		local veces = if typeof(pide) == "number" then pide else 1
 		if not p:FindFirstChild("CartelSantuario") then
-			local b = Instance.new("BillboardGui")
-			b.Name = "CartelSantuario"
-			b.Size = UDim2.fromOffset(380, 110)
-			b.StudsOffsetWorldSpace = Vector3.new(0, p.Size.Y / 2 + 3, 0)
-			b.MaxDistance = 140
-			b.LightInfluence = 0
-			local col = Estilo.contenido(b :: any, 2, true)
-			local t = Estilo.texto("Santuario del Renacer", 34, Color3.fromHex("#FFD23F"))
-			t.LayoutOrder = 1
-			t.Parent = col
-			local f = Estilo.conIconos(
-				{ "Renacer" },
+			local b = Estilo.cartelLugar(
+				p,
+				p.Size.Y / 2 + 3,
+				"Santuario del Renacer",
+				"Renacer",
+				Color3.fromHex("#FFD23F"),
 				("Para los que renacieron %d %s"):format(
 					veces,
 					if veces == 1 then "vez" else "veces"
 				),
-				24
+				"Renacer"
 			)
-			f.LayoutOrder = 2
-			f.Parent = col
+			b.Name = "CartelSantuario"
 			b.Parent = p
 		end
 		abrir(p, n >= veces)

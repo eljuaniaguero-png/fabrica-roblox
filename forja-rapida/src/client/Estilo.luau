@@ -724,4 +724,150 @@ function Estilo.escalar(obj: GuiObject, extra: number?)
 	seguirCamara()
 end
 
+-- Carteles del mundo -----------------------------------------------------------------------
+-- Tres niveles, para que se lea qué importa y no se encimen:
+--   Geoda  chico: nombre blanco y debajo la rareza en su color; solo de cerca.
+--   Jefe   grande: ícono (calavera o estrella), nombre y barra de vida o contador; de lejos.
+--   Lugar  mediano: ícono y nombre (Banco, Tienda, portones...); siempre visible en el lobby.
+-- Cada nivel va a otra altura y con otro alcance, así no se pisan.
+
+Estilo.Carteles = {
+	Geoda = { Distancia = 60, Nombre = 20, Rareza = 15, Barra = { 120, 12 } },
+	Jefe = { Distancia = 150, Nombre = 36, Icono = 44, Barra = { 280, 26 } },
+	Lugar = { Distancia = 600, Nombre = 26, Icono = 34, Detalle = 20 },
+}
+
+local function cartelBase(
+	adornee: BasePart,
+	alto: number,
+	ancho: number,
+	altoPx: number,
+	distancia: number
+)
+	local b = Instance.new("BillboardGui")
+	b.Name = "Cartel"
+	b.Adornee = adornee
+	b.Size = UDim2.fromOffset(ancho, altoPx)
+	b.StudsOffsetWorldSpace = Vector3.new(0, alto, 0)
+	b.MaxDistance = distancia
+	b.LightInfluence = 0
+	local lista = Instance.new("UIListLayout")
+	lista.HorizontalAlignment = Enum.HorizontalAlignment.Center
+	lista.VerticalAlignment = Enum.VerticalAlignment.Bottom
+	lista.SortOrder = Enum.SortOrder.LayoutOrder
+	lista.Padding = UDim.new(0, 1)
+	lista.Parent = b
+	return b
+end
+
+-- Barra con relleno verde y texto encima (vida o contador).
+local function barraCartel(
+	ancho: number,
+	alto: number,
+	color: { string }?
+): (Frame, Frame, TextLabel)
+	local barra = Instance.new("Frame")
+	barra.Size = UDim2.fromOffset(ancho, alto)
+	barra.BackgroundColor3 = Estilo.Oscuro
+	Estilo.esquinas(barra, alto // 2)
+	Estilo.borde(barra, 2)
+	local relleno = Instance.new("Frame")
+	relleno.Name = "Relleno"
+	relleno.Size = UDim2.fromScale(1, 1)
+	relleno.BackgroundColor3 = Color3.new(1, 1, 1)
+	Estilo.esquinas(relleno, alto // 2)
+	local c = color or { "#7CFF3C", "#2DBA2D" }
+	degradado(relleno, { Color3.fromHex(c[1]), Color3.fromHex(c[2]) })
+	relleno.Parent = barra
+	local texto = Estilo.texto("", math.max(11, alto - 6))
+	texto.AnchorPoint = Vector2.new(0.5, 0.5)
+	texto.Position = UDim2.fromScale(0.5, 0.5)
+	texto.ZIndex = 2
+	texto.Parent = barra
+	return barra, relleno, texto
+end
+
+-- Geoda: nombre y rareza (con los íconos del modificador si es exótica) y una barrita de vida.
+function Estilo.cartelGeoda(
+	adornee: BasePart,
+	alto: number,
+	nombre: string,
+	rareza: string,
+	colorRareza: Color3,
+	iconos: { string }?
+): (BillboardGui, Frame, TextLabel)
+	local c = Estilo.Carteles.Geoda
+	local b = cartelBase(adornee, alto, 220, 62, c.Distancia)
+	b.Name = "CartelGeoda"
+	local n = Estilo.texto(nombre, c.Nombre)
+	n.LayoutOrder = 1
+	n.Parent = b
+	local r = if iconos and #iconos > 0
+		then Estilo.conIconos(iconos, rareza, c.Rareza, colorRareza)
+		else Estilo.texto(rareza, c.Rareza, colorRareza)
+	r.LayoutOrder = 2
+	r.Parent = b
+	local barra, relleno, texto = barraCartel(c.Barra[1], c.Barra[2])
+	barra.LayoutOrder = 3
+	barra.Parent = b
+	texto.Visible = false -- tan chica no se lee: alcanza con el relleno
+	return b, relleno, texto
+end
+
+-- Jefe o evento: ícono grande + nombre, y debajo la barra (vida o contador).
+function Estilo.cartelJefe(
+	adornee: BasePart,
+	alto: number,
+	nombre: string,
+	icono: string,
+	color: Color3?
+): (BillboardGui, Frame, TextLabel)
+	local c = Estilo.Carteles.Jefe
+	local b = cartelBase(adornee, alto, 420, 84, c.Distancia)
+	b.Name = "CartelJefe"
+	local fila = Estilo.fila(6)
+	fila.LayoutOrder = 1
+	fila.Parent = b
+	local ic = Estilo.icono(icono, c.Icono)
+	ic.LayoutOrder = 1
+	ic.Parent = fila
+	local n = Estilo.texto(nombre, c.Nombre, color)
+	n.LayoutOrder = 2
+	n.Parent = fila
+	local barra, relleno, texto = barraCartel(c.Barra[1], c.Barra[2], { "#FF7A86", "#D11F3A" })
+	barra.LayoutOrder = 2
+	barra.Parent = b
+	return b, relleno, texto
+end
+
+-- Lugar: ícono + nombre, mediano, visible desde todo el lobby. `detalle` es una segunda línea
+-- más chica (ej.: lo que pide un portón), con su propio ícono.
+function Estilo.cartelLugar(
+	adornee: BasePart,
+	alto: number,
+	nombre: string,
+	icono: string?,
+	color: Color3?,
+	detalle: string?,
+	iconoDetalle: string?
+): BillboardGui
+	local c = Estilo.Carteles.Lugar
+	local b = cartelBase(adornee, alto, 460, if detalle then 76 else 44, c.Distancia)
+	b.Name = "CartelLugar"
+	b.AlwaysOnTop = true -- que no lo tape el techo del puesto
+	local f = if icono
+		then Estilo.conIconos({ icono }, nombre, c.Nombre, color)
+		else Estilo.texto(nombre, c.Nombre, color)
+	f.LayoutOrder = 1
+	f.Parent = b
+	if detalle then
+		local d = if iconoDetalle
+			then Estilo.conIconos({ iconoDetalle }, detalle, c.Detalle)
+			else Estilo.texto(detalle, c.Detalle)
+		d.LayoutOrder = 2
+		d.Parent = b
+	end
+	return b
+end
+
 return Estilo

@@ -48,66 +48,37 @@ local rng = Random.new()
 local function crearCartel(m: Model, roca: BasePart): (BillboardGui, Frame, TextLabel)
 	local tam = Reglas.tamano(tostring(m:GetAttribute("Tamano")))
 	local mod = Reglas.modificador(tostring(m:GetAttribute("Modificador")))
-	local exotica = mod ~= nil and Reglas.esExotica(mod.Id)
-
-	local b = Instance.new("BillboardGui")
+	local nombre = if tam then tam.Nombre else "Geoda"
+	-- arriba de todo el modelo (los cristales sobresalen de la roca)
+	local caja, tamCaja = m:GetBoundingBox()
+	local alto = math.max(roca.Size.Y / 2, caja.Position.Y + tamCaja.Y / 2 - roca.Position.Y) + 1.2
+	local b, relleno, texto
+	-- Jefes y eventos: cartel grande con calavera (jefes) o estrella (eventos)
+	if tam and (tam.Id == "Jefe" or tam.Id == "Ancestral" or tam.Id == "Renacida") then
+		local icono = if tam.Id == "Renacida" then "Chispa" else "Jefe"
+		b, relleno, texto = Estilo.cartelJefe(roca, alto + 2, nombre, icono)
+	else
+		-- la rareza de la geoda es su modificador ("Común" si no tiene)
+		local exotica = mod ~= nil and Reglas.esExotica(mod.Id)
+		local rareza = if mod and mod.Id ~= "Normal" then mod.Nombre else "Común"
+		local color = if mod and mod.Id ~= "Normal"
+			then Color3.fromHex(mod.Color)
+			else Color3.fromHex(Estilo.Rarezas.Comun[1])
+		-- Grupo 4: el nombre de su roca, si no es la de siempre ("Musgosa", "de Obsidiana"...)
+		local variante = m:GetAttribute("Variante")
+		if typeof(variante) == "string" and variante ~= "" then
+			rareza ..= " · " .. variante
+		end
+		b, relleno, texto = Estilo.cartelGeoda(
+			roca,
+			alto,
+			nombre,
+			rareza,
+			color,
+			if exotica and mod then Reglas.partes(mod.Id) else nil
+		)
+	end
 	b.Name = "Cartel"
-	b.Adornee = roca
-	b.Size = UDim2.fromOffset(240, if exotica then 100 else 74)
-	b.StudsOffsetWorldSpace = Vector3.new(0, roca.Size.Y / 2 + 1.8, 0)
-	b.MaxDistance = 70
-	b.LightInfluence = 0
-	local lista = Instance.new("UIListLayout")
-	lista.HorizontalAlignment = Enum.HorizontalAlignment.Center
-	lista.VerticalAlignment = Enum.VerticalAlignment.Bottom
-	lista.SortOrder = Enum.SortOrder.LayoutOrder
-	lista.Padding = UDim.new(0, 2)
-	lista.Parent = b
-
-	if exotica and mod then
-		local linea =
-			Estilo.conIconos(Reglas.partes(mod.Id), mod.Nombre, 20, Color3.fromHex(mod.Color))
-		linea.LayoutOrder = 1
-		linea.Parent = b
-	end
-	local nombre = Estilo.texto(
-		if tam then tam.Nombre else "Geoda",
-		if tam and tam.Id == "Jefe" then 28 else 24
-	)
-	nombre.LayoutOrder = 2
-	nombre.Parent = b
-	-- Grupo 4: el nombre de su roca, si no es la de siempre ("Musgosa", "de Obsidiana"...)
-	local variante = m:GetAttribute("Variante")
-	if typeof(variante) == "string" and variante ~= "" then
-		local vt = Estilo.texto(variante, 18, Color3.fromHex("#E3E8F2"))
-		vt.LayoutOrder = 3
-		vt.Parent = b
-		b.Size += UDim2.fromOffset(0, 20)
-	end
-
-	local barra = Instance.new("Frame")
-	barra.LayoutOrder = 4
-	barra.Size = UDim2.fromOffset(200, 24)
-	barra.BackgroundColor3 = Estilo.Oscuro
-	Estilo.esquinas(barra, 6)
-	Estilo.borde(barra, 2)
-	barra.Parent = b
-	local relleno = Instance.new("Frame")
-	relleno.Name = "Relleno"
-	relleno.Size = UDim2.fromScale(1, 1)
-	relleno.BackgroundColor3 = Color3.new(1, 1, 1)
-	Estilo.esquinas(relleno, 6)
-	local verde = Instance.new("UIGradient")
-	verde.Rotation = 90
-	verde.Color = ColorSequence.new(Estilo.Verde, Estilo.VerdeOscuro)
-	verde.Parent = relleno
-	relleno.Parent = barra
-	local texto = Estilo.texto("", 18)
-	texto.AnchorPoint = Vector2.new(0.5, 0.5)
-	texto.Position = UDim2.fromScale(0.5, 0.5)
-	texto.ZIndex = 2
-	texto.Parent = barra
-
 	b.Parent = m
 	return b, relleno, texto
 end

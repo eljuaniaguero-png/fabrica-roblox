@@ -255,11 +255,26 @@ local GameConfig = {
 		-- Si varios le pegan a la misma geoda, cada uno que hizo al menos este porcentaje de su
 		-- vida (o el que la rompió) se lleva su propia revelación, con su propia suerte.
 		ParteParaPremio = 0.1,
-		-- Animación del pico (el brazo derecho sube y baja): segundos que dura y ángulos del
-		-- hombro en grados (arriba de la cabeza y el golpe hacia adelante).
-		Animacion = 0.22,
-		BrazoArriba = 150,
-		BrazoGolpe = 40,
+		-- Animación del pico en tres tiempos (segundos): levanta hacia atrás, baja con fuerza y
+		-- rebota al pegar. Ángulos del hombro en grados (arriba de la cabeza / golpe adelante).
+		Levanta = 0.08,
+		Baja = 0.06,
+		Rebote = 0.1,
+		Vuelve = 0.12, -- después del rebote, vuelve a la pose de reposo
+		BrazoArriba = 120,
+		BrazoGolpe = 35,
+		ReboteGrados = 12,
+		Torso = 7, -- cuánto se inclina el torso hacia adelante al bajar (grados)
+		-- Cada 3 golpes seguidos (sin cortar más de PausaCombo s) sale uno fuerte.
+		GolpeFuerteCada = 3,
+		PausaCombo = 0.6,
+		FuerteArriba = 165,
+		FuerteRebote = 24,
+		FuerteTorso = 14,
+		FuerteTono = 0.6, -- tono del "¡CRACK!" (más bajo = más grave)
+		-- Balanceo del pico al caminar: grados y vueltas por segundo.
+		Balanceo = 5,
+		BalanceoVelocidad = 1.6,
 		ParteParaPremioAncestral = 0.02, -- en la Geoda Ancestral alcanza con menos (son muchos)
 	},
 

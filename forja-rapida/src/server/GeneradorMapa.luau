@@ -50,23 +50,14 @@ local TAGS: { [string]: string } = {
 local GAJOS =
 	{ "#FF4D5E", "#FFC93C", "#4CD964", "#2EC8FF", "#9B4DFF", "#FF8C42", "#FF6FD8", "#7CF5FF" }
 
--- Cartel flotante con texto grande (Museo, Ruleta, Misiones...).
-local function letrero(p: BasePart, texto: string, color: string, alto: number)
-	local b = Instance.new("BillboardGui")
-	b.Name = "Letrero"
-	b.Size = UDim2.fromOffset(340, 60)
-	b.StudsOffset = Vector3.new(0, alto, 0)
-	b.MaxDistance = 110
-	local t = Instance.new("TextLabel")
-	t.Size = UDim2.fromScale(1, 1)
-	t.BackgroundTransparency = 1
-	t.Font = Enum.Font.FredokaOne
-	t.TextScaled = true
-	t.Text = texto
-	t.TextColor3 = Color3.fromHex(color)
-	t.TextStrokeTransparency = 0
-	t.Parent = b
-	b.Parent = p
+-- Cartel flotante de un lugar (Museo, Ruleta, Banco...). Solo marca la parte: lo dibuja
+-- Letreros.client con Estilo.cartelLugar, así todos los carteles se ven iguales.
+local function letrero(p: BasePart, texto: string, color: string, alto: number, icono: string)
+	p:SetAttribute("LetreroTexto", texto)
+	p:SetAttribute("LetreroColor", color)
+	p:SetAttribute("LetreroAlto", alto)
+	p:SetAttribute("LetreroIcono", icono)
+	CollectionService:AddTag(p, "Letrero")
 end
 
 -- ProximityPrompt que abre un menú en el cliente (lo abre Secretos.client por el atributo Menu).
@@ -371,7 +362,7 @@ local function armarMarcador(m: Marcador, carpeta: Instance)
 		)
 		decorativa(puntero)
 		abreMenu(p, "Mascotas", "Girar", "Ruleta de Mascotas")
-		letrero(p, "RULETA DE MASCOTAS", "#FF9ED8", radio + 3)
+		letrero(p, "RULETA DE MASCOTAS", "#FF9ED8", radio + 3, "Ruleta")
 	elseif m.Tipo == "PuertaRenacer" then
 		-- Grupo 4: portón dorado del Santuario; se abre para los que renacieron (Secretos.client)
 		p = parte("PuertaRenacer", tam, cf, "#FFD23F", Enum.Material.ForceField, carpeta)
@@ -429,20 +420,7 @@ local function armarMarcador(m: Marcador, carpeta: Instance)
 		prompt.RequiresLineOfSight = false
 		prompt:SetAttribute("Menu", "Museo") -- lo abre el cliente (Secretos.client)
 		prompt.Parent = p
-		local b = Instance.new("BillboardGui")
-		b.Size = UDim2.fromOffset(320, 60)
-		b.StudsOffset = Vector3.new(0, 5, 0)
-		b.MaxDistance = 90
-		local t = Instance.new("TextLabel")
-		t.Size = UDim2.fromScale(1, 1)
-		t.BackgroundTransparency = 1
-		t.Font = Enum.Font.FredokaOne
-		t.TextScaled = true
-		t.Text = "MUSEO DE MINERALES"
-		t.TextColor3 = Color3.fromHex("#FFE45C")
-		t.TextStrokeTransparency = 0
-		t.Parent = b
-		b.Parent = p
+		letrero(p, "MUSEO DE MINERALES", "#FFE45C", 5, "Gema")
 	else
 		-- puntos y destinos: invisibles
 		p = parte(m.Tipo, tam, cf, "#FFFFFF", Enum.Material.SmoothPlastic, carpeta)
@@ -523,10 +501,10 @@ local function alfombraConMenu(m: Model, menu: string, texto: string)
 end
 
 -- Letrero flotante arriba del cartel de la pieza (el cartel de Blender viene sin texto).
-local function cartelPieza(m: Model, texto: string, color: string, alto: number)
+local function cartelPieza(m: Model, texto: string, color: string, alto: number, icono: string)
 	for _, d in m:GetDescendants() do
 		if d:IsA("BasePart") and d.Name:match("_Cartel") then
-			letrero(d, texto, color, alto)
+			letrero(d, texto, color, alto, icono)
 			return
 		end
 	end
@@ -548,10 +526,10 @@ local function armarPieza(m: Marcador, molde: Instance, carpeta: Instance)
 	end
 	if nombre == "Puesto_Vender" then
 		alfombraConMenu(p, "Mochila", "Banco")
-		cartelPieza(p, "BANCO", "#FFE45C", 3)
+		cartelPieza(p, "BANCO", "#FFE45C", 3, "Banco")
 	elseif nombre == "Tienda_Forja" then
 		alfombraConMenu(p, "Tienda", "Tienda")
-		cartelPieza(p, "TIENDA", "#B8FF6A", 3)
+		cartelPieza(p, "TIENDA", "#B8FF6A", 3, "Tienda")
 	elseif nombre == "Ruleta_Mascotas" then
 		-- la rueda que gira la arma el marcador Ruleta en el mismo lugar
 		local rueda = p:FindFirstChild("Rueda")
