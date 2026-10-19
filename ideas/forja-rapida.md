@@ -439,7 +439,8 @@ Guía de estilo (18/10/2026, elegida con las referencias de `forja-rapida/arte/r
 - **Todo con studs** (MaterialVariant `Studs_Liso`): geodas (roca y nido) y decoración, menos lo que brilla o es transparente.
 - **Geodas 1,5 veces más grandes** (`GameConfig.Modelos.EscalaGeoda`).
 - **Decoración a los costados de cada zona** (árboles, cactus, pinos, columnas: `GameConfig.Modelos.DecoExtra`), con el centro libre para las geodas.
-- Pendiente: efectos y HUD con el estilo de las referencias.
+- **HUD como las referencias:** Fuerza, Suerte y Monedas en números grandes con contorno abajo a la izquierda (en celular arriba a la derecha, por el joystick); menús en botones anchos con ícono y nombre al costado (2 columnas); nombre de la zona donde estás arriba al centro.
+- **Aro de luz que late en el piso** debajo de cada lugar con cartel (Tienda, Banco...), del color del lugar.
 
 ## Afuera del prototipo
 

@@ -1,9 +1,10 @@
 --!strict
 -- HUD de Forja Rápida (diseño de Figma v2, piezas de ForgeGUI):
---   Arriba a la derecha: Monedas, Suerte y Fuerza en píldoras (saltan cuando cambian), y los
---   botones "Vender todo" y Ajustes.
---   A la izquierda: botones grandes de los menús (Tienda, Mochila, Museo, Vitrina, Ranking,
---   Eventos y, del Grupo 4, Misiones, Mascotas y Renacer) con globitos de aviso, en 3 columnas.
+--   Abajo a la izquierda (en celular, arriba a la derecha): Fuerza, Suerte y Monedas en números
+--   grandes con contorno (saltan cuando cambian). Arriba a la derecha: "Vender todo" y Ajustes.
+--   Arriba al centro: el nombre de la zona donde estás.
+--   A la izquierda: botones anchos de los menús (ícono y nombre al costado) con globitos de
+--   aviso, en 2 columnas.
 --   En celular van arriba, para no tapar el joystick.
 --   A la derecha, abajo de los recursos (Grupo 4): el seguimiento de las misiones (en celular,
 --   solo la que está más cerca de cumplirse). Tocarlo abre el menú.
@@ -90,15 +91,48 @@ listaDer.Parent = derecha
 Estilo.escalar(derecha)
 derecha.Parent = pantalla
 
-local pMonedas, tMonedas = Estilo.pildora("Moneda", Estilo.Colores.Amarillo, 250, 60)
-pMonedas.LayoutOrder = 1
-pMonedas.Parent = derecha
-local pSuerte, tSuerte = Estilo.pildora("Trebol", Estilo.Colores.Verde, 210, 52)
-pSuerte.LayoutOrder = 2
-pSuerte.Parent = derecha
-local pFuerza, tFuerza = Estilo.pildora("Fuerza", Estilo.Colores.Rojo, 210, 52)
-pFuerza.LayoutOrder = 3
-pFuerza.Parent = derecha
+-- Monedas, Suerte y Fuerza: números grandes con contorno negro y su ícono, sin fondo (como las
+-- referencias de arte/referencias). En compu, abajo a la izquierda; en celular, arriba a la
+-- derecha (abajo a la izquierda está el joystick).
+local contadores = Instance.new("Frame")
+contadores.Name = "Contadores"
+contadores.AutomaticSize = Enum.AutomaticSize.XY
+contadores.BackgroundTransparency = 1
+local listaCont = Instance.new("UIListLayout")
+listaCont.SortOrder = Enum.SortOrder.LayoutOrder
+listaCont.Padding = UDim.new(0, 2)
+listaCont.Parent = contadores
+if celular then
+	contadores.AnchorPoint = Vector2.new(1, 0)
+	contadores.Position = UDim2.new(1, -16, 0, 12)
+	listaCont.HorizontalAlignment = Enum.HorizontalAlignment.Right
+	derecha.Position = UDim2.new(1, -16, 0, 190)
+else
+	contadores.AnchorPoint = Vector2.new(0, 1)
+	contadores.Position = UDim2.new(0, 20, 1, -16)
+end
+Estilo.escalar(contadores, if celular then 0.7 else 1)
+contadores.Parent = pantalla
+
+local function contador(
+	icono: string,
+	color: string,
+	tam: number,
+	orden: number
+): (Frame, TextLabel)
+	local f = Estilo.conIconos({ icono }, "0", tam, Color3.fromHex(color))
+	f.LayoutOrder = orden
+	local t = f:FindFirstChildOfClass("TextLabel") :: TextLabel
+	local trazo = t:FindFirstChildOfClass("UIStroke")
+	if trazo then
+		trazo.Thickness = math.max(3, tam / 11)
+	end
+	f.Parent = contadores
+	return f, t
+end
+local pFuerza, tFuerza = contador("Fuerza", "#FF4D5E", 66, 1)
+local pSuerte, tSuerte = contador("Trebol", "#5CFF4C", 56, 2)
+local pMonedas, tMonedas = contador("Moneda", "#FFD93D", 84, 3)
 
 local filaBotones = Estilo.fila(10)
 filaBotones.LayoutOrder = 4
@@ -127,7 +161,7 @@ local anteriores = { Monedas = -1, Suerte = -1, Fuerza = -1 }
 local function recursos()
 	local m, s, f = Datos.numero("Monedas"), Datos.numero("Suerte"), Datos.numero("Fuerza")
 	tMonedas.Text = Formato.corto(m)
-	tSuerte.Text = Formato.suerte(math.max(1, s))
+	tSuerte.Text = Formato.suerte(math.max(1, s)) .. " Suerte"
 	tFuerza.Text = Formato.corto(f)
 	if anteriores.Monedas >= 0 and m > anteriores.Monedas then
 		saltar(pMonedas)
@@ -186,7 +220,7 @@ end)
 local izquierda = Instance.new("Frame")
 izquierda.Name = "Menus"
 izquierda.BackgroundTransparency = 1
-izquierda.Size = UDim2.fromOffset(3 * 96 + 2 * 12, 3 * 96 + 2 * 12)
+izquierda.Size = UDim2.fromOffset(2 * 200 + 10, 4 * 64 + 3 * 10)
 if celular then
 	izquierda.AnchorPoint = Vector2.new(0, 0)
 	izquierda.Position = UDim2.fromOffset(12, 8)
@@ -195,8 +229,8 @@ else
 	izquierda.Position = UDim2.new(0, 16, 0.45, 0)
 end
 local grilla = Instance.new("UIGridLayout")
-grilla.CellSize = UDim2.fromOffset(96, 96)
-grilla.CellPadding = UDim2.fromOffset(12, 12)
+grilla.CellSize = UDim2.fromOffset(200, 64)
+grilla.CellPadding = UDim2.fromOffset(10, 10)
 grilla.SortOrder = Enum.SortOrder.LayoutOrder
 grilla.Parent = izquierda
 Estilo.escalar(izquierda, if celular then 0.8 else 1)
@@ -212,24 +246,21 @@ local function botonMenu(
 	icono: string,
 	color: string
 ): Boton
-	local b = Instance.new("TextButton")
+	-- botón ancho: ícono a la izquierda y el nombre grande al costado (como las referencias)
+	local b = Estilo.boton({
+		Texto = texto,
+		Icono = icono,
+		Color = color,
+		Ancho = 200,
+		Alto = 64,
+		TamanoTexto = 28,
+	})
 	b.Name = id
-	b.Text = ""
-	b.AutoButtonColor = false
 	b.LayoutOrder = orden
-	Estilo.superficie(b, { "Boton" .. color, "BotonBlanco" }, Estilo.Colores[color], 24, 5)
-	local c = Estilo.contenido(b, -4, true)
-	local ic = Estilo.icono(icono, 60)
-	ic.LayoutOrder = 1
-	ic.Parent = c
-	local t = Estilo.texto(texto, 20)
-	t.LayoutOrder = 2
-	t.Parent = c
 	local g = Estilo.globito("!", 34)
-	g.Position = UDim2.new(1, -6, 0, 6)
+	g.Position = UDim2.new(1, -4, 0, 4)
 	g.Visible = false
 	g.Parent = b
-	Estilo.presionable(b)
 	b.Activated:Connect(function()
 		Ventanas.alternar(id)
 	end)
@@ -452,6 +483,38 @@ RenacerRemoto.OnClientEvent:Connect(function(numero: unknown, esencia: unknown)
 		destello:Destroy()
 	end)
 	t:Play()
+end)
+
+-- Arriba al centro: la zona donde estás, en letras grandes (como las referencias) ----------
+
+local titulo = Estilo.texto("", 58)
+titulo.Name = "TituloZona"
+titulo.AnchorPoint = Vector2.new(0.5, 0)
+titulo.Position = UDim2.new(0.5, 0, 0, 6)
+Estilo.escalar(titulo, if celular then 0.6 else 1)
+titulo.Parent = pantalla
+local zonaActual = -1
+task.spawn(function()
+	while true do
+		local personaje = jugador.Character
+		local raiz = personaje and personaje:FindFirstChild("HumanoidRootPart")
+		local n = 0
+		if raiz and raiz:IsA("BasePart") then
+			for i, rango in GameConfig.Modelos.DecoExtra.Zonas do
+				if raiz.Position.Z >= rango[1] - 8 and raiz.Position.Z <= rango[2] + 8 then
+					n = i
+				end
+			end
+		end
+		if n ~= zonaActual then
+			zonaActual = n
+			local z = GameConfig.Zonas[n]
+			titulo.Text = if z then z.Nombre else "Plaza"
+			titulo.TextColor3 = if z then Color3.fromHex(z.ColorCristal) else Color3.new(1, 1, 1)
+			saltar(titulo)
+		end
+		task.wait(0.3)
+	end
 end)
 
 -- Abajo al centro: próxima zona ------------------------------------------------------------
