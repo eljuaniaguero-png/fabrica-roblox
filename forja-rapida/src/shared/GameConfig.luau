@@ -274,7 +274,7 @@ local GameConfig = {
 			Multiplicador = 2,
 			CambiaCada = { 3, 5 },
 			Radio = 3, -- tolerancia en studs alrededor de la grieta (generosa para celular)
-			Tamano = 1.6, -- tamaño de la grieta en una geoda de 6 studs (crece con la geoda)
+			Tamano = 1.2, -- tamaño de la grieta en una roca chica (crece con la roca, hasta el doble)
 		},
 		TamanosConTope = { Gigante = true, Jefe = true, Ancestral = true },
 		-- Animación del pico en tres tiempos (segundos): levanta hacia atrás, baja con fuerza y

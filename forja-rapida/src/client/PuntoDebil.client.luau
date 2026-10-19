@@ -20,8 +20,10 @@ type Grieta = { Parte: BasePart, Tamano: number }
 local grietas: { [Model]: Grieta } = {}
 
 local function crear(geoda: Model): Grieta
-	local _, tam = geoda:GetBoundingBox()
-	local tamano = P.Tamano * math.clamp(tam.Magnitude / 10, 0.8, 4)
+	-- se mide la roca (el modelo entero incluye el aura y el cartel)
+	local roca = geoda:FindFirstChild("Roca", true)
+	local medida = if roca and roca:IsA("BasePart") then roca.Size.Magnitude else 8
+	local tamano = P.Tamano * math.clamp(medida / 10, 0.8, 2)
 	local p = Instance.new("Part")
 	p.Name = "PuntoDebil"
 	p.Shape = Enum.PartType.Ball
@@ -35,8 +37,8 @@ local function crear(geoda: Model): Grieta
 	p.Color = COLOR
 	local luz = Instance.new("PointLight")
 	luz.Color = COLOR
-	luz.Range = tamano * 4
-	luz.Brightness = 2
+	luz.Range = tamano * 3
+	luz.Brightness = 1
 	luz.Shadows = false
 	luz.Parent = p
 	local chispas = Instance.new("ParticleEmitter")

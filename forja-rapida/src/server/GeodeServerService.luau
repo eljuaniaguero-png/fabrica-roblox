@@ -202,7 +202,8 @@ end
 -- Punto débil: un punto de la superficie de la roca, del lado de afuera (los costados o
 -- arriba). Se busca con un rayo desde afuera hacia el centro que solo ve esta geoda.
 local function moverDebil(e: Estado)
-	local cf, tam = e.Modelo:GetBoundingBox()
+	-- solo la roca (el modelo entero incluye el aura y el cartel)
+	local cf, tam = e.Roca.CFrame, e.Roca.Size
 	local angulo = rng:NextNumber() * math.pi * 2
 	local subida = rng:NextNumber(0.15, 0.7)
 	local dir = Vector3.new(math.cos(angulo), subida, math.sin(angulo)).Unit
@@ -210,7 +211,7 @@ local function moverDebil(e: Estado)
 	local centro = cf.Position
 	local params = RaycastParams.new()
 	params.FilterType = Enum.RaycastFilterType.Include
-	params.FilterDescendantsInstances = { e.Modelo }
+	params.FilterDescendantsInstances = { e.Roca }
 	local r = workspace:Raycast(centro + dir * radio, -dir * radio, params)
 	local punto = if r then r.Position else centro + dir * math.min(tam.X, tam.Z) * 0.45
 	local P = G.PuntoDebil
@@ -228,8 +229,8 @@ local function enDebil(e: Estado, punto: unknown): boolean
 	if punto.X ~= punto.X or punto.Y ~= punto.Y or punto.Z ~= punto.Z then
 		return false
 	end
-	local cf, tam = e.Modelo:GetBoundingBox()
-	if (punto - cf.Position).Magnitude > tam.Magnitude / 2 + 2 then
+	local cf, tam = e.Roca.CFrame, e.Roca.Size
+	if (punto - cf.Position).Magnitude > tam.Magnitude / 2 + 3 then
 		return false
 	end
 	local radio = math.max(G.PuntoDebil.Radio, tam.Magnitude * 0.08)
