@@ -369,7 +369,8 @@ local function intentar(posicion: Vector2, conBarra: boolean)
 	end
 	ultimoGolpe = ahora
 	ultimoPunto[geoda] = punto :: Vector3
-	Golpear:FireServer(geoda)
+	-- el punto tocado sirve para el punto débil (el servidor lo revisa)
+	Golpear:FireServer(geoda, punto)
 	if jugador.Character then
 		golpeDePico(jugador.Character)
 	end
@@ -522,7 +523,7 @@ local function cubitos(
 	end
 end
 
-Golpe.OnClientEvent:Connect(function(geoda: Model, danio: number, _vida: number)
+Golpe.OnClientEvent:Connect(function(geoda: Model, danio: number, _vida: number, debil: boolean?)
 	if typeof(geoda) ~= "Instance" or not geoda:IsA("Model") then
 		return
 	end
@@ -536,8 +537,12 @@ Golpe.OnClientEvent:Connect(function(geoda: Model, danio: number, _vida: number)
 	-- ¿este golpe es el fuerte del pico? (el que está bajando o acaba de pegar)
 	local personaje = jugador.Character
 	local g = personaje and golpes[personaje]
-	local fuerte = g ~= nil and g.fuerte and os.clock() - g.inicio < 0.6
-	numeroFlotante(roca, punto, danio, danio >= maxima * 0.5, fuerte)
+	local fuerte = (g ~= nil and g.fuerte and os.clock() - g.inicio < 0.6) or debil == true
+	numeroFlotante(roca, punto, danio, danio >= maxima * 0.5 or debil == true, fuerte)
+	if debil then
+		-- SONIDO: golpe en el punto débil (más agudo)
+		Sonidos.tocar(GameConfig.Sonidos.Golpe, 1.5, 0.8, roca)
+	end
 	-- SONIDO: golpe del pico (cambia un poco el tono en cada golpe)
 	Sonidos.tocar(GameConfig.Sonidos.Golpe, 0.9 + rng:NextNumber() * 0.25, 0.5, roca)
 	destello.Adornee = geoda

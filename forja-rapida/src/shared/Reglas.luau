@@ -535,9 +535,17 @@ end
 -- Vida de la Geoda Ancestral: crece con la Fuerza de todos los que están jugando.
 -- Daño que hace un golpe: la Fuerza, sin pasarse de la vida que queda y, en las geodas
 -- grandes, sin pasarse del tope (GameConfig.Golpe.TopePorSegundo repartido en los golpes por segundo).
-function Reglas.danioGolpe(fuerza: number, tamano: string, vida: number, vidaMax: number): number
+function Reglas.danioGolpe(
+	fuerza: number,
+	tamano: string,
+	vida: number,
+	vidaMax: number,
+	debil: boolean?
+): number
 	local g = GameConfig.Golpe
-	local hecho = math.min(fuerza, vida)
+	-- en el punto débil pega más fuerte (el tope de las grandes se aplica igual)
+	local golpe = if debil then fuerza * g.PuntoDebil.Multiplicador else fuerza
+	local hecho = math.min(golpe, vida)
 	if g.TamanosConTope[tamano] then
 		hecho = math.min(hecho, math.max(1, vidaMax * g.TopePorSegundo / g.PorSegundo))
 	end

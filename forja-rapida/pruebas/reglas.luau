@@ -1021,6 +1021,11 @@ chequear(Reglas.precioViaje(0) == 0, "volver al Lobby es gratis")
 chequear(Reglas.precioViaje(2) == 1500, "viajar a las Dunas cuesta 1,5K")
 chequear(Reglas.precioViaje(9) == 0, "zona que no existe")
 
+-- Punto débil: ×2, sin pasarse del tope en las grandes.
+chequear(Reglas.danioGolpe(10, "Pequena", 100, 100, true) == 20, "punto débil hace x2")
+chequear(Reglas.danioGolpe(10, "Pequena", 15, 100, true) == 15, "punto débil no saca más de lo que queda")
+chequear(Reglas.danioGolpe(1e9, "Jefe", 1500, 1500, true) == 37.5, "punto débil respeta el tope")
+
 if errores > 0 then
 	print(("%d pruebas fallaron"):format(errores))
 	process.exit(1)

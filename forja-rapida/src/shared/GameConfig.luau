@@ -268,6 +268,14 @@ local GameConfig = {
 		-- (cada golpe saca como mucho TopePorSegundo / PorSegundo). Así un jugador muy fuerte
 		-- tarda al menos 5 s en romperla y los demás llegan a sumarse para ganar su gema.
 		TopePorSegundo = 0.2,
+		-- Punto débil (19/10/2026): una grieta brillante en la geoda. Pegarle ahí multiplica el
+		-- daño (antes del tope). Cambia de lugar cada CambiaCada segundos y apenas le pegás.
+		PuntoDebil = {
+			Multiplicador = 2,
+			CambiaCada = { 3, 5 },
+			Radio = 3, -- tolerancia en studs alrededor de la grieta (generosa para celular)
+			Tamano = 1.6, -- tamaño de la grieta en una geoda de 6 studs (crece con la geoda)
+		},
 		TamanosConTope = { Gigante = true, Jefe = true, Ancestral = true },
 		-- Animación del pico en tres tiempos (segundos): levanta hacia atrás, baja con fuerza y
 		-- rebota al pegar. Ángulos del hombro en grados: 0 = brazo estirado adelante (como se

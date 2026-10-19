@@ -56,6 +56,8 @@ type Estado = {
 	ParteParaPremio: number,
 	Secreto: number?, -- Grupo 3: está detrás de la puerta secreta de ese bioma
 	Renacer: number?, -- Grupo 4: está en el Santuario (hace falta haber renacido tantas veces)
+	Debil: Vector3?, -- punto débil en la superficie (atributo PuntoDebil para los clientes)
+	DebilHasta: number,
 }
 
 local G = GameConfig.Golpe
@@ -197,7 +199,44 @@ local function romper(e: Estado, ultimo: Player)
 	end)
 end
 
-local function alGolpear(jugador: Player, geoda: unknown)
+-- Punto débil: un punto de la superficie de la roca, del lado de afuera (los costados o
+-- arriba). Se busca con un rayo desde afuera hacia el centro que solo ve esta geoda.
+local function moverDebil(e: Estado)
+	local cf, tam = e.Modelo:GetBoundingBox()
+	local angulo = rng:NextNumber() * math.pi * 2
+	local subida = rng:NextNumber(0.15, 0.7)
+	local dir = Vector3.new(math.cos(angulo), subida, math.sin(angulo)).Unit
+	local radio = tam.Magnitude
+	local centro = cf.Position
+	local params = RaycastParams.new()
+	params.FilterType = Enum.RaycastFilterType.Include
+	params.FilterDescendantsInstances = { e.Modelo }
+	local r = workspace:Raycast(centro + dir * radio, -dir * radio, params)
+	local punto = if r then r.Position else centro + dir * math.min(tam.X, tam.Z) * 0.45
+	local P = G.PuntoDebil
+	e.Debil = punto
+	e.DebilHasta = os.clock() + rng:NextNumber(P.CambiaCada[1], P.CambiaCada[2])
+	e.Modelo:SetAttribute("PuntoDebil", punto)
+end
+
+-- ¿El punto que tocó el cliente está sobre la grieta? Solo se cree si además está pegado a
+-- la geoda (cerca de su caja), así no sirve mandar cualquier posición.
+local function enDebil(e: Estado, punto: unknown): boolean
+	if typeof(punto) ~= "Vector3" or not e.Debil then
+		return false
+	end
+	if punto.X ~= punto.X or punto.Y ~= punto.Y or punto.Z ~= punto.Z then
+		return false
+	end
+	local cf, tam = e.Modelo:GetBoundingBox()
+	if (punto - cf.Position).Magnitude > tam.Magnitude / 2 + 2 then
+		return false
+	end
+	local radio = math.max(G.PuntoDebil.Radio, tam.Magnitude * 0.08)
+	return (punto - e.Debil).Magnitude <= radio
+end
+
+local function alGolpear(jugador: Player, geoda: unknown, punto: unknown)
 	if typeof(geoda) ~= "Instance" then
 		return
 	end
@@ -222,7 +261,11 @@ local function alGolpear(jugador: Player, geoda: unknown)
 		return
 	end
 	local fuerza = Jugadores.fuerza(d)
-	local hecho = Reglas.danioGolpe(fuerza, e.Tamano, e.Vida, e.VidaMax)
+	local debil = enDebil(e, punto)
+	local hecho = Reglas.danioGolpe(fuerza, e.Tamano, e.Vida, e.VidaMax, debil)
+	if debil then
+		moverDebil(e) -- acertaste: la grieta salta a otro lado
+	end
 	e.Vida -= hecho
 	e.Danio[jugador] = (e.Danio[jugador] or 0) + hecho
 	e.Modelo:SetAttribute("Vida", e.Vida)
@@ -232,7 +275,8 @@ local function alGolpear(jugador: Player, geoda: unknown)
 		pico:SetAttribute("Golpe", os.clock())
 	end
 	-- El número flotante muestra toda la Fuerza del golpe, aunque a la geoda le quedara menos.
-	Remotos.Golpe:FireClient(jugador, e.Modelo, fuerza, e.Vida)
+	local mostrado = if debil then fuerza * G.PuntoDebil.Multiplicador else fuerza
+	Remotos.Golpe:FireClient(jugador, e.Modelo, mostrado, e.Vida, debil)
 	if e.Vida <= 0 then
 		romper(e, jugador)
 	end
@@ -281,8 +325,10 @@ local function crear(
 		Renacer = if typeof(punto:GetAttribute("Renacer")) == "number"
 			then punto:GetAttribute("Renacer") :: number
 			else nil,
+		DebilHasta = 0,
 	}
 	modelo.Parent = carpeta
+	moverDebil(estados[modelo])
 	return modelo
 end
 
@@ -337,6 +383,18 @@ end
 
 function GeodeServerService.iniciar()
 	Remotos.Golpear.OnServerEvent:Connect(alGolpear)
+	-- Los puntos débiles cambian de lugar solos cada tanto.
+	task.spawn(function()
+		while true do
+			task.wait(0.5)
+			local ahora = os.clock()
+			for _, e in estados do
+				if e.Viva and ahora >= e.DebilHasta then
+					moverDebil(e)
+				end
+			end
+		end
+	end)
 	CollectionService:GetInstanceAddedSignal("PuntoGeoda"):Connect(alAgregarPunto)
 	for _, punto in CollectionService:GetTagged("PuntoGeoda") do
 		alAgregarPunto(punto)
