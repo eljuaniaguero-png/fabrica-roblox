@@ -1536,9 +1536,39 @@ local GameConfig = {
 				},
 				SunRays = { Intensity = 0.05, Spread = 0.6 },
 			},
-			-- A · Caramelo: mediodía de dibujo animado, sombras suaves y azuladas, colores
-			-- vivos pero sin quemar, cielo con bruma celeste.
+			-- A · Juguete (como las referencias de arte/referencias): mediodía, luz blanca,
+			-- sombras nítidas, colores saturados y cielo limpio.
 			A = {
+				Lighting = {
+					ClockTime = 14.5,
+					Brightness = 2.6,
+					Ambient = "#4A4A50",
+					OutdoorAmbient = "#8C8C94",
+					EnvironmentDiffuseScale = 1,
+					EnvironmentSpecularScale = 0.5,
+					GlobalShadows = true,
+					ShadowSoftness = 0.1,
+					ExposureCompensation = 0,
+				},
+				ColorCorrection = {
+					Saturacion = 0.25,
+					Contraste = 0.1,
+					Brillo = 0,
+					Color = "#FFFFFF",
+				},
+				Bloom = { Intensity = 0.3, Size = 24, Threshold = 2 },
+				Atmosphere = {
+					Density = 0.2,
+					Offset = 0,
+					Color = "#C8E6FF",
+					Decay = "#6EA8FF",
+					Glare = 0,
+					Haze = 0,
+				},
+				SunRays = { Intensity = 0.02, Spread = 0.5 },
+			},
+			-- B · Caramelo: lo mismo pero más suave y pastel, sombras azuladas y bruma celeste.
+			B = {
 				Lighting = {
 					ClockTime = 12.8,
 					Brightness = 2.4,
@@ -1567,66 +1597,35 @@ local GameConfig = {
 				},
 				SunRays = { Intensity = 0.04, Spread = 0.5 },
 			},
-			-- B · Atardecer dorado: sol bajo, luz cálida naranja, sombras largas lilas.
-			B = {
+			-- C · Brillo intenso: como A pero con más color, más contraste y los Neon brillando.
+			C = {
 				Lighting = {
-					ClockTime = 17.3,
-					Brightness = 2.6,
-					Ambient = "#6E4E66",
-					OutdoorAmbient = "#C08A7C",
-					EnvironmentDiffuseScale = 0.9,
-					EnvironmentSpecularScale = 0.4,
+					ClockTime = 14,
+					Brightness = 3,
+					Ambient = "#505060",
+					OutdoorAmbient = "#9090A0",
+					EnvironmentDiffuseScale = 1,
+					EnvironmentSpecularScale = 0.7,
 					GlobalShadows = true,
-					ShadowSoftness = 0.45,
+					ShadowSoftness = 0.15,
 					ExposureCompensation = 0.15,
 				},
 				ColorCorrection = {
-					Saturacion = 0.25,
-					Contraste = 0.12,
+					Saturacion = 0.45,
+					Contraste = 0.2,
 					Brillo = 0.02,
-					Color = "#FFE7CF",
+					Color = "#FFFFFF",
 				},
-				Bloom = { Intensity = 0.9, Size = 36, Threshold = 1.1 },
+				Bloom = { Intensity = 1, Size = 32, Threshold = 1 },
 				Atmosphere = {
-					Density = 0.35,
-					Offset = 0.2,
-					Color = "#FFC9A0",
-					Decay = "#B06A80",
-					Glare = 0.6,
-					Haze = 1.6,
+					Density = 0.18,
+					Offset = 0,
+					Color = "#BEE4FF",
+					Decay = "#5A9CFF",
+					Glare = 0.1,
+					Haze = 0,
 				},
-				SunRays = { Intensity = 0.15, Spread = 0.8 },
-			},
-			-- C · Noche mágica: cielo violeta con estrellas, todo en penumbra azul y los
-			-- cristales Neon brillan fuerte (los efectos lucen mucho más).
-			C = {
-				Lighting = {
-					ClockTime = 20.6,
-					Brightness = 1.2,
-					Ambient = "#3C3170",
-					OutdoorAmbient = "#5A4AA0",
-					EnvironmentDiffuseScale = 0.8,
-					EnvironmentSpecularScale = 0.6,
-					GlobalShadows = true,
-					ShadowSoftness = 0.5,
-					ExposureCompensation = 0.4,
-				},
-				ColorCorrection = {
-					Saturacion = 0.35,
-					Contraste = 0.18,
-					Brillo = 0.04,
-					Color = "#E8E0FF",
-				},
-				Bloom = { Intensity = 1.3, Size = 40, Threshold = 0.85 },
-				Atmosphere = {
-					Density = 0.4,
-					Offset = 0.15,
-					Color = "#4A3A8C",
-					Decay = "#1E1650",
-					Glare = 0.3,
-					Haze = 2,
-				},
-				SunRays = { Intensity = 0, Spread = 0.5 },
+				SunRays = { Intensity = 0.05, Spread = 0.6 },
 			},
 		},
 		-- Cielo: el Sky de fábrica de Roblox (celeste con nubes de dibujo; de noche, estrellas).
