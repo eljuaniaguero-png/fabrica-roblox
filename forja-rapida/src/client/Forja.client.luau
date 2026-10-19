@@ -36,6 +36,7 @@ type Estado = {
 	UnoEn: number,
 	Zona: number,
 	Resultado: string?,
+	Gastadas: number?,
 }
 
 local rng = Random.new()
@@ -154,6 +155,14 @@ listo.AnchorPoint = Vector2.new(0, 0)
 listo.Position = UDim2.fromOffset(820, 636)
 listo.Parent = lienzo
 
+-- "Forjar x5": gasta GameConfig.Forja.Lote monedas "?" de un saque (el servidor tira todas).
+local lote, textoLote =
+	Estilo.boton({ Texto = "Forjar x5", Color = "Verde", Ancho = 170, Alto = 64 })
+lote.AnchorPoint = Vector2.new(1, 0)
+lote.Position = UDim2.fromOffset(460, 636)
+lote.Visible = false
+lote.Parent = lienzo
+
 -- Partículas de pantalla (cuadraditos y puntos) -------------------------------------------
 
 type Chispa = { Obj: Frame, X: number, Y: number, VX: number, VY: number, Vida: number }
@@ -235,6 +244,11 @@ local function pintarMonedas(e: Estado)
 	local puede = e.Quedan + e.Guardadas > 0 and fase == "espera"
 	Estilo.colorBoton(boton, if puede then "Verde" else "Gris")
 	boton.Active = puede
+	local total = e.Quedan + e.Guardadas
+	lote.Visible = fase == "espera" and total >= 2
+	if textoLote then
+		textoLote.Text = "Forjar x" .. math.min(GameConfig.Forja.Lote, total)
+	end
 end
 
 local function ponerCartel(e: Estado)
@@ -294,6 +308,7 @@ local function irAlFinal()
 	tFase = 0
 	boton.Visible = false
 	listo.Visible = false
+	lote.Visible = false
 	cartel.Text = "¡Forjando!"
 end
 
@@ -321,7 +336,11 @@ local function festejar(e: Estado)
 		soltarChispas(45, c, 800)
 		mostrarAviso("¡EFECTO " .. string.upper(if ef then ef.Nombre else e.Efecto) .. "!", c)
 	else
-		mostrarAviso("Casi…", Color3.fromHex("#A99CC4"))
+		local n = e.Gastadas or 1
+		mostrarAviso(
+			if n > 1 then "Casi… (" .. n .. " intentos)" else "Casi…",
+			Color3.fromHex("#A99CC4")
+		)
 	end
 	fase = "espera"
 	tFase = 0
@@ -360,6 +379,7 @@ local function empezar(e: Estado)
 	aviso.Visible = false
 	boton.Visible = false
 	listo.Visible = false
+	lote.Visible = false
 	monedas.Visible = false
 	fase = "acerca"
 	tFase = 0
@@ -377,28 +397,38 @@ local function empezar(e: Estado)
 	end)
 end
 
-boton.Activated:Connect(function()
+local function pedir(cantidad: number)
 	local e = actual
 	if not e or fase ~= "espera" or e.Quedan + e.Guardadas <= 0 then
 		return
 	end
-	Intentar:FireServer(e.Id)
+	Intentar:FireServer(e.Id, cantidad)
 	fase = "tirando"
 	tFase = 0
 	pendiente = nil
+	lote.Visible = false
 	velocidad = if Efectos.reducidos() then 6 else 18
 	escalaBoton.Scale = 0.85
 	TweenService:Create(escalaBoton, TweenInfo.new(0.25, Enum.EasingStyle.Back), { Scale = 1 })
 		:Play()
-	-- la moneda que se gasta salta y se va
-	local primera = monedas:FindFirstChildWhichIsA("TextLabel")
-	if primera then
-		primera:Destroy()
+	-- las monedas que se gastan saltan y se van
+	for _ = 1, math.min(cantidad, e.Quedan) do
+		local m = monedas:FindFirstChildWhichIsA("TextLabel")
+		if m then
+			m:Destroy()
+		end
 	end
-	soltarChispas(14, Color3.fromHex("#FFCF3F"), 500)
+	soltarChispas(14 * math.min(cantidad, 3), Color3.fromHex("#FFCF3F"), 500)
 	-- SONIDO: apretar "¡Intentar!"
 	Sonidos.tocar(S.ForjaIntento, 1.2)
 	Estilo.colorBoton(boton, "Gris")
+end
+
+boton.Activated:Connect(function()
+	pedir(1)
+end)
+lote.Activated:Connect(function()
+	pedir(GameConfig.Forja.Lote)
 end)
 
 listo.Activated:Connect(irAlFinal)

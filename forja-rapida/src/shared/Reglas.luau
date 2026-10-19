@@ -804,6 +804,7 @@ export type Bonos = {
 	Llaves: number, -- multiplica la chance de encontrar llaves
 	Lugares: number, -- mascotas que te acompañan a la vez
 	NivelInicial: number, -- niveles de Fuerza con los que arrancás cada renacer
+	TopeForja: number, -- monedas "?" que podés tener guardadas
 }
 
 local mascotas: { [string]: Mascota } = {}
@@ -833,6 +834,7 @@ function Reglas.bonos(e: EstadoBonos): Bonos
 		Llaves = 1,
 		Lugares = GameConfig.Mascotas.Lugares,
 		NivelInicial = 0,
+		TopeForja = GameConfig.Forja.Tope,
 	}
 	for _, r in R.Ramas do
 		local nivel = math.min(e.Ramas[r.Id] or 0, #r.Costos)
@@ -849,6 +851,8 @@ function Reglas.bonos(e: EstadoBonos): Bonos
 			b.Lugares += v
 		elseif r.Bono == "NivelInicial" then
 			b.NivelInicial += v
+		elseif r.Bono == "TopeForja" then
+			b.TopeForja += v
 		end
 	end
 	-- solo cuentan las que entran en tus lugares

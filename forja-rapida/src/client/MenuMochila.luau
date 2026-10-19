@@ -1,7 +1,8 @@
 --!strict
 -- Mochila y Banco: las gemas que juntaste (de la zona más alta a la más baja y de la más rara a
 -- la más común), cuánto vale todo y el botón "¡Vender todo!". Vender lo hace el servidor
--- (Remotos.Vender, Economia.luau); acá solo se muestra.
+-- (Remotos.Vender, Economia.luau); acá solo se muestra. Las Legendarias o mejores tienen además
+-- un botón "Fundir" que las cambia por monedas "?" de la Forja (Remotos.Fundir, Forja.luau).
 
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
@@ -12,7 +13,10 @@ local Datos = require(script.Parent.Datos)
 local Estilo = require(script.Parent.Estilo)
 local Ventanas = require(script.Parent.Ventanas)
 
-local Vender = ReplicatedStorage:WaitForChild("Remotos"):WaitForChild("Vender") :: RemoteEvent
+local remotos = ReplicatedStorage:WaitForChild("Remotos")
+local Vender = remotos:WaitForChild("Vender") :: RemoteEvent
+local Fundir = remotos:WaitForChild("Fundir") :: RemoteEvent
+local VALOR_FUNDIR = GameConfig.Forja.Fundir :: { [string]: number }
 
 local ORDEN_RAREZA: { [string]: number } = {}
 for i, r in GameConfig.Rarezas do
@@ -116,6 +120,23 @@ local function crear()
 				borde.Color = Color3.fromHex(e.Color)
 				borde.Thickness = 4
 				borde.Parent = t
+			end
+			local fundir = VALOR_FUNDIR[g.Rareza]
+			if fundir then
+				-- vender vale lo de abajo; fundir da monedas "?" para la próxima forja
+				local b = Estilo.boton({
+					Texto = "Fundir +" .. fundir .. " ?",
+					Color = "Violeta",
+					Ancho = 126,
+					Alto = 36,
+				})
+				b.AnchorPoint = Vector2.new(0.5, 0)
+				b.Position = UDim2.new(0.5, 0, 0, 30)
+				b.ZIndex = 4
+				b.Parent = t
+				b.Activated:Connect(function()
+					Fundir:FireServer(clave)
+				end)
 			end
 			t.LayoutOrder = i
 			t.Parent = lista

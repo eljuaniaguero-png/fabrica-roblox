@@ -2275,8 +2275,13 @@ local GameConfig = {
 		},
 		-- Monedas "?" por geoda: Común 1, Rara o mejor 3; la Jefe y la exótica suman.
 		Intentos = { Comun = 1, Resto = 3, Jefe = 2, Exotica = 1 },
-		-- Monedas "?" guardadas (se usan cuando se acaban las de la geoda).
-		Tope = 20,
+		-- Monedas "?" guardadas (se usan cuando se acaban las de la geoda). La rama Fragua Amplia
+		-- del árbol de Esencia suma más.
+		Tope = 30,
+		Lote = 5, -- intentos que gasta el botón "Forjar x5" de un saque
+		-- Fundir (desde la Mochila): una gema Legendaria o mejor se cambia por monedas "?"
+		-- guardadas en vez de venderla. La del Museo no se toca: solo se funden las de la mochila.
+		Fundir = { Legendario = 2, Mitico = 5, Celestial = 15 },
 		PorMision = { Facil = 0, Media = 1, Dificil = 2, Leyenda = 2, Prestigio = 3 },
 		PorRenacer = 5,
 		Vence = 15, -- segundos sin apretar hasta que se entrega sola
@@ -2354,6 +2359,15 @@ local GameConfig = {
 				Bono = "Suerte",
 				Valor = 0.05,
 				Costos = { 1, 2, 3, 4, 5 },
+				Renacer = 1,
+			},
+			{
+				Id = "Fragua",
+				Nombre = "Fragua Amplia",
+				Descripcion = '+10 monedas "?" guardadas por nivel',
+				Bono = "TopeForja",
+				Valor = 10,
+				Costos = { 1, 2, 3 },
 				Renacer = 1,
 			},
 			{

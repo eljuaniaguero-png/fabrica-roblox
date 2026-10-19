@@ -5,7 +5,7 @@
 -- Números en GameConfig.Forja; la tirada es Reglas.intentoForja.
 --
 -- El servidor decide todo:
---   Remotos.ForjaIntentar (Id)  revisa que la piedra sea suya, que le queden monedas "?" (de la
+--   Remotos.ForjaIntentar (Id, Cantidad?)  1 o GameConfig.Forja.Lote ("Forjar x5"); revisa que la piedra sea suya, que le queden monedas "?" (de la
 --                               geoda o guardadas), el tiempo y el freno; tira él y contesta.
 --   Remotos.ForjaListo (Id)     se queda con la piedra como está.
 -- Se entrega UNA sola vez (primero se borra la pendiente, después se suma a la mochila) cuando:
@@ -61,7 +61,8 @@ export type Estado = {
 	UnoEn: number,
 	Zona: number,
 	Geoda: Model?,
-	Resultado: string?, -- "Sube" | "Efecto" | "Nada" (solo en "Resultado")
+	Resultado: string?, -- "Sube" | "Efecto" | "Nada" (solo en "Resultado"; en lote, el mejor)
+	Gastadas: number?, -- monedas "?" que gastó el pedido (solo en "Resultado")
 }
 
 -- Lo que trae la geoda rota para empezar.
@@ -225,28 +226,44 @@ function Forja.empezar(jugador: Player, i: Inicio)
 	Remotos.Forja:FireClient(jugador, "Empieza", estado(d, p, nil))
 end
 
-local function alIntentar(jugador: Player, id: unknown)
+local PESO_RESULTADO = { Nada = 0, Efecto = 1, Sube = 2 }
+
+local function alIntentar(jugador: Player, id: unknown, cantidad: unknown)
 	local d = Jugadores.obtener(jugador)
 	local p = d and d.ForjaPendiente
 	if not d or not p or typeof(id) ~= "number" or id ~= p.Id then
 		return
 	end
+	local n = if cantidad == F.Lote then F.Lote else 1
 	local ahora = os.clock()
 	if ahora > p.Vence or ahora - p.Ultimo < F.Espera then
 		return
 	end
-	if p.Quedan > 0 then
-		p.Quedan -= 1
-	elseif d.FichasForja > 0 then
-		d.FichasForja -= 1 -- se descuenta en el mismo paso que el intento
-	else
+	local mejor: string? = nil
+	local gastadas = 0
+	for _ = 1, n do
+		if p.Quedan > 0 then
+			p.Quedan -= 1
+		elseif d.FichasForja > 0 then
+			d.FichasForja -= 1 -- se descuenta en el mismo paso que el intento
+		else
+			break
+		end
+		gastadas += 1
+		local r = tirar(p)
+		if not mejor or PESO_RESULTADO[r] > PESO_RESULTADO[mejor] then
+			mejor = r
+		end
+	end
+	if not mejor then
 		return
 	end
 	p.Ultimo = ahora
 	p.Vence = ahora + F.Vence
-	local resultado = tirar(p)
 	Jugadores.publicar(jugador)
-	Remotos.Forja:FireClient(jugador, "Resultado", estado(d, p, resultado))
+	local e = estado(d, p, mejor)
+	e.Gastadas = gastadas
+	Remotos.Forja:FireClient(jugador, "Resultado", e)
 	if p.Quedan <= 0 and d.FichasForja <= 0 then
 		-- sin monedas: se entrega cuando el cliente termina la animación (o al vencer)
 		p.Vence = ahora + 3
@@ -261,24 +278,61 @@ local function alListo(jugador: Player, id: unknown)
 	end
 end
 
--- Suma monedas "?" guardadas (misiones, renacer), hasta el tope.
+-- Suma monedas "?" guardadas (misiones, renacer, fundir), hasta el tope (con Fragua Amplia).
 function Forja.sumarFichas(jugador: Player, cantidad: number)
 	local d = Jugadores.obtener(jugador)
 	if not d or cantidad <= 0 then
 		return
 	end
-	d.FichasForja = math.min(F.Tope, d.FichasForja + cantidad)
+	d.FichasForja = math.min(Jugadores.bonos(d).TopeForja, d.FichasForja + cantidad)
 	Jugadores.publicar(jugador)
+end
+
+-- Fundir: una gema Legendaria o mejor de la mochila se cambia por monedas "?" guardadas
+-- (GameConfig.Forja.Fundir). Revisa que la tenga, que la rareza se pueda fundir, el tope y el freno.
+local ultimoFundir: { [Player]: number } = {}
+local function alFundir(jugador: Player, clave: unknown)
+	local d = Jugadores.obtener(jugador)
+	if not d or typeof(clave) ~= "string" or (d.Mochila[clave] or 0) <= 0 then
+		return
+	end
+	local ahora = os.clock()
+	if ahora - (ultimoFundir[jugador] or 0) < 0.2 then
+		return
+	end
+	ultimoFundir[jugador] = ahora
+	local gema = Reglas.gema((Reglas.separarClave(clave)))
+	local valor = gema and (F.Fundir :: { [string]: number })[gema.Rareza]
+	if not gema or not valor then
+		return
+	end
+	local tope = Jugadores.bonos(d).TopeForja
+	if d.FichasForja >= tope then
+		Remotos.Aviso:FireClient(jugador, ('Ya tenés el máximo de monedas "?" (%d)'):format(tope))
+		return
+	end
+	d.Mochila[clave] -= 1 -- primero se saca, después se paga
+	if d.Mochila[clave] <= 0 then
+		d.Mochila[clave] = nil
+	end
+	d.FichasForja = math.min(tope, d.FichasForja + valor)
+	Jugadores.publicar(jugador)
+	Remotos.Aviso:FireClient(
+		jugador,
+		('Fundiste %s: +%d monedas "?" (%d/%d)'):format(gema.Nombre, valor, d.FichasForja, tope)
+	)
 end
 
 -- Antes de borrar sus datos: lo que tenga a medias se le entrega.
 function Forja.alSalir(jugador: Player)
 	Forja.entregar(jugador)
+	ultimoFundir[jugador] = nil
 end
 
 function Forja.iniciar()
 	Remotos.ForjaIntentar.OnServerEvent:Connect(alIntentar)
 	Remotos.ForjaListo.OnServerEvent:Connect(alListo)
+	Remotos.Fundir.OnServerEvent:Connect(alFundir)
 	-- las que vencen se entregan solas
 	local proximo = 0
 	RunService.Heartbeat:Connect(function()

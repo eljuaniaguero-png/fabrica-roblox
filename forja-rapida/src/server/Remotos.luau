@@ -53,8 +53,9 @@ local Remotos = {
 	EquiparMascota = evento("EquiparMascota"), -- cliente -> servidor: (Id, true = poner / false = sacar)
 	-- La Forja (Forja.luau)
 	Forja = evento("Forja"), -- servidor -> cliente: ("Empieza" | "Resultado" | "Fin", Forja.Estado)
-	ForjaIntentar = evento("ForjaIntentar"), -- cliente -> servidor: (Id) gastar una moneda "?"
+	ForjaIntentar = evento("ForjaIntentar"), -- cliente -> servidor: (Id, cantidad?) gastar monedas "?"
 	ForjaListo = evento("ForjaListo"), -- cliente -> servidor: (Id) quedarse con la piedra así
+	Fundir = evento("Fundir"), -- cliente -> servidor: (clave de la mochila) fundir 1 por monedas "?"
 }
 
 carpeta.Parent = ReplicatedStorage
