@@ -23,6 +23,7 @@ local RunService = game:GetService("RunService")
 
 local GameConfig = require(ReplicatedStorage.Shared.GameConfig)
 local Reglas = require(ReplicatedStorage.Shared.Reglas)
+local Analitica = require(script.Parent.Analitica)
 local Anuncios = require(script.Parent.Anuncios)
 local Descubrimientos = require(script.Parent.Descubrimientos)
 local Economia = require(script.Parent.Economia)
@@ -218,6 +219,7 @@ function Forja.empezar(jugador: Player, i: Inicio)
 		Suerte = i.Suerte,
 	}
 	d.ForjaPendiente = p
+	Analitica.paso(jugador, Analitica.Pasos.GeodaRota)
 	if not Reglas.forjaConEscena(i.Rareza, i.Tamano) then
 		-- sin escena (Común, Rara): sus monedas "?" se usan solas y se entrega al toque
 		while p.Quedan > 0 do
@@ -228,6 +230,7 @@ function Forja.empezar(jugador: Player, i: Inicio)
 		return
 	end
 	Remotos.Forja:FireClient(jugador, "Empieza", estado(d, p, nil))
+	Analitica.paso(jugador, Analitica.Pasos.Forja)
 end
 
 local PESO_RESULTADO = { Nada = 0, Efecto = 1, Sube = 2 }

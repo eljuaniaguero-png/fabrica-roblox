@@ -267,6 +267,21 @@ local GameConfig = {
 		VentanaClank = 2, -- segundos después del dash en que el primer golpe suena más fuerte
 	},
 
+	-- Analítica (Analitica.luau): los 10 pasos del embudo del jugador nuevo, en orden. Se ven en
+	-- Creator Hub → Analytics → Onboarding. Si un paso cambia de lugar, cambiar también acá.
+	Embudo = {
+		"Entró al juego",
+		"Primer golpe",
+		"Primera geoda rota",
+		"Primera venta",
+		"Primera Fuerza comprada",
+		"Abrió la zona 2",
+		"Primera forja con escena",
+		"Primer pico nuevo",
+		"Abrió la zona 3",
+		"Primera mascota",
+	},
+
 	-- Velocidad al caminar (Paso Ligero y Chispa). Tope para que el mapa no se sienta chico.
 	Velocidad = { Base = 16, Maxima = 20 },
 

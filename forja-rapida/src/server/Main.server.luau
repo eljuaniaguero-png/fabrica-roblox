@@ -23,6 +23,7 @@ local Viajes = require(script.Parent.Viajes)
 local Dash = require(script.Parent.Dash)
 local Velocidad = require(script.Parent.Velocidad)
 local Guardado = require(script.Parent.Guardado)
+local Analitica = require(script.Parent.Analitica)
 
 Iluminacion.aplicar()
 GeneradorMapa.armar() -- antes que todo lo que busca puntos, vitrinas y puertas del mapa
@@ -33,6 +34,7 @@ local function alEntrar(jugador: Player)
 		return
 	end
 	Jugadores.crear(jugador, datos)
+	Analitica.paso(jugador, Analitica.Pasos.Entro)
 	Social.alEntrar(jugador)
 	Misiones.alEntrar(jugador)
 end

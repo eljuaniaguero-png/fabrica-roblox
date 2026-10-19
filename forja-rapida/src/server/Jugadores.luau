@@ -68,6 +68,7 @@ export type Datos = {
 	-- La Forja
 	FichasForja: number, -- monedas "?" guardadas (tope GameConfig.Forja.Tope)
 	ForjaPendiente: Pendiente?, -- la piedra que está forjando (se entrega una sola vez)
+	Embudo: number, -- último paso del embudo de analítica que ya se registró
 }
 
 -- La Forja: piedra de una geoda rota que todavía no entró a la mochila (Forja.luau).
@@ -153,6 +154,7 @@ function Jugadores.nuevos(): Datos
 		MascotasEquipadas = {},
 		FichasForja = 0,
 		ForjaPendiente = nil,
+		Embudo = 0,
 	}
 end
 

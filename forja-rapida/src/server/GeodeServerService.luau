@@ -31,6 +31,7 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local GameConfig = require(ReplicatedStorage.Shared.GameConfig)
 local Reglas = require(ReplicatedStorage.Shared.Reglas)
+local Analitica = require(script.Parent.Analitica)
 local Anuncios = require(script.Parent.Anuncios)
 local Forja = require(script.Parent.Forja)
 local Jugadores = require(script.Parent.Jugadores)
@@ -278,6 +279,7 @@ local function alGolpear(jugador: Player, geoda: unknown, punto: unknown)
 	-- El número flotante muestra toda la Fuerza del golpe, aunque a la geoda le quedara menos.
 	local mostrado = if debil then fuerza * G.PuntoDebil.Multiplicador else fuerza
 	Remotos.Golpe:FireClient(jugador, e.Modelo, mostrado, e.Vida, debil)
+	Analitica.paso(jugador, Analitica.Pasos.Golpe)
 	if e.Vida <= 0 then
 		romper(e, jugador)
 	end

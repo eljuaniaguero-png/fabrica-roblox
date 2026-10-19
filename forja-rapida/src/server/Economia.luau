@@ -14,6 +14,7 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Formato = require(ReplicatedStorage.Shared.Formato)
 local GameConfig = require(ReplicatedStorage.Shared.GameConfig)
 local Reglas = require(ReplicatedStorage.Shared.Reglas)
+local Analitica = require(script.Parent.Analitica)
 local Jugadores = require(script.Parent.Jugadores)
 local Remotos = require(script.Parent.Remotos)
 
@@ -51,6 +52,11 @@ function Economia.revisarZonas(jugador: Player)
 	local hitos = {}
 	for _, n in nuevas do
 		d.Zonas[n] = true
+		if n == 2 then
+			Analitica.paso(jugador, Analitica.Pasos.Zona2)
+		elseif n == 3 then
+			Analitica.paso(jugador, Analitica.Pasos.Zona3)
+		end
 		local z = GameConfig.Zonas[n]
 		table.insert(hitos, {
 			Id = "Zona" .. n,
@@ -77,6 +83,8 @@ local function vender(jugador: Player)
 	end
 	d.Mochila = {} -- primero se vacía, después se paga
 	d.Monedas += total
+	Analitica.monedas(jugador, true, total, "Venta")
+	Analitica.paso(jugador, Analitica.Pasos.Venta)
 	Jugadores.publicar(jugador)
 	Remotos.Premio:FireClient(jugador, total)
 	Remotos.Compra:FireClient(jugador, "Vender", Formato.corto(total))
@@ -95,6 +103,8 @@ local function comprarFuerza(jugador: Player, d: Jugadores.Datos, todos: boolean
 	end
 	d.Monedas -= costo
 	d.NivelFuerza += niveles
+	Analitica.monedas(jugador, false, costo, "Fuerza")
+	Analitica.paso(jugador, Analitica.Pasos.Fuerza)
 	Jugadores.publicar(jugador)
 	Remotos.Compra:FireClient(jugador, "Fuerza", "+" .. niveles)
 	Economia.revisarZonas(jugador)
@@ -112,6 +122,8 @@ local function comprarPico(jugador: Player, d: Jugadores.Datos)
 	end
 	d.Monedas -= pico.Precio
 	d.Pico = numero
+	Analitica.monedas(jugador, false, pico.Precio, "Pico")
+	Analitica.paso(jugador, Analitica.Pasos.Pico)
 	Jugadores.publicar(jugador)
 	Remotos.Compra:FireClient(jugador, "Pico", pico.Nombre)
 	Economia.revisarZonas(jugador)
@@ -128,6 +140,7 @@ local function comprarAmuleto(jugador: Player, d: Jugadores.Datos)
 		return
 	end
 	d.Monedas -= amuleto.Precio
+	Analitica.monedas(jugador, false, amuleto.Precio, "Amuleto")
 	d.Amuletos[amuleto.Id] = true
 	Jugadores.publicar(jugador)
 	Remotos.Compra:FireClient(jugador, "Amuleto", amuleto.Nombre)

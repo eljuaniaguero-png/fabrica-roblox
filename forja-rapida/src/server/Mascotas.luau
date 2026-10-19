@@ -14,6 +14,7 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Formato = require(ReplicatedStorage.Shared.Formato)
 local GameConfig = require(ReplicatedStorage.Shared.GameConfig)
 local Reglas = require(ReplicatedStorage.Shared.Reglas)
+local Analitica = require(script.Parent.Analitica)
 local Anuncios = require(script.Parent.Anuncios)
 local Jugadores = require(script.Parent.Jugadores)
 local Remotos = require(script.Parent.Remotos)
@@ -46,6 +47,8 @@ local function girar(jugador: Player)
 	end
 	ultimaTirada[jugador] = t
 	d.Monedas -= precio -- primero se cobra, después se tira
+	Analitica.monedas(jugador, false, precio, "Ruleta")
+	Analitica.paso(jugador, Analitica.Pasos.Mascota)
 	local m = Reglas.tirarRuleta(function()
 		return rng:NextNumber()
 	end)
