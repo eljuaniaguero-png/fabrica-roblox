@@ -177,6 +177,9 @@ end
 
 -- Al entrar: sus primeras misiones.
 function Misiones.alEntrar(jugador: Player)
+	if not GameConfig.Misiones.Activas then
+		return
+	end
 	local d = Jugadores.obtener(jugador)
 	if d then
 		completar(jugador, d)
@@ -185,6 +188,9 @@ end
 
 -- Después de renacer: misiones nuevas (las de antes pedían cosas de zonas que ya no tiene).
 function Misiones.reiniciar(jugador: Player)
+	if not GameConfig.Misiones.Activas then
+		return
+	end
 	local d = Jugadores.obtener(jugador)
 	if d then
 		d.Misiones = {}
@@ -193,6 +199,9 @@ function Misiones.reiniciar(jugador: Player)
 end
 
 function Misiones.iniciar()
+	if not GameConfig.Misiones.Activas then
+		return
+	end
 	Mundo.alRomper(function(r: Mundo.Rotura)
 		for _, jugador in r.Premiados do
 			avanzar(jugador, {

@@ -2042,6 +2042,9 @@ local GameConfig = {
 	-- Premio en monedas = Monedas de la dificultad x lo que vale una gema común de tu mejor
 	-- zona (así sirve igual en la Pradera que en el Abismo).
 	Misiones = {
+		-- 19/10/2026: Juani sacó las misiones del juego. El código queda; con false no se
+		-- reparten, no hay seguimiento en pantalla ni cartel en el mapa.
+		Activas = false,
 		Lugares = { "Facil", "Media", "Dificil" },
 		LugarPrestigio = "Prestigio",
 		Dificultades = {

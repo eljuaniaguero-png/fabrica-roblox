@@ -223,7 +223,7 @@ izquierda.Name = "Menus"
 izquierda.BackgroundTransparency = 1
 -- 19/10/2026: HUD menos cargado. A la vista solo 4 botones en una columna (Tienda, Mochila,
 -- Viajar y Más); "Más" despliega al costado los menús que se usan menos.
-izquierda.Size = UDim2.fromOffset(190, 4 * 58 + 3 * 8)
+izquierda.Size = UDim2.fromOffset(190, 3 * 58 + 2 * 8)
 if celular then
 	izquierda.AnchorPoint = Vector2.new(0, 0)
 	izquierda.Position = UDim2.fromOffset(12, 8)
@@ -250,7 +250,7 @@ local mas = Instance.new("Frame")
 mas.Name = "Mas"
 mas.BackgroundTransparency = 1
 
-mas.Size = UDim2.fromOffset(3 * 96 + 2 * 8, 2 * 96 + 8)
+mas.Size = UDim2.fromOffset(3 * 96 + 2 * 8, 96)
 mas.Visible = false
 local grillaMas = Instance.new("UIGridLayout")
 grillaMas.CellSize = UDim2.fromOffset(96, 96)
@@ -326,7 +326,7 @@ local function botonMas(orden: number, id: string, texto: string, icono: string,
 	enMas[id] = true
 end
 
-botonMenu(1, "Tienda", "Tienda", "Tienda", "Verde")
+-- 19/10/2026: la Tienda se abre solo en el mapa (alfombra del Lobby); sin botón acá.
 botonMenu(2, "Mochila", "Mochila", "Mochila", "Naranja")
 botonMenu(3, "Viajar", "Viajar", "Cristal", "Cian")
 -- "Más" no abre una ventana: despliega el panel.
@@ -346,8 +346,7 @@ botonMasB.Activated:Connect(function()
 	mas.Visible = not mas.Visible
 end)
 botonMasB.Parent = columnaBotones
-botonMas(1, "Misiones", "Misiones", "Mision", "Cian")
-botonMas(2, "Eventos", "Eventos", "Reloj", "Azul")
+-- 19/10/2026: sin Misiones (sacadas del juego) ni Eventos (se ven solos en pantalla).
 botonMas(3, "Mascotas", "Mascotas", "Mascota", "Rosa")
 botonMas(4, "Vitrina", "Vitrina", "Corona", "Violeta")
 botonMas(5, "Clasificacion", "Ranking", "Trofeo", "Amarillo")
@@ -526,8 +525,12 @@ local function dibujarSeguimiento()
 		f.Parent = seguimiento
 	end
 end
-dibujarSeguimiento()
-Datos.alCambiar({ "Misiones" }, dibujarSeguimiento)
+if GameConfig.Misiones.Activas then
+	dibujarSeguimiento()
+	Datos.alCambiar({ "Misiones" }, dibujarSeguimiento)
+else
+	seguimiento.Visible = false
+end
 
 MisionRemoto.OnClientEvent:Connect(function(texto: unknown, monedas: unknown, esencia: unknown)
 	if typeof(texto) ~= "string" or typeof(monedas) ~= "number" then

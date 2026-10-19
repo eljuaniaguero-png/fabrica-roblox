@@ -536,3 +536,8 @@ Animación aprobada: `ideas/la-forja-animacion.html` (demo jugable). La geoda se
 - **Luz (19/10)**: el juego pisaba la luz que Juani dejó en Studio. Ahora el estilo A usa esos valores (Brightness 3, Ambient #464646, ColorCorrection 0,05 / 0,15 / 0,1) y deja su cielo "Realistic Sky" (`CieloDeFabrica = false`).
 - Falta: volver a correr `pruebas/simular` (el tope solo frena al que vuelve a zonas bajas).
 - **HUD más limpio (19/10)**: a la izquierda solo 4 botones en columna (Tienda, Mochila, Viajar y Más). "Más" despliega al costado Misiones, Eventos, Mascotas, Vitrina y Ranking en botones cuadrados; si alguno tiene aviso, "Más" muestra "!". A la derecha se sigue una sola misión (la más cerca de cumplirse); las demás están en el menú Misiones.
+- **Tienda, misiones y eventos (19/10, pedido de Juani)**:
+  - La Tienda se abre solo en el mapa (alfombra de la tienda del Lobby); no tiene botón en el HUD. Arreglo: la alfombra se llamaba "Tienda_Forja_Alfombra.001" y el código no la encontraba, así que antes no abría.
+  - Misiones fuera del juego: `GameConfig.Misiones.Activas = false` (sin reparto, sin seguimiento a la derecha, sin cartel en la plaza). El código queda por si vuelven.
+  - Eventos: sin menú ni botón; se ven solos en el cartel de arriba con la cuenta regresiva, que no se puede tocar.
+  - HUD: Mochila, Viajar y Más (Mascotas, Vitrina, Ranking).

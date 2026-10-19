@@ -162,6 +162,9 @@ end
 -- Marcadores --------------------------------------------------------------------------------
 
 local function armarMarcador(m: Marcador, carpeta: Instance)
+	if m.Atributos.Menu == "Misiones" and not GameConfig.Misiones.Activas then
+		return -- sin misiones no va su cartel
+	end
 	local pos = Vector3.new(m.Pos[1], m.Pos[2], m.Pos[3])
 	local tam = Vector3.new(m.Tam[1], m.Tam[2], m.Tam[3])
 	local cf = CFrame.new(pos) * CFrame.Angles(0, math.rad(m.Giro), 0)
@@ -493,7 +496,10 @@ end
 
 local function alfombraConMenu(m: Model, menu: string, texto: string)
 	for _, d in m:GetDescendants() do
-		if d:IsA("BasePart") and d.Name:match("_Alfombra$") then
+		-- "_Alfombra" al final, o con el ".001" que a veces agrega Blender (no la AlfombraBorde)
+		if
+			d:IsA("BasePart") and (d.Name:match("_Alfombra$") or d.Name:match("_Alfombra%.%d+$"))
+		then
 			abreMenu(d, menu, "Abrir", texto)
 			return
 		end
