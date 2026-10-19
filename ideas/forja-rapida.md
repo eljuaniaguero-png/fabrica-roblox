@@ -527,3 +527,10 @@ Animación aprobada: `ideas/la-forja-animacion.html` (demo jugable). La geoda se
 - La geoda se infla y se pone blanca antes de explotar para todos (`Geodas.client`); la escena muestra el dibujo de las piedras de la zona en negro como silueta.
 - Herramientas de Studio: `ServerStorage.Prueba.Forjar` y `Entregar`.
 - Falta: probar en celular (el MCP no emula pantalla de celular) y que el guardado (ProfileStore) no guarde la geoda de `ForjaPendiente` (es un Model).
+
+## Viajes y tope de daño (ideas elegidas, 19/10/2026)
+
+- **Mojones de viaje** (`server/Viajes.luau`, números en `GameConfig.Viajes`): en el Lobby hay una fila de 5 mojones, uno por zona, con la bola del color de la zona. Si la zona está abierta te lleva al inicio de esa zona; si no, avisa "Te faltan X de Fuerza para ...". Al inicio de cada zona hay un mojón blanco "Lobby" para volver. El servidor revisa que la zona esté abierta, la distancia al mojón y 3 s de espera entre viajes. Gratis.
+- **Tope de daño** (`Reglas.danioGolpe`, `GameConfig.Golpe.TopePorSegundo`): en las Gigantes, los Jefes y el Jefe Ancestral nadie saca más del 20 % de la vida por segundo (2,5 % por golpe). Probado: con Fuerza al máximo, un Jefe de la Pradera tarda 5,3 s (antes, un golpe). Así los demás llegan a meter su 10 % y se llevan su gema.
+- Decisión: el tope es por segundo y no por golpe, porque con 8 golpes por segundo un tope de 15 % por golpe igual dejaba romperla en 1 s.
+- Falta: el botón "Viajar" en el HUD para celular (anotado en Obsidian) y volver a correr `pruebas/simular` (el tope solo frena al que vuelve a zonas bajas).

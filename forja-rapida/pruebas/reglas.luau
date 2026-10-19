@@ -1005,6 +1005,13 @@ for _ = 1, 5000 do
 	chequear(r3 == "Nada", "la Celestial con efecto no cambia")
 end
 
+-- Tope de daño: en las grandes, un golpe enorme saca como mucho 20 % / 8 = 2,5 % (5 s a tope).
+chequear(Reglas.danioGolpe(1e9, "Jefe", 1500, 1500) == 37.5, "tope del Jefe")
+chequear(Reglas.danioGolpe(1e9, "Gigante", 50, 130) <= 3.25, "tope de la Gigante")
+chequear(Reglas.danioGolpe(10, "Jefe", 1500, 1500) == 10, "golpe chico no cambia")
+chequear(Reglas.danioGolpe(1e9, "Pequena", 10, 10) == 10, "la Pequeña no tiene tope")
+chequear(Reglas.danioGolpe(1e9, "Jefe", 5, 1500) == 5, "no saca más de lo que queda")
+
 if errores > 0 then
 	print(("%d pruebas fallaron"):format(errores))
 	process.exit(1)

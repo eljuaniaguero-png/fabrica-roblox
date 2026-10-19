@@ -533,6 +533,17 @@ function Reglas.eventoAlAzar(azar: () -> number, anterior: string?): Evento
 end
 
 -- Vida de la Geoda Ancestral: crece con la Fuerza de todos los que están jugando.
+-- Daño que hace un golpe: la Fuerza, sin pasarse de la vida que queda y, en las geodas
+-- grandes, sin pasarse del tope (GameConfig.Golpe.TopePorSegundo repartido en los golpes por segundo).
+function Reglas.danioGolpe(fuerza: number, tamano: string, vida: number, vidaMax: number): number
+	local g = GameConfig.Golpe
+	local hecho = math.min(fuerza, vida)
+	if g.TamanosConTope[tamano] then
+		hecho = math.min(hecho, math.max(1, vidaMax * g.TopePorSegundo / g.PorSegundo))
+	end
+	return hecho
+end
+
 function Reglas.vidaAncestral(fuerzas: { number }): number
 	local def = Reglas.evento("JefeAncestral")
 	local jefe = if def then def.Jefe else nil

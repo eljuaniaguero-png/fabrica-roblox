@@ -222,7 +222,7 @@ local function alGolpear(jugador: Player, geoda: unknown)
 		return
 	end
 	local fuerza = Jugadores.fuerza(d)
-	local hecho = math.min(fuerza, e.Vida)
+	local hecho = Reglas.danioGolpe(fuerza, e.Tamano, e.Vida, e.VidaMax)
 	e.Vida -= hecho
 	e.Danio[jugador] = (e.Danio[jugador] or 0) + hecho
 	e.Modelo:SetAttribute("Vida", e.Vida)

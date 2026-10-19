@@ -248,6 +248,17 @@ local IMAGEN = {
 
 local GameConfig = {
 	-- Golpes. El servidor ignora lo que no cumpla esto (GeodeServerService).
+	-- Mojones de viaje: en el Lobby uno por zona (solo viajás a las abiertas) y al inicio de
+	-- cada zona uno para volver. Destino = un poco después de la puerta de la zona.
+	Viajes = {
+		Lobby = { X = -16, Y = 0, Z = -2, Separacion = 8 }, -- fila de mojones en el Lobby
+		InicioZona1 = 50, -- Z del inicio de la Pradera (las demás salen de su puerta)
+		Adelante = 12, -- studs después de la puerta donde aparecés
+		Atras = 7, -- el mojón "Volver al Lobby" va en el centro del camino, esto antes del destino
+		Espera = 3, -- segundos entre viajes
+		Distancia = 10,
+	},
+
 	Golpe = {
 		PorSegundo = 8, -- golpes por segundo que se aceptan, sostenidos...
 		Rafaga = 4, -- ...con hasta 4 juntos (los paquetes llegan amontonados por la red)
@@ -255,6 +266,11 @@ local GameConfig = {
 		-- Si varios le pegan a la misma geoda, cada uno que hizo al menos este porcentaje de su
 		-- vida (o el que la rompió) se lleva su propia revelación, con su propia suerte.
 		ParteParaPremio = 0.1,
+		-- Tope de daño: en estas geodas nadie saca más que esta parte de su vida total por segundo
+		-- (cada golpe saca como mucho TopePorSegundo / PorSegundo). Así un jugador muy fuerte
+		-- tarda al menos 5 s en romperla y los demás llegan a sumarse para ganar su gema.
+		TopePorSegundo = 0.2,
+		TamanosConTope = { Gigante = true, Jefe = true, Ancestral = true },
 		-- Animación del pico en tres tiempos (segundos): levanta hacia atrás, baja con fuerza y
 		-- rebota al pegar. Ángulos del hombro en grados: 0 = brazo estirado adelante (como se
 		-- sostiene la herramienta), positivo = hacia arriba, negativo = hacia el piso.
