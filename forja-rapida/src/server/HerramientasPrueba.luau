@@ -10,6 +10,7 @@
 --   game.ServerStorage.Prueba.Forjar:Invoke("Nombre", "Amatista", "Epico", 1, "Pequena")
 --     -> empieza La Forja con esa piedra, como si hubiera roto una geoda (zona y tamaño)
 --   game.ServerStorage.Prueba.Entregar:Invoke("Nombre") -> entrega la piedra pendiente
+--   game.ServerStorage.Prueba.Estilo:Invoke("B") -> prueba un estilo de luz (GameConfig.Luz)
 
 local HttpService = game:GetService("HttpService")
 local Players = game:GetService("Players")
@@ -18,6 +19,7 @@ local ServerStorage = game:GetService("ServerStorage")
 
 local Economia = require(script.Parent.Economia)
 local Forja = require(script.Parent.Forja)
+local Iluminacion = require(script.Parent.Iluminacion)
 local Jugadores = require(script.Parent.Jugadores)
 local Misiones = require(script.Parent.Misiones)
 
@@ -124,6 +126,11 @@ function HerramientasPrueba.iniciar()
 			return false
 		end
 		Forja.entregar(jugador)
+		return true
+	end)
+
+	funcion(carpeta, "Estilo", function(nombre: string): boolean
+		Iluminacion.aplicar(nombre)
 		return true
 	end)
 

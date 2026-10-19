@@ -21,8 +21,10 @@ local function efecto(clase: string, nombre: string): Instance
 	return e :: Instance
 end
 
-function Iluminacion.aplicar()
-	local L = GameConfig.Luz
+-- Aplica un estilo de GameConfig.Luz.Estilos (por defecto, el Elegido).
+function Iluminacion.aplicar(nombre: string?)
+	local L = GameConfig.Luz.Estilos[nombre or GameConfig.Luz.Elegido]
+		or GameConfig.Luz.Estilos.Actual
 
 	local base = L.Lighting
 	Lighting.ClockTime = base.ClockTime
@@ -61,7 +63,7 @@ function Iluminacion.aplicar()
 	rayos.Spread = L.SunRays.Spread
 	rayos.Enabled = true
 
-	if L.CieloDeFabrica then
+	if GameConfig.Luz.CieloDeFabrica then
 		-- Un Sky nuevo trae las texturas de fábrica de Roblox: celeste con nubes de dibujo.
 		for _, s in Lighting:GetChildren() do
 			if s:IsA("Sky") and s.Name ~= "CieloForja" then

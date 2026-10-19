@@ -1501,30 +1501,135 @@ local GameConfig = {
 	-- Luz del juego (día brillante como la referencia). Ajustada mirando capturas: menos niebla
 	-- y más saturación que lo pedido, porque con 0,25 / 0,5 el pasto quedaba lavado. La aplica server/Iluminacion.luau.
 	-- Technology no se puede cambiar por script: va a mano en Lighting (ShadowMap).
+	-- Luz y color. Estilos para elegir (punto de control 2, 18/10/2026); Elegido = el que se usa.
+	-- Para probar en Studio: ServerStorage.Prueba.Estilo:Invoke("B").
 	Luz = {
-		Lighting = {
-			ClockTime = 14,
-			Brightness = 3,
-			Ambient = "#8C8C8C",
-			OutdoorAmbient = "#A0A0A0",
-			EnvironmentDiffuseScale = 0.5,
-			EnvironmentSpecularScale = 0.3,
-			GlobalShadows = true,
-			ShadowSoftness = 0.2,
-			ExposureCompensation = -0.1,
+		Elegido = "Actual",
+		Estilos = {
+			-- El de antes: luz gris pareja, sombras duras.
+			Actual = {
+				Lighting = {
+					ClockTime = 14,
+					Brightness = 3,
+					Ambient = "#8C8C8C",
+					OutdoorAmbient = "#A0A0A0",
+					EnvironmentDiffuseScale = 0.5,
+					EnvironmentSpecularScale = 0.3,
+					GlobalShadows = true,
+					ShadowSoftness = 0.2,
+					ExposureCompensation = -0.1,
+				},
+				ColorCorrection = {
+					Saturacion = 0.35,
+					Contraste = 0.15,
+					Brillo = 0.02,
+					Color = "#FFFFFF",
+				},
+				Bloom = { Intensity = 0.6, Size = 24, Threshold = 1.8 },
+				Atmosphere = {
+					Density = 0.15,
+					Offset = 0.25,
+					Color = "#C7E9FF",
+					Decay = "#9CC9FF",
+					Glare = 0,
+					Haze = 0.3,
+				},
+				SunRays = { Intensity = 0.05, Spread = 0.6 },
+			},
+			-- A · Caramelo: mediodía de dibujo animado, sombras suaves y azuladas, colores
+			-- vivos pero sin quemar, cielo con bruma celeste.
+			A = {
+				Lighting = {
+					ClockTime = 12.8,
+					Brightness = 2.4,
+					Ambient = "#5E6C96",
+					OutdoorAmbient = "#9DB0DE",
+					EnvironmentDiffuseScale = 1,
+					EnvironmentSpecularScale = 0.25,
+					GlobalShadows = true,
+					ShadowSoftness = 0.6,
+					ExposureCompensation = 0.1,
+				},
+				ColorCorrection = {
+					Saturacion = 0.2,
+					Contraste = 0.08,
+					Brillo = 0.03,
+					Color = "#FFF8EE",
+				},
+				Bloom = { Intensity = 0.4, Size = 30, Threshold = 1.4 },
+				Atmosphere = {
+					Density = 0.3,
+					Offset = 0.1,
+					Color = "#BFE3FF",
+					Decay = "#8FC1FF",
+					Glare = 0.2,
+					Haze = 1.2,
+				},
+				SunRays = { Intensity = 0.04, Spread = 0.5 },
+			},
+			-- B · Atardecer dorado: sol bajo, luz cálida naranja, sombras largas lilas.
+			B = {
+				Lighting = {
+					ClockTime = 17.3,
+					Brightness = 2.6,
+					Ambient = "#6E4E66",
+					OutdoorAmbient = "#C08A7C",
+					EnvironmentDiffuseScale = 0.9,
+					EnvironmentSpecularScale = 0.4,
+					GlobalShadows = true,
+					ShadowSoftness = 0.45,
+					ExposureCompensation = 0.15,
+				},
+				ColorCorrection = {
+					Saturacion = 0.25,
+					Contraste = 0.12,
+					Brillo = 0.02,
+					Color = "#FFE7CF",
+				},
+				Bloom = { Intensity = 0.9, Size = 36, Threshold = 1.1 },
+				Atmosphere = {
+					Density = 0.35,
+					Offset = 0.2,
+					Color = "#FFC9A0",
+					Decay = "#B06A80",
+					Glare = 0.6,
+					Haze = 1.6,
+				},
+				SunRays = { Intensity = 0.15, Spread = 0.8 },
+			},
+			-- C · Noche mágica: cielo violeta con estrellas, todo en penumbra azul y los
+			-- cristales Neon brillan fuerte (los efectos lucen mucho más).
+			C = {
+				Lighting = {
+					ClockTime = 20.6,
+					Brightness = 1.2,
+					Ambient = "#3C3170",
+					OutdoorAmbient = "#5A4AA0",
+					EnvironmentDiffuseScale = 0.8,
+					EnvironmentSpecularScale = 0.6,
+					GlobalShadows = true,
+					ShadowSoftness = 0.5,
+					ExposureCompensation = 0.4,
+				},
+				ColorCorrection = {
+					Saturacion = 0.35,
+					Contraste = 0.18,
+					Brillo = 0.04,
+					Color = "#E8E0FF",
+				},
+				Bloom = { Intensity = 1.3, Size = 40, Threshold = 0.85 },
+				Atmosphere = {
+					Density = 0.4,
+					Offset = 0.15,
+					Color = "#4A3A8C",
+					Decay = "#1E1650",
+					Glare = 0.3,
+					Haze = 2,
+				},
+				SunRays = { Intensity = 0, Spread = 0.5 },
+			},
 		},
-		ColorCorrection = { Saturacion = 0.35, Contraste = 0.15, Brillo = 0.02, Color = "#FFFFFF" },
-		Bloom = { Intensity = 0.6, Size = 24, Threshold = 1.8 },
-		Atmosphere = {
-			Density = 0.15,
-			Offset = 0.25,
-			Color = "#C7E9FF",
-			Decay = "#9CC9FF",
-			Glare = 0,
-			Haze = 0.3,
-		},
-		SunRays = { Intensity = 0.05, Spread = 0.6 },
-		-- Cielo: el Sky de fábrica de Roblox (celeste con nubes de dibujo).
+		-- Cielo: el Sky de fábrica de Roblox (celeste con nubes de dibujo; de noche, estrellas).
 		CieloDeFabrica = true,
 	},
 
