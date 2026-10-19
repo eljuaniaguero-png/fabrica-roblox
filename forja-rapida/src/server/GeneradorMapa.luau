@@ -591,7 +591,15 @@ local function armarDeco(m: Marcador, carpetaDeco: Instance, padre: Instance)
 			local c = DecoColores[(d.Name:gsub("%.%d+$", ""))]
 			if c then
 				d.Color = Color3.fromHex(c.Color)
-				d.Material = if c.Neon then Enum.Material.Neon else Enum.Material.SmoothPlastic
+				-- con studs, como las referencias (salvo lo que brilla o se transparenta)
+				local studs = not c.Neon and c.Transparencia == 0
+				d.Material = if c.Neon
+					then Enum.Material.Neon
+					elseif studs then Enum.Material.Plastic
+					else Enum.Material.SmoothPlastic
+				if studs then
+					d.MaterialVariant = GameConfig.Modelos.Studs
+				end
 				d.Transparency = c.Transparencia
 				if c.Neon or c.Transparencia > 0 then
 					d.CastShadow = false
@@ -628,6 +636,65 @@ local function ajustarConPiezas(lugares: Instance, piezas: Instance)
 		local puntero = ruleta:FindFirstChild("Puntero")
 		if puntero then
 			puntero:Destroy()
+		end
+	end
+end
+
+-- Decoración de más (GameConfig.Modelos.DecoExtra): piezas de cada zona al azar sobre el pasto,
+-- lejos de lo que tiene función. Se arma con el mapa ya en Workspace (mira el piso con rayos).
+local function decoExtra(carpetaDeco: Instance, padre: Instance)
+	local D = GameConfig.Modelos.DecoExtra
+	local rng = Random.new(D.Semilla)
+	local ocupados: { Vector3 } = {} -- decoración que ya hay
+	local funciones: { Vector3 } = {} -- geodas, carteles, puertas, piezas del lobby
+	for _, m in MapaDatos.Marcadores :: { Marcador } do
+		local p = Vector3.new(m.Pos[1], 0, m.Pos[3])
+		table.insert(if m.Tipo == "Deco" then ocupados else funciones, p)
+	end
+	local filtro = RaycastParams.new()
+	filtro.FilterType = Enum.RaycastFilterType.Include
+	filtro.FilterDescendantsInstances = { padre.Parent :: Instance }
+	local function libre(p: Vector3, lista: { Vector3 }, distancia: number): boolean
+		for _, q in lista do
+			if (p - q).Magnitude < distancia then
+				return false
+			end
+		end
+		return true
+	end
+	for zona, rango in D.Zonas do
+		local piezas = D.Piezas[zona]
+		local puestas, intentos = 0, 0
+		while puestas < D.PorZona and intentos < D.PorZona * 30 do
+			intentos += 1
+			-- a los costados (como las referencias): el centro queda libre para las geodas
+			local x = rng:NextNumber(D.Borde, 72) * (if rng:NextNumber() < 0.5 then -1 else 1)
+			local p = Vector3.new(x, 0, rng:NextNumber(rango[1], rango[2]))
+			if not libre(p, funciones, D.LejosDe) or not libre(p, ocupados, D.Separacion) then
+				continue
+			end
+			-- solo sobre el pasto de la zona (no caminos, plataformas ni agua)
+			local r = Workspace:Raycast(p + Vector3.new(0, 80, 0), Vector3.new(0, -120, 0), filtro)
+			local piso = r and r.Instance
+			if
+				not piso
+				or piso.Name ~= "Bloque"
+				or not string.match(piso.MaterialVariant, "^Studs_")
+				or piso.MaterialVariant == "Studs_Camino"
+				or piso.MaterialVariant == "Studs_Liso"
+			then
+				continue
+			end
+			local nombre = piezas[rng:NextInteger(1, #piezas)]
+			armarDeco({
+				Tipo = "Deco",
+				Pos = { p.X, (r :: RaycastResult).Position.Y, p.Z },
+				Tam = { 1, 1, 1 },
+				Giro = rng:NextInteger(0, 3) * 90,
+				Atributos = { Nombre = nombre, Escala = rng:NextNumber(0.8, 1.2), Choca = false },
+			}, carpetaDeco, padre)
+			table.insert(ocupados, p)
+			puestas += 1
 		end
 	end
 end
@@ -671,6 +738,9 @@ function GeneradorMapa.armar(): boolean
 	end
 	ajustarConPiezas(lugares, piezas)
 	mapa.Parent = Workspace
+	if carpetaDeco then
+		decoExtra(carpetaDeco, deco)
+	end
 	return true
 end
 

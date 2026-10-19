@@ -434,7 +434,12 @@ De las capturas se toma el estilo, no el contenido: cielo celeste brillante, pis
 - **HUD y menús**: diseñados en Figma, archivo "Forja Rápida · HUD y menús" (https://www.figma.com/design/DZ114Em8TCx2WZPzRiPAeL). Pantallas: HUD de compu (1920×1080) y de celular (844×390, sin tapar el joystick ni el salto de Roblox), revelación Épica con aviso en cadena, Tienda (Fuerza, Amuletos con "qué cambia" en números, Picos), Mochila/Banco, Índice con probabilidades (suman 100 %), avisos, carteles por modificador, botón de efectos y tres paletas para elegir. Letra: Lilita One en Figma; en Roblox, FredokaOne (la más parecida que trae Roblox).
 - **HUD y menús v2** (página "v2 · Eventos y social" del mismo archivo, con el estilo de tus últimas capturas): HUD de compu más colorido (botones con globitos, bonos activos, cartel del evento), Geoda Ancestral con podio de daño, Índice, Tienda con "Destacado", Eventos, Mi Vitrina (títulos y ajustes), Clasificación semanal y HUD de celular v2. Los 14 íconos están como componentes en esa página.
 
-Guía de estilo: **pendiente** (punto de control 2: elegir paleta A · Pradera, B · Caramelo o C · Noche volcánica en Figma). Hasta que elijas, todo usa la A, que es la de tus capturas.
+Guía de estilo (18/10/2026, elegida con las referencias de `forja-rapida/arte/referencias/`):
+- **Luz A · Juguete** (`GameConfig.Luz`): mediodía, luz blanca, sombras nítidas, colores saturados, cielo limpio.
+- **Todo con studs** (MaterialVariant `Studs_Liso`): geodas (roca y nido) y decoración, menos lo que brilla o es transparente.
+- **Geodas 1,5 veces más grandes** (`GameConfig.Modelos.EscalaGeoda`).
+- **Decoración a los costados de cada zona** (árboles, cactus, pinos, columnas: `GameConfig.Modelos.DecoExtra`), con el centro libre para las geodas.
+- Pendiente: efectos y HUD con el estilo de las referencias.
 
 ## Afuera del prototipo
 

@@ -87,9 +87,24 @@ local function hijo(padre: Instance?, nombres: { string }, tamano: string): Mode
 	if not padre then
 		return nil
 	end
+	-- Studio a veces deja "Mediana_3.001" al importar: se compara sin ese final
+	local function buscar(dentro: Instance?, nombre: string): Instance?
+		if not dentro then
+			return nil
+		end
+		local exacto = dentro:FindFirstChild(nombre)
+		if exacto then
+			return exacto
+		end
+		for _, h in dentro:GetChildren() do
+			if (h.Name:gsub("%.%d+$", "")) == nombre then
+				return h
+			end
+		end
+		return nil
+	end
 	for _, n in nombres do
-		local grupo = padre:FindFirstChild(n)
-		local m = grupo and grupo:FindFirstChild(tamano)
+		local m = buscar(buscar(padre, n), tamano)
 		if m and m:IsA("Model") then
 			return m
 		end
@@ -171,6 +186,10 @@ local function pintar(m: Model, zona: number, tamano: string, modificador: strin
 			p.Color, p.Material = colorRoca, materialRoca
 			if exotica and mod.Textura ~= "" and p:IsA("MeshPart") then
 				p.TextureID = mod.Textura
+			elseif materialRoca ~= Enum.Material.Glass then
+				-- con studs, como las referencias (el color sale de la parte)
+				p.Material = Enum.Material.Plastic
+				p.MaterialVariant = GameConfig.Modelos.Studs
 			end
 		elseif nombre == "Cristales" then
 			p.Color = colorCristal
@@ -186,7 +205,8 @@ local function pintar(m: Model, zona: number, tamano: string, modificador: strin
 			p.CanCollide, p.CanQuery, p.CanTouch = false, false, false
 			p.CastShadow = false
 		elseif nombre == "Base" then
-			p.Color, p.Material = COLOR_BASE, Enum.Material.Ground
+			p.Color, p.Material = COLOR_BASE, Enum.Material.Plastic
+			p.MaterialVariant = GameConfig.Modelos.Studs
 		elseif nombre == "Runas" then
 			-- cinturón de runas de la Geoda Ancestral: siempre dorado y brillante
 			p.Color, p.Material = Color3.fromHex("#FFD23F"), Enum.Material.Neon
@@ -226,6 +246,10 @@ function ModeloGeoda.crear(zona: number, tamano: string, modificador: string): (
 		if t and t.Escala ~= 1 then
 			m:ScaleTo(t.Escala)
 		end
+	end
+	-- más grandes, como los huevos de las referencias (escala alrededor del pie)
+	if GameConfig.Modelos.EscalaGeoda ~= 1 then
+		m:ScaleTo(m:GetScale() * GameConfig.Modelos.EscalaGeoda)
 	end
 	m.Name = "Geoda"
 	m.ModelStreamingMode = Enum.ModelStreamingMode.Atomic -- el cliente la necesita entera

@@ -1504,7 +1504,7 @@ local GameConfig = {
 	-- Luz y color. Estilos para elegir (punto de control 2, 18/10/2026); Elegido = el que se usa.
 	-- Para probar en Studio: ServerStorage.Prueba.Estilo:Invoke("B").
 	Luz = {
-		Elegido = "Actual",
+		Elegido = "A", -- elegido el 18/10/2026: el más parecido a arte/referencias
 		Estilos = {
 			-- El de antes: luz gris pareja, sombras duras.
 			Actual = {
@@ -2839,6 +2839,55 @@ local GameConfig = {
 		Deco = "Deco",
 		EscalaDeco = 1 / 0.28,
 		GiroDeco = 90, -- grados en x: Importar 3D deja las piezas de decoración acostadas
+		-- Estilo de las referencias (18/10/2026): geodas más grandes y todo con studs.
+		EscalaGeoda = 1.5,
+		Studs = "Studs_Liso", -- MaterialVariant del place (blanco: toma el color de la parte)
+		-- Decoración de más, repartida al azar (siempre igual: Semilla) sobre el pasto de cada
+		-- zona, lejos de geodas, caminos y edificios. Piezas de Deco_Zona<N> (Blender).
+		DecoExtra = {
+			Semilla = 18102026,
+			PorZona = 22,
+			Borde = 46, -- solo entre x 46 y 72 (y del otro lado): el centro queda para jugar
+			Separacion = 10, -- studs entre dos piezas de decoración
+			LejosDe = 12, -- studs de cualquier geoda, cartel, puerta o pieza del lobby
+			Zonas = { -- zona: z mínimo, z máximo (el mapa va de x -72 a 72)
+				{ 16, 200 },
+				{ 224, 408 },
+				{ 432, 616 },
+				{ 640, 824 },
+				{ 848, 1032 },
+			},
+			Piezas = {
+				{
+					"Arbol_Grande_1",
+					"Arbol_Grande_2",
+					"Arbol_Grande_3",
+					"Arbol_Mediano_1",
+					"Arbol_Mediano_2",
+					"Arbol_Rosa_1",
+					"Arbol_Rosa_2",
+					"Arbusto_1",
+					"Arbusto_2",
+					"Arbusto_3",
+				},
+				{
+					"Cactus_Grande",
+					"Cactus_Mediano",
+					"Cactus_Chico",
+					"Arbol_Seco_Desierto_1",
+					"Arbol_Seco_Desierto_2",
+					"Racimo_Ambar",
+				},
+				{ "Pino_Nevado_Grande", "Pino_Nevado_Chico", "Pico_Hielo", "Hielo_Suelto" },
+				{ "Arbol_Quemado", "Columnas_Basalto_1", "Columnas_Basalto_2" },
+				{
+					"Arbol_Nebuloso",
+					"Columna_Estelar_Baja",
+					"Columna_Estelar_Alta",
+					"Cristales_Abismo",
+				},
+			},
+		},
 		-- El FBX llega sin colores: cada malla se pinta con el de lobby.py (pieza -> malla -> color).
 		-- Las de BrillanLobby van en Neon (las alfombras con 0,4 de transparencia).
 		ColoresLobby = {
