@@ -847,6 +847,7 @@ export type Bonos = {
 	Lugares: number, -- mascotas que te acompañan a la vez
 	NivelInicial: number, -- niveles de Fuerza con los que arrancás cada renacer
 	TopeForja: number, -- monedas "?" que podés tener guardadas
+	Velocidad: number, -- studs por segundo al caminar (con tope GameConfig.Velocidad.Maxima)
 }
 
 local mascotas: { [string]: Mascota } = {}
@@ -877,6 +878,7 @@ function Reglas.bonos(e: EstadoBonos): Bonos
 		Lugares = GameConfig.Mascotas.Lugares,
 		NivelInicial = 0,
 		TopeForja = GameConfig.Forja.Tope,
+		Velocidad = 1, -- multiplicador; abajo se pasa a studs por segundo
 	}
 	for _, r in R.Ramas do
 		local nivel = math.min(e.Ramas[r.Id] or 0, #r.Costos)
@@ -895,6 +897,8 @@ function Reglas.bonos(e: EstadoBonos): Bonos
 			b.NivelInicial += v
 		elseif r.Bono == "TopeForja" then
 			b.TopeForja += v
+		elseif r.Bono == "Velocidad" then
+			b.Velocidad += v
 		end
 	end
 	-- solo cuentan las que entran en tus lugares
@@ -903,8 +907,11 @@ function Reglas.bonos(e: EstadoBonos): Bonos
 		if m and i <= b.Lugares then
 			b.Monedas += m.Monedas or 0
 			b.Suerte += m.Suerte or 0
+			b.Velocidad += m.Velocidad or 0
 		end
 	end
+	local V = GameConfig.Velocidad
+	b.Velocidad = math.min(V.Maxima, V.Base * b.Velocidad)
 	return b
 end
 

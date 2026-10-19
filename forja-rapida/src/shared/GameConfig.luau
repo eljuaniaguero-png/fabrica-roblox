@@ -167,6 +167,7 @@ export type Mascota = {
 	Chance: number,
 	Monedas: number?, -- +% de monedas al vender (0,05 = +5 %)
 	Suerte: number?, -- se suma a tu suerte
+	Velocidad: number?, -- +% de velocidad al caminar (0,1 = +10 %)
 	Forma: string, -- cómo se arma: "Topo", "Golem", "Zorro", "Tortuga", "Cristal", "Pinguino", "Dragon" o "Gato"
 	Colores: { string }, -- { cuerpo, detalle }
 }
@@ -265,6 +266,9 @@ local GameConfig = {
 		Espera = 4, -- segundos entre dos dash
 		VentanaClank = 2, -- segundos después del dash en que el primer golpe suena más fuerte
 	},
+
+	-- Velocidad al caminar (Paso Ligero y Chispa). Tope para que el mapa no se sienta chico.
+	Velocidad = { Base = 16, Maxima = 20 },
 
 	Golpe = {
 		PorSegundo = 8, -- golpes por segundo que se aceptan, sostenidos...
@@ -2384,6 +2388,15 @@ local GameConfig = {
 				Renacer = 1,
 			},
 			{
+				Id = "Paso",
+				Nombre = "Paso Ligero",
+				Descripcion = "+5 % de velocidad al caminar por nivel",
+				Bono = "Velocidad",
+				Valor = 0.05,
+				Costos = { 1, 2, 3 },
+				Renacer = 1,
+			},
+			{
 				Id = "Rastreador",
 				Nombre = "Rastreador",
 				Descripcion = "Las llaves salen 25 % más seguido por nivel",
@@ -2447,6 +2460,7 @@ local GameConfig = {
 				Rareza = "Raro",
 				Chance = 14,
 				Monedas = 0.1,
+				Velocidad = 0.1, -- Mascota veloz (idea elegida del 19/10/2026)
 				Forma = "Zorro",
 				Colores = { "#FF8C42", "#FFF3E0" },
 			},

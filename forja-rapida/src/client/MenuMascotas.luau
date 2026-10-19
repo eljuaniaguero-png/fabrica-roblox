@@ -143,6 +143,9 @@ function MenuMascotas.bono(m: GameConfig.Mascota): string
 	if m.Suerte then
 		table.insert(partes, "+" .. Formato.suerte(m.Suerte):sub(2) .. " suerte")
 	end
+	if m.Velocidad then
+		table.insert(partes, ("+%d %% velocidad"):format(math.floor(m.Velocidad * 100 + 0.5)))
+	end
 	return table.concat(partes, " · ")
 end
 

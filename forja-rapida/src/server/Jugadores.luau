@@ -263,6 +263,7 @@ function Jugadores.publicar(jugador: Player)
 	end
 	local fuerza = Jugadores.fuerza(d)
 	jugador:SetAttribute("Monedas", d.Monedas)
+	jugador:SetAttribute("Velocidad", Jugadores.bonos(d).Velocidad) -- la aplica Velocidad.luau
 	jugador:SetAttribute("Fuerza", fuerza)
 	jugador:SetAttribute("Suerte", Jugadores.suerte(d))
 	jugador:SetAttribute("NivelFuerza", d.NivelFuerza)

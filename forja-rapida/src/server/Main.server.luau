@@ -21,6 +21,7 @@ local Social = require(script.Parent.Social)
 local Forja = require(script.Parent.Forja)
 local Viajes = require(script.Parent.Viajes)
 local Dash = require(script.Parent.Dash)
+local Velocidad = require(script.Parent.Velocidad)
 
 Iluminacion.aplicar()
 GeneradorMapa.armar() -- antes que todo lo que busca puntos, vitrinas y puertas del mapa
@@ -55,4 +56,5 @@ Renacer.iniciar()
 Mascotas.iniciar()
 Viajes.iniciar()
 Dash.iniciar()
+Velocidad.iniciar()
 HerramientasPrueba.iniciar() -- solo en Studio
