@@ -13,6 +13,7 @@ Exporta a forja-rapida/arte/:
   glb/Mascota_<Id>.glb   con la animación (visor)
   fbx/Mascota_<Id>.fbx   con la animación (Studio)
   renders/Mascota_<Id>.png
+  fbx/mascotas_pivotes.json  articulación de cada pieza (la usa Mascotas.client)
   blend/Mascotas.blend   las 8 en fila, para abrir en Blender
 
 Correrlo desde la raíz del repositorio (no toca la escena abierta en Blender):
@@ -656,15 +657,22 @@ def main():
     sin_renders = "--sin-renders" in sys.argv
     for carpeta in (GLB, FBX, RENDERS, BLEND):
         carpeta.mkdir(parents=True, exist_ok=True)
+    pivotes = {}
     for id_juego, nombre, armar in MASCOTAS:
         limpiar()
         vacio = armar()
+        # articulación de cada pieza (studs, ejes de Blender) para animarlas en Roblox
+        pivotes[id_juego] = {o.name: [round(c, 3) for c in o["pivote"]]
+                             for o in vacio.children_recursive if o.type == "MESH"}
         lineal(vacio)
         exportar(id_juego, vacio)
         if not sin_renders:
             render(nombre)
         tris = sum(len(o.data.polygons) * 2 for o in vacio.children_recursive if o.type == "MESH")
         print(f"Mascota lista: {nombre} ({id_juego}), {tris} triángulos")
+    import json
+
+    (FBX / "mascotas_pivotes.json").write_text(json.dumps(pivotes, indent=1), encoding="utf-8")
     # las 8 en fila en un .blend para abrir en Blender
     limpiar()
     for n, (_, nombre, armar) in enumerate(MASCOTAS):

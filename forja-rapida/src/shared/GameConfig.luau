@@ -282,7 +282,7 @@ local GameConfig = {
 		"Primera mascota",
 	},
 
-	-- Velocidad al caminar (Paso Ligero y Chispa). Tope para que el mapa no se sienta chico.
+	-- Velocidad al caminar (Paso Ligero y Brasita). Tope para que el mapa no se sienta chico.
 	Velocidad = { Base = 16, Maxima = 20 },
 
 	Golpe = {
@@ -2453,7 +2453,7 @@ local GameConfig = {
 		Lista = {
 			{
 				Id = "Topito",
-				Nombre = "Topito",
+				Nombre = "Cavadín",
 				Rareza = "Comun",
 				Chance = 30,
 				Monedas = 0.05,
@@ -2462,7 +2462,7 @@ local GameConfig = {
 			},
 			{
 				Id = "Piedrin",
-				Nombre = "Piedrín",
+				Nombre = "Pedrusco",
 				Rareza = "Comun",
 				Chance = 30,
 				Suerte = 0.05,
@@ -2471,7 +2471,7 @@ local GameConfig = {
 			},
 			{
 				Id = "Chispa",
-				Nombre = "Chispa",
+				Nombre = "Brasita",
 				Rareza = "Raro",
 				Chance = 14,
 				Monedas = 0.1,
@@ -2481,7 +2481,7 @@ local GameConfig = {
 			},
 			{
 				Id = "Musgo",
-				Nombre = "Musgo",
+				Nombre = "Jadeíta",
 				Rareza = "Raro",
 				Chance = 14,
 				Suerte = 0.1,
@@ -2490,7 +2490,7 @@ local GameConfig = {
 			},
 			{
 				Id = "Cuarcito",
-				Nombre = "Cuarcito",
+				Nombre = "Prismo",
 				Rareza = "Epico",
 				Chance = 4.5,
 				Monedas = 0.2,
@@ -2499,7 +2499,7 @@ local GameConfig = {
 			},
 			{
 				Id = "Glaciel",
-				Nombre = "Glaciel",
+				Nombre = "Escarchín",
 				Rareza = "Epico",
 				Chance = 4.5,
 				Suerte = 0.2,
@@ -2508,7 +2508,7 @@ local GameConfig = {
 			},
 			{
 				Id = "Magmo",
-				Nombre = "Magmo",
+				Nombre = "Fraguón",
 				Rareza = "Legendario",
 				Chance = 2.6,
 				Monedas = 0.35,
@@ -2518,7 +2518,7 @@ local GameConfig = {
 			},
 			{
 				Id = "Nebula",
-				Nombre = "Nébula",
+				Nombre = "Astralis",
 				Rareza = "Mitico",
 				Chance = 0.4,
 				Monedas = 0.6,

@@ -1,5 +1,5 @@
 --!strict
--- Velocidad al caminar: Paso Ligero (árbol de Esencia) y Chispa (mascota) la suben, con tope
+-- Velocidad al caminar: Paso Ligero (árbol de Esencia) y Brasita (mascota) la suben, con tope
 -- GameConfig.Velocidad.Maxima (Reglas.bonos). Jugadores.publicar deja el valor en el atributo
 -- "Velocidad" del jugador y acá se le pone al Humanoid, también cada vez que reaparece.
 
