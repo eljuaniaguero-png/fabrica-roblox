@@ -544,6 +544,15 @@ function Reglas.danioGolpe(fuerza: number, tamano: string, vida: number, vidaMax
 	return hecho
 end
 
+-- Monedas que cuesta viajar a una zona desde el menú Viajar (0 = Lobby, gratis).
+function Reglas.precioViaje(zona: number): number
+	local z = Reglas.zona(zona)
+	if zona <= 0 or not z then
+		return 0
+	end
+	return GameConfig.Viajes.PrecioPorValor * z.Valor
+end
+
 function Reglas.vidaAncestral(fuerzas: { number }): number
 	local def = Reglas.evento("JefeAncestral")
 	local jefe = if def then def.Jefe else nil

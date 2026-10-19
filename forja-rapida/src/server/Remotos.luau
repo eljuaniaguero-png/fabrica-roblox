@@ -37,6 +37,8 @@ local Remotos = {
 	-- Banco y Tienda (Economia.luau)
 	Vender = evento("Vender"), -- cliente -> servidor: () vender toda la mochila
 	Comprar = evento("Comprar"), -- cliente -> servidor: ("Fuerza" | "FuerzaMax" | "Pico" | "Amuleto")
+	Viajar = evento("Viajar"), -- cliente -> servidor: (zona: number, 0 = Lobby) ver Viajes.luau
+	Viajo = evento("Viajo"), -- servidor -> cliente: (zona, precio) el viaje salió bien
 	Compra = evento("Compra"), -- servidor -> cliente: (tipo, nombre) salió bien la compra o venta
 	-- Grupo 3
 	Equipar = evento("Equipar"), -- cliente -> servidor: (tipo de cosmético, Id o "" para sacarlo)

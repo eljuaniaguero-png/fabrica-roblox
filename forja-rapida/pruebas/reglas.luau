@@ -1012,6 +1012,10 @@ chequear(Reglas.danioGolpe(10, "Jefe", 1500, 1500) == 10, "golpe chico no cambia
 chequear(Reglas.danioGolpe(1e9, "Pequena", 10, 10) == 10, "la Pequeña no tiene tope")
 chequear(Reglas.danioGolpe(1e9, "Jefe", 5, 1500) == 5, "no saca más de lo que queda")
 
+chequear(Reglas.precioViaje(0) == 0, "volver al Lobby es gratis")
+chequear(Reglas.precioViaje(2) == 1500, "viajar a las Dunas cuesta 1,5K")
+chequear(Reglas.precioViaje(9) == 0, "zona que no existe")
+
 if errores > 0 then
 	print(("%d pruebas fallaron"):format(errores))
 	process.exit(1)

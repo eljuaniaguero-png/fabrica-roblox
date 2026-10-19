@@ -248,15 +248,13 @@ local IMAGEN = {
 
 local GameConfig = {
 	-- Golpes. El servidor ignora lo que no cumpla esto (GeodeServerService).
-	-- Mojones de viaje: en el Lobby uno por zona (solo viajás a las abiertas) y al inicio de
-	-- cada zona uno para volver. Destino = un poco después de la puerta de la zona.
+	-- Viajes: menú "Viajar" del HUD. Ir a una zona abierta cuesta PrecioPorValor × el valor de
+	-- una gema común de esa zona (150, 1,5K, 45K, 600K y 7,5M); volver al Lobby es gratis.
 	Viajes = {
-		Lobby = { X = -16, Y = 0, Z = -2, Separacion = 8 }, -- fila de mojones en el Lobby
+		PrecioPorValor = 150,
 		InicioZona1 = 50, -- Z del inicio de la Pradera (las demás salen de su puerta)
 		Adelante = 12, -- studs después de la puerta donde aparecés
-		Atras = 7, -- el mojón "Volver al Lobby" va en el centro del camino, esto antes del destino
 		Espera = 3, -- segundos entre viajes
-		Distancia = 10,
 	},
 
 	Golpe = {
@@ -1554,12 +1552,13 @@ local GameConfig = {
 			},
 			-- A · Juguete (como las referencias de arte/referencias): mediodía, luz blanca,
 			-- sombras nítidas, colores saturados y cielo limpio.
+			-- 19/10/2026: con los valores que Juani dejó en Studio (Lighting y ColorCorrection).
 			A = {
 				Lighting = {
 					ClockTime = 14.5,
-					Brightness = 2.6,
-					Ambient = "#4A4A50",
-					OutdoorAmbient = "#8C8C94",
+					Brightness = 3,
+					Ambient = "#464646",
+					OutdoorAmbient = "#464646",
 					EnvironmentDiffuseScale = 1,
 					EnvironmentSpecularScale = 0.5,
 					GlobalShadows = true,
@@ -1567,9 +1566,9 @@ local GameConfig = {
 					ExposureCompensation = 0,
 				},
 				ColorCorrection = {
-					Saturacion = 0.25,
-					Contraste = 0.1,
-					Brillo = 0,
+					Saturacion = 0.1,
+					Contraste = 0.15,
+					Brillo = 0.05,
 					Color = "#FFFFFF",
 				},
 				Bloom = { Intensity = 0.3, Size = 24, Threshold = 2 },
@@ -1644,8 +1643,9 @@ local GameConfig = {
 				SunRays = { Intensity = 0.05, Spread = 0.6 },
 			},
 		},
-		-- Cielo: el Sky de fábrica de Roblox (celeste con nubes de dibujo; de noche, estrellas).
-		CieloDeFabrica = true,
+		-- Cielo: true = el Sky de fábrica de Roblox (nubes de dibujo). false = se deja el cielo
+		-- que esté en Studio (19/10/2026: Juani eligió "Realistic Sky").
+		CieloDeFabrica = false,
 	},
 
 	-- Eventos del mundo (Grupo 6). Uno por vez: se anuncia AvisoPrevio segundos antes, dura su

@@ -48,6 +48,7 @@ for _, nombre in
 		"MenuMisiones",
 		"MenuMascotas",
 		"MenuRenacer",
+		"MenuViajar",
 	}
 do
 	local modulo =
@@ -277,6 +278,7 @@ botonMenu(5, "Clasificacion", "Ranking", "Trofeo", "Amarillo")
 botonMenu(6, "Eventos", "Eventos", "Reloj", "Azul")
 botonMenu(7, "Misiones", "Misiones", "Mision", "Cian")
 botonMenu(8, "Mascotas", "Mascotas", "Mascota", "Rosa")
+botonMenu(9, "Viajar", "Viajar", "Cristal", "Cian")
 -- Museo y Renacer ya no tienen botón (17/10, plan v5 del mapa): sus menús siguen en el código.
 
 local function globito(id: string, texto: string?)

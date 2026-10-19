@@ -530,7 +530,8 @@ Animación aprobada: `ideas/la-forja-animacion.html` (demo jugable). La geoda se
 
 ## Viajes y tope de daño (ideas elegidas, 19/10/2026)
 
-- **Mojones de viaje** (`server/Viajes.luau`, números en `GameConfig.Viajes`): en el Lobby hay una fila de 5 mojones, uno por zona, con la bola del color de la zona. Si la zona está abierta te lleva al inicio de esa zona; si no, avisa "Te faltan X de Fuerza para ...". Al inicio de cada zona hay un mojón blanco "Lobby" para volver. El servidor revisa que la zona esté abierta, la distancia al mojón y 3 s de espera entre viajes. Gratis.
+- **Menú Viajar** (cambio de Juani, 19/10): botón "Viajar" en el HUD, sin nada físico en el mapa. Una tarjeta por zona y una para el Lobby. Cuesta 150 × el valor de una común de la zona (150, 1,5K, 45K, 600K y 7,5M Monedas, `GameConfig.Viajes`); el Lobby es gratis. El servidor (`server/Viajes.luau`) revisa zona abierta, plata, personaje vivo y 3 s entre viajes. Cliente: `client/MenuViajar.luau`.
 - **Tope de daño** (`Reglas.danioGolpe`, `GameConfig.Golpe.TopePorSegundo`): en las Gigantes, los Jefes y el Jefe Ancestral nadie saca más del 20 % de la vida por segundo (2,5 % por golpe). Probado: con Fuerza al máximo, un Jefe de la Pradera tarda 5,3 s (antes, un golpe). Así los demás llegan a meter su 10 % y se llevan su gema.
 - Decisión: el tope es por segundo y no por golpe, porque con 8 golpes por segundo un tope de 15 % por golpe igual dejaba romperla en 1 s.
-- Falta: el botón "Viajar" en el HUD para celular (anotado en Obsidian) y volver a correr `pruebas/simular` (el tope solo frena al que vuelve a zonas bajas).
+- **Luz (19/10)**: el juego pisaba la luz que Juani dejó en Studio. Ahora el estilo A usa esos valores (Brightness 3, Ambient #464646, ColorCorrection 0,05 / 0,15 / 0,1) y deja su cielo "Realistic Sky" (`CieloDeFabrica = false`).
+- Falta: volver a correr `pruebas/simular` (el tope solo frena al que vuelve a zonas bajas).
