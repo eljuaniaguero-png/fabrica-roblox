@@ -22,12 +22,17 @@ local Forja = require(script.Parent.Forja)
 local Viajes = require(script.Parent.Viajes)
 local Dash = require(script.Parent.Dash)
 local Velocidad = require(script.Parent.Velocidad)
+local Guardado = require(script.Parent.Guardado)
 
 Iluminacion.aplicar()
 GeneradorMapa.armar() -- antes que todo lo que busca puntos, vitrinas y puertas del mapa
 
 local function alEntrar(jugador: Player)
-	Jugadores.crear(jugador)
+	local datos = Guardado.cargar(jugador) -- espera; nil = no se pudo y ya lo sacó
+	if not datos then
+		return
+	end
+	Jugadores.crear(jugador, datos)
 	Social.alEntrar(jugador)
 	Misiones.alEntrar(jugador)
 end
@@ -39,6 +44,7 @@ end
 Players.PlayerRemoving:Connect(function(jugador: Player)
 	Social.alSalir(jugador) -- antes de borrar sus datos (sube sus puntos de la semana)
 	Forja.alSalir(jugador) -- la piedra que estaba forjando entra a la mochila
+	Guardado.alSalir(jugador) -- guardado final (antes de borrar los datos)
 	Jugadores.quitar(jugador)
 end)
 

@@ -1,6 +1,6 @@
 --!strict
--- Datos de cada jugador mientras está en el servidor. Todavía no se guardan: el guardado con
--- ProfileStore es el sistema 6 de la ficha y va a cargar y guardar esta misma tabla.
+-- Datos de cada jugador mientras está en el servidor. Los carga y guarda Guardado.luau
+-- (ProfileStore) con esta misma tabla.
 -- Se publican como atributos del Player para que el cliente los lea (solo para mostrar):
 --   Monedas, Fuerza (daño por golpe), Suerte (la del jugador, con amuletos), NivelFuerza,
 --   Pico (número), Amuletos ("Trebol;Herradura"), GeodasRotas, Mochila (JSON: gema ->
@@ -115,7 +115,7 @@ local datosDe: { [Player]: Datos } = {}
 
 local Jugadores = {}
 
-local function nuevos(): Datos
+function Jugadores.nuevos(): Datos
 	return {
 		Monedas = 0,
 		NivelFuerza = 0,
@@ -178,8 +178,9 @@ local function valor(carpeta: Instance, nombre: string): NumberValue
 	return nuevo
 end
 
-function Jugadores.crear(jugador: Player)
-	datosDe[jugador] = nuevos()
+-- `datos`: los que cargó Guardado (nil = jugador nuevo, para las pruebas).
+function Jugadores.crear(jugador: Player, datos: Datos?)
+	datosDe[jugador] = datos or Jugadores.nuevos()
 	local stats = Instance.new("Folder")
 	stats.Name = "leaderstats"
 	valor(stats, "Fuerza")
