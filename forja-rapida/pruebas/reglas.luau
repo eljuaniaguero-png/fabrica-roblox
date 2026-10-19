@@ -503,10 +503,30 @@ chequear(
 	Reglas.valorMochila({ [g1.Id] = 3, Inventada = 99 }) == 3 * Reglas.valorGema(g1.Id),
 	"el valor de la mochila está mal (o cuenta gemas que no existen)"
 )
-chequear(#Reglas.zonasNuevas({ [1] = true }, 0) == 0, "con Fuerza 0 se abre una zona")
+local todasGemas = {}
+for _, g in GameConfig.Gemas do
+	todasGemas[g.Id] = true
+end
+chequear(#Reglas.zonasNuevas({ [1] = true }, 0, todasGemas) == 0, "con Fuerza 0 se abre una zona")
 local z2 = GameConfig.Zonas[2]
-local nuevas = Reglas.zonasNuevas({ [1] = true }, z2.FuerzaParaAbrir)
+local nuevas = Reglas.zonasNuevas({ [1] = true }, z2.FuerzaParaAbrir, todasGemas)
 chequear(#nuevas == 1 and nuevas[1] == 2, "la zona 2 no se abre con su Fuerza justa")
+-- Requisito de colección: con la Fuerza pero sin gemas de la Pradera, no se abre
+chequear(
+	#Reglas.zonasNuevas({ [1] = true }, z2.FuerzaParaAbrir, {}) == 0,
+	"la zona 2 se abre sin las gemas de la Pradera"
+)
+local pradera = {}
+for _, r in { "Comun", "Raro" } do
+	for _, g in Reglas.gemasDe(1, r) do
+		pradera[g.Id] = true
+	end
+end
+chequear(Reglas.gemasVistas(pradera, 1) == 4, "no cuenta bien las gemas vistas de la Pradera")
+chequear(
+	#Reglas.zonasNuevas({ [1] = true }, math.huge, pradera) == 1,
+	"con todas las Fuerzas abre más de una zona sin las gemas de cada una"
+)
 chequear((Reglas.proximaZona({ [1] = true }) :: any).Numero == 2, "la próxima zona no es la 2")
 local abiertas = {}
 for _, z in GameConfig.Zonas do
@@ -1023,7 +1043,10 @@ chequear(Reglas.precioViaje(9) == 0, "zona que no existe")
 
 -- Punto débil: ×2, sin pasarse del tope en las grandes.
 chequear(Reglas.danioGolpe(10, "Pequena", 100, 100, true) == 20, "punto débil hace x2")
-chequear(Reglas.danioGolpe(10, "Pequena", 15, 100, true) == 15, "punto débil no saca más de lo que queda")
+chequear(
+	Reglas.danioGolpe(10, "Pequena", 15, 100, true) == 15,
+	"punto débil no saca más de lo que queda"
+)
 chequear(Reglas.danioGolpe(1e9, "Jefe", 1500, 1500, true) == 37.5, "punto débil respeta el tope")
 
 if errores > 0 then

@@ -676,13 +676,55 @@ function Reglas.valorMochila(mochila: { [string]: number }): number
 	return total
 end
 
--- Zonas que se abren con esa Fuerza y que todavía no estaban abiertas (en orden).
-function Reglas.zonasNuevas(zonas: { [number]: boolean }, fuerza: number): { number }
+-- Gemas distintas de esa zona que están en el Índice (las que encontró alguna vez).
+function Reglas.gemasVistas(indice: { [string]: boolean }, zona: number): number
+	local n = 0
+	for id in indice do
+		local g = gemas[id]
+		if g and g.Zona == zona then
+			n += 1
+		end
+	end
+	return n
+end
+
+-- Gemas de la zona anterior que pide esa zona para abrirse (0 si no pide).
+function Reglas.gemasParaAbrir(z: Zona): number
+	return z.GemasParaAbrir or 0
+end
+
+-- Lo que pide una zona, para carteles: "700 de Fuerza y 4 gemas de Dunas de Ámbar".
+function Reglas.textoRequisito(z: Zona, corto: (number) -> string): string
+	local texto = corto(z.FuerzaParaAbrir) .. " de Fuerza"
+	local gemasZona = Reglas.gemasParaAbrir(z)
+	local anterior = GameConfig.Zonas[z.Numero - 1]
+	if gemasZona > 0 and anterior then
+		texto ..= (" y %d gemas distintas de %s"):format(gemasZona, anterior.Nombre)
+	end
+	return texto
+end
+
+-- Zonas que se abren con esa Fuerza (y las gemas de la zona anterior encontradas) y que
+-- todavía no estaban abiertas, en orden. Se abren de a una: hace falta la anterior.
+function Reglas.zonasNuevas(
+	zonas: { [number]: boolean },
+	fuerza: number,
+	indice: { [string]: boolean }
+): { number }
 	local lista = {}
 	for _, z in GameConfig.Zonas do
-		if not zonas[z.Numero] and fuerza >= z.FuerzaParaAbrir then
-			table.insert(lista, z.Numero)
+		if zonas[z.Numero] then
+			continue
 		end
+		local anterior = z.Numero == 1 or zonas[z.Numero - 1] or table.find(lista, z.Numero - 1)
+		if
+			not anterior
+			or fuerza < z.FuerzaParaAbrir
+			or Reglas.gemasVistas(indice, z.Numero - 1) < Reglas.gemasParaAbrir(z)
+		then
+			break
+		end
+		table.insert(lista, z.Numero)
 	end
 	return lista
 end

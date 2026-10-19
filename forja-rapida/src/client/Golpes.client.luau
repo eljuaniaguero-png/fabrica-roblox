@@ -543,6 +543,13 @@ Golpe.OnClientEvent:Connect(function(geoda: Model, danio: number, _vida: number,
 		-- SONIDO: golpe en el punto débil (más agudo)
 		Sonidos.tocar(GameConfig.Sonidos.Golpe, 1.5, 0.8, roca)
 	end
+	-- Dash minero: el primer golpe después del dash hace un "clank" más fuerte (solo se siente)
+	local dash = tonumber(jugador:GetAttribute("UltimoDash"))
+	if dash and os.clock() - dash < GameConfig.Dash.VentanaClank then
+		jugador:SetAttribute("UltimoDash", nil)
+		-- SONIDO: clank fuerte del primer golpe después del dash
+		Sonidos.tocar(GameConfig.Sonidos.Golpe, 0.7, 1, roca)
+	end
 	-- SONIDO: golpe del pico (cambia un poco el tono en cada golpe)
 	Sonidos.tocar(GameConfig.Sonidos.Golpe, 0.9 + rng:NextNumber() * 0.25, 0.5, roca)
 	destello.Adornee = geoda

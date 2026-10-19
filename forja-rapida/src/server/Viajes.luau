@@ -77,13 +77,9 @@ local function viajar(jugador: Player, zona: unknown)
 	if zona > 0 then
 		local z = Reglas.zona(zona) :: GameConfig.Zona
 		if not d.Zonas[zona] then
-			local falta = z.FuerzaParaAbrir - Jugadores.fuerza(d)
 			Remotos.Aviso:FireClient(
 				jugador,
-				("Te faltan %s de Fuerza para %s"):format(
-					Formato.corto(math.max(1, falta)),
-					z.Nombre
-				)
+				("Para %s necesitás %s"):format(z.Nombre, Reglas.textoRequisito(z, Formato.corto))
 			)
 			return
 		end

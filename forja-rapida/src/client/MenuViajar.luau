@@ -54,7 +54,7 @@ local function crear()
 
 		local detalle: string
 		if not abierta and z then
-			detalle = ("Necesitás %s de Fuerza"):format(Formato.corto(z.FuerzaParaAbrir))
+			detalle = "Necesitás " .. Reglas.textoRequisito(z, Formato.corto)
 		elseif precio == 0 then
 			detalle = "Gratis"
 		else

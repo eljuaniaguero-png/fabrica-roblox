@@ -44,7 +44,7 @@ function Economia.revisarZonas(jugador: Player)
 	if not d then
 		return
 	end
-	local nuevas = Reglas.zonasNuevas(d.Zonas, Jugadores.fuerza(d))
+	local nuevas = Reglas.zonasNuevas(d.Zonas, Jugadores.fuerza(d), d.Indice)
 	if #nuevas == 0 then
 		return
 	end

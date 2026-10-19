@@ -55,6 +55,7 @@ local Remotos = {
 	Forja = evento("Forja"), -- servidor -> cliente: ("Empieza" | "Resultado" | "Fin", Forja.Estado)
 	ForjaIntentar = evento("ForjaIntentar"), -- cliente -> servidor: (Id, cantidad?) gastar monedas "?"
 	ForjaListo = evento("ForjaListo"), -- cliente -> servidor: (Id) quedarse con la piedra así
+	Dash = evento("Dash"), -- cliente -> servidor: () avisa que hizo un dash (Dash.luau revisa la espera)
 	Fundir = evento("Fundir"), -- cliente -> servidor: (clave de la mochila) fundir 1 por monedas "?"
 }
 

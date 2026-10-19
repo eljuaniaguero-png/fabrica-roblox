@@ -20,6 +20,7 @@ local TweenService = game:GetService("TweenService")
 
 local Formato = require(ReplicatedStorage.Shared.Formato)
 local GameConfig = require(ReplicatedStorage.Shared.GameConfig)
+local Reglas = require(ReplicatedStorage.Shared.Reglas)
 local Datos = require(script.Parent.Datos)
 local Efectos = require(script.Parent.Efectos)
 local Estilo = require(script.Parent.Estilo)
@@ -87,7 +88,7 @@ local function cartelPuerta(p: BasePart, zona: GameConfig.Zona)
 		zona.Nombre,
 		"Portal",
 		Color3.fromHex(zona.ColorCristal),
-		"Necesitás " .. Formato.corto(zona.FuerzaParaAbrir) .. " de Fuerza",
+		"Necesitás " .. Reglas.textoRequisito(zona, Formato.corto),
 		"Fuerza"
 	)
 	b.Name = "CartelZona"

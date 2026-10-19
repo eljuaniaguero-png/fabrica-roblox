@@ -25,6 +25,7 @@ local GameConfig = require(ReplicatedStorage.Shared.GameConfig)
 local Reglas = require(ReplicatedStorage.Shared.Reglas)
 local Anuncios = require(script.Parent.Anuncios)
 local Descubrimientos = require(script.Parent.Descubrimientos)
+local Economia = require(script.Parent.Economia)
 local Jugadores = require(script.Parent.Jugadores)
 local Mundo = require(script.Parent.Mundo)
 local Remotos = require(script.Parent.Remotos)
@@ -121,6 +122,9 @@ function Forja.entregar(jugador: Player)
 	end
 	d.ForjaPendiente = nil -- primero se borra, después se entrega: nunca dos veces
 	local nueva = Jugadores.agregarGema(jugador, p.Gema, p.Unidades, p.Efecto)
+	if nueva then
+		Economia.revisarZonas(jugador) -- una gema nueva puede cumplir el requisito de colección
+	end
 	local hitos = Descubrimientos.registrar(jugador, p.Modificador, p.Rareza)
 	local uno = unoEn(p.Rareza, p.Suerte)
 	local gema = Reglas.gema(p.Gema)

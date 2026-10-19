@@ -639,15 +639,22 @@ local function zona()
 		return
 	end
 	local f = Datos.numero("Fuerza")
+	-- Requisito de colección: también hacen falta gemas distintas de la zona anterior
+	local pide = Reglas.gemasParaAbrir(z)
+	local vistasZona = math.min(pide, Reglas.gemasVistas(Datos.conjunto("Indice"), z.Numero - 1))
+	local texto = ("%s / %s de Fuerza"):format(Formato.corto(f), Formato.corto(z.FuerzaParaAbrir))
+	if pide > 0 then
+		texto ..= (" · Gemas %d/%d"):format(vistasZona, pide)
+	end
 	ponerZona(
-		f / math.max(1, z.FuerzaParaAbrir),
-		("%s / %s de Fuerza"):format(Formato.corto(f), Formato.corto(z.FuerzaParaAbrir))
+		math.min(f / math.max(1, z.FuerzaParaAbrir), if pide > 0 then vistasZona / pide else 1),
+		texto
 	)
 	nombreZona.Text = z.Nombre
 	nombreZona.TextColor3 = Color3.fromHex(z.ColorCristal)
 end
 zona()
-Datos.alCambiar({ "Fuerza", "Zonas" }, zona)
+Datos.alCambiar({ "Fuerza", "Zonas", "Indice" }, zona)
 
 -- Compras: sonido, salto de la píldora y cartel para lo grande ------------------------------
 

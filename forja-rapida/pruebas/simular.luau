@@ -4,6 +4,8 @@
 --   lune run forja-rapida/pruebas/simular            (4 golpes por segundo)
 --   lune run forja-rapida/pruebas/simular 6          (otro ritmo de golpes)
 --   lune run forja-rapida/pruebas/simular 4 sin-forja (sin La Forja, para comparar)
+--   lune run forja-rapida/pruebas/simular 4 con-forja sin-coleccion
+--     (sin el requisito de gemas de GameConfig.Zonas[n].GemasParaAbrir, para comparar)
 -- El jugador: le pega a geodas de su mejor zona (tamaño al azar, como en el mapa), vende
 -- todo apenas rompe (con un 15 % de tiempo extra por los viajes al Banco) y compra lo que más
 -- le rinde por moneda entre: el próximo nivel de Fuerza, el próximo pico y el próximo amuleto.
@@ -16,6 +18,11 @@ local Reglas = cargar("Reglas")
 
 local GOLPES_POR_SEGUNDO = tonumber(process.args[1]) or 4
 local CON_FORJA = process.args[2] ~= "sin-forja"
+local CON_COLECCION = process.args[3] ~= "sin-coleccion"
+local function gemasParaPasar(zona: number): number
+	local z = GameConfig.Zonas[zona + 1]
+	return if CON_COLECCION and z then Reglas.gemasParaAbrir(z) else 0
+end
 local ESCENA_FORJA = 4 -- segundos que dura la escena de La Forja (Rara o mejor)
 local CAMINATA = 1.2 -- segundos para ir de una geoda a otra
 local VIAJES_BANCO = 1.15
@@ -54,12 +61,28 @@ for semilla = 1, SEMILLAS do
 	local monedas = 0
 	local nivel, pico, amuletos, cantAmuletos = 0, 1, {}, 0
 	local zona = 1
+	local vistas: { [number]: { [string]: boolean } } = {}
+	local function distintas(z: number): number
+		local n = 0
+		for _ in vistas[z] or {} do
+			n += 1
+		end
+		return n
+	end
+	local trabado: number? = nil -- desde cuándo tiene la Fuerza pero le faltan gemas
 
 	while t < DURACION do
 		local fuerza = Reglas.fuerza(nivel, pico)
 		-- Zonas nuevas apenas la Fuerza alcanza.
 		local nueva = Reglas.zonaMaxima(fuerza)
-		while zona < nueva do
+		if zona < nueva and distintas(zona) < gemasParaPasar(zona) then
+			trabado = trabado or t
+		end
+		while zona < nueva and distintas(zona) >= gemasParaPasar(zona) do
+			if trabado then
+				anotar("Espera por gemas en zona " .. zona, t - trabado)
+				trabado = nil
+			end
 			zona += 1
 			anotar("Zona " .. zona .. " (" .. GameConfig.Zonas[zona].Nombre .. ")", t)
 		end
@@ -92,6 +115,8 @@ for semilla = 1, SEMILLAS do
 				t += ESCENA_FORJA
 			end
 		end
+		vistas[zona] = vistas[zona] or {}
+		vistas[zona][gema.Id] = true
 		monedas += Reglas.unidades(tamano, modificador) * Reglas.valorGema(clave)
 
 		-- Compras: lo que más sube el ingreso por moneda gastada.

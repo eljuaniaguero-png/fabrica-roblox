@@ -57,6 +57,7 @@ export type Zona = {
 	Numero: number,
 	Nombre: string,
 	FuerzaParaAbrir: number, -- Fuerza (daño por golpe) que hay que tener; no se gasta
+	GemasParaAbrir: number?, -- gemas distintas de la zona anterior que hay que haber encontrado
 	Dureza: number,
 	Valor: number, -- monedas que vale una gema común de esta zona
 	Suerte: number,
@@ -255,6 +256,14 @@ local GameConfig = {
 		InicioZona1 = 50, -- Z del inicio de la Pradera (las demás salen de su puerta)
 		Adelante = 12, -- studs después de la puerta donde aparecés
 		Espera = 3, -- segundos entre viajes
+	},
+
+	-- Dash minero (idea elegida del 19/10/2026): Shift o Q en compu, botón en celular.
+	Dash = {
+		Distancia = 30, -- studs hacia adelante
+		Duracion = 0.25, -- segundos que dura el envión
+		Espera = 4, -- segundos entre dos dash
+		VentanaClank = 2, -- segundos después del dash en que el primer golpe suena más fuerte
 	},
 
 	Golpe = {
@@ -587,6 +596,7 @@ local GameConfig = {
 			Numero = 2,
 			Nombre = "Dunas de Ámbar",
 			FuerzaParaAbrir = 25,
+			GemasParaAbrir = 3, -- 3 en la Pradera: con 4, el jugador nuevo se trababa ~7 min (pruebas/simular)
 			Dureza = 8,
 			Valor = 10,
 			Suerte = 1.5,
@@ -634,6 +644,7 @@ local GameConfig = {
 			Numero = 3,
 			Nombre = "Glaciar de Zafiro",
 			FuerzaParaAbrir = 700,
+			GemasParaAbrir = 4, -- Comunes y Raras de la zona anterior
 			Dureza = 120,
 			Valor = 300,
 			Suerte = 2.5,
@@ -678,6 +689,7 @@ local GameConfig = {
 			Numero = 4,
 			Nombre = "Volcán de Rubí",
 			FuerzaParaAbrir = 6000,
+			GemasParaAbrir = 4, -- Comunes y Raras de la zona anterior
 			Dureza = 1100,
 			Valor = 4000,
 			Suerte = 4,
@@ -723,6 +735,7 @@ local GameConfig = {
 			Numero = 5,
 			Nombre = "Abismo Estelar",
 			FuerzaParaAbrir = 40000,
+			GemasParaAbrir = 4, -- Comunes y Raras de la zona anterior
 			Dureza = 8000,
 			Valor = 50000,
 			Suerte = 7,
@@ -2741,6 +2754,7 @@ local GameConfig = {
 	-- Para cambiar el tono de un mismo sample se usa PlaybackSpeed (CLAUDE.md, Audio).
 	Sonidos = {
 		Golpe = "",
+		Dash = "", -- el envión del dash
 		Romper = "",
 		Revelacion = "", -- se sube el tono según la rareza
 		RevelacionRara = "", -- extra para Épica o mejor
