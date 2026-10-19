@@ -541,3 +541,4 @@ Animación aprobada: `ideas/la-forja-animacion.html` (demo jugable). La geoda se
   - Misiones fuera del juego: `GameConfig.Misiones.Activas = false` (sin reparto, sin seguimiento a la derecha, sin cartel en la plaza). El código queda por si vuelven.
   - Eventos: sin menú ni botón; se ven solos en el cartel de arriba con la cuenta regresiva, que no se puede tocar.
   - HUD: Mochila, Viajar y Más (Mascotas, Vitrina, Ranking).
+  - Runas Mágicas (logro Aprendiz de Runas): ahora se gana rompiendo 300 geodas, porque ya no hay misiones (el Id sigue siendo Misiones10).

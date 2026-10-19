@@ -584,7 +584,12 @@ local g4 = {
 chequear(#Reglas.logrosNuevos(g4) == 0, "grupo 4: logros sin cumplir nada")
 g4.Pico, g4.MisionesHechas, g4.Renacimientos = 3, 10, 2
 local g4n = ids(Reglas.logrosNuevos(g4))
-chequear(g4n == "Forjador,Misiones3,Misiones10,Renacer1,Renacer2", "grupo 4: salió " .. g4n)
+chequear(g4n == "Forjador,Misiones3,Renacer1,Renacer2", "grupo 4: salió " .. g4n)
+-- Runas Mágicas (Misiones10) se gana con 300 geodas desde el 19/10/2026.
+g4.Logros = { Forjador = true, Misiones3 = true, Renacer1 = true, Renacer2 = true }
+g4.GeodasRotas = 300
+chequear(ids(Reglas.logrosNuevos(g4)):find("Misiones10") ~= nil, "Runas con 300 geodas")
+g4.Logros, g4.GeodasRotas = {}, 0
 for _, id in { "Coleccion1", "Coleccion2", "Museo3" } do
 	g4.Logros[id] = true
 end

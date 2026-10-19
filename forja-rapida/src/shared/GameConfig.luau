@@ -1458,10 +1458,12 @@ local GameConfig = {
 			Premio = { Monedas = 150 },
 		},
 		{
+			-- 19/10/2026: sin misiones en el juego, se gana rompiendo geodas (se deja el Id
+			-- para no romper los logros ya cobrados).
 			Id = "Misiones10",
 			Nombre = "Aprendiz de Runas",
-			Descripcion = "Cumplí 10 misiones",
-			Necesita = { Tipo = "Misiones", Cuantas = 10 },
+			Descripcion = "Rompé 300 geodas",
+			Necesita = { Tipo = "Geodas", Cuantas = 300 },
 			Premio = { Suerte = 0.1, Cosmetico = { Tipo = "Efecto", Id = "Runas" } },
 		},
 		{
