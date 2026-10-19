@@ -535,3 +535,4 @@ Animación aprobada: `ideas/la-forja-animacion.html` (demo jugable). La geoda se
 - Decisión: el tope es por segundo y no por golpe, porque con 8 golpes por segundo un tope de 15 % por golpe igual dejaba romperla en 1 s.
 - **Luz (19/10)**: el juego pisaba la luz que Juani dejó en Studio. Ahora el estilo A usa esos valores (Brightness 3, Ambient #464646, ColorCorrection 0,05 / 0,15 / 0,1) y deja su cielo "Realistic Sky" (`CieloDeFabrica = false`).
 - Falta: volver a correr `pruebas/simular` (el tope solo frena al que vuelve a zonas bajas).
+- **HUD más limpio (19/10)**: a la izquierda solo 4 botones en columna (Tienda, Mochila, Viajar y Más). "Más" despliega al costado Misiones, Eventos, Mascotas, Vitrina y Ranking en botones cuadrados; si alguno tiene aviso, "Más" muestra "!". A la derecha se sigue una sola misión (la más cerca de cumplirse); las demás están en el menú Misiones.

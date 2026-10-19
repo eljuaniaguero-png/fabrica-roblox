@@ -221,24 +221,56 @@ end)
 local izquierda = Instance.new("Frame")
 izquierda.Name = "Menus"
 izquierda.BackgroundTransparency = 1
-izquierda.Size = UDim2.fromOffset(2 * 200 + 10, 4 * 64 + 3 * 10)
+-- 19/10/2026: HUD menos cargado. A la vista solo 4 botones en una columna (Tienda, Mochila,
+-- Viajar y Más); "Más" despliega al costado los menús que se usan menos.
+izquierda.Size = UDim2.fromOffset(190, 4 * 58 + 3 * 8)
 if celular then
 	izquierda.AnchorPoint = Vector2.new(0, 0)
 	izquierda.Position = UDim2.fromOffset(12, 8)
 else
 	izquierda.AnchorPoint = Vector2.new(0, 0.5)
-	izquierda.Position = UDim2.new(0, 16, 0.45, 0)
+	izquierda.Position = UDim2.new(0, 16, 0.42, 0)
 end
-local grilla = Instance.new("UIGridLayout")
-grilla.CellSize = UDim2.fromOffset(200, 64)
-grilla.CellPadding = UDim2.fromOffset(10, 10)
-grilla.SortOrder = Enum.SortOrder.LayoutOrder
-grilla.Parent = izquierda
+-- La columna lleva el orden; el panel "Más" va al costado, dentro del mismo bloque para que
+-- se escalen juntos.
+local columnaBotones = Instance.new("Frame")
+columnaBotones.Name = "Columna"
+columnaBotones.BackgroundTransparency = 1
+columnaBotones.Size = UDim2.fromScale(1, 1)
+columnaBotones.Parent = izquierda
+local columna = Instance.new("UIListLayout")
+columna.Padding = UDim.new(0, 8)
+columna.SortOrder = Enum.SortOrder.LayoutOrder
+columna.Parent = columnaBotones
 Estilo.escalar(izquierda, if celular then 0.8 else 1)
 izquierda.Parent = pantalla
 
+-- Panel que abre "Más": botones cuadrados con ícono y nombre abajo.
+local mas = Instance.new("Frame")
+mas.Name = "Mas"
+mas.BackgroundTransparency = 1
+
+mas.Size = UDim2.fromOffset(3 * 96 + 2 * 8, 2 * 96 + 8)
+mas.Visible = false
+local grillaMas = Instance.new("UIGridLayout")
+grillaMas.CellSize = UDim2.fromOffset(96, 96)
+grillaMas.CellPadding = UDim2.fromOffset(8, 8)
+grillaMas.SortOrder = Enum.SortOrder.LayoutOrder
+grillaMas.Parent = mas
+mas.Position = UDim2.fromOffset(200, 0)
+mas.Parent = izquierda
+
 type Boton = { Boton: TextButton, Globito: Frame }
 local botones: { [string]: Boton } = {}
+local enMas: { [string]: boolean } = {}
+
+local function nuevoGlobito(b: GuiObject): Frame
+	local g = Estilo.globito("!", 30)
+	g.Position = UDim2.new(1, -4, 0, 4)
+	g.Visible = false
+	g.Parent = b
+	return g
+end
 
 local function botonMenu(
 	orden: number,
@@ -252,34 +284,91 @@ local function botonMenu(
 		Texto = texto,
 		Icono = icono,
 		Color = color,
-		Ancho = 200,
-		Alto = 64,
-		TamanoTexto = 28,
+		Ancho = 190,
+		Alto = 58,
+		TamanoTexto = 26,
 	})
 	b.Name = id
 	b.LayoutOrder = orden
-	local g = Estilo.globito("!", 34)
-	g.Position = UDim2.new(1, -4, 0, 4)
-	g.Visible = false
-	g.Parent = b
+	local g = nuevoGlobito(b)
 	b.Activated:Connect(function()
+		mas.Visible = false
 		Ventanas.alternar(id)
 	end)
-	b.Parent = izquierda
+	b.Parent = columnaBotones
 	local r = { Boton = b, Globito = g }
 	botones[id] = r
 	return r
 end
 
+-- Botón chico del panel "Más": ícono arriba y nombre abajo.
+local function botonMas(orden: number, id: string, texto: string, icono: string, color: string)
+	local b = Estilo.boton({ Icono = icono, Color = color, Ancho = 96, Alto = 96 })
+	b.Name = id
+	b.LayoutOrder = orden
+	local ic = b:FindFirstChild("Icono" .. icono, true) :: GuiObject?
+	if ic then
+		ic.Position = UDim2.fromScale(0.5, 0.4)
+		ic.AnchorPoint = Vector2.new(0.5, 0.5)
+	end
+	local t = Estilo.texto(texto, 17)
+	t.AnchorPoint = Vector2.new(0.5, 1)
+	t.Position = UDim2.new(0.5, 0, 1, -6)
+	t.ZIndex = 5
+	t.Parent = b
+	local g = nuevoGlobito(b)
+	b.Activated:Connect(function()
+		mas.Visible = false
+		Ventanas.alternar(id)
+	end)
+	b.Parent = mas
+	botones[id] = { Boton = b, Globito = g }
+	enMas[id] = true
+end
+
 botonMenu(1, "Tienda", "Tienda", "Tienda", "Verde")
 botonMenu(2, "Mochila", "Mochila", "Mochila", "Naranja")
-botonMenu(4, "Vitrina", "Vitrina", "Corona", "Violeta")
-botonMenu(5, "Clasificacion", "Ranking", "Trofeo", "Amarillo")
-botonMenu(6, "Eventos", "Eventos", "Reloj", "Azul")
-botonMenu(7, "Misiones", "Misiones", "Mision", "Cian")
-botonMenu(8, "Mascotas", "Mascotas", "Mascota", "Rosa")
-botonMenu(9, "Viajar", "Viajar", "Cristal", "Cian")
+botonMenu(3, "Viajar", "Viajar", "Cristal", "Cian")
+-- "Más" no abre una ventana: despliega el panel.
+local botonMasB = Estilo.boton({
+	Texto = "Más",
+	Icono = "Corona",
+	Color = "Violeta",
+	Ancho = 190,
+	Alto = 58,
+	TamanoTexto = 26,
+})
+botonMasB.Name = "Mas"
+botonMasB.LayoutOrder = 4
+local botonMasR = { Boton = botonMasB, Globito = nuevoGlobito(botonMasB) }
+botonMasB.Activated:Connect(function()
+	Ventanas.cerrar()
+	mas.Visible = not mas.Visible
+end)
+botonMasB.Parent = columnaBotones
+botonMas(1, "Misiones", "Misiones", "Mision", "Cian")
+botonMas(2, "Eventos", "Eventos", "Reloj", "Azul")
+botonMas(3, "Mascotas", "Mascotas", "Mascota", "Rosa")
+botonMas(4, "Vitrina", "Vitrina", "Corona", "Violeta")
+botonMas(5, "Clasificacion", "Ranking", "Trofeo", "Amarillo")
 -- Museo y Renacer ya no tienen botón (17/10, plan v5 del mapa): sus menús siguen en el código.
+
+-- "Más" muestra "!" si alguno de los que tiene adentro tiene un aviso.
+local function globitoMas()
+	local hay = false
+	for id in enMas do
+		local b = botones[id]
+		if b and b.Globito.Visible then
+			hay = true
+		end
+	end
+	local g = botonMasR.Globito
+	local antes = g.Visible
+	g.Visible = hay
+	if hay and not antes then
+		saltar(g)
+	end
+end
 
 local function globito(id: string, texto: string?)
 	local b = botones[id]
@@ -294,6 +383,9 @@ local function globito(id: string, texto: string?)
 		if not antes then
 			saltar(g)
 		end
+	end
+	if enMas[id] then
+		globitoMas()
 	end
 end
 
@@ -399,8 +491,8 @@ local function dibujarSeguimiento()
 		end
 	end
 	local lista = MenuMisiones.lista()
-	if celular and #lista > 1 then
-		-- solo la que está más cerca de cumplirse
+	if #lista > 1 then
+		-- solo la que está más cerca de cumplirse (las demás, en el menú Misiones)
 		table.sort(lista, function(a, b)
 			return a.Progreso / math.max(1, a.Meta) > b.Progreso / math.max(1, b.Meta)
 		end)
