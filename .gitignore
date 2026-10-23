@@ -16,3 +16,6 @@ __pycache__/
 
 # Std mínimo de Selene para sesiones en la nube (en la compu se genera el completo)
 forja-rapida/roblox.yml
+
+# Capturas de referencia (pesan mucho)
+pesca-compas/referencias/
