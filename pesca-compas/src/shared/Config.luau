@@ -159,9 +159,75 @@ Config.PrecioCana = { 0, 25, 70, 160, 350, 700, 1300, 2400, 4200, 7000 }
 Config.CapacidadBalde = { 10, 15, 20, 25, 30, 40, 50, 60 }
 Config.PrecioBalde = { 0, 40, 120, 300, 650, 1300, 2500, 4500 }
 
+-- Cebos (casa "CEBO & CAÑAS"). Respetan la regla de arriba: NO cambian la rareza. Solo hacen
+-- picar más rápido (Espera multiplica el tiempo de espera) y dan peces más pesados (Peso
+-- multiplica los kg, y el precio va por kg). Se gastan de a una tirada cuando el pez pica.
+-- Comprar el mismo cebo suma tiradas; comprar otro reemplaza al que tenías.
+export type Cebo = {
+	Id: string,
+	Nombre: string,
+	Detalle: string, -- lo que lee el jugador en la tienda
+	Precio: number, -- Escamas
+	Tiradas: number,
+	Espera: number,
+	Peso: number,
+	Color: Color3,
+}
+
+Config.Cebos = {
+	{
+		Id = "Lombriz",
+		Nombre = "Lombriz Bailarina",
+		Detalle = "Pican el doble de rápido",
+		Precio = 15,
+		Tiradas = 10,
+		Espera = 0.5,
+		Peso = 1,
+		Color = Color3.fromRGB(255, 140, 170),
+	},
+	{
+		Id = "Camaron",
+		Nombre = "Camarón Groovy",
+		Detalle = "Más rápido y peces +25% kg",
+		Precio = 45,
+		Tiradas = 10,
+		Espera = 0.75,
+		Peso = 1.25,
+		Color = Color3.fromRGB(255, 160, 80),
+	},
+	{
+		Id = "Calamar",
+		Nombre = "Calamar Disco",
+		Detalle = "El doble de rápido y peces +50% kg",
+		Precio = 120,
+		Tiradas = 10,
+		Espera = 0.5,
+		Peso = 1.5,
+		Color = Color3.fromRGB(190, 110, 255),
+	},
+} :: { Cebo }
+Config.CeboTiradasMax = 50 -- tope de tiradas acumuladas de un mismo cebo
+Config.DistanciaTienda = 14 -- studs desde la puerta de la tienda para poder comprar
+
+-- Robux (server/Monetizacion.luau). Id = 0 = todavía no creado en el Creator Dashboard: queda
+-- apagado y no se puede comprar. Solo conveniencia o cosmético: nada cambia la rareza ni saltea
+-- el ritmo. Al crear el producto/pase, pegar el id acá y listo.
+export type Producto = { Id: number, Nombre: string, Cebo: string, Tiradas: number }
+Config.Productos = {
+	PackCalamar = { Id = 0, Nombre = "Pack Calamar Disco x30", Cebo = "Calamar", Tiradas = 30 },
+} :: { [string]: Producto }
+-- Pases: el jugador recibe el atributo "Pase_<clave>" = true (lo leen Equipo y la UI).
+Config.Pases = {
+	CarreteDorado = 0, -- cosmético: carrete dorado brillante en cualquier nivel de caña
+} :: { [string]: number }
+
 -- Premio diario (ficha, sección 7): Escamas por día de racha. Si saltea un día, vuelve al 1.
 -- PENDIENTE: el día 7 también da una caña cosmética cuando existan los cosméticos.
 Config.PremioDiario = { 20, 30, 45, 60, 80, 110, 200 }
+
+-- Museo: premio único por isla al sacar todos sus peces (los jefes no cuentan: no salen al
+-- sortear y tendrán su propio trofeo). Isla 1 = los 7 peces sin la Ballena.
+Config.PremioMuseo = { 400 }
 
 -- XP para pasar del nivel n al n+1
 function Config.xpParaSubir(nivel: number): number

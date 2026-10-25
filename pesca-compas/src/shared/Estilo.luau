@@ -57,6 +57,34 @@ Estilo.Pez = {
 	Silueta = Color3.fromRGB(45, 60, 120), -- pez que todavía no sacaste, en la vitrina
 }
 
+-- Caña del personaje y cebos (arte/fbx): se pintan por rol como los peces. Ver ModeloEquipo.luau.
+-- El carrete (rol Aleta) toma el color del nivel de caña: cada mejora se ve en la mano sin
+-- modelar 10 cañas. Desde NeonDesde el carrete brilla (el bloom solo agarra Neon).
+Estilo.Cana = {
+	Madera = Color3.fromRGB(190, 120, 70),
+	Corcho = Color3.fromRGB(235, 200, 150),
+	Metal = Color3.fromRGB(70, 75, 95),
+	Nota = Color3.fromRGB(255, 225, 70), -- la nota de la punta, en Neon
+	Linea = Color3.fromRGB(250, 245, 230), -- línea de pesca: clara, se lee sobre el agua
+	Carrete = {
+		Color3.fromRGB(255, 110, 90), -- 1 coral
+		Color3.fromRGB(255, 170, 60), -- 2 naranja
+		Color3.fromRGB(255, 225, 70), -- 3 amarillo
+		Color3.fromRGB(110, 230, 110), -- 4 verde
+		Color3.fromRGB(60, 200, 255), -- 5 celeste
+		Color3.fromRGB(80, 120, 255), -- 6 azul
+		Color3.fromRGB(170, 100, 255), -- 7 violeta
+		Color3.fromRGB(255, 90, 200), -- 8 rosa
+		Color3.fromRGB(230, 235, 255), -- 9 plateado
+		Color3.fromRGB(255, 205, 50), -- 10 dorado
+	},
+	NeonDesde = 9,
+	-- Pase "Carrete Dorado": en cualquier nivel. El nivel 10 ya es dorado, así que el del pase
+	-- además suelta destellos: el que pagó se reconoce de lejos.
+	CarreteDorado = Color3.fromRGB(255, 190, 30),
+	Destello = Color3.fromRGB(255, 245, 180),
+}
+
 -- Agua del Terrain: casi opaca y sin reflejo, para que se lea como color plano.
 Estilo.Agua = {
 	Color = Estilo.Mundo.Agua,
@@ -123,6 +151,8 @@ Estilo.UI = {
 	BotonCana = Color3.fromRGB(255, 150, 50),
 	BotonBalde = Color3.fromRGB(50, 170, 255),
 	BotonNeutro = Color3.fromRGB(150, 110, 255),
+	BotonRobux = Color3.fromRGB(0, 180, 110), -- verde Robux: se distingue de los botones de Escamas
+	BotonPase = Color3.fromRGB(235, 175, 40), -- dorado del Carrete Dorado
 	Esquina = 14,
 }
 

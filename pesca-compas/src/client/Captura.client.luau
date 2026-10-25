@@ -16,15 +16,17 @@ local Shared = ReplicatedStorage:WaitForChild("Shared")
 local Config = require(Shared:WaitForChild("Config"))
 local Limpieza = require(Shared:WaitForChild("Limpieza"))
 local ModeloPez = require(Shared:WaitForChild("ModeloPez"))
+local Estilo = require(Shared:WaitForChild("Estilo"))
 local Remotos = ReplicatedStorage:WaitForChild("Remotos")
+local AnimPesca = require(script.Parent:WaitForChild("AnimPesca"))
 
 local jugador = Players.LocalPlayer
 
-local SALTO = 0.55 -- segundos del salto boya -> cabeza
+local SALTO = 0.55 -- segundos del salto boya -> cabeza (= marcador "Agarrar" de Levantar, ver shared/Animaciones)
 local MOSTRAR = 2.6 -- igual que la tarjeta de Pesca.client (revelar)
 local SALIDA = 0.2
 local ALTO_SALTO = 7 -- studs que sube el arco por encima de la recta
-local SOBRE_CABEZA = 3.2
+local SOBRE_CABEZA = 1.8 -- centro del pez sobre la cabeza: las manos de Levantar quedan a ~1.1 (medido en R15)
 local LARGO_BASE = 2.6 -- studs del pez en la mano; el peso lo mueve entre 85% y 120%
 
 local carpeta = Instance.new("Folder")
@@ -78,6 +80,26 @@ local function golpeDeCamara()
 	acercar:Play()
 end
 
+-- gotas que saltan del pez cuando llega a las manos (marcador "VFX")
+local function salpicar(donde: Vector3)
+	local ancla = Instance.new("Attachment")
+	ancla.WorldPosition = donde
+	ancla.Parent = Workspace.Terrain
+	local gotas = Instance.new("ParticleEmitter")
+	gotas.Color = ColorSequence.new(Estilo.Mundo.Ventana, Estilo.Mundo.Agua)
+	gotas.LightEmission = 0.3
+	gotas.Size = NumberSequence.new({ NumberSequenceKeypoint.new(0, 0.35), NumberSequenceKeypoint.new(1, 0) })
+	gotas.Lifetime = NumberRange.new(0.35, 0.6)
+	gotas.Speed = NumberRange.new(8, 14)
+	gotas.SpreadAngle = Vector2.new(70, 70)
+	gotas.Acceleration = Vector3.new(0, -40, 0)
+	gotas.EmissionDirection = Enum.NormalId.Top
+	gotas.Rate = 0
+	gotas.Parent = ancla
+	gotas:Emit(18)
+	limpieza:dar(ancla)
+end
+
 local function mostrar(datos: any)
 	limpieza:limpiar()
 	local personaje = jugador.Character
@@ -104,8 +126,15 @@ local function mostrar(datos: any)
 	end))
 	posBoya = nil
 
+	-- el personaje levanta los brazos; el golpe de cámara y las gotas salen de los marcadores
+	-- "Agarrar"/"VFX" de la animación, no de un reloj propio
+	local pararAnim, conAnim = AnimPesca.levantar(golpeDeCamara, function()
+		salpicar(cab.Position + Vector3.new(0, SOBRE_CABEZA, 0))
+	end)
+	limpieza:dar(pararAnim)
+
 	local inicio = os.clock()
-	local aterrizo = false
+	local aterrizo = conAnim -- sin animación (R6, enfriamiento) el golpe va por tiempo, como antes
 	limpieza:dar(RunService.RenderStepped:Connect(function()
 		if not cab.Parent then
 			limpieza:limpiar()

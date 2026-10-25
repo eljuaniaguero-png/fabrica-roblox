@@ -26,11 +26,19 @@ export type Datos = {
 	MisionProgreso: number,
 	DiarioDia: number, -- día UTC (os.time() // 86400) del último premio diario; 0 = nunca
 	DiarioRacha: number, -- 1..#Config.PremioDiario
+	MuseoCobrado: { [string]: boolean }, -- isla (como texto: "1") -> ya cobró el premio del museo
+	Cebo: string, -- Id en Config.Cebos; "" = sin cebo
+	CeboTiradas: number,
+	Compras: { string }, -- últimos PurchaseId de Robux ya entregados (no entregar dos veces)
 }
 
 local Jugadores = {}
 
 local datosDe: { [Player]: Datos } = {}
+
+-- Se llama cada vez que cambia algo y se manda el estado (lo usa Equipo para repintar la caña y
+-- cambiar el cebo). Es un gancho para no requerir Equipo desde acá: Equipo ya requiere Jugadores.
+Jugadores.alEnviar = nil :: ((jugador: Player, d: Datos) -> ())?
 
 function Jugadores.nuevos(): Datos
 	return {
@@ -50,6 +58,10 @@ function Jugadores.nuevos(): Datos
 		MisionProgreso = 0,
 		DiarioDia = 0,
 		DiarioRacha = 0,
+		MuseoCobrado = {},
+		Cebo = "",
+		CeboTiradas = 0,
+		Compras = {},
 	}
 end
 
@@ -95,12 +107,19 @@ function Jugadores.enviar(jugador: Player)
 		Balde = d.Balde,
 		PrecioBalde = Config.PrecioBalde[d.Balde + 1],
 		EnBalde = #d.Cubeta,
+		Cubeta = d.Cubeta, -- barra del balde (como mucho 60 peces, cabe de sobra en un evento)
 		Capacidad = Jugadores.capacidad(d),
 		Vistos = d.Vistos,
 		Afinados = d.Afinados,
 		Desfase = d.Desfase,
 		Calibrado = d.Calibrado,
+		Cebo = if d.CeboTiradas > 0 then d.Cebo else nil,
+		CeboTiradas = d.CeboTiradas,
 	})
+	local gancho = Jugadores.alEnviar
+	if gancho then
+		gancho(jugador, d)
+	end
 end
 
 return Jugadores

@@ -19,6 +19,8 @@ local Estilo = require(ReplicatedStorage.Shared:WaitForChild("Estilo"))
 local UI = Estilo.UI
 local Ritmo = require(ReplicatedStorage.Shared:WaitForChild("Ritmo"))
 local Remotos = ReplicatedStorage:WaitForChild("Remotos")
+local AnimPesca = require(script.Parent:WaitForChild("AnimPesca"))
+local JugoRitmo = require(script.Parent:WaitForChild("JugoRitmo"))
 
 local jugador = Players.LocalPlayer
 
@@ -107,6 +109,7 @@ marca50.ZIndex = 3
 local cartel = texto(gui, UDim2.fromScale(0.4, 0.08), UDim2.fromScale(0.5, 0.1), "")
 local calificacion = texto(gui, UDim2.fromScale(0.25, 0.06), UDim2.fromScale(0.5, 0.82), "")
 local rachaTexto = texto(gui, UDim2.fromScale(0.15, 0.04), UDim2.fromScale(0.62, 0.17), "")
+JugoRitmo.preparar(panelRitmo, aro, rachaTexto)
 
 -- revelación del pez
 local tarjeta = caja(gui, UDim2.fromScale(0.42, 0.42), UDim2.fromScale(0.5, 0.45), UI.PanelOscuro)
@@ -157,10 +160,19 @@ local function sonar(id: string, velocidad: number?, volumen: number?)
 	end)
 end
 
--- sin precargar, los primeros golpes de la calibración no suenan y el desfase sale mal
+-- sin precargar, los primeros golpes de la calibración no suenan y el desfase sale mal.
+-- Se precarga un Sound (no el id suelto: con un texto PreloadAsync lo pide como imagen, falla con
+-- "Asset type does not match" y el audio queda sin cargar). El Sound queda vivo para que no se descargue.
 local function precargarNota()
+	if Config.SonidoNotaId == "" then
+		return
+	end
+	local molde = Instance.new("Sound")
+	molde.Name = "NotaPrecargada"
+	molde.SoundId = Config.SonidoNotaId
+	molde.Parent = SoundService
 	pcall(function()
-		ContentProvider:PreloadAsync({ Config.SonidoNotaId })
+		ContentProvider:PreloadAsync({ molde })
 	end)
 end
 task.spawn(precargarNota)
@@ -256,6 +268,9 @@ local function anotarRacha(p: Partida, acierto: boolean)
 		rachaTexto.Text = if p.Racha >= 2 then ("x%d"):format(p.Racha) else ""
 		bordeAro.Color = Color3.new(1, 1, 1)
 	end
+	JugoRitmo.racha(p.Racha)
+	-- otros scripts del cliente (JugoBoya) leen la racha sin depender de este: solo visual
+	jugador:SetAttribute("RachaRitmo", p.Racha)
 end
 
 local terminarRitmo: (p: Partida) -> () -- se define más abajo
@@ -284,7 +299,7 @@ local function tocarRitmo(p: Partida)
 	local i, calif = Ritmo.clasificar(p.Patron, p.Usadas, t, p.Perfecto, p.Bien)
 	if i then
 		p.Usadas[i] = true
-		p.Notas[i].Visible = false
+		JugoRitmo.acierto(p.Notas[i], calif)
 		sonarNota(p.Patron.Alturas[i])
 		popup(
 			calificacion,
@@ -294,6 +309,7 @@ local function tocarRitmo(p: Partida)
 	else
 		sonar(Config.SonidoErrorId)
 		popup(calificacion, "Error", UI.Error)
+		JugoRitmo.error()
 	end
 	moverTension(p, calif)
 	anotarRacha(p, calif ~= "Error")
@@ -376,6 +392,7 @@ local function actualizarRitmo()
 				p.Falladas[i] = true
 				frame.Visible = false
 				popup(calificacion, "Error", UI.Error)
+				JugoRitmo.error()
 				moverTension(p, "Error")
 				anotarRacha(p, false)
 				if cortoLinea(p) then
@@ -397,6 +414,8 @@ function cerrarRitmo()
 		end
 	end
 	partida = nil
+	jugador:SetAttribute("RachaRitmo", 0)
+	JugoRitmo.limpiar()
 	congelar(false)
 	panelRitmo.Visible = false
 	barraTension.Visible = false
@@ -580,6 +599,7 @@ UserInputService.InputEnded:Connect(function(input)
 	local carga = math.clamp((os.clock() - inicioCarga) / Config.CargaMax, 0, 1)
 	fase = "Lanzando"
 	sonar(Config.SonidoLanzarId)
+	AnimPesca.reproducir("Lanzar") -- al soltar, sin esperar al servidor: el tiro se siente al toque
 	Remotos.Lanzar:FireServer(carga)
 	task.delay(2, function()
 		if fase == "Lanzando" then

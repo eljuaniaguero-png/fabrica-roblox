@@ -25,6 +25,7 @@ local Remotos = {
 	Aviso = evento("Aviso"), -- servidor -> cliente: (texto) mensaje corto
 	-- servidor -> cliente: ("Mision" | "Diario", { Texto, Escamas, Racha? }) tarjeta de premio
 	Premio = evento("Premio"),
+	ComprarCebo = evento("ComprarCebo"), -- cliente -> servidor: (Id de Config.Cebos) cerca de la tienda
 }
 
 carpeta.Parent = ReplicatedStorage

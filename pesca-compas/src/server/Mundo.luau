@@ -351,10 +351,10 @@ local function armarGuias(carpeta: Instance)
 	brillo(guias, "PisoVenta", Vector3.new(9, 0.08, 6), CFrame.new(14, 1.04, 0.6), M.PisoVenta, 0.35)
 	brillo(guias, "PisoCebo", Vector3.new(9, 0.08, 5), CASA_CEBO * CFrame.new(0, 0.04, -7.2), M.PisoCebo, 0.35)
 	brillo(guias, "PisoMuseo", Vector3.new(9, 0.08, 5), CASA_MUSEO * CFrame.new(0, 0.04, -7.2), M.PisoMuseo, 0.35)
-	-- la tienda de cebo todavía no existe: el piso de color promete algo, así que se avisa
-	-- "¡PRONTO!" arriba para que nadie se pare ahí esperando un menú (y queda la intriga).
-	-- El museo ya tiene su vitrina (client/Vitrina.client.luau), que es local de cada jugador.
-	for _, cf in { CASA_CEBO } do
+	-- Las dos casas ya tienen uso: la de cebo es la tienda (server/Tienda.luau le pone el
+	-- ProximityPrompt a la puerta) y el museo tiene su vitrina (client/Vitrina.client.luau).
+	-- El cartel "¡PRONTO!" queda para la próxima casa que se sume sin función todavía.
+	for _, cf in {} :: { CFrame } do
 		local ancla = brillo(guias, "AnclaPronto", Vector3.one, cf * CFrame.new(0, 12.5, -2), M.Flecha, 1)
 		local cartelPronto = Instance.new("BillboardGui")
 		cartelPronto.Name = "Pronto"
@@ -531,7 +531,8 @@ function Mundo.armarSiFalta()
 
 	palmera(carpeta, "Palmera1", Vector3.new(-26, 1, 14), 0.8)
 	palmera(carpeta, "Palmera2", Vector3.new(-18, 1, 22), -0.6)
-	palmera(carpeta, "Palmera3", Vector3.new(28, 1, 18), -0.9)
+	-- en (28, 1, 18) el tronco tapaba el cartel "MUSEO x/7" desde el spawn (medido con rayos)
+	palmera(carpeta, "Palmera3", Vector3.new(24, 1, 22), -0.9)
 
 	local spawn = Instance.new("SpawnLocation")
 	spawn.Name = "Inicio"

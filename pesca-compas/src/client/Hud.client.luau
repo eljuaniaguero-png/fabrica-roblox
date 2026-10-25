@@ -11,6 +11,8 @@ local Config = require(ReplicatedStorage:WaitForChild("Shared"):WaitForChild("Co
 local Estilo = require(ReplicatedStorage.Shared:WaitForChild("Estilo"))
 local UI = Estilo.UI
 local Remotos = ReplicatedStorage:WaitForChild("Remotos")
+local Boton = require(script.Parent:WaitForChild("ui"):WaitForChild("Boton"))
+local BarraBalde = require(script.Parent.ui:WaitForChild("BarraBalde"))
 
 local jugador = Players.LocalPlayer
 
@@ -35,26 +37,25 @@ local function etiqueta(padre: Instance, tam: UDim2, pos: UDim2, alineado: Enum.
 end
 
 local function boton(texto: string, pos: UDim2, color: Color3): TextButton
-	local b = Instance.new("TextButton")
-	b.Size = UDim2.fromScale(0.16, 0.06)
-	b.Position = pos
-	b.AnchorPoint = Vector2.new(1, 0.5)
-	b.BackgroundColor3 = color
-	b.Font = UI.Fuente
-	b.TextScaled = true
-	b.TextColor3 = UI.Texto
-	b.Text = texto
-	local esquina = Instance.new("UICorner")
-	esquina.CornerRadius = UDim.new(0, UI.Esquina)
-	esquina.Parent = b
-	Estilo.borde(b)
-	b.Parent = gui
+	-- Scale para el ancho, más un mínimo en px para que en celular el dedo entre
+	local b = Boton.nuevo({
+		Texto = texto,
+		Color = color,
+		Tam = UDim2.new(0.16, 0, 0.06, 0),
+		Pos = pos,
+		Ancla = Vector2.new(1, 0.5),
+		Padre = gui,
+	})
+	local minimo = Instance.new("UISizeConstraint")
+	minimo.MinSize = Vector2.new(150, 40)
+	minimo.Parent = b
 	return b
 end
 
--- arriba a la izquierda
+-- arriba a la izquierda: Escamas y nivel. El balde ya no va acá, lo muestra la barra de abajo
+-- (ui/BarraBalde.luau); tenerlo en los dos lados era leer el mismo número dos veces.
 local panel = Instance.new("Frame")
-panel.Size = UDim2.fromScale(0.22, 0.16)
+panel.Size = UDim2.fromScale(0.22, 0.12)
 panel.Position = UDim2.fromScale(0.01, 0.02)
 panel.BackgroundColor3 = UI.PanelOscuro
 panel.BackgroundTransparency = 0.1
@@ -64,12 +65,13 @@ esquinaPanel.CornerRadius = UDim.new(0, UI.Esquina)
 esquinaPanel.Parent = panel
 Estilo.borde(panel)
 
-local tEscamas = etiqueta(panel, UDim2.fromScale(0.9, 0.32), UDim2.fromScale(0.05, 0.04))
+local TAM_ESCAMAS = UDim2.fromScale(0.9, 0.42)
+local tEscamas = etiqueta(panel, TAM_ESCAMAS, UDim2.fromScale(0.05, 0.06))
 tEscamas.TextColor3 = UI.Escamas
-local tNivel = etiqueta(panel, UDim2.fromScale(0.9, 0.2), UDim2.fromScale(0.05, 0.4))
+local tNivel = etiqueta(panel, UDim2.fromScale(0.9, 0.26), UDim2.fromScale(0.05, 0.5))
 local barraXP = Instance.new("Frame")
-barraXP.Size = UDim2.fromScale(0.9, 0.08)
-barraXP.Position = UDim2.fromScale(0.05, 0.62)
+barraXP.Size = UDim2.fromScale(0.9, 0.1)
+barraXP.Position = UDim2.fromScale(0.05, 0.8)
 barraXP.BackgroundColor3 = Estilo.Contorno
 barraXP.BorderSizePixel = 0
 barraXP.Parent = panel
@@ -78,7 +80,6 @@ rellenoXP.Size = UDim2.fromScale(0, 1)
 rellenoXP.BackgroundColor3 = UI.XP
 rellenoXP.BorderSizePixel = 0
 rellenoXP.Parent = barraXP
-local tBalde = etiqueta(panel, UDim2.fromScale(0.9, 0.2), UDim2.fromScale(0.05, 0.76))
 
 -- mejoras a la derecha
 local bCana = boton("Caña", UDim2.fromScale(0.99, 0.42), UI.BotonCana)
@@ -121,13 +122,21 @@ rellenoMision.Parent = barraMision
 local tMisionPremio = etiqueta(panelMision, UDim2.fromScale(0.26, 0.22), UDim2.fromScale(0.7, 0.69), Enum.TextXAlignment.Right)
 tMisionPremio.TextColor3 = UI.Escamas
 
--- tarjeta de premio (misión cumplida o premio diario), una por vez y en fila
+-- tarjeta de premio (misión cumplida o premio diario), una por vez y en fila.
+-- Va en su propia capa arriba de la pesca (DisplayOrder 5): el premio diario sale al entrar,
+-- justo cuando aparece el panel de calibración, y quedaba tapado.
+local guiPremios = Instance.new("ScreenGui")
+guiPremios.Name = "PremiosGui"
+guiPremios.ResetOnSpawn = false
+guiPremios.DisplayOrder = 6
+guiPremios.Parent = gui.Parent
+
 local tarjeta = Instance.new("Frame")
 tarjeta.Size = UDim2.fromScale(0.3, 0.14)
 tarjeta.Position = UDim2.fromScale(0.5, -0.2)
 tarjeta.AnchorPoint = Vector2.new(0.5, 0)
 tarjeta.BackgroundColor3 = UI.PanelOscuro
-tarjeta.Parent = gui
+tarjeta.Parent = guiPremios
 local esquinaTarjeta = Instance.new("UICorner")
 esquinaTarjeta.CornerRadius = UDim.new(0, UI.Esquina)
 esquinaTarjeta.Parent = tarjeta
@@ -152,7 +161,10 @@ local function mostrarSiguiente()
 	end
 	mostrando = true
 	local p = table.remove(fila, 1) :: { Tipo: string, Datos: any }
-	tTarjetaTitulo.Text = if p.Tipo == "Diario" then "🎁 ¡PREMIO DIARIO!" else "✅ ¡MISIÓN CUMPLIDA!"
+	tTarjetaTitulo.Text = if p.Tipo == "Diario"
+		then "🎁 ¡PREMIO DIARIO!"
+		elseif p.Tipo == "Museo" then "🏛️ ¡MUSEO COMPLETO!"
+		else "✅ ¡MISIÓN CUMPLIDA!"
 	tTarjetaTexto.Text = p.Datos.Texto
 	tTarjetaEscamas.Text = ("+%d 🐟 Escamas"):format(p.Datos.Escamas)
 	tarjeta.Position = AFUERA
@@ -175,6 +187,9 @@ Remotos.Premio.OnClientEvent:Connect(function(tipo: string, datos: any)
 	mostrarSiguiente()
 end)
 
+-- balde abajo al centro (ui/BarraBalde.luau): los peces con su kg, como en las referencias
+local barraBalde = BarraBalde.nueva(gui)
+
 -- probabilidades abajo a la izquierda
 local partes = {}
 for _, r in Config.Rarezas do
@@ -186,17 +201,36 @@ tProbs.Text = "Probabilidades: " .. table.concat(partes, " · ")
 
 -- aviso arriba al centro
 local tAviso = etiqueta(gui, UDim2.fromScale(0.5, 0.05), UDim2.fromScale(0.25, 0.18), Enum.TextXAlignment.Center)
-tAviso.TextTransparency = 1
+-- el contorno (UIStroke) no sigue a TextTransparency: con el texto invisible igual se veía el borde
+-- de "Label" o del último aviso. Por eso se esconde con Visible y el contorno se apaga junto al texto.
+tAviso.Text = ""
+tAviso.Visible = false
+local bordeAviso = tAviso:FindFirstChildOfClass("UIStroke")
 local avisoId = 0
 Remotos.Aviso.OnClientEvent:Connect(function(texto: string)
 	avisoId += 1
 	local id = avisoId
 	tAviso.Text = texto
 	tAviso.TextTransparency = 0
+	if bordeAviso then
+		bordeAviso.Transparency = 0
+	end
+	tAviso.Visible = true
 	task.delay(2.5, function()
-		if id == avisoId then
-			TweenService:Create(tAviso, TweenInfo.new(0.4), { TextTransparency = 1 }):Play()
+		if id ~= avisoId then
+			return
 		end
+		local info = TweenInfo.new(0.4)
+		local fade = TweenService:Create(tAviso, info, { TextTransparency = 1 })
+		if bordeAviso then
+			TweenService:Create(bordeAviso, info, { Transparency = 1 }):Play()
+		end
+		fade.Completed:Once(function()
+			if id == avisoId then
+				tAviso.Visible = false
+			end
+		end)
+		fade:Play()
 	end)
 end)
 
@@ -204,21 +238,19 @@ local escamasAntes: number? = nil
 Remotos.Estado.OnClientEvent:Connect(function(e: any)
 	tEscamas.Text = ("🐟 %d Escamas"):format(e.Escamas)
 	if escamasAntes and e.Escamas > escamasAntes then
-		tEscamas.Size = UDim2.fromScale(1, 0.38)
-		TweenService:Create(tEscamas, TweenInfo.new(0.25, Enum.EasingStyle.Back), { Size = UDim2.fromScale(0.9, 0.32) })
-			:Play()
+		tEscamas.Size = UDim2.fromScale(0.95, 0.5)
+		TweenService:Create(tEscamas, TweenInfo.new(0.25, Enum.EasingStyle.Back), { Size = TAM_ESCAMAS }):Play()
 	end
 	escamasAntes = e.Escamas
 	tNivel.Text = ("Nivel %d"):format(e.Nivel)
 	rellenoXP:TweenSize(UDim2.fromScale(e.XPNivel / e.XPSiguiente, 1), Enum.EasingDirection.Out, Enum.EasingStyle.Quad, 0.3, true)
-	tBalde.Text = ("Balde %d/%d"):format(e.EnBalde, e.Capacidad)
-	tBalde.TextColor3 = if e.EnBalde >= e.Capacidad then UI.Error else UI.Texto
 	bCana.Text = if e.PrecioCana then ("Caña %d → %d · %d 🐟"):format(e.Cana, e.Cana + 1, e.PrecioCana) else "Caña MÁX"
 	bBalde.Text = if e.PrecioBalde then ("Balde %d → %d · %d 🐟"):format(e.Balde, e.Balde + 1, e.PrecioBalde) else "Balde MÁX"
-	bCana.AutoButtonColor = e.PrecioCana ~= nil and e.Escamas >= e.PrecioCana
-	bCana.BackgroundTransparency = if bCana.AutoButtonColor then 0 else 0.5
-	bBalde.AutoButtonColor = e.PrecioBalde ~= nil and e.Escamas >= e.PrecioBalde
-	bBalde.BackgroundTransparency = if bBalde.AutoButtonColor then 0 else 0.5
+	Boton.habilitar(bCana, e.PrecioCana ~= nil and e.Escamas >= e.PrecioCana)
+	Boton.habilitar(bBalde, e.PrecioBalde ~= nil and e.Escamas >= e.PrecioBalde)
+	if typeof(e.Cubeta) == "table" then
+		barraBalde.actualizar(e.Cubeta, e.Capacidad)
+	end
 	local m = e.Mision
 	if m then
 		tMision.Text = m.Texto

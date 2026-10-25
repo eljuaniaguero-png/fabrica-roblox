@@ -163,7 +163,9 @@ end
 local function armar(vistos: { [string]: boolean }, afinados: { [string]: boolean })
 	peces:limpiar()
 	table.clear(modelos)
-	local cuantos = 0
+	-- el contador es sin jefes, igual que el premio del museo (Misiones.revisarMuseo): la Ballena
+	-- todavía no sale al sortear y con "7/8" el jugador creería que le falta un pez que no existe
+	local cuantos, total = 0, 0
 	for i, pez in Config.Peces do
 		local lugar = lugares[i]
 		if not lugar then
@@ -181,13 +183,18 @@ local function armar(vistos: { [string]: boolean }, afinados: { [string]: boolea
 		peces:dar(m)
 		modelos[i] = m
 		local r = rareza(pez.Rareza)
-		lugar.Cartel.Text = if visto then pez.Nombre else "???"
+		lugar.Cartel.Text = if visto then pez.Nombre elseif pez.Jefe then "JEFE ???" else "???"
 		lugar.Cartel.TextColor3 = if visto and r then r.Color else Estilo.UI.Texto
-		if visto then
-			cuantos += 1
+		if not pez.Jefe then
+			total += 1
+			if visto then
+				cuantos += 1
+			end
 		end
 	end
-	titulo.Text = ("MUSEO  %d/%d"):format(cuantos, #Config.Peces)
+	titulo.Text = if cuantos >= total and total > 0
+		then ("MUSEO  %d/%d ★"):format(cuantos, total)
+		else ("MUSEO  %d/%d"):format(cuantos, total)
 end
 
 alEstado = function(estado: any)

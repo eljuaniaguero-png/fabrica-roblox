@@ -25,8 +25,10 @@ ListaMisiones.Cadena = {
 	{ Tipo = "Sacar", Meta = 5, Premio = 25, Texto = "Sacá %d peces" },
 	{ Tipo = "Sacar", Meta = 1, Premio = 40, Texto = "Sacá un pez Raro o mejor", RarezaMin = "Raro" },
 	{ Tipo = "Racha", Meta = 1, Premio = 40, Texto = "Hacé una racha de 5 aciertos" },
-	{ Tipo = "Afinado", Meta = 1, Premio = 60, Texto = "Sacá un pez AFINADO" },
-	{ Tipo = "Escamas", Meta = 300, Premio = 80, Texto = "Ganá %d Escamas vendiendo" },
+	-- 7 y 8 bajados (60 -> 45, 80 -> 50, OK de Gemini): con 220 juntas el jugador se salteaba el
+	-- escalón de Caña 4 (160) y Balde 3 (120) sin pasar por el ritmo
+	{ Tipo = "Afinado", Meta = 1, Premio = 45, Texto = "Sacá un pez AFINADO" },
+	{ Tipo = "Escamas", Meta = 300, Premio = 50, Texto = "Ganá %d Escamas vendiendo" },
 	{ Tipo = "Peso", Meta = 1, Premio = 100, Texto = "Sacá un pez de 3 kg o más", PesoMin = 3 },
 	{ Tipo = "Sacar", Meta = 1, Premio = 150, Texto = "Sacá un pez Épico o mejor", RarezaMin = "Épico" },
 	{ Tipo = "Mejorar", Meta = 3, Premio = 150, Texto = "Mejorá %d veces" },

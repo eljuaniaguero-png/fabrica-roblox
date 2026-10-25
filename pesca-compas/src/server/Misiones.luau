@@ -40,24 +40,55 @@ end
 
 -- Suma `cantidad` a la misión actual si es de ese tipo. No manda el estado: lo hace quien llama
 -- (Pesca y Economia ya llaman a Jugadores.enviar después de cada cambio).
-function Misiones.registrar(jugador: Player, tipo: ListaMisiones.Tipo, cantidad: number, detalle: Detalle?)
+-- Devuelve true si con esto completó la misión (para que un mismo pez no cuente para la siguiente).
+function Misiones.registrar(jugador: Player, tipo: ListaMisiones.Tipo, cantidad: number, detalle: Detalle?): boolean
 	local d = Jugadores.obtener(jugador)
 	if not d or cantidad <= 0 then
-		return
+		return false
 	end
 	local m = ListaMisiones.obtener(d.Mision)
 	if not cuenta(m, tipo, detalle) then
-		return
+		return false
 	end
 	d.MisionProgreso += cantidad
 	if d.MisionProgreso < m.Meta then
-		return
+		return false
 	end
 	-- completa: cobra y pasa a la siguiente (lo que sobra no se arrastra, así cada misión se juega)
 	d.Escamas += m.Premio
 	d.Mision += 1
 	d.MisionProgreso = 0
 	Remotos.Premio:FireClient(jugador, "Mision", { Texto = ListaMisiones.texto(m), Escamas = m.Premio })
+	return true
+end
+
+-- Llamar cuando saca un pez que no tenía. Si con eso completó los peces de su isla (sin jefes),
+-- cobra Config.PremioMuseo una sola vez por isla. No manda el estado: lo hace Pesca después.
+function Misiones.revisarMuseo(jugador: Player, isla: number)
+	local d = Jugadores.obtener(jugador)
+	local premio = Config.PremioMuseo[isla]
+	local clave = tostring(isla)
+	if not d or not premio or d.MuseoCobrado[clave] then
+		return
+	end
+	local total = 0
+	for _, p in Config.Peces do
+		if p.Isla == isla and not p.Jefe then
+			if not d.Vistos[p.Id] then
+				return
+			end
+			total += 1
+		end
+	end
+	if total == 0 then
+		return
+	end
+	d.MuseoCobrado[clave] = true
+	d.Escamas += premio
+	Remotos.Premio:FireClient(jugador, "Museo", {
+		Texto = ("Encontraste los %d peces de la isla"):format(total),
+		Escamas = premio,
+	})
 end
 
 local function diaDeHoy(): number

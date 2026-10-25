@@ -17,6 +17,9 @@ export type Anim = {
 	Entrada: number, -- fade in (s)
 	Salida: number, -- fade out (s)
 	Enfriamiento: number, -- no se vuelve a arrancar antes de esto (s)
+	-- solo loops que siguen el tempo del pez (Animaciones.client los acelera o frena):
+	Pulsos: number?, -- cuántos pulsos del pez dura una vuelta del loop
+	Golpe: number?, -- segundo del loop (a velocidad 1) en que el tirón llega a su punto: cae en el pulso
 }
 
 local Animaciones = {
@@ -29,7 +32,8 @@ local Animaciones = {
 		Salida = 0.2,
 		Enfriamiento = 0,
 	} :: Anim,
-	-- en loop durante el ritmo: tirones cortos de la caña, 2 por compás
+	-- en loop durante el ritmo: tirones cortos de la caña, 2 por compás. Va al tempo de cada pez:
+	-- si el animador publica otra versión, el tirón tiene que caer en Golpe (o cambiar el número)
 	Recoger = {
 		Id = "",
 		Prioridad = Enum.AnimationPriority.Action,
@@ -37,6 +41,8 @@ local Animaciones = {
 		Entrada = 0.1,
 		Salida = 0.15,
 		Enfriamiento = 0,
+		Pulsos = 2,
+		Golpe = 0.12,
 	} :: Anim,
 	-- tiro de la caña por arriba del hombro, 0.5 s
 	Lanzar = {

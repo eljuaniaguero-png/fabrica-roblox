@@ -13,11 +13,13 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Workspace = game:GetService("Workspace")
 
 local Config = require(ReplicatedStorage.Shared.Config)
+local Equipo = require(script.Parent.Equipo)
 local Estilo = require(ReplicatedStorage.Shared.Estilo)
 local Ritmo = require(ReplicatedStorage.Shared.Ritmo)
 local Jugadores = require(script.Parent.Jugadores)
 local Misiones = require(script.Parent.Misiones)
 local Remotos = require(script.Parent.Remotos)
+local Tienda = require(script.Parent.Tienda)
 
 type Fase = "Libre" | "Esperando" | "Ritmo"
 
@@ -174,13 +176,14 @@ local function terminar(jugador: Player, e: Estado, res: Ritmo.Resultado?)
 	d.Sacados += 1
 	d.MasPesado = math.max(d.MasPesado, e.Peso)
 	table.insert(d.Cubeta, { Id = pez.Id, Peso = e.Peso, Afinado = res.Afinado })
-	Misiones.registrar(jugador, "Sacar", 1, { Rareza = pez.Rareza })
-	Misiones.registrar(jugador, "Peso", 1, { Peso = e.Peso })
-	if res.Afinado then
-		Misiones.registrar(jugador, "Afinado", 1)
-	end
-	if res.RachaMax >= Config.RachaLargo then
-		Misiones.registrar(jugador, "Racha", 1)
+	-- un pez completa como mucho una misión: si no, un Raro con racha cerraba "Sacá un Raro" y
+	-- también "Hacé una racha" (la siguiente) con la misma tirada, y la misión de racha no se jugaba
+	local _ = Misiones.registrar(jugador, "Sacar", 1, { Rareza = pez.Rareza })
+		or Misiones.registrar(jugador, "Peso", 1, { Peso = e.Peso })
+		or (res.Afinado and Misiones.registrar(jugador, "Afinado", 1))
+		or (res.RachaMax >= Config.RachaLargo and Misiones.registrar(jugador, "Racha", 1))
+	if nuevo then
+		Misiones.revisarMuseo(jugador, pez.Isla)
 	end
 
 	Remotos.Pesca:FireClient(jugador, "Resultado", {
@@ -245,6 +248,12 @@ local function picar(jugador: Player, token: number)
 	e.Fase = "Ritmo"
 	e.Pez = pez
 	e.Peso = Ritmo.peso(pez, e.Carga, azar)
+	-- el cebo solo cambia kg (y la espera, en alLanzar): la rareza ya se sorteó arriba sin él
+	local cebo = Tienda.ceboActivo(d)
+	if cebo then
+		e.Peso = math.floor(e.Peso * cebo.Peso * 100 + 0.5) / 100
+		Tienda.gastarTirada(jugador, d)
+	end
 	e.Patron = patron
 	e.Perfecto = perfecto
 	e.Bien = bien
@@ -262,6 +271,9 @@ local function picar(jugador: Player, token: number)
 		Perfecto = perfecto,
 		Bien = bien,
 		Tension = Config.TensionInicial,
+		-- para que los tirones del personaje vayan al tempo (ya se deduce de Tiempos: no revela nada nuevo)
+		Bpm = pez.Bpm,
+		BpmFinal = pez.BpmFinal,
 	})
 	-- si el cliente nunca contesta (se colgó, cerró), el pez se escapa
 	task.delay(Config.CuentaRegresiva + patron.Duracion + 6, function()
@@ -307,10 +319,15 @@ local function alLanzar(jugador: Player, carga: unknown)
 	boya.CFrame = CFrame.new(pos.X, 0.3, pos.Z) -- superficie del agua en y = 0 (ver Mundo.luau)
 	boya.Parent = carpetaBoyas
 	e.Boya = boya
+	Equipo.lanzado(jugador, boya) -- línea desde la punta de la caña y el cebo bajo la boya
 
 	local espera = if d.Tiradas == 0
 		then Config.EsperaPrimeraTirada
 		else Config.EsperaMin + (Config.EsperaMax - Config.EsperaMin) * azar()
+	local cebo = Tienda.ceboActivo(d)
+	if cebo then
+		espera *= cebo.Espera
+	end
 	Remotos.Pesca:FireClient(jugador, "Lanzado", { Boya = boya })
 	task.delay(espera, picar, jugador, e.Token)
 end

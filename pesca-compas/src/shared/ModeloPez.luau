@@ -57,8 +57,20 @@ local function provisorio(): Model
 	return m
 end
 
+-- Blender nombra las piezas "<Id>_<Rol>" (MojarraGlobo_Cuerpo): el rol es lo que va después del
+-- último "_". "Cuerpo.001" u "Ojo2" también cuentan como su rol.
 local function rol(nombre: string): string
-	return string.match(nombre, "^%a+") or nombre -- "Cuerpo.001" o "Ojo2" cuentan como su rol
+	local sufijo = string.match(nombre, "_([^_]+)$") or nombre
+	return string.match(sufijo, "^%a+") or sufijo
+end
+
+local function buscarRol(m: Instance, r: string): BasePart?
+	for _, d in m:GetDescendants() do
+		if d:IsA("BasePart") and rol(d.Name) == r then
+			return d
+		end
+	end
+	return nil
 end
 
 local function colorDe(r: string, base: Color3): Color3
@@ -106,10 +118,7 @@ function ModeloPez.crear(id: string, opciones: Opciones?): Model
 	local m: Model = if molde and molde:IsA("Model") then molde:Clone() else provisorio()
 	m.Name = "Pez_" .. id
 	if not m.PrimaryPart then
-		local cuerpo = m:FindFirstChild("Cuerpo", true)
-		if cuerpo and cuerpo:IsA("BasePart") then
-			m.PrimaryPart = cuerpo
-		end
+		m.PrimaryPart = buscarRol(m, "Cuerpo")
 	end
 	ModeloPez.pintar(m, id, op.Silueta)
 
