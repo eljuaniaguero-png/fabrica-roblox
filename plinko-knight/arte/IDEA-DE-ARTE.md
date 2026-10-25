@@ -97,8 +97,8 @@ Nada de dibujos, nombres, personajes, íconos ni marcos de los juegos de las cap
 
 ---
 
-## 6. Para decidir (Juani)
+## 6. Decisiones aprobadas por Juani (25/10/2026)
 
-1. **Pantalla en 3 columnas** (monstruo a la derecha) en vez de monstruo abajo del tablero. Recomiendo las 3 columnas porque entran mejor en el celular horizontal.
-2. **Panel de daño en dos cajas** (daño | ×2), como en las refs 04-07. Con esto la clavija roja sigue igual: duplica lo que llevás. El panel solo lo muestra separado.
-3. **Paleta B "Cripta azul"** como favorita. Las otras dos muestras se hacen igual en la etapa 8.
+1. **Pantalla en 3 columnas:** panel a la izquierda, tablero al centro y monstruo a la derecha. Reemplaza al dibujo del plan que ponía el monstruo abajo del tablero.
+2. **Panel de daño en dos cajas** (daño | ×2), como en las refs 04-07. La clavija roja no cambia: duplica lo que llevás. El panel solo lo muestra separado.
+3. **Paleta B "Cripta azul"** como favorita. En la etapa 8 se arman igual las 3 muestras, y Juani elige la final.

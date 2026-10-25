@@ -38,6 +38,8 @@ Hay una copia de este archivo en tu PC en `plinko-knight/PLAN-Y-PROMPTS.md`. Tod
 
 ## Cómo lo ve el jugador (pantalla de pelea)
 
+> **Cambio aprobado el 25/10/2026:** la pantalla va en **3 columnas**: panel de vida y daño a la izquierda, tablero al centro y monstruo a la derecha. El panel de daño tiene dos cajas (daño | ×2) y la paleta favorita es "Cripta azul". Ver `plinko-knight/arte/IDEA-DE-ARTE.md`, que manda sobre el dibujo de abajo. Va en la ficha (Prompt 1) y se usa desde la etapa 2 (con los bloques grises).
+
 ```
 ┌──────────────────────────────────────────────┐
 │ ♥ 50/50   [Pelea 3 de 7]          ⚙          │  ← vida del caballero, piso, ajustes
