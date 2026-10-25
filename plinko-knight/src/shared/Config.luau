@@ -80,8 +80,8 @@ Config.Monstruos = {
 	{
 		Id = "jefe",
 		Nombre = "Rey de los Huesos",
-		Vida = 320,
-		Golpe = 11,
+		Vida = 240, -- era 320 / 11: imposible de ganar sin mejoras (etapa 4, 25/10)
+		Golpe = 8,
 		Color = "#C9A227",
 		EsJefe = true,
 	},

@@ -43,7 +43,7 @@ do
 
 	e = Mazmorra.nueva()
 	Mazmorra.irAPiso(e, 7)
-	chequear(e.Piso == 7 and e.VidaMonstruo == 320, "el comando no fue al jefe")
+	chequear(e.Piso == 7 and e.VidaMonstruo == Config.Monstruos[7].Vida, "el comando no fue al jefe")
 	t = Mazmorra.turno(e, 999)
 	chequear(t.Resultado == "gano" and e.Fase == "gano", "ganarle al jefe no terminó la mazmorra")
 

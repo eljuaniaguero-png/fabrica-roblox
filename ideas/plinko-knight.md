@@ -42,7 +42,7 @@ Arriba de todo, una barra fina con el piso ("Pelea 3 de 7") y Ajustes. La cámar
 | Tablero | 7 columnas × 8 filas alternadas (unas 52 clavijas) |
 | Daño por clavija | 2 (cada clavija cuenta una vez por tiro) |
 | Vida del caballero | 50; se cura 10 entre peleas |
-| Monstruos (vida / golpe) | 1: 40 / 4 · 2: 60 / 5 · 3: 85 / 6 · 4: 115 / 7 · 5: 150 / 8 · 6: 190 / 9 · **Jefe: 320 / 11** |
+| Monstruos (vida / golpe) | 1: 40 / 4 · 2: 60 / 5 · 3: 85 / 6 · 4: 115 / 7 · 5: 150 / 8 · 6: 190 / 9 · **Jefe: 240 / 8** (era 320 / 11; cambiado el 25/10, ver etapa 4) |
 | Bola de fuego | +1 de daño por clavija; el monstruo se quema 3 por turno durante 2 turnos. Repetida: +1 más |
 | Clavija que duplica | 2 clavijas rojas; al tocar una, el daño que llevás en ese tiro se duplica (cada una, una vez por tiro). Repetida: una clavija roja más |
 | Bola que se divide | En el 5.º toque se parte en 2 y las dos siguen sumando. Repetida: en el 4.º toque, y después en el 3.º |
@@ -129,5 +129,5 @@ Mazos de bolas, reto diario, ranking, **cualquier cosa con Robux**, varias mazmo
 
 - Sin mejoras se pierde en el piso 5, dentro del objetivo (pisos 4 a 6). Desde la pelea 4 se pasa de los 2 a 4 tiros por pelea, pero eso lo tienen que bajar las mejoras de la etapa 5.
 - **El jefe, como está, no se puede ganar.** Tarda unos 12 tiros y te pega 11 por tiro: con 50 de vida caés en 5. Aun con el doble de daño por las mejoras, son 6 tiros y 66 de daño.
-- **Propuesta (todavía no aplicada, la decide Juani):** jefe en **240 de vida y 8 de golpe**, y volver a medir todo al terminar la etapa 5, con mejoras.
+- **Cambio aprobado por Juani (25/10/2026):** el jefe pasa a **240 de vida y 8 de golpe**. Hay que volver a medir todo al terminar la etapa 5, con mejoras.
 
