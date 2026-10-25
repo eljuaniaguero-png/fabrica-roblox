@@ -10,6 +10,7 @@
 
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local TweenService = game:GetService("TweenService")
+local UserInputService = game:GetService("UserInputService")
 local Workspace = game:GetService("Workspace")
 
 local GameConfig = require(ReplicatedStorage.Shared.GameConfig)
@@ -245,17 +246,32 @@ function Estilo.presionable(b: GuiButton)
 		TweenService:Create(escala, TweenInfo.new(t, Enum.EasingStyle.Back), { Scale = valor })
 			:Play()
 	end
+	local encima = false
+	local function soltar()
+		ir(if encima then 1.05 else 1, 0.15)
+	end
 	b.MouseEnter:Connect(function()
+		-- en celular el dedo "entra" al tocar y a veces nunca "sale": ahí no se agranda
+		if UserInputService:GetLastInputType() == Enum.UserInputType.Touch then
+			return
+		end
+		encima = true
 		ir(1.05, 0.12)
 	end)
 	b.MouseLeave:Connect(function()
+		encima = false
 		ir(1, 0.12)
 	end)
 	b.MouseButton1Down:Connect(function()
 		ir(0.9, 0.06)
 	end)
-	b.MouseButton1Up:Connect(function()
-		ir(1, 0.15)
+	b.MouseButton1Up:Connect(soltar)
+	-- si se suelta fuera del botón (dedo que se desliza), MouseButton1Up no llega
+	b.InputEnded:Connect(function(input)
+		local tipo = input.UserInputType
+		if tipo == Enum.UserInputType.Touch or tipo == Enum.UserInputType.MouseButton1 then
+			soltar()
+		end
 	end)
 	b.Activated:Connect(function()
 		-- SONIDO: tocar un botón

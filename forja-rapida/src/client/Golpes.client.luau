@@ -180,6 +180,27 @@ local function picoTocaGeoda(pico: Instance): boolean
 	return false
 end
 
+-- Sacudón corto del golpe fuerte: la cámara cae de golpe y vuelve (Quad Out), así el impacto
+-- "pesa". Va después de la cámara de Roblox, como el temblor de Revelacion.
+local function sacudonCamara()
+	if Efectos.reducidos() then
+		return
+	end
+	local inicio = os.clock()
+	local nombre = "SacudonCrack"
+	RunService:UnbindFromRenderStep(nombre) -- si venía otro a medias, lo reemplaza
+	RunService:BindToRenderStep(nombre, Enum.RenderPriority.Camera.Value + 1, function()
+		local camara = Workspace.CurrentCamera
+		local t = (os.clock() - inicio) / G.FuerteCamaraDura
+		if not camara or t >= 1 then
+			RunService:UnbindFromRenderStep(nombre)
+			return
+		end
+		local f = (1 - suave(t, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)) * G.FuerteCamara
+		camara.CFrame *= CFrame.new(rng:NextNumber(-0.3, 0.3) * f, -f, 0)
+	end)
+end
+
 local function crack(personaje: Model, pico: Instance)
 	local cabeza = pico:FindFirstChild("Handle") or pico:FindFirstChildWhichIsA("BasePart", true)
 	-- SONIDO: golpe fuerte (el mismo del pico, más grave)
@@ -187,6 +208,7 @@ local function crack(personaje: Model, pico: Instance)
 	if personaje ~= jugador.Character or not cabeza or not cabeza:IsA("BasePart") then
 		return
 	end
+	sacudonCamara()
 	local ancla = Instance.new("Attachment")
 	ancla.WorldPosition = cabeza.Position + Vector3.new(0, 2, 0)
 	ancla.Parent = Workspace.Terrain
@@ -329,13 +351,22 @@ RunService.Heartbeat:Connect(function()
 	end
 end)
 
+-- Picos que ya se escuchan: al guardar y volver a sacar el pico, ChildAdded salta de nuevo con
+-- la misma herramienta y sin esto se sumaba otra conexión cada vez. Claves débiles: si el pico
+-- se va sin que llegue Destroying al cliente (personaje viejo al reaparecer), no queda colgado.
+local picosVigilados: { [Instance]: boolean } = setmetatable({}, { __mode = "k" }) :: any
+
 local function vigilarPicos(otro: Player)
 	if otro == jugador then
 		return
 	end
 	local function conPersonaje(personaje: Model)
 		local function conHerramienta(h: Instance)
-			if h:IsA("Tool") and h.Name == "Pico" then
+			if h:IsA("Tool") and h.Name == "Pico" and not picosVigilados[h] then
+				picosVigilados[h] = true
+				h.Destroying:Once(function()
+					picosVigilados[h] = nil
+				end)
 				h:GetAttributeChangedSignal("Golpe"):Connect(function()
 					if h.Parent == personaje then
 						golpeDePico(personaje)

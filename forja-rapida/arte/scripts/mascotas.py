@@ -11,9 +11,12 @@ Cada pieza tiene su pivote en la articulación y la animación solo gira o mueve
 
 Exporta a forja-rapida/arte/:
   glb/Mascota_<Id>.glb   con la animación (visor)
-  fbx/Mascota_<Id>.fbx   con la animación (Studio)
+  fbx/Mascota_<Id>.fbx   sin animación (Studio; la anima Mascotas.client con MascotasRig),
+                         con la textura fbx/Paleta.png adentro (colores por UV, ver PALETA)
+  fbx_color/             los FBX viejos pasados a la paleta con repaletizar_fbx() (sin rearmar)
   renders/Mascota_<Id>.png
-  fbx/mascotas_pivotes.json  articulación de cada pieza (la usa Mascotas.client)
+  fbx/mascotas_pivotes.json  articulación de cada pieza (ejes de Blender, solo referencia)
+  ../src/shared/MascotasRig.luau  pivotes y animación en ejes de Roblox (la lee Mascotas.client)
   blend/Mascotas.blend   las 8 en fila, para abrir en Blender
 
 Correrlo desde la raíz del repositorio (no toca la escena abierta en Blender):
@@ -117,7 +120,8 @@ def material(color, brillo=0.0):
         return _materiales[clave]
     m = bpy.data.materials.new(f"M_{color.lstrip('#')}{'_brillo' if brillo else ''}")
     m.use_nodes = True
-    bsdf = m.node_tree.nodes["Principled BSDF"]
+    # por tipo y no por nombre: con Blender en español el nodo se llama distinto
+    bsdf = next(n for n in m.node_tree.nodes if n.type == "BSDF_PRINCIPLED")
     rgb = (*hex_a_rgb(color), 1)
     bsdf.inputs["Base Color"].default_value = rgb
     bsdf.inputs["Roughness"].default_value = 0.55
@@ -217,9 +221,30 @@ def raiz(nombre):
 
 # ---------------------------------------------------------------------------------------------
 # Animación (bucle: el primer y el último cuadro coinciden)
+#
+# Cada movimiento además se anota en _receta, en ejes de Roblox, para escribir MascotasRig.luau:
+# Roblox no importa la animación del FBX, así que Mascotas.client la repite por código.
+
+_receta = []
+
+
+def a_roblox(eje, valor):
+    """Eje de Blender -> eje de Roblox con el FBX de exportar(): x -> -X, y -> Z, z -> Y."""
+    return ("X", -valor) if eje == 0 else ("Z", valor) if eje == 1 else ("Y", valor)
+
+
+def anotar(obj, tipo, canal, eje, amplitud, fase=0.0, veces=1):
+    eje_r, amp = a_roblox(eje, amplitud)
+    if canal == "Esc":
+        eje_r, amp = "XZ", amplitud  # escala del suelo: no depende del eje
+    if canal == "Pos":
+        amp /= STUD  # metros -> studs
+    _receta.append({"pieza": obj.name, "Tipo": tipo, "Canal": canal, "Eje": eje_r,
+                    "Amplitud": amp, "Fase": fase, "Veces": veces})
 
 
 def onda(obj, canal, eje, amplitud, fase=0.0, veces=1):
+    anotar(obj, "Onda", "Pos" if canal == "location" else "Rot", eje, amplitud, fase, veces)
     datos = getattr(obj, canal)
     inicio = datos[eje]
     for f in range(0, CUADROS + 1, 2):
@@ -230,6 +255,7 @@ def onda(obj, canal, eje, amplitud, fase=0.0, veces=1):
 
 
 def salto(obj, alto, veces=2):
+    anotar(obj, "Salto", "Pos", 2, alto * STUD, 0.0, veces)
     z = obj.location.z
     for f in range(0, CUADROS + 1, 2):
         t = f / CUADROS
@@ -239,6 +265,7 @@ def salto(obj, alto, veces=2):
 
 
 def vuelta(obj, eje=2):
+    anotar(obj, "Vuelta", "Rot", eje, 2 * math.pi)
     for f in range(0, CUADROS + 1, 2):
         obj.rotation_euler[eje] = 2 * math.pi * f / CUADROS
         obj.keyframe_insert("rotation_euler", index=eje, frame=f + 1)
@@ -434,6 +461,7 @@ def prismo():
     onda(r, "location", 2, 0.25 * STUD)
     onda(cuerpo, "rotation_euler", 2, math.radians(14))
     vuelta(orbita)
+    anotar(sombra, "Escala", "Esc", 2, -0.15)  # se achica en X y Z cuando Prismo sube
     for f in range(0, CUADROS + 1, 2):
         s = 1 - 0.15 * math.sin(2 * math.pi * f / CUADROS)
         sombra.scale = (s, s, 1)
@@ -600,6 +628,159 @@ def lineal(vacio):
                 k.interpolation = "LINEAR"
 
 
+def optimizar(vacio):
+    """Junta las caras planas vecinas del mismo color (los cubitos sueltos), sin cambiar la forma.
+
+    Baja ~50 % los triángulos (Topito 6068 -> 2894). Primero suelda vértices repetidos.
+    """
+    import bmesh
+
+    for obj in vacio.children_recursive:
+        if obj.type != "MESH":
+            continue
+        bm = bmesh.new()
+        bm.from_mesh(obj.data)
+        bmesh.ops.remove_doubles(bm, verts=bm.verts, dist=0.0005)
+        bmesh.ops.dissolve_limit(bm, angle_limit=math.radians(1), use_dissolve_boundaries=False,
+                                 verts=bm.verts, edges=bm.edges, delimit={"MATERIAL", "NORMAL"})
+        bm.to_mesh(obj.data)
+        bm.free()
+        obj.data.update()
+
+
+# Roblox no importa los materiales de color de un FBX (las piezas quedaban grises). Por eso cada
+# cara apunta con su UV al cuadradito de su color en una sola textura chica (Paleta.png, 64x64),
+# compartida por las 8 y metida adentro del FBX. El brillo se pierde: lo pone Mascotas.client.
+PALETA = [
+    "#15131C", "#2F5D8A", "#3A2A55", "#4B2A6B", "#4DFFB0", "#5A2A10", "#5E8C4A", "#6B717A",
+    "#7A5233", "#7B5A9E", "#7CF5FF", "#8A1A0E", "#8A5A2B", "#8D939C", "#9EEBFF", "#B07A4A",
+    "#B3261A", "#B98552", "#C77DFF", "#D9C27A", "#E0336E", "#E0507A", "#E0A800", "#E8F4FF",
+    "#FF3B1F", "#FF6A1F", "#FF8C42", "#FF8FB0", "#FFA51F", "#FFB3C7", "#FFCF3F", "#FFE14D",
+    "#FFF3E0", "#FFF6C8", "#FFFFFF",
+]  # color nuevo en una mascota -> agregarlo AL FINAL (los anteriores no se mueven)
+PALETA_CELDAS = 8  # 8x8 cuadraditos de 8 px
+
+
+def color_material(m):
+    """Color base de un material en hex sRGB (como en PALETA)."""
+    bsdf = next((n for n in m.node_tree.nodes if n.type == "BSDF_PRINCIPLED"), None) if m.use_nodes else None
+    c = tuple(bsdf.inputs["Base Color"].default_value)[:3] if bsdf else tuple(m.diffuse_color)[:3]
+    return "#%02X%02X%02X" % tuple(round(max(0.0, min(1.0, v)) ** (1 / 2.2) * 255) for v in c)
+
+
+def imagen_paleta():
+    img = bpy.data.images.get("Paleta")
+    if img:
+        return img
+    lado = PALETA_CELDAS * 8
+    img = bpy.data.images.new("Paleta", lado, lado)
+    px = [0.0] * (lado * lado * 4)
+    for i, h in enumerate(PALETA):
+        col, fila = i % PALETA_CELDAS, i // PALETA_CELDAS
+        rgb = [int(h.lstrip("#")[k : k + 2], 16) / 255 for k in (0, 2, 4)]
+        for y in range(fila * 8, fila * 8 + 8):
+            for x in range(col * 8, col * 8 + 8):
+                j = (y * lado + x) * 4
+                px[j : j + 4] = (*rgb, 1.0)
+    img.pixels = px
+    img.filepath_raw = str(FBX / "Paleta.png")
+    img.file_format = "PNG"
+    img.save()
+    return img
+
+
+def material_paleta():
+    m = bpy.data.materials.get("Paleta")
+    if m:
+        return m
+    m = bpy.data.materials.new("Paleta")
+    m.use_nodes = True
+    bsdf = next(n for n in m.node_tree.nodes if n.type == "BSDF_PRINCIPLED")
+    bsdf.inputs["Roughness"].default_value = 0.55
+    tex = m.node_tree.nodes.new("ShaderNodeTexImage")
+    tex.image = imagen_paleta()
+    tex.interpolation = "Closest"
+    m.node_tree.links.new(tex.outputs["Color"], bsdf.inputs["Base Color"])
+    return m
+
+
+def paletizar(objetos):
+    """Cambia los materiales de color de cada malla por UVs a la paleta y un solo material."""
+    pal = material_paleta()
+    for obj in objetos:
+        if obj.type != "MESH":
+            continue
+        malla = obj.data
+        celda = []
+        for m in malla.materials:
+            h = color_material(m) if m else "#FFFFFF"
+            if h not in PALETA:
+                raise ValueError(f"{obj.name}: el color {h} no está en PALETA, agregalo al final")
+            i = PALETA.index(h)
+            celda.append(((i % PALETA_CELDAS + 0.5) / PALETA_CELDAS, (i // PALETA_CELDAS + 0.5) / PALETA_CELDAS))
+        uv = malla.uv_layers.new(name="Paleta")
+        for p in malla.polygons:
+            u = celda[p.material_index] if celda else (0.5, 0.5)
+            for li in p.loop_indices:
+                uv.data[li].uv = u
+        for p in malla.polygons:
+            p.material_index = 0
+        malla.materials.clear()
+        malla.materials.append(pal)
+
+
+def repaletizar_fbx(salida=None):
+    """Pasa los FBX ya exportados de fbx/ a la paleta, sin volver a armar las mascotas.
+
+    Trabaja en una escena temporal (no toca la escena abierta) y guarda en fbx_color/.
+    """
+    salida = Path(salida) if salida else ARTE / "fbx_color"
+    salida.mkdir(parents=True, exist_ok=True)
+    original = bpy.context.window.scene
+    tmp = bpy.data.scenes.new("TMP_Paleta")
+    bpy.context.window.scene = tmp
+    hechos = []
+    try:
+        for id_juego, _, _ in MASCOTAS:
+            antes = set(bpy.data.objects)
+            bpy.ops.import_scene.fbx(filepath=str(FBX / f"Mascota_{id_juego}.fbx"), axis_forward="Z", axis_up="Y")
+            nuevos = [o for o in bpy.data.objects if o not in antes]
+            paletizar(nuevos)
+            bpy.ops.object.select_all(action="DESELECT")
+            for o in nuevos:
+                o.select_set(True)
+            exportar_fbx(salida / f"Mascota_{id_juego}.fbx")
+            for o in nuevos:
+                bpy.data.objects.remove(o, do_unlink=True)
+            hechos.append(id_juego)
+    finally:
+        bpy.context.window.scene = original
+        bpy.data.scenes.remove(tmp)
+        for datos in (bpy.data.meshes, bpy.data.materials):
+            for d in list(datos):
+                if d.users == 0:
+                    datos.remove(d)
+    return hechos
+
+
+def exportar_fbx(ruta):
+    # Sin animación: Roblox no importa animaciones de mallas sin rig y Mascotas.client las anima
+    # con MascotasRig.luau. axis_forward="Z" deja la cara (-Y de Blender) mirando a -Z en Roblox.
+    # La paleta va adentro del FBX: el Import 3D de Studio la sube sola.
+    bpy.ops.export_scene.fbx(filepath=str(ruta), use_selection=True,
+                             object_types={"EMPTY", "MESH"}, use_mesh_modifiers=True,
+                             bake_anim=False, axis_forward="Z", axis_up="Y",
+                             path_mode="COPY", embed_textures=True)
+
+
+def triangulos(vacio):
+    total = 0
+    for obj in vacio.children_recursive:
+        if obj.type == "MESH":
+            total += sum(len(p.vertices) - 2 for p in obj.data.polygons)
+    return total
+
+
 def seleccionar(vacio):
     bpy.ops.object.select_all(action="DESELECT")
     for obj in [vacio, *vacio.children_recursive]:
@@ -612,11 +793,9 @@ def exportar(id_juego, vacio):
     bpy.ops.export_scene.gltf(filepath=str(GLB / f"Mascota_{id_juego}.glb"), export_format="GLB",
                               use_selection=True, export_animations=True,
                               export_animation_mode="SCENE", export_force_sampling=True)
+    paletizar(vacio.children_recursive)
     seleccionar(vacio)
-    bpy.ops.export_scene.fbx(filepath=str(FBX / f"Mascota_{id_juego}.fbx"), use_selection=True,
-                             object_types={"EMPTY", "MESH"}, bake_anim=True,
-                             bake_anim_use_all_actions=False, bake_anim_use_nla_strips=False,
-                             axis_forward="Z", axis_up="Y")
+    exportar_fbx(FBX / f"Mascota_{id_juego}.fbx")
 
 
 def escenario():
@@ -653,34 +832,158 @@ def render(nombre):
     bpy.ops.render.render(write_still=True)
 
 
+def rig(vacio):
+    """Pivotes, caja y movimientos de una mascota recién armada (antes de optimizar), en Roblox.
+
+    Lee la pose de reposo sin evaluar la animación: cada pieza está en su pivote y la malla
+    guarda la forma relativa a él (en metros).
+    """
+    lo, hi = [math.inf] * 3, [-math.inf] * 3
+    piezas = {}
+    for o in vacio.children_recursive:
+        if o.type != "MESH":
+            continue
+        p = Vector(o["pivote"])
+        for v in o.data.vertices:
+            w = p + v.co / STUD
+            lo = [min(lo[i], w[i]) for i in range(3)]
+            hi = [max(hi[i], w[i]) for i in range(3)]
+        piezas[o.name] = {"Pivote": (-p.x, p.z, p.y), "Rebota": o.parent is not vacio, "Movs": []}
+    rebote = []
+    for m in _receta:
+        nombre = m.pop("pieza")
+        (piezas[nombre]["Movs"] if nombre in piezas else rebote).append(m)
+    centro = [(lo[i] + hi[i]) / 2 for i in range(3)]
+    return {"Lado": max(hi[i] - lo[i] for i in range(3)), "Centro": (-centro[0], centro[2], centro[1]),
+            "Rebote": rebote, "Piezas": piezas}
+
+
+def escribir_luau(rigs, ruta):
+    def n(x):
+        texto = f"{x:.3f}".rstrip("0").rstrip(".")
+        return "0" if texto in ("0", "-0") else texto
+
+    def v3(t):
+        return f"Vector3.new({n(t[0])}, {n(t[1])}, {n(t[2])})"
+
+    def movs(lista, sangria):
+        if not lista:
+            return "{}"
+        filas = [f'{sangria}\t{{ Tipo = "{m["Tipo"]}", Canal = "{m["Canal"]}", Eje = "{m["Eje"]}", '
+                 f'Amplitud = {n(m["Amplitud"])}, Fase = {n(m["Fase"])}, Veces = {m["Veces"]} }},' for m in lista]
+        return "{\n" + "\n".join(filas) + f"\n{sangria}}}"
+
+    lineas = [
+        "--!strict",
+        "-- GENERADO por arte/scripts/mascotas.py: no editar a mano, cambiar el script y volver a correrlo.",
+        "--",
+        "-- Articulaciones y animación en bucle de las mascotas importadas (arte/fbx/Mascota_<Id>.fbx).",
+        "-- Todo en studs y ejes de Roblox (frente -Z, arriba Y), al tamaño original de Blender:",
+        "--   Lado    lado más largo de la mascota entera (para escalar: factor = tamaño real / Lado)",
+        "--   Centro  centro de su caja; corresponde al centro de Model:GetBoundingBox()",
+        "--   Pivote  articulación de cada pieza (MeshPart con ese nombre). Posición en el modelo:",
+        "--           cajaCFrame * CFrame.new((Pivote - Centro) * factor)",
+        "--   Rebota  la pieza sigue al Rebote (cuerpo); si es false queda en el piso (patas)",
+        "--",
+        "-- Cada movimiento, con t = (tiempo / Periodo) % 1:",
+        "--   Onda    Amplitud * sin(2π (t * Veces + Fase))  (Rot en radianes, Pos en studs)",
+        "--   Salto   Amplitud * |sin(π t Veces)| en Y (studs)",
+        "--   Vuelta  Amplitud * t (una vuelta entera por Periodo)",
+        "--   Escala  tamaño en X y Z = 1 + Amplitud * sin(2π t)",
+        "-- Rot y Pos son relativos al pivote de la pieza. Las posiciones se multiplican por el factor.",
+        "",
+        "export type Mov = {",
+        "\tTipo: string,",
+        "\tCanal: string,",
+        "\tEje: string,",
+        "\tAmplitud: number,",
+        "\tFase: number,",
+        "\tVeces: number,",
+        "}",
+        "",
+        "export type Pieza = {",
+        "\tPivote: Vector3,",
+        "\tRebota: boolean,",
+        "\tMovs: { Mov },",
+        "}",
+        "",
+        "export type Rig = {",
+        "\tLado: number,",
+        "\tCentro: Vector3,",
+        "\tRebote: { Mov },",
+        "\tPiezas: { [string]: Pieza },",
+        "}",
+        "",
+        "local MascotasRig: { Periodo: number, Mascotas: { [string]: Rig } } = {",
+        f"\tPeriodo = {n(CUADROS / FPS)},",
+        "\tMascotas = {",
+    ]
+    for id_juego, r in rigs.items():
+        lineas += [
+            f"\t\t{id_juego} = {{",
+            f"\t\t\tLado = {n(r['Lado'])},",
+            f"\t\t\tCentro = {v3(r['Centro'])},",
+            f"\t\t\tRebote = {movs(r['Rebote'], chr(9) * 3)},",
+            "\t\t\tPiezas = {",
+        ]
+        for nombre, p in sorted(r["Piezas"].items()):
+            lineas += [
+                f"\t\t\t\t{nombre} = {{",
+                f"\t\t\t\t\tPivote = {v3(p['Pivote'])},",
+                f"\t\t\t\t\tRebota = {'true' if p['Rebota'] else 'false'},",
+                f"\t\t\t\t\tMovs = {movs(p['Movs'], chr(9) * 5)},",
+                "\t\t\t\t},",
+            ]
+        lineas += ["\t\t\t},", "\t\t},"]
+    lineas += ["\t},", "}", "", "return MascotasRig", ""]
+    Path(ruta).write_text("\n".join(lineas), encoding="utf-8")
+
+
+def armar_rigs():
+    """Arma las 8 en la escena actual y devuelve su rig (sin exportar ni borrar nada)."""
+    rigs = {}
+    for id_juego, _, armar in MASCOTAS:
+        _receta.clear()
+        rigs[id_juego] = rig(armar())
+    return rigs
+
+
+RIG_LUAU = ARTE.parent / "src" / "shared" / "MascotasRig.luau"
+
+
 def main():
     sin_renders = "--sin-renders" in sys.argv
     for carpeta in (GLB, FBX, RENDERS, BLEND):
         carpeta.mkdir(parents=True, exist_ok=True)
-    pivotes = {}
+    pivotes, rigs = {}, {}
     for id_juego, nombre, armar in MASCOTAS:
         limpiar()
+        _receta.clear()
         vacio = armar()
         # articulación de cada pieza (studs, ejes de Blender) para animarlas en Roblox
         pivotes[id_juego] = {o.name: [round(c, 3) for c in o["pivote"]]
                              for o in vacio.children_recursive if o.type == "MESH"}
+        rigs[id_juego] = rig(vacio)
         lineal(vacio)
+        optimizar(vacio)
         exportar(id_juego, vacio)
         if not sin_renders:
             render(nombre)
-        tris = sum(len(o.data.polygons) * 2 for o in vacio.children_recursive if o.type == "MESH")
-        print(f"Mascota lista: {nombre} ({id_juego}), {tris} triángulos")
+        print(f"Mascota lista: {nombre} ({id_juego}), {triangulos(vacio)} triángulos")
     import json
 
     (FBX / "mascotas_pivotes.json").write_text(json.dumps(pivotes, indent=1), encoding="utf-8")
+    escribir_luau(rigs, RIG_LUAU)
     # las 8 en fila en un .blend para abrir en Blender
     limpiar()
     for n, (_, nombre, armar) in enumerate(MASCOTAS):
         vacio = armar()
         lineal(vacio)
+        optimizar(vacio)
         vacio.location.x = (n - 3.5) * 7 * STUD
     escenario()
     bpy.ops.wm.save_as_mainfile(filepath=str(BLEND / "Mascotas.blend"))
 
 
-main()
+if __name__ == "__main__":
+    main()

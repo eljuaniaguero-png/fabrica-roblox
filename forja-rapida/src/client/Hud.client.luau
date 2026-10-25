@@ -107,7 +107,13 @@ if celular then
 	contadores.AnchorPoint = Vector2.new(1, 0)
 	contadores.Position = UDim2.new(1, -16, 0, 12)
 	listaCont.HorizontalAlignment = Enum.HorizontalAlignment.Right
-	derecha.Position = UDim2.new(1, -16, 0, 190)
+	-- 23/10/2026: Vender todo va pegado abajo de los contadores. Con 190 fijo quedaba a mitad de
+	-- pantalla en un celular acostado (390 de alto) y con un hueco grande arriba.
+	local function bajoContadores()
+		derecha.Position = UDim2.new(1, -16, 0, 12 + contadores.AbsoluteSize.Y + 8)
+	end
+	contadores:GetPropertyChangedSignal("AbsoluteSize"):Connect(bajoContadores)
+	bajoContadores()
 else
 	contadores.AnchorPoint = Vector2.new(0, 1)
 	contadores.Position = UDim2.new(0, 20, 1, -16)
@@ -134,6 +140,14 @@ end
 local pFuerza, tFuerza = contador("Fuerza", "#FF4D5E", 66, 1)
 local pSuerte, tSuerte = contador("Trebol", "#5CFF4C", 56, 2)
 local pMonedas, tMonedas = contador("Moneda", "#FFD93D", 84, 3)
+
+-- Opción C del orden del HUD (24/10/2026, falta el OK de Juani): en compu, Monedas va arriba a la
+-- derecha, encima de "Vender todo", para ver subir las monedas donde vendés. En celular ya está
+-- así. Con false queda como antes (Monedas abajo a la izquierda con Fuerza y Suerte).
+local MONEDAS_ARRIBA = false
+if MONEDAS_ARRIBA and not celular then
+	pMonedas.Parent = derecha
+end
 
 local filaBotones = Estilo.fila(10)
 filaBotones.LayoutOrder = 4
@@ -332,7 +346,7 @@ botonMenu(3, "Viajar", "Viajar", "Cristal", "Cian")
 -- "Más" no abre una ventana: despliega el panel.
 local botonMasB = Estilo.boton({
 	Texto = "Más",
-	Icono = "Corona",
+	Icono = "Cofre", -- no "Corona": es el ícono de Vitrina, que está adentro de "Más"
 	Color = "Violeta",
 	Ancho = 190,
 	Alto = 58,
@@ -616,21 +630,33 @@ end)
 
 -- Abajo al centro: próxima zona ------------------------------------------------------------
 
-local abajo = Estilo.fila(10)
+-- 23/10/2026: el nombre va arriba de la barra y no al costado. Al costado estiraba la fila y en
+-- 1280x720 se encimaba con los contadores de abajo a la izquierda.
+local abajo = Instance.new("Frame")
 abajo.Name = "ProximaZona"
+abajo.BackgroundTransparency = 1
+abajo.AutomaticSize = Enum.AutomaticSize.XY
 abajo.AnchorPoint = Vector2.new(0.5, 1)
 abajo.Position = UDim2.new(0.5, 0, 1, -16)
+local listaAbajo = Instance.new("UIListLayout")
+listaAbajo.HorizontalAlignment = Enum.HorizontalAlignment.Center
+listaAbajo.SortOrder = Enum.SortOrder.LayoutOrder
+listaAbajo.Padding = UDim.new(0, 2)
+listaAbajo.Parent = abajo
 Estilo.escalar(abajo)
 abajo.Parent = pantalla
+local nombreZona = Estilo.texto("", 26)
+nombreZona.LayoutOrder = 1
+nombreZona.Parent = abajo
+local filaZona = Estilo.fila(10)
+filaZona.LayoutOrder = 2
+filaZona.Parent = abajo
 local icZona = Estilo.icono("Fuerza", 52)
 icZona.LayoutOrder = 1
-icZona.Parent = abajo
+icZona.Parent = filaZona
 local barraZona, ponerZona = Estilo.barra(460, 44, { "#FF8A94", "#D62839" })
 barraZona.LayoutOrder = 2
-barraZona.Parent = abajo
-local nombreZona = Estilo.texto("", 24)
-nombreZona.LayoutOrder = 3
-nombreZona.Parent = abajo
+barraZona.Parent = filaZona
 
 local function zona()
 	local z = Reglas.proximaZona(Datos.zonas())
@@ -650,7 +676,7 @@ local function zona()
 		math.min(f / math.max(1, z.FuerzaParaAbrir), if pide > 0 then vistasZona / pide else 1),
 		texto
 	)
-	nombreZona.Text = z.Nombre
+	nombreZona.Text = "Próxima: " .. z.Nombre
 	nombreZona.TextColor3 = Color3.fromHex(z.ColorCristal)
 end
 zona()

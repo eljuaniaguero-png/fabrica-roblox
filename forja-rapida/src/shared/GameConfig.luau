@@ -323,6 +323,10 @@ local GameConfig = {
 		FuerteRebote = 24,
 		FuerteTorso = 14,
 		FuerteTono = 0.6, -- tono del "¡CRACK!" (más bajo = más grave)
+		-- Sacudón de cámara del "¡CRACK!" (solo el propio, y no con "Efectos reducidos"):
+		-- studs que salta la cámara hacia abajo y cuánto tarda en volver.
+		FuerteCamara = 0.3,
+		FuerteCamaraDura = 0.14,
 		-- Balanceo del pico al caminar: grados y vueltas por segundo.
 		Balanceo = 5,
 		BalanceoVelocidad = 1.6,
@@ -2781,32 +2785,34 @@ local GameConfig = {
 
 	-- Sonidos (los usa el cliente; cada uso está marcado con "-- SONIDO:"). Vacíos = sin sonido.
 	-- Para cambiar el tono de un mismo sample se usa PlaybackSpeed (CLAUDE.md, Audio).
+	-- Solo de ProSoundEffects y APMOfficial (librerías con licencia que Roblox da gratis); nada
+	-- subido por terceros, porque suelen ser copias de otros juegos. Probados en Studio el 23/10/2026.
 	Sonidos = {
-		Golpe = "",
-		Dash = "", -- el envión del dash
-		Romper = "",
-		Revelacion = "", -- se sube el tono según la rareza
-		RevelacionRara = "", -- extra para Épica o mejor
-		Logro = "",
-		Anuncio = "",
-		EventoEmpieza = "", -- uno por evento estaría bueno; por ahora el mismo con otro tono
-		Cristal = "", -- agarrar un cristal de la lluvia
-		Trueno = "", -- relámpago de la Tormenta Neón
-		JefeAparece = "",
-		Vender = "",
-		Comprar = "",
-		Click = "", -- tocar un botón de la interfaz
-		AbrirMenu = "",
-		Secreto = "", -- Grupo 3: abrir una puerta secreta, un cofre, un altar o cruzar un portal
-		ForjaIntento = "", -- La Forja: apretar "¡Intentar!" (con el tono de cada tic)
-		ForjaSube = "", -- La Forja: la piedra sube de rareza
-		ForjaEfecto = "", -- La Forja: la piedra gana un efecto
-		ForjaExplota = "", -- La Forja: la geoda explota
+		Golpe = "rbxassetid://9116651688", -- PSE Metal Hits 7 (0,5 s)
+		Dash = "rbxassetid://9126229255", -- PSE Whoosh By Fast Airy Swooshing (1,0 s)
+		Romper = "rbxassetid://9118587698", -- PSE Rock Drop Breaks 3 (1,6 s)
+		Revelacion = "rbxassetid://9116394545", -- se sube el tono según la rareza. PSE Magic Glows 1
+		RevelacionRara = "rbxassetid://9116395089", -- extra para Épica o mejor. PSE Magic Glows 4
+		Logro = "rbxassetid://9044739323", -- APM "Sugar Crash (sting)" (4,7 s)
+		Anuncio = "rbxassetid://9116395179", -- PSE Magic Glows 6
+		EventoEmpieza = "rbxassetid://9114630421", -- PSE Gong Resonant Trail 2
+		Cristal = "rbxassetid://9116394545", -- agarrar un cristal de la lluvia (mismo de Revelacion)
+		Trueno = "rbxassetid://9119841013", -- relámpago de la Tormenta Neón. PSE Synth Thunder Cracks 1 (5,1 s)
+		JefeAparece = "rbxassetid://9125585550", -- PSE Gong Chinese Style 5 (5,8 s)
+		Vender = "rbxassetid://9113728049", -- PSE Cash Register 2
+		Comprar = "rbxassetid://9113728042", -- PSE Cash Register 1
+		Click = "rbxassetid://9120232246", -- tocar un botón de la interfaz. PSE Mouse Clicking 7
+		AbrirMenu = "rbxassetid://9120232137", -- PSE Mouse Clicking 5
+		Secreto = "rbxassetid://9116394756", -- Grupo 3: puerta secreta, cofre, altar o portal. PSE Magic Glows 3
+		ForjaIntento = "rbxassetid://9116651251", -- La Forja: apretar "¡Intentar!". PSE Metal Hits 1
+		ForjaSube = "rbxassetid://9116394876", -- La Forja: la piedra sube de rareza. PSE Magic Glows 2
+		ForjaEfecto = "rbxassetid://9116395085", -- La Forja: la piedra gana un efecto. PSE Magic Glows 5
+		ForjaExplota = "rbxassetid://9118587701", -- La Forja: la geoda explota. PSE Rock Drop Breaks 4
 		-- Grupo 4
-		Mision = "", -- misión cumplida
-		Ruleta = "", -- cada "tic" de la ruleta (se sube el tono al frenar)
-		Mascota = "", -- mascota nueva
-		Renacer = "",
+		Mision = "rbxassetid://9042807094", -- misión cumplida. APM sting (3,9 s)
+		Ruleta = "rbxassetid://9120233347", -- cada "tic" de la ruleta. PSE Mouse Clicking 24
+		Mascota = "rbxassetid://9047214582", -- mascota nueva. APM "Party In The Wild - Tag2"
+		Renacer = "rbxassetid://9125585526", -- PSE Gong Chinese Style 2 (6,5 s)
 	},
 
 	-- Íconos de las 60 gemas (renders de arte/iconos/gemas/<Id>.png subidos a Roblox): Id de la

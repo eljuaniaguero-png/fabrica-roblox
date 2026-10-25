@@ -384,8 +384,10 @@ RunService.RenderStepped:Connect(function()
 	if id ~= eventoActual then
 		eventoActual = id
 		ambiente(id)
-		-- SONIDO: empieza un evento
-		if id ~= "" then
+		-- SONIDO: empieza un evento (el Jefe Ancestral tiene su propio gong)
+		if id == "JefeAncestral" then
+			Sonidos.tocar(GameConfig.Sonidos.JefeAparece)
+		elseif id ~= "" then
 			Sonidos.tocar(GameConfig.Sonidos.EventoEmpieza)
 		end
 	end
