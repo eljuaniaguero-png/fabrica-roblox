@@ -61,8 +61,12 @@ Config.Simulacion = {
 	BrilloClavija = 0.15, -- segundos que brilla una clavija tocada (cliente)
 }
 
+-- Golpe = Fuerza × Multi (paso 5a, estilo roguelike). Cada tiro arranca con Fuerza 0 y Multi 1;
+-- cada clavija suma a una de las dos cajas según su tipo (Config.Clavijas). Cada clavija cuenta
+-- una vez por bola y por tiro.
 Config.Danio = {
-	PorClavija = 2, -- cada clavija cuenta una sola vez por tiro
+	FuerzaInicial = 0,
+	MultiInicial = 1,
 }
 
 -- El caballero: vida al empezar la mazmorra y cuánto se cura al ganar cada pelea.
@@ -90,33 +94,72 @@ Config.Monstruos = {
 	},
 } :: { Monstruo }
 
--- Mejoras (1 de 3 entre peleas, etapa 5). "Repetida" = qué cambia cada vez que la elegís de
--- nuevo. Todo lo que cambia el tiro lo calcula shared/Simulacion (así el servidor lo repite).
-Config.OrdenMejoras = { "Fuego", "Duplica", "Divide" } -- las que existen, en el orden de las cartas
-Config.MejorasPorPantalla = 3 -- cartas que se ofrecen al ganar una pelea
-Config.Mejoras = {
-	Fuego = {
-		Nombre = "Bola de fuego",
-		-- +1 por clavija desde el nivel 1, y no sube al repetirla: con el ×2 de las rojas se
-		-- disparaba (eligiendo siempre fuego se ganaba el 74 %; lune, 25/10).
-		DanioExtraPorClavija = 1,
-		Quemadura = 3, -- daño por turno al monstruo (nivel 1)
-		QuemaduraPorNivel = 3, -- repetida: la quemadura sube 3 (nivel 2 = 6, nivel 3 = 9)
-		TurnosQuemadura = 2, -- cada tiro con fuego lo vuelve a prender por estos turnos
+-- Clavijas especiales (paso 5a). El tablero es de la partida: empieza todo gris y las cartas
+-- (después, la tienda) convierten clavijas. "Nivel" lo suben los pergaminos (paso 5b); por
+-- ahora todas arrancan en 1. Cada valor: el de nivel 1 + PorNivel × (nivel - 1).
+Config.OrdenClavijas = { "roja", "azul", "dorada", "verde", "violeta" } -- las que salen en cartas
+Config.Clavijas = {
+	gris = { Nombre = "Gris", Fuerza = 2, FuerzaPorNivel = 1, Color = "#C8C8C8" },
+	-- Roja: +2 Multi (era +3: eligiéndola siempre se ganaba el 60 %, el resto 5 a 18 %; lune, 25/10).
+	roja = { Nombre = "Roja", Plural = "rojas", Multi = 2, MultiPorNivel = 2, Color = "#D23232" },
+	azul = {
+		Nombre = "Azul",
+		Plural = "azules",
+		PorMulti = 2, -- multiplica el Multi (con ×1,5 y la rotura casi no servía: 2 % de mazmorras ganadas)
+		PorMultiPorNivel = 0.5,
+		Rotura = 0.25, -- chance de romperse al tocarla (con la semilla): queda hueco
+		Color = "#3C8CFF",
 	},
-	Duplica = {
-		Nombre = "Clavija que duplica",
-		ClavijasRojas = 2, -- nivel 1; repetida: una clavija roja más
-		ClavijasRojasPorNivel = 1,
-		Factor = 2, -- el daño del tiro hasta ese momento se multiplica por esto
-		-- Filas donde pueden caer (1 = la de arriba): ni la primera (sería ×2 de casi nada) ni la
-		-- última (casi no se llega a ver el efecto).
-		FilaMinima = 3,
-		FilaMaxima = 7,
+	dorada = {
+		Nombre = "Dorada",
+		Plural = "doradas",
+		Fuerza = 6,
+		Oro = 1,
+		OroPorNivel = 1,
+		Color = "#F5C542",
 	},
-	Divide = {
-		Nombre = "Bola que se divide",
-		ToquesParaDividir = { 5, 4, 3 }, -- 1.ª vez, 2.ª vez, 3.ª vez o más
+	verde = {
+		Nombre = "Verde",
+		Plural = "verdes",
+		Fuerza = 10,
+		FuerzaPorNivel = 5,
+		Impulso = 16, -- studs/s que le suma a la bola hacia afuera de la clavija (resorte)
+		Color = "#3CC864",
+	},
+	violeta = {
+		Nombre = "Violeta",
+		Plural = "violetas",
+		Fuerza = 2, -- como una gris, para que nunca sea peor elegirla (sola sumaba menos)
+		Eco = 2, -- la próxima clavija que toque esa bola cuenta estas veces
+		EcoPorNivel = 1,
+		Color = "#A050E6",
+	},
+	hueco = { Nombre = "Hueco", Color = "#3A3A3A" }, -- azul rota: la bola pasa derecho
+}
+
+-- Cartas entre peleas (hasta que llegue la tienda en el paso 5b): 3 tipos de clavija; elegir uno
+-- convierte clavijas grises al azar (con la semilla de la partida) en ese tipo.
+Config.Cartas = {
+	PorPantalla = 3,
+	ClavijasPorCarta = 2,
+}
+
+-- Bolas para elegir al empezar (la pantalla de elegir llega en la etapa 7; en Studio, tecla Z).
+-- La de fuego y la partida son las mejoras de la etapa 5 convertidas.
+Config.OrdenBolas = { "hierro", "fuego", "partida" }
+Config.Bolas = {
+	hierro = { Nombre = "Hierro", Desbloqueo = "inicio" },
+	fuego = {
+		Nombre = "Fuego",
+		Desbloqueo = "zona2",
+		FuerzaExtra = 1, -- por cada clavija tocada
+		Quemadura = 3, -- daño por turno al monstruo
+		TurnosQuemadura = 2, -- cada tiro lo vuelve a prender por estos turnos
+	},
+	partida = {
+		Nombre = "Partida",
+		Desbloqueo = "jefe",
+		ToqueParaDividir = 5,
 		Partes = 2,
 		-- Grados entre las dos bolas al partirse: AnguloDivision ± AnguloAzar (con la semilla).
 		AnguloDivision = 24,
@@ -124,21 +167,15 @@ Config.Mejoras = {
 	},
 }
 
--- Topes del tiro, para que las tres mejoras juntas no exploten (Simulacion).
+-- Topes del tiro, para que las combinaciones no exploten (Simulacion).
 Config.TopeBolas = 4
-Config.TopeDanioTiro = 999
-
--- Bolas que se desbloquean y se guardan.
-Config.Bolas = {
-	{ Id = "hierro", Nombre = "Hierro", Desbloqueo = "inicio" },
-	{ Id = "fuego", Nombre = "Fuego", Desbloqueo = "piso4" },
-	{ Id = "partida", Nombre = "Partida", Desbloqueo = "jefe" },
-}
+Config.TopeDanioTiro = 10000000
+Config.TopeMulti = 1000000
 
 -- Revisión del servidor (etapa 3, server/Tiros.luau).
 Config.Servidor = {
 	MargenDanio = 0.05, -- si el daño que vio el cliente difiere más que esto (5 %), se avisa
-	TopeDanioPorTiro = 2000, -- por si algo sale mal
+	TopeDanioPorTiro = 10000000, -- por si algo sale mal (= Config.TopeDanioTiro)
 	TiempoMinimoEntreTiros = 1, -- segundos entre dos tiros del mismo jugador
 	TiempoMinimoVolver = 0.5, -- segundos entre dos "Volver a bajar" del mismo jugador
 }
@@ -161,18 +198,18 @@ Config.Numeros = {
 	Subida = 2.5, -- studs que sube
 	PopTotal = 1.25, -- tamaño del TOTAL en el "pop" de cada toque (1 = normal)
 	DuracionPop = 0.12,
-	DuracionDuplica = 1.2, -- segundos que se ve el "×2" grande del TOTAL (con 0,7 casi no se leía)
+	DuracionPopMulti = 0.2, -- el MULTI se agranda un poco más cuando lo multiplica una azul
 }
 
 -- Colores del graybox (hasta la etapa 8).
 Config.Colores = {
-	Clavija = "#C8C8C8",
-	ClavijaDuplica = "#D23232",
 	Bola = "#FFFFFF",
 	BolaFuego = "#FF4A00", -- la bola con la mejora de fuego (con Neon brilla: más oscuro se ve naranja)
 	Quemadura = "#FF8A1F", -- el número de la quemadura sobre el monstruo
-	Duplica = "#FF3B3B", -- el "×2" grande del TOTAL
-	Carta = "#4A4A4A", -- graybox de las cartas de mejora
+	Fuerza = "#4FA8FF", -- caja de FUERZA del panel
+	Multi = "#FF4A4A", -- caja de MULTI del panel
+	Oro = "#F5C542",
+	Carta = "#4A4A4A", -- graybox de las cartas
 	Gris = "#808080",
 	Fondo = "#3A3A3A",
 	Brillo = "#FFF6B0", -- clavija tocada

@@ -1,10 +1,10 @@
 # Plinko Knight — ficha del prototipo
 
 Origen: `plinko-knight/PLAN-Y-PROMPTS.md` (25/10/2026) + idea de arte aprobada (`plinko-knight/arte/IDEA-DE-ARTE.md`).
-Estado: **aprobada por Juani el 25/10/2026** (punto de control 1). Etapas 2 (tablero, puntería y bola), 3 (daño y revisión del servidor), 4 (monstruos y mazmorra) y 5 (mejoras 1 de 3) hechas el 25/10/2026. Juani jugó la prueba de 5 minutos (perdió en el piso 6: "está bueno") y pidió hacerlo **más roguelike, estilo Balatro**. **Rediseño propuesto el 25/10/2026, esperando su OK** (punto de control 1 de nuevo): no se programa nada hasta que lo apruebe.
+Estado: **aprobada por Juani el 25/10/2026** (punto de control 1). Etapas 2 (tablero, puntería y bola), 3 (daño y revisión del servidor), 4 (monstruos y mazmorra) y 5 (mejoras 1 de 3) hechas el 25/10/2026. Juani jugó la prueba de 5 minutos (perdió en el piso 6: "está bueno") y pidió hacerlo **más roguelike, estilo Balatro**. **Rediseño aprobado el 25/10/2026.** Paso 5a (Fuerza × Multi y clavijas especiales) hecho el 25/10; lo próximo es el 5b (oro y tienda).
 Carpeta: `plinko-knight/` (código en `plinko-knight/src/`, Rojo con `rojo serve plinko-knight`, puerto 34876). Place propio: `plinko-knight/PlinkoKnight.rbxl`.
 
-## Rediseño roguelike (propuesto el 25/10/2026, falta tu OK)
+## Rediseño roguelike (aprobado el 25/10/2026)
 
 Después de la prueba de 5 minutos ("perdí en el piso 6, está bueno") pediste que sea **más roguelike, estilo Balatro, con más sinergias y modificadores**. De Balatro se toma **la mecánica, no el contenido**: nada de cartas de póker, ni sus nombres (comodines, ciegas, fichas), ni nada que parezca casino. Sigue siendo un caballero en una mazmorra.
 
@@ -51,7 +51,7 @@ Arriba de todo, la fila de **reliquias** (5 lugares), en orden de izquierda a de
 4. Cuando caen todas las bolas, las reliquias que actúan "al final del tiro" se aplican **de izquierda a derecha**. Por eso importa el orden: primero las que suman Multi y después las que lo multiplican. Las reliquias se reordenan arrastrándolas en la tienda.
 5. **Golpe = Fuerza × Multi**, redondeado para abajo.
 
-Ejemplo: 12 clavijas grises (24 Fuerza) + 2 rojas (+6 Multi, total 7) = 168. Con Corona del Rey Caído (×2 Multi) = 336.
+Ejemplo: 12 clavijas grises (24 Fuerza) + 2 rojas (+4 Multi, total 5) = 120. Con Corona del Rey Caído (×2 Multi) = 240.
 
 ## Clavijas especiales (tu tablero es tu mazo)
 
@@ -60,11 +60,11 @@ El tablero empieza con 52 clavijas grises y es **tuyo durante toda la partida**.
 | Clavija | Qué hace (nivel 1) | Al subir de nivel |
 |---|---|---|
 | Gris | +2 Fuerza | +1 Fuerza |
-| Roja | +3 Multi | +2 Multi |
-| Azul (cristal) | ×1,5 Multi. Tiene 1 en 4 de romperse y quedar como hueco hasta el final de la partida | +0,25 al × |
+| Roja | +2 Multi (era +3, ver paso 5a) | +2 Multi |
+| Azul (cristal) | ×2 Multi (era ×1,5). Tiene 1 en 4 de romperse y quedar como hueco hasta el final de la partida | +0,5 al × |
 | Dorada | +6 Fuerza y +1 oro | +1 oro |
 | Verde (resorte) | +10 Fuerza y la bola sale disparada para arriba (toca más clavijas) | +5 Fuerza |
-| Violeta (eco) | la próxima clavija que toque la bola cuenta 2 veces | cuenta 3 veces |
+| Violeta (eco) | +2 Fuerza (como una gris) y la próxima clavija que toque esa bola cuenta 2 veces | cuenta 3 veces |
 
 Las clavijas rojas de la etapa 5 (×2 del total) pasan a ser las **azules**; la bola de fuego y la bola que se divide pasan a ser **bolas iniciales y reliquias**.
 
@@ -296,4 +296,23 @@ Con los números de la etapa 4, las mejoras hacían todo muy fácil: eligiendo c
 | Siempre divide | 64 % en la 5, 36 % en la 6 | 0 % |
 
 Cada pelea dura 2 a 3 tiros de promedio. Mezclar mejoras es lo que gana (las tres se potencian entre sí). Falta que Juani lo juegue y diga qué ajustar.
+
+### Paso 5a · Fuerza × Multi y clavijas especiales (25/10/2026)
+
+- **Golpe = Fuerza × Multi.** Cada tiro arranca con Fuerza 0 y Multi 1. La simulación (`shared/Simulacion.luau`) suma cada clavija a su caja según el tipo y devuelve Fuerza, Multi, golpe, oro y las azules que se rompieron. El servidor repite el tiro con el tablero, los niveles y la bola de la partida (el cliente no los manda), y en todos los tiros probados coincidió.
+- **Módulo nuevo `shared/Clavijas.luau`** (reemplaza a `Mejoras.luau`): lo que da cada tipo según su nivel, el tablero de la partida, convertir clavijas, las cartas y los números cortos ("12,4 mil", "1,5 M").
+- **El tablero es de la partida:** una lista con el tipo de cada una de las 52 clavijas. Empieza todo gris y se reinicia al "Volver a bajar". Las azules que se rompen quedan como **hueco** (la bola pasa derecho) hasta el final de la partida.
+- **Cartas, mientras no hay tienda:** al ganar una pelea salen 3 tipos de clavija distintos. Elegir uno convierte **2 grises al azar** (las elige el servidor) en ese tipo, y brillan un momento. La carta muestra una clavija de muestra, qué hace y cuántas tenés. En el paso 5b la tienda reemplaza a esta pantalla y ahí sí vas a tocar qué clavija cambiar.
+- **Bolas:** la de fuego (+1 Fuerza por clavija y quemadura) y la partida (se parte en el toque 5) son las mejoras de la etapa 5 convertidas. La que se elige al empezar llega con las pantallas (etapa 7); por ahora se arranca con Hierro. "Clavija que duplica" pasó a ser la azul.
+- **En pantalla (graybox):** a la izquierda, el panel **FUERZA** (azul) **×** **MULTI** (rojo) y abajo "= golpe" cuando cae la bola. Cada clavija tiene el color de su tipo, y al tocarla salta lo que sumó ("+2", "+2 Multi", "×2", "+6 +1 oro", "eco ×2: …", "¡se rompió!"). Arriba a la izquierda, el oro. Abajo, la bola y cuántas clavijas de cada tipo tenés.
+- **Comandos de prueba, solo en Studio:** 1 a 7 y 0 como antes; **Z** cambia de bola, **X** convierte 2 grises (cada vez un tipo distinto), **C** sube 1 nivel todos los tipos. Ojo: si se aprietan con la bola en juego, ese tiro se anula.
+- **Prueba con Lune** (`lune run plinko-knight/pruebas/clavijas`, reemplaza a `pruebas/mejoras`): cada tipo (lo que suma y que las cajas cierren), la violeta, los huecos, el resorte, la azul que se rompe, los niveles, las dos bolas, todo mezclado hasta nivel 10 (nunca pasa los topes) y que el servidor coincida en golpe, oro y rotas. `pruebas/mazmorra` ahora mide el balance con cartas de clavijas y acepta otras vidas de monstruos sin tocar Config (`lune run plinko-knight/pruebas/mazmorra 40,80,150,250,400,600,900 100`).
+- **Topes nuevos:** golpe de 10 millones por tiro, Multi de 1 millón, 4 bolas.
+
+#### Ajustes de balance del paso 5a (lune, 150 mazmorras)
+
+- **Roja: +2 Multi** (era +3). Con +3, eligiéndola siempre se ganaba el 60 % y con los otros tipos, 5 a 18 %.
+- **Azul: ×2** (era ×1,5). Con ×1,5 y la rotura casi no servía (2 %). Es lo mismo que el vidrio de Balatro: ×2 y 1 en 4 de romperse.
+- **Violeta: también +2 Fuerza.** Sola sumaba menos que una gris.
+- Monstruos sin cambios: el balance de verdad va en el paso 5d, con las 3 zonas. Medido ahora: cartas al azar con bola de hierro, se gana **9 %**; con fuego, 39 %; con la partida, 69 % (por eso se desbloquea tarde). La dorada todavía no sirve: el oro se usa recién en la tienda (5b).
 

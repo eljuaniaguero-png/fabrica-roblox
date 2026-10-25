@@ -4,13 +4,16 @@
 -- para dibujar el tiro y el servidor la repite para revisar el daño (etapa 3).
 --
 -- El azar sale de shared/Azar (con semilla, no Random.new: Random no existe en Lune).
--- Etapa 5: las mejoras también pasan acá (fuego, clavijas rojas y bola que se divide), así el
--- servidor repite el tiro igual. La bola dividida se simula al mismo tiempo que la original,
--- paso por paso, para que los toques (y los ×2) queden en el orden en que pasan.
+-- Paso 5a: el golpe es Fuerza × Multi. Cada clavija suma a una de las dos cajas según su tipo
+-- (shared/Clavijas): gris y verde suman Fuerza, roja suma Multi, azul lo multiplica (y a veces
+-- se rompe), dorada da oro y violeta hace que la próxima cuente varias veces. Los huecos no
+-- existen para la bola. Las bolas de fuego y partida también pasan acá, así el servidor repite el
+-- tiro igual. La bola partida se simula al mismo tiempo que la original, paso por paso, para que
+-- los toques (y los × de las azules) queden en el orden en que pasan.
 
 local Azar = require(script.Parent.Azar)
 local Config = require(script.Parent.Config)
-local MejorasModulo = require(script.Parent.Mejoras)
+local Clavijas = require(script.Parent.Clavijas)
 local TableroModulo = require(script.Parent.Tablero)
 
 type Tablero = TableroModulo.Tablero
@@ -20,20 +23,27 @@ export type Bola = {
 	Velocidad: number,
 }
 
--- Mejoras activas en el tiro (etapa 5): los niveles de cada una y las clavijas rojas de la
--- pelea (las elige el servidor con Mejoras.rojas). {} = sin mejoras.
-export type Mejoras = {
-	Niveles: MejorasModulo.Niveles?,
-	Rojas: { number }?,
+-- Lo que cambia el tiro: el tablero de la partida (tipo de cada clavija), el nivel de cada tipo
+-- y la bola elegida. {} = todo gris, nivel 1, bola de hierro. Lo pone el servidor.
+export type Modificadores = {
+	Tablero: Clavijas.TableroPartida?,
+	Niveles: Clavijas.Niveles?,
+	Bola: string?, -- "hierro", "fuego" o "partida"
 }
 
 export type Toque = {
 	Clavija: number, -- Id de la clavija
 	Paso: number, -- índice global del paso (1 = salida); para la bola 1 es su índice en X/Y
-	Danio: number, -- lo que suma este toque
-	Total: number, -- daño acumulado del tiro hasta este toque (incluido, con el ×2 si hubo)
 	Bola: number, -- qué bola la tocó (1 = la que tiraste; 2 o más = las de la división)
-	Duplico: boolean, -- era una clavija roja: el total se multiplicó
+	Tipo: string, -- tipo de la clavija
+	Veces: number, -- cuántas veces contó (más de 1 si venía de una violeta)
+	Fuerza: number, -- lo que sumó a la Fuerza
+	Multi: number, -- lo que sumó al Multi
+	PorMulti: number, -- por cuánto multiplicó el Multi (1 = nada)
+	Oro: number,
+	Rota: boolean, -- era azul y se rompió
+	FuerzaTotal: number, -- cómo quedaron las cajas después de este toque
+	MultiTotal: number,
 }
 
 -- El camino de una bola. X[1] es su posición en el paso global Inicio.
@@ -48,11 +58,14 @@ export type Resultado = {
 	Y: { number },
 	Recorridos: { Recorrido }, -- uno por bola (más de uno si se dividió)
 	Pasos: number, -- índice global del último paso (cuando cayó la última bola)
-	-- En orden. Cada bola suma cada clavija una sola vez (la segunda vez rebota pero no suma), y
-	-- cada clavija roja duplica una sola vez por tiro aunque la toquen varias bolas.
+	-- En orden. Cada bola suma cada clavija una sola vez (la segunda vez rebota pero no suma).
 	Toques: { Toque },
 	ClavijasDistintas: number, -- toques que sumaron (de todas las bolas)
-	Danio: number, -- total del tiro (con tope Config.TopeDanioTiro)
+	Fuerza: number,
+	Multi: number,
+	Danio: number, -- el golpe: Fuerza × Multi, para abajo (con tope Config.TopeDanioTiro)
+	Oro: number, -- el que dieron las doradas
+	Rotas: { number }, -- azules que se rompieron (el servidor las vuelve hueco después del tiro)
 	Quemadura: number, -- daño por turno que deja la bola de fuego (0 sin fuego)
 	Fuego: boolean,
 	Empujones: number, -- cuántas veces actuó el anti-trabas
@@ -70,6 +83,7 @@ type Viva = {
 	tocadas: { [number]: boolean }, -- clavijas que ya sumó esta bola
 	toques: number,
 	puedeDividir: boolean,
+	eco: number, -- cuántas veces cuenta la próxima clavija (1 = normal)
 	yVentana: number,
 	activa: boolean,
 }
@@ -96,7 +110,7 @@ function Simulacion.simular(
 	tablero: Tablero,
 	angulo: number,
 	bola: Bola,
-	mejoras: Mejoras,
+	mods: Modificadores,
 	semilla: number
 ): Resultado
 	local s = Config.Simulacion
@@ -105,21 +119,25 @@ function Simulacion.simular(
 	local r = bola.Radio
 	local clavijas = tablero.Clavijas
 
-	-- Mejoras.
-	local niveles = mejoras.Niveles
-	local nivelFuego = MejorasModulo.nivel(niveles, "Fuego")
-	local danioPorClavija = MejorasModulo.danioPorClavija(nivelFuego)
-	local toquesDividir = MejorasModulo.toquesParaDividir(MejorasModulo.nivel(niveles, "Divide"))
-	local rojas: { [number]: boolean } = {}
-	if MejorasModulo.nivel(niveles, "Duplica") > 0 then
-		for _, id in mejoras.Rojas or {} do
-			rojas[id] = true
-		end
+	-- Tablero de la partida, niveles y bola.
+	local tipos: { [number]: string } = {}
+	for _, c in clavijas do
+		tipos[c.Id] = Clavijas.tipo(mods.Tablero, c.Id)
 	end
-	local rojasUsadas: { [number]: boolean } = {}
-	local factor = Config.Mejoras.Duplica.Factor
-	local divide = Config.Mejoras.Divide
-	local tope = Config.TopeDanioTiro
+	local niveles = mods.Niveles
+	local nombreBola = mods.Bola or "hierro"
+	local fuego = nombreBola == "fuego"
+	local fuerzaExtra = if fuego then Config.Bolas.fuego.FuerzaExtra else 0
+	local divide = Config.Bolas.partida
+	local toquesDividir: number? = if nombreBola == "partida" then divide.ToqueParaDividir else nil
+	local rotura = Config.Clavijas.azul.Rotura
+	local impulso = Config.Clavijas.verde.Impulso
+
+	local fuerza = Config.Danio.FuerzaInicial
+	local multi = Config.Danio.MultiInicial
+	local oro = 0
+	local rotas: { number } = {}
+	local rotasEnTiro: { [number]: boolean } = {}
 
 	local function nuevaBola(x: number, y: number, vx: number, vy: number, inicio: number): Viva
 		return {
@@ -132,6 +150,7 @@ function Simulacion.simular(
 			tocadas = {},
 			toques = 0,
 			puedeDividir = false,
+			eco = 1,
 			yVentana = y,
 			activa = true,
 		}
@@ -147,7 +166,6 @@ function Simulacion.simular(
 
 	local toques: { Toque } = {}
 	local distintas = 0
-	local danio = 0
 	local empujones = 0
 	local fin = "tope"
 	local ultimoPaso = 1
@@ -192,8 +210,12 @@ function Simulacion.simular(
 			b.x += b.vx * dt
 			b.y += b.vy * dt
 
-			-- Clavijas: sacar la bola hacia afuera y rebotar.
+			-- Clavijas: sacar la bola hacia afuera y rebotar. Los huecos no existen.
 			for _, c in clavijas do
+				local tipo = tipos[c.Id]
+				if tipo == "hueco" then
+					continue
+				end
 				local dx, dy = b.x - c.X, b.y - c.Y
 				local minimo = r + c.Radio
 				local d2 = dx * dx + dy * dy
@@ -221,20 +243,44 @@ function Simulacion.simular(
 							b.tocadas[c.Id] = true
 							b.toques += 1
 							distintas += 1
-							danio = math.min(danio + danioPorClavija, tope)
-							local duplico = false
-							if rojas[c.Id] and not rojasUsadas[c.Id] then
-								rojasUsadas[c.Id] = true
-								danio = math.min(danio * factor, tope)
-								duplico = true
+							local nivel = Clavijas.nivel(niveles, tipo)
+							local veces = b.eco
+							b.eco = 1
+							local sumaF = (Clavijas.fuerza(tipo, nivel) + fuerzaExtra) * veces
+							local sumaM = Clavijas.multi(tipo, nivel) * veces
+							local por = Clavijas.porMulti(tipo, nivel) ^ veces
+							local sumaOro = Clavijas.oro(tipo, nivel) * veces
+							fuerza += sumaF
+							multi = math.min((multi + sumaM) * por, Config.TopeMulti)
+							oro += sumaOro
+							local eco = Clavijas.eco(tipo, nivel)
+							if eco > 0 then
+								b.eco = eco
+							end
+							if tipo == "verde" then
+								-- Resorte: la bola sale disparada hacia afuera de la clavija.
+								b.vx += nx * impulso
+								b.vy += ny * impulso
+							end
+							local rota = false
+							if tipo == "azul" and not rotasEnTiro[c.Id] and azar() < rotura then
+								rotasEnTiro[c.Id] = true
+								table.insert(rotas, c.Id)
+								rota = true
 							end
 							table.insert(toques, {
 								Clavija = c.Id,
 								Paso = paso + 1,
-								Danio = danioPorClavija,
-								Total = danio,
 								Bola = indice,
-								Duplico = duplico,
+								Tipo = tipo,
+								Veces = veces,
+								Fuerza = sumaF,
+								Multi = sumaM,
+								PorMulti = por,
+								Oro = sumaOro,
+								Rota = rota,
+								FuerzaTotal = fuerza,
+								MultiTotal = multi,
 							})
 							if b.puedeDividir and b.toques == toquesDividir then
 								dividir(b, paso, c.Id)
@@ -316,9 +362,13 @@ function Simulacion.simular(
 		Pasos = ultimoPaso,
 		Toques = toques,
 		ClavijasDistintas = distintas,
-		Danio = danio,
-		Quemadura = MejorasModulo.quemadura(nivelFuego),
-		Fuego = nivelFuego > 0,
+		Fuerza = fuerza,
+		Multi = multi,
+		Danio = math.min(math.floor(fuerza * multi), Config.TopeDanioTiro),
+		Oro = oro,
+		Rotas = rotas,
+		Quemadura = if fuego then Config.Bolas.fuego.Quemadura else 0,
+		Fuego = fuego,
 		Empujones = empujones,
 		Fin = fin,
 	}

@@ -26,7 +26,7 @@ export type Escena = {
 	Bola: BasePart, -- = Bolas[1]
 	Bolas: { BasePart }, -- Config.TopeBolas bolas (las de más, para la bola que se divide)
 	Puntos: { BasePart },
-	AnclaTotal: BasePart,
+	AnclaTotal: BasePart, -- ancla del panel FUERZA × MULTI (columna izquierda)
 	Cartel: BasePart, -- el monstruo (un cartel plano)
 	BarraMonstruo: BasePart, -- arriba del cartel
 	Caballero: BasePart,
@@ -145,12 +145,12 @@ function Escena.armar(): Escena
 	)
 	barraMonstruo.Transparency = 1
 
-	-- Ancla del TOTAL, arriba de la barra (entre las columnas no entra: hay 3 studs).
+	-- Ancla del panel FUERZA × MULTI: en la columna izquierda, espejo del monstruo (paso 5a).
 	local anclaTotal = parte(
 		"AnclaTotal",
 		modelo,
 		Vector3.new(1, 1, 1),
-		CFrame.new(aMundo(xMonstruo, yMonstruo + ALTO_MONSTRUO / 2 + 5.5, 1)),
+		CFrame.new(aMundo(-xMonstruo, yMonstruo + 1, 1)),
 		Config.Colores.Gris
 	)
 	anclaTotal.Transparency = 1
@@ -163,7 +163,7 @@ function Escena.armar(): Escena
 			modelo,
 			Vector3.new(1, c.Radio * 2, c.Radio * 2),
 			CFrame.new(aMundo(c.X, c.Y, 0)) * CFrame.Angles(0, math.rad(90), 0),
-			if c.Tipo == "duplica" then Config.Colores.ClavijaDuplica else Config.Colores.Clavija
+			Config.Clavijas.gris.Color -- el color de cada tipo lo pone Main.client con el tablero
 		)
 		p.Shape = Enum.PartType.Cylinder
 		p:SetAttribute("Clavija", c.Id)

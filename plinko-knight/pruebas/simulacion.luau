@@ -79,11 +79,11 @@ for i = 1, TIROS do
 			("tiro %d: la clavija %d sumó dos veces"):format(i, t.Clavija)
 		)
 		vistas[t.Clavija] = true
-		acumulado += t.Danio
-		chequear(t.Total == acumulado, ("tiro %d: el total acumulado no cierra"):format(i))
+		acumulado += t.Fuerza
+		chequear(t.FuerzaTotal == acumulado, ("tiro %d: la Fuerza acumulada no cierra"):format(i))
 	end
 	chequear(
-		res.Danio == res.ClavijasDistintas * Config.Danio.PorClavija,
+		res.Danio == res.ClavijasDistintas * Config.Clavijas.gris.Fuerza and res.Multi == 1,
 		("tiro %d: daño %d con %d clavijas"):format(i, res.Danio, res.ClavijasDistintas)
 	)
 

@@ -1,11 +1,12 @@
 --!strict
--- Números de daño en pantalla: el "+2" que salta sobre cada clavija tocada y el TOTAL grande
--- arriba del lugar del monstruo, que sube con cada toque con un "pop" de tamaño.
+-- Números en pantalla: lo que suma cada clavija tocada (salta sobre ella) y el panel de la
+-- izquierda, FUERZA × MULTI = GOLPE, que sube con cada toque con un "pop" de tamaño.
 -- Son BillboardGui con tamaño en studs, así acompañan al tablero en cualquier pantalla.
 
 local TweenService = game:GetService("TweenService")
 
 local Shared = game:GetService("ReplicatedStorage"):WaitForChild("Shared")
+local Clavijas = require(Shared:WaitForChild("Clavijas"))
 local Config = require(Shared:WaitForChild("Config"))
 
 local Numeros = {}
@@ -66,69 +67,85 @@ function Numeros.saltar(
 	end)
 end
 
-export type Total = {
-	poner: (valor: number, pop: boolean) -> (),
-	duplicar: () -> (), -- "×2" grande al lado del TOTAL (clavija roja)
+export type Panel = {
+	-- Pone las dos cajas. pop: "fuerza", "multi", "por" (la azul multiplicó) o nil.
+	poner: (fuerza: number, multi: number, pop: string?) -> (),
+	golpe: (valor: number) -> (), -- muestra "= GOLPE" grande al caer la bola
+	limpiar: () -> (), -- tiro nuevo: Fuerza 0, Multi 1 y sin golpe
 }
 
--- TOTAL grande, colgado de una parte invisible (la pone Escena arriba del monstruo).
-function Numeros.crearTotal(ancla: BasePart): Total
+-- Panel de la columna izquierda: FUERZA (azul) × MULTI (rojo) y abajo el GOLPE. Colgado de una
+-- parte invisible (la pone Escena a la izquierda del tablero), en studs, como el resto.
+function Numeros.crearPanel(ancla: BasePart): Panel
 	local cartel = Instance.new("BillboardGui")
-	cartel.Name = "Total"
-	cartel.Size = UDim2.fromScale(12, 5) -- studs
-	cartel.ClipsDescendants = false -- el "×2" sale un poco del cartel
+	cartel.Name = "Panel"
+	cartel.Size = UDim2.fromScale(11, 10) -- studs
 	cartel.LightInfluence = 0
 	cartel.Adornee = ancla
-	local escala = Instance.new("UIScale")
-	escala.Parent = cartel
 
-	local titulo = etiqueta(cartel, "TOTAL")
-	titulo.Size = UDim2.fromScale(1, 0.35)
-	local valor = etiqueta(cartel, "0")
-	valor.Position = UDim2.fromScale(0, 0.35)
-	valor.Size = UDim2.fromScale(1, 0.65)
+	local function caja(titulo: string, hex: string, x: number): (TextLabel, UIScale)
+		local fondo = Instance.new("Frame")
+		fondo.Position = UDim2.fromScale(x, 0)
+		fondo.Size = UDim2.fromScale(0.42, 0.5)
+		fondo.BackgroundColor3 = Color3.fromHex(hex)
+		fondo.BorderSizePixel = 0
+		fondo.Parent = cartel
+		local esquinas = Instance.new("UICorner")
+		esquinas.CornerRadius = UDim.new(0.12, 0)
+		esquinas.Parent = fondo
+		local escala = Instance.new("UIScale")
+		escala.Parent = fondo
+		local t = etiqueta(fondo, titulo)
+		t.TextColor3 = Color3.new(1, 1, 1)
+		t.Position = UDim2.fromScale(0.05, 0.04)
+		t.Size = UDim2.fromScale(0.9, 0.3)
+		local valor = etiqueta(fondo, "0")
+		valor.TextColor3 = Color3.new(1, 1, 1)
+		valor.Position = UDim2.fromScale(0.05, 0.36)
+		valor.Size = UDim2.fromScale(0.9, 0.58)
+		return valor, escala
+	end
+
+	local fuerza, escalaFuerza = caja("FUERZA", Config.Colores.Fuerza, 0)
+	local multi, escalaMulti = caja("MULTI", Config.Colores.Multi, 0.58)
+	local por = etiqueta(cartel, "×")
+	por.TextColor3 = Color3.new(1, 1, 1)
+	por.Position = UDim2.fromScale(0.42, 0.1)
+	por.Size = UDim2.fromScale(0.16, 0.3)
+	local golpe = etiqueta(cartel, "")
+	golpe.Position = UDim2.fromScale(0, 0.55)
+	golpe.Size = UDim2.fromScale(1, 0.45)
+	local escalaGolpe = Instance.new("UIScale")
+	escalaGolpe.Parent = golpe
 	cartel.Parent = ancla
-
-	-- "×2" grande, a la derecha del número (fuera del cartel: ClipsDescendants está apagado).
-	local por = etiqueta(cartel, ("×%d"):format(Config.Mejoras.Duplica.Factor))
-	por.AnchorPoint = Vector2.new(0, 0.5)
-	por.Position = UDim2.fromScale(0.78, 0.6)
-	por.Size = UDim2.fromScale(0.55, 0.8)
-	por.TextColor3 = Color3.fromHex(Config.Colores.Duplica)
-	por.TextTransparency = 1
-	por.TextStrokeTransparency = 1
-	local escalaPor = Instance.new("UIScale")
-	escalaPor.Parent = por
-	local duplicados = 0
 
 	local info =
 		TweenInfo.new(Config.Numeros.DuracionPop, Enum.EasingStyle.Back, Enum.EasingDirection.Out)
+	local function saltar(escala: UIScale, tamanio: number)
+		escala.Scale = tamanio
+		TweenService:Create(escala, info, { Scale = 1 }):Play()
+	end
+
 	return {
-		poner = function(n: number, pop: boolean)
-			valor.Text = tostring(n)
-			if pop then
-				escala.Scale = Config.Numeros.PopTotal
-				TweenService:Create(escala, info, { Scale = 1 }):Play()
+		poner = function(f: number, m: number, pop: string?)
+			fuerza.Text = Clavijas.numeroCorto(f)
+			multi.Text = Clavijas.numeroCorto(m)
+			if pop == "fuerza" then
+				saltar(escalaFuerza, Config.Numeros.PopTotal)
+			elseif pop == "multi" then
+				saltar(escalaMulti, Config.Numeros.PopTotal)
+			elseif pop == "por" then
+				saltar(escalaMulti, Config.Numeros.PopTotal * 1.3)
 			end
 		end,
-		duplicar = function()
-			duplicados += 1
-			local marca = duplicados
-			por.TextTransparency = 0
-			por.TextStrokeTransparency = 0
-			escalaPor.Scale = 1.8
-			TweenService:Create(escalaPor, info, { Scale = 1 }):Play()
-			escala.Scale = Config.Numeros.PopTotal * 1.2
-			TweenService:Create(escala, info, { Scale = 1 }):Play()
-			task.delay(Config.Numeros.DuracionDuplica, function()
-				if duplicados == marca then
-					TweenService:Create(
-						por,
-						TweenInfo.new(0.25),
-						{ TextTransparency = 1, TextStrokeTransparency = 1 }
-					):Play()
-				end
-			end)
+		golpe = function(valor: number)
+			golpe.Text = "= " .. Clavijas.numeroCorto(valor)
+			saltar(escalaGolpe, 1.6)
+		end,
+		limpiar = function()
+			fuerza.Text = Clavijas.numeroCorto(Config.Danio.FuerzaInicial)
+			multi.Text = Clavijas.numeroCorto(Config.Danio.MultiInicial)
+			golpe.Text = ""
 		end,
 	}
 end

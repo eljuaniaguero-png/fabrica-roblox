@@ -10,7 +10,7 @@ export type Clavija = {
 	Y: number,
 	Radio: number,
 	Fila: number, -- 1 = la de arriba
-	Tipo: string, -- "normal" (las rojas de la mejora "Duplica" van aparte: cambian por pelea)
+	Tipo: string, -- "normal" (el tipo de cada clavija en la partida va aparte: shared/Clavijas)
 }
 
 export type Tablero = {

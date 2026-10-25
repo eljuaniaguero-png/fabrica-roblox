@@ -2,12 +2,13 @@
 -- Remotos de la mazmorra (los tiros están en Tiros.luau):
 --   ObtenerEstado() -> Mazmorra.Estado
 --   VolverABajar() -> Mazmorra.Estado  (solo después de perder o de ganar la mazmorra)
---   ElegirMejora(id) -> Mazmorra.Estado  (solo en la fase "eligiendo" y si id es una de las
---   cartas ofrecidas; si no, devuelve el estado como está)
+--   ElegirCarta(tipo) -> (Mazmorra.Estado, ids convertidos)  (solo en la fase "eligiendo" y si
+--   tipo es una de las cartas ofrecidas; si no, devuelve el estado como está y nil)
 --   EstadoCambio (servidor -> cliente): el estado cambió fuera de un tiro (comandos de prueba)
---   Prueba(comando, n) (SOLO existe en Studio): "piso" salta a la pelea n (7 = el jefe) y "vida"
---   te pone n de vida, "mejora" sube un nivel la mejora n de Config.OrdenMejoras. El cliente lo
---   manda con las teclas 1 a 7, 0 y Z, X, C (ver Main.client).
+--   Prueba(comando, n) (SOLO existe en Studio): "piso" salta a la pelea n (7 = el jefe), "vida"
+--   te pone n de vida, "bola" cambia a la bola n de Config.OrdenBolas, "clavija" convierte
+--   grises en el tipo n de Config.OrdenClavijas y "nivel" sube 1 nivel todos los tipos. El
+--   cliente lo manda con las teclas 1 a 7, 0, Z, X y C (ver Main.client).
 -- Con teclas y no con el chat porque este place usa el chat viejo, que Roblox ya no carga.
 
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
@@ -16,6 +17,7 @@ local RunService = game:GetService("RunService")
 local Shared = ReplicatedStorage:WaitForChild("Shared")
 local Config = require(Shared:WaitForChild("Config"))
 local Mazmorra = require(Shared:WaitForChild("Mazmorra"))
+local Clavijas = require(Shared:WaitForChild("Clavijas"))
 local Partida = require(script.Parent:WaitForChild("Partida"))
 
 local Peleas = {}
@@ -38,15 +40,29 @@ function Peleas.saltarAPiso(jugador: Player, piso: number)
 	avisar(jugador, p)
 end
 
--- Comando de prueba: sube un nivel una mejora (sin ganar la pelea) y arranca la pelea de nuevo.
-function Peleas.subirMejora(jugador: Player, indice: number)
+-- Comandos de prueba de clavijas y bolas (sin ganar la pelea).
+function Peleas.probar(jugador: Player, comando: string, n: number)
 	local p = Partida.de(jugador)
-	local id = Config.OrdenMejoras[math.floor(indice)]
-	if not p or not id or p.Estado.Fase ~= "peleando" then
+	if not p or p.Estado.Fase ~= "peleando" then
 		return
 	end
-	p.Estado.Mejoras[id] = (p.Estado.Mejoras[id] or 0) + 1
-	Partida.nuevaPelea(p)
+	local e = p.Estado
+	if comando == "bola" then
+		local bola = Config.OrdenBolas[math.floor(n)]
+		if bola then
+			p.Bola = bola
+			e.Bola = bola
+		end
+	elseif comando == "clavija" then
+		local tipo = Config.OrdenClavijas[math.floor(n)]
+		if tipo then
+			Clavijas.convertir(e.Tablero, tipo, Config.Cartas.ClavijasPorCarta, Partida.semilla())
+		end
+	elseif comando == "nivel" then
+		for tipo in Config.Clavijas do
+			e.Niveles[tipo] = Clavijas.nivel(e.Niveles, tipo) + 1
+		end
+	end
 	p.Semilla = nil
 	avisar(jugador, p)
 end
@@ -95,18 +111,19 @@ function Peleas.iniciar()
 	volver.Parent = carpeta
 
 	local elegir = Instance.new("RemoteFunction")
-	elegir.Name = "ElegirMejora"
-	elegir.OnServerInvoke = function(jugador: Player, id: any): Mazmorra.Estado?
+	elegir.Name = "ElegirCarta"
+	elegir.OnServerInvoke = function(jugador: Player, tipo: any): (Mazmorra.Estado?, { number }?)
 		local p = Partida.de(jugador)
 		if not p then
-			return nil
+			return nil, nil
 		end
 		-- Mazmorra.elegir valida la fase, el tipo y que sea una de las cartas ofrecidas.
-		if Mazmorra.elegir(p.Estado, id) then
+		local ids = Mazmorra.elegir(p.Estado, tipo, Partida.semilla())
+		if ids then
 			Partida.nuevaPelea(p)
 			p.Semilla = nil
 		end
-		return Mazmorra.copiar(p.Estado)
+		return Mazmorra.copiar(p.Estado), ids
 	end
 	elegir.Parent = carpeta
 
@@ -125,8 +142,8 @@ function Peleas.iniciar()
 				Peleas.saltarAPiso(jugador, n)
 			elseif comando == "vida" then
 				Peleas.ponerVida(jugador, n)
-			elseif comando == "mejora" then
-				Peleas.subirMejora(jugador, n)
+			elseif comando == "bola" or comando == "clavija" or comando == "nivel" then
+				Peleas.probar(jugador, comando, n)
 			end
 		end)
 		prueba.Parent = carpeta

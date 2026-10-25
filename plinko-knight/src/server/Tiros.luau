@@ -4,15 +4,15 @@
 -- mazmorra (golpe al monstruo y contraataque) y devuelve qué pasó para que el cliente lo anime.
 --   PedirTiro() -> (numeroTiro, semilla)  (nil si no estás peleando)
 --   Tirar(numeroTiro, angulo, danioVisto) -> Mazmorra.Turno  (nil si el pedido no es válido)
--- Las mejoras (niveles y clavijas rojas) las pone el servidor desde la partida: el cliente no
--- las manda. Al ganar una pelea, el turno vuelve con la fase "eligiendo" y las cartas ofrecidas.
+-- El tablero de clavijas, los niveles y la bola los pone el servidor desde la partida: el
+-- cliente no los manda. El oro de las doradas y las azules rotas también salen de la revisión. Al ganar una pelea, el turno vuelve con la fase "eligiendo" y las cartas ofrecidas.
 
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local Shared = ReplicatedStorage:WaitForChild("Shared")
 local Config = require(Shared:WaitForChild("Config"))
 local Mazmorra = require(Shared:WaitForChild("Mazmorra"))
-local Mejoras = require(Shared:WaitForChild("Mejoras"))
+local Clavijas = require(Shared:WaitForChild("Clavijas"))
 local Revision = require(Shared:WaitForChild("Revision"))
 local TableroModulo = require(Shared:WaitForChild("Tablero"))
 local Partida = require(script.Parent:WaitForChild("Partida"))
@@ -67,8 +67,7 @@ local function tirar(
 	p.Semilla = nil
 
 	local e = p.Estado
-	local mejoras = { Niveles = e.Mejoras, Rojas = e.Rojas }
-	local r = Revision.revisar(tablero, angulo, semilla, mejoras, danioVisto)
+	local r = Revision.revisar(tablero, angulo, semilla, Mazmorra.modificadores(e), danioVisto)
 	if r.Corregido then
 		warn(
 			("[Tiros] %s dijo %s de daño en el tiro %d; el servidor calculó %d y usa ese."):format(
@@ -79,9 +78,10 @@ local function tirar(
 			)
 		)
 	end
+	Mazmorra.cobrarTiro(e, r.Oro, r.Rotas)
 	local turno = Mazmorra.turno(e, r.Danio, r.Quemadura)
 	if e.Fase == "eligiendo" then
-		Mazmorra.ofrecer(e, Mejoras.ofrecer(Partida.semilla()))
+		Mazmorra.ofrecer(e, Clavijas.ofrecer(Partida.semilla()))
 		turno.Estado = Mazmorra.copiar(e)
 	end
 	return turno

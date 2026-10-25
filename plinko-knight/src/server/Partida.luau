@@ -1,12 +1,11 @@
 --!strict
--- La partida de cada jugador, en el servidor: la mazmorra (piso, vidas, fase, mejoras y
--- clavijas rojas, todo en Estado) y el tiro en curso. Por ahora no se guarda (etapa 6).
+-- La partida de cada jugador, en el servidor: la mazmorra (piso, vidas, fase, tablero de
+-- clavijas, bola y oro, todo en Estado) y el tiro en curso. Por ahora no se guarda (etapa 6).
 
 local Players = game:GetService("Players")
 
 local Shared = game:GetService("ReplicatedStorage"):WaitForChild("Shared")
 local Mazmorra = require(Shared:WaitForChild("Mazmorra"))
-local TableroModulo = require(Shared:WaitForChild("Tablero"))
 
 export type Partida = {
 	Estado: Mazmorra.Estado,
@@ -14,20 +13,19 @@ export type Partida = {
 	Semilla: number?, -- semilla del tiro pedido; nil si no hay uno pendiente
 	UltimoTiro: number, -- os.clock() del último tiro aceptado
 	UltimoVolver: number, -- os.clock() del último "Volver a bajar"
+	Bola: string, -- la bola con la que baja (hasta la pantalla de elegir bola, etapa 7)
 }
 
 local Partida = {}
 
 local partidas: { [Player]: Partida } = {}
-local tablero = TableroModulo.generar()
 local azar = Random.new()
 
--- Pelea nueva: las clavijas rojas salen de una semilla nueva y quedan fijas toda la pelea.
 function Partida.nuevaPelea(p: Partida)
-	Mazmorra.empezarPelea(p.Estado, tablero, azar:NextInteger(1, 2 ^ 31 - 1))
+	Mazmorra.empezarPelea(p.Estado)
 end
 
--- Semilla para elegir qué cartas salen al ganar una pelea.
+-- Semilla para las cartas que salen y las clavijas que convierte una carta.
 function Partida.semilla(): number
 	return azar:NextInteger(1, 2 ^ 31 - 1)
 end
@@ -43,15 +41,16 @@ function Partida.iniciar(jugador: Player): Partida
 		Semilla = nil,
 		UltimoTiro = -math.huge,
 		UltimoVolver = -math.huge,
+		Bola = "hierro",
 	}
 	Partida.nuevaPelea(p)
 	partidas[jugador] = p
 	return p
 end
 
--- Mazmorra nueva desde el piso 1: se pierden las mejoras y el tiro pendiente.
+-- Mazmorra nueva desde el piso 1: tablero todo gris otra vez y sin el tiro pendiente.
 function Partida.reiniciar(p: Partida)
-	p.Estado = Mazmorra.nueva()
+	p.Estado = Mazmorra.nueva(p.Bola)
 	p.Semilla = nil
 	Partida.nuevaPelea(p)
 end
