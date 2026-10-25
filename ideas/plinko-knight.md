@@ -1,59 +1,195 @@
 # Plinko Knight — ficha del prototipo
 
 Origen: `plinko-knight/PLAN-Y-PROMPTS.md` (25/10/2026) + idea de arte aprobada (`plinko-knight/arte/IDEA-DE-ARTE.md`).
-Estado: **aprobada por Juani el 25/10/2026** (punto de control 1). Etapas 2 (tablero, puntería y bola), 3 (daño y revisión del servidor), 4 (monstruos y mazmorra) y 5 (mejoras 1 de 3) hechas el 25/10/2026. **Punto de control: prototipo jugable**, esperando que Juani lo juegue 5 minutos.
+Estado: **aprobada por Juani el 25/10/2026** (punto de control 1). Etapas 2 (tablero, puntería y bola), 3 (daño y revisión del servidor), 4 (monstruos y mazmorra) y 5 (mejoras 1 de 3) hechas el 25/10/2026. Juani jugó la prueba de 5 minutos (perdió en el piso 6: "está bueno") y pidió hacerlo **más roguelike, estilo Balatro**. **Rediseño propuesto el 25/10/2026, esperando su OK** (punto de control 1 de nuevo): no se programa nada hasta que lo apruebe.
 Carpeta: `plinko-knight/` (código en `plinko-knight/src/`, Rojo con `rojo serve plinko-knight`, puerto 34876). Place propio: `plinko-knight/PlinkoKnight.rbxl`.
+
+## Rediseño roguelike (propuesto el 25/10/2026, falta tu OK)
+
+Después de la prueba de 5 minutos ("perdí en el piso 6, está bueno") pediste que sea **más roguelike, estilo Balatro, con más sinergias y modificadores**. De Balatro se toma **la mecánica, no el contenido**: nada de cartas de póker, ni sus nombres (comodines, ciegas, fichas), ni nada que parezca casino. Sigue siendo un caballero en una mazmorra.
+
+Lo que hace bueno a Balatro, y cómo entra acá:
+
+| En Balatro | En Plinko Knight |
+|---|---|
+| Fichas × Multi | **Fuerza × Multi**: las clavijas suman Fuerza o Multi, y al final se multiplican |
+| Mejoras de cartas del mazo | **Clavijas especiales**: tu tablero es tu mazo y lo vas cambiando durante la partida |
+| Comodines (el corazón de las sinergias) | **Reliquias**: hasta 5 a la vez, cada una cambia una regla, y se combinan entre sí |
+| Planetas y tarots | **Pergaminos**: se usan cuando querés (suben de nivel un tipo de clavija, convierten clavijas, curan) |
+| Tienda con plata e interés | **Tienda con oro** entre peleas; ahorrar da interés |
+| Ciegas jefe con reglas raras | **Jefes con maña**: cada jefe rompe una regla y lo sabés antes de pelear |
+| Antes que suben | **3 zonas** de 3 peleas cada una; los números crecen mucho de zona en zona |
+| Mazos para elegir | **Bolas para elegir** al empezar (Hierro, Fuego, Partida), que se desbloquean |
 
 ## Concepto
 
-Un caballero baja por una mazmorra. Su ataque es una bola que tira desde arriba de un tablero de clavijas: cada clavija que toca suma daño, y el total le pega al monstruo. Son 6 peleas y un jefe. Después de cada pelea que gana, elige 1 de 3 mejoras. Si pierde, vuelve a bajar desde el principio.
+Un caballero baja por una mazmorra de 3 zonas. Ataca tirando una bola desde arriba de un tablero de clavijas. Cada clavija que toca suma **Fuerza** o **Multi**; cuando cae la bola, **Fuerza × Multi** es el golpe que recibe el monstruo. Entre peleas gasta **oro** en la tienda: **reliquias** que cambian las reglas, **clavijas especiales** para su tablero y **pergaminos**. La gracia es armar una combinación que explote (pasar de golpes de 30 a golpes de 50.000) antes de que la mazmorra te gane. Si perdés, empezás de cero; lo que sí queda son las bolas y reliquias que desbloqueaste.
 
-**No es un juego de apuestas.** Abajo del tablero no hay casilleros con multiplicadores: la bola cae a un piso liso. El daño sale solo de las clavijas que toca y de las mejoras. En el juego no aparecen palabras de casino ni de premios al azar.
+**No es un juego de apuestas.** Abajo del tablero no hay casilleros con multiplicadores: el Multi sale de las clavijas y de las reliquias. El oro es del juego, se pierde al terminar la partida y **nunca se vende por Robux**. No aparecen palabras de casino ni de premios al azar.
 
-## Loop de 30 segundos
+## Loop
 
-1. Ves el tablero al centro y el monstruo a la derecha. Apuntás con el mouse o con el dedo (una línea de puntos corta muestra el primer tramo) y soltás.
-2. La bola rebota por el tablero. Cada clavija que toca brilla y muestra "+2", y el panel de daño va subiendo.
-3. Cuando la bola llega abajo, el total vuela al monstruo y le baja la vida. Si sigue vivo, contraataca y te baja vida a vos.
-4. Si lo matás, aparecen 3 cartas de mejora: elegís una y bajás al piso siguiente.
+**Un tiro (10 segundos):** apuntás, soltás. La bola rebota; cada clavija suma a una de las dos cajas del panel (FUERZA | MULTI). Las reliquias que se activan se sacuden y muestran lo que sumaron. Al caer: las dos cajas chocan, sale el golpe en grande y vuela al monstruo. Si sigue vivo, contraataca.
+
+**Una pelea (30 a 60 segundos):** 2 a 4 tiros. Al ganar: oro, y vas a la tienda.
+
+**Una partida (15 a 20 minutos):** 3 zonas × (2 monstruos + 1 jefe con maña) = 9 peleas. Después de cada jefe, un **cofre**: elegís 1 de 3 reliquias gratis (la pantalla de cartas que ya existe).
 
 ## Pantalla de pelea (celular en horizontal, 3 columnas)
 
 | Izquierda | Centro | Derecha |
 |---|---|---|
-| Tu vida, la vida del monstruo y el **panel de daño** en dos cajas: daño que se suma \| cuántos ×2 hubo. Abajo, los íconos de tus mejoras. | El tablero, con el caballero y el lanzador arriba. Abajo, un piso liso (sin casilleros). | El monstruo grande, con su barra de vida. El jefe ocupa toda la columna. |
+| Vida del caballero, oro, y el **panel de golpe**: FUERZA (azul) × MULTI (rojo) = GOLPE. Abajo, tus pergaminos (2 lugares). | El tablero con tus clavijas especiales, el caballero y el lanzador arriba. Abajo, un piso liso. | El monstruo con su vida. Si es jefe, su maña escrita arriba en un cartel. |
 
-Arriba de todo, una barra fina con el piso ("Pelea 3 de 7") y Ajustes. La cámara está fija, de frente al tablero, y no se camina durante la pelea.
+Arriba de todo, la fila de **reliquias** (5 lugares), en orden de izquierda a derecha, y "Zona 2 · Pelea 2 de 3".
 
-## Sistemas del prototipo
+## Cómo se calcula el golpe (Fuerza × Multi)
 
-1. **Simulación de la bola** (`shared/Simulacion.luau`): física propia en 2D, con paso fijo y siempre el mismo resultado. Se prueba con Lune.
-2. **Tablero y puntería**: cada cliente arma su tablero (no se comparte con los demás jugadores). Apuntás con el mouse o el dedo en un abanico hacia abajo y soltás para tirar.
-3. **Daño y revisión del servidor**: cada clavija cuenta una sola vez por tiro. El servidor repite la simulación y, si el número no coincide, usa el suyo.
-4. **Monstruos y mazmorra**: 6 peleas y un jefe. El monstruo contraataca después de cada tiro. Si te quedás sin vida perdés, y con un botón grande "Volver a bajar" empezás de nuevo.
-5. **Mejoras 1 de 3**: bola de fuego, clavija que duplica y bola que se divide. Si elegís una que ya tenés, mejora.
-6. **Guardado** con ProfileStore: mejor piso y bolas desbloqueadas.
-7. **Pantallas**: inicio, pelea, mejoras, derrota y victoria, en compu y en celular.
+1. Cada tiro arranca con **Fuerza 0 y Multi 1**.
+2. Cada clavija gris suma **+2 de Fuerza**. Cada clavija cuenta una vez por bola y por tiro (como ahora).
+3. Las clavijas especiales suman Multi, multiplican el Multi o hacen otras cosas (tabla de abajo).
+4. Cuando caen todas las bolas, las reliquias que actúan "al final del tiro" se aplican **de izquierda a derecha**. Por eso importa el orden: primero las que suman Multi y después las que lo multiplican. Las reliquias se reordenan arrastrándolas en la tienda.
+5. **Golpe = Fuerza × Multi**, redondeado para abajo.
+
+Ejemplo: 12 clavijas grises (24 Fuerza) + 2 rojas (+6 Multi, total 7) = 168. Con Corona del Rey Caído (×2 Multi) = 336.
+
+## Clavijas especiales (tu tablero es tu mazo)
+
+El tablero empieza con 52 clavijas grises y es **tuyo durante toda la partida**. En la tienda comprás mejoras de clavija y **vos tocás cuál clavija cambiar**. Cada tipo tiene un color y un nivel (los pergaminos lo suben).
+
+| Clavija | Qué hace (nivel 1) | Al subir de nivel |
+|---|---|---|
+| Gris | +2 Fuerza | +1 Fuerza |
+| Roja | +3 Multi | +2 Multi |
+| Azul (cristal) | ×1,5 Multi. Tiene 1 en 4 de romperse y quedar como hueco hasta el final de la partida | +0,25 al × |
+| Dorada | +6 Fuerza y +1 oro | +1 oro |
+| Verde (resorte) | +10 Fuerza y la bola sale disparada para arriba (toca más clavijas) | +5 Fuerza |
+| Violeta (eco) | la próxima clavija que toque la bola cuenta 2 veces | cuenta 3 veces |
+
+Las clavijas rojas de la etapa 5 (×2 del total) pasan a ser las **azules**; la bola de fuego y la bola que se divide pasan a ser **bolas iniciales y reliquias**.
+
+## Reliquias (las sinergias)
+
+Hasta **5** a la vez. Se compran en la tienda o salen del cofre del jefe; se venden por la mitad de lo que costaron. Hay 3 rarezas: **común** (4 de oro), **rara** (7) y **legendaria** (12). Están pensadas en **familias** que se potencian entre sí. Empezamos con 20; los números son de arranque y se ajustan con pruebas de Lune.
+
+| # | Reliquia | Rareza | Qué hace | Combina con |
+|---|---|---|---|---|
+| 1 | Brasa | común | +1 Multi por cada clavija roja que haya **en tu tablero** (aunque no la toques) | comprar rojas, Pergamino rojo |
+| 2 | Corazón de Rubí | rara | las rojas dan el doble de Multi | Brasa |
+| 3 | Martillo Pesado | común | +30 Fuerza si el tiro tocó 15 clavijas o más | resortes, bola partida |
+| 4 | Cadena | común | +2 Multi por cada 5 clavijas tocadas en el tiro | Martillo, bola partida |
+| 5 | Gemela | común | la bola se parte en 2 en el toque 6 | Cadena, Martillo, Enjambre |
+| 6 | Enjambre | rara | ×1,5 Multi por cada bola extra que haya en el tiro | Gemela, bola Partida |
+| 7 | Hoja Afilada | común | las bolas extra suman el doble de Fuerza | Gemela |
+| 8 | Bolsa de Cuero | común | el interés de la tienda llega hasta 10 de oro (en vez de 5) | Avaro |
+| 9 | Avaro | rara | +1 Multi por cada 5 de oro que tengas guardado | Bolsa de Cuero, doradas |
+| 10 | Toque de Oro | común | las doradas también dan +2 Multi | doradas |
+| 11 | Trofeo | rara | crece: +1 Multi para siempre cada vez que matás un monstruo de un solo tiro | todo lo que haga golpes grandes |
+| 12 | Callo | común | crece: +3 Fuerza para siempre cada vez que se rompe una azul | azules, Vidrio Frágil |
+| 13 | Racha | rara | crece: ×0,25 Multi más por cada pelea seguida que ganás sin que te peguen; se reinicia si te pegan | jugar arriesgado |
+| 14 | Yesca | rara | la quemadura de la bola de fuego hace tanto daño como tu Multi del último tiro | bola Fuego, rojas |
+| 15 | Vidrio Frágil | rara | las azules dan ×2 en vez de ×1,5, pero se rompen 1 de cada 2 | Callo |
+| 16 | Último Aliento | rara | ×3 Multi si te queda menos de 15 de vida | Racha (al revés: riesgo) |
+| 17 | Paciencia | rara | el primer tiro de cada pelea no hace daño; el segundo tiene ×4 Multi | jefes con mucha vida |
+| 18 | Corona del Rey Caído | legendaria | ×2 Multi en todos los tiros | todo |
+| 19 | Eco Infinito | legendaria | las violetas hacen que la próxima clavija cuente 4 veces | violetas en zonas con muchas rojas |
+| 20 | Mano de Midas | legendaria | cada clavija que toca la primera bola da +1 oro | Avaro |
+
+## Pergaminos (se usan cuando querés)
+
+Hay **2 lugares**. Se compran en la tienda (3 de oro) y se usan con un toque, entre tiros o en la tienda.
+
+| Pergamino | Qué hace |
+|---|---|
+| Rojo / Azul / Dorado / Verde / Violeta / Gris | sube 1 nivel ese tipo de clavija, para toda la partida |
+| Forja | convierte 2 clavijas que elijas en el tipo que diga el pergamino |
+| Martillo | borra 1 clavija que elijas (la deja como hueco: la bola pasa derecho) |
+| Vendaje | +15 de vida |
+| Furia | el próximo tiro tiene ×2 Multi |
+
+## Tienda (reemplaza a "elegí 1 de 3")
+
+- Aparece después de cada pelea que ganás. Primero te curás 10 (como ahora).
+- **Oro:** 3 por monstruo, 5 por jefe. +2 si lo mataste en 1 tiro, +1 si fue en 2. **Interés:** +1 por cada 5 de oro que tengas al entrar, hasta 5 (la Bolsa de Cuero sube el tope).
+- Ofrece: **2 reliquias, 2 mejoras de clavija y 1 pergamino**. Botón **Renovar** (2 de oro, y cada vez que lo usás en la misma tienda cuesta 1 más).
+- Lo que sale lo elige el servidor con la semilla de la partida. Cada reliquia muestra su rareza; las chances de cada rareza (común 70 %, rara 25 %, legendaria 5 %) se ven en un botón "¿Qué puede salir?". Como el oro **no se vende por Robux**, no cuenta como ítem pago al azar (sección 6 de la GUIA), pero mostramos las chances igual.
+- Botón grande **"Bajar"** para ir a la próxima pelea.
+
+## La mazmorra: 3 zonas y jefes con maña
+
+| Zona | Pelea 1 | Pelea 2 | Jefe (con maña) |
+|---|---|---|---|
+| 1 · Cloacas | Rata de Cloaca | Slime Verde | Rey Rata |
+| 2 · Catacumbas | Murciélago | Esqueleto | Goblin con Lanza |
+| 3 · Trono de Hueso | Gólem de Piedra | Caballero Hueco | Rey de los Huesos |
+
+- La vida de los monstruos crece mucho de zona en zona (como en Balatro), porque las combinaciones crecen mucho. **Números de arranque:** zona 1: 60, 110, 200 · zona 2: 450, 800, 1.500 · zona 3: 3.500, 6.000, 12.000. Golpes: 4 a 14. Se ajustan con Lune.
+- El caballero sigue con **50 de vida** y se cura 10 entre peleas. Si llegás a 0, perdés.
+- Los números grandes se escriben cortos: 12.400 → "12,4 mil", 1.500.000 → "1,5 M". El tope por tiro sube de 999 a 10 millones.
+
+**Mañas de jefe** (el servidor sortea una por jefe con la semilla de la partida; se ve en un cartel antes de tirar):
+
+| Maña | Qué rompe |
+|---|---|
+| Sangre fría | las rojas no suman |
+| Cristal maldito | las azules se rompen siempre |
+| Paredes vivas | las 2 columnas de los costados no cuentan |
+| Avaricia | te saca 1 de oro por tiro |
+| Coraza | solo cuentan los golpes de 100 o más |
+| Silencio | la reliquia de la izquierda no funciona |
+| Viento | la bola sale más rápida y desviada |
+| Furia | si no lo matás, te pega el doble |
+
+## Bolas para elegir (se desbloquean y se guardan)
+
+Al empezar la partida elegís con qué bola bajás. Cada una cambia el estilo de juego:
+
+| Bola | Qué hace | Cómo se desbloquea |
+|---|---|---|
+| Hierro | normal; empezás con 4 de oro más | desde el inicio |
+| Fuego | +1 Fuerza por clavija; el monstruo se quema (3 por turno, 2 turnos) | llegar a la zona 2 |
+| Partida | se parte en 2 en el toque 5 | ganarle a un jefe |
+| (después) Cristal, Oro, Eco… | una por familia de reliquias | logros |
+
+**Desbloqueos de reliquias:** de las 20, arrancás con 12; las otras 8 se desbloquean con logros ("hacé un golpe de 10.000", "ganá una pelea con 4 bolas en juego", "terminá una zona con 20 de oro"). Es el motivo para volver (lo que el algoritmo de Roblox mide a 28 días).
+
+## Sistemas del prototipo (orden nuevo)
+
+1. **Simulación de la bola** (hecho, etapa 2).
+2. **Tablero y puntería** (hecho, etapa 2).
+3. **Revisión del servidor** (hecho, etapa 3): repite el tiro con las clavijas, reliquias y pergaminos de la partida, que el cliente no manda.
+4. **Monstruos y mazmorra** (hecho, etapa 4; pasa a 3 zonas en la 5d).
+5. **Rediseño roguelike**, en 4 pasos:
+   - **5a · Fuerza × Multi y clavijas especiales.** Panel de dos cajas, 6 tipos de clavija, tablero propio de la partida. Lo de la etapa 5 se convierte (azul, bola de fuego, Gemela).
+   - **5b · Oro y tienda.** Oro, interés, tienda con renovar, mejoras de clavija tocando el tablero, pergaminos.
+   - **5c · Reliquias.** Las 20, con orden de izquierda a derecha, vender y reordenar. Prueba con Lune de cada una y de combinaciones.
+   - **5d · Zonas, jefes con maña y cofre.** 3 zonas, 8 mañas, cofre de 1 de 3 reliquias. Balance con Lune (un bot que compra y elige).
+   - **Punto de control:** prototipo jugable de nuevo, con prueba de 10 minutos.
+6. **Guardado** con ProfileStore: bolas y reliquias desbloqueadas, logros, mejor zona.
+7. **Pantallas**: inicio y elegir bola, pelea, tienda, cofre, derrota y victoria, colección de reliquias.
+8. a 11. Estilo, arte (ahora también 20 íconos de reliquias, 6 de clavijas y 10 de pergaminos), sensación y sonido, antes de publicar.
 
 ## Números de arranque (en `plinko-knight/src/shared/Config.luau`)
 
 | Qué | Valor |
 |---|---|
-| Tablero | 7 columnas × 8 filas alternadas (unas 52 clavijas) |
-| Daño por clavija | 2 (cada clavija cuenta una vez por tiro) |
+| Tablero | 7 columnas × 8 filas alternadas (52 clavijas) |
+| Golpe | Fuerza × Multi; cada tiro arranca con Fuerza 0 y Multi 1; gris = +2 Fuerza |
 | Vida del caballero | 50; se cura 10 entre peleas |
-| Monstruos (vida / golpe) | 1: 40 / 4 · 2: 60 / 6 · 3: 100 / 7 · 4: 150 / 9 · 5: 210 / 10 · 6: 280 / 12 · **Jefe: 380 / 12** (con mejoras; ver etapa 5) |
-| Bola de fuego | +1 de daño por clavija; el monstruo se quema 3 por turno durante 2 turnos. Repetida: la quemadura sube 3 (6, 9…); el +1 por clavija no sube (ver etapa 5) |
-| Clavija que duplica | 2 clavijas rojas; al tocar una, el daño que llevás en ese tiro se duplica (cada una, una vez por tiro). Repetida: una clavija roja más |
-| Bola que se divide | En el 5.º toque se parte en 2 y las dos siguen sumando. Repetida: en el 4.º toque, y después en el 3.º |
-| Bolas que se desbloquean | Hierro (desde el inicio) · Fuego (llegar al piso 4) · Partida (ganarle al jefe) |
+| Lugares | 5 reliquias, 2 pergaminos |
+| Oro | 3 por monstruo, 5 por jefe, +2/+1 por matar en 1/2 tiros, interés 1 cada 5 (tope 5) |
+| Precios | reliquia 4 / 7 / 12 · mejora de clavija 3 · pergamino 3 · renovar 2 (+1 cada vez) |
+| Chances de rareza | común 70 %, rara 25 %, legendaria 5 % (a la vista en la tienda) |
+| Monstruos (vida) | zona 1: 60, 110, 200 · zona 2: 450, 800, 1.500 · zona 3: 3.500, 6.000, 12.000 |
+| Tope por tiro | 10 millones de golpe; 4 bolas |
 
-Objetivo de balance: un tiro normal toca entre 10 y 18 clavijas (20 a 36 de daño), cada pelea dura 2 a 4 tiros y en las primeras partidas se pierde entre la pelea 4 y la 6.
+Objetivo de balance: con un bot que compra al azar, perder casi siempre en la zona 2; con un bot que arma una familia, ganarle al jefe de la zona 2 seguido y a veces al de la 3. Una partida ganada dura 15 a 20 minutos.
 
 ## Cómo funciona por dentro
 
 - **La física es propia y en 2D, no la de Roblox.** La bola nunca es una pieza con física: el cliente solo la dibuja siguiendo la simulación. Así no se escapa hacia la cámara y se puede probar fuera de Studio.
-- **El servidor lleva la partida** (piso, vida, mejoras y monstruo). En cada tiro le da al cliente una semilla, y el cliente manda solo el ángulo y el daño que vio. El servidor corre la misma simulación con ese ángulo; si el daño no coincide (con un margen chico), usa el suyo. Además tiene un tope de daño por tiro, un límite de frecuencia y revisa que el tiro sea del turno actual. Valida tipos y números finitos.
+- **El servidor lleva la partida** (zona, pelea, vida, oro, tablero con sus clavijas especiales, reliquias, pergaminos y monstruo). La tienda, el cofre y las mañas salen de la semilla de la partida, que tiene el servidor; el cliente solo pide ("comprar la reliquia 2", "mejorar la clavija 17") y el servidor valida oro, lugares libres y que el ítem esté en la tienda.
+- **El servidor lleva la pelea** En cada tiro le da al cliente una semilla, y el cliente manda solo el ángulo y el daño que vio. El servidor corre la misma simulación con ese ángulo; si el daño no coincide (con un margen chico), usa el suyo. Además tiene un tope de daño por tiro, un límite de frecuencia y revisa que el tiro sea del turno actual. Valida tipos y números finitos.
 - **Guardado:** ProfileStore con `VERSION` y migración cada vez que cambie lo que se guarda.
 
 ## Cómo se ve
@@ -75,13 +211,13 @@ Objetivo de balance: un tiro normal toca entre 10 y 18 clavijas (20 a 36 de dañ
 
 ## Qué queda FUERA de la versión mínima ("después")
 
-Mazos de bolas, reto diario, ranking, **cualquier cosa con Robux**, varias mazmorras, multijugador cooperativo, mascotas y tienda. Se anotan acá y no se programan. Cuando llegue Robux: aspectos de bola y de tablero. Si alguna vez hay algo al azar que se pague, van las probabilidades a la vista y PolicyService (sección 6 de la GUIA).
+Dificultades extra después de ganar (como las apuestas de color de Balatro, acá serían "profundidades"), más bolas y reliquias, reto diario con semilla fija, ranking, **cualquier cosa con Robux**, varias mazmorras, multijugador cooperativo, mascotas y tienda con Robux (la tienda de oro sí entra). Se anotan acá y no se programan. Cuando llegue Robux: aspectos de bola y de tablero. Si alguna vez hay algo al azar que se pague, van las probabilidades a la vista y PolicyService (sección 6 de la GUIA).
 
 ## Cambios respecto del plan
 
 - **El monstruo va a la derecha, no abajo del tablero.** Lo aprobaste el 25/10 en la idea de arte: en un celular horizontal el tablero y el monstruo no entran uno arriba del otro.
 - **El panel de daño tiene dos cajas** (daño | ×2). La regla de la clavija roja no cambia: solo se muestra separado.
-- Lo demás (números, mejoras, lo que queda fuera y cómo funciona por dentro) es igual al plan.
+- **Rediseño roguelike (25/10, propuesto):** el daño pasa a ser Fuerza × Multi, el "elegí 1 de 3" se cambia por una tienda con oro (el 1 de 3 queda para el cofre de cada jefe), aparecen reliquias, pergaminos, clavijas especiales, 3 zonas y jefes con maña. Las etapas 5a a 5d reemplazan a la etapa 5 del plan; las etapas 6 a 11 siguen, con más pantallas y más arte.
 
 ## Avance
 

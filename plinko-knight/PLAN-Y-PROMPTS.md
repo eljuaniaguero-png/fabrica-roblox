@@ -32,6 +32,8 @@ Hay una copia de este archivo en tu PC en `plinko-knight/PLAN-Y-PROMPTS.md`. Tod
 | 10 | Sensación y sonido | Golpes que se sienten, números que explotan, sonidos | Video corto |
 | 11 | Antes de publicar | Tutorial del primer minuto, analítica, checklist | **Publicás vos** |
 
+> **Cambio del 25/10/2026:** después de la prueba de 5 minutos, Juani pidió hacerlo más roguelike, estilo Balatro. La ficha (`ideas/plinko-knight.md`, sección "Rediseño roguelike") manda sobre este plan: la etapa 5 sigue con los pasos 5a a 5d (Fuerza × Multi, tienda, reliquias, zonas y jefes con maña) antes del guardado. Los prompts 6 a 11 de abajo se adaptan a eso.
+
 **La prueba de los 5 minutos (después de la etapa 5):** jugá en gris, sin arte. Si perdés en la pelea 4 y querés empezar de nuevo enseguida, el juego sigue. Si te aburre, se frena ahí y no se gasta tiempo en arte. Por eso el arte va al final.
 
 ---
