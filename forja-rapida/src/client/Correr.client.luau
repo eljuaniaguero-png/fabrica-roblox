@@ -204,7 +204,11 @@ RunService.Heartbeat:Connect(function()
 		polvo = p
 	end
 	local enElPiso = humanoide.FloorMaterial ~= Enum.Material.Air
-	local activo = corre and enElPiso and not Efectos.reducidos()
+	-- con la animación propia (AnimCorrer) el polvo sale en cada pisada, no seguido
+	local activo = corre
+		and enElPiso
+		and not Efectos.reducidos()
+		and personaje:GetAttribute("AnimCorrer") ~= true
 	p.Rate = if activo then C.PolvoPorSegundo else 0
 	if activo and os.clock() > proximoColor then
 		proximoColor = os.clock() + 0.5

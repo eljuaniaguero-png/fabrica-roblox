@@ -278,6 +278,54 @@ local GameConfig = {
 		FovCorrer = 78,
 		FovTiempo = 0.25,
 		PolvoPorSegundo = 10, -- cubitos de polvo en los pies mientras corre (0 con Efectos reducidos)
+		-- Animación propia de correr (pedido B1, AnimCorrer.client.luau). Solo cuando corre;
+		-- caminar sigue con la de Roblox.
+		VelocidadAnimacion = 30, -- studs/s a los que el pie de apoyo no patina con AdjustSpeed 1 (medido el 25/10)
+		CaderaMedida = 2.19, -- HipHeight del muñeco con el que se midió (cada avatar se escala con el suyo)
+		AjusteMinimo = 0.8, -- límites de AdjustSpeed (ciclo de 0,69 a 0,41 s)
+		AjusteMaximo = 1.35,
+		MinimaParaAnimar = 19, -- studs/s: más lento que esto se ve la de caminar
+		ArranqueSi = 0.35, -- si estaba quieto hace menos de esto (s), hace los 3 pasos de arranque
+		FrenadaSi = 1, -- si venía corriendo más de esto (s) y se para, derrapa
+		PolvoPisada = 4, -- cubitos de polvo en cada pisada (0 con Efectos reducidos)
+		PolvoDerrape = 14,
+		-- Tipo de piso según el MaterialVariant del piso (lo que contiene el nombre); si no está,
+		-- según el Material. Cada tipo tiene su tono y volumen de pisada (GameConfig.Sonidos.Pisada).
+		PisoPorVariante = {
+			Pradera = "Pasto",
+			Dunas = "Arena",
+			Glaciar = "Nieve",
+			Abismo = "Cristal",
+		},
+		PisoPorMaterial = {
+			Grass = "Pasto",
+			LeafyGrass = "Pasto",
+			Sand = "Arena",
+			Snow = "Nieve",
+			Ice = "Nieve",
+			Glass = "Cristal",
+			Neon = "Cristal",
+			ForceField = "Cristal",
+		},
+		Pisadas = {
+			Pasto = { Tono = 0.8, Volumen = 0.35 },
+			Arena = { Tono = 0.65, Volumen = 0.3 },
+			Nieve = { Tono = 0.55, Volumen = 0.4 },
+			Piedra = { Tono = 1.1, Volumen = 0.4 },
+			Cristal = { Tono = 1.7, Volumen = 0.35 },
+		},
+	},
+
+	-- Animaciones propias del personaje (R15). Cada una es "rbxassetid://..." cuando está
+	-- publicada. Vacía: en Studio se arma sola desde shared/AnimacionesCorrer (anda solo en
+	-- Studio) y en el juego publicado se usa la de Roblox.
+	-- Publicadas el 25/10/2026 desde el Editor de animación (pedido B1).
+	Animaciones = {
+		Correr = "rbxassetid://105077947764210",
+		CorrerPico = "rbxassetid://104361622568574",
+		Arranque = "rbxassetid://99277479362653",
+		Frenada = "rbxassetid://98271089079099",
+		Salto = "rbxassetid://71931251943636",
 	},
 
 	-- Analítica (Analitica.luau): los 10 pasos del embudo del jugador nuevo, en orden. Se ven en
@@ -2840,6 +2888,10 @@ local GameConfig = {
 	Sonidos = {
 		Golpe = "rbxassetid://9116651688", -- PSE Metal Hits 7 (0,5 s)
 		Correr = "rbxassetid://9126229255", -- al empezar a correr. PSE Whoosh By Fast Airy Swooshing
+		-- pisada al correr (marker Pisada_Izq/Der); el tono cambia según el piso (Correr.Pisadas).
+		-- Es el golpe de caer del personaje que trae Roblox.
+		Pisada = "rbxasset://sounds/action_jump_land.mp3",
+		Derrape = "rbxassetid://9125380423", -- frenada. PSE Baseball Runner Slide On Dirt (se corta a 0,6 s)
 		Romper = "rbxassetid://9118587698", -- PSE Rock Drop Breaks 3 (1,6 s)
 		Revelacion = "rbxassetid://9116394545", -- se sube el tono según la rareza. PSE Magic Glows 1
 		RevelacionRara = "rbxassetid://9116395089", -- extra para Épica o mejor. PSE Magic Glows 4

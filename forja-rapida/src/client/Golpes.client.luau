@@ -322,6 +322,11 @@ local function animar(personaje: Model)
 		if raiz and raiz:IsA("BasePart") then
 			local v = raiz.AssemblyLinearVelocity
 			local rapidez = math.min(Vector3.new(v.X, 0, v.Z).Magnitude / 16, 1)
+			-- corriendo, el brazo lo mueve la animación de correr (AnimCorrer)
+			local dueno = Players:GetPlayerFromCharacter(personaje)
+			if dueno and dueno:GetAttribute("Corriendo") == true then
+				rapidez = 0
+			end
 			angulo = G.Balanceo * rapidez * math.sin(os.clock() * G.BalanceoVelocidad * math.pi * 2)
 		end
 	end

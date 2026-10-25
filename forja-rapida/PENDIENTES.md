@@ -40,7 +40,7 @@ Se hacen de a uno, en orden. Cuando un pedido dice "Prompt: X de PROMPTS-SECTORE
   - Cómo lo pruebo: caminar, correr, saltar corriendo, con bonos, celular, y 2 jugadores en Local Server.
   - Prompt: A1 de PROMPTS-SECTORES.md
 
-- [ ] **B1 · Animación de correr** (necesita A1)
+- [x] **B1 · Animación de correr** (necesita A1) — hecho 25/10/2026, IDs en GameConfig.Animaciones
   - Qué se hace: animación de Roblox propia, estilo caricatura, ≥ 10 poses, con arranque, frenada y markers de pisada (polvo y sonido según el piso).
   - Qué hacés vos: publicar la animación si no puedo hacerlo yo (te paso los botones).
   - Cómo lo pruebo: tiras de 8 capturas (costado, frente, cámara lenta) y lado a lado en el juego.
