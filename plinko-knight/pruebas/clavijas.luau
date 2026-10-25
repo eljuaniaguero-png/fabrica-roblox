@@ -5,7 +5,7 @@
 -- 2) Cada tipo de clavija: lo que suma cada toque y que las cajas cierren.
 -- 3) Niveles, bola de fuego y bola partida.
 -- 4) Todo junto a nivel alto: no explota (topes) y el servidor coincide (golpe, oro y rotas).
--- 5) Cartas, convertir clavijas, azules rotas y quemadura en la mazmorra.
+-- 5) Convertir clavijas, azules rotas y quemadura en la mazmorra.
 -- Sale con error si algo falla.
 
 local process = require("@lune/process")
@@ -319,20 +319,8 @@ do
 	chequear(res.Multi <= Config.TopeMulti and res.Danio <= Config.TopeDanioTiro, "tope: se pasó")
 end
 
--- 5) Mazmorra: cartas, convertir, rotas y quemadura
+-- 5) Mazmorra: números cortos, convertir, rotas y quemadura (la tienda: pruebas/tienda)
 do
-	local cartas = Clavijas.ofrecer(42)
-	chequear(#cartas == Config.Cartas.PorPantalla, "tienen que salir 3 cartas")
-	local vistas: { [string]: boolean } = {}
-	for _, tipo in cartas do
-		chequear(table.find(Config.OrdenClavijas, tipo) ~= nil and not vistas[tipo], "carta mal")
-		vistas[tipo] = true
-	end
-	chequear(
-		table.concat(Clavijas.ofrecer(42), ",") == table.concat(cartas, ","),
-		"cartas: misma semilla, otras"
-	)
-
 	chequear(Clavijas.numeroCorto(1.75) == "1,75", "número corto: 1,75")
 	chequear(Clavijas.numeroCorto(12400) == "12,4 mil", "número corto: 12,4 mil")
 	chequear(Clavijas.numeroCorto(1500000) == "1,5 M", "número corto: 1,5 M")
@@ -340,20 +328,8 @@ do
 
 	local e = Mazmorra.nueva()
 	chequear(#e.Tablero == N and e.Bola == "hierro" and e.Oro == 0, "la partida no arranca bien")
-	chequear(Mazmorra.elegir(e, "roja", 1) == nil, "se pudo elegir peleando")
-	local t = Mazmorra.turno(e, 999)
-	chequear(t.Resultado == "piso" and e.Fase == "eligiendo", "ganar no abrió las cartas")
-	Mazmorra.ofrecer(e, { "roja", "azul", "verde" })
-	chequear(Mazmorra.elegir(e, "dorada", 1) == nil, "se pudo elegir una carta no ofrecida")
-	chequear(Mazmorra.elegir(e, "hueco", 1) == nil, "se pudo elegir hueco")
-	chequear(Mazmorra.elegir(e, 5, 1) == nil, "se pudo elegir un número")
-	local ids = Mazmorra.elegir(e, "azul", 9)
-	chequear(ids ~= nil and #ids == Config.Cartas.ClavijasPorCarta, "no convirtió 2 clavijas")
-	chequear(e.Fase == "peleando", "elegir no volvió a la pelea")
-	for _, id in ids or {} do
-		chequear(e.Tablero[id] == "azul", "la clavija convertida no es azul")
-	end
-	chequear(Mazmorra.elegir(e, "roja", 1) == nil, "se pudo elegir dos veces")
+	local ids = Clavijas.convertir(e.Tablero, "azul", 2, 9)
+	chequear(#ids == 2 and e.Tablero[ids[1]] == "azul", "no convirtió 2 clavijas")
 
 	-- Convertir solo agarra grises.
 	local t2 = Clavijas.nuevoTablero(N)
@@ -387,7 +363,7 @@ do
 	-- Quemadura de la bola de fuego.
 	local q = Config.Bolas.fuego.Quemadura
 	local vida = e.VidaMonstruo
-	t = Mazmorra.turno(e, 10, q)
+	local t = Mazmorra.turno(e, 10, q)
 	chequear(t.Quemadura == q and e.VidaMonstruo == vida - 10 - q, "la quemadura no pegó")
 	Mazmorra.turno(e, 1, 0)
 	t = Mazmorra.turno(e, 1, 0)

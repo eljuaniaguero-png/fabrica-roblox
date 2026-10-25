@@ -5,14 +5,16 @@
 --   PedirTiro() -> (numeroTiro, semilla)  (nil si no estás peleando)
 --   Tirar(numeroTiro, angulo, danioVisto) -> Mazmorra.Turno  (nil si el pedido no es válido)
 -- El tablero de clavijas, los niveles y la bola los pone el servidor desde la partida: el
--- cliente no los manda. El oro de las doradas y las azules rotas también salen de la revisión. Al ganar una pelea, el turno vuelve con la fase "eligiendo" y las cartas ofrecidas.
+-- cliente no los manda. El oro de las doradas y las azules rotas también salen de la revisión.
+-- La furia (pergamino) se gasta en este tiro. Al ganar una pelea, el turno vuelve con la fase
+-- "tienda" y lo que hay en la tienda. Al ganar una pelea, el turno vuelve con la fase "eligiendo" y las cartas ofrecidas.
 
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local Shared = ReplicatedStorage:WaitForChild("Shared")
 local Config = require(Shared:WaitForChild("Config"))
 local Mazmorra = require(Shared:WaitForChild("Mazmorra"))
-local Clavijas = require(Shared:WaitForChild("Clavijas"))
+local TiendaModulo = require(Shared:WaitForChild("Tienda"))
 local Revision = require(Shared:WaitForChild("Revision"))
 local TableroModulo = require(Shared:WaitForChild("Tablero"))
 local Partida = require(script.Parent:WaitForChild("Partida"))
@@ -79,9 +81,10 @@ local function tirar(
 		)
 	end
 	Mazmorra.cobrarTiro(e, r.Oro, r.Rotas)
+	e.Furia = false
 	local turno = Mazmorra.turno(e, r.Danio, r.Quemadura)
-	if e.Fase == "eligiendo" then
-		Mazmorra.ofrecer(e, Clavijas.ofrecer(Partida.semilla()))
+	if e.Fase == "tienda" then
+		TiendaModulo.abrir(e, Partida.semilla())
 		turno.Estado = Mazmorra.copiar(e)
 	end
 	return turno

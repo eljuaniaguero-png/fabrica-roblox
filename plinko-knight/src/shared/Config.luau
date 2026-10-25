@@ -137,11 +137,41 @@ Config.Clavijas = {
 	hueco = { Nombre = "Hueco", Color = "#3A3A3A" }, -- azul rota: la bola pasa derecho
 }
 
--- Cartas entre peleas (hasta que llegue la tienda en el paso 5b): 3 tipos de clavija; elegir uno
--- convierte clavijas grises al azar (con la semilla de la partida) en ese tipo.
-Config.Cartas = {
-	PorPantalla = 3,
-	ClavijasPorCarta = 2,
+-- Oro (paso 5b): se gana al matar un monstruo y se gasta en la tienda. Es del juego, se pierde al
+-- terminar la partida y NUNCA se vende por Robux.
+Config.Oro = {
+	PorMonstruo = 3,
+	PorJefe = 5,
+	BonusUnTiro = 2, -- si lo mataste en 1 tiro
+	BonusDosTiros = 1, -- si fue en 2
+	InteresCada = 5, -- +1 de interés por cada 5 que tengas al entrar a la tienda...
+	InteresTope = 5, -- ...hasta 5 (la reliquia Bolsa de Cuero sube el tope, paso 5c)
+	Inicial = 0,
+}
+
+-- Tienda entre peleas (paso 5b). Lo que sale lo elige el servidor con la semilla de la partida.
+-- Las reliquias se suman en el paso 5c.
+Config.Tienda = {
+	MejorasDeClavija = 2, -- cuántas mejoras de clavija ofrece
+	Pergaminos = 1, -- cuántos pergaminos ofrece
+	-- Convertir 1 clavija que elijas en ese tipo. A 3 (con 3 de oro por monstruo) comprando al
+	-- azar se ganaba el 3 %; a 2, el 21 % (lune, 25/10).
+	PrecioClavija = 2,
+	PrecioPergamino = 3,
+	Renovar = 2, -- y cada vez que renovás en la misma tienda cuesta 1 más
+	RenovarSube = 1,
+}
+
+-- Pergaminos (paso 5b): se compran en la tienda y se usan cuando querés (entre tiros o en la
+-- tienda). Hay 2 lugares. Peso = qué tan seguido sale en la tienda (la chance se ve en
+-- "¿Qué puede salir?"). Los "nivel:" suben un tipo de clavija y los "forja:" convierten 2.
+Config.LugaresPergamino = 2
+Config.Pergaminos = {
+	nivel = { Nombre = "Pergamino", Peso = 1 }, -- uno por tipo de clavija (6 en total)
+	forja = { Nombre = "Forja", Peso = 1, Clavijas = 2 }, -- uno por tipo especial (5 en total)
+	martillo = { Nombre = "Martillo", Peso = 2 }, -- borra 1 clavija (queda hueco)
+	vendaje = { Nombre = "Vendaje", Peso = 2, Cura = 15 },
+	furia = { Nombre = "Furia", Peso = 2, PorMulti = 2 }, -- el próximo tiro: ×2 Multi al final
 }
 
 -- Bolas para elegir al empezar (la pantalla de elegir llega en la etapa 7; en Studio, tecla Z).
@@ -178,6 +208,7 @@ Config.Servidor = {
 	TopeDanioPorTiro = 10000000, -- por si algo sale mal (= Config.TopeDanioTiro)
 	TiempoMinimoEntreTiros = 1, -- segundos entre dos tiros del mismo jugador
 	TiempoMinimoVolver = 0.5, -- segundos entre dos "Volver a bajar" del mismo jugador
+	TiempoMinimoAccion = 0.15, -- segundos entre dos compras o pergaminos del mismo jugador
 }
 
 -- Animación del turno (cliente, etapa 4).

@@ -2,13 +2,16 @@
 -- Remotos de la mazmorra (los tiros están en Tiros.luau):
 --   ObtenerEstado() -> Mazmorra.Estado
 --   VolverABajar() -> Mazmorra.Estado  (solo después de perder o de ganar la mazmorra)
---   ElegirCarta(tipo) -> (Mazmorra.Estado, ids convertidos)  (solo en la fase "eligiendo" y si
---   tipo es una de las cartas ofrecidas; si no, devuelve el estado como está y nil)
+--   Tienda(accion, indice, clavijas) -> (Mazmorra.Estado, error?)  acciones: "comprar" (el ítem
+--   indice; clavijas = { id } para una mejora de clavija), "renovar" y "bajar"
+--   UsarPergamino(lugar, clavijas) -> (Mazmorra.Estado, error?)  (en la pelea o en la tienda)
+--   Todo lo valida shared/Tienda; si no se puede, devuelve el estado como está y el motivo.
 --   EstadoCambio (servidor -> cliente): el estado cambió fuera de un tiro (comandos de prueba)
 --   Prueba(comando, n) (SOLO existe en Studio): "piso" salta a la pelea n (7 = el jefe), "vida"
 --   te pone n de vida, "bola" cambia a la bola n de Config.OrdenBolas, "clavija" convierte
---   grises en el tipo n de Config.OrdenClavijas y "nivel" sube 1 nivel todos los tipos. El
---   cliente lo manda con las teclas 1 a 7, 0, Z, X y C (ver Main.client).
+--   grises en el tipo n de Config.OrdenClavijas, "nivel" sube 1 nivel todos los tipos, "oro" da n
+--   de oro y "pergamino" agrega el pergamino n de Tienda.pergaminosPosibles. El cliente lo manda
+--   con las teclas 1 a 7, 0, Z, X, C, 8 y 9 (ver Main.client).
 -- Con teclas y no con el chat porque este place usa el chat viejo, que Roblox ya no carga.
 
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
@@ -18,6 +21,7 @@ local Shared = ReplicatedStorage:WaitForChild("Shared")
 local Config = require(Shared:WaitForChild("Config"))
 local Mazmorra = require(Shared:WaitForChild("Mazmorra"))
 local Clavijas = require(Shared:WaitForChild("Clavijas"))
+local TiendaModulo = require(Shared:WaitForChild("Tienda"))
 local Partida = require(script.Parent:WaitForChild("Partida"))
 
 local Peleas = {}
@@ -43,11 +47,19 @@ end
 -- Comandos de prueba de clavijas y bolas (sin ganar la pelea).
 function Peleas.probar(jugador: Player, comando: string, n: number)
 	local p = Partida.de(jugador)
-	if not p or p.Estado.Fase ~= "peleando" then
+	if not p or (p.Estado.Fase ~= "peleando" and p.Estado.Fase ~= "tienda") then
 		return
 	end
 	local e = p.Estado
-	if comando == "bola" then
+	if comando == "oro" then
+		e.Oro += math.floor(n)
+	elseif comando == "pergamino" then
+		local posibles = TiendaModulo.pergaminosPosibles()
+		local elegido = posibles[(math.floor(n) - 1) % #posibles + 1]
+		if #e.Pergaminos < Config.LugaresPergamino then
+			table.insert(e.Pergaminos, elegido.Id)
+		end
+	elseif comando == "bola" then
 		local bola = Config.OrdenBolas[math.floor(n)]
 		if bola then
 			p.Bola = bola
@@ -56,7 +68,7 @@ function Peleas.probar(jugador: Player, comando: string, n: number)
 	elseif comando == "clavija" then
 		local tipo = Config.OrdenClavijas[math.floor(n)]
 		if tipo then
-			Clavijas.convertir(e.Tablero, tipo, Config.Cartas.ClavijasPorCarta, Partida.semilla())
+			Clavijas.convertir(e.Tablero, tipo, 2, Partida.semilla())
 		end
 	elseif comando == "nivel" then
 		for tipo in Config.Clavijas do
@@ -110,22 +122,69 @@ function Peleas.iniciar()
 	end
 	volver.Parent = carpeta
 
-	local elegir = Instance.new("RemoteFunction")
-	elegir.Name = "ElegirCarta"
-	elegir.OnServerInvoke = function(jugador: Player, tipo: any): (Mazmorra.Estado?, { number }?)
+	-- Límite de frecuencia de compras y pergaminos (además de lo que valida shared/Tienda).
+	local function puedeActuar(p: Partida.Partida): boolean
+		local ahora = os.clock()
+		if ahora - p.UltimaAccion < Config.Servidor.TiempoMinimoAccion then
+			return false
+		end
+		p.UltimaAccion = ahora
+		return true
+	end
+
+	local tienda = Instance.new("RemoteFunction")
+	tienda.Name = "Tienda"
+	tienda.OnServerInvoke = function(
+		jugador: Player,
+		accion: any,
+		indice: any,
+		clavijas: any
+	): (Mazmorra.Estado?, string?)
 		local p = Partida.de(jugador)
 		if not p then
 			return nil, nil
 		end
-		-- Mazmorra.elegir valida la fase, el tipo y que sea una de las cartas ofrecidas.
-		local ids = Mazmorra.elegir(p.Estado, tipo, Partida.semilla())
-		if ids then
-			Partida.nuevaPelea(p)
+		if not puedeActuar(p) then
+			return Mazmorra.copiar(p.Estado), "Más despacio"
+		end
+		local ok, motivo = false, "Acción desconocida"
+		if accion == "comprar" then
+			ok, motivo = TiendaModulo.comprar(p.Estado, indice, clavijas)
+		elseif accion == "renovar" then
+			ok, motivo = TiendaModulo.renovar(p.Estado, Partida.semilla())
+		elseif accion == "bajar" then
+			ok = TiendaModulo.bajar(p.Estado)
+			motivo = if ok then nil else "La tienda está cerrada"
+			if ok then
+				p.Semilla = nil
+			end
+		end
+		return Mazmorra.copiar(p.Estado), if ok then nil else motivo
+	end
+	tienda.Parent = carpeta
+
+	local usar = Instance.new("RemoteFunction")
+	usar.Name = "UsarPergamino"
+	usar.OnServerInvoke = function(
+		jugador: Player,
+		lugar: any,
+		clavijas: any
+	): (Mazmorra.Estado?, string?)
+		local p = Partida.de(jugador)
+		if not p then
+			return nil, nil
+		end
+		if not puedeActuar(p) then
+			return Mazmorra.copiar(p.Estado), "Más despacio"
+		end
+		local ok, motivo = TiendaModulo.usar(p.Estado, lugar, clavijas)
+		if ok then
+			-- El tablero o la furia cambiaron: el tiro pedido (si había) se anula y se pide otro.
 			p.Semilla = nil
 		end
-		return Mazmorra.copiar(p.Estado), ids
+		return Mazmorra.copiar(p.Estado), if ok then nil else motivo
 	end
-	elegir.Parent = carpeta
+	usar.Parent = carpeta
 
 	estadoCambio = Instance.new("RemoteEvent")
 	estadoCambio.Name = "EstadoCambio"
@@ -142,7 +201,13 @@ function Peleas.iniciar()
 				Peleas.saltarAPiso(jugador, n)
 			elseif comando == "vida" then
 				Peleas.ponerVida(jugador, n)
-			elseif comando == "bola" or comando == "clavija" or comando == "nivel" then
+			elseif
+				comando == "bola"
+				or comando == "clavija"
+				or comando == "nivel"
+				or comando == "oro"
+				or comando == "pergamino"
+			then
 				Peleas.probar(jugador, comando, n)
 			end
 		end)

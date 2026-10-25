@@ -14,6 +14,7 @@ export type Partida = {
 	UltimoTiro: number, -- os.clock() del último tiro aceptado
 	UltimoVolver: number, -- os.clock() del último "Volver a bajar"
 	Bola: string, -- la bola con la que baja (hasta la pantalla de elegir bola, etapa 7)
+	UltimaAccion: number, -- os.clock() de la última compra / pergamino (límite de frecuencia)
 }
 
 local Partida = {}
@@ -42,6 +43,7 @@ function Partida.iniciar(jugador: Player): Partida
 		UltimoTiro = -math.huge,
 		UltimoVolver = -math.huge,
 		Bola = "hierro",
+		UltimaAccion = -math.huge,
 	}
 	Partida.nuevaPelea(p)
 	partidas[jugador] = p

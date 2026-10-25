@@ -1,7 +1,7 @@
 --!strict
 -- Clavijas especiales del paso 5a, sin Instances (las usan Simulacion, el servidor, el cliente y
--- las pruebas con Lune): cuánto suma cada tipo según su nivel, el tablero de la partida, qué
--- cartas salen y qué clavijas convierte una carta. Los números están en Config.Clavijas.
+-- las pruebas con Lune): cuánto suma cada tipo según su nivel, el tablero de la partida y
+-- convertir clavijas. Los números están en Config.Clavijas.
 --
 -- El tablero de la partida es una lista densa (una entrada por Id de clavija, en el orden de
 -- shared/Tablero) con el tipo de cada una: "gris", "roja", "azul", "dorada", "verde", "violeta" o
@@ -108,17 +108,6 @@ function Clavijas.contar(tablero: TableroPartida): { [string]: number }
 	return cuenta
 end
 
--- Las cartas que salen al ganar una pelea (3 tipos distintos, con la semilla).
-function Clavijas.ofrecer(semilla: number): { string }
-	local todas = table.clone(Config.OrdenClavijas)
-	Azar.mezclar(todas, Azar.nuevo(semilla))
-	local elegidas: { string } = {}
-	for i = 1, math.min(Config.Cartas.PorPantalla, #todas) do
-		table.insert(elegidas, todas[i])
-	end
-	return elegidas
-end
-
 -- Qué hace un tipo, en una frase corta (para cartas y carteles).
 function Clavijas.efecto(tipo: string, nivel: number): string
 	if tipo == "roja" then
@@ -140,17 +129,6 @@ function Clavijas.efecto(tipo: string, nivel: number): string
 		return ("+%d Fuerza"):format(Clavijas.fuerza(tipo, nivel))
 	end
 	return ""
-end
-
--- Nombre y frase de una carta.
-function Clavijas.describir(tipo: string, nivel: number): (string, string)
-	local d = datos(tipo)
-	return ("Clavijas %s"):format(d.Plural),
-		("%d grises se vuelven %s: %s"):format(
-			Config.Cartas.ClavijasPorCarta,
-			d.Plural,
-			Clavijas.efecto(tipo, nivel)
-		)
 end
 
 -- Números para mostrar: 1,5 · 12,4 mil · 1,5 M (sin decimales si no hacen falta).

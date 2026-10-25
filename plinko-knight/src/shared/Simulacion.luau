@@ -29,6 +29,7 @@ export type Modificadores = {
 	Tablero: Clavijas.TableroPartida?,
 	Niveles: Clavijas.Niveles?,
 	Bola: string?, -- "hierro", "fuego" o "partida"
+	Furia: boolean?, -- pergamino Furia: el Multi se multiplica al final del tiro
 }
 
 export type Toque = {
@@ -68,6 +69,7 @@ export type Resultado = {
 	Rotas: { number }, -- azules que se rompieron (el servidor las vuelve hueco después del tiro)
 	Quemadura: number, -- daño por turno que deja la bola de fuego (0 sin fuego)
 	Fuego: boolean,
+	Furia: number, -- por cuánto multiplicó la furia al final (1 = no había)
 	Empujones: number, -- cuántas veces actuó el anti-trabas
 	Fin: string, -- "abajo" (cayeron todas) o "tope" (llegó al tiempo máximo)
 }
@@ -350,6 +352,10 @@ function Simulacion.simular(
 		end
 	end
 
+	-- Pergamino Furia: al final del tiro, el Multi se multiplica.
+	local furia = if mods.Furia then Config.Pergaminos.furia.PorMulti else 1
+	multi = math.min(multi * furia, Config.TopeMulti)
+
 	local recorridos: { Recorrido } = {}
 	for _, b in bolas do
 		table.insert(recorridos, b.recorrido)
@@ -369,6 +375,7 @@ function Simulacion.simular(
 		Rotas = rotas,
 		Quemadura = if fuego then Config.Bolas.fuego.Quemadura else 0,
 		Fuego = fuego,
+		Furia = furia,
 		Empujones = empujones,
 		Fin = fin,
 	}

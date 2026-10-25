@@ -1,0 +1,313 @@
+--!strict
+-- Tienda y pergaminos del paso 5b, sin Instances (las usan el servidor, el cliente para mostrar
+-- y las pruebas con Lune). Todo lo que cambia la partida pasa por acá y valida: que haya oro, que
+-- el ítem esté en la tienda y no se haya vendido, que haya lugar para el pergamino y que las
+-- clavijas elegidas existan y no sean hueco. Los números están en Config.Oro, Config.Tienda y
+-- Config.Pergaminos.
+--
+-- Pergaminos: "nivel:<tipo>" (sube ese tipo de clavija), "forja:<tipo>" (convierte 2 clavijas que
+-- elijas), "martillo" (borra 1), "vendaje" (cura) y "furia" (×2 Multi en el próximo tiro).
+
+local Azar = require(script.Parent.Azar)
+local Clavijas = require(script.Parent.Clavijas)
+local Config = require(script.Parent.Config)
+local Mazmorra = require(script.Parent.Mazmorra)
+
+type Estado = Mazmorra.Estado
+type Item = Mazmorra.ItemTienda
+
+local Tienda = {}
+
+-- Todos los pergaminos que pueden salir, con su peso (la chance = peso / suma de pesos).
+function Tienda.pergaminosPosibles(): { { Id: string, Peso: number } }
+	local p = Config.Pergaminos
+	local lista = {}
+	table.insert(lista, { Id = "nivel:gris", Peso = p.nivel.Peso })
+	for _, tipo in Config.OrdenClavijas do
+		table.insert(lista, { Id = "nivel:" .. tipo, Peso = p.nivel.Peso })
+	end
+	for _, tipo in Config.OrdenClavijas do
+		table.insert(lista, { Id = "forja:" .. tipo, Peso = p.forja.Peso })
+	end
+	table.insert(lista, { Id = "martillo", Peso = p.martillo.Peso })
+	table.insert(lista, { Id = "vendaje", Peso = p.vendaje.Peso })
+	table.insert(lista, { Id = "furia", Peso = p.furia.Peso })
+	return lista
+end
+
+-- "nivel:roja" -> ("nivel", "roja"); "martillo" -> ("martillo", nil)
+function Tienda.partes(id: string): (string, string?)
+	local clase, tipo = string.match(id, "^(%a+):(%a+)$")
+	if clase then
+		return clase, tipo
+	end
+	return id, nil
+end
+
+function Tienda.esPergamino(id: any): boolean
+	if typeof(id) ~= "string" then
+		return false
+	end
+	for _, p in Tienda.pergaminosPosibles() do
+		if p.Id == id then
+			return true
+		end
+	end
+	return false
+end
+
+-- Cuántas clavijas hay que elegir en el tablero para usarlo (0, 1 o 2).
+function Tienda.clavijasAElegir(clase: string, id: string): number
+	if clase == "clavija" then
+		return 1
+	end
+	local tipoPergamino = Tienda.partes(id)
+	if tipoPergamino == "forja" then
+		return Config.Pergaminos.forja.Clavijas
+	elseif tipoPergamino == "martillo" then
+		return 1
+	end
+	return 0
+end
+
+-- Nombre, frase y color (hex) para mostrar un ítem o un pergamino.
+function Tienda.describir(clase: string, id: string, e: Estado?): (string, string, string)
+	if clase == "clavija" then
+		local d = (Config.Clavijas :: any)[id]
+		local nivel = Clavijas.nivel(if e then e.Niveles else nil, id)
+		return ("Clavija %s"):format(d.Nombre:lower()),
+			("Tocá una clavija y se vuelve %s: %s"):format(
+				d.Nombre:lower(),
+				Clavijas.efecto(id, nivel)
+			),
+			d.Color
+	end
+	local tipoPergamino, tipo = Tienda.partes(id)
+	local p = Config.Pergaminos
+	if tipoPergamino == "nivel" and tipo then
+		local d = (Config.Clavijas :: any)[tipo]
+		local nivel = Clavijas.nivel(if e then e.Niveles else nil, tipo) + 1
+		return ("Pergamino de %s"):format(d.Plural or "grises"),
+			("Las %s suben a nivel %d: %s"):format(
+				d.Plural or "grises",
+				nivel,
+				Clavijas.efecto(tipo, nivel)
+			),
+			d.Color
+	elseif tipoPergamino == "forja" and tipo then
+		local d = (Config.Clavijas :: any)[tipo]
+		return ("Forja %s"):format(d.Nombre:lower()),
+			("Tocá %d clavijas y se vuelven %s"):format(p.forja.Clavijas, d.Plural),
+			d.Color
+	elseif tipoPergamino == "martillo" then
+		return p.martillo.Nombre, "Tocá una clavija y la borrás (la bola pasa derecho)", "#B0B0B0"
+	elseif tipoPergamino == "vendaje" then
+		return p.vendaje.Nombre, ("+%d de vida"):format(p.vendaje.Cura), "#4CC46A"
+	elseif tipoPergamino == "furia" then
+		return p.furia.Nombre,
+			("El próximo tiro: ×%d Multi al final"):format(p.furia.PorMulti),
+			"#FF4A4A"
+	end
+	return id, "", "#FFFFFF"
+end
+
+-- Las chances de lo que puede salir, en texto (botón "¿Qué puede salir?").
+function Tienda.chances(): { string }
+	local lineas = {}
+	local tipos = #Config.OrdenClavijas
+	table.insert(
+		lineas,
+		("Mejoras de clavija (%d por tienda): cada tipo %s %%"):format(
+			Config.Tienda.MejorasDeClavija,
+			Clavijas.numeroCorto(math.floor(1000 / tipos + 0.5) / 10)
+		)
+	)
+	local posibles = Tienda.pergaminosPosibles()
+	local total = 0
+	for _, p in posibles do
+		total += p.Peso
+	end
+	table.insert(lineas, ("Pergaminos (%d por tienda):"):format(Config.Tienda.Pergaminos))
+	for _, p in posibles do
+		local nombre = Tienda.describir("pergamino", p.Id)
+		table.insert(
+			lineas,
+			("  %s: %s %%"):format(
+				nombre,
+				Clavijas.numeroCorto(math.floor(p.Peso / total * 1000 + 0.5) / 10)
+			)
+		)
+	end
+	return lineas
+end
+
+-- Lo que sale en una tienda (con la semilla): mejoras de clavija y pergaminos.
+function Tienda.generar(semilla: number): { Item }
+	local azar = Azar.nuevo(semilla)
+	local items: { Item } = {}
+	for _ = 1, Config.Tienda.MejorasDeClavija do
+		local tipo = Config.OrdenClavijas[math.floor(azar() * #Config.OrdenClavijas) + 1]
+		table.insert(
+			items,
+			{ Clase = "clavija", Id = tipo, Precio = Config.Tienda.PrecioClavija, Vendido = false }
+		)
+	end
+	local posibles = Tienda.pergaminosPosibles()
+	local total = 0
+	for _, p in posibles do
+		total += p.Peso
+	end
+	for _ = 1, Config.Tienda.Pergaminos do
+		local x = azar() * total
+		local elegido = posibles[#posibles].Id
+		for _, p in posibles do
+			x -= p.Peso
+			if x < 0 then
+				elegido = p.Id
+				break
+			end
+		end
+		table.insert(items, {
+			Clase = "pergamino",
+			Id = elegido,
+			Precio = Config.Tienda.PrecioPergamino,
+			Vendido = false,
+		})
+	end
+	return items
+end
+
+-- Se abre la tienda (después de ganar una pelea, ya con el oro cobrado).
+function Tienda.abrir(e: Estado, semilla: number)
+	e.Fase = "tienda"
+	e.Tienda = { Items = Tienda.generar(semilla), Renovaciones = 0 }
+end
+
+function Tienda.precioRenovar(e: Estado): number
+	return Config.Tienda.Renovar + e.Tienda.Renovaciones * Config.Tienda.RenovarSube
+end
+
+function Tienda.renovar(e: Estado, semilla: number): (boolean, string?)
+	if e.Fase ~= "tienda" then
+		return false, "La tienda está cerrada"
+	end
+	local precio = Tienda.precioRenovar(e)
+	if e.Oro < precio then
+		return false, "No te alcanza el oro"
+	end
+	e.Oro -= precio
+	e.Tienda = { Items = Tienda.generar(semilla), Renovaciones = e.Tienda.Renovaciones + 1 }
+	return true, nil
+end
+
+-- Lista de Id de clavijas que mandó el cliente: tienen que ser `cantidad` números distintos de
+-- clavijas que existen y no son hueco (ni del tipo `noEste`).
+local function clavijasValidas(
+	e: Estado,
+	objetivos: any,
+	cantidad: number,
+	noEste: string?
+): { number }?
+	if cantidad == 0 then
+		return {}
+	end
+	if typeof(objetivos) ~= "table" or #objetivos ~= cantidad then
+		return nil
+	end
+	local vistas: { [number]: boolean } = {}
+	local ids: { number } = {}
+	for i = 1, cantidad do
+		local id = objetivos[i]
+		if typeof(id) ~= "number" or id ~= math.floor(id) or id < 1 or id > #e.Tablero then
+			return nil
+		end
+		local tipo = e.Tablero[id]
+		if tipo == "hueco" or tipo == noEste or vistas[id] then
+			return nil
+		end
+		vistas[id] = true
+		table.insert(ids, id)
+	end
+	return ids
+end
+
+-- Comprar el ítem `indice` de la tienda. Las mejoras de clavija se aplican enseguida a la
+-- clavija elegida (objetivos = { id }); los pergaminos van a un lugar libre.
+function Tienda.comprar(e: Estado, indice: any, objetivos: any): (boolean, string?)
+	if e.Fase ~= "tienda" then
+		return false, "La tienda está cerrada"
+	end
+	if typeof(indice) ~= "number" then
+		return false, "Ese ítem no está"
+	end
+	local item = e.Tienda.Items[indice]
+	if not item or item.Vendido then
+		return false, "Ese ítem no está"
+	end
+	if e.Oro < item.Precio then
+		return false, "No te alcanza el oro"
+	end
+	if item.Clase == "clavija" then
+		local ids = clavijasValidas(e, objetivos, 1, item.Id)
+		if not ids then
+			return false, "Elegí una clavija que no sea hueco ni de ese tipo"
+		end
+		e.Tablero[ids[1]] = item.Id
+	else
+		if #e.Pergaminos >= Config.LugaresPergamino then
+			return false, "No tenés lugar: usá un pergamino primero"
+		end
+		table.insert(e.Pergaminos, item.Id)
+	end
+	e.Oro -= item.Precio
+	item.Vendido = true
+	return true, nil
+end
+
+-- Usar el pergamino del lugar `lugar` (en la pelea, entre tiros, o en la tienda).
+function Tienda.usar(e: Estado, lugar: any, objetivos: any): (boolean, string?)
+	if e.Fase ~= "peleando" and e.Fase ~= "tienda" then
+		return false, "Ahora no se puede"
+	end
+	if typeof(lugar) ~= "number" then
+		return false, "No hay pergamino ahí"
+	end
+	local id = e.Pergaminos[lugar]
+	if not id then
+		return false, "No hay pergamino ahí"
+	end
+	local clase, tipo = Tienda.partes(id)
+	local ids = clavijasValidas(e, objetivos, Tienda.clavijasAElegir("pergamino", id), tipo)
+	if not ids then
+		return false, "Elegí clavijas que no sean hueco"
+	end
+	if clase == "nivel" and tipo then
+		e.Niveles[tipo] = Clavijas.nivel(e.Niveles, tipo) + 1
+	elseif clase == "forja" and tipo then
+		for _, clavija in ids do
+			e.Tablero[clavija] = tipo
+		end
+	elseif clase == "martillo" then
+		e.Tablero[ids[1]] = "hueco"
+	elseif clase == "vendaje" then
+		e.Vida = math.min(e.Vida + Config.Pergaminos.vendaje.Cura, e.VidaMaxima)
+	elseif clase == "furia" then
+		e.Furia = true
+	else
+		return false, "Pergamino desconocido"
+	end
+	table.remove(e.Pergaminos, lugar)
+	return true, nil
+end
+
+-- Botón "Bajar": a la próxima pelea.
+function Tienda.bajar(e: Estado): boolean
+	if e.Fase ~= "tienda" then
+		return false
+	end
+	e.Fase = "peleando"
+	Mazmorra.empezarPelea(e)
+	return true
+end
+
+return Tienda

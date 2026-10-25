@@ -6,9 +6,11 @@
 -- revisa el golpe, juega el turno y devuelve qué pasó; el cliente solo lo anima (golpe al
 -- monstruo, contraataque, piso nuevo, perder o ganar la mazmorra).
 -- Paso 5a: cada clavija tiene el color de su tipo (el tablero de la partida lo manda el servidor)
--- y al ganar una pelea salen 3 cartas de clavijas. Con la bola de fuego la bola es naranja y la
+-- y la bola de fuego es naranja y la
 -- quemadura salta sobre el monstruo; con la partida se ven las dos bolas. Las azules rotas
 -- quedan como hueco. Abajo, la fila con tu bola y tus clavijas especiales.
+-- Paso 5b: al ganar una pelea se abre la tienda (TiendaVista). Las mejoras de clavija y los
+-- pergaminos de forja y martillo piden tocar clavijas (Seleccion); todo lo valida el servidor.
 -- Input con UserInputService: los otros juegos no usan el Input Action System.
 
 local Players = game:GetService("Players")
@@ -20,11 +22,14 @@ local Shared = game:GetService("ReplicatedStorage"):WaitForChild("Shared")
 local Config = require(Shared:WaitForChild("Config"))
 local Simulacion = require(Shared:WaitForChild("Simulacion"))
 local Clavijas = require(Shared:WaitForChild("Clavijas"))
+local TiendaModulo = require(Shared:WaitForChild("Tienda"))
 local Mazmorra = require(Shared:WaitForChild("Mazmorra"))
 local Escena = require(script.Parent:WaitForChild("Escena"))
 local MonstruoVista = require(script.Parent:WaitForChild("Monstruo"))
 local Numeros = require(script.Parent:WaitForChild("Numeros"))
 local PantallasModulo = require(script.Parent:WaitForChild("Pantallas"))
+local SeleccionModulo = require(script.Parent:WaitForChild("Seleccion"))
+local TiendaVistaModulo = require(script.Parent:WaitForChild("TiendaVista"))
 
 local jugador = Players.LocalPlayer
 
@@ -46,7 +51,8 @@ local remotos = {
 	Tirar = carpetaRemotos:WaitForChild("Tirar") :: RemoteFunction,
 	ObtenerEstado = carpetaRemotos:WaitForChild("ObtenerEstado") :: RemoteFunction,
 	VolverABajar = carpetaRemotos:WaitForChild("VolverABajar") :: RemoteFunction,
-	ElegirCarta = carpetaRemotos:WaitForChild("ElegirCarta") :: RemoteFunction,
+	Tienda = carpetaRemotos:WaitForChild("Tienda") :: RemoteFunction,
+	UsarPergamino = carpetaRemotos:WaitForChild("UsarPergamino") :: RemoteFunction,
 	EstadoCambio = carpetaRemotos:WaitForChild("EstadoCambio") :: RemoteEvent,
 }
 
@@ -59,6 +65,7 @@ local colorFuego = Color3.fromHex(Config.Colores.BolaFuego)
 local colorQuemadura = Color3.fromHex(Config.Colores.Quemadura)
 local monstruo = MonstruoVista.crear(escena.Cartel, escena.BarraMonstruo)
 local pantallas = PantallasModulo.crear()
+local seleccion = SeleccionModulo.crear(escena)
 
 local estado: Mazmorra.Estado = Mazmorra.nueva() -- se pisa con el del servidor al arrancar
 local tirosPelea = 0 -- para la consola: cuántos tiros lleva la pelea actual
@@ -146,48 +153,109 @@ local function brillar(id: number)
 	end)
 end
 
-local elegirCarta: (tipo: string) -> ()
+local tiendaVista: TiendaVistaModulo.TiendaVista
 
--- Dibuja el estado que mandó el servidor (pelea nueva, volver a bajar o comando de prueba).
+-- Dibuja el estado que mandó el servidor (pelea nueva, tienda, volver a bajar, pergamino o
+-- comando de prueba).
 local function ponerEstado(e: Mazmorra.Estado)
 	estado = e
 	tirosPelea = 0
 	monstruo.mostrar(e.Piso, e.VidaMonstruo)
 	pantallas.ponerEstado(e)
 	pantallas.ponerTablero(e)
+	tiendaVista.ponerPergaminos(e)
 	pintarClavijas()
 	panel.limpiar()
+	if e.Fase == "tienda" then
+		tiendaVista.mostrar(e)
+	else
+		tiendaVista.ocultar()
+	end
 	if e.Fase == "peleando" then
 		pantallas.ocultarFinal()
-		pantallas.ocultarCartas()
-	elseif e.Fase == "eligiendo" then
-		pantallas.mostrarCartas(e, elegirCarta)
 	end
 end
 
--- Tocaste una carta: el servidor revisa que sea una de las ofrecidas, convierte las clavijas y
--- arranca la pelea nueva. Las convertidas brillan un momento.
-elegirCarta = function(tipo: string)
-	local ok, e, ids = pcall(function()
-		return remotos.ElegirCarta:InvokeServer(tipo)
+-- Pide al servidor una acción de la tienda o un pergamino y dibuja lo que devuelve. Si no se
+-- pudo, muestra el motivo un momento.
+local function pedir(remoto: RemoteFunction, ...: any): boolean
+	local argumentos = table.pack(...)
+	local ok, e, motivo = pcall(function()
+		return remoto:InvokeServer(table.unpack(argumentos, 1, argumentos.n))
 	end)
-	if ok and typeof(e) == "table" then
-		ponerEstado(e) -- si no se aceptó, vuelven a salir las cartas que manda el servidor
-		if e.Fase == "peleando" and typeof(ids) == "table" then
-			print(("[Cartas] Elegiste %s: clavijas %s"):format(tipo, table.concat(ids, ", ")))
-			pantallas.anunciar(("¡Piso %d!"):format(e.Piso))
-			for _ = 1, 3 do
-				for _, id in ids do
-					brillar(id)
-				end
-				task.wait(Config.Simulacion.BrilloClavija * 2)
+	if not ok or typeof(e) ~= "table" then
+		warn("No se pudo hablar con el servidor")
+		return false
+	end
+	ponerEstado(e)
+	if typeof(motivo) == "string" then
+		pantallas.anunciar(motivo)
+		return false
+	end
+	return true
+end
+
+-- Tocar clavijas para un ítem o pergamino (si hace falta). nil = se canceló.
+local function elegirClavijas(clase: string, id: string): ({ number }?, boolean)
+	local cantidad = TiendaModulo.clavijasAElegir(clase, id)
+	if cantidad == 0 then
+		return nil, true
+	end
+	local nombre = TiendaModulo.describir(clase, id, estado)
+	local _, tipo = TiendaModulo.partes(id)
+	local noEste = if clase == "clavija" then id else tipo
+	local texto = if cantidad == 1
+		then ("%s: tocá 1 clavija"):format(nombre)
+		else ("%s: tocá %d clavijas"):format(nombre, cantidad)
+	local ids = seleccion.elegir(cantidad, texto, function(clavija: number): boolean
+		local actual = Clavijas.tipo(estado.Tablero, clavija)
+		return actual ~= "hueco" and actual ~= noEste
+	end)
+	return ids, ids ~= nil
+end
+
+tiendaVista = TiendaVistaModulo.crear({
+	comprar = function(indice: number)
+		local item = estado.Tienda.Items[indice]
+		if seleccion.activa() or not item or item.Vendido then
+			return
+		end
+		if estado.Oro < item.Precio then
+			pantallas.anunciar("No te alcanza el oro")
+			return
+		end
+		local ids, seguir = elegirClavijas(item.Clase, item.Id)
+		if seguir and pedir(remotos.Tienda, "comprar", indice, ids) then
+			print(("[Tienda] Compraste %s %s · oro %d"):format(item.Clase, item.Id, estado.Oro))
+			for _, id in ids or {} do
+				brillar(id)
 			end
 		end
-	else
-		warn("No se pudo elegir la carta")
-		pantallas.mostrarCartas(estado, elegirCarta)
-	end
-end
+	end,
+	renovar = function()
+		if not seleccion.activa() then
+			pedir(remotos.Tienda, "renovar")
+		end
+	end,
+	bajar = function()
+		if not seleccion.activa() and pedir(remotos.Tienda, "bajar") then
+			pantallas.anunciar(("¡Piso %d!"):format(estado.Piso))
+		end
+	end,
+	usar = function(lugar: number)
+		local id = estado.Pergaminos[lugar]
+		if tirando or seleccion.activa() or not id then
+			return
+		end
+		local ids, seguir = elegirClavijas("pergamino", id)
+		if seguir and pedir(remotos.UsarPergamino, lugar, ids) then
+			print(("[Pergamino] Usaste %s"):format(id))
+			for _, clavija in ids or {} do
+				brillar(clavija)
+			end
+		end
+	end,
+})
 
 local mostrarFinal: (Mazmorra.Estado) -> ()
 
@@ -287,7 +355,7 @@ local function animarTurno(turno: Mazmorra.Turno)
 	if turno.Resultado == "piso" then
 		print(("[Mazmorra] Pelea %d ganada en %d tiros"):format(estado.Piso, tirosPelea))
 		task.wait(0.3)
-		ponerEstado(e) -- fase "eligiendo": salen las cartas; "¡Piso N!" sale al elegir
+		ponerEstado(e) -- fase "tienda": se abre la tienda; "¡Piso N!" sale al bajar
 	elseif turno.Resultado == "gano" then
 		print(("[Mazmorra] Jefe ganado en %d tiros"):format(tirosPelea))
 		estado = e
@@ -302,7 +370,7 @@ local function animarTurno(turno: Mazmorra.Turno)
 end
 
 local function tirar()
-	if tirando or estado.Fase ~= "peleando" or pantallas.hayFinal() then
+	if tirando or estado.Fase ~= "peleando" or pantallas.hayFinal() or seleccion.activa() then
 		return
 	end
 	tirando = true
@@ -389,6 +457,10 @@ local function tirar()
 				return remotos.Tirar:InvokeServer(numeroTiro, anguloTiro, res.Danio)
 			end)
 			local danio = if okTiro and typeof(turno) == "table" then turno.Danio else nil
+			if res.Furia > 1 then
+				panel.poner(res.Fuerza, res.Multi, "por") -- la furia multiplica al final
+				pantallas.anunciar(("¡Furia ×%d!"):format(res.Furia))
+			end
 			panel.golpe(danio or res.Danio)
 			print(
 				("[Tiro %d] ángulo %.1f° · %d clavijas · %d bolas · Fuerza %s × Multi %s = %d (servidor: %s) · oro %d · rotas %d · %.1f s"):format(
@@ -425,7 +497,12 @@ end
 -- Un clic que empieza con la pantalla final abierta (o justo al cerrarla) no apunta ni tira:
 -- si no, tocar "Volver a bajar" también soltaba una bola.
 UserInputService.InputBegan:Connect(function(input: InputObject, procesado: boolean)
-	if procesado or pantallas.hayFinal() or os.clock() - pantallas.finalCerrado() < 0.3 then
+	if
+		procesado
+		or pantallas.hayFinal()
+		or seleccion.activa()
+		or os.clock() - pantallas.finalCerrado() < 0.3
+	then
 		return
 	end
 	local tipo = input.UserInputType
@@ -461,11 +538,12 @@ UserInputService.InputEnded:Connect(function(input: InputObject)
 end)
 
 -- Comando de prueba, solo en Studio: teclas 1 a 7 saltan a esa pelea, 0 pone 999 de vida,
--- Z cambia de bola, X convierte 2 grises (cada vez un tipo distinto) y C sube de nivel todos los
--- tipos de clavija.
+-- Z cambia de bola, X convierte 2 grises (cada vez un tipo distinto), C sube de nivel todos los
+-- tipos de clavija, 8 da 20 de oro y 9 agrega un pergamino (cada vez uno distinto).
 local prueba = if RunService:IsStudio() then carpetaRemotos:WaitForChild("Prueba", 3) else nil
 if RunService:IsStudio() and prueba and prueba:IsA("RemoteEvent") then
 	local tipoPrueba = 0
+	local pergaminoPrueba = 0
 	local teclas = {
 		[Enum.KeyCode.One] = 1,
 		[Enum.KeyCode.Two] = 2,
@@ -492,6 +570,11 @@ if RunService:IsStudio() and prueba and prueba:IsA("RemoteEvent") then
 			prueba:FireServer("clavija", tipoPrueba)
 		elseif input.KeyCode == Enum.KeyCode.C then
 			prueba:FireServer("nivel", 1)
+		elseif input.KeyCode == Enum.KeyCode.Eight then
+			prueba:FireServer("oro", 20)
+		elseif input.KeyCode == Enum.KeyCode.Nine then
+			pergaminoPrueba += 1
+			prueba:FireServer("pergamino", pergaminoPrueba)
 		end
 	end)
 end

@@ -1,7 +1,7 @@
 # Plinko Knight — ficha del prototipo
 
 Origen: `plinko-knight/PLAN-Y-PROMPTS.md` (25/10/2026) + idea de arte aprobada (`plinko-knight/arte/IDEA-DE-ARTE.md`).
-Estado: **aprobada por Juani el 25/10/2026** (punto de control 1). Etapas 2 (tablero, puntería y bola), 3 (daño y revisión del servidor), 4 (monstruos y mazmorra) y 5 (mejoras 1 de 3) hechas el 25/10/2026. Juani jugó la prueba de 5 minutos (perdió en el piso 6: "está bueno") y pidió hacerlo **más roguelike, estilo Balatro**. **Rediseño aprobado el 25/10/2026.** Paso 5a (Fuerza × Multi y clavijas especiales) hecho el 25/10; lo próximo es el 5b (oro y tienda).
+Estado: **aprobada por Juani el 25/10/2026** (punto de control 1). Etapas 2 (tablero, puntería y bola), 3 (daño y revisión del servidor), 4 (monstruos y mazmorra) y 5 (mejoras 1 de 3) hechas el 25/10/2026. Juani jugó la prueba de 5 minutos (perdió en el piso 6: "está bueno") y pidió hacerlo **más roguelike, estilo Balatro**. **Rediseño aprobado el 25/10/2026.** Pasos 5a (Fuerza × Multi y clavijas especiales) y 5b (oro y tienda) hechos el 25/10; lo próximo es el 5c (reliquias).
 Carpeta: `plinko-knight/` (código en `plinko-knight/src/`, Rojo con `rojo serve plinko-knight`, puerto 34876). Place propio: `plinko-knight/PlinkoKnight.rbxl`.
 
 ## Rediseño roguelike (aprobado el 25/10/2026)
@@ -178,7 +178,7 @@ Al empezar la partida elegís con qué bola bajás. Cada una cambia el estilo de
 | Vida del caballero | 50; se cura 10 entre peleas |
 | Lugares | 5 reliquias, 2 pergaminos |
 | Oro | 3 por monstruo, 5 por jefe, +2/+1 por matar en 1/2 tiros, interés 1 cada 5 (tope 5) |
-| Precios | reliquia 4 / 7 / 12 · mejora de clavija 3 · pergamino 3 · renovar 2 (+1 cada vez) |
+| Precios | reliquia 4 / 7 / 12 · mejora de clavija 2 (era 3, ver paso 5b) · pergamino 3 · renovar 2 (+1 cada vez) |
 | Chances de rareza | común 70 %, rara 25 %, legendaria 5 % (a la vista en la tienda) |
 | Monstruos (vida) | zona 1: 60, 110, 200 · zona 2: 450, 800, 1.500 · zona 3: 3.500, 6.000, 12.000 |
 | Tope por tiro | 10 millones de golpe; 4 bolas |
@@ -315,4 +315,27 @@ Cada pelea dura 2 a 3 tiros de promedio. Mezclar mejoras es lo que gana (las tre
 - **Azul: ×2** (era ×1,5). Con ×1,5 y la rotura casi no servía (2 %). Es lo mismo que el vidrio de Balatro: ×2 y 1 en 4 de romperse.
 - **Violeta: también +2 Fuerza.** Sola sumaba menos que una gris.
 - Monstruos sin cambios: el balance de verdad va en el paso 5d, con las 3 zonas. Medido ahora: cartas al azar con bola de hierro, se gana **9 %**; con fuego, 39 %; con la partida, 69 % (por eso se desbloquea tarde). La dorada todavía no sirve: el oro se usa recién en la tienda (5b).
+
+### Paso 5b · Oro y tienda (25/10/2026)
+
+- **Oro al ganar una pelea:** 3 (5 si es jefe), +2 si lo mataste en 1 tiro y +1 si fue en 2. Después, **interés**: +1 por cada 5 de oro que tengas, hasta 5. La dorada sigue dando oro en cada tiro. El oro es del juego, se pierde al terminar la partida y nunca se vende por Robux.
+- **La tienda reemplaza a las cartas del 5a.** Se abre al ganar cada pelea, en la columna derecha (tapa al monstruo y deja el tablero libre). Ofrece **2 mejoras de clavija y 1 pergamino** (las reliquias se suman en el 5c). Arriba dice cuánto oro ganaste y por qué. Tiene **Renovar** (2 de oro, +1 cada vez en la misma tienda), **"¿Qué sale?"** con las chances de todo lo que puede salir, y **Bajar** para ir a la próxima pelea ("¡Piso N!").
+- **Mejora de clavija:** la tocás en la tienda, aparece arriba "tocá 1 clavija" (con Cancelar), tocás la que quieras del tablero y se convierte. No vale un hueco ni una del mismo tipo.
+- **Pergaminos** (2 lugares, a la izquierda debajo del oro; se usan tocándolos, en la pelea entre tiros o en la tienda):
+  - **Pergamino de rojas / azules / doradas / verdes / violetas / grises:** sube 1 nivel ese tipo para toda la partida.
+  - **Forja (de un tipo):** tocás 2 clavijas y se vuelven de ese tipo.
+  - **Martillo:** tocás 1 clavija y la borrás (queda hueco).
+  - **Vendaje:** +15 de vida.
+  - **Furia:** el próximo tiro tiene ×2 Multi al final.
+
+  Chances en la tienda: cada pergamino de nivel y cada forja 5,9 %; martillo, vendaje y furia 11,8 % cada uno. Cada tipo de mejora de clavija, 20 %.
+- **Todo lo decide el servidor** (`shared/Tienda.luau`, remotos `Tienda` y `UsarPergamino`): qué sale (con su semilla), que haya oro, que el ítem esté y no se haya vendido, que haya lugar para el pergamino y que las clavijas elegidas existan, no sean hueco y no estén repetidas. Tiene un límite de 1 acción cada 0,15 s. Si algo no se puede, devuelve el motivo ("No te alcanza el oro") y el cliente lo muestra. Usar un pergamino anula el tiro pedido (si había) para que el servidor no repita el tiro con otro tablero.
+- **Comandos de prueba, solo en Studio:** además de los anteriores, **8** da 20 de oro y **9** agrega un pergamino (cada vez uno distinto).
+- **Prueba con Lune** (`lune run plinko-knight/pruebas/tienda`): el oro (base, bonus, interés y tope), qué sale en la tienda (con 3000 semillas salen todos los ítems), comprar y sus validaciones (sin oro, vendido, sin lugar, clavija que no existe, hueco, mismo tipo, índices raros), renovar, bajar, cada pergamino y la furia (con el servidor coincidiendo).
+- **En Studio:** gané la primera pelea, compré una clavija azul tocando el tablero, renové, miré las chances y bajé. Después usé una forja roja (2 clavijas) y una furia: 24 × 6 = 144, igual en cliente y servidor, y como lo maté de un tiro la tienda mostró "+3 por ganar, +2 rápido, +1 interés".
+
+#### Balance del paso 5b (lune, 150 mazmorras, un bot que compra)
+
+- Con la mejora de clavija a 3 de oro, comprando al azar con hierro se ganaba el 3 % (en el 5a, con 2 clavijas gratis por pelea, era 9 %). Con 4 de oro por monstruo se ganaba el 29 %. Quedó **3 de oro por monstruo y la mejora a 2**: comprando al azar se gana el **21 %** con hierro, 55 % con fuego y 83 % con la partida. Comprando siempre un solo tipo casi no se gana: conviene mezclar, y las reliquias del 5c van a premiar armar una familia.
+- El bot de `pruebas/mazmorra` ahora compra en la tienda: sin comprar, al azar (con cada bola), todo lo que puede o siempre un tipo. Usa los pergaminos enseguida, menos el martillo.
 
