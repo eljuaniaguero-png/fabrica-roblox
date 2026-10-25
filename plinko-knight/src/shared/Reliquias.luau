@@ -73,7 +73,9 @@ function Reliquias.describir(id: string, contador: number?): string
 	elseif id == "avaro" then
 		return ("Al final: +%d Multi por cada %d de oro que tengas"):format(d.Multi, d.Cada)
 	elseif id == "toqueOro" then
-		return ("Las doradas también dan +%d Multi"):format(d.Multi)
+		return ("Las doradas también dan ×%s Multi"):format(
+			(tostring(d.PorMulti):gsub("%.", ","))
+		)
 	elseif id == "trofeo" then
 		return ("Crece: +%d Multi cada vez que matás de un tiro (ahora +%d)"):format(
 			d.Multi,

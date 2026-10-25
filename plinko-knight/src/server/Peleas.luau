@@ -4,11 +4,12 @@
 --   VolverABajar() -> Mazmorra.Estado  (solo después de perder o de ganar la mazmorra)
 --   Tienda(accion, indice, clavijas) -> (Mazmorra.Estado, error?)  acciones: "comprar" (el ítem
 --   indice; clavijas = { id } para una mejora de clavija), "vender" (la reliquia del lugar indice),
---   "mover" (la reliquia del lugar indice al lugar que viene en clavijas), "renovar" y "bajar"
+--   "mover" (la reliquia del lugar indice al lugar que viene en clavijas), "cofre" (llevarse la
+--   reliquia indice del cofre del jefe), "renovar" y "bajar"
 --   UsarPergamino(lugar, clavijas) -> (Mazmorra.Estado, error?)  (en la pelea o en la tienda)
 --   Todo lo valida shared/Tienda; si no se puede, devuelve el estado como está y el motivo.
 --   EstadoCambio (servidor -> cliente): el estado cambió fuera de un tiro (comandos de prueba)
---   Prueba(comando, n) (SOLO existe en Studio): "piso" salta a la pelea n (7 = el jefe), "vida"
+--   Prueba(comando, n) (SOLO existe en Studio): "piso" salta a la pelea n (9 = el último jefe), "vida"
 --   te pone n de vida, "bola" cambia a la bola n de Config.OrdenBolas, "clavija" convierte
 --   grises en el tipo n de Config.OrdenClavijas, "nivel" sube 1 nivel todos los tipos, "oro" da n
 --   de oro, "pergamino" agrega el pergamino n de Tienda.pergaminosPosibles y "reliquia" agrega la
@@ -158,6 +159,8 @@ function Peleas.iniciar()
 		local ok, motivo = false, "Acción desconocida"
 		if accion == "comprar" then
 			ok, motivo = TiendaModulo.comprar(p.Estado, indice, clavijas)
+		elseif accion == "cofre" then
+			ok, motivo = TiendaModulo.tomarCofre(p.Estado, indice)
 		elseif accion == "vender" then
 			ok, motivo = TiendaModulo.vender(p.Estado, indice)
 		elseif accion == "mover" then

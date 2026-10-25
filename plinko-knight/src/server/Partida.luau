@@ -26,6 +26,11 @@ function Partida.nuevaPelea(p: Partida)
 	Mazmorra.empezarPelea(p.Estado)
 end
 
+-- Partida nueva: se sortean las mañas de los jefes.
+local function sortear(p: Partida)
+	Mazmorra.sortearManias(p.Estado, azar:NextInteger(1, 2 ^ 31 - 1))
+end
+
 -- Semilla para las cartas que salen y las clavijas que convierte una carta.
 function Partida.semilla(): number
 	return azar:NextInteger(1, 2 ^ 31 - 1)
@@ -45,7 +50,7 @@ function Partida.iniciar(jugador: Player): Partida
 		Bola = "hierro",
 		UltimaAccion = -math.huge,
 	}
-	Partida.nuevaPelea(p)
+	sortear(p)
 	partidas[jugador] = p
 	return p
 end
@@ -54,7 +59,7 @@ end
 function Partida.reiniciar(p: Partida)
 	p.Estado = Mazmorra.nueva(p.Bola)
 	p.Semilla = nil
-	Partida.nuevaPelea(p)
+	sortear(p)
 end
 
 Players.PlayerAdded:Connect(Partida.iniciar)

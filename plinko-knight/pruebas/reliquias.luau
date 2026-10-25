@@ -131,14 +131,17 @@ do
 		chequear(c.Fuerza == f, "hoja: la Fuerza no cierra")
 
 		sin, c = par(i, { Oro = 17 }, con("avaro"))
-		chequear(cerca(c.Multi, 1 + 3 * R.avaro.Multi), "avaro: con 17 de oro tiene que dar +3")
+		chequear(
+			cerca(c.Multi, 1 + math.floor(17 / R.avaro.Cada) * R.avaro.Multi),
+			"avaro: Multi mal con 17 de oro"
+		)
 
 		sin, c = par(i, { Tablero = conTipo("dorada", 3) }, con("toqueOro"))
 		for _, t in c.Toques do
 			if t.Tipo == "dorada" then
 				chequear(
-					t.Multi == R.toqueOro.Multi * t.Veces,
-					"toque de oro: la dorada no dio Multi"
+					t.PorMulti == R.toqueOro.PorMulti ^ t.Veces,
+					"toque de oro: la dorada no multiplicó"
 				)
 			end
 		end

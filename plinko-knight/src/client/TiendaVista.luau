@@ -13,9 +13,11 @@ local Config = require(Shared:WaitForChild("Config"))
 local Mazmorra = require(Shared:WaitForChild("Mazmorra"))
 local Reliquias = require(Shared:WaitForChild("Reliquias"))
 local TiendaModulo = require(Shared:WaitForChild("Tienda"))
+local Clavijas = require(Shared:WaitForChild("Clavijas"))
 
 export type Acciones = {
 	comprar: (indice: number) -> (),
+	tomarCofre: (indice: number) -> (), -- reliquia del cofre del jefe
 	renovar: () -> (),
 	bajar: () -> (),
 	usar: (lugar: number) -> (), -- pergamino
@@ -108,8 +110,19 @@ function TiendaVista.crear(acciones: Acciones): TiendaVista
 	titulo.Size = UDim2.fromScale(0.9, 0.08)
 	local ganado = texto(panel, "", Enum.Font.GothamBold)
 	ganado.TextColor3 = Color3.fromHex(Config.Colores.Oro)
-	ganado.Position = UDim2.fromScale(0.05, 0.1)
-	ganado.Size = UDim2.fromScale(0.9, 0.05)
+	ganado.Position = UDim2.fromScale(0.05, 0.095)
+	ganado.Size = UDim2.fromScale(0.9, 0.04)
+	-- Qué viene después (y la maña, si es un jefe), para decidir qué comprar.
+	local proximo = texto(panel, "", Enum.Font.GothamBold)
+	proximo.Name = "Proximo"
+	proximo.TextWrapped = true
+	proximo.Position = UDim2.fromScale(0.05, 0.135)
+	proximo.Size = UDim2.fromScale(0.9, 0.035)
+	local botonCofre = boton(panel, "Cofre", Config.Colores.Oro)
+	botonCofre.Name = "Cofre"
+	botonCofre.Position = UDim2.fromScale(0.7, 0.015)
+	botonCofre.Size = UDim2.fromScale(0.26, 0.07)
+	botonCofre.Visible = false
 
 	local lista = Instance.new("Frame")
 	lista.Position = UDim2.fromScale(0.04, 0.17)
@@ -202,14 +215,23 @@ function TiendaVista.crear(acciones: Acciones): TiendaVista
 		tFrase.TextWrapped = true
 		tFrase.Position = UDim2.fromScale(0.09, 0.48)
 		tFrase.Size = UDim2.fromScale(0.88, 0.46)
-		local tPrecio = texto(b, if item.Vendido then "Vendido" else ("%d oro"):format(item.Precio))
-		tPrecio.TextColor3 = if item.Vendido
+		-- Una reliquia que ya tenés (por ejemplo, la sacaste del cofre) no se puede comprar.
+		local laTenes = item.Clase == "reliquia" and Reliquias.tiene(e.Reliquias, item.Id)
+		local apagado = item.Vendido or laTenes
+		local tPrecio = texto(
+			b,
+			if item.Vendido
+				then "Vendido"
+				elseif laTenes then "La tenés"
+				else ("%d oro"):format(item.Precio)
+		)
+		tPrecio.TextColor3 = if apagado
 			then Color3.fromRGB(150, 150, 150)
 			elseif e.Oro >= item.Precio then Color3.fromHex(Config.Colores.Oro)
 			else Color3.fromHex(Config.Colores.Golpe)
 		tPrecio.Position = UDim2.fromScale(0.72, 0.06)
 		tPrecio.Size = UDim2.fromScale(0.25, 0.38)
-		if item.Vendido then
+		if apagado then
 			b.BackgroundTransparency = 0.6
 		else
 			b.Activated:Connect(function()
@@ -223,7 +245,7 @@ function TiendaVista.crear(acciones: Acciones): TiendaVista
 	filaReliquias.Name = "Reliquias"
 	filaReliquias.AnchorPoint = Vector2.new(1, 0)
 	filaReliquias.Position = UDim2.new(1, -10, 0, 6)
-	filaReliquias.Size = UDim2.new(0.42, 0, 0, 62)
+	filaReliquias.Size = UDim2.new(0.36, 0, 0, 62) -- deja libre el centro (zona y pelea)
 	filaReliquias.BackgroundTransparency = 1
 	filaReliquias.Parent = gui
 	local ordenFila = Instance.new("UIListLayout")
@@ -403,6 +425,89 @@ function TiendaVista.crear(acciones: Acciones): TiendaVista
 		end)
 	end
 
+	-- Cofre del jefe (paso 5d): 3 reliquias, te llevás 1 gratis. Se abre solo al entrar a la tienda
+	-- y se puede volver a abrir con el botón "Cofre" mientras no hayas elegido.
+	local cofre = Instance.new("Frame")
+	cofre.Name = "PantallaCofre"
+	cofre.Size = UDim2.fromScale(1, 1)
+	cofre.BackgroundColor3 = Color3.new(0, 0, 0)
+	cofre.BackgroundTransparency = 0.35
+	cofre.Visible = false
+	cofre.ZIndex = 8
+	cofre.Parent = gui
+	local tituloCofre = texto(cofre, "¡Cofre del jefe! Llevate una reliquia gratis")
+	tituloCofre.AnchorPoint = Vector2.new(0.5, 0)
+	tituloCofre.Position = UDim2.fromScale(0.5, 0.12)
+	tituloCofre.Size = UDim2.fromScale(0.7, 0.09)
+	tituloCofre.ZIndex = 9
+	local mesa = Instance.new("Frame")
+	mesa.AnchorPoint = Vector2.new(0.5, 0)
+	mesa.Position = UDim2.fromScale(0.5, 0.25)
+	mesa.Size = UDim2.fromScale(0.8, 0.5)
+	mesa.BackgroundTransparency = 1
+	mesa.ZIndex = 9
+	mesa.Parent = cofre
+	local ordenMesa = Instance.new("UIListLayout")
+	ordenMesa.FillDirection = Enum.FillDirection.Horizontal
+	ordenMesa.HorizontalAlignment = Enum.HorizontalAlignment.Center
+	ordenMesa.Padding = UDim.new(0.03, 0)
+	ordenMesa.SortOrder = Enum.SortOrder.LayoutOrder
+	ordenMesa.Parent = mesa
+	local saltear = boton(cofre, "Saltear", "#5A5A5A")
+	saltear.AnchorPoint = Vector2.new(0.5, 0)
+	saltear.Position = UDim2.fromScale(0.5, 0.8)
+	saltear.Size = UDim2.fromScale(0.22, 0.1)
+	saltear.ZIndex = 9
+	saltear.Activated:Connect(function()
+		cofre.Visible = false
+	end)
+	botonCofre.Activated:Connect(function()
+		cofre.Visible = true
+	end)
+
+	local function ponerCofre(e: Mazmorra.Estado)
+		for _, hijo in mesa:GetChildren() do
+			if hijo:IsA("GuiButton") then
+				hijo:Destroy()
+			end
+		end
+		for indice, id in e.Tienda.Cofre do
+			local nombre, frase, hex = TiendaModulo.describir("reliquia", id, e)
+			local carta = boton(mesa, "", Config.Colores.Carta)
+			carta.Name = "Carta" .. indice
+			carta.LayoutOrder = indice
+			carta.Size = UDim2.fromScale(0.3, 1)
+			carta.ZIndex = 9
+			local borde = Instance.new("UIStroke")
+			borde.Thickness = 4
+			borde.Color = Color3.fromHex(hex)
+			borde.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+			borde.Parent = carta
+			local tNombre = texto(carta, nombre)
+			tNombre.Position = UDim2.fromScale(0.06, 0.08)
+			tNombre.Size = UDim2.fromScale(0.88, 0.2)
+			tNombre.TextWrapped = true
+			tNombre.ZIndex = 10
+			local tRareza = texto(carta, Reliquias.rareza(id).Nombre, Enum.Font.GothamBold)
+			tRareza.TextColor3 = Color3.fromHex(hex)
+			tRareza.Position = UDim2.fromScale(0.06, 0.3)
+			tRareza.Size = UDim2.fromScale(0.88, 0.1)
+			tRareza.ZIndex = 10
+			local tFrase = texto(carta, frase, Enum.Font.GothamBold)
+			tFrase.TextWrapped = true
+			tFrase.Position = UDim2.fromScale(0.08, 0.45)
+			tFrase.Size = UDim2.fromScale(0.84, 0.4)
+			tFrase.ZIndex = 10
+			local limite = Instance.new("UITextSizeConstraint")
+			limite.MaxTextSize = 30
+			limite.Parent = tFrase
+			carta.Activated:Connect(function()
+				cofre.Visible = false
+				acciones.tomarCofre(indice)
+			end)
+		end
+	end
+
 	local function ponerPergaminos(e: Mazmorra.Estado)
 		for lugar, b in botonesLugar do
 			local id = e.Pergaminos[lugar]
@@ -445,10 +550,34 @@ function TiendaVista.crear(acciones: Acciones): TiendaVista
 			renovar.TextColor3 = if e.Oro >= precio
 				then Color3.new(1, 1, 1)
 				else Color3.fromHex(Config.Colores.Golpe)
+			-- Próxima pelea.
+			local m = Mazmorra.monstruo(e.Piso)
+			local maniaProxima = if m.EsJefe then e.ManiasJefes[m.Zona] else nil
+			proximo.Text = ("Próximo: %s (%s de vida)%s"):format(
+				m.Nombre,
+				Clavijas.numeroCorto(m.Vida),
+				if maniaProxima then " · " .. Mazmorra.textoMania(maniaProxima, m.Zona) else ""
+			)
+			proximo.TextColor3 = if m.EsJefe
+				then Color3.fromHex(Config.Colores.Golpe)
+				else Color3.fromRGB(200, 200, 200)
+			-- Cofre: se abre solo la primera vez que entrás con un cofre nuevo.
+			local hayCofre = #e.Tienda.Cofre > 0 and not e.Tienda.CofreTomado
+			local cofreNuevo = hayCofre and not panel.Visible
+			botonCofre.Visible = hayCofre
+			if hayCofre then
+				ponerCofre(e)
+				if cofreNuevo then
+					cofre.Visible = true
+				end
+			else
+				cofre.Visible = false
+			end
 			panel.Visible = true
 			ponerPergaminos(e)
 		end,
 		ocultar = function()
+			cofre.Visible = false
 			panel.Visible = false
 			chances.Visible = false
 		end,

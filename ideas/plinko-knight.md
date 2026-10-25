@@ -1,7 +1,7 @@
 # Plinko Knight — ficha del prototipo
 
 Origen: `plinko-knight/PLAN-Y-PROMPTS.md` (25/10/2026) + idea de arte aprobada (`plinko-knight/arte/IDEA-DE-ARTE.md`).
-Estado: **aprobada por Juani el 25/10/2026** (punto de control 1). Etapas 2 (tablero, puntería y bola), 3 (daño y revisión del servidor), 4 (monstruos y mazmorra) y 5 (mejoras 1 de 3) hechas el 25/10/2026. Juani jugó la prueba de 5 minutos (perdió en el piso 6: "está bueno") y pidió hacerlo **más roguelike, estilo Balatro**. **Rediseño aprobado el 25/10/2026.** Pasos 5a (Fuerza × Multi y clavijas especiales), 5b (oro y tienda) y 5c (reliquias) hechos el 25/10; lo próximo es el 5d (zonas, jefes con maña, cofre y balance).
+Estado: **aprobada por Juani el 25/10/2026** (punto de control 1). Etapas 2 (tablero, puntería y bola), 3 (daño y revisión del servidor), 4 (monstruos y mazmorra) y 5 (mejoras 1 de 3) hechas el 25/10/2026. Juani jugó la prueba de 5 minutos (perdió en el piso 6: "está bueno") y pidió hacerlo **más roguelike, estilo Balatro**. **Rediseño aprobado el 25/10/2026.** Pasos 5a a 5d del rediseño hechos el 25/10 (Fuerza × Multi, clavijas, tienda, reliquias, zonas, mañas y cofre). **Punto de control: prototipo jugable de nuevo**, esperando la prueba de 10 minutos de Juani.
 Carpeta: `plinko-knight/` (código en `plinko-knight/src/`, Rojo con `rojo serve plinko-knight`, puerto 34876). Place propio: `plinko-knight/PlinkoKnight.rbxl`.
 
 ## Rediseño roguelike (aprobado el 25/10/2026)
@@ -74,7 +74,7 @@ Hasta **5** a la vez. Se compran en la tienda o salen del cofre del jefe; se ven
 
 | # | Reliquia | Rareza | Qué hace | Combina con |
 |---|---|---|---|---|
-| 1 | Brasa | común | +1 Multi por cada clavija roja que haya **en tu tablero** (aunque no la toques) | comprar rojas, Pergamino rojo |
+| 1 | Brasa | común | +2 Multi por cada clavija roja que haya **en tu tablero** (aunque no la toques; era +1, ver 5d) | comprar rojas, Pergamino rojo |
 | 2 | Corazón de Rubí | rara | las rojas dan el doble de Multi | Brasa |
 | 3 | Martillo Pesado | común | +30 Fuerza si el tiro tocó 15 clavijas o más | resortes, bola partida |
 | 4 | Cadena | común | +2 Multi por cada 5 clavijas tocadas en el tiro | Martillo, bola partida |
@@ -82,8 +82,8 @@ Hasta **5** a la vez. Se compran en la tienda o salen del cofre del jefe; se ven
 | 6 | Enjambre | rara | ×1,5 Multi por cada bola extra que haya en el tiro | Gemela, bola Partida |
 | 7 | Hoja Afilada | común | las bolas extra suman el doble de Fuerza | Gemela |
 | 8 | Bolsa de Cuero | común | el interés de la tienda llega hasta 10 de oro (en vez de 5) | Avaro |
-| 9 | Avaro | rara | +1 Multi por cada 5 de oro que tengas guardado | Bolsa de Cuero, doradas |
-| 10 | Toque de Oro | común | las doradas también dan +2 Multi | doradas |
+| 9 | Avaro | rara | +1 Multi por cada 2 de oro que tengas guardado (era cada 5, ver 5d) | Bolsa de Cuero, doradas |
+| 10 | Toque de Oro | común | las doradas también dan ×1,5 Multi (era +2, ver 5d) | doradas |
 | 11 | Trofeo | rara | crece: +1 Multi para siempre cada vez que matás un monstruo de un solo tiro | todo lo que haga golpes grandes |
 | 12 | Callo | común | crece: +3 Fuerza para siempre cada vez que se rompe una azul | azules, Vidrio Frágil |
 | 13 | Racha | rara | crece: ×0,25 Multi más por cada pelea seguida que ganás sin que te peguen; se reinicia si te pegan | jugar arriesgado |
@@ -123,7 +123,7 @@ Hay **2 lugares**. Se compran en la tienda (3 de oro) y se usan con un toque, en
 | 2 · Catacumbas | Murciélago | Esqueleto | Goblin con Lanza |
 | 3 · Trono de Hueso | Gólem de Piedra | Caballero Hueco | Rey de los Huesos |
 
-- La vida de los monstruos crece mucho de zona en zona (como en Balatro), porque las combinaciones crecen mucho. **Números de arranque:** zona 1: 60, 110, 200 · zona 2: 450, 800, 1.500 · zona 3: 3.500, 6.000, 12.000. Golpes: 4 a 14. Se ajustan con Lune.
+- La vida de los monstruos crece mucho de zona en zona (como en Balatro), porque las combinaciones crecen mucho. **Números ajustados en el 5d:** zona 1: 50, 90, 140 · zona 2: 250, 420, 750 · zona 3: 1.500, 2.600, 4.500. Golpes: 4, 5, 7 · 7, 9, 11 · 11, 13, 14. (Los de arranque eran 60/110/200 · 450/800/1.500 · 3.500/6.000/12.000, y así nadie pasaba la zona 2.)
 - El caballero sigue con **50 de vida** y se cura 10 entre peleas. Si llegás a 0, perdés.
 - Los números grandes se escriben cortos: 12.400 → "12,4 mil", 1.500.000 → "1,5 M". El tope por tiro sube de 999 a 10 millones.
 
@@ -135,10 +135,10 @@ Hay **2 lugares**. Se compran en la tienda (3 de oro) y se usan con un toque, en
 | Cristal maldito | las azules se rompen siempre |
 | Paredes vivas | las 2 columnas de los costados no cuentan |
 | Avaricia | te saca 1 de oro por tiro |
-| Coraza | solo cuentan los golpes de 100 o más |
+| Coraza | solo cuentan los golpes de 40 o más (zona 1), 250 (zona 2) o 1.200 (zona 3) |
 | Silencio | la reliquia de la izquierda no funciona |
 | Viento | la bola sale más rápida y desviada |
-| Furia | si no lo matás, te pega el doble |
+| Rabia | si no lo matás, te pega el doble (se llama Rabia para no confundirla con el pergamino Furia) |
 
 ## Bolas para elegir (se desbloquean y se guardan)
 
@@ -180,7 +180,7 @@ Al empezar la partida elegís con qué bola bajás. Cada una cambia el estilo de
 | Oro | 3 por monstruo, 5 por jefe, +2/+1 por matar en 1/2 tiros, interés 1 cada 5 (tope 5) |
 | Precios | reliquia 4 / 7 / 12 · mejora de clavija 2 (era 3, ver paso 5b) · pergamino 3 · renovar 2 (+1 cada vez) |
 | Chances de rareza | común 70 %, rara 25 %, legendaria 5 % (a la vista en la tienda) |
-| Monstruos (vida) | zona 1: 60, 110, 200 · zona 2: 450, 800, 1.500 · zona 3: 3.500, 6.000, 12.000 |
+| Monstruos (vida) | zona 1: 50, 90, 140 · zona 2: 250, 420, 750 · zona 3: 1.500, 2.600, 4.500 (paso 5d) |
 | Tope por tiro | 10 millones de golpe; 4 bolas |
 
 Objetivo de balance: con un bot que compra al azar, perder casi siempre en la zona 2; con un bot que arma una familia, ganarle al jefe de la zona 2 seguido y a veces al de la 3. Una partida ganada dura 15 a 20 minutos.
@@ -366,4 +366,31 @@ Cada pelea dura 2 a 3 tiros de promedio. Mezclar mejoras es lo que gana (las tre
 | Siempre un solo tipo de clavija, sin reliquias | 0 a 4 % |
 
 Armar una familia rinde mucho más que comprar al azar: las sinergias funcionan. Ahora es demasiado fácil (37 % al azar con hierro) porque los monstruos son los de la etapa 4; eso se corrige en el **5d**, con las 3 zonas y sus vidas. También queda para el 5d mejorar la familia del oro, que casi no sube el golpe.
+
+### Paso 5d · Zonas, jefes con maña, cofre y balance (25/10/2026)
+
+- **3 zonas de 3 peleas** (`Config.Zonas` y `Config.Monstruos`): Cloacas (Rata, Slime, **Rey Rata**), Catacumbas (Murciélago, Esqueleto, **Goblin con Lanza**) y Trono de Hueso (Gólem, Caballero Hueco, **Rey de los Huesos**). Arriba dice "Zona 2 · Catacumbas · Pelea 1 de 3" o "Jefe · Zona 2 · Catacumbas".
+- **Mañas de jefe** (`Config.Manias`): al empezar la partida, el servidor sortea una distinta para cada jefe. Se ven **antes** de pelear (en la tienda: "Próximo: Goblin con Lanza (750 de vida) · Coraza: …") y **durante** la pelea, en un cartel rojo debajo de la zona.
+  - En el tiro (`Simulacion`): Sangre fría, Cristal maldito, Paredes vivas (la primera y la última clavija de cada fila no cuentan), Silencio (la reliquia de la izquierda no existe) y Viento (bola 30 % más rápida y el triple de desvío).
+  - En el turno (`Mazmorra`): Avaricia (−1 de oro por tiro), Coraza (golpes chicos no hacen daño) y Rabia (te pega el doble).
+- **Cofre:** al ganarle al jefe de las zonas 1 y 2, la tienda abre una pantalla con **3 reliquias que no tenés** (con las mismas chances de rareza que la tienda) y te llevás **una gratis**. "Saltear" la cierra; el botón **Cofre** de la tienda la vuelve a abrir mientras no hayas elegido. Si tenés los 5 lugares llenos, vendés una y volvés a abrirlo. El servidor valida todo (`Tienda.tomarCofre`). Renovar no cambia el cofre. Si una reliquia de la tienda ya la tenés (por ejemplo, la sacaste del cofre), dice "La tenés".
+- **Ajustes de reliquias para que las familias rindan parecido:** Brasa +2 Multi por roja (era +1), Avaro +1 Multi cada 2 de oro (era cada 5) y Toque de Oro ×1,5 Multi por dorada (era +2). Coraza: 40 / 250 / 1.200 según la zona (con 100 en la zona 1, el primer jefe mataba demasiado).
+- **Prueba con Lune** (`lune run plinko-knight/pruebas/zonas`): las zonas, que las mañas salgan distintas y solo en jefes, cada maña haciendo lo suyo, y el cofre (aparece solo después de un jefe, no trae repetidas ni las que tenés, se toma una sola, con lugar lleno no deja y después de vender sí, el último jefe termina la mazmorra). `pruebas/mazmorra` ahora acepta `rapido` para medir solo 4 formas de jugar.
+- **En Studio:** salté al Rey Rata (Avaricia, en el cartel) y le gané de un tiro (22 × 14 = 308, igual en el servidor). Cobré +5 por ser jefe, se abrió el cofre (Martillo Pesado, Cadena, Callo) y me llevé la Cadena. La tienda mostró "Próximo: Murciélago (250 de vida)". Después, el Goblin con Lanza con su maña en el cartel.
+
+#### Balance del paso 5d (lune, 150 mazmorras con tiros al azar)
+
+| Cómo compra el bot | Dónde cae casi siempre | Gana |
+|---|---|---|
+| Sin comprar | pelea 4 (77 %) | 0 % |
+| Al azar, bola de hierro | zona 2 (61 %) | **7 %** |
+| Al azar, bola de fuego / partida | zona 2 y 3 | 24 % / 34 % |
+| Al azar sin reliquias | zona 2 (83 %) | 0 % |
+| Familia de las rojas | jefe de la zona 2 (29 %) y zona 3 | 0 % |
+| Familia de las bolas | repartido | **13 %** |
+| Familia del oro | pelea 4 (54 %); si pasa la zona 2 casi no pierde | 0 % |
+| Siempre un solo tipo de clavija | pelea 4 o 5 | 0 % |
+
+- Se cumple lo que pedía la ficha: comprando al azar se pierde casi siempre en la zona 2. Armando una familia se le gana al jefe de la zona 2 alrededor de la mitad de las veces, y a veces se gana todo.
+- El bot tira a cualquier lado; una persona apunta, así que debería irle mejor. **Lo que falta saber jugando:** si la zona 3 es demasiado dura para la familia de las rojas, y si la del oro es demasiado lenta al principio.
 

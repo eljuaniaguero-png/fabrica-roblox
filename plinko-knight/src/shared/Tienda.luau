@@ -10,6 +10,8 @@
 -- Paso 5c: reliquias. Salen 2 por tienda (primero se sortea la rareza con Config.Rarezas y después
 -- una de esa rareza que no tengas ni esté ya en la tienda). Se venden por la mitad y se mueven de
 -- lugar (el orden importa: se aplican de izquierda a derecha). Vender y mover, solo en la tienda.
+-- Paso 5d: después de un jefe, la tienda trae el cofre: 3 reliquias que no tenés y te llevás 1
+-- gratis (si tenés lugar). Renovar no cambia el cofre.
 
 local Azar = require(script.Parent.Azar)
 local Clavijas = require(script.Parent.Clavijas)
@@ -158,20 +160,19 @@ function Tienda.chances(): { string }
 	return lineas
 end
 
--- Lo que sale en una tienda (con la semilla): reliquias, mejoras de clavija y pergaminos. Las
--- reliquias que ya tenés (en `e`) no salen.
-function Tienda.generar(semilla: number, e: Estado?): { Item }
-	local azar = Azar.nuevo(semilla)
-	local items: { Item } = {}
+-- `cantidad` reliquias distintas que no estén en `usadas`: primero la rareza (con su peso) y
+-- después una de esa rareza. Marca las elegidas en `usadas`.
+local function sortearReliquias(
+	azar: () -> number,
+	usadas: { [string]: boolean },
+	cantidad: number
+): { string }
 	local pesoTotal = 0
 	for _, r in Config.Rarezas do
 		pesoTotal += r.Peso
 	end
-	local usadas: { [string]: boolean } = {}
-	for _, r in (if e then e.Reliquias else {}) :: { Reliquias.Tenida } do
-		usadas[r.Id] = true
-	end
-	for _ = 1, Config.Tienda.Reliquias do
+	local elegidas: { string } = {}
+	for _ = 1, cantidad do
 		local x = azar() * pesoTotal
 		local rareza = Config.OrdenRarezas[#Config.OrdenRarezas]
 		for _, id in Config.OrdenRarezas do
@@ -197,11 +198,26 @@ function Tienda.generar(semilla: number, e: Estado?): { Item }
 		if #posibles > 0 then
 			local id = posibles[math.floor(azar() * #posibles) + 1]
 			usadas[id] = true
-			table.insert(
-				items,
-				{ Clase = "reliquia", Id = id, Precio = Reliquias.precio(id), Vendido = false }
-			)
+			table.insert(elegidas, id)
 		end
+	end
+	return elegidas
+end
+
+-- Lo que sale en una tienda (con la semilla): reliquias, mejoras de clavija y pergaminos. Las
+-- reliquias que ya tenés (en `e`) no salen.
+function Tienda.generar(semilla: number, e: Estado?): { Item }
+	local azar = Azar.nuevo(semilla)
+	local items: { Item } = {}
+	local usadas: { [string]: boolean } = {}
+	for _, r in (if e then e.Reliquias else {}) :: { Reliquias.Tenida } do
+		usadas[r.Id] = true
+	end
+	for _, id in sortearReliquias(azar, usadas, Config.Tienda.Reliquias) do
+		table.insert(
+			items,
+			{ Clase = "reliquia", Id = id, Precio = Reliquias.precio(id), Vendido = false }
+		)
 	end
 	for _ = 1, Config.Tienda.MejorasDeClavija do
 		local tipo = Config.OrdenClavijas[math.floor(azar() * #Config.OrdenClavijas) + 1]
@@ -238,7 +254,38 @@ end
 -- Se abre la tienda (después de ganar una pelea, ya con el oro cobrado).
 function Tienda.abrir(e: Estado, semilla: number)
 	e.Fase = "tienda"
-	e.Tienda = { Items = Tienda.generar(semilla, e), Renovaciones = 0 }
+	local cofre: { string } = {}
+	if e.CofrePendiente then
+		local usadas: { [string]: boolean } = {}
+		for _, r in e.Reliquias do
+			usadas[r.Id] = true
+		end
+		-- Otra semilla para el cofre (así no repite las reliquias de la tienda).
+		cofre = sortearReliquias(Azar.nuevo(semilla + 7919), usadas, Config.Cofre.Reliquias)
+		e.CofrePendiente = false
+	end
+	e.Tienda =
+		{ Items = Tienda.generar(semilla, e), Renovaciones = 0, Cofre = cofre, CofreTomado = false }
+end
+
+-- Llevarse la reliquia `indice` del cofre (gratis, una sola).
+function Tienda.tomarCofre(e: Estado, indice: any): (boolean, string?)
+	if e.Fase ~= "tienda" then
+		return false, "La tienda está cerrada"
+	end
+	local id = if typeof(indice) == "number" then e.Tienda.Cofre[indice] else nil
+	if not id or e.Tienda.CofreTomado then
+		return false, "Esa reliquia no está en el cofre"
+	end
+	if #e.Reliquias >= Config.LugaresReliquia then
+		return false, "No tenés lugar: vendé una reliquia y volvé a abrir el cofre"
+	end
+	if Reliquias.tiene(e.Reliquias, id) then
+		return false, "Ya la tenés"
+	end
+	table.insert(e.Reliquias, { Id = id, Contador = 0, Precio = Reliquias.precio(id) })
+	e.Tienda.CofreTomado = true
+	return true, nil
 end
 
 function Tienda.precioRenovar(e: Estado): number
@@ -254,7 +301,12 @@ function Tienda.renovar(e: Estado, semilla: number): (boolean, string?)
 		return false, "No te alcanza el oro"
 	end
 	e.Oro -= precio
-	e.Tienda = { Items = Tienda.generar(semilla, e), Renovaciones = e.Tienda.Renovaciones + 1 }
+	e.Tienda = {
+		Items = Tienda.generar(semilla, e),
+		Renovaciones = e.Tienda.Renovaciones + 1,
+		Cofre = e.Tienda.Cofre,
+		CofreTomado = e.Tienda.CofreTomado,
+	}
 	return true, nil
 end
 

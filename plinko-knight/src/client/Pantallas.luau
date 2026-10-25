@@ -71,7 +71,19 @@ function Pantallas.crear(): Pantallas
 	local piso = texto(gui, "")
 	piso.AnchorPoint = Vector2.new(0.5, 0)
 	piso.Position = UDim2.new(0.5, 0, 0, 8)
-	piso.Size = UDim2.new(0.3, 0, 0, 40)
+	piso.Size = UDim2.new(0.26, 0, 0, 40)
+
+	-- Cartel de la maña del jefe (paso 5d): debajo del piso, en rojo.
+	local mania = texto(gui, "")
+	mania.Name = "Mania"
+	mania.AnchorPoint = Vector2.new(0.5, 0)
+	mania.Position = UDim2.new(0.5, 0, 0, 50)
+	mania.Size = UDim2.new(0.3, 0, 0, 30)
+	mania.BackgroundTransparency = 0.15
+	mania.BackgroundColor3 = Color3.fromHex(Config.Colores.FondoBarra)
+	mania.Font = Enum.Font.GothamBold
+	mania.TextColor3 = Color3.fromHex(Config.Colores.Golpe)
+	mania.Visible = false
 
 	-- Cartel grande en el medio ("¡Piso 2!").
 	local anuncio = texto(gui, "")
@@ -211,10 +223,15 @@ function Pantallas.crear(): Pantallas
 	return {
 		ponerEstado = function(e: Mazmorra.Estado)
 			ponerVida(e.Vida, e.VidaMaxima)
-			local total = #Config.Monstruos
-			piso.Text = if e.Piso >= total
-				then ("Jefe · Pelea %d de %d"):format(e.Piso, total)
-				else ("Pelea %d de %d"):format(e.Piso, total)
+			local m = Mazmorra.monstruo(e.Piso)
+			local porZona = #Config.Monstruos / #Config.Zonas
+			local enZona = (e.Piso - 1) % porZona + 1
+			local zona = ("Zona %d · %s"):format(m.Zona, Config.Zonas[m.Zona] or "")
+			piso.Text = if m.EsJefe
+				then ("Jefe · %s"):format(zona)
+				else ("%s · Pelea %d de %d"):format(zona, enZona, porZona)
+			mania.Visible = e.Mania ~= "" and e.Fase == "peleando"
+			mania.Text = if e.Mania ~= "" then Mazmorra.textoMania(e.Mania, m.Zona) else ""
 		end,
 		ponerVida = ponerVida,
 		anunciar = function(valor: string)

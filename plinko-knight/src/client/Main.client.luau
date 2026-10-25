@@ -13,6 +13,7 @@
 -- pergaminos de forja y martillo piden tocar clavijas (Seleccion); todo lo valida el servidor.
 -- Paso 5c: la fila de reliquias (TiendaVista). Al final de cada tiro, las que actuaron saltan en
 -- orden y muestran lo que sumaron o multiplicaron.
+-- Paso 5d: zona y pelea arriba, cartel con la maña del jefe, "Próximo" en la tienda y el cofre.
 -- Input con UserInputService: los otros juegos no usan el Input Action System.
 
 local Players = game:GetService("Players")
@@ -235,6 +236,12 @@ tiendaVista = TiendaVistaModulo.crear({
 			end
 		end
 	end,
+	tomarCofre = function(indice: number)
+		local id = estado.Tienda.Cofre[indice]
+		if id and pedir(remotos.Tienda, "cofre", indice) then
+			print(("[Tienda] Del cofre te llevaste %s"):format(id))
+		end
+	end,
 	renovar = function()
 		if not seleccion.activa() then
 			pedir(remotos.Tienda, "renovar")
@@ -242,7 +249,12 @@ tiendaVista = TiendaVistaModulo.crear({
 	end,
 	bajar = function()
 		if not seleccion.activa() and pedir(remotos.Tienda, "bajar") then
-			pantallas.anunciar(("¡Piso %d!"):format(estado.Piso))
+			local m = Mazmorra.monstruo(estado.Piso)
+			pantallas.anunciar(
+				if m.EsJefe
+					then ("¡Jefe: %s!"):format(m.Nombre)
+					else ("¡Piso %d!"):format(estado.Piso)
+			)
 		end
 	end,
 	vender = function(lugar: number)

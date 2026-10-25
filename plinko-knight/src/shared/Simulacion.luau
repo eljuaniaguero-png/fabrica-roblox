@@ -13,6 +13,8 @@
 -- Paso 5c: las reliquias. Algunas cambian cada toque (rojas, azules, doradas, violetas, bolas
 -- extra, Midas, Gemela); otras actúan al final del tiro, en el orden de la lista (de izquierda a
 -- derecha): por eso importa si una suma Multi antes o después de otra que lo multiplica.
+-- Paso 5d: las mañas de jefe que cambian el tiro (sangre fría, cristal maldito, paredes vivas,
+-- silencio y viento). Las que cambian el turno (avaricia, coraza, rabia) están en Mazmorra.
 
 local Azar = require(script.Parent.Azar)
 local Config = require(script.Parent.Config)
@@ -38,6 +40,7 @@ export type Modificadores = {
 	Oro: number?, -- el que tenés antes del tiro (Avaro)
 	Vida: number?, -- la del caballero (Último Aliento)
 	TirosPelea: number?, -- tiros que ya hiciste en esta pelea (Paciencia)
+	Mania: string?, -- la maña del jefe de esta pelea ("" o nil = ninguna)
 }
 
 -- Una reliquia que hizo algo al final del tiro (para que el cliente la sacuda y muestre el texto).
@@ -151,8 +154,31 @@ function Simulacion.simular(
 	local divide = Config.Bolas.partida
 	local impulso = Config.Clavijas.verde.Impulso
 
-	-- Reliquias que cambian cada toque.
+	-- Maña del jefe.
+	local mania = mods.Mania or ""
+	-- Paredes vivas: la primera y la última clavija de cada fila no cuentan (rebotan igual).
+	local costados: { [number]: boolean } = {}
+	if mania == "paredesVivas" then
+		local porFila: { [number]: { number } } = {}
+		for _, c in clavijas do
+			porFila[c.Fila] = porFila[c.Fila] or {}
+			table.insert(porFila[c.Fila], c.Id)
+		end
+		for _, ids in porFila do
+			table.sort(ids, function(a: number, b: number): boolean
+				return clavijas[a].X < clavijas[b].X
+			end)
+			costados[ids[1]] = true
+			costados[ids[#ids]] = true
+		end
+	end
+
+	-- Reliquias que cambian cada toque. Con Silencio, la de la izquierda no existe en este tiro.
 	local lista = mods.Reliquias or {}
+	if mania == "silencio" and #lista > 0 then
+		lista = table.clone(lista)
+		table.remove(lista, 1)
+	end
 	local R = Config.Reliquias
 	local tiene = function(id: string): boolean
 		return Reliquias.tiene(lista, id)
@@ -160,9 +186,12 @@ function Simulacion.simular(
 	local gemela = tiene("gemela")
 	local factorRojas = if tiene("rubi") then R.rubi.Factor else 1
 	local factorExtra = if tiene("hoja") then R.hoja.Factor else 1
-	local multiDoradas = if tiene("toqueOro") then R.toqueOro.Multi else 0
+	local porDoradas = if tiene("toqueOro") then R.toqueOro.PorMulti else 1
 	local vidrio = tiene("vidrio")
-	local rotura = if vidrio then R.vidrio.Rotura else Config.Clavijas.azul.Rotura
+	local rotura = if mania == "cristalMaldito"
+		then 1
+		elseif vidrio then R.vidrio.Rotura
+		else Config.Clavijas.azul.Rotura
 	local ecoMinimo = if tiene("ecoInfinito") then R.ecoInfinito.Veces else 0
 	local oroMidas = if tiene("midas") then R.midas.Oro else 0
 	-- En qué toque se parte la bola que tirás: la partida en el suyo; si no, Gemela.
@@ -196,6 +225,10 @@ function Simulacion.simular(
 	end
 
 	local vx0, vy0 = velocidadInicial(Simulacion.limitarAngulo(angulo), bola)
+	if mania == "viento" then
+		vx0 *= Config.Manias.viento.Velocidad
+		vy0 *= Config.Manias.viento.Velocidad
+	end
 	local primera = nuevaBola(tablero.LanzadorX, tablero.LanzadorY, vx0, vy0, 1)
 	table.insert(primera.recorrido.X, primera.x)
 	table.insert(primera.recorrido.Y, primera.y)
@@ -215,6 +248,7 @@ function Simulacion.simular(
 	local pasosMaximos = math.floor(s.TiempoMaximo / dt)
 	local pasosTraba = math.floor(s.TiempoTraba / dt)
 	local desvioMaximo = math.rad(s.Desvio)
+		* (if mania == "viento" then Config.Manias.viento.Desvio else 1)
 
 	-- La bola se parte: ella y las nuevas salen abiertas en abanico desde el mismo punto.
 	local function dividir(b: Viva, paso: number, clavija: number)
@@ -286,7 +320,7 @@ function Simulacion.simular(
 					end
 					if not b.tocando[c.Id] then
 						b.tocando[c.Id] = true
-						if not b.tocadas[c.Id] then
+						if not b.tocadas[c.Id] and not costados[c.Id] then
 							b.tocadas[c.Id] = true
 							b.toques += 1
 							distintas += 1
@@ -298,9 +332,9 @@ function Simulacion.simular(
 							local porToque = Clavijas.porMulti(tipo, nivel)
 							local oroToque = Clavijas.oro(tipo, nivel)
 							if tipo == "roja" then
-								multiToque *= factorRojas
+								multiToque *= if mania == "sangreFria" then 0 else factorRojas
 							elseif tipo == "dorada" then
-								multiToque += multiDoradas
+								porToque *= porDoradas
 							elseif tipo == "azul" and vidrio then
 								porToque = R.vidrio.PorMulti
 									+ (porToque - Clavijas.porMulti("azul", 1))

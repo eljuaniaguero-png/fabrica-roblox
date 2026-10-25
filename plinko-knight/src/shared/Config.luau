@@ -9,6 +9,7 @@ export type Monstruo = {
 	Vida: number,
 	Golpe: number, -- daño que te hace cuando contraataca
 	Color: string, -- graybox: el rectángulo del cartel (hex)
+	Zona: number, -- 1, 2 o 3
 	EsJefe: boolean?,
 }
 
@@ -73,22 +74,63 @@ Config.Danio = {
 Config.VidaCaballero = 50
 Config.CuraEntrePeleas = 10
 
--- Las 6 peleas y el jefe, en orden (nombres de prueba hasta el arte final).
--- Etapa 5 (25/10): con mejoras, los números de la etapa 4 daban 98 % de mazmorras ganadas
--- eligiendo cartas al azar. Con estos (lune run plinko-knight/pruebas/mazmorra): al azar se gana
--- ~30 % y casi todos caen en las peleas 5 a 7; eligiendo siempre la misma, en la 5 o la 6.
+-- Paso 5d: 3 zonas de 3 peleas (2 monstruos y un jefe con maña). La vida crece mucho de zona en
+-- zona porque las combinaciones crecen mucho (como en Balatro). Nombres de prueba hasta el arte.
+-- Ajustados con lune run plinko-knight/pruebas/mazmorra (ver la ficha, paso 5d): la ficha decía
+-- 60/110/200 · 450/800/1500 · 3500/6000/12000 y así nadie pasaba la zona 2.
+Config.Zonas = { "Cloacas", "Catacumbas", "Trono de Hueso" }
 Config.Monstruos = {
-	{ Id = "rata", Nombre = "Rata de Cloaca", Vida = 40, Golpe = 4, Color = "#8A6E5A" },
-	{ Id = "slime", Nombre = "Slime Verde", Vida = 60, Golpe = 6, Color = "#5FBF4A" }, -- era 60/5
-	{ Id = "murcielago", Nombre = "Murciélago", Vida = 100, Golpe = 7, Color = "#7A5AA8" }, -- 85/6
-	{ Id = "esqueleto", Nombre = "Esqueleto", Vida = 150, Golpe = 9, Color = "#E6E0CC" }, -- 115/7
-	{ Id = "goblin", Nombre = "Goblin con Lanza", Vida = 210, Golpe = 10, Color = "#3E8C6E" }, -- 150/8
-	{ Id = "golem", Nombre = "Gólem de Piedra", Vida = 280, Golpe = 12, Color = "#6E7A8A" }, -- 190/9
+	{ Id = "rata", Nombre = "Rata de Cloaca", Zona = 1, Vida = 50, Golpe = 4, Color = "#8A6E5A" },
+	{ Id = "slime", Nombre = "Slime Verde", Zona = 1, Vida = 90, Golpe = 5, Color = "#5FBF4A" },
+	{
+		Id = "reyRata",
+		Nombre = "Rey Rata",
+		Zona = 1,
+		Vida = 140,
+		Golpe = 7,
+		Color = "#6B4A3A",
+		EsJefe = true,
+	},
+	{
+		Id = "murcielago",
+		Nombre = "Murciélago",
+		Zona = 2,
+		Vida = 250,
+		Golpe = 7,
+		Color = "#7A5AA8",
+	},
+	{ Id = "esqueleto", Nombre = "Esqueleto", Zona = 2, Vida = 420, Golpe = 9, Color = "#E6E0CC" },
+	{
+		Id = "goblin",
+		Nombre = "Goblin con Lanza",
+		Zona = 2,
+		Vida = 750,
+		Golpe = 11,
+		Color = "#3E8C6E",
+		EsJefe = true,
+	},
+	{
+		Id = "golem",
+		Nombre = "Gólem de Piedra",
+		Zona = 3,
+		Vida = 1500,
+		Golpe = 11,
+		Color = "#6E7A8A",
+	},
+	{
+		Id = "hueco",
+		Nombre = "Caballero Hueco",
+		Zona = 3,
+		Vida = 2600,
+		Golpe = 13,
+		Color = "#4A4F66",
+	},
 	{
 		Id = "jefe",
 		Nombre = "Rey de los Huesos",
-		Vida = 380, -- etapa 4: 320/11 → 240/8 (sin mejoras no se ganaba); etapa 5: 380/12
-		Golpe = 12,
+		Zona = 3,
+		Vida = 4500,
+		Golpe = 14,
 		Color = "#C9A227",
 		EsJefe = true,
 	},
@@ -173,6 +215,42 @@ Config.Tienda = {
 -- desde el principio; el resto se desbloquea con un logro cuando llegue el guardado (etapa 6).
 -- Por ahora todas pueden salir en la tienda.
 Config.LugaresReliquia = 5
+
+-- Cofre del jefe (paso 5d): al ganarle a un jefe (menos el último) se abre un cofre con 3
+-- reliquias que no tenés; te llevás 1 gratis (o ninguna). Se elige en la tienda que viene después.
+Config.Cofre = { Reliquias = 3 }
+
+-- Mañas de jefe (paso 5d): el servidor sortea una por jefe al empezar la partida (con la semilla
+-- de la partida) y se ve antes de pelear (en la tienda de antes y en un cartel en la pelea).
+Config.OrdenManias = {
+	"sangreFria",
+	"cristalMaldito",
+	"paredesVivas",
+	"avaricia",
+	"coraza",
+	"silencio",
+	"viento",
+	"rabia",
+}
+Config.Manias = {
+	sangreFria = { Nombre = "Sangre fría", Texto = "Las clavijas rojas no suman" },
+	cristalMaldito = { Nombre = "Cristal maldito", Texto = "Las azules se rompen siempre" },
+	paredesVivas = { Nombre = "Paredes vivas", Texto = "Las clavijas de los costados no cuentan" },
+	avaricia = { Nombre = "Avaricia", Texto = "Te saca %d de oro en cada tiro", Oro = 1 },
+	coraza = {
+		Nombre = "Coraza",
+		Texto = "Solo le hacen daño los golpes de %s o más",
+		Minimo = { 40, 250, 1200 },
+	},
+	silencio = { Nombre = "Silencio", Texto = "Tu reliquia de la izquierda no funciona" },
+	viento = {
+		Nombre = "Viento",
+		Texto = "La bola sale más rápida y se desvía más",
+		Velocidad = 1.3,
+		Desvio = 3, -- veces el desvío normal en cada rebote
+	},
+	rabia = { Nombre = "Rabia", Texto = "Si no lo matás, te pega el doble", Factor = 2 },
+}
 Config.Rarezas = {
 	comun = { Nombre = "Común", Peso = 70, Precio = 4, Color = "#B8B8B8" },
 	rara = { Nombre = "Rara", Peso = 25, Precio = 7, Color = "#4FA8FF" },
@@ -202,7 +280,7 @@ Config.OrdenReliquias = {
 	"midas",
 }
 Config.Reliquias = {
-	brasa = { Nombre = "Brasa", Rareza = "comun", Desbloqueo = "inicio", MultiPorRoja = 1 },
+	brasa = { Nombre = "Brasa", Rareza = "comun", Desbloqueo = "inicio", MultiPorRoja = 2 }, -- era 1 (paso 5d),
 	rubi = { Nombre = "Corazón de Rubí", Rareza = "rara", Desbloqueo = "inicio", Factor = 2 },
 	martillo = {
 		Nombre = "Martillo Pesado",
@@ -216,8 +294,8 @@ Config.Reliquias = {
 	enjambre = { Nombre = "Enjambre", Rareza = "rara", Desbloqueo = "logro", PorBola = 1.5 },
 	hoja = { Nombre = "Hoja Afilada", Rareza = "comun", Desbloqueo = "inicio", Factor = 2 },
 	bolsa = { Nombre = "Bolsa de Cuero", Rareza = "comun", Desbloqueo = "inicio", InteresTope = 10 },
-	avaro = { Nombre = "Avaro", Rareza = "rara", Desbloqueo = "logro", Multi = 1, Cada = 5 },
-	toqueOro = { Nombre = "Toque de Oro", Rareza = "comun", Desbloqueo = "inicio", Multi = 2 },
+	avaro = { Nombre = "Avaro", Rareza = "rara", Desbloqueo = "logro", Multi = 1, Cada = 2 },
+	toqueOro = { Nombre = "Toque de Oro", Rareza = "comun", Desbloqueo = "inicio", PorMulti = 1.5 },
 	trofeo = { Nombre = "Trofeo", Rareza = "rara", Desbloqueo = "inicio", Multi = 1 },
 	callo = { Nombre = "Callo", Rareza = "comun", Desbloqueo = "inicio", Fuerza = 3 },
 	racha = { Nombre = "Racha", Rareza = "rara", Desbloqueo = "logro", PorPelea = 0.25 },
@@ -269,7 +347,7 @@ Config.Bolas = {
 	hierro = { Nombre = "Hierro", Desbloqueo = "inicio" },
 	fuego = {
 		Nombre = "Fuego",
-		Desbloqueo = "zona2",
+		Desbloqueo = "zona2", -- llegar a la zona 2
 		FuerzaExtra = 1, -- por cada clavija tocada
 		Quemadura = 3, -- daño por turno al monstruo
 		TurnosQuemadura = 2, -- cada tiro lo vuelve a prender por estos turnos

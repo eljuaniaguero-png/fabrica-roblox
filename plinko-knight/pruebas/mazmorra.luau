@@ -7,7 +7,8 @@
 --    y cuenta cuántos tiros dura cada pelea y en qué piso se pierde. Sale con error si una regla falla; el balance solo
 --    se informa.
 -- Para probar otras vidas de monstruos sin tocar Config (y menos corridas):
---   lune run plinko-knight/pruebas/mazmorra 40,80,150,250,400,600,900 100
+--   lune run plinko-knight/pruebas/mazmorra 50,90,160,300,500,900,1600,2800,5000 100
+-- y con "rapido" al final mide solo 4 formas de jugar (al azar con hierro y las 3 familias).
 
 local process = require("@lune/process")
 local cargar = require("./cargar")
@@ -29,7 +30,7 @@ end
 do
 	local e = Mazmorra.nueva()
 	chequear(e.Piso == 1 and e.Vida == Config.VidaCaballero, "la mazmorra no arranca bien")
-	chequear(#Config.Monstruos == 7, "tienen que ser 6 monstruos y el jefe")
+	chequear(#Config.Monstruos == 9, "tienen que ser 3 zonas de 3 peleas")
 
 	local rata = Config.Monstruos[1]
 	local t = Mazmorra.turno(e, 10) -- la rata sigue viva y contraataca
@@ -52,16 +53,16 @@ do
 	chequear(t.Resultado == "perdio" and e.Fase == "perdio" and e.Vida == 0, "no perdió")
 
 	e = Mazmorra.nueva()
-	Mazmorra.irAPiso(e, 7)
+	Mazmorra.irAPiso(e, 9)
 	chequear(
-		e.Piso == 7 and e.VidaMonstruo == Config.Monstruos[7].Vida,
+		e.Piso == 9 and e.VidaMonstruo == Config.Monstruos[9].Vida,
 		"el comando no fue al jefe"
 	)
 	t = Mazmorra.turno(e, 10000000)
 	chequear(t.Resultado == "gano" and e.Fase == "gano", "ganarle al jefe no terminó la mazmorra")
 
 	Mazmorra.irAPiso(e, 99)
-	chequear(e.Piso == 7, "el comando se pasó del último piso")
+	chequear(e.Piso == 9, "el comando se pasó del último piso")
 end
 
 -- 2) Balance
@@ -132,6 +133,15 @@ end
 -- Formas de comprar en la tienda. querer(item) dice si el bot lo quiere.
 local function comprador(querer: ((item: any) -> boolean)?): (e: any) -> ()
 	return function(e: any)
+		-- Cofre del jefe: la primera que quiera (o la primera, si quiere todo al azar).
+		if querer and not e.Tienda.CofreTomado then
+			for indice, id in e.Tienda.Cofre do
+				if querer({ Clase = "reliquia", Id = id, Precio = 0 }) then
+					Tienda.tomarCofre(e, indice)
+					break
+				end
+			end
+		end
 		if querer then
 			for indice, item in e.Tienda.Items do
 				if not item.Vendido and e.Oro >= item.Precio and querer(item) then
@@ -157,6 +167,7 @@ local function jugar(comprar: (e: any) -> (), bola: string?): Medida
 	end
 	for _ = 1, CORRIDAS do
 		local e = Mazmorra.nueva(bola)
+		Mazmorra.sortearManias(e, nuevaSemilla())
 		local tiros = 0
 		while e.Fase == "peleando" do
 			local piso = e.Piso
@@ -184,38 +195,45 @@ local alAzar = comprador(function(): boolean
 	return azar() < 0.7
 end)
 
+-- Formas de jugar. Con "rapido" como tercer argumento se miden solo las marcadas (para ajustar
+-- números sin esperar 5 minutos).
+local RAPIDO = process.args[3] == "rapido"
 local medidas: { { titulo: string, medida: Medida } } = {}
-table.insert(medidas, { titulo = "Sin comprar", medida = jugar(comprador(nil)) })
-for _, bola in Config.OrdenBolas do
-	table.insert(
-		medidas,
-		{ titulo = "Compra al azar, bola " .. bola, medida = jugar(alAzar, bola) }
-	)
+local function medir(titulo: string, comprar: (e: any) -> (), bola: string?, enRapido: boolean?)
+	if RAPIDO and not enRapido then
+		return
+	end
+	table.insert(medidas, { titulo = titulo, medida = jugar(comprar, bola) })
 end
-table.insert(medidas, {
-	titulo = "Compra todo lo que puede",
-	medida = jugar(comprador(function(): boolean
+
+medir("Sin comprar", comprador(nil))
+for _, bola in Config.OrdenBolas do
+	medir("Compra al azar, bola " .. bola, alAzar, bola, bola == "hierro")
+end
+medir(
+	"Compra todo lo que puede",
+	comprador(function(): boolean
 		return true
-	end)),
-})
+	end)
+)
 for _, tipo in Config.OrdenClavijas do
 	-- Solo clavijas y pergaminos de ese tipo, y vendajes.
-	table.insert(medidas, {
-		titulo = "Siempre " .. tipo,
-		medida = jugar(comprador(function(item: any): boolean
+	medir(
+		"Siempre " .. tipo,
+		comprador(function(item: any): boolean
 			local _, del = Tienda.partes(item.Id)
 			return item.Id == tipo or del == tipo or item.Id == "vendaje"
-		end)),
-	})
+		end)
+	)
 end
 
 -- Al azar pero sin reliquias (para comparar con el paso 5b).
-table.insert(medidas, {
-	titulo = "Compra al azar sin reliquias",
-	medida = jugar(comprador(function(item: any): boolean
+medir(
+	"Compra al azar sin reliquias",
+	comprador(function(item: any): boolean
 		return item.Clase ~= "reliquia" and azar() < 0.7
-	end)),
-})
+	end)
+)
 
 -- Armar una familia (paso 5c): sus clavijas, sus pergaminos y sus reliquias.
 local familias = {
@@ -236,23 +254,25 @@ local familias = {
 	},
 }
 for _, f in familias do
-	table.insert(medidas, {
-		titulo = "Familia " .. f.Nombre,
-		medida = jugar(comprador(function(item: any): boolean
+	medir(
+		"Familia " .. f.Nombre,
+		comprador(function(item: any): boolean
 			local _, del = Tienda.partes(item.Id)
 			if item.Clase == "reliquia" then
 				return table.find(f.Reliquias, item.Id) ~= nil
 			end
 			return item.Id == f.Tipo or del == f.Tipo or item.Id == "vendaje"
-		end)),
-	})
+		end),
+		nil,
+		true
+	)
 end
 
--- El jefe solo, sin comprar y con vida de sobra (como con la tecla 0), para saber cuánto dura.
+-- El jefe de la zona 1 solo, sin comprar y con vida de sobra (como con la tecla 0).
 local tirosJefe: { number } = {}
 for _ = 1, CORRIDAS do
 	local e = Mazmorra.nueva()
-	Mazmorra.irAPiso(e, #Config.Monstruos)
+	Mazmorra.irAPiso(e, 3)
 	e.Vida = 9999
 	local tiros = 0
 	while e.Fase == "peleando" do
@@ -295,7 +315,7 @@ end
 for _, m in medidas do
 	informar(m.titulo, m.medida)
 end
-print("Jefe solo, sin comprar y con vida de sobra: " .. resumen(tirosJefe))
+print("Jefe de la zona 1 solo, sin comprar y con vida de sobra: " .. resumen(tirosJefe))
 
 if errores > 0 then
 	print(("%d fallas"):format(errores))
