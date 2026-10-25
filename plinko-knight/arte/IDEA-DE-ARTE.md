@@ -20,6 +20,13 @@ Las referencias están en `plinko-knight/Referencias/`. De ellas se toma **cómo
 | 13-pelea-completa-tres-columnas | Pantalla entera: enemigos arriba con su vida, tablero al centro, paneles a los costados | El orden en 3 columnas para pantalla horizontal (ver sección 2) | El pixel art, los rieles curvos |
 | 14-numero-de-dano-grande-sobre-enemigo | Un "565" enorme y blanco encima del enemigo cuando le pega | Al final del tiro, el total vuela al monstruo y aparece gigante encima | — |
 | 15-carta-de-bola-en-panel-lateral | Columna de íconos (reliquias) y la carta de la bola actual con su efecto | Columna de mejoras que ya tenés, con la bola actual arriba | — |
+| 16-jefe-grande-a-la-derecha | Enemigos chicos en cuadros con su vida arriba, y el jefe mucho más grande a la derecha | El jefe ocupa toda la columna derecha y es el doble de alto que un monstruo normal | El personaje |
+| 17-linea-de-punteria-curva | Tablero muy lleno y una línea de puntos blanca que hace la curva de la caída | Línea de puntería con curva (ya cae con gravedad), pero **corta**, como dice el plan | El tablero tan lleno: el nuestro tiene unas 52 clavijas |
+| 18-clavijas-especiales-con-numero | Clavijas grandes de colores con un número adentro, entre muchas chicas, y fuego violeta abajo | La clavija roja es un poco más grande que las normales y lleva "×2" escrito adentro. Fuego o niebla de color abajo de todo como piso | Las bombas, el contador de vida 999.999 |
+| 19-pelea-completa-tres-columnas-grande | La misma de la 13, más grande | Confirma el orden en 3 columnas | — |
+| 20-numeros-amontonados-lo-que-NO-hacemos | Varios números de daño encimados que no se leen | **Lo que no hay que hacer:** cada número nuevo sale un poco corrido y se va rápido, para que nunca se encimen | — |
+| 21-cartas-con-cartel-de-titulo | Las 3 cartas con un cartel de tela arriba que dice "elegí una carta", y una barra fina arriba de todo con vida, oro y piso | Cartel arriba de las cartas ("Elegí una mejora") y barra fina arriba con vida y piso | Sus textos y dibujos |
+| 22-cartas-con-brillo-por-tipo | Las cartas con un brillo alrededor de distinto color según el tipo | Cada carta brilla con el color de su tipo, y la que tocás brilla más | — |
 
 ---
 
@@ -69,11 +76,16 @@ Las referencias que mejor se leen tienen **fondo frío y oscuro** con clavijas y
 ## 4. Cada pieza
 
 - **Clavijas (ref 12):** redondas, con brillo suave. Cuando las toca la bola se prenden más fuerte y quedan prendidas hasta el final del tiro, así se ve el camino.
+- **Clavija roja (ref 18):** un poco más grande que las normales, con "×2" escrito adentro, así se entiende sin explicar.
+- **Línea de puntería (ref 17):** puntos blancos que siguen la curva de la caída, pero solo el primer tramo.
+- **Piso del tablero (ref 18):** niebla cian que se mueve abajo de todo. Es solo decoración: no tiene casilleros ni números.
 - **Bola:** blanca y brillante. Bola de fuego con estela naranja; bola partida con una raya cian.
-- **Números de toque (refs 08-09):** "+2" chico en amarillo flúor que sube y se va. El "×2" de la clavija roja (refs 10-11) es el doble de grande y rojo, con una sacudida corta.
+- **Números de toque (refs 08-09 y 20):** "+2" chico en amarillo flúor que sube y se va en medio segundo. Cada número sale un poco corrido del anterior para que no se encimen (la 20 muestra el error). El "×2" de la clavija roja (refs 10-11) es el doble de grande y rojo, con una sacudida corta.
 - **Panel de daño (refs 04-07):** dos cajas grandes. Izquierda: el daño que se va sumando (cuando toca una roja, ese número se duplica ahí mismo). Derecha: cuántos ×2 hubo en el tiro, en rojo y con un salto cada vez que suma uno. **Con el jefe** el panel pasa a violeta y, si el daño supera 100, el número se prende fuego (ref 07).
 - **Monstruo (refs 02 y 14):** imagen plana de Gemini en un cartel de piedra con su nombre y barra de vida. Cuando le pegan, el cartel se inclina, se pone blanco un instante y aparece el número gigante encima.
-- **Cartas de mejora (ref 03):** 3 cartas grandes sobre el fondo oscurecido. Arriba el nombre, en el medio el ícono de Gemini y abajo una sola línea ("+1 de daño por clavija"). El borde es de un color por tipo: fuego naranja, duplica rojo, divide cian. Sin botón Saltar: siempre elegís una, como dice el plan.
+- **Jefe (ref 16):** ocupa toda la columna derecha, el doble de alto que un monstruo normal, con su nombre en un cartel.
+- **Barra de arriba (ref 21):** una franja fina con vida, piso y ajustes. Va igual en la pelea y en las mejoras.
+- **Cartas de mejora (refs 03, 21 y 22):** cartel arriba que dice "Elegí una mejora" y 3 cartas grandes sobre el fondo oscurecido. Cada carta brilla con el color de su tipo, y la que tocás brilla más y se agranda. Arriba el nombre, en el medio el ícono de Gemini y abajo una sola línea ("+1 de daño por clavija"). El borde es de un color por tipo: fuego naranja, duplica rojo, divide cian. Sin botón Saltar: siempre elegís una, como dice el plan.
 - **Columna de mejoras (ref 15):** íconos chicos uno abajo del otro. Si tocás uno, se ve qué hace.
 - **Fondo:** pared de piedra azulada, dos velas o cristales cian a los costados del tablero y niebla baja. Va oscuro y sin detalle en el centro, para que las clavijas resalten.
 
