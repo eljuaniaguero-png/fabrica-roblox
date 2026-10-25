@@ -17,17 +17,47 @@ local Config = {}
 Config.VERSION = 1
 
 -- Tablero: filas alternadas (una de Columnas clavijas, la siguiente de Columnas - 1).
+-- Medidas en studs, en el plano del tablero: x hacia la derecha, y hacia arriba, el lanzador en
+-- (0, 0) y las clavijas hacia abajo (y negativo). shared/Tablero.luau arma las clavijas.
 Config.Tablero = {
 	Columnas = 7,
 	Filas = 8,
+	SeparacionX = 3.25, -- entre clavijas de una misma fila (con 4 tocaba solo 6,6 por tiro)
+	SeparacionY = 3.5, -- entre filas
+	PrimeraFila = -4, -- y de la fila de arriba
+	MargenAbajo = 3.5, -- de la última fila al borde de abajo (donde termina el tiro)
+	RadioClavija = 0.7,
+	HuecoPared = 1.3, -- espacio libre entre la clavija de la punta y la pared (más que la bola)
 }
 
--- Física de la bola (shared/Simulacion.luau, etapa 2). Arranque: se ajustan probando con Lune.
+-- La bola de hierro (la de siempre).
+Config.Bola = {
+	Radio = 0.6,
+	Velocidad = 18, -- studs/s al salir del lanzador
+}
+
+-- Puntería: abanico hacia abajo, en grados desde la vertical (0 = derecho para abajo).
+Config.Punteria = {
+	AnguloMaximo = 60,
+	DuracionLinea = 0.22, -- segundos de vuelo que muestra la línea de puntos (solo el primer tramo)
+	PuntosLinea = 8,
+}
+
+-- Física de la bola (shared/Simulacion.luau). Ajustada el 25/10 con
+-- lune run plinko-knight/pruebas/simulacion: con estas medidas un tiro toca 14 clavijas de
+-- promedio (de 5 a 21) y dura unos 5 s. Más radio de clavija o de bola = más toques.
 Config.Simulacion = {
 	Paso = 1 / 120, -- segundos por paso fijo
+	Gravedad = 60, -- studs/s²
 	Restitucion = 0.65, -- cuánto rebota (1 = sin perder nada)
+	Friccion = 0.04, -- parte de la velocidad de costado que se pierde en cada rebote
+	Desvio = 4, -- grados: desvío al azar (con la semilla) en cada rebote contra una clavija
+	VelocidadMaxima = 45, -- studs/s
 	TiempoMaximo = 15, -- segundos: tope por tiro
 	TiempoTraba = 2, -- segundos casi sin bajar antes de un empujón
+	BajadaMinima = 1, -- studs que tiene que bajar en ese tiempo para no contar como trabada
+	Empujon = 6, -- studs/s hacia abajo del empujón (más un poco de costado al azar)
+	BrilloClavija = 0.15, -- segundos que brilla una clavija tocada (cliente)
 }
 
 Config.Danio = {
@@ -87,6 +117,8 @@ Config.Colores = {
 	ClavijaDuplica = "#D23232",
 	Bola = "#FFFFFF",
 	Gris = "#808080",
+	Fondo = "#3A3A3A",
+	Brillo = "#FFF6B0", -- clavija tocada
 }
 
 return Config

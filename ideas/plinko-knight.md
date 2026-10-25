@@ -1,7 +1,7 @@
 # Plinko Knight — ficha del prototipo
 
 Origen: `plinko-knight/PLAN-Y-PROMPTS.md` (25/10/2026) + idea de arte aprobada (`plinko-knight/arte/IDEA-DE-ARTE.md`).
-Estado: **aprobada por Juani el 25/10/2026** (punto de control 1). Lo próximo es la etapa 2: tablero, puntería y bola.
+Estado: **aprobada por Juani el 25/10/2026** (punto de control 1). Etapa 2 (tablero, puntería y bola) hecha el 25/10/2026; lo próximo es la etapa 3: daño y revisión del servidor.
 Carpeta: `plinko-knight/` (código en `plinko-knight/src/`, Rojo con `rojo serve plinko-knight`, puerto 34876). Place propio: `plinko-knight/PlinkoKnight.rbxl`.
 
 ## Concepto
@@ -82,3 +82,15 @@ Mazos de bolas, reto diario, ranking, **cualquier cosa con Robux**, varias mazmo
 - **El monstruo va a la derecha, no abajo del tablero.** Lo aprobaste el 25/10 en la idea de arte: en un celular horizontal el tablero y el monstruo no entran uno arriba del otro.
 - **El panel de daño tiene dos cajas** (daño | ×2). La regla de la clavija roja no cambia: solo se muestra separado.
 - Lo demás (números, mejoras, lo que queda fuera y cómo funciona por dentro) es igual al plan.
+
+## Avance
+
+### Etapa 2 · Tablero, puntería y bola (25/10/2026)
+
+- `shared/Tablero.luau` arma las 52 clavijas como datos; `shared/Simulacion.luau` calcula el tiro en 2D (paso de 1/120 s, rebote 0,65, fricción 0,04, anti-trabas a los 2 s y tope de 15 s). El cliente arma el tablero solo para él, con cámara fija (FOV 20) y el lugar del monstruo a la derecha.
+- **Medidas ajustadas:** con separación 4 y la bola chica tocaba solo 6,6 clavijas por tiro. Quedó: separación 3,25 entre clavijas y 3,5 entre filas, clavija de radio 0,7, bola de radio 0,6 y 1,3 de hueco junto a las paredes (si el hueco es más chico que la bola, se traba).
+- **Prueba con Lune** (`lune run plinko-knight/pruebas/simulacion`): 200 tiros, ninguno se traba ni sale por los costados, y el mismo tiro da siempre lo mismo. Promedio: **14 clavijas** (de 5 a 21), unos 5 s por tiro.
+- **En Studio:** 10 tiros con el mouse a los dos lados, con un promedio de **14,7 clavijas**. Todos terminan abajo y no se puede tirar otra bola mientras rebota.
+- **Decisión:** el azar del rebote usa un generador propio con semilla, no `Random.new`, porque `Random` no existe en Lune. Así las pruebas y el juego dan exactamente los mismos números.
+- Cada rebote contra una clavija tiene un desvío chico (hasta 4°) que sale de la semilla: el mismo ángulo no da siempre el mismo recorrido. Por ahora la semilla sale del reloj; desde la etapa 3 la da el servidor.
+
