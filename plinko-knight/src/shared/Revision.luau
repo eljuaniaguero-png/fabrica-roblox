@@ -13,6 +13,7 @@ export type Revisado = {
 	Danio: number, -- el que vale
 	DanioServidor: number, -- el de la simulación del servidor, sin tope
 	Corregido: boolean, -- el del cliente difería más del margen
+	Quemadura: number, -- daño por turno que deja la bola de fuego (0 sin fuego)
 }
 
 local Revision = {}
@@ -31,6 +32,7 @@ function Revision.revisar(
 		Danio = math.min(servidor, Config.Servidor.TopeDanioPorTiro),
 		DanioServidor = servidor,
 		Corregido = math.abs(danioVisto - servidor) > margen,
+		Quemadura = res.Quemadura,
 	}
 end
 

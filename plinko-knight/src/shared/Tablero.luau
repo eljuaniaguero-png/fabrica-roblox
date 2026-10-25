@@ -9,7 +9,8 @@ export type Clavija = {
 	X: number,
 	Y: number,
 	Radio: number,
-	Tipo: string, -- "normal" (después: "duplica")
+	Fila: number, -- 1 = la de arriba
+	Tipo: string, -- "normal" (las rojas de la mejora "Duplica" van aparte: cambian por pelea)
 }
 
 export type Tablero = {
@@ -38,6 +39,7 @@ function Tablero.generar(): Tablero
 				X = x,
 				Y = y,
 				Radio = c.RadioClavija,
+				Fila = fila + 1,
 				Tipo = "normal",
 			})
 		end

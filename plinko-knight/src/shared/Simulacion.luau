@@ -3,10 +3,14 @@
 -- mismo tablero + ángulo + semilla = mismo recorrido, en Studio y en Lune. El cliente la corre
 -- para dibujar el tiro y el servidor la repite para revisar el daño (etapa 3).
 --
--- El azar sale de un generador propio con semilla (xorshift de 32 bits) y no de Random.new:
--- Random no existe en Lune, y así las pruebas dan exactamente los mismos números que el juego.
+-- El azar sale de shared/Azar (con semilla, no Random.new: Random no existe en Lune).
+-- Etapa 5: las mejoras también pasan acá (fuego, clavijas rojas y bola que se divide), así el
+-- servidor repite el tiro igual. La bola dividida se simula al mismo tiempo que la original,
+-- paso por paso, para que los toques (y los ×2) queden en el orden en que pasan.
 
+local Azar = require(script.Parent.Azar)
 local Config = require(script.Parent.Config)
+local MejorasModulo = require(script.Parent.Mejoras)
 local TableroModulo = require(script.Parent.Tablero)
 
 type Tablero = TableroModulo.Tablero
@@ -16,46 +20,71 @@ export type Bola = {
 	Velocidad: number,
 }
 
--- Mejoras activas en el tiro. Todavía no cambian nada (llegan en la etapa 5).
-export type Mejoras = { [string]: number }
+-- Mejoras activas en el tiro (etapa 5): los niveles de cada una y las clavijas rojas de la
+-- pelea (las elige el servidor con Mejoras.rojas). {} = sin mejoras.
+export type Mejoras = {
+	Niveles: MejorasModulo.Niveles?,
+	Rojas: { number }?,
+}
 
 export type Toque = {
 	Clavija: number, -- Id de la clavija
-	Paso: number, -- índice en el recorrido (1 = posición de salida)
+	Paso: number, -- índice global del paso (1 = salida); para la bola 1 es su índice en X/Y
 	Danio: number, -- lo que suma este toque
-	Total: number, -- daño acumulado del tiro hasta este toque (incluido)
+	Total: number, -- daño acumulado del tiro hasta este toque (incluido, con el ×2 si hubo)
+	Bola: number, -- qué bola la tocó (1 = la que tiraste; 2 o más = las de la división)
+	Duplico: boolean, -- era una clavija roja: el total se multiplicó
+}
+
+-- El camino de una bola. X[1] es su posición en el paso global Inicio.
+export type Recorrido = {
+	X: { number },
+	Y: { number },
+	Inicio: number,
 }
 
 export type Resultado = {
-	X: { number }, -- posición de la bola en cada paso
+	X: { number }, -- posición de la bola que tiraste en cada paso (= Recorridos[1])
 	Y: { number },
-	-- En orden. Cada clavija aparece una sola vez: la segunda vez la bola rebota pero no suma.
+	Recorridos: { Recorrido }, -- uno por bola (más de uno si se dividió)
+	Pasos: number, -- índice global del último paso (cuando cayó la última bola)
+	-- En orden. Cada bola suma cada clavija una sola vez (la segunda vez rebota pero no suma), y
+	-- cada clavija roja duplica una sola vez por tiro aunque la toquen varias bolas.
 	Toques: { Toque },
-	ClavijasDistintas: number,
-	Danio: number, -- total del tiro
+	ClavijasDistintas: number, -- toques que sumaron (de todas las bolas)
+	Danio: number, -- total del tiro (con tope Config.TopeDanioTiro)
+	Quemadura: number, -- daño por turno que deja la bola de fuego (0 sin fuego)
+	Fuego: boolean,
 	Empujones: number, -- cuántas veces actuó el anti-trabas
-	Fin: string, -- "abajo" (cruzó el borde de abajo) o "tope" (llegó al tiempo máximo)
+	Fin: string, -- "abajo" (cayeron todas) o "tope" (llegó al tiempo máximo)
+}
+
+-- Una bola en juego, durante la simulación.
+type Viva = {
+	x: number,
+	y: number,
+	vx: number,
+	vy: number,
+	recorrido: Recorrido,
+	tocando: { [number]: boolean }, -- clavijas que está tocando ahora
+	tocadas: { [number]: boolean }, -- clavijas que ya sumó esta bola
+	toques: number,
+	puedeDividir: boolean,
+	yVentana: number,
+	activa: boolean,
 }
 
 local Simulacion = {}
-
-local function nuevoAzar(semilla: number): () -> number
-	local estado = math.floor(semilla) % 4294967296
-	if estado == 0 then
-		estado = 0x9E3779B9
-	end
-	return function(): number
-		estado = bit32.bxor(estado, bit32.lshift(estado, 13))
-		estado = bit32.bxor(estado, bit32.rshift(estado, 17))
-		estado = bit32.bxor(estado, bit32.lshift(estado, 5))
-		return estado / 4294967296
-	end
-end
 
 -- Velocidad de salida para un ángulo en grados desde la vertical (positivo = a la derecha).
 local function velocidadInicial(angulo: number, bola: Bola): (number, number)
 	local a = math.rad(angulo)
 	return math.sin(a) * bola.Velocidad, -math.cos(a) * bola.Velocidad
+end
+
+local function girar(vx: number, vy: number, angulo: number): (number, number)
+	local c, s = math.cos(angulo), math.sin(angulo)
+	return vx * c - vy * s, vx * s + vy * c
 end
 
 function Simulacion.limitarAngulo(angulo: number): number
@@ -67,132 +96,229 @@ function Simulacion.simular(
 	tablero: Tablero,
 	angulo: number,
 	bola: Bola,
-	_mejoras: Mejoras,
+	mejoras: Mejoras,
 	semilla: number
 ): Resultado
 	local s = Config.Simulacion
 	local dt = s.Paso
-	local azar = nuevoAzar(semilla)
+	local azar = Azar.nuevo(semilla)
 	local r = bola.Radio
 	local clavijas = tablero.Clavijas
 
-	local x, y = tablero.LanzadorX, tablero.LanzadorY
-	local vx, vy = velocidadInicial(Simulacion.limitarAngulo(angulo), bola)
+	-- Mejoras.
+	local niveles = mejoras.Niveles
+	local nivelFuego = MejorasModulo.nivel(niveles, "Fuego")
+	local danioPorClavija = MejorasModulo.danioPorClavija(nivelFuego)
+	local toquesDividir = MejorasModulo.toquesParaDividir(MejorasModulo.nivel(niveles, "Divide"))
+	local rojas: { [number]: boolean } = {}
+	if MejorasModulo.nivel(niveles, "Duplica") > 0 then
+		for _, id in mejoras.Rojas or {} do
+			rojas[id] = true
+		end
+	end
+	local rojasUsadas: { [number]: boolean } = {}
+	local factor = Config.Mejoras.Duplica.Factor
+	local divide = Config.Mejoras.Divide
+	local tope = Config.TopeDanioTiro
 
-	local xs, ys = { x }, { y }
+	local function nuevaBola(x: number, y: number, vx: number, vy: number, inicio: number): Viva
+		return {
+			x = x,
+			y = y,
+			vx = vx,
+			vy = vy,
+			recorrido = { X = {}, Y = {}, Inicio = inicio },
+			tocando = {},
+			tocadas = {},
+			toques = 0,
+			puedeDividir = false,
+			yVentana = y,
+			activa = true,
+		}
+	end
+
+	local vx0, vy0 = velocidadInicial(Simulacion.limitarAngulo(angulo), bola)
+	local primera = nuevaBola(tablero.LanzadorX, tablero.LanzadorY, vx0, vy0, 1)
+	table.insert(primera.recorrido.X, primera.x)
+	table.insert(primera.recorrido.Y, primera.y)
+	primera.puedeDividir = toquesDividir ~= nil
+	local bolas: { Viva } = { primera }
+	local activas = 1
+
 	local toques: { Toque } = {}
-	local tocando: { [number]: boolean } = {}
-	local tocadas: { [number]: boolean } = {}
 	local distintas = 0
 	local danio = 0
-	local danioPorClavija = Config.Danio.PorClavija
 	local empujones = 0
 	local fin = "tope"
+	local ultimoPaso = 1
 
 	local pasosMaximos = math.floor(s.TiempoMaximo / dt)
 	local pasosTraba = math.floor(s.TiempoTraba / dt)
-	local yVentana = y
 	local desvioMaximo = math.rad(s.Desvio)
 
+	-- La bola se parte: ella y las nuevas salen abiertas en abanico desde el mismo punto.
+	local function dividir(b: Viva, paso: number, clavija: number)
+		b.puedeDividir = false
+		local partes = math.min(divide.Partes, Config.TopeBolas - #bolas + 1)
+		if partes < 2 then
+			return
+		end
+		local abertura = math.rad(divide.AnguloDivision + (azar() * 2 - 1) * divide.AnguloAzar)
+		local signo = if azar() < 0.5 then -1 else 1
+		local vx, vy = b.vx, b.vy
+		for k = 0, partes - 1 do
+			local nvx, nvy = girar(vx, vy, signo * abertura * (k - (partes - 1) / 2))
+			if k == 0 then
+				b.vx, b.vy = nvx, nvy
+			else
+				local nueva = nuevaBola(b.x, b.y, nvx, nvy, paso + 1)
+				-- La clavija donde se partió ya la tocó: no suma de nuevo enseguida.
+				nueva.tocando[clavija] = true
+				nueva.tocadas[clavija] = true
+				table.insert(bolas, nueva)
+				activas += 1
+			end
+		end
+	end
+
 	for paso = 1, pasosMaximos do
-		vy -= s.Gravedad * dt
-		x += vx * dt
-		y += vy * dt
+		local cantidad = #bolas -- las que nacen en este paso se mueven desde el siguiente
+		for indice = 1, cantidad do
+			local b = bolas[indice]
+			if not b.activa then
+				continue
+			end
+			b.vy -= s.Gravedad * dt
+			b.x += b.vx * dt
+			b.y += b.vy * dt
 
-		-- Clavijas: sacar la bola hacia afuera y rebotar.
-		for _, c in clavijas do
-			local dx, dy = x - c.X, y - c.Y
-			local minimo = r + c.Radio
-			local d2 = dx * dx + dy * dy
-			if d2 < minimo * minimo then
-				local d = math.sqrt(d2)
-				local nx, ny
-				if d > 1e-6 then
-					nx, ny = dx / d, dy / d
-				else
-					nx, ny = 0, 1
-				end
-				x, y = c.X + nx * minimo, c.Y + ny * minimo
-				local vn = vx * nx + vy * ny
-				if vn < 0 then
-					local tx, ty = vx - vn * nx, vy - vn * ny
-					vx = tx * (1 - s.Friccion) - vn * s.Restitucion * nx
-					vy = ty * (1 - s.Friccion) - vn * s.Restitucion * ny
-					-- Un desvío chico con la semilla: el mismo ángulo no da siempre el mismo tiro
-					-- en turnos distintos, y la bola no queda quieta en equilibrio arriba de una clavija.
-					local giro = (azar() * 2 - 1) * desvioMaximo
-					local cg, sg = math.cos(giro), math.sin(giro)
-					vx, vy = vx * cg - vy * sg, vx * sg + vy * cg
-				end
-				if not tocando[c.Id] then
-					tocando[c.Id] = true
-					if not tocadas[c.Id] then
-						tocadas[c.Id] = true
-						distintas += 1
-						danio += danioPorClavija
-						table.insert(toques, {
-							Clavija = c.Id,
-							Paso = paso + 1,
-							Danio = danioPorClavija,
-							Total = danio,
-						})
+			-- Clavijas: sacar la bola hacia afuera y rebotar.
+			for _, c in clavijas do
+				local dx, dy = b.x - c.X, b.y - c.Y
+				local minimo = r + c.Radio
+				local d2 = dx * dx + dy * dy
+				if d2 < minimo * minimo then
+					local d = math.sqrt(d2)
+					local nx, ny
+					if d > 1e-6 then
+						nx, ny = dx / d, dy / d
+					else
+						nx, ny = 0, 1
 					end
+					b.x, b.y = c.X + nx * minimo, c.Y + ny * minimo
+					local vn = b.vx * nx + b.vy * ny
+					if vn < 0 then
+						local tx, ty = b.vx - vn * nx, b.vy - vn * ny
+						b.vx = tx * (1 - s.Friccion) - vn * s.Restitucion * nx
+						b.vy = ty * (1 - s.Friccion) - vn * s.Restitucion * ny
+						-- Un desvío chico con la semilla: el mismo ángulo no da siempre el mismo tiro
+						-- en turnos distintos, y la bola no queda quieta en equilibrio arriba de una clavija.
+						b.vx, b.vy = girar(b.vx, b.vy, (azar() * 2 - 1) * desvioMaximo)
+					end
+					if not b.tocando[c.Id] then
+						b.tocando[c.Id] = true
+						if not b.tocadas[c.Id] then
+							b.tocadas[c.Id] = true
+							b.toques += 1
+							distintas += 1
+							danio = math.min(danio + danioPorClavija, tope)
+							local duplico = false
+							if rojas[c.Id] and not rojasUsadas[c.Id] then
+								rojasUsadas[c.Id] = true
+								danio = math.min(danio * factor, tope)
+								duplico = true
+							end
+							table.insert(toques, {
+								Clavija = c.Id,
+								Paso = paso + 1,
+								Danio = danioPorClavija,
+								Total = danio,
+								Bola = indice,
+								Duplico = duplico,
+							})
+							if b.puedeDividir and b.toques == toquesDividir then
+								dividir(b, paso, c.Id)
+							end
+						end
+					end
+				elseif b.tocando[c.Id] and d2 > (minimo + 0.05) ^ 2 then
+					b.tocando[c.Id] = nil
 				end
-			elseif tocando[c.Id] and d2 > (minimo + 0.05) ^ 2 then
-				tocando[c.Id] = nil
+			end
+
+			-- Paredes y techo.
+			if b.x - r < tablero.ParedIzquierda then
+				b.x = tablero.ParedIzquierda + r
+				if b.vx < 0 then
+					b.vx = -b.vx * s.Restitucion
+				end
+			elseif b.x + r > tablero.ParedDerecha then
+				b.x = tablero.ParedDerecha - r
+				if b.vx > 0 then
+					b.vx = -b.vx * s.Restitucion
+				end
+			end
+			if b.y + r > tablero.Techo and b.vy > 0 then
+				b.y = tablero.Techo - r
+				b.vy = -b.vy * s.Restitucion
+			end
+
+			-- Tope de velocidad.
+			local v2 = b.vx * b.vx + b.vy * b.vy
+			if v2 > s.VelocidadMaxima * s.VelocidadMaxima then
+				local k = s.VelocidadMaxima / math.sqrt(v2)
+				b.vx *= k
+				b.vy *= k
+			end
+
+			-- Anti-trabas: si en TiempoTraba casi no bajó, un empujón chico hacia abajo.
+			if paso % pasosTraba == 0 then
+				if b.yVentana - b.y < s.BajadaMinima then
+					b.vx += (azar() * 2 - 1) * s.Empujon * 0.5
+					b.vy -= s.Empujon
+					empujones += 1
+				end
+				b.yVentana = b.y
+			end
+
+			table.insert(b.recorrido.X, b.x)
+			table.insert(b.recorrido.Y, b.y)
+
+			if b.y < tablero.Fondo then
+				b.activa = false
+				activas -= 1
 			end
 		end
 
-		-- Paredes y techo.
-		if x - r < tablero.ParedIzquierda then
-			x = tablero.ParedIzquierda + r
-			if vx < 0 then
-				vx = -vx * s.Restitucion
-			end
-		elseif x + r > tablero.ParedDerecha then
-			x = tablero.ParedDerecha - r
-			if vx > 0 then
-				vx = -vx * s.Restitucion
-			end
-		end
-		if y + r > tablero.Techo and vy > 0 then
-			y = tablero.Techo - r
-			vy = -vy * s.Restitucion
+		-- Las que nacieron en este paso arrancan su recorrido acá (en el punto donde se partió).
+		for indice = cantidad + 1, #bolas do
+			local b = bolas[indice]
+			table.insert(b.recorrido.X, b.x)
+			table.insert(b.recorrido.Y, b.y)
 		end
 
-		-- Tope de velocidad.
-		local v2 = vx * vx + vy * vy
-		if v2 > s.VelocidadMaxima * s.VelocidadMaxima then
-			local k = s.VelocidadMaxima / math.sqrt(v2)
-			vx *= k
-			vy *= k
-		end
-
-		-- Anti-trabas: si en TiempoTraba casi no bajó, un empujón chico hacia abajo.
-		if paso % pasosTraba == 0 then
-			if yVentana - y < s.BajadaMinima then
-				vx += (azar() * 2 - 1) * s.Empujon * 0.5
-				vy -= s.Empujon
-				empujones += 1
-			end
-			yVentana = y
-		end
-
-		table.insert(xs, x)
-		table.insert(ys, y)
-
-		if y < tablero.Fondo then
+		ultimoPaso = paso + 1
+		if activas == 0 then
 			fin = "abajo"
 			break
 		end
 	end
 
+	local recorridos: { Recorrido } = {}
+	for _, b in bolas do
+		table.insert(recorridos, b.recorrido)
+	end
+
 	return {
-		X = xs,
-		Y = ys,
+		X = primera.recorrido.X,
+		Y = primera.recorrido.Y,
+		Recorridos = recorridos,
+		Pasos = ultimoPaso,
 		Toques = toques,
 		ClavijasDistintas = distintas,
 		Danio = danio,
+		Quemadura = MejorasModulo.quemadura(nivelFuego),
+		Fuego = nivelFuego > 0,
 		Empujones = empujones,
 		Fin = fin,
 	}

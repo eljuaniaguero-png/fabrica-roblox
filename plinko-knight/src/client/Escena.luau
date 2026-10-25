@@ -23,7 +23,8 @@ local SEPARACION_COLUMNAS = 3
 export type Escena = {
 	Tablero: TableroModulo.Tablero,
 	Clavijas: { [number]: BasePart },
-	Bola: BasePart,
+	Bola: BasePart, -- = Bolas[1]
+	Bolas: { BasePart }, -- Config.TopeBolas bolas (las de más, para la bola que se divide)
 	Puntos: { BasePart },
 	AnclaTotal: BasePart,
 	Cartel: BasePart, -- el monstruo (un cartel plano)
@@ -170,15 +171,19 @@ function Escena.armar(): Escena
 	end
 
 	local radio = Config.Bola.Radio
-	local bola = parte(
-		"Bola",
-		modelo,
-		Vector3.new(radio * 2, radio * 2, radio * 2),
-		CFrame.new(aMundo(0, 0, 0.6)),
-		Config.Colores.Bola
-	)
-	bola.Shape = Enum.PartType.Ball
-	bola.Transparency = 1
+	local bolas: { BasePart } = {}
+	for i = 1, Config.TopeBolas do
+		local bola = parte(
+			"Bola",
+			modelo,
+			Vector3.new(radio * 2, radio * 2, radio * 2),
+			CFrame.new(aMundo(0, 0, 0.6)),
+			Config.Colores.Bola
+		)
+		bola.Shape = Enum.PartType.Ball
+		bola.Transparency = 1
+		bolas[i] = bola
+	end
 
 	local puntos: { BasePart } = {}
 	for i = 1, Config.Punteria.PuntosLinea do
@@ -241,7 +246,8 @@ function Escena.armar(): Escena
 	return {
 		Tablero = tablero,
 		Clavijas = clavijas,
-		Bola = bola,
+		Bola = bolas[1],
+		Bolas = bolas,
 		Puntos = puntos,
 		AnclaTotal = anclaTotal,
 		Cartel = cartel,

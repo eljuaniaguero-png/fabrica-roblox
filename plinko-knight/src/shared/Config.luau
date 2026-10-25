@@ -70,39 +70,63 @@ Config.VidaCaballero = 50
 Config.CuraEntrePeleas = 10
 
 -- Las 6 peleas y el jefe, en orden (nombres de prueba hasta el arte final).
+-- Etapa 5 (25/10): con mejoras, los números de la etapa 4 daban 98 % de mazmorras ganadas
+-- eligiendo cartas al azar. Con estos (lune run plinko-knight/pruebas/mazmorra): al azar se gana
+-- ~30 % y casi todos caen en las peleas 5 a 7; eligiendo siempre la misma, en la 5 o la 6.
 Config.Monstruos = {
 	{ Id = "rata", Nombre = "Rata de Cloaca", Vida = 40, Golpe = 4, Color = "#8A6E5A" },
-	{ Id = "slime", Nombre = "Slime Verde", Vida = 60, Golpe = 5, Color = "#5FBF4A" },
-	{ Id = "murcielago", Nombre = "Murciélago", Vida = 85, Golpe = 6, Color = "#7A5AA8" },
-	{ Id = "esqueleto", Nombre = "Esqueleto", Vida = 115, Golpe = 7, Color = "#E6E0CC" },
-	{ Id = "goblin", Nombre = "Goblin con Lanza", Vida = 150, Golpe = 8, Color = "#3E8C6E" },
-	{ Id = "golem", Nombre = "Gólem de Piedra", Vida = 190, Golpe = 9, Color = "#6E7A8A" },
+	{ Id = "slime", Nombre = "Slime Verde", Vida = 60, Golpe = 6, Color = "#5FBF4A" }, -- era 60/5
+	{ Id = "murcielago", Nombre = "Murciélago", Vida = 100, Golpe = 7, Color = "#7A5AA8" }, -- 85/6
+	{ Id = "esqueleto", Nombre = "Esqueleto", Vida = 150, Golpe = 9, Color = "#E6E0CC" }, -- 115/7
+	{ Id = "goblin", Nombre = "Goblin con Lanza", Vida = 210, Golpe = 10, Color = "#3E8C6E" }, -- 150/8
+	{ Id = "golem", Nombre = "Gólem de Piedra", Vida = 280, Golpe = 12, Color = "#6E7A8A" }, -- 190/9
 	{
 		Id = "jefe",
 		Nombre = "Rey de los Huesos",
-		Vida = 240, -- era 320 / 11: imposible de ganar sin mejoras (etapa 4, 25/10)
-		Golpe = 8,
+		Vida = 380, -- etapa 4: 320/11 → 240/8 (sin mejoras no se ganaba); etapa 5: 380/12
+		Golpe = 12,
 		Color = "#C9A227",
 		EsJefe = true,
 	},
 } :: { Monstruo }
 
--- Mejoras (1 de 3 entre peleas). "Repetida" = qué cambia cada vez que la elegís de nuevo.
+-- Mejoras (1 de 3 entre peleas, etapa 5). "Repetida" = qué cambia cada vez que la elegís de
+-- nuevo. Todo lo que cambia el tiro lo calcula shared/Simulacion (así el servidor lo repite).
+Config.OrdenMejoras = { "Fuego", "Duplica", "Divide" } -- las que existen, en el orden de las cartas
+Config.MejorasPorPantalla = 3 -- cartas que se ofrecen al ganar una pelea
 Config.Mejoras = {
 	Fuego = {
-		DanioExtraPorClavija = 1, -- repetida: +1 más
-		Quemadura = 3, -- daño por turno al monstruo
-		TurnosQuemadura = 2,
+		Nombre = "Bola de fuego",
+		-- +1 por clavija desde el nivel 1, y no sube al repetirla: con el ×2 de las rojas se
+		-- disparaba (eligiendo siempre fuego se ganaba el 74 %; lune, 25/10).
+		DanioExtraPorClavija = 1,
+		Quemadura = 3, -- daño por turno al monstruo (nivel 1)
+		QuemaduraPorNivel = 3, -- repetida: la quemadura sube 3 (nivel 2 = 6, nivel 3 = 9)
+		TurnosQuemadura = 2, -- cada tiro con fuego lo vuelve a prender por estos turnos
 	},
 	Duplica = {
-		ClavijasRojas = 2, -- repetida: una clavija roja más
+		Nombre = "Clavija que duplica",
+		ClavijasRojas = 2, -- nivel 1; repetida: una clavija roja más
+		ClavijasRojasPorNivel = 1,
 		Factor = 2, -- el daño del tiro hasta ese momento se multiplica por esto
+		-- Filas donde pueden caer (1 = la de arriba): ni la primera (sería ×2 de casi nada) ni la
+		-- última (casi no se llega a ver el efecto).
+		FilaMinima = 3,
+		FilaMaxima = 7,
 	},
 	Divide = {
+		Nombre = "Bola que se divide",
 		ToquesParaDividir = { 5, 4, 3 }, -- 1.ª vez, 2.ª vez, 3.ª vez o más
 		Partes = 2,
+		-- Grados entre las dos bolas al partirse: AnguloDivision ± AnguloAzar (con la semilla).
+		AnguloDivision = 24,
+		AnguloAzar = 8,
 	},
 }
+
+-- Topes del tiro, para que las tres mejoras juntas no exploten (Simulacion).
+Config.TopeBolas = 4
+Config.TopeDanioTiro = 999
 
 -- Bolas que se desbloquean y se guardan.
 Config.Bolas = {
@@ -137,6 +161,7 @@ Config.Numeros = {
 	Subida = 2.5, -- studs que sube
 	PopTotal = 1.25, -- tamaño del TOTAL en el "pop" de cada toque (1 = normal)
 	DuracionPop = 0.12,
+	DuracionDuplica = 1.2, -- segundos que se ve el "×2" grande del TOTAL (con 0,7 casi no se leía)
 }
 
 -- Colores del graybox (hasta la etapa 8).
@@ -144,6 +169,10 @@ Config.Colores = {
 	Clavija = "#C8C8C8",
 	ClavijaDuplica = "#D23232",
 	Bola = "#FFFFFF",
+	BolaFuego = "#FF4A00", -- la bola con la mejora de fuego (con Neon brilla: más oscuro se ve naranja)
+	Quemadura = "#FF8A1F", -- el número de la quemadura sobre el monstruo
+	Duplica = "#FF3B3B", -- el "×2" grande del TOTAL
+	Carta = "#4A4A4A", -- graybox de las cartas de mejora
 	Gris = "#808080",
 	Fondo = "#3A3A3A",
 	Brillo = "#FFF6B0", -- clavija tocada

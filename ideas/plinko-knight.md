@@ -1,7 +1,7 @@
 # Plinko Knight — ficha del prototipo
 
 Origen: `plinko-knight/PLAN-Y-PROMPTS.md` (25/10/2026) + idea de arte aprobada (`plinko-knight/arte/IDEA-DE-ARTE.md`).
-Estado: **aprobada por Juani el 25/10/2026** (punto de control 1). Etapas 2 (tablero, puntería y bola), 3 (daño y revisión del servidor) y 4 (monstruos y mazmorra) hechas el 25/10/2026; lo próximo es la etapa 5: mejoras 1 de 3.
+Estado: **aprobada por Juani el 25/10/2026** (punto de control 1). Etapas 2 (tablero, puntería y bola), 3 (daño y revisión del servidor), 4 (monstruos y mazmorra) y 5 (mejoras 1 de 3) hechas el 25/10/2026. **Punto de control: prototipo jugable**, esperando que Juani lo juegue 5 minutos.
 Carpeta: `plinko-knight/` (código en `plinko-knight/src/`, Rojo con `rojo serve plinko-knight`, puerto 34876). Place propio: `plinko-knight/PlinkoKnight.rbxl`.
 
 ## Concepto
@@ -42,8 +42,8 @@ Arriba de todo, una barra fina con el piso ("Pelea 3 de 7") y Ajustes. La cámar
 | Tablero | 7 columnas × 8 filas alternadas (unas 52 clavijas) |
 | Daño por clavija | 2 (cada clavija cuenta una vez por tiro) |
 | Vida del caballero | 50; se cura 10 entre peleas |
-| Monstruos (vida / golpe) | 1: 40 / 4 · 2: 60 / 5 · 3: 85 / 6 · 4: 115 / 7 · 5: 150 / 8 · 6: 190 / 9 · **Jefe: 240 / 8** (era 320 / 11; cambiado el 25/10, ver etapa 4) |
-| Bola de fuego | +1 de daño por clavija; el monstruo se quema 3 por turno durante 2 turnos. Repetida: +1 más |
+| Monstruos (vida / golpe) | 1: 40 / 4 · 2: 60 / 6 · 3: 100 / 7 · 4: 150 / 9 · 5: 210 / 10 · 6: 280 / 12 · **Jefe: 380 / 12** (con mejoras; ver etapa 5) |
+| Bola de fuego | +1 de daño por clavija; el monstruo se quema 3 por turno durante 2 turnos. Repetida: la quemadura sube 3 (6, 9…); el +1 por clavija no sube (ver etapa 5) |
 | Clavija que duplica | 2 clavijas rojas; al tocar una, el daño que llevás en ese tiro se duplica (cada una, una vez por tiro). Repetida: una clavija roja más |
 | Bola que se divide | En el 5.º toque se parte en 2 y las dos siguen sumando. Repetida: en el 4.º toque, y después en el 3.º |
 | Bolas que se desbloquean | Hierro (desde el inicio) · Fuego (llegar al piso 4) · Partida (ganarle al jefe) |
@@ -130,4 +130,34 @@ Mazos de bolas, reto diario, ranking, **cualquier cosa con Robux**, varias mazmo
 - Sin mejoras se pierde en el piso 5, dentro del objetivo (pisos 4 a 6). Desde la pelea 4 se pasa de los 2 a 4 tiros por pelea, pero eso lo tienen que bajar las mejoras de la etapa 5.
 - **El jefe, como está, no se puede ganar.** Tarda unos 12 tiros y te pega 11 por tiro: con 50 de vida caés en 5. Aun con el doble de daño por las mejoras, son 6 tiros y 66 de daño.
 - **Cambio aprobado por Juani (25/10/2026):** el jefe pasa a **240 de vida y 8 de golpe**. Hay que volver a medir todo al terminar la etapa 5, con mejoras.
+
+### Etapa 5 · Mejoras: elegí 1 de 3 (25/10/2026)
+
+- **Todo pasa en `shared/Simulacion.luau`**, así el servidor repite el tiro igual: el daño por clavija con fuego, el ×2 de las rojas y la bola que se divide. Los niveles y las clavijas rojas los pone el servidor desde la partida: el cliente no los manda. Módulos nuevos: `shared/Mejoras.luau` (cuánto vale cada nivel, qué clavijas son rojas, qué cartas salen, texto de las cartas) y `shared/Azar.luau` (el generador con semilla, que ahora comparten la simulación y las mejoras).
+- **Bola de fuego:** +1 por clavija (3 en vez de 2) y deja al monstruo quemándose: le saca la quemadura en el mismo turno del tiro y en el siguiente; cada tiro con fuego la vuelve a prender.
+- **Clavija que duplica:** al empezar cada pelea el servidor elige las rojas con una semilla nueva, entre las filas 3 y 7 (en la primera sería ×2 de casi nada). No se mueven en toda la pelea. Al tocar una, el daño del tiro hasta ese momento se duplica; cada roja duplica una vez por tiro aunque la toquen las dos bolas.
+- **Bola que se divide:** en el toque N la bola se parte en 2 con una abertura de 24° ± 8° (sale de la semilla). Las dos se simulan a la vez, paso por paso, y el tiro termina cuando caen todas. **Decisión:** cada bola suma cada clavija una vez (si las dos tocan la misma, suman las dos); si no, la segunda bola casi no sumaba.
+- **Topes** (en `Config.luau`): `TopeBolas = 4` y `TopeDanioTiro = 999` por tiro.
+- **Pantalla de mejoras:** al ganar una pelea salen 3 cartas grandes (nombre, una frase con los números y "Nueva" o "Nivel 2"). El servidor elige cuáles (con 3 mejoras, siempre las 3) y `ElegirMejora` solo acepta una de las ofrecidas, en la fase "eligiendo". "¡Piso N!" sale después de elegir.
+- **En pantalla (graybox):** abajo, la fila "Fuego · Nv 2", "×2 · Nv 1", "Divide · Nv 1". Con fuego la bola es naranja y brilla, y la quemadura salta "+3 fuego" sobre el monstruo. Las clavijas rojas se ven rojas y al tocarlas sale un "×2" rojo grande al lado del TOTAL (1,2 s). Con la división se ven las dos bolas.
+- **Comando de prueba, solo en Studio:** además de 1 a 7 y 0, las teclas **Z, X y C** suben un nivel Fuego, ×2 y Divide.
+- **Prueba con Lune** (`lune run plinko-knight/pruebas/mejoras`): cada mejora en sus 3 primeros niveles, las tres juntas hasta nivel 8 (nunca más de 4 bolas ni más de 999), el servidor coincide en todos los tiros, elegir solo acepta cartas ofrecidas y la quemadura dura lo que tiene que durar.
+- **En Studio:** una mazmorra eligiendo Fuego, ×2, Fuego y Divide hasta la pelea 5 jugando normal; después, con las teclas de prueba, la 6 y el jefe con las tres mejoras. En todos los tiros el daño del cliente y el del servidor coincidieron, y el servidor rechazó elegir una carta fuera de turno, una que no existe y un dato raro.
+
+#### Balance con mejoras (lune, 300 mazmorras con tiros al azar)
+
+Con los números de la etapa 4, las mejoras hacían todo muy fácil: eligiendo cartas al azar se ganaba el **98 %**, y eligiendo siempre fuego, el 100 % (el +1 por clavija repetido se multiplicaba con el ×2). Cambios:
+
+- **Fuego repetido** ya no suma +1 por clavija cada vez: sube la quemadura (3 → 6 → 9).
+- **Monstruos** más fuertes desde la pelea 2: 60/6, 100/7, 150/9, 210/10, 280/12 y el **jefe 380/12** (era 240/8, el que aprobaste en la etapa 4 para jugar sin mejoras).
+
+| Cómo elige | Dónde se cae | Mazmorras ganadas |
+|---|---|---|
+| Sin mejoras | 81 % en la pelea 4, el resto en la 5 | 0 % |
+| Cartas al azar | 7 % en la 5, 30 % en la 6, 36 % en el jefe | **27 %** |
+| Siempre fuego | mitad en la 5, mitad en la 6 | 0 % |
+| Siempre ×2 | 51 % en la 5, 42 % en la 6 | 1 % |
+| Siempre divide | 64 % en la 5, 36 % en la 6 | 0 % |
+
+Cada pelea dura 2 a 3 tiros de promedio. Mezclar mejoras es lo que gana (las tres se potencian entre sí). Falta que Juani lo juegue y diga qué ajustar.
 

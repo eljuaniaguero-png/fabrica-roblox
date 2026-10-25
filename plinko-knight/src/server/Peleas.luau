@@ -2,9 +2,12 @@
 -- Remotos de la mazmorra (los tiros están en Tiros.luau):
 --   ObtenerEstado() -> Mazmorra.Estado
 --   VolverABajar() -> Mazmorra.Estado  (solo después de perder o de ganar la mazmorra)
+--   ElegirMejora(id) -> Mazmorra.Estado  (solo en la fase "eligiendo" y si id es una de las
+--   cartas ofrecidas; si no, devuelve el estado como está)
 --   EstadoCambio (servidor -> cliente): el estado cambió fuera de un tiro (comandos de prueba)
 --   Prueba(comando, n) (SOLO existe en Studio): "piso" salta a la pelea n (7 = el jefe) y "vida"
---   te pone n de vida. El cliente lo manda con las teclas 1 a 7 y 0 (ver Main.client).
+--   te pone n de vida, "mejora" sube un nivel la mejora n de Config.OrdenMejoras. El cliente lo
+--   manda con las teclas 1 a 7, 0 y Z, X, C (ver Main.client).
 -- Con teclas y no con el chat porque este place usa el chat viejo, que Roblox ya no carga.
 
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
@@ -30,6 +33,20 @@ function Peleas.saltarAPiso(jugador: Player, piso: number)
 		return
 	end
 	Mazmorra.irAPiso(p.Estado, piso)
+	Partida.nuevaPelea(p)
+	p.Semilla = nil
+	avisar(jugador, p)
+end
+
+-- Comando de prueba: sube un nivel una mejora (sin ganar la pelea) y arranca la pelea de nuevo.
+function Peleas.subirMejora(jugador: Player, indice: number)
+	local p = Partida.de(jugador)
+	local id = Config.OrdenMejoras[math.floor(indice)]
+	if not p or not id or p.Estado.Fase ~= "peleando" then
+		return
+	end
+	p.Estado.Mejoras[id] = (p.Estado.Mejoras[id] or 0) + 1
+	Partida.nuevaPelea(p)
 	p.Semilla = nil
 	avisar(jugador, p)
 end
@@ -64,8 +81,9 @@ function Peleas.iniciar()
 			return nil
 		end
 		local ahora = os.clock()
+		local fase = p.Estado.Fase
 		if
-			p.Estado.Fase == "peleando"
+			(fase ~= "perdio" and fase ~= "gano")
 			or ahora - p.UltimoVolver < Config.Servidor.TiempoMinimoVolver
 		then
 			return Mazmorra.copiar(p.Estado) -- no se puede: se devuelve como está
@@ -75,6 +93,22 @@ function Peleas.iniciar()
 		return Mazmorra.copiar(p.Estado)
 	end
 	volver.Parent = carpeta
+
+	local elegir = Instance.new("RemoteFunction")
+	elegir.Name = "ElegirMejora"
+	elegir.OnServerInvoke = function(jugador: Player, id: any): Mazmorra.Estado?
+		local p = Partida.de(jugador)
+		if not p then
+			return nil
+		end
+		-- Mazmorra.elegir valida la fase, el tipo y que sea una de las cartas ofrecidas.
+		if Mazmorra.elegir(p.Estado, id) then
+			Partida.nuevaPelea(p)
+			p.Semilla = nil
+		end
+		return Mazmorra.copiar(p.Estado)
+	end
+	elegir.Parent = carpeta
 
 	estadoCambio = Instance.new("RemoteEvent")
 	estadoCambio.Name = "EstadoCambio"
@@ -91,6 +125,8 @@ function Peleas.iniciar()
 				Peleas.saltarAPiso(jugador, n)
 			elseif comando == "vida" then
 				Peleas.ponerVida(jugador, n)
+			elseif comando == "mejora" then
+				Peleas.subirMejora(jugador, n)
 			end
 		end)
 		prueba.Parent = carpeta

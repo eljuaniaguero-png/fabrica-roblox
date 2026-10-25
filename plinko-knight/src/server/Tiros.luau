@@ -4,12 +4,15 @@
 -- mazmorra (golpe al monstruo y contraataque) y devuelve qué pasó para que el cliente lo anime.
 --   PedirTiro() -> (numeroTiro, semilla)  (nil si no estás peleando)
 --   Tirar(numeroTiro, angulo, danioVisto) -> Mazmorra.Turno  (nil si el pedido no es válido)
+-- Las mejoras (niveles y clavijas rojas) las pone el servidor desde la partida: el cliente no
+-- las manda. Al ganar una pelea, el turno vuelve con la fase "eligiendo" y las cartas ofrecidas.
 
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local Shared = ReplicatedStorage:WaitForChild("Shared")
 local Config = require(Shared:WaitForChild("Config"))
 local Mazmorra = require(Shared:WaitForChild("Mazmorra"))
+local Mejoras = require(Shared:WaitForChild("Mejoras"))
 local Revision = require(Shared:WaitForChild("Revision"))
 local TableroModulo = require(Shared:WaitForChild("Tablero"))
 local Partida = require(script.Parent:WaitForChild("Partida"))
@@ -63,7 +66,9 @@ local function tirar(
 	p.UltimoTiro = ahora
 	p.Semilla = nil
 
-	local r = Revision.revisar(tablero, angulo, semilla, p.Mejoras, danioVisto)
+	local e = p.Estado
+	local mejoras = { Niveles = e.Mejoras, Rojas = e.Rojas }
+	local r = Revision.revisar(tablero, angulo, semilla, mejoras, danioVisto)
 	if r.Corregido then
 		warn(
 			("[Tiros] %s dijo %s de daño en el tiro %d; el servidor calculó %d y usa ese."):format(
@@ -74,7 +79,12 @@ local function tirar(
 			)
 		)
 	end
-	return Mazmorra.turno(p.Estado, r.Danio)
+	local turno = Mazmorra.turno(e, r.Danio, r.Quemadura)
+	if e.Fase == "eligiendo" then
+		Mazmorra.ofrecer(e, Mejoras.ofrecer(Partida.semilla()))
+		turno.Estado = Mazmorra.copiar(e)
+	end
+	return turno
 end
 
 function Tiros.iniciar()

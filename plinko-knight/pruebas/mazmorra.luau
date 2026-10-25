@@ -2,8 +2,9 @@
 -- Pruebas de las reglas de la mazmorra y del balance. Se corren desde la raíz del repositorio:
 --   lune run plinko-knight/pruebas/mazmorra
 -- 1) Reglas: contraataque, curarse al ganar, perder y ganarle al jefe.
--- 2) Balance: juega muchas mazmorras con tiros a ángulos al azar (sin mejoras, como la etapa 4)
---    y cuenta cuántos tiros dura cada pelea y en qué piso se pierde. Sale con error si una regla
+-- 2) Balance: juega muchas mazmorras con tiros a ángulos al azar (sin mejoras, eligiendo cartas
+--    al azar y eligiendo siempre la misma) y cuenta cuántos tiros dura cada pelea y en qué piso
+--    se pierde. Sale con error si una regla
 --    falla; el balance solo se informa.
 
 local process = require("@lune/process")
@@ -43,7 +44,10 @@ do
 
 	e = Mazmorra.nueva()
 	Mazmorra.irAPiso(e, 7)
-	chequear(e.Piso == 7 and e.VidaMonstruo == Config.Monstruos[7].Vida, "el comando no fue al jefe")
+	chequear(
+		e.Piso == 7 and e.VidaMonstruo == Config.Monstruos[7].Vida,
+		"el comando no fue al jefe"
+	)
 	t = Mazmorra.turno(e, 999)
 	chequear(t.Resultado == "gano" and e.Fase == "gano", "ganarle al jefe no terminó la mazmorra")
 
@@ -53,47 +57,75 @@ end
 
 -- 2) Balance
 local tablero = Tablero.generar()
-local CORRIDAS = 500 -- con 2000 tarda 3 minutos y da casi lo mismo
+local CORRIDAS = 300 -- por cada forma de elegir (con 2000 tarda mucho y da casi lo mismo)
 local semilla = 12345
 local function azar(): number -- 0..1, determinista
 	semilla = (semilla * 1103515245 + 12345) % 2147483648
 	return semilla / 2147483648
 end
 
-local function tiro(): number
+local Mejoras = cargar("Mejoras")
+
+-- Un tiro a un ángulo al azar, con las mejoras que tiene la partida.
+local function tiro(e: any): (number, number)
 	local angulo = (azar() * 2 - 1) * Config.Punteria.AnguloMaximo
-	local res = Simulacion.simular(tablero, angulo, Config.Bola, {}, math.floor(azar() * 2 ^ 31))
-	return res.Danio
+	local mej = { Niveles = e.Mejoras, Rojas = e.Rojas }
+	local res = Simulacion.simular(tablero, angulo, Config.Bola, mej, math.floor(azar() * 2 ^ 31))
+	return res.Danio, res.Quemadura
 end
 
-local tirosPorPelea: { { number } } = {}
-local caidas: { number } = {}
-for piso = 1, #Config.Monstruos do
-	tirosPorPelea[piso] = {}
-	caidas[piso] = 0
-end
-local ganadas = 0
-
-for _ = 1, CORRIDAS do
-	local e = Mazmorra.nueva()
-	local tiros = 0
-	while e.Fase == "peleando" do
-		local piso = e.Piso
-		tiros += 1
-		local t = Mazmorra.turno(e, tiro())
-		if t.Resultado == "piso" or t.Resultado == "gano" then
-			table.insert(tirosPorPelea[piso], tiros)
-			tiros = 0
-		elseif t.Resultado == "perdio" then
-			caidas[piso] += 1
+-- Juega CORRIDAS mazmorras. elegir: qué carta toma al ganar una pelea (nil = ninguna).
+type Medida = { tirosPorPelea: { { number } }, caidas: { number }, ganadas: number }
+local function jugar(elegir: ((cartas: { string }, e: any) -> string)?): Medida
+	local m: Medida = { tirosPorPelea = {}, caidas = {}, ganadas = 0 }
+	for piso = 1, #Config.Monstruos do
+		m.tirosPorPelea[piso] = {}
+		m.caidas[piso] = 0
+	end
+	for _ = 1, CORRIDAS do
+		local e = Mazmorra.nueva()
+		Mazmorra.empezarPelea(e, tablero, math.floor(azar() * 2 ^ 31))
+		local tiros = 0
+		while e.Fase == "peleando" do
+			local piso = e.Piso
+			tiros += 1
+			local t = Mazmorra.turno(e, tiro(e))
+			if t.Resultado == "piso" or t.Resultado == "gano" then
+				table.insert(m.tirosPorPelea[piso], tiros)
+				tiros = 0
+			elseif t.Resultado == "perdio" then
+				m.caidas[piso] += 1
+			end
+			if e.Fase == "eligiendo" then
+				local cartas = Mejoras.ofrecer(math.floor(azar() * 2 ^ 31))
+				Mazmorra.ofrecer(e, cartas)
+				if elegir then
+					chequear(Mazmorra.elegir(e, elegir(cartas, e)), "no se pudo elegir la carta")
+				else
+					e.Fase = "peleando"
+				end
+				Mazmorra.empezarPelea(e, tablero, math.floor(azar() * 2 ^ 31))
+			end
+		end
+		if e.Fase == "gano" then
+			m.ganadas += 1
 		end
 	end
-	if e.Fase == "gano" then
-		ganadas += 1
-	end
+	return m
 end
 
--- El jefe solo, con vida de sobra (como en la prueba con "/vida"), para saber cuánto dura.
+local sinMejoras = jugar(nil)
+local alAzar = jugar(function(cartas: { string }): string
+	return cartas[math.floor(azar() * #cartas) + 1]
+end)
+local porMejora: { [string]: Medida } = {}
+for _, id in Config.OrdenMejoras do
+	porMejora[id] = jugar(function(): string
+		return id
+	end)
+end
+
+-- El jefe solo, con vida de sobra (como en la prueba con la tecla 0), para saber cuánto dura.
 local tirosJefe: { number } = {}
 for _ = 1, CORRIDAS do
 	local e = Mazmorra.nueva()
@@ -102,7 +134,7 @@ for _ = 1, CORRIDAS do
 	local tiros = 0
 	while e.Fase == "peleando" do
 		tiros += 1
-		Mazmorra.turno(e, tiro())
+		Mazmorra.turno(e, tiro(e))
 	end
 	table.insert(tirosJefe, tiros)
 end
@@ -120,21 +152,29 @@ local function resumen(lista: { number }): string
 	return ("%.1f tiros (de %d a %d, %d veces)"):format(suma / #lista, minimo, maximo, #lista)
 end
 
-print(("Balance sin mejoras, %d mazmorras con tiros al azar:"):format(CORRIDAS))
-for piso, m in Config.Monstruos do
-	print(
-		("  Pelea %d · %s (%d/%d): %s · caídas acá: %.1f %%"):format(
-			piso,
-			m.Nombre,
-			m.Vida,
-			m.Golpe,
-			resumen(tirosPorPelea[piso]),
-			caidas[piso] / CORRIDAS * 100
+local function informar(titulo: string, medida: Medida)
+	print(("%s, %d mazmorras con tiros al azar:"):format(titulo, CORRIDAS))
+	for piso, m in Config.Monstruos do
+		print(
+			("  Pelea %d · %s (%d/%d): %s · caídas acá: %.1f %%"):format(
+				piso,
+				m.Nombre,
+				m.Vida,
+				m.Golpe,
+				resumen(medida.tirosPorPelea[piso]),
+				medida.caidas[piso] / CORRIDAS * 100
+			)
 		)
-	)
+	end
+	print(("  Mazmorras ganadas: %.1f %%"):format(medida.ganadas / CORRIDAS * 100))
 end
-print(("  Mazmorras ganadas: %.1f %%"):format(ganadas / CORRIDAS * 100))
-print("  Jefe solo, con vida de sobra: " .. resumen(tirosJefe))
+
+informar("Balance sin mejoras", sinMejoras)
+informar("Balance eligiendo una carta al azar", alAzar)
+for _, id in Config.OrdenMejoras do
+	informar("Balance eligiendo siempre " .. id, porMejora[id])
+end
+print("Jefe solo, sin mejoras y con vida de sobra: " .. resumen(tirosJefe))
 
 if errores > 0 then
 	print(("%d fallas"):format(errores))

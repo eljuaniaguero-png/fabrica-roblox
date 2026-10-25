@@ -5,6 +5,9 @@
 -- tocada brilla, salta su "+2" y sube el TOTAL. Al terminar, el servidor revisa el daño, juega
 -- el turno y devuelve qué pasó; el cliente solo lo anima (golpe al monstruo, contraataque,
 -- piso nuevo, perder o ganar la mazmorra).
+-- Etapa 5: al ganar una pelea salen 3 cartas de mejora (las elige y valida el servidor). Con
+-- fuego la bola es naranja y la quemadura salta sobre el monstruo; las clavijas rojas hacen "×2"
+-- en el TOTAL; con la bola que se divide se ven las dos. Abajo, la fila con tus mejoras.
 -- Input con UserInputService: los otros juegos no usan el Input Action System.
 
 local Players = game:GetService("Players")
@@ -41,6 +44,7 @@ local remotos = {
 	Tirar = carpetaRemotos:WaitForChild("Tirar") :: RemoteFunction,
 	ObtenerEstado = carpetaRemotos:WaitForChild("ObtenerEstado") :: RemoteFunction,
 	VolverABajar = carpetaRemotos:WaitForChild("VolverABajar") :: RemoteFunction,
+	ElegirMejora = carpetaRemotos:WaitForChild("ElegirMejora") :: RemoteFunction,
 	EstadoCambio = carpetaRemotos:WaitForChild("EstadoCambio") :: RemoteEvent,
 }
 
@@ -49,6 +53,10 @@ local total = Numeros.crearTotal(escena.AnclaTotal)
 local tablero = escena.Tablero
 local colorClavija = Color3.fromHex(Config.Colores.Clavija)
 local colorBrillo = Color3.fromHex(Config.Colores.Brillo)
+local colorRoja = Color3.fromHex(Config.Colores.ClavijaDuplica)
+local colorBola = Color3.fromHex(Config.Colores.Bola)
+local colorFuego = Color3.fromHex(Config.Colores.BolaFuego)
+local colorQuemadura = Color3.fromHex(Config.Colores.Quemadura)
 local monstruo = MonstruoVista.crear(escena.Cartel, escena.BarraMonstruo)
 local pantallas = PantallasModulo.crear()
 
@@ -83,6 +91,21 @@ local function apuntarA(posicionPantalla: Vector2)
 	dibujarLinea()
 end
 
+-- Clavijas rojas de la pelea (las manda el servidor en el estado).
+local rojas: { [number]: boolean } = {}
+local function colorDe(id: number): Color3
+	return if rojas[id] then colorRoja else colorClavija
+end
+local function pintarRojas(ids: { number })
+	rojas = {}
+	for _, id in ids do
+		rojas[id] = true
+	end
+	for id, p in escena.Clavijas do
+		p.Color = colorDe(id)
+	end
+end
+
 local brillos: { [number]: number } = {}
 local function brillar(id: number)
 	local p = escena.Clavijas[id]
@@ -95,11 +118,13 @@ local function brillar(id: number)
 	p.Material = Enum.Material.Neon
 	task.delay(Config.Simulacion.BrilloClavija, function()
 		if brillos[id] == marca then
-			p.Color = colorClavija
+			p.Color = colorDe(id)
 			p.Material = Enum.Material.SmoothPlastic
 		end
 	end)
 end
+
+local elegirMejora: (id: string) -> ()
 
 -- Dibuja el estado que mandó el servidor (pelea nueva, volver a bajar o comando de prueba).
 local function ponerEstado(e: Mazmorra.Estado)
@@ -107,9 +132,33 @@ local function ponerEstado(e: Mazmorra.Estado)
 	tirosPelea = 0
 	monstruo.mostrar(e.Piso, e.VidaMonstruo)
 	pantallas.ponerEstado(e)
+	pantallas.ponerMejoras(e.Mejoras)
+	pintarRojas(e.Rojas)
 	total.poner(0, false)
 	if e.Fase == "peleando" then
 		pantallas.ocultarFinal()
+		pantallas.ocultarMejoras()
+	elseif e.Fase == "eligiendo" then
+		pantallas.mostrarMejoras(e.Ofrecidas, e.Mejoras, elegirMejora)
+	end
+end
+
+-- Tocaste una carta: el servidor revisa que sea una de las ofrecidas y arranca la pelea nueva.
+elegirMejora = function(id: string)
+	local ok, e = pcall(function()
+		return remotos.ElegirMejora:InvokeServer(id)
+	end)
+	if ok and typeof(e) == "table" then
+		if e.Fase == "peleando" then
+			print(("[Mejoras] Elegiste %s (nivel %d)"):format(id, e.Mejoras[id] or 0))
+			ponerEstado(e)
+			pantallas.anunciar(("¡Piso %d!"):format(e.Piso))
+		else
+			ponerEstado(e) -- no se aceptó: vuelven a salir las cartas que manda el servidor
+		end
+	else
+		warn("No se pudo elegir la mejora")
+		pantallas.mostrarMejoras(estado.Ofrecidas, estado.Mejoras, elegirMejora)
 	end
 end
 
@@ -178,8 +227,20 @@ local function animarTurno(turno: Mazmorra.Turno)
 	tirosPelea += 1
 	volarTotal()
 	monstruo.recibir()
-	monstruo.ponerVida(turno.VidaMonstruo, true)
+	monstruo.ponerVida(turno.VidaMonstruo + turno.Quemadura, true)
 	task.wait(t.Sacudida)
+	if turno.Quemadura > 0 then
+		-- La quemadura salta sobre el monstruo, naranja.
+		Numeros.saltar(
+			escena.Cartel,
+			turno.Quemadura,
+			("+%d fuego"):format(turno.Quemadura),
+			colorQuemadura,
+			Vector2.new(7, 2.4)
+		)
+		monstruo.ponerVida(turno.VidaMonstruo, true)
+		task.wait(t.Sacudida)
+	end
 
 	if turno.Golpe > 0 then
 		monstruo.atacar()
@@ -195,8 +256,7 @@ local function animarTurno(turno: Mazmorra.Turno)
 	if turno.Resultado == "piso" then
 		print(("[Mazmorra] Pelea %d ganada en %d tiros"):format(estado.Piso, tirosPelea))
 		task.wait(0.3)
-		pantallas.anunciar(("¡Piso %d!"):format(e.Piso))
-		ponerEstado(e)
+		ponerEstado(e) -- fase "eligiendo": salen las cartas; "¡Piso N!" sale al elegir
 	elseif turno.Resultado == "gano" then
 		print(("[Mazmorra] Jefe ganado en %d tiros"):format(tirosPelea))
 		estado = e
@@ -228,25 +288,43 @@ local function tirar()
 		return
 	end
 	local anguloTiro = angulo
-	local res = Simulacion.simular(tablero, anguloTiro, Config.Bola, {}, semilla)
-	local bola = escena.Bola
-	bola.Transparency = 0
+	-- Las mejoras salen del estado del servidor (el servidor repite el tiro con las mismas).
+	local mejoras = { Niveles = estado.Mejoras, Rojas = estado.Rojas }
+	local res = Simulacion.simular(tablero, anguloTiro, Config.Bola, mejoras, semilla)
+	for _, bola in escena.Bolas do
+		bola.Color = if res.Fuego then colorFuego else colorBola
+		bola.Material = if res.Fuego then Enum.Material.Neon else Enum.Material.SmoothPlastic
+		bola.Transparency = 1
+	end
 	total.poner(0, false)
 
 	local paso = Config.Simulacion.Paso
-	local ultimo = #res.X
+	local ultimo = res.Pasos
 	local siguienteToque = 1
 	local tiempo = 0
 	local conexion: RBXScriptConnection
 	conexion = RunService.RenderStepped:Connect(function(dt: number)
 		tiempo += dt
 		local i = math.min(tiempo / paso + 1, ultimo)
-		local i0 = math.floor(i)
-		local i1 = math.min(i0 + 1, ultimo)
-		local f = i - i0
-		local x = res.X[i0] + (res.X[i1] - res.X[i0]) * f
-		local y = res.Y[i0] + (res.Y[i1] - res.Y[i0]) * f
-		bola.Position = escena.aMundo(x, y, 0.6)
+		-- Cada bola sigue su recorrido: aparece en su paso de inicio y se esconde al caer.
+		for k, rec in res.Recorridos do
+			local bola = escena.Bolas[k]
+			if not bola then
+				continue
+			end
+			local j = i - rec.Inicio + 1
+			if j < 1 or j > #rec.X then
+				bola.Transparency = 1
+				continue
+			end
+			local j0 = math.floor(j)
+			local j1 = math.min(j0 + 1, #rec.X)
+			local f = j - j0
+			local x = rec.X[j0] + (rec.X[j1] - rec.X[j0]) * f
+			local y = rec.Y[j0] + (rec.Y[j1] - rec.Y[j0]) * f
+			bola.Position = escena.aMundo(x, y, 0.6)
+			bola.Transparency = 0
+		end
 
 		while siguienteToque <= #res.Toques and res.Toques[siguienteToque].Paso <= i do
 			local toque = res.Toques[siguienteToque]
@@ -256,12 +334,17 @@ local function tirar()
 				Numeros.saltar(clavija, toque.Danio)
 			end
 			total.poner(toque.Total, true)
+			if toque.Duplico then
+				total.duplicar()
+			end
 			siguienteToque += 1
 		end
 
 		if i >= ultimo then
 			conexion:Disconnect()
-			bola.Transparency = 1
+			for _, bola in escena.Bolas do
+				bola.Transparency = 1
+			end
 			-- El servidor revisa el daño, juega el turno y devuelve qué pasó.
 			local okTiro, turno = pcall(function()
 				return remotos.Tirar:InvokeServer(numeroTiro, anguloTiro, res.Danio)
@@ -271,10 +354,11 @@ local function tirar()
 				total.poner(danio, true)
 			end
 			print(
-				("[Tiro %d] ángulo %.1f° · %d clavijas · daño %d (servidor: %s) · %.1f s"):format(
+				("[Tiro %d] ángulo %.1f° · %d clavijas · %d bolas · daño %d (servidor: %s) · %.1f s"):format(
 					numeroTiro,
 					anguloTiro,
 					res.ClavijasDistintas,
+					#res.Recorridos,
 					res.Danio,
 					tostring(danio),
 					(ultimo - 1) * paso
@@ -335,7 +419,8 @@ UserInputService.InputEnded:Connect(function(input: InputObject)
 	end
 end)
 
--- Comando de prueba, solo en Studio: teclas 1 a 7 saltan a esa pelea y 0 pone 999 de vida.
+-- Comando de prueba, solo en Studio: teclas 1 a 7 saltan a esa pelea, 0 pone 999 de vida y
+-- Z, X, C suben un nivel Fuego, Duplica y Divide.
 local prueba = if RunService:IsStudio() then carpetaRemotos:WaitForChild("Prueba", 3) else nil
 if RunService:IsStudio() and prueba and prueba:IsA("RemoteEvent") then
 	local teclas = {
@@ -356,6 +441,12 @@ if RunService:IsStudio() and prueba and prueba:IsA("RemoteEvent") then
 			prueba:FireServer("piso", piso)
 		elseif input.KeyCode == Enum.KeyCode.Zero then
 			prueba:FireServer("vida", 999)
+		elseif input.KeyCode == Enum.KeyCode.Z then
+			prueba:FireServer("mejora", 1)
+		elseif input.KeyCode == Enum.KeyCode.X then
+			prueba:FireServer("mejora", 2)
+		elseif input.KeyCode == Enum.KeyCode.C then
+			prueba:FireServer("mejora", 3)
 		end
 	end)
 end
