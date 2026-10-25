@@ -24,6 +24,7 @@ local Dash = require(script.Parent.Dash)
 local Velocidad = require(script.Parent.Velocidad)
 local Guardado = require(script.Parent.Guardado)
 local Analitica = require(script.Parent.Analitica)
+local Bordes = require(script.Parent.Bordes)
 
 Iluminacion.aplicar()
 GeneradorMapa.armar() -- antes que todo lo que busca puntos, vitrinas y puertas del mapa
@@ -65,4 +66,5 @@ Mascotas.iniciar()
 Viajes.iniciar()
 Dash.iniciar()
 Velocidad.iniciar()
+Bordes.iniciar()
 HerramientasPrueba.iniciar() -- solo en Studio

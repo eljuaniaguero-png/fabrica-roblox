@@ -22,7 +22,7 @@ Se hacen de a uno, en orden. Cuando un pedido dice "Prompt: X de PROMPTS-SECTORE
   - Cómo lo pruebo: lado a lado de Pradera, Dunas, Glaciar y lobby.
   - Prompt: D3 de PROMPTS-SECTORES.md
 
-- [ ] **E1 · Bordes cerrados en todo el mapa**
+- [x] ~~**E1 · Bordes cerrados en todo el mapa**~~ hecho 25/10 (franja angosta y vacío; falta emulador de celular)
   - Qué se hace: paredes altas con "cresta" de pasto y árboles, anillo de terreno afuera, piso de abajo, paredes invisibles y vuelta al último lugar seguro; lobby cerrado.
   - Qué hacés vos: nada (solo mirar).
   - Cómo lo pruebo: capturas desde 8 puntos por zona con zoom máximo, antes y después; FPS en emulador de celular; copia .rbxl.

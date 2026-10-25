@@ -363,10 +363,10 @@ def tipo_pieza(nombre):
     raise KeyError(nombre)
 
 
-def deco(nombre, x, z, giro=0, y=0, escala=1):
+def deco(nombre, x, z, giro=0, y=0, escala=1, **extra):
     tam = PIEZAS[tipo_pieza(nombre)]
-    choca = any(nombre.startswith(c) for c in CHOCAN)
-    marcador("Deco", (x, y, z), tuple(round(v * escala, 1) for v in tam), giro, Nombre=nombre, Escala=escala, Choca=choca)
+    choca = any(nombre.startswith(c) for c in CHOCAN) and not extra.get("Lejos")
+    marcador("Deco", (x, y, z), tuple(round(v * escala, 1) for v in tam), giro, Nombre=nombre, Escala=escala, Choca=choca, **extra)
 
 
 def radio(nombre, escala=1):
@@ -841,7 +841,16 @@ def plaza(g, s, rng):
         if i % 2 == 0:
             deco(arboles[i // 2 % 5], XMIN - 10, z + 8, rng.choice([0, 90, 180, 270]))
             deco(arboles[(i // 2 + 2) % 5], XMAX + 10, z + 8, rng.choice([0, 90, 180, 270]))
-    # sin pared adelante (17/10, Juani): solo el arco de entrada de Lobby.fbx
+    # E1 (25/10): cerrado adelante como lobby-2; el arco de entrada es la única salida a la Pradera
+    for x in (-72, -60, -44, -28, -20, 20, 28, 44, 60, 72):
+        deco("Pared_Ladrillo_Zona1", x, 0, 0)
+    marcador("Pieza", (ARCO[0], 0, ARCO[1]), (20, 20, 3), 0, Nombre="Arco_Entrada")
+    g.poner(-12, 0, -2, -10, PARED, 2, "Barrera")  # las rendijas entre el arco y las paredes
+    g.poner(10, 0, -2, 12, PARED, 2, "Barrera")
+    g.poner(XMIN, PARED, -2, XMAX, BARRERA, 2, "Barrera")
+    g.poner(XMIN - 6, PARED, z0 - 8, XMIN, BARRERA, 2, "Barrera")
+    g.poner(XMAX, PARED, z0 - 8, XMAX + 6, BARRERA, 2, "Barrera")
+    g.poner(XMIN, PARED, z0 - 8, XMAX, BARRERA, z0 - 2, "Barrera")
     s.marcar(XMIN, -2, XMAX, 8)
     s.marcar(-16, z0, 16, 0)  # camino del Santuario al arco
     # los 2 tableros en las paredes de los costados, mirando al medio
@@ -1249,6 +1258,69 @@ def cimas(g, rng, n, zs, ze, alto_izq=None, alto_der=None):
         deco("Nube_Bloques", rng.randint(-60, 60), zs + 60 + i * 110, rng.choice([0, 180]), y=80 + i * 12)
 
 
+# --- Afuera del pasillo (E1, 25/10/2026) ---------------------------------------------------------
+# Detrás de las paredes hay una franja angosta del piso de la zona, a la altura de la tapa de las
+# paredes, con grupos de árboles (la "cresta"). Más allá, vacío: Juani lo prefirió así (25/10) a una
+# meseta hasta el horizonte. Tapa la tierra de abajo y el borde de la grilla.
+
+AFUERA = 60  # studs de franja hacia cada lado; después, vacío (25/10, Juani)
+CRESTA = 48  # ancho de la franja con grupos de árboles
+GRUPOS_CRESTA = 9  # grupos de árboles por lado y por zona
+
+
+def meseta(cajas, mat, x0, x1, z0, z1, h):
+    """Una caja de meseta (se agrega tal cual: está afuera de la grilla)."""
+    y0 = h - 4
+    y1 = h + PARED - 1
+    if x1 > x0 and z1 > z0:
+        cajas.append((mat, x0, y0, z0, x1 - x0, y1 - y0, z1 - z0))
+
+
+def arboles_afuera(rng, n, z0, z1, h, lados=(-1, 1)):
+    nombres = CIMAS[n]
+    for lado in lados:
+        borde = XMIN - 6 if lado < 0 else XMAX + 6
+        for _ in range(GRUPOS_CRESTA):
+            cx = borde + lado * rng.randint(14, CRESTA)
+            cz = rng.randint(z0 + 8, max(z0 + 9, z1 - 8))
+            for _ in range(rng.randint(2, 3)):
+                deco(rng.choice(nombres), par(cx + rng.randint(-8, 8)), par(cz + rng.randint(-10, 10)),
+                     rng.choice([0, 90, 180, 270]), y=h + PARED - 1)
+
+
+def afuera(rng):
+    cajas = []
+    izq, der = XMIN - 4, XMAX + 4
+    # lobby: los dos costados y atrás (hasta las esquinas)
+    meseta(cajas, "Pasto", izq - AFUERA, izq, PLAZA - 4, 0, 0)
+    meseta(cajas, "Pasto", der, der + AFUERA, PLAZA - 4, 0, 0)
+    meseta(cajas, "Pasto", izq - AFUERA, der + AFUERA, PLAZA - 4 - AFUERA, PLAZA - 4, 0)
+    arboles_afuera(rng, 1, PLAZA, 0, 0)
+    for _ in range(14):  # atrás del lobby
+        x = rng.randint(XMIN - 40, XMAX + 40)
+        z = PLAZA - 10 - rng.randint(0, CRESTA)
+        deco(rng.choice(CIMAS[1]), par(x), par(z), rng.choice([0, 90, 180, 270]), y=PARED - 1,
+             escala=rng.choice([1, 1.5]), Lejos=True)
+    for n in range(1, 6):
+        b = BIOMAS[n]
+        h = (n - 1) * SUBA
+        z0, z1 = inicio_zona(n) - MURO, fin_zona(n) + (4 if n == 5 else 0)
+        zd = puerta_secreta_z(n)
+        meseta(cajas, b["Piso"], izq - AFUERA, izq, z0, z1, h)
+        # a la derecha, la cámara secreta queda como una cueva adentro de la meseta
+        c0, c1 = zd - 16, zd + 20
+        meseta(cajas, b["Piso"], der, der + AFUERA, z0, c0, h)
+        meseta(cajas, b["Piso"], der, der + AFUERA, c1, z1, h)
+        meseta(cajas, b["Piso"], XMAX + 48, der + AFUERA, c0, c1, h)
+        cajas.append((b["Piso"], der, h + 18, c0, XMAX + 48 - der, PARED - 19, c1 - c0))  # techo
+        arboles_afuera(rng, n, z0, z1, h)
+    # después de la última zona
+    h5 = 4 * SUBA
+    fin = fin_zona(5) + 4
+    meseta(cajas, BIOMAS[5]["Piso"], izq - AFUERA, der + AFUERA, fin, fin + AFUERA, h5)
+    return cajas
+
+
 # --- Dimensión Prisma ------------------------------------------------------------------------------
 
 PRISMA = (0, 200, 620)  # centro de la isla (arriba del Glaciar, lejos de todo)
@@ -1295,7 +1367,8 @@ def armar(semilla=7):
     plaza(g, s, rng)
     for n in range(1, 6):
         bioma(g, s, rng, n)
-    return g.cajas() + dimension_prisma()
+    # lo de afuera usa su propio azar: el resto del mapa sale igual que antes
+    return g.cajas() + dimension_prisma() + afuera(random.Random(semilla + 1))
 
 
 def escribir(cajas):

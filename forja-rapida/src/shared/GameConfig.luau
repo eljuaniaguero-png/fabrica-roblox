@@ -2974,6 +2974,20 @@ local GameConfig = {
 		ParedLobby = "#FFAE50",
 	},
 
+	-- Bordes del mapa (E1, server/Bordes.luau): quien se cae o sube arriba de la meseta de afuera
+	-- vuelve al último lugar seguro. Las medidas copian arte/scripts/mapa.py.
+	Bordes = {
+		Intervalo = 0.5, -- segundos entre revisiones
+		CaidaY = -20, -- por debajo de esta altura, se cayó
+		XMax = 80, -- borde del pasillo caminable (mapa.py: XMAX)
+		AltoPared = 24, -- mapa.py: PARED
+		Suba = 6, -- cada zona sube esto (mapa.py: SUBA)
+		InicioZona1 = 8,
+		LargoZona = 208, -- LARGO + MURO
+		Zonas = 5,
+		ZFondoLobby = -140, -- detrás de la pared del fondo del lobby
+	},
+
 	Pisos = {
 		StudsPorTeja = 8,
 		StudsPorTejaLiso = 4,

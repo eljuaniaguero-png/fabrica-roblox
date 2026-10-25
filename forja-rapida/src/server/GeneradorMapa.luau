@@ -441,10 +441,10 @@ local function armarMarcador(m: Marcador, carpeta: Instance)
 end
 
 -- Color de una malla de decoración: GameConfig.Paleta pisa a DecoColores (D3). Las paredes de
--- ladrillo del lobby (z < 0) van durazno aunque sean las mismas mallas que las de la Pradera.
+-- ladrillo del lobby (z <= 0) van durazno aunque sean las mismas mallas que las de la Pradera.
 local function colorDeco(malla: string, base: string, pieza: string, z: number): string
 	local P = GameConfig.Paleta
-	if z < 0 and pieza:match("^Pared_Ladrillo") and malla:match("^Pared_Zona") then
+	if z <= 0 and pieza:match("^Pared_Ladrillo") and malla:match("^Pared_Zona") then
 		return P.ParedLobby
 	end
 	if P.Deco[malla] then
@@ -648,7 +648,8 @@ local function armarDeco(m: Marcador, carpetaDeco: Instance, padre: Instance)
 			end
 		end
 	end
-	if nombre:match("^Nube") or nombre:match("^Arcoiris") then -- el cielo no hace sombra
+	-- el cielo y los árboles de lejos (afuera del pasillo, E1) no hacen sombra: rinde más
+	if nombre:match("^Nube") or nombre:match("^Arcoiris") or m.Atributos.Lejos == true then
 		for _, d in copia:GetDescendants() do
 			if d:IsA("BasePart") then
 				d.CastShadow = false
