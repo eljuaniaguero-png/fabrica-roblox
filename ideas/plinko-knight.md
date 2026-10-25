@@ -61,6 +61,18 @@ Objetivo de balance: un tiro normal toca entre 10 y 18 clavijas (20 a 36 de dañ
 - **Hasta la etapa 8, todo en bloques grises.** Los colores solo distinguen cosas: clavija normal gris claro, clavija que duplica roja y bola blanca.
 - **Para después (etapas 8 y 9):** mazmorra de piedra, clavijas doradas `#F5C542`, números de daño amarillo flúor y monstruos como imágenes planas. La paleta favorita es "Cripta azul" (fondo `#151B2E`, piedra `#2F3B57`, rubí `#E2323F`, cian `#4FE3F0`). Todo el detalle está en `plinko-knight/arte/IDEA-DE-ARTE.md`.
 
+## Herramientas de arte y sonido
+
+Juani ya tiene **ForgeGUI** (suscripción paga, 25/10/2026). Es la herramienta principal; **Gemini** queda de reserva, con los prompts de `plinko-knight/PLAN-Y-PROMPTS.md`.
+
+- **Etapa 9 (arte final):** monstruos, caballero, íconos de mejoras y de bolas, y fondo de mazmorra.
+  - Primero se crea un **estilo de ForgeGUI** con la guía de estilo de la ficha (la que se elija en la etapa 8) y se usa en **todas** las imágenes, así salen parecidas entre sí.
+  - El fondo se saca con color key (un color de fondo liso que después se borra).
+  - Se sube a Roblox con la conexión de ForgeGUI, y el ID de cada asset va en `Config.luau`.
+- **Etapa 10 (sensación y sonido):** efectos de sonido y música hechos con ForgeGUI y subidos a Roblox. Siguen las reglas de Audio de `CLAUDE.md`: nada con derechos de autor y cada punto marcado con `-- SONIDO:`.
+- **Antes de usarlo:** confirmar que lo que se genera con el plan pago es privado y se puede usar comercialmente. Si no, se frena y se le avisa a Juani.
+- **Cada vez que una etapa necesite arte o sonido con IA, avisarle a Juani antes de generar** (qué se va a hacer, con qué herramienta y cuántos créditos gasta, más o menos).
+
 ## Qué queda FUERA de la versión mínima ("después")
 
 Mazos de bolas, reto diario, ranking, **cualquier cosa con Robux**, varias mazmorras, multijugador cooperativo, mascotas y tienda. Se anotan acá y no se programan. Cuando llegue Robux: aspectos de bola y de tablero. Si alguna vez hay algo al azar que se pague, van las probabilidades a la vista y PolicyService (sección 6 de la GUIA).

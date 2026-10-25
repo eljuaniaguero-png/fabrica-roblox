@@ -483,6 +483,18 @@ de 13 o de 16 (el cuestionario de madurez lo completo yo). Commit "listo para pu
 
 ---
 
+## Herramientas de arte y sonido
+
+Juani ya tiene **ForgeGUI** (suscripción paga, 25/10/2026). Es la herramienta principal; **Gemini** queda de reserva, con los prompts de `plinko-knight/PLAN-Y-PROMPTS.md`.
+
+- **Etapa 9 (arte final):** monstruos, caballero, íconos de mejoras y de bolas, y fondo de mazmorra.
+  - Primero se crea un **estilo de ForgeGUI** con la guía de estilo de la ficha (la que se elija en la etapa 8) y se usa en **todas** las imágenes, así salen parecidas entre sí.
+  - El fondo se saca con color key (un color de fondo liso que después se borra).
+  - Se sube a Roblox con la conexión de ForgeGUI, y el ID de cada asset va en `Config.luau`.
+- **Etapa 10 (sensación y sonido):** efectos de sonido y música hechos con ForgeGUI y subidos a Roblox. Siguen las reglas de Audio de `CLAUDE.md`: nada con derechos de autor y cada punto marcado con `-- SONIDO:`.
+- **Antes de usarlo:** confirmar que lo que se genera con el plan pago es privado y se puede usar comercialmente. Si no, se frena y se le avisa a Juani.
+- **Cada vez que una etapa necesite arte o sonido con IA, avisarle a Juani antes de generar** (qué se va a hacer, con qué herramienta y cuántos créditos gasta, más o menos).
+
 ## Prompts para Gemini (arte de la etapa 9)
 
 Usalos en Gemini (Nano Banana). Pegá **la frase de estilo y después el prompt**. Guardá cada imagen en `plinko-knight/arte/gemini/` con el nombre en negrita. Si en la etapa 8 elegiste B o C, cambiá la frase de estilo por la que Claude te anote en la ficha.
