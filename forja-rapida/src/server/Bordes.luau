@@ -7,6 +7,7 @@
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
+local Correr = require(script.Parent.Correr)
 local GameConfig = require(ReplicatedStorage.Shared.GameConfig)
 
 local Bordes = {}
@@ -42,6 +43,7 @@ local function revisar(jugador: Player)
 		if volver then
 			raiz.AssemblyLinearVelocity = Vector3.zero
 			personaje:PivotTo(volver)
+			Correr.teletransportado(jugador)
 		end
 	elseif humanoide.FloorMaterial ~= Enum.Material.Air then
 		seguro[jugador] = raiz.CFrame + Vector3.new(0, 1, 0)

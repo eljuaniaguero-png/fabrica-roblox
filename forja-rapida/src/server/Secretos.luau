@@ -19,6 +19,7 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Workspace = game:GetService("Workspace")
 
 local Formato = require(ReplicatedStorage.Shared.Formato)
+local Correr = require(script.Parent.Correr)
 local GameConfig = require(ReplicatedStorage.Shared.GameConfig)
 local Reglas = require(ReplicatedStorage.Shared.Reglas)
 local Jugadores = require(script.Parent.Jugadores)
@@ -280,6 +281,7 @@ local function portal(parte: BasePart)
 			if llegada:IsA("BasePart") and llegada:GetAttribute("Nombre") == destino then
 				ultimoPortal[jugador] = ahora
 				personaje:PivotTo(llegada.CFrame + Vector3.new(0, 4, 0))
+				Correr.teletransportado(jugador)
 				Remotos.Secreto:FireClient(jugador, "Portal", zona)
 				Mundo.avisarAccion(jugador, "Portal")
 				return

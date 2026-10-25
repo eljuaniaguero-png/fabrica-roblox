@@ -259,12 +259,25 @@ local GameConfig = {
 		Espera = 3, -- segundos entre viajes
 	},
 
-	-- Dash minero (idea elegida del 19/10/2026): Shift o Q en compu, botón en celular.
-	Dash = {
-		Distancia = 30, -- studs hacia adelante
-		Duracion = 0.25, -- segundos que dura el envión
-		Espera = 4, -- segundos entre dos dash
-		VentanaClank = 2, -- segundos después del dash en que el primer golpe suena más fuerte
+	-- Correr (pedido A1, 25/10/2026; reemplaza al dash): mantener Shift en compu, apretar el stick
+	-- izquierdo (L3) en joystick o el botón de la zapatilla en celular (los dos últimos prenden y
+	-- apagan). El servidor decide la velocidad (Velocidad.luau) y controla que nadie vaya más rápido.
+	Correr = {
+		Multiplicador = 1.6, -- velocidad al correr = velocidad de caminar del jugador × esto
+		Maxima = 32, -- tope al correr (el de caminar es Velocidad.Maxima = 20; 20 × 1,6 = 32)
+		AvisosPorSegundo = 6, -- "corro / no corro" que acepta el servidor por jugador
+		-- Control de velocidad: cada Intervalo segundos mide cuánto se movió (sin contar la
+		-- altura). Si pasó la velocidad permitida × Margen + Extra studs, suma un aviso; con
+		-- Avisos seguidos, lo vuelve a la última posición buena.
+		Intervalo = 1,
+		Margen = 1.35,
+		Extra = 6,
+		Avisos = 2,
+		-- Efectos (solo en el cliente)
+		FovCaminar = 70,
+		FovCorrer = 78,
+		FovTiempo = 0.25,
+		PolvoPorSegundo = 10, -- cubitos de polvo en los pies mientras corre (0 con Efectos reducidos)
 	},
 
 	-- Analítica (Analitica.luau): los 10 pasos del embudo del jugador nuevo, en orden. Se ven en
@@ -2573,6 +2586,7 @@ local GameConfig = {
 	-- dibujos de respaldo están en arte/iconos). Pegar acá el "rbxassetid://..." de cada uno.
 	-- Mientras estén vacíos, el cliente dibuja una insignia de color.
 	Iconos = {
+		Zapatilla = "rbxassetid://96393864041568", -- botón de correr (arte/scripts/icono_zapatilla.py)
 		Lava = "",
 		Neon = "",
 		Midas = "",
@@ -2825,7 +2839,7 @@ local GameConfig = {
 	-- subido por terceros, porque suelen ser copias de otros juegos. Probados en Studio el 23/10/2026.
 	Sonidos = {
 		Golpe = "rbxassetid://9116651688", -- PSE Metal Hits 7 (0,5 s)
-		Dash = "rbxassetid://9126229255", -- PSE Whoosh By Fast Airy Swooshing (1,0 s)
+		Correr = "rbxassetid://9126229255", -- al empezar a correr. PSE Whoosh By Fast Airy Swooshing
 		Romper = "rbxassetid://9118587698", -- PSE Rock Drop Breaks 3 (1,6 s)
 		Revelacion = "rbxassetid://9116394545", -- se sube el tono según la rareza. PSE Magic Glows 1
 		RevelacionRara = "rbxassetid://9116395089", -- extra para Épica o mejor. PSE Magic Glows 4

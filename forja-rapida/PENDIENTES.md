@@ -28,13 +28,13 @@ Se hacen de a uno, en orden. Cuando un pedido dice "Prompt: X de PROMPTS-SECTORE
   - Cómo lo pruebo: capturas desde 8 puntos por zona con zoom máximo, antes y después; FPS en emulador de celular; copia .rbxl.
   - Prompt: E1 de PROMPTS-SECTORES.md
 
-- [ ] **E2 · La zona siguiente se ve atrás** (solo si después de E1 todavía hace falta)
+- [x] ~~**E2 · La zona siguiente se ve atrás**~~ salteado 25/10 (Juani: no hace falta)
   - Qué se hace: escalón entre zonas y montañas de fondo (prompt C de "mapa como la referencia" del 18/10).
   - Qué hacés vos: decirme si querés hacerlo después de ver E1.
   - Cómo lo pruebo: lado a lado con mapa-1 y mapa-3.
   - Prompt: E2 de PROMPTS-SECTORES.md
 
-- [ ] **A1 · Correr con Shift en vez del dash**
+- [x] ~~**A1 · Correr con Shift en vez del dash**~~ hecho 25/10 (falta probar el botón en el emulador de celular y con 2 jugadores)
   - Qué se hace: se saca el dash; Shift (L3 en joystick, botón zapatilla en celular) = correr ×1,6, con FOV y polvo. El servidor controla la velocidad.
   - Qué hacés vos: nada.
   - Cómo lo pruebo: caminar, correr, saltar corriendo, con bonos, celular, y 2 jugadores en Local Server.

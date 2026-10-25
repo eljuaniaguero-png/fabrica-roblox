@@ -13,6 +13,7 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Workspace = game:GetService("Workspace")
 
 local Formato = require(ReplicatedStorage.Shared.Formato)
+local Correr = require(script.Parent.Correr)
 local GameConfig = require(ReplicatedStorage.Shared.GameConfig)
 local Reglas = require(ReplicatedStorage.Shared.Reglas)
 local Analitica = require(script.Parent.Analitica)
@@ -98,6 +99,7 @@ local function viajar(jugador: Player, zona: unknown)
 	Analitica.monedas(jugador, false, precio, "Viaje")
 	Jugadores.publicar(jugador)
 	personaje:PivotTo(CFrame.new(destino + Vector3.new(0, 4, 0)))
+	Correr.teletransportado(jugador)
 	Remotos.Viajo:FireClient(jugador, zona, precio)
 end
 

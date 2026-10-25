@@ -12,6 +12,7 @@ local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Workspace = game:GetService("Workspace")
 
+local Correr = require(script.Parent.Correr)
 local GameConfig = require(ReplicatedStorage.Shared.GameConfig)
 local Reglas = require(ReplicatedStorage.Shared.Reglas)
 local Anuncios = require(script.Parent.Anuncios)
@@ -40,6 +41,7 @@ local function aLaPlaza(jugador: Player)
 	local spawn = Workspace:FindFirstChildWhichIsA("SpawnLocation", true)
 	if personaje and spawn then
 		personaje:PivotTo(spawn.CFrame + Vector3.new(0, 5, 0))
+		Correr.teletransportado(jugador)
 	end
 end
 
