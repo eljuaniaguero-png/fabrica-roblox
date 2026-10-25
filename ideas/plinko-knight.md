@@ -1,0 +1,72 @@
+# Plinko Knight — ficha del prototipo
+
+Origen: `plinko-knight/PLAN-Y-PROMPTS.md` (25/10/2026) + idea de arte aprobada (`plinko-knight/arte/IDEA-DE-ARTE.md`).
+Estado: **borrador, esperando OK** (punto de control 1). Todavía no hay mecánica programada.
+Carpeta: `plinko-knight/` (código en `plinko-knight/src/`, Rojo con `rojo serve plinko-knight`, puerto 34876). Place propio: `plinko-knight/PlinkoKnight.rbxl`.
+
+## Concepto
+
+Un caballero baja por una mazmorra. Su ataque es una bola que tira desde arriba de un tablero de clavijas: cada clavija que toca suma daño, y el total le pega al monstruo. Son 6 peleas y un jefe. Después de cada pelea que gana, elige 1 de 3 mejoras. Si pierde, vuelve a bajar desde el principio.
+
+**No es un juego de apuestas.** Abajo del tablero no hay casilleros con multiplicadores: la bola cae a un piso liso. El daño sale solo de las clavijas que toca y de las mejoras. En el juego no aparecen palabras de casino ni de premios al azar.
+
+## Loop de 30 segundos
+
+1. Ves el tablero al centro y el monstruo a la derecha. Apuntás con el mouse o con el dedo (una línea de puntos corta muestra el primer tramo) y soltás.
+2. La bola rebota por el tablero. Cada clavija que toca brilla y muestra "+2", y el panel de daño va subiendo.
+3. Cuando la bola llega abajo, el total vuela al monstruo y le baja la vida. Si sigue vivo, contraataca y te baja vida a vos.
+4. Si lo matás, aparecen 3 cartas de mejora: elegís una y bajás al piso siguiente.
+
+## Pantalla de pelea (celular en horizontal, 3 columnas)
+
+| Izquierda | Centro | Derecha |
+|---|---|---|
+| Tu vida, la vida del monstruo y el **panel de daño** en dos cajas: daño que se suma \| cuántos ×2 hubo. Abajo, los íconos de tus mejoras. | El tablero, con el caballero y el lanzador arriba. Abajo, un piso liso (sin casilleros). | El monstruo grande, con su barra de vida. El jefe ocupa toda la columna. |
+
+Arriba de todo, una barra fina con el piso ("Pelea 3 de 7") y Ajustes. La cámara está fija, de frente al tablero, y no se camina durante la pelea.
+
+## Sistemas del prototipo
+
+1. **Simulación de la bola** (`shared/Simulacion.luau`): física propia en 2D, con paso fijo y siempre el mismo resultado. Se prueba con Lune.
+2. **Tablero y puntería**: cada cliente arma su tablero (no se comparte con los demás jugadores). Apuntás con el mouse o el dedo en un abanico hacia abajo y soltás para tirar.
+3. **Daño y revisión del servidor**: cada clavija cuenta una sola vez por tiro. El servidor repite la simulación y, si el número no coincide, usa el suyo.
+4. **Monstruos y mazmorra**: 6 peleas y un jefe. El monstruo contraataca después de cada tiro. Si te quedás sin vida perdés, y con un botón grande "Volver a bajar" empezás de nuevo.
+5. **Mejoras 1 de 3**: bola de fuego, clavija que duplica y bola que se divide. Si elegís una que ya tenés, mejora.
+6. **Guardado** con ProfileStore: mejor piso y bolas desbloqueadas.
+7. **Pantallas**: inicio, pelea, mejoras, derrota y victoria, en compu y en celular.
+
+## Números de arranque (en `plinko-knight/src/shared/Config.luau`)
+
+| Qué | Valor |
+|---|---|
+| Tablero | 7 columnas × 8 filas alternadas (unas 52 clavijas) |
+| Daño por clavija | 2 (cada clavija cuenta una vez por tiro) |
+| Vida del caballero | 50; se cura 10 entre peleas |
+| Monstruos (vida / golpe) | 1: 40 / 4 · 2: 60 / 5 · 3: 85 / 6 · 4: 115 / 7 · 5: 150 / 8 · 6: 190 / 9 · **Jefe: 320 / 11** |
+| Bola de fuego | +1 de daño por clavija; el monstruo se quema 3 por turno durante 2 turnos. Repetida: +1 más |
+| Clavija que duplica | 2 clavijas rojas; al tocar una, el daño que llevás en ese tiro se duplica (cada una, una vez por tiro). Repetida: una clavija roja más |
+| Bola que se divide | En el 5.º toque se parte en 2 y las dos siguen sumando. Repetida: en el 4.º toque, y después en el 3.º |
+| Bolas que se desbloquean | Hierro (desde el inicio) · Fuego (llegar al piso 4) · Partida (ganarle al jefe) |
+
+Objetivo de balance: un tiro normal toca entre 10 y 18 clavijas (20 a 36 de daño), cada pelea dura 2 a 4 tiros y en las primeras partidas se pierde entre la pelea 4 y la 6.
+
+## Cómo funciona por dentro
+
+- **La física es propia y en 2D, no la de Roblox.** La bola nunca es una pieza con física: el cliente solo la dibuja siguiendo la simulación. Así no se escapa hacia la cámara y se puede probar fuera de Studio.
+- **El servidor lleva la partida** (piso, vida, mejoras y monstruo). En cada tiro le da al cliente una semilla, y el cliente manda solo el ángulo y el daño que vio. El servidor corre la misma simulación con ese ángulo; si el daño no coincide (con un margen chico), usa el suyo. Además tiene un tope de daño por tiro, un límite de frecuencia y revisa que el tiro sea del turno actual. Valida tipos y números finitos.
+- **Guardado:** ProfileStore con `VERSION` y migración cada vez que cambie lo que se guarda.
+
+## Cómo se ve
+
+- **Hasta la etapa 8, todo en bloques grises.** Los colores solo distinguen cosas: clavija normal gris claro, clavija que duplica roja y bola blanca.
+- **Para después (etapas 8 y 9):** mazmorra de piedra, clavijas doradas `#F5C542`, números de daño amarillo flúor y monstruos como imágenes planas. La paleta favorita es "Cripta azul" (fondo `#151B2E`, piedra `#2F3B57`, rubí `#E2323F`, cian `#4FE3F0`). Todo el detalle está en `plinko-knight/arte/IDEA-DE-ARTE.md`.
+
+## Qué queda FUERA de la versión mínima ("después")
+
+Mazos de bolas, reto diario, ranking, **cualquier cosa con Robux**, varias mazmorras, multijugador cooperativo, mascotas y tienda. Se anotan acá y no se programan. Cuando llegue Robux: aspectos de bola y de tablero. Si alguna vez hay algo al azar que se pague, van las probabilidades a la vista y PolicyService (sección 6 de la GUIA).
+
+## Cambios respecto del plan
+
+- **El monstruo va a la derecha, no abajo del tablero.** Lo aprobaste el 25/10 en la idea de arte: en un celular horizontal el tablero y el monstruo no entran uno arriba del otro.
+- **El panel de daño tiene dos cajas** (daño | ×2). La regla de la clavija roja no cambia: solo se muestra separado.
+- Lo demás (números, mejoras, lo que queda fuera y cómo funciona por dentro) es igual al plan.
