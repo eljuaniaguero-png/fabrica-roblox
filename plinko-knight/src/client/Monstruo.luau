@@ -7,6 +7,7 @@ local TweenService = game:GetService("TweenService")
 local Shared = game:GetService("ReplicatedStorage"):WaitForChild("Shared")
 local Config = require(Shared:WaitForChild("Config"))
 local Mazmorra = require(Shared:WaitForChild("Mazmorra"))
+local Ajustes = require(script.Parent:WaitForChild("Ajustes"))
 
 export type Monstruo = {
 	mostrar: (piso: number, vida: number) -> (),
@@ -109,7 +110,7 @@ function Monstruo.crear(cartel: BasePart, barra: BasePart): Monstruo
 			task.spawn(function()
 				local fin = os.clock() + t.Sacudida
 				while os.clock() < fin and sacudida == marca do
-					local queda = (fin - os.clock()) / t.Sacudida
+					local queda = (fin - os.clock()) / t.Sacudida * Ajustes.factorEfectos()
 					cartel.CFrame = base * CFrame.new((math.random() * 2 - 1) * 0.6 * queda, 0, 0)
 					task.wait()
 				end

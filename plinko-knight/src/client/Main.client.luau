@@ -16,6 +16,9 @@
 -- Paso 5d: zona y pelea arriba, cartel con la maña del jefe, "Próximo" en la tienda y el cofre.
 -- Etapa 6: el progreso guardado llega del servidor (remoto Progreso). Antes de cada partida
 -- (fase "inicio") se elige la bola; al desbloquear algo sale un aviso grande.
+-- Etapa 7: todas las pantallas con client/Estilo; la cámara deja libres las franjas de arriba y de
+-- abajo; Ajustes (sonido, música, efectos reducidos) se guardan con el progreso. "Volver a bajar"
+-- arranca otra partida con la misma bola en un toque.
 -- Input con UserInputService: los otros juegos no usan el Input Action System.
 
 local Players = game:GetService("Players")
@@ -36,6 +39,7 @@ local Numeros = require(script.Parent:WaitForChild("Numeros"))
 local PantallasModulo = require(script.Parent:WaitForChild("Pantallas"))
 local SeleccionModulo = require(script.Parent:WaitForChild("Seleccion"))
 local TiendaVistaModulo = require(script.Parent:WaitForChild("TiendaVista"))
+local Ajustes = require(script.Parent:WaitForChild("Ajustes"))
 
 local jugador = Players.LocalPlayer
 
@@ -74,6 +78,7 @@ local colorQuemadura = Color3.fromHex(Config.Colores.Quemadura)
 local monstruo = MonstruoVista.crear(escena.Cartel, escena.BarraMonstruo)
 local pantallas = PantallasModulo.crear()
 local seleccion = SeleccionModulo.crear(escena)
+escena.ponerZonaLibre(pantallas.zonaLibre)
 
 local estado: Mazmorra.Estado = Mazmorra.nueva() -- se pisa con el del servidor al arrancar
 estado.Fase = "inicio" -- hasta que el servidor termine de cargar el progreso, no se tira
@@ -81,6 +86,9 @@ local progreso: ProgresoModulo.Datos? = nil
 local abrirInicio: () -> ()
 local mostrarAvisos: () -> ()
 local tirosPelea = 0 -- para la consola: cuántos tiros lleva la pelea actual
+-- Para la pantalla final: el récord al empezar la partida y lo que se desbloqueó en ella.
+local mejorAntes = 0
+local desbloqueosPartida: { string } = {}
 
 local angulo = 0
 local apuntando = false -- dedo apoyado o botón del mouse apretado
@@ -302,6 +310,10 @@ local function volverABajar(bola: string)
 		return remotos.VolverABajar:InvokeServer(bola)
 	end)
 	if ok and typeof(e) == "table" then
+		if e.Fase == "peleando" and estado.Fase ~= "peleando" then
+			mejorAntes = if progreso then progreso.MejorPiso else 0
+			desbloqueosPartida = {}
+		end
 		ponerEstado(e)
 		print(
 			("[Mazmorra] Bajás con la bola %s: jugando en %d ms"):format(
@@ -325,16 +337,23 @@ abrirInicio = function()
 	end
 end
 
+-- Pantalla de perder o ganar. "Volver a bajar" arranca con la misma bola; "Cambiar bola" abre el
+-- inicio.
 mostrarFinal = function(e: Mazmorra.Estado)
-	if e.Fase == "perdio" then
-		pantallas.mostrarFinal(
-			("Caíste en el piso %d"):format(e.Piso),
-			"Volver a bajar",
-			abrirInicio
-		)
-	elseif e.Fase == "gano" then
-		pantallas.mostrarFinal("¡Ganaste la mazmorra!", "Volver", abrirInicio)
+	if e.Fase ~= "perdio" and e.Fase ~= "gano" then
+		return
 	end
+	local gano = e.Fase == "gano"
+	local ganadas = if gano then #Config.Monstruos else e.Piso - 1
+	pantallas.mostrarFinal({
+		Gano = gano,
+		Piso = e.Piso,
+		MejorAntes = mejorAntes,
+		MejorAhora = math.max(if progreso then progreso.MejorPiso else 0, ganadas),
+		Desbloqueos = desbloqueosPartida,
+	}, function()
+		volverABajar(if progreso then progreso.BolaElegida else e.Bola)
+	end, abrirInicio)
 end
 
 local colorCaballero = Color3.fromHex(Config.Colores.Caballero)
@@ -419,7 +438,13 @@ local function animarTurno(turno: Mazmorra.Turno)
 end
 
 local function tirar()
-	if tirando or estado.Fase ~= "peleando" or pantallas.hayFinal() or seleccion.activa() then
+	if
+		tirando
+		or estado.Fase ~= "peleando"
+		or pantallas.hayFinal()
+		or seleccion.activa()
+		or tiendaVista.abierta()
+	then
 		return
 	end
 	tirando = true
@@ -559,6 +584,7 @@ UserInputService.InputBegan:Connect(function(input: InputObject, procesado: bool
 		procesado
 		or pantallas.hayFinal()
 		or seleccion.activa()
+		or tiendaVista.abierta()
 		or os.clock() - pantallas.finalCerrado() < 0.3
 	then
 		return
@@ -678,12 +704,17 @@ remotos.Progreso.OnClientEvent:Connect(function(datos: any, nuevos: any)
 		return
 	end
 	progreso = datos
+	Ajustes.cargar(datos.Ajustes)
 	if estado.Fase == "inicio" then
 		abrirInicio() -- se dibuja con el progreso nuevo (mejor piso, bolas, la elegida)
 	end
 	if typeof(nuevos) == "table" then
 		for _, n in nuevos do
 			print(("[Progreso] Desbloqueaste %s: %s"):format(n.Tipo, n.Nombre))
+			table.insert(
+				desbloqueosPartida,
+				if n.Tipo == "bola" then ("bola %s"):format(n.Nombre) else n.Nombre
+			)
 			table.insert(avisosPendientes, n)
 		end
 		if not tirando then
@@ -705,6 +736,7 @@ task.spawn(function()
 				end)
 				if okP and typeof(datos) == "table" then
 					progreso = datos
+					Ajustes.cargar(datos.Ajustes)
 				end
 			end
 			ponerEstado(inicial)

@@ -93,6 +93,23 @@ do
 	chequear((m :: any).CampoViejo == nil, "migrar dejó un campo viejo")
 	local m2 = Progreso.migrar({ BolasDesbloqueadas = { "fuego" }, BolaElegida = "fuego" })
 	chequear(m2.BolaElegida == "fuego", "migrar no respetó la bola elegida")
+	-- Versión 2: ajustes. Un dato de la versión 1 (sin ajustes) queda con los de un jugador nuevo.
+	chequear(
+		m.Ajustes.Sonido and m.Ajustes.Musica and not m.Ajustes.EfectosReducidos,
+		"migrar de la versión 1 no puso los ajustes de un jugador nuevo"
+	)
+	local m3 =
+		Progreso.migrar({ Ajustes = { Sonido = false, Musica = "no", EfectosReducidos = true } })
+	chequear(
+		not m3.Ajustes.Sonido and m3.Ajustes.Musica and m3.Ajustes.EfectosReducidos,
+		"migrar no respetó los ajustes o aceptó uno raro"
+	)
+	local limpio = Progreso.limpiarAjustes({ Sonido = 1, Musica = false }, m3.Ajustes)
+	chequear(
+		not limpio.Sonido and not limpio.Musica and limpio.EfectosReducidos,
+		"limpiarAjustes aceptó un número o perdió lo que estaba"
+	)
+	chequear(Progreso.copiar(m3).Ajustes ~= m3.Ajustes, "copiar comparte los ajustes")
 
 	local c = Progreso.copiar(m)
 	table.insert(c.BolasDesbloqueadas, "partida")

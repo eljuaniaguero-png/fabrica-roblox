@@ -5,12 +5,14 @@
 -- su barra de vida arriba. El caballero es un bloque al lado del lanzador.
 -- Graybox: partes grises ancladas y sin colisión.
 
+local GuiService = game:GetService("GuiService")
 local RunService = game:GetService("RunService")
 local Workspace = game:GetService("Workspace")
 
 local Shared = game:GetService("ReplicatedStorage"):WaitForChild("Shared")
 local Config = require(Shared:WaitForChild("Config"))
 local TableroModulo = require(Shared:WaitForChild("Tablero"))
+local Ajustes = require(script.Parent:WaitForChild("Ajustes"))
 
 -- Lejos del lugar donde aparece el personaje, para que no se vea.
 local ORIGEN = Vector3.new(0, 500, 0)
@@ -30,7 +32,10 @@ export type Escena = {
 	Cartel: BasePart, -- el monstruo (un cartel plano)
 	BarraMonstruo: BasePart, -- arriba del cartel
 	Caballero: BasePart,
-	sacudir: (fuerza: number, duracion: number) -> (),
+	sacudir: (fuerza: number, duracion: number) -> (), -- más suave con "efectos reducidos"
+	-- De dónde a dónde (y en px de pantalla) queda libre entre las franjas de arriba y de abajo:
+	-- la cámara mete todo ahí, así ninguna pantalla tapa el tablero.
+	ponerZonaLibre: (zona: () -> (number, number)) -> (),
 	aMundo: (x: number, y: number, z: number?) -> Vector3,
 	aTablero: (posicionPantalla: Vector2) -> (number, number),
 }
@@ -211,10 +216,26 @@ function Escena.armar(): Escena
 	local camara = Workspace.CurrentCamera
 	-- Temblor: la cámara se corre un poco al azar y se va calmando.
 	local temblorFuerza, temblorFin, temblorDuracion = 0, 0, 1
+	local zonaLibre: (() -> (number, number))? = nil
 	RunService:BindToRenderStep("CamaraTablero", Enum.RenderPriority.Last.Value + 10, function()
 		local vista = camara.ViewportSize
 		local aspecto = if vista.Y > 0 then vista.X / vista.Y else 16 / 9
-		local distancia = math.max(mitadAlto / tangente, mitadAncho / (tangente * aspecto))
+		-- Franja libre (en px de la vista): sin franjas, la pantalla entera.
+		local arribaLibre, abajoLibre = 0, vista.Y
+		local zona = zonaLibre
+		if zona then
+			local y0, y1 = zona()
+			local inset = GuiService:GetGuiInset().Y
+			if y1 - y0 > vista.Y * 0.3 then
+				arribaLibre, abajoLibre = y0 + inset, y1 + inset
+			end
+		end
+		local fraccion = math.max((abajoLibre - arribaLibre) / math.max(vista.Y, 1), 0.3)
+		local distancia =
+			math.max(mitadAlto / (tangente * fraccion), mitadAncho / (tangente * aspecto))
+		-- Correr la cámara para que el centro de las 3 columnas caiga en el centro de la franja libre.
+		local corridoPx = (arribaLibre + abajoLibre) / 2 - vista.Y / 2
+		local subir = corridoPx * 2 * distancia * tangente / math.max(vista.Y, 1)
 		local corrimiento = Vector3.zero
 		local queda = temblorFin - os.clock()
 		if queda > 0 then
@@ -223,11 +244,12 @@ function Escena.armar(): Escena
 		end
 		camara.CameraType = Enum.CameraType.Scriptable
 		camara.FieldOfView = FOV
-		camara.CFrame = CFrame.lookAt(centro + Vector3.new(0, 0, distancia), centro) + corrimiento
+		local mira = centro + Vector3.new(0, subir, 0)
+		camara.CFrame = CFrame.lookAt(mira + Vector3.new(0, 0, distancia), mira) + corrimiento
 	end)
 
 	local function sacudir(fuerza: number, duracion: number)
-		temblorFuerza, temblorDuracion = fuerza, math.max(duracion, 0.01)
+		temblorFuerza, temblorDuracion = fuerza * Ajustes.factorEfectos(), math.max(duracion, 0.01)
 		temblorFin = os.clock() + duracion
 	end
 
@@ -254,6 +276,9 @@ function Escena.armar(): Escena
 		BarraMonstruo = barraMonstruo,
 		Caballero = caballero,
 		sacudir = sacudir,
+		ponerZonaLibre = function(zona: () -> (number, number))
+			zonaLibre = zona
+		end,
 		aMundo = aMundo,
 		aTablero = aTablero,
 	}

@@ -6,6 +6,7 @@
 --   Progreso (servidor -> cliente): (datos, nuevos) el progreso guardado y lo que se acaba de
 --   desbloquear (para el aviso grande)
 --   ObtenerProgreso() -> datos  (nil mientras carga)
+--   GuardarAjustes(ajustes) (cliente -> servidor): sonido, música y efectos reducidos (etapa 7)
 --   Tienda(accion, indice, clavijas) -> (Mazmorra.Estado, error?)  acciones: "comprar" (el ítem
 --   indice; clavijas = { id } para una mejora de clavija), "vender" (la reliquia del lugar indice),
 --   "mover" (la reliquia del lugar indice al lugar que viene en clavijas), "cofre" (llevarse la
@@ -156,6 +157,29 @@ function Peleas.iniciar()
 		return Mazmorra.copiar(p.Estado)
 	end
 	volver.Parent = carpeta
+
+	-- Ajustes: solo 3 sí/no; lo raro se ignora. Se guardan con el resto del progreso.
+	local guardarAjustes = Instance.new("RemoteEvent")
+	guardarAjustes.Name = "GuardarAjustes"
+	local ultimosAjustes: { [Player]: number } = {}
+	guardarAjustes.OnServerEvent:Connect(function(jugador: Player, valor: any)
+		local p = Partida.de(jugador)
+		local ahora = os.clock()
+		if
+			not p
+			or typeof(valor) ~= "table"
+			or ahora - (ultimosAjustes[jugador] or -math.huge)
+				< Config.Servidor.TiempoMinimoAjustes
+		then
+			return
+		end
+		ultimosAjustes[jugador] = ahora
+		p.Progreso.Ajustes = Progreso.limpiarAjustes(valor, p.Progreso.Ajustes)
+	end)
+	game:GetService("Players").PlayerRemoving:Connect(function(jugador: Player)
+		ultimosAjustes[jugador] = nil
+	end)
+	guardarAjustes.Parent = carpeta
 
 	-- Límite de frecuencia de compras y pergaminos (además de lo que valida shared/Tienda).
 	local function puedeActuar(p: Partida.Partida): boolean

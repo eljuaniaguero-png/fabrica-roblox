@@ -16,7 +16,7 @@ export type Monstruo = {
 local Config = {}
 
 -- Versión de los datos guardados: se sube (con su migración) cada vez que cambia lo que se guarda.
-Config.VERSION = 1
+Config.VERSION = 2 -- 2: se suman los Ajustes (etapa 7)
 
 -- Tablero: filas alternadas (una de Columnas clavijas, la siguiente de Columnas - 1).
 -- Medidas en studs, en el plano del tablero: x hacia la derecha, y hacia arriba, el lanzador en
@@ -431,6 +431,7 @@ Config.Servidor = {
 	TiempoMinimoEntreTiros = 1, -- segundos entre dos tiros del mismo jugador
 	TiempoMinimoVolver = 0.5, -- segundos entre dos "Volver a bajar" del mismo jugador
 	TiempoMinimoAccion = 0.15, -- segundos entre dos compras o pergaminos del mismo jugador
+	TiempoMinimoAjustes = 0.3, -- segundos entre dos cambios de Ajustes del mismo jugador
 }
 
 -- Animación del turno (cliente, etapa 4).

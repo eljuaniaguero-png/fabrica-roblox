@@ -9,6 +9,7 @@ local UserInputService = game:GetService("UserInputService")
 
 local Shared = game:GetService("ReplicatedStorage"):WaitForChild("Shared")
 local Config = require(Shared:WaitForChild("Config"))
+local Estilo = require(script.Parent:WaitForChild("Estilo"))
 
 export type Seleccion = {
 	elegir: (cantidad: number, texto: string, valida: (id: number) -> boolean) -> { number }?,
@@ -21,47 +22,26 @@ local Seleccion = {}
 local MARGEN_TOQUE = 1.8
 
 function Seleccion.crear(escena: any): Seleccion
-	local gui = Instance.new("ScreenGui")
-	gui.Name = "Seleccion"
-	gui.ResetOnSpawn = false
-	gui.DisplayOrder = 12
-	gui.Parent = Players.LocalPlayer:WaitForChild("PlayerGui")
-
-	local cartel = Instance.new("Frame")
+	-- El cartel va en la franja de arriba (tapa "Pelea N de 9" mientras elegís): el tablero queda
+	-- libre para tocar.
+	local gui = Estilo.pantalla("Seleccion", 12, Players.LocalPlayer:WaitForChild("PlayerGui"))
+	local lienzo = Estilo.lienzo(gui)
+	local cartel = Estilo.panel(lienzo)
 	cartel.AnchorPoint = Vector2.new(0.5, 0)
-	cartel.Position = UDim2.new(0.5, 0, 0, 56)
-	cartel.Size = UDim2.new(0.5, 0, 0, 56)
-	cartel.BackgroundColor3 = Color3.fromHex(Config.Colores.FondoBarra)
-	cartel.BackgroundTransparency = 0.15
-	cartel.BorderSizePixel = 0
+	cartel.Position = UDim2.fromScale(0.5, 0)
+	cartel.Size = UDim2.fromOffset(600, Estilo.Medidas.BarraArriba)
+	cartel.BackgroundTransparency = 0
 	cartel.Visible = false
-	cartel.Parent = gui
-	local redondeo = Instance.new("UICorner")
-	redondeo.CornerRadius = UDim.new(0.2, 0)
-	redondeo.Parent = cartel
-	local texto = Instance.new("TextLabel")
-	texto.BackgroundTransparency = 1
-	texto.Position = UDim2.fromScale(0.03, 0.1)
-	texto.Size = UDim2.fromScale(0.7, 0.8)
-	texto.Font = Enum.Font.GothamBold
-	texto.TextScaled = true
-	texto.TextColor3 = Color3.new(1, 1, 1)
-	texto.Parent = cartel
-	local cancelar = Instance.new("TextButton")
+	Estilo.borde(cartel, "Oro")
+	local texto = Estilo.texto(cartel, "", Estilo.Texto.Normal, Estilo.Fuentes.Texto)
+	texto.TextXAlignment = Enum.TextXAlignment.Left
+	texto.Position = UDim2.fromOffset(14, 4)
+	texto.Size = UDim2.new(1, -200, 1, -8)
+	local cancelar = Estilo.boton(cartel, "Cancelar", "Peligro", Estilo.Texto.Normal)
 	cancelar.Name = "Cancelar"
 	cancelar.AnchorPoint = Vector2.new(1, 0.5)
-	cancelar.Position = UDim2.fromScale(0.98, 0.5)
-	cancelar.Size = UDim2.new(0.24, 0, 0, 44) -- 44 px: se toca bien con el dedo
-	cancelar.BackgroundColor3 = Color3.fromHex(Config.Colores.Golpe)
-	cancelar.BorderSizePixel = 0
-	cancelar.Font = Enum.Font.GothamBlack
-	cancelar.TextScaled = true
-	cancelar.TextColor3 = Color3.new(1, 1, 1)
-	cancelar.Text = "Cancelar"
-	cancelar.Parent = cartel
-	local redondeoBoton = Instance.new("UICorner")
-	redondeoBoton.CornerRadius = UDim.new(0.25, 0)
-	redondeoBoton.Parent = cancelar
+	cancelar.Position = UDim2.new(1, -6, 0.5, 0)
+	cancelar.Size = UDim2.fromOffset(170, Estilo.Medidas.Boton)
 
 	local activa = false
 	local cancelada = false

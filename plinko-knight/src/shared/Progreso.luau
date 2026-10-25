@@ -4,8 +4,9 @@
 -- empezás de cero): solo el progreso entre partidas.
 --
 -- Datos: Version, MejorPiso, MejorZona, MejorGolpe, BolasDesbloqueadas, ReliquiasDesbloqueadas,
--- Logros, BolaElegida, PartidasJugadas, PartidasGanadas y JefesVencidos. Las listas son listas de
--- texto (así viajan bien por los remotos y la DataStore).
+-- Logros, BolaElegida, PartidasJugadas, PartidasGanadas, JefesVencidos y Ajustes (sonido, música y
+-- efectos reducidos, desde la versión 2). Las listas son listas de texto (así viajan bien por los
+-- remotos y la DataStore).
 --
 -- Logros: los revisa el servidor después de cada tiro (alTirar) y de cada turno (alTurno). Cada
 -- uno desbloquea una bola o una reliquia (Config.Bolas / Config.Reliquias, campos Desbloqueo y
@@ -25,7 +26,11 @@ export type Datos = {
 	PartidasJugadas: number,
 	PartidasGanadas: number,
 	JefesVencidos: number,
+	Ajustes: Ajustes,
 }
+
+-- Lo que el jugador elige en la pantalla de Ajustes (etapa 7).
+export type Ajustes = { Sonido: boolean, Musica: boolean, EfectosReducidos: boolean }
 
 -- Algo que se desbloqueó recién (para el aviso grande "¡Nueva bola: Fuego!").
 export type Nuevo = { Tipo: string, Id: string, Nombre: string }
@@ -58,7 +63,22 @@ function Progreso.nuevos(): Datos
 		PartidasJugadas = 0,
 		PartidasGanadas = 0,
 		JefesVencidos = 0,
+		Ajustes = { Sonido = true, Musica = true, EfectosReducidos = false },
 	}
+end
+
+-- Ajustes que mandó el cliente o que estaban guardados -> ajustes limpios (lo raro queda como
+-- estaba en `base`).
+function Progreso.limpiarAjustes(valor: any, base: Ajustes): Ajustes
+	local a = table.clone(base)
+	if typeof(valor) == "table" then
+		for _, clave in { "Sonido", "Musica", "EfectosReducidos" } do
+			if typeof(valor[clave]) == "boolean" then
+				(a :: any)[clave] = valor[clave]
+			end
+		end
+	end
+	return a
 end
 
 -- Lo guardado -> datos completos y limpios: lo que falta queda como en un jugador nuevo, lo que no
@@ -113,6 +133,8 @@ function Progreso.migrar(guardado: any): Datos
 	then
 		d.BolaElegida = guardado.BolaElegida
 	end
+	-- Versión 2: los ajustes (si no estaban, quedan los de un jugador nuevo).
+	d.Ajustes = Progreso.limpiarAjustes(guardado.Ajustes, d.Ajustes)
 	d.Version = Config.VERSION
 	return d
 end
@@ -123,6 +145,7 @@ function Progreso.copiar(d: Datos): Datos
 	c.BolasDesbloqueadas = table.clone(d.BolasDesbloqueadas)
 	c.ReliquiasDesbloqueadas = table.clone(d.ReliquiasDesbloqueadas)
 	c.Logros = table.clone(d.Logros)
+	c.Ajustes = table.clone(d.Ajustes)
 	return c
 end
 
