@@ -1,19 +1,25 @@
 --!strict
--- Cliente de Plinko Knight (etapas 2 y 3): arma el tablero, apunta con mouse o dedo y, al
+-- Cliente de Plinko Knight (etapas 2 a 4): arma el tablero, apunta con mouse o dedo y, al
 -- soltar, pide el tiro al servidor (número y semilla) y tira la bola. La bola sigue el
--- recorrido de shared/Simulacion (interpolado, así se ve suave a cualquier FPS); cada clavija tocada brilla, salta su "+2" y sube el TOTAL. Al terminar, el
--- servidor revisa el daño y devuelve el que vale. Todavía sin monstruos.
+-- recorrido de shared/Simulacion (interpolado, así se ve suave a cualquier FPS); cada clavija
+-- tocada brilla, salta su "+2" y sube el TOTAL. Al terminar, el servidor revisa el daño, juega
+-- el turno y devuelve qué pasó; el cliente solo lo anima (golpe al monstruo, contraataque,
+-- piso nuevo, perder o ganar la mazmorra).
 -- Input con UserInputService: los otros juegos no usan el Input Action System.
 
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
+local TweenService = game:GetService("TweenService")
 local UserInputService = game:GetService("UserInputService")
 
 local Shared = game:GetService("ReplicatedStorage"):WaitForChild("Shared")
 local Config = require(Shared:WaitForChild("Config"))
 local Simulacion = require(Shared:WaitForChild("Simulacion"))
+local Mazmorra = require(Shared:WaitForChild("Mazmorra"))
 local Escena = require(script.Parent:WaitForChild("Escena"))
+local MonstruoVista = require(script.Parent:WaitForChild("Monstruo"))
 local Numeros = require(script.Parent:WaitForChild("Numeros"))
+local PantallasModulo = require(script.Parent:WaitForChild("Pantallas"))
 
 local jugador = Players.LocalPlayer
 
@@ -33,6 +39,9 @@ local carpetaRemotos = game:GetService("ReplicatedStorage"):WaitForChild("Remoto
 local remotos = {
 	PedirTiro = carpetaRemotos:WaitForChild("PedirTiro") :: RemoteFunction,
 	Tirar = carpetaRemotos:WaitForChild("Tirar") :: RemoteFunction,
+	ObtenerEstado = carpetaRemotos:WaitForChild("ObtenerEstado") :: RemoteFunction,
+	VolverABajar = carpetaRemotos:WaitForChild("VolverABajar") :: RemoteFunction,
+	EstadoCambio = carpetaRemotos:WaitForChild("EstadoCambio") :: RemoteEvent,
 }
 
 local escena = Escena.armar()
@@ -40,6 +49,11 @@ local total = Numeros.crearTotal(escena.AnclaTotal)
 local tablero = escena.Tablero
 local colorClavija = Color3.fromHex(Config.Colores.Clavija)
 local colorBrillo = Color3.fromHex(Config.Colores.Brillo)
+local monstruo = MonstruoVista.crear(escena.Cartel, escena.BarraMonstruo)
+local pantallas = PantallasModulo.crear()
+
+local estado: Mazmorra.Estado = Mazmorra.nueva() -- se pisa con el del servidor al arrancar
+local tirosPelea = 0 -- para la consola: cuántos tiros lleva la pelea actual
 
 local angulo = 0
 local apuntando = false -- dedo apoyado o botón del mouse apretado
@@ -87,8 +101,117 @@ local function brillar(id: number)
 	end)
 end
 
+-- Dibuja el estado que mandó el servidor (pelea nueva, volver a bajar o comando de prueba).
+local function ponerEstado(e: Mazmorra.Estado)
+	estado = e
+	tirosPelea = 0
+	monstruo.mostrar(e.Piso, e.VidaMonstruo)
+	pantallas.ponerEstado(e)
+	total.poner(0, false)
+	if e.Fase == "peleando" then
+		pantallas.ocultarFinal()
+	end
+end
+
+local mostrarFinal: (Mazmorra.Estado) -> ()
+
+local function volverABajar()
+	local inicio = os.clock()
+	local ok, e = pcall(function()
+		return remotos.VolverABajar:InvokeServer()
+	end)
+	if ok and typeof(e) == "table" then
+		ponerEstado(e)
+		print(("[Mazmorra] Volver a bajar: jugando en %d ms"):format((os.clock() - inicio) * 1000))
+		if estado.Fase ~= "peleando" then
+			mostrarFinal(estado)
+		end
+	else
+		warn("No se pudo volver a bajar")
+		mostrarFinal(estado)
+	end
+end
+
+mostrarFinal = function(e: Mazmorra.Estado)
+	if e.Fase == "perdio" then
+		pantallas.mostrarFinal(
+			("Caíste en el piso %d"):format(e.Piso),
+			"Volver a bajar",
+			volverABajar
+		)
+	elseif e.Fase == "gano" then
+		pantallas.mostrarFinal("¡Ganaste la mazmorra!", "Volver", volverABajar)
+	end
+end
+
+local colorCaballero = Color3.fromHex(Config.Colores.Caballero)
+local colorGolpe = Color3.fromHex(Config.Colores.Golpe)
+
+-- Bolita de luz del TOTAL al cartel del monstruo.
+local function volarTotal()
+	local luz = Instance.new("Part")
+	luz.Name = "LuzTotal"
+	luz.Shape = Enum.PartType.Ball
+	luz.Size = Vector3.new(1.4, 1.4, 1.4)
+	luz.Material = Enum.Material.Neon
+	luz.Color = Color3.fromHex(Config.Colores.Numero)
+	luz.Anchored = true
+	luz.CanCollide = false
+	luz.CanTouch = false
+	luz.CanQuery = false
+	luz.CastShadow = false
+	luz.Position = escena.AnclaTotal.Position
+	luz.Parent = escena.Cartel.Parent
+	local tween = TweenService:Create(
+		luz,
+		TweenInfo.new(Config.Turno.VueloTotal, Enum.EasingStyle.Quad, Enum.EasingDirection.In),
+		{ Position = monstruo.centro() + Vector3.new(0, 0, 1) }
+	)
+	tween:Play()
+	tween.Completed:Wait()
+	luz:Destroy()
+end
+
+-- Anima lo que pasó en el turno (todo lo decidió el servidor).
+local function animarTurno(turno: Mazmorra.Turno)
+	local t = Config.Turno
+	tirosPelea += 1
+	volarTotal()
+	monstruo.recibir()
+	monstruo.ponerVida(turno.VidaMonstruo, true)
+	task.wait(t.Sacudida)
+
+	if turno.Golpe > 0 then
+		monstruo.atacar()
+		task.wait(t.DuracionAtaque / 2)
+		escena.sacudir(t.TemblorPantalla, t.DuracionTemblor)
+		escena.Caballero.Color = colorGolpe
+		pantallas.ponerVida(turno.VidaCaballero, estado.VidaMaxima)
+		task.wait(t.DuracionAtaque / 2)
+		escena.Caballero.Color = colorCaballero
+	end
+
+	local e = turno.Estado
+	if turno.Resultado == "piso" then
+		print(("[Mazmorra] Pelea %d ganada en %d tiros"):format(estado.Piso, tirosPelea))
+		task.wait(0.3)
+		pantallas.anunciar(("¡Piso %d!"):format(e.Piso))
+		ponerEstado(e)
+	elseif turno.Resultado == "gano" then
+		print(("[Mazmorra] Jefe ganado en %d tiros"):format(tirosPelea))
+		estado = e
+		mostrarFinal(e)
+	elseif turno.Resultado == "perdio" then
+		print(("[Mazmorra] Caíste en el piso %d (tiro %d de la pelea)"):format(e.Piso, tirosPelea))
+		estado = e
+		mostrarFinal(e)
+	else
+		estado = e
+	end
+end
+
 local function tirar()
-	if tirando then
+	if tirando or estado.Fase ~= "peleando" or pantallas.hayFinal() then
 		return
 	end
 	tirando = true
@@ -139,13 +262,13 @@ local function tirar()
 		if i >= ultimo then
 			conexion:Disconnect()
 			bola.Transparency = 1
-			-- El servidor revisa y devuelve el daño que vale.
-			local okTiro, danio = pcall(function()
+			-- El servidor revisa el daño, juega el turno y devuelve qué pasó.
+			local okTiro, turno = pcall(function()
 				return remotos.Tirar:InvokeServer(numeroTiro, anguloTiro, res.Danio)
 			end)
-			local final = if okTiro and typeof(danio) == "number" then danio else res.Danio
-			if final ~= res.Danio then
-				total.poner(final, true)
+			local danio = if okTiro and typeof(turno) == "table" then turno.Danio else nil
+			if danio and danio ~= res.Danio then
+				total.poner(danio, true)
 			end
 			print(
 				("[Tiro %d] ángulo %.1f° · %d clavijas · daño %d (servidor: %s) · %.1f s"):format(
@@ -157,14 +280,27 @@ local function tirar()
 					(ultimo - 1) * paso
 				)
 			)
+			if danio then
+				animarTurno(turno)
+			else
+				-- Tiro rechazado (por ejemplo, un comando de prueba lo anuló): volver al estado real.
+				local okEstado, e = pcall(function()
+					return remotos.ObtenerEstado:InvokeServer()
+				end)
+				if okEstado and typeof(e) == "table" then
+					ponerEstado(e)
+				end
+			end
 			tirando = false
 			dibujarLinea()
 		end
 	end)
 end
 
+-- Un clic que empieza con la pantalla final abierta (o justo al cerrarla) no apunta ni tira:
+-- si no, tocar "Volver a bajar" también soltaba una bola.
 UserInputService.InputBegan:Connect(function(input: InputObject, procesado: boolean)
-	if procesado then
+	if procesado or pantallas.hayFinal() or os.clock() - pantallas.finalCerrado() < 0.3 then
 		return
 	end
 	local tipo = input.UserInputType
@@ -178,7 +314,8 @@ UserInputService.InputChanged:Connect(function(input: InputObject)
 	local tipo = input.UserInputType
 	-- El mouse apunta siempre; el dedo, mientras está apoyado.
 	if
-		tipo == Enum.UserInputType.MouseMovement or (tipo == Enum.UserInputType.Touch and apuntando)
+		tipo == Enum.UserInputType.MouseMovement
+		or (tipo == Enum.UserInputType.Touch and apuntando)
 	then
 		apuntarA(Vector2.new(input.Position.X, input.Position.Y))
 	end
@@ -190,10 +327,53 @@ UserInputService.InputEnded:Connect(function(input: InputObject)
 		(tipo == Enum.UserInputType.MouseButton1 or tipo == Enum.UserInputType.Touch) and apuntando
 	then
 		apuntando = false
+		if pantallas.hayFinal() or os.clock() - pantallas.finalCerrado() < 0.3 then
+			return
+		end
 		apuntarA(Vector2.new(input.Position.X, input.Position.Y))
 		tirar()
 	end
 end)
+
+-- Comando de prueba, solo en Studio: teclas 1 a 7 saltan a esa pelea y 0 pone 999 de vida.
+local prueba = if RunService:IsStudio() then carpetaRemotos:WaitForChild("Prueba", 3) else nil
+if RunService:IsStudio() and prueba and prueba:IsA("RemoteEvent") then
+	local teclas = {
+		[Enum.KeyCode.One] = 1,
+		[Enum.KeyCode.Two] = 2,
+		[Enum.KeyCode.Three] = 3,
+		[Enum.KeyCode.Four] = 4,
+		[Enum.KeyCode.Five] = 5,
+		[Enum.KeyCode.Six] = 6,
+		[Enum.KeyCode.Seven] = 7,
+	}
+	UserInputService.InputBegan:Connect(function(input: InputObject, procesado: boolean)
+		if procesado then
+			return
+		end
+		local piso = teclas[input.KeyCode]
+		if piso then
+			prueba:FireServer("piso", piso)
+		elseif input.KeyCode == Enum.KeyCode.Zero then
+			prueba:FireServer("vida", 999)
+		end
+	end)
+end
+
+remotos.EstadoCambio.OnClientEvent:Connect(function(e: Mazmorra.Estado)
+	if typeof(e) == "table" then
+		ponerEstado(e)
+	end
+end)
+
+local okInicio, inicial = pcall(function()
+	return remotos.ObtenerEstado:InvokeServer()
+end)
+if okInicio and typeof(inicial) == "table" then
+	ponerEstado(inicial)
+else
+	ponerEstado(estado)
+end
 
 dibujarLinea()
 print("Plinko Knight: tablero listo")

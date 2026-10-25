@@ -1,7 +1,7 @@
 # Plinko Knight — ficha del prototipo
 
 Origen: `plinko-knight/PLAN-Y-PROMPTS.md` (25/10/2026) + idea de arte aprobada (`plinko-knight/arte/IDEA-DE-ARTE.md`).
-Estado: **aprobada por Juani el 25/10/2026** (punto de control 1). Etapas 2 (tablero, puntería y bola) y 3 (daño y revisión del servidor) hechas el 25/10/2026; lo próximo es la etapa 4: monstruos, contraataque y la mazmorra.
+Estado: **aprobada por Juani el 25/10/2026** (punto de control 1). Etapas 2 (tablero, puntería y bola), 3 (daño y revisión del servidor) y 4 (monstruos y mazmorra) hechas el 25/10/2026; lo próximo es la etapa 5: mejoras 1 de 3.
 Carpeta: `plinko-knight/` (código en `plinko-knight/src/`, Rojo con `rojo serve plinko-knight`, puerto 34876). Place propio: `plinko-knight/PlinkoKnight.rbxl`.
 
 ## Concepto
@@ -103,4 +103,31 @@ Mazos de bolas, reto diario, ranking, **cualquier cosa con Robux**, varias mazmo
 - **Revisión** (`shared/Revision.luau`): repite la simulación y **el daño que vale es siempre el del servidor** (con tope de 2000). Como es el mismo módulo, en un tiro normal coincide con el del cliente. Si el del cliente difiere más del 5 %, se avisa en la consola, sin castigar al jugador.
 - **Prueba con Lune:** en los 200 tiros cliente y servidor coinciden, y un daño falso de 9999 termina usando el del servidor.
 - **En Studio:** 5 tiros con daño de 20 a 30, todos iguales en cliente y servidor. Un tiro mandado a mano con 9999 se corrigió a 26 con aviso en la consola. Repetir el tiro, un ángulo de 85° y un número inválido (NaN) se rechazan.
+
+### Etapa 4 · Monstruos, contraataque y la mazmorra (25/10/2026)
+
+- **Reglas** (`shared/Mazmorra.luau`, sin Roblox, se prueba con Lune): el daño del tiro le pega al monstruo; si sigue vivo, contraataca con su golpe. Al ganar pasás al piso siguiente y te curás `Config.CuraEntrePeleas` (10) sin pasarte del máximo. Al ganarle al jefe termina la mazmorra. Lo decide todo el servidor: `Tirar` devuelve qué pasó en el turno y el cliente solo lo anima.
+- **Números en `Config.luau`:** `Config.VidaCaballero` (50), `Config.CuraEntrePeleas` (10) y `Config.Monstruos` con los 7 de la tabla (nombres de prueba: Rata de Cloaca, Slime Verde, Murciélago, Esqueleto, Goblin con Lanza, Gólem de Piedra y el jefe Rey de los Huesos). Cada uno tiene un color de graybox. Los tiempos de la animación están en `Config.Turno`.
+- **Graybox:** el monstruo es un cartel fino a la derecha del tablero (no abajo: así quedó en la ficha), con un rectángulo de su color, su nombre abajo y la barra de vida arriba. El caballero es un bloque azul a la izquierda del lanzador. Arriba: "Vida 46/50" a la izquierda y "Pelea 3 de 7" al centro.
+- **Turno:** una bolita de luz va del TOTAL al cartel (0,3 s), el cartel se sacude y baja su barra. Si sigue vivo, se agranda y vuelve, la pantalla tiembla apenas, el caballero se pone rojo y baja tu vida.
+- **Pantallas:** "¡Piso N!" al ganar una pelea. "Caíste en el piso N" con un botón grande "Volver a bajar", y "¡Ganaste la mazmorra!" con "Volver". Volver a bajar tarda **65 ms** entre el toque y estar jugando.
+- **Arreglo:** tocar el botón de volver también soltaba una bola. Ahora, mientras está la pantalla final y hasta 0,3 s después de cerrarla, los clics no apuntan ni tiran.
+- **Comando de prueba, solo en Studio:** las teclas **1 a 7** saltan a esa pelea y la **0** te pone 999 de vida (para llegar al jefe sin mejoras). Es con teclas y no con el chat porque este place usa el chat viejo, que Roblox ya no carga. El remoto `Prueba` solo existe en Studio.
+- **Prueba con Lune** (`lune run plinko-knight/pruebas/mazmorra`): las reglas andan, y además juega 500 mazmorras con tiros al azar, sin mejoras.
+
+#### Balance medido (sin mejoras, como queda en esta etapa)
+
+| Pelea | Vida / golpe | Tiros en Studio | Tiros con Lune (2000 mazmorras) |
+|---|---|---|---|
+| 1 · Rata de Cloaca | 40 / 4 | 2 | 2,0 |
+| 2 · Slime Verde | 60 / 5 | 3 | 2,7 |
+| 3 · Murciélago | 85 / 6 | 4 | 3,6 |
+| 4 · Esqueleto | 115 / 7 | 6 | 4,8 |
+| 5 · Goblin con Lanza | 150 / 8 | caí al 3.er tiro | 5,0 (el 97,5 % cae acá) |
+| 6 · Gólem de Piedra | 190 / 9 | — | nadie llega a ganarla |
+| 7 · Rey de los Huesos | 320 / 11 | 13 y 12 (con vida 999) | 12,2 (con vida de sobra) |
+
+- Sin mejoras se pierde en el piso 5, dentro del objetivo (pisos 4 a 6). Desde la pelea 4 se pasa de los 2 a 4 tiros por pelea, pero eso lo tienen que bajar las mejoras de la etapa 5.
+- **El jefe, como está, no se puede ganar.** Tarda unos 12 tiros y te pega 11 por tiro: con 50 de vida caés en 5. Aun con el doble de daño por las mejoras, son 6 tiros y 66 de daño.
+- **Propuesta (todavía no aplicada, la decide Juani):** jefe en **240 de vida y 8 de golpe**, y volver a medir todo al terminar la etapa 5, con mejoras.
 

@@ -8,6 +8,7 @@ export type Monstruo = {
 	Nombre: string,
 	Vida: number,
 	Golpe: number, -- daño que te hace cuando contraataca
+	Color: string, -- graybox: el rectángulo del cartel (hex)
 	EsJefe: boolean?,
 }
 
@@ -64,20 +65,26 @@ Config.Danio = {
 	PorClavija = 2, -- cada clavija cuenta una sola vez por tiro
 }
 
-Config.Caballero = {
-	Vida = 50,
-	CuraEntrePeleas = 10,
-}
+-- El caballero: vida al empezar la mazmorra y cuánto se cura al ganar cada pelea.
+Config.VidaCaballero = 50
+Config.CuraEntrePeleas = 10
 
--- Las 6 peleas y el jefe, en orden.
+-- Las 6 peleas y el jefe, en orden (nombres de prueba hasta el arte final).
 Config.Monstruos = {
-	{ Id = "rata", Nombre = "Rata de cloaca", Vida = 40, Golpe = 4 },
-	{ Id = "slime", Nombre = "Slime", Vida = 60, Golpe = 5 },
-	{ Id = "murcielago", Nombre = "Murciélago", Vida = 85, Golpe = 6 },
-	{ Id = "esqueleto", Nombre = "Esqueleto", Vida = 115, Golpe = 7 },
-	{ Id = "goblin", Nombre = "Goblin", Vida = 150, Golpe = 8 },
-	{ Id = "golem", Nombre = "Gólem", Vida = 190, Golpe = 9 },
-	{ Id = "jefe", Nombre = "Rey de los Huesos", Vida = 320, Golpe = 11, EsJefe = true },
+	{ Id = "rata", Nombre = "Rata de Cloaca", Vida = 40, Golpe = 4, Color = "#8A6E5A" },
+	{ Id = "slime", Nombre = "Slime Verde", Vida = 60, Golpe = 5, Color = "#5FBF4A" },
+	{ Id = "murcielago", Nombre = "Murciélago", Vida = 85, Golpe = 6, Color = "#7A5AA8" },
+	{ Id = "esqueleto", Nombre = "Esqueleto", Vida = 115, Golpe = 7, Color = "#E6E0CC" },
+	{ Id = "goblin", Nombre = "Goblin con Lanza", Vida = 150, Golpe = 8, Color = "#3E8C6E" },
+	{ Id = "golem", Nombre = "Gólem de Piedra", Vida = 190, Golpe = 9, Color = "#6E7A8A" },
+	{
+		Id = "jefe",
+		Nombre = "Rey de los Huesos",
+		Vida = 320,
+		Golpe = 11,
+		Color = "#C9A227",
+		EsJefe = true,
+	},
 } :: { Monstruo }
 
 -- Mejoras (1 de 3 entre peleas). "Repetida" = qué cambia cada vez que la elegís de nuevo.
@@ -109,6 +116,19 @@ Config.Servidor = {
 	MargenDanio = 0.05, -- si el daño que vio el cliente difiere más que esto (5 %), se avisa
 	TopeDanioPorTiro = 2000, -- por si algo sale mal
 	TiempoMinimoEntreTiros = 1, -- segundos entre dos tiros del mismo jugador
+	TiempoMinimoVolver = 0.5, -- segundos entre dos "Volver a bajar" del mismo jugador
+}
+
+-- Animación del turno (cliente, etapa 4).
+Config.Turno = {
+	VueloTotal = 0.3, -- segundos que tarda la bolita de luz del TOTAL al cartel
+	Sacudida = 0.35, -- segundos que se sacude el monstruo al recibir el golpe
+	BajadaBarra = 0.4, -- segundos que tarda en bajar una barra de vida
+	Agrandar = 1.2, -- tamaño del cartel cuando contraataca (1 = normal)
+	DuracionAtaque = 0.35, -- segundos de ida y vuelta del contraataque
+	TemblorPantalla = 0.35, -- studs: cuánto se mueve la cámara (apenas)
+	DuracionTemblor = 0.25,
+	CartelPiso = 1.2, -- segundos que se ve "¡Piso N!"
 }
 
 -- Números que saltan en pantalla (cliente).
@@ -128,6 +148,11 @@ Config.Colores = {
 	Fondo = "#3A3A3A",
 	Brillo = "#FFF6B0", -- clavija tocada
 	Numero = "#FFF200", -- amarillo de prueba de los "+2" y el TOTAL
+	Caballero = "#5A78B4",
+	Golpe = "#E2323F", -- el caballero se pone de este color cuando lo golpean
+	VidaMonstruo = "#E2323F",
+	VidaCaballero = "#4CC46A",
+	FondoBarra = "#202020",
 }
 
 return Config

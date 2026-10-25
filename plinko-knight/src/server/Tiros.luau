@@ -1,13 +1,15 @@
 --!strict
 -- Remotos de los tiros. El cliente pide un tiro (recibe número y semilla), simula y dibuja, y
--- al terminar manda el ángulo y el daño que vio. El servidor revisa y devuelve el daño que vale.
---   PedirTiro() -> (numeroTiro, semilla)
---   Tirar(numeroTiro, angulo, danioVisto) -> danio  (nil si el pedido no es válido)
+-- al terminar manda el ángulo y el daño que vio. El servidor revisa el daño, juega el turno de la
+-- mazmorra (golpe al monstruo y contraataque) y devuelve qué pasó para que el cliente lo anime.
+--   PedirTiro() -> (numeroTiro, semilla)  (nil si no estás peleando)
+--   Tirar(numeroTiro, angulo, danioVisto) -> Mazmorra.Turno  (nil si el pedido no es válido)
 
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local Shared = ReplicatedStorage:WaitForChild("Shared")
 local Config = require(Shared:WaitForChild("Config"))
+local Mazmorra = require(Shared:WaitForChild("Mazmorra"))
 local Revision = require(Shared:WaitForChild("Revision"))
 local TableroModulo = require(Shared:WaitForChild("Tablero"))
 local Partida = require(script.Parent:WaitForChild("Partida"))
@@ -23,7 +25,7 @@ end
 
 local function pedirTiro(jugador: Player): (number?, number?)
 	local p = Partida.de(jugador)
-	if not p then
+	if not p or p.Estado.Fase ~= "peleando" then
 		return nil, nil
 	end
 	-- Si ya hay un tiro pendiente se devuelve el mismo: pedir de nuevo no cambia la semilla.
@@ -34,9 +36,14 @@ local function pedirTiro(jugador: Player): (number?, number?)
 	return p.NumeroTiro, p.Semilla
 end
 
-local function tirar(jugador: Player, numeroTiro: any, angulo: any, danioVisto: any): number?
+local function tirar(
+	jugador: Player,
+	numeroTiro: any,
+	angulo: any,
+	danioVisto: any
+): Mazmorra.Turno?
 	local p = Partida.de(jugador)
-	if not p then
+	if not p or p.Estado.Fase ~= "peleando" then
 		return nil
 	end
 	if not (numeroValido(numeroTiro) and numeroValido(angulo) and numeroValido(danioVisto)) then
@@ -67,7 +74,7 @@ local function tirar(jugador: Player, numeroTiro: any, angulo: any, danioVisto: 
 			)
 		)
 	end
-	return r.Danio
+	return Mazmorra.turno(p.Estado, r.Danio)
 end
 
 function Tiros.iniciar()
