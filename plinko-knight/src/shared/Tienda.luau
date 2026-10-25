@@ -165,8 +165,20 @@ end
 local function sortearReliquias(
 	azar: () -> number,
 	usadas: { [string]: boolean },
-	cantidad: number
+	cantidad: number,
+	disponibles: { string }?
 ): { string }
+	-- Solo las desbloqueadas (etapa 6); sin lista, todas.
+	local permitidas: { [string]: boolean }? = nil
+	if disponibles and #disponibles > 0 then
+		permitidas = {}
+		for _, id in disponibles do
+			(permitidas :: { [string]: boolean })[id] = true
+		end
+	end
+	local function vale(id: string): boolean
+		return not usadas[id] and (permitidas == nil or permitidas[id] == true)
+	end
 	local pesoTotal = 0
 	for _, r in Config.Rarezas do
 		pesoTotal += r.Peso
@@ -184,13 +196,13 @@ local function sortearReliquias(
 		end
 		local posibles = {}
 		for _, id in Config.OrdenReliquias do
-			if Reliquias.datos(id).Rareza == rareza and not usadas[id] then
+			if Reliquias.datos(id).Rareza == rareza and vale(id) then
 				table.insert(posibles, id)
 			end
 		end
 		if #posibles == 0 then -- ya tenés todas las de esa rareza: cualquiera que no tengas
 			for _, id in Config.OrdenReliquias do
-				if not usadas[id] then
+				if vale(id) then
 					table.insert(posibles, id)
 				end
 			end
@@ -213,7 +225,8 @@ function Tienda.generar(semilla: number, e: Estado?): { Item }
 	for _, r in (if e then e.Reliquias else {}) :: { Reliquias.Tenida } do
 		usadas[r.Id] = true
 	end
-	for _, id in sortearReliquias(azar, usadas, Config.Tienda.Reliquias) do
+	local disponibles = if e then e.ReliquiasDisponibles else nil
+	for _, id in sortearReliquias(azar, usadas, Config.Tienda.Reliquias, disponibles) do
 		table.insert(
 			items,
 			{ Clase = "reliquia", Id = id, Precio = Reliquias.precio(id), Vendido = false }
@@ -261,7 +274,12 @@ function Tienda.abrir(e: Estado, semilla: number)
 			usadas[r.Id] = true
 		end
 		-- Otra semilla para el cofre (así no repite las reliquias de la tienda).
-		cofre = sortearReliquias(Azar.nuevo(semilla + 7919), usadas, Config.Cofre.Reliquias)
+		cofre = sortearReliquias(
+			Azar.nuevo(semilla + 7919),
+			usadas,
+			Config.Cofre.Reliquias,
+			e.ReliquiasDisponibles
+		)
 		e.CofrePendiente = false
 	end
 	e.Tienda =

@@ -14,6 +14,8 @@
 -- Paso 5c: la fila de reliquias (TiendaVista). Al final de cada tiro, las que actuaron saltan en
 -- orden y muestran lo que sumaron o multiplicaron.
 -- Paso 5d: zona y pelea arriba, cartel con la maña del jefe, "Próximo" en la tienda y el cofre.
+-- Etapa 6: el progreso guardado llega del servidor (remoto Progreso). Antes de cada partida
+-- (fase "inicio") se elige la bola; al desbloquear algo sale un aviso grande.
 -- Input con UserInputService: los otros juegos no usan el Input Action System.
 
 local Players = game:GetService("Players")
@@ -25,6 +27,7 @@ local Shared = game:GetService("ReplicatedStorage"):WaitForChild("Shared")
 local Config = require(Shared:WaitForChild("Config"))
 local Simulacion = require(Shared:WaitForChild("Simulacion"))
 local Clavijas = require(Shared:WaitForChild("Clavijas"))
+local ProgresoModulo = require(Shared:WaitForChild("Progreso"))
 local TiendaModulo = require(Shared:WaitForChild("Tienda"))
 local Mazmorra = require(Shared:WaitForChild("Mazmorra"))
 local Escena = require(script.Parent:WaitForChild("Escena"))
@@ -57,6 +60,8 @@ local remotos = {
 	Tienda = carpetaRemotos:WaitForChild("Tienda") :: RemoteFunction,
 	UsarPergamino = carpetaRemotos:WaitForChild("UsarPergamino") :: RemoteFunction,
 	EstadoCambio = carpetaRemotos:WaitForChild("EstadoCambio") :: RemoteEvent,
+	Progreso = carpetaRemotos:WaitForChild("Progreso") :: RemoteEvent,
+	ObtenerProgreso = carpetaRemotos:WaitForChild("ObtenerProgreso") :: RemoteFunction,
 }
 
 local escena = Escena.armar()
@@ -71,6 +76,10 @@ local pantallas = PantallasModulo.crear()
 local seleccion = SeleccionModulo.crear(escena)
 
 local estado: Mazmorra.Estado = Mazmorra.nueva() -- se pisa con el del servidor al arrancar
+estado.Fase = "inicio" -- hasta que el servidor termine de cargar el progreso, no se tira
+local progreso: ProgresoModulo.Datos? = nil
+local abrirInicio: () -> ()
+local mostrarAvisos: () -> ()
 local tirosPelea = 0 -- para la consola: cuántos tiros lleva la pelea actual
 
 local angulo = 0
@@ -177,6 +186,9 @@ local function ponerEstado(e: Mazmorra.Estado)
 	end
 	if e.Fase == "peleando" then
 		pantallas.ocultarFinal()
+		pantallas.ocultarInicio()
+	elseif e.Fase == "inicio" then
+		abrirInicio()
 	end
 end
 
@@ -283,20 +295,33 @@ tiendaVista = TiendaVistaModulo.crear({
 
 local mostrarFinal: (Mazmorra.Estado) -> ()
 
-local function volverABajar()
+-- Elegiste la bola: el servidor revisa que la tengas y arranca la partida.
+local function volverABajar(bola: string)
 	local inicio = os.clock()
 	local ok, e = pcall(function()
-		return remotos.VolverABajar:InvokeServer()
+		return remotos.VolverABajar:InvokeServer(bola)
 	end)
 	if ok and typeof(e) == "table" then
 		ponerEstado(e)
-		print(("[Mazmorra] Volver a bajar: jugando en %d ms"):format((os.clock() - inicio) * 1000))
+		print(
+			("[Mazmorra] Bajás con la bola %s: jugando en %d ms"):format(
+				bola,
+				(os.clock() - inicio) * 1000
+			)
+		)
 		if estado.Fase ~= "peleando" then
-			mostrarFinal(estado)
+			abrirInicio() -- no se aceptó: elegir de nuevo
 		end
 	else
 		warn("No se pudo volver a bajar")
-		mostrarFinal(estado)
+		abrirInicio()
+	end
+end
+
+-- Pantalla de inicio: elegir bola (necesita el progreso; si todavía no llegó, espera).
+abrirInicio = function()
+	if progreso then
+		pantallas.mostrarInicio(progreso, volverABajar)
 	end
 end
 
@@ -305,10 +330,10 @@ mostrarFinal = function(e: Mazmorra.Estado)
 		pantallas.mostrarFinal(
 			("Caíste en el piso %d"):format(e.Piso),
 			"Volver a bajar",
-			volverABajar
+			abrirInicio
 		)
 	elseif e.Fase == "gano" then
-		pantallas.mostrarFinal("¡Ganaste la mazmorra!", "Volver", volverABajar)
+		pantallas.mostrarFinal("¡Ganaste la mazmorra!", "Volver", abrirInicio)
 	end
 end
 
@@ -521,6 +546,7 @@ local function tirar()
 				end
 			end
 			tirando = false
+			task.spawn(mostrarAvisos)
 			dibujarLinea()
 		end
 	end)
@@ -572,6 +598,7 @@ end)
 -- Comando de prueba, solo en Studio: teclas 1 a 7 saltan a esa pelea, 0 pone 999 de vida,
 -- Z cambia de bola, X convierte 2 grises (cada vez un tipo distinto), C sube de nivel todos los
 -- tipos de clavija, 8 da 20 de oro, 9 agrega un pergamino y R una reliquia (cada vez una distinta).
+-- L hace como si salieras y volvieras a entrar (prueba del guardado).
 local prueba = if RunService:IsStudio() then carpetaRemotos:WaitForChild("Prueba", 3) else nil
 if RunService:IsStudio() and prueba and prueba:IsA("RemoteEvent") then
 	local tipoPrueba = 0
@@ -608,6 +635,8 @@ if RunService:IsStudio() and prueba and prueba:IsA("RemoteEvent") then
 		elseif input.KeyCode == Enum.KeyCode.Nine then
 			pergaminoPrueba += 1
 			prueba:FireServer("pergamino", pergaminoPrueba)
+		elseif input.KeyCode == Enum.KeyCode.L then
+			prueba:FireServer("recargar", 0)
 		elseif input.KeyCode == Enum.KeyCode.R then
 			reliquiaPrueba += 1
 			prueba:FireServer("reliquia", reliquiaPrueba)
@@ -621,14 +650,70 @@ remotos.EstadoCambio.OnClientEvent:Connect(function(e: Mazmorra.Estado)
 	end
 end)
 
-local okInicio, inicial = pcall(function()
-	return remotos.ObtenerEstado:InvokeServer()
-end)
-if okInicio and typeof(inicial) == "table" then
-	ponerEstado(inicial)
-else
-	ponerEstado(estado)
+-- Avisos de desbloqueo, uno por uno. Si llegan con la bola en juego, esperan a que termine el
+-- turno (si no, el aviso anticipaba que ibas a ganar la pelea).
+local avisosPendientes: { any } = {}
+local mostrandoAvisos = false
+mostrarAvisos = function()
+	if mostrandoAvisos then
+		return
+	end
+	mostrandoAvisos = true
+	while #avisosPendientes > 0 do
+		local n = table.remove(avisosPendientes, 1)
+		pantallas.anunciar(
+			if n.Tipo == "bola"
+				then ("¡Nueva bola: %s!"):format(n.Nombre)
+				else ("¡Nueva reliquia: %s!"):format(n.Nombre)
+		)
+		task.wait(Config.Turno.CartelPiso + 0.4)
+	end
+	mostrandoAvisos = false
 end
+
+-- Progreso guardado: llega al cargar y cada vez que cambia (mejor piso, desbloqueos). Lo nuevo
+-- sale en un aviso grande, uno por uno.
+remotos.Progreso.OnClientEvent:Connect(function(datos: any, nuevos: any)
+	if typeof(datos) ~= "table" then
+		return
+	end
+	progreso = datos
+	if estado.Fase == "inicio" then
+		abrirInicio() -- se dibuja con el progreso nuevo (mejor piso, bolas, la elegida)
+	end
+	if typeof(nuevos) == "table" then
+		for _, n in nuevos do
+			print(("[Progreso] Desbloqueaste %s: %s"):format(n.Tipo, n.Nombre))
+			table.insert(avisosPendientes, n)
+		end
+		if not tirando then
+			task.spawn(mostrarAvisos)
+		end
+	end
+end)
+
+-- El estado de la partida: mientras el servidor carga el progreso devuelve nil (se reintenta).
+task.spawn(function()
+	for _ = 1, 60 do
+		local ok, inicial = pcall(function()
+			return remotos.ObtenerEstado:InvokeServer()
+		end)
+		if ok and typeof(inicial) == "table" then
+			if not progreso then
+				local okP, datos = pcall(function()
+					return remotos.ObtenerProgreso:InvokeServer()
+				end)
+				if okP and typeof(datos) == "table" then
+					progreso = datos
+				end
+			end
+			ponerEstado(inicial)
+			return
+		end
+		task.wait(0.5)
+	end
+	warn("No llegó el estado de la partida")
+end)
 
 dibujarLinea()
 print("Plinko Knight: tablero listo")

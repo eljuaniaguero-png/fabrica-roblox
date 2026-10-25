@@ -1,11 +1,11 @@
 --!strict
 -- La partida de cada jugador, en el servidor: la mazmorra (piso, vidas, fase, tablero de
--- clavijas, bola y oro, todo en Estado) y el tiro en curso. Por ahora no se guarda (etapa 6).
-
-local Players = game:GetService("Players")
+-- clavijas, bola y oro, todo en Estado), el tiro en curso y su progreso guardado (Progreso, lo
+-- carga server/Guardado). La partida en curso no se guarda: si sale a la mitad, empieza de cero.
 
 local Shared = game:GetService("ReplicatedStorage"):WaitForChild("Shared")
 local Mazmorra = require(Shared:WaitForChild("Mazmorra"))
+local Progreso = require(Shared:WaitForChild("Progreso"))
 
 export type Partida = {
 	Estado: Mazmorra.Estado,
@@ -13,7 +13,8 @@ export type Partida = {
 	Semilla: number?, -- semilla del tiro pedido; nil si no hay uno pendiente
 	UltimoTiro: number, -- os.clock() del último tiro aceptado
 	UltimoVolver: number, -- os.clock() del último "Volver a bajar"
-	Bola: string, -- la bola con la que baja (hasta la pantalla de elegir bola, etapa 7)
+	Bola: string, -- la bola con la que baja (la elige en la fase "inicio")
+	Progreso: Progreso.Datos, -- lo que se guarda (mejor piso, desbloqueos, logros…)
 	UltimaAccion: number, -- os.clock() de la última compra / pergamino (límite de frecuencia)
 }
 
@@ -40,36 +41,39 @@ function Partida.de(jugador: Player): Partida?
 	return partidas[jugador]
 end
 
-function Partida.iniciar(jugador: Player): Partida
+-- Con el progreso ya cargado: la partida arranca en la fase "inicio" (elegir bola).
+function Partida.iniciar(jugador: Player, datos: Progreso.Datos): Partida
+	local bola = if Progreso.tieneBola(datos, datos.BolaElegida)
+		then datos.BolaElegida
+		else "hierro"
 	local p: Partida = {
-		Estado = Mazmorra.nueva(),
+		Estado = Mazmorra.nueva(bola, datos.ReliquiasDesbloqueadas),
 		NumeroTiro = 0,
 		Semilla = nil,
 		UltimoTiro = -math.huge,
 		UltimoVolver = -math.huge,
-		Bola = "hierro",
+		Bola = bola,
 		UltimaAccion = -math.huge,
+		Progreso = datos,
 	}
 	sortear(p)
+	p.Estado.Fase = "inicio"
 	partidas[jugador] = p
 	return p
 end
 
--- Mazmorra nueva desde el piso 1: tablero todo gris otra vez y sin el tiro pendiente.
-function Partida.reiniciar(p: Partida)
-	p.Estado = Mazmorra.nueva(p.Bola)
+-- Mazmorra nueva desde el piso 1 con la bola elegida: tablero todo gris otra vez, sin el tiro
+-- pendiente y con las reliquias desbloqueadas hasta ahora.
+function Partida.empezar(p: Partida, bola: string)
+	p.Bola = bola
+	p.Estado = Mazmorra.nueva(bola, p.Progreso.ReliquiasDesbloqueadas)
 	p.Semilla = nil
 	sortear(p)
+	Progreso.alEmpezar(p.Progreso, bola)
 end
 
-Players.PlayerAdded:Connect(Partida.iniciar)
-for _, jugador in Players:GetPlayers() do
-	if not partidas[jugador] then
-		Partida.iniciar(jugador)
-	end
-end
-Players.PlayerRemoving:Connect(function(jugador: Player)
+function Partida.quitar(jugador: Player)
 	partidas[jugador] = nil
-end)
+end
 
 return Partida

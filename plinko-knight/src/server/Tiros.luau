@@ -18,6 +18,9 @@ local TiendaModulo = require(Shared:WaitForChild("Tienda"))
 local Revision = require(Shared:WaitForChild("Revision"))
 local TableroModulo = require(Shared:WaitForChild("Tablero"))
 local Partida = require(script.Parent:WaitForChild("Partida"))
+local Guardado = require(script.Parent:WaitForChild("Guardado"))
+local Peleas = require(script.Parent:WaitForChild("Peleas"))
+local Progreso = require(Shared:WaitForChild("Progreso"))
 
 local Tiros = {}
 
@@ -82,7 +85,19 @@ local function tirar(
 	end
 	Mazmorra.cobrarTiro(e, r.Oro, r.Rotas)
 	e.Furia = false
+	-- Logros (etapa 6): lo que pasó en el tiro y en el turno.
+	local nuevos = Progreso.alTirar(p.Progreso, e, r.Resultado)
+	local piso, bola = e.Piso, e.Bola
 	local turno = Mazmorra.turno(e, r.Danio, r.Quemadura)
+	for _, n in Progreso.alTurno(p.Progreso, e, turno, piso, bola) do
+		table.insert(nuevos, n)
+	end
+	if #nuevos > 0 then
+		Guardado.guardarYa(jugador) -- un desbloqueo no se pierde aunque se caiga el servidor
+	end
+	if #nuevos > 0 or turno.Resultado ~= "sigue" then
+		task.defer(Peleas.avisarProgreso, jugador, nuevos)
+	end
 	if e.Fase == "tienda" then
 		TiendaModulo.abrir(e, Partida.semilla())
 		turno.Estado = Mazmorra.copiar(e)

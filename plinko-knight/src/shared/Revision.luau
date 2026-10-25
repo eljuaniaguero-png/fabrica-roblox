@@ -17,6 +17,7 @@ export type Revisado = {
 	Quemadura: number, -- daño por turno que deja la bola de fuego (0 sin fuego)
 	Oro: number, -- el de las doradas
 	Rotas: { number }, -- azules que se rompieron
+	Resultado: Simulacion.Resultado, -- el tiro entero del servidor (para los logros)
 }
 
 local Revision = {}
@@ -38,6 +39,7 @@ function Revision.revisar(
 		Quemadura = res.Quemadura,
 		Oro = res.Oro,
 		Rotas = res.Rotas,
+		Resultado = res,
 	}
 end
 

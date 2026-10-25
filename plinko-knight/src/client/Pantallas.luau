@@ -2,6 +2,8 @@
 -- Pantallas en graybox: la barra de arriba (vida del caballero, oro y piso), el cartel
 -- "¡Piso N!", las pantallas de perder y de ganar la mazmorra con un botón grande y la fila de
 -- abajo con tu bola y tus clavijas especiales (paso 5a). La tienda está en TiendaVista.
+-- Etapa 6: la pantalla de inicio (antes de cada partida): tu mejor zona y elegir la bola entre las
+-- desbloqueadas; las bloqueadas dicen cómo se consiguen.
 -- Las pantallas lindas llegan en la etapa 7.
 
 local Players = game:GetService("Players")
@@ -11,6 +13,7 @@ local Shared = game:GetService("ReplicatedStorage"):WaitForChild("Shared")
 local Config = require(Shared:WaitForChild("Config"))
 local Mazmorra = require(Shared:WaitForChild("Mazmorra"))
 local Clavijas = require(Shared:WaitForChild("Clavijas"))
+local Progreso = require(Shared:WaitForChild("Progreso"))
 
 export type Pantallas = {
 	ponerEstado: (estado: Mazmorra.Estado) -> (),
@@ -19,7 +22,10 @@ export type Pantallas = {
 	mostrarFinal: (titulo: string, boton: string, alTocar: () -> ()) -> (),
 	ocultarFinal: () -> (),
 	ponerTablero: (estado: Mazmorra.Estado) -> (), -- la fila de abajo y el oro
-	hayFinal: () -> boolean, -- pantalla de perder o ganar abierta: mientras tanto no se tira
+	-- Inicio: elegir bola. alElegir recibe el Id de la bola.
+	mostrarInicio: (progreso: Progreso.Datos, alElegir: (string) -> ()) -> (),
+	ocultarInicio: () -> (),
+	hayFinal: () -> boolean, -- final o inicio abiertos: mientras tanto no se tira
 	finalCerrado: () -> number, -- os.clock() de la última vez que se cerró la pantalla final
 }
 
@@ -85,8 +91,14 @@ function Pantallas.crear(): Pantallas
 	mania.TextColor3 = Color3.fromHex(Config.Colores.Golpe)
 	mania.Visible = false
 
-	-- Cartel grande en el medio ("¡Piso 2!").
-	local anuncio = texto(gui, "")
+	-- Cartel grande en el medio ("¡Piso 2!", "¡Nueva bola: Fuego!"). En su propia capa, arriba de
+	-- todo: si no, el cofre (que se abre al mismo tiempo) tapaba los avisos de desbloqueo.
+	local guiAvisos = Instance.new("ScreenGui")
+	guiAvisos.Name = "Avisos"
+	guiAvisos.ResetOnSpawn = false
+	guiAvisos.DisplayOrder = 30
+	guiAvisos.Parent = gui.Parent
+	local anuncio = texto(guiAvisos, "")
 	anuncio.AnchorPoint = Vector2.new(0.5, 0.5)
 	anuncio.Position = UDim2.fromScale(0.5, 0.45)
 	anuncio.Size = UDim2.fromScale(0.6, 0.18)
@@ -204,6 +216,132 @@ function Pantallas.crear(): Pantallas
 		end
 	end
 
+	-- Pantalla de inicio (etapa 6): en el mismo ScreenGui que la final, tapando todo.
+	local inicio = Instance.new("Frame")
+	inicio.Name = "Inicio"
+	inicio.Size = UDim2.fromScale(1, 1)
+	inicio.BackgroundColor3 = Color3.new(0, 0, 0)
+	inicio.BackgroundTransparency = 0.25
+	inicio.Visible = false
+	inicio.ZIndex = 10
+	inicio.Parent = guiFinal
+	local tituloInicio = texto(inicio, "Plinko Knight")
+	tituloInicio.AnchorPoint = Vector2.new(0.5, 0)
+	tituloInicio.Position = UDim2.fromScale(0.5, 0.08)
+	tituloInicio.Size = UDim2.fromScale(0.6, 0.14)
+	tituloInicio.ZIndex = 11
+	local mejor = texto(inicio, "")
+	mejor.AnchorPoint = Vector2.new(0.5, 0)
+	mejor.Position = UDim2.fromScale(0.5, 0.23)
+	mejor.Size = UDim2.fromScale(0.6, 0.06)
+	mejor.Font = Enum.Font.GothamBold
+	mejor.TextColor3 = Color3.fromHex(Config.Colores.Oro)
+	mejor.ZIndex = 11
+	local elegi = texto(inicio, "Elegí con qué bola bajás")
+	elegi.AnchorPoint = Vector2.new(0.5, 0)
+	elegi.Position = UDim2.fromScale(0.5, 0.31)
+	elegi.Size = UDim2.fromScale(0.5, 0.07)
+	elegi.ZIndex = 11
+	local mesaBolas = Instance.new("Frame")
+	mesaBolas.AnchorPoint = Vector2.new(0.5, 0)
+	mesaBolas.Position = UDim2.fromScale(0.5, 0.42)
+	mesaBolas.Size = UDim2.fromScale(0.8, 0.45)
+	mesaBolas.BackgroundTransparency = 1
+	mesaBolas.ZIndex = 11
+	mesaBolas.Parent = inicio
+	local ordenBolas = Instance.new("UIListLayout")
+	ordenBolas.FillDirection = Enum.FillDirection.Horizontal
+	ordenBolas.HorizontalAlignment = Enum.HorizontalAlignment.Center
+	ordenBolas.Padding = UDim.new(0.03, 0)
+	ordenBolas.SortOrder = Enum.SortOrder.LayoutOrder
+	ordenBolas.Parent = mesaBolas
+	local alElegirBola: ((string) -> ())? = nil
+
+	local function mostrarInicio(progreso: Progreso.Datos, alElegir: (string) -> ())
+		for _, hijo in mesaBolas:GetChildren() do
+			if hijo:IsA("GuiButton") then
+				hijo:Destroy()
+			end
+		end
+		mejor.Text = if progreso.MejorPiso > 0
+			then ("Tu mejor: pelea %d de %d · jefes vencidos: %d · partidas ganadas: %d"):format(
+				progreso.MejorPiso,
+				#Config.Monstruos,
+				progreso.JefesVencidos,
+				progreso.PartidasGanadas
+			)
+			else "Bajá a la mazmorra y llegá lo más lejos que puedas"
+		for orden, id in Config.OrdenBolas do
+			local d = (Config.Bolas :: any)[id]
+			local tiene = Progreso.tieneBola(progreso, id)
+			local carta = Instance.new("TextButton")
+			carta.Name = "Bola" .. id
+			carta.LayoutOrder = orden
+			carta.Size = UDim2.fromScale(0.3, 1)
+			carta.BackgroundColor3 = Color3.fromHex(Config.Colores.Carta)
+			carta.BackgroundTransparency = if tiene then 0 else 0.5
+			carta.BorderSizePixel = 0
+			carta.AutoButtonColor = tiene
+			carta.Text = ""
+			carta.ZIndex = 11
+			carta.Parent = mesaBolas
+			local redondeo = Instance.new("UICorner")
+			redondeo.CornerRadius = UDim.new(0.06, 0)
+			redondeo.Parent = carta
+			local borde = Instance.new("UIStroke")
+			borde.Thickness = if id == progreso.BolaElegida then 5 else 2
+			borde.Color = if id == progreso.BolaElegida
+				then Color3.fromHex(Config.Colores.Oro)
+				else Color3.fromRGB(120, 120, 120)
+			borde.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+			borde.Parent = carta
+			local muestra = Instance.new("Frame")
+			muestra.AnchorPoint = Vector2.new(0.5, 0)
+			muestra.Position = UDim2.fromScale(0.5, 0.08)
+			muestra.Size = UDim2.fromScale(0.25, 0.25)
+			muestra.SizeConstraint = Enum.SizeConstraint.RelativeXX
+			muestra.BackgroundColor3 = Color3.fromHex(
+				if id == "fuego" then Config.Colores.BolaFuego else Config.Colores.Bola
+			)
+			muestra.BackgroundTransparency = if tiene then 0 else 0.6
+			muestra.BorderSizePixel = 0
+			muestra.ZIndex = 12
+			muestra.Parent = carta
+			local circulo = Instance.new("UICorner")
+			circulo.CornerRadius = UDim.new(0.5, 0)
+			circulo.Parent = muestra
+			local nombre = texto(carta, d.Nombre)
+			nombre.Position = UDim2.fromScale(0.06, 0.42)
+			nombre.Size = UDim2.fromScale(0.88, 0.18)
+			nombre.ZIndex = 12
+			local detalle = texto(carta, if tiene then d.Descripcion else "Bloqueada: " .. d.Logro)
+			detalle.Font = Enum.Font.GothamBold
+			detalle.TextWrapped = true
+			detalle.TextStrokeTransparency = 1
+			detalle.TextColor3 = if tiene
+				then Color3.new(1, 1, 1)
+				else Color3.fromRGB(170, 170, 170)
+			detalle.Position = UDim2.fromScale(0.08, 0.64)
+			detalle.Size = UDim2.fromScale(0.84, 0.3)
+			detalle.ZIndex = 12
+			local limite = Instance.new("UITextSizeConstraint")
+			limite.MaxTextSize = 26
+			limite.Parent = detalle
+			if tiene then
+				carta.Activated:Connect(function()
+					local accion = alElegirBola
+					if accion then
+						alElegirBola = nil -- un solo toque
+						accion(id)
+					end
+				end)
+			end
+		end
+		alElegirBola = alElegir
+		final.Visible = false
+		inicio.Visible = true
+	end
+
 	local alTocarBoton: (() -> ())? = nil
 	boton.Activated:Connect(function()
 		local accion = alTocarBoton
@@ -264,8 +402,16 @@ function Pantallas.crear(): Pantallas
 			final.Visible = false
 		end,
 		ponerTablero = ponerTablero,
+		mostrarInicio = mostrarInicio,
+		ocultarInicio = function()
+			alElegirBola = nil
+			if inicio.Visible then
+				cerrado = os.clock()
+			end
+			inicio.Visible = false
+		end,
 		hayFinal = function(): boolean
-			return final.Visible
+			return final.Visible or inicio.Visible
 		end,
 		finalCerrado = function(): number
 			return cerrado

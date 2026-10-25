@@ -1,7 +1,7 @@
 # Plinko Knight — ficha del prototipo
 
 Origen: `plinko-knight/PLAN-Y-PROMPTS.md` (25/10/2026) + idea de arte aprobada (`plinko-knight/arte/IDEA-DE-ARTE.md`).
-Estado: **aprobada por Juani el 25/10/2026** (punto de control 1). Etapas 2 (tablero, puntería y bola), 3 (daño y revisión del servidor), 4 (monstruos y mazmorra) y 5 (mejoras 1 de 3) hechas el 25/10/2026. Juani jugó la prueba de 5 minutos (perdió en el piso 6: "está bueno") y pidió hacerlo **más roguelike, estilo Balatro**. **Rediseño aprobado el 25/10/2026.** Pasos 5a a 5d del rediseño hechos el 25/10 (Fuerza × Multi, clavijas, tienda, reliquias, zonas, mañas y cofre). **Punto de control: prototipo jugable de nuevo**, esperando la prueba de 10 minutos de Juani.
+Estado: **aprobada por Juani el 25/10/2026** (punto de control 1). Etapas 2 (tablero, puntería y bola), 3 (daño y revisión del servidor), 4 (monstruos y mazmorra) y 5 (mejoras 1 de 3) hechas el 25/10/2026. Juani jugó la prueba de 5 minutos (perdió en el piso 6: "está bueno") y pidió hacerlo **más roguelike, estilo Balatro**. **Rediseño aprobado el 25/10/2026.** Pasos 5a a 5d del rediseño hechos el 25/10; Juani lo jugó 10 minutos y dijo OK. Etapa 6 (guardado) hecha el 25/10; lo próximo es la etapa 7 (pantallas).
 Carpeta: `plinko-knight/` (código en `plinko-knight/src/`, Rojo con `rojo serve plinko-knight`, puerto 34876). Place propio: `plinko-knight/PlinkoKnight.rbxl`.
 
 ## Rediseño roguelike (aprobado el 25/10/2026)
@@ -151,7 +151,7 @@ Al empezar la partida elegís con qué bola bajás. Cada una cambia el estilo de
 | Partida | se parte en 2 en el toque 5 | ganarle a un jefe |
 | (después) Cristal, Oro, Eco… | una por familia de reliquias | logros |
 
-**Desbloqueos de reliquias:** de las 20, arrancás con 12; las otras 8 se desbloquean con logros ("hacé un golpe de 10.000", "ganá una pelea con 4 bolas en juego", "terminá una zona con 20 de oro"). Es el motivo para volver (lo que el algoritmo de Roblox mide a 28 días).
+**Desbloqueos de reliquias:** de las 20, arrancás con 12; las otras 8 se desbloquean con logros (la lista quedó en la etapa 6). Es el motivo para volver (lo que el algoritmo de Roblox mide a 28 días).
 
 ## Sistemas del prototipo (orden nuevo)
 
@@ -393,4 +393,42 @@ Armar una familia rinde mucho más que comprar al azar: las sinergias funcionan.
 
 - Se cumple lo que pedía la ficha: comprando al azar se pierde casi siempre en la zona 2. Armando una familia se le gana al jefe de la zona 2 alrededor de la mitad de las veces, y a veces se gana todo.
 - El bot tira a cualquier lado; una persona apunta, así que debería irle mejor. **Lo que falta saber jugando:** si la zona 3 es demasiado dura para la familia de las rojas, y si la del oro es demasiado lenta al principio.
+
+### Etapa 6 · Guardado (25/10/2026)
+
+- **`server/Guardado.luau` con ProfileStore**, con la misma forma que el de Forja Rápida:
+  - Bloqueo de sesión: si otro servidor toma tu sesión, te saca de este.
+  - Autoguardado cada 300 s y guardado al salir.
+  - Al cerrar el servidor, ProfileStore guarda a todos en paralelo.
+  - Cuando Roblox avisa que reinicia el servidor (`ServerRestartScheduled`), se guarda a todos.
+  - Si falla la carga: "No pudimos cargar tu progreso, volvé a entrar", sin dejarte jugar sin guardar.
+  - Almacén: `Config.Guardado.Almacen` ("PlinkoKnight_Jugadores_v1").
+- **Qué se guarda** (`shared/Progreso.luau`, `Config.VERSION = 1`): mejor pelea, mejor zona, mejor golpe, bolas y reliquias desbloqueadas, logros, bola elegida, partidas jugadas y ganadas, y jefes vencidos. **La partida en curso no se guarda**: si salís a la mitad, la próxima vez empezás de cero. La migración (`Progreso.migrar`) completa lo que falte, descarta lo que ya no existe y los números rotos.
+- **Pantalla de inicio**, antes de cada partida (al entrar y después de perder o ganar): tu mejor pelea, jefes vencidos y partidas ganadas, y elegir la bola. Las bloqueadas aparecen en gris y dicen cómo se consiguen. La elegida queda marcada (y guardada). El servidor solo te deja bajar con una bola desbloqueada.
+- **Logros y desbloqueos** (los revisa el servidor después de cada tiro y cada turno; números en `Config.Logros`):
+
+| Desbloquea | Cómo |
+|---|---|
+| Bola de fuego | llegar a la zona 2 |
+| Bola partida | ganarle a un jefe |
+| Enjambre | tener 4 bolas en juego en un tiro |
+| Avaro | terminar una zona con 20 de oro o más |
+| Racha | ganar 3 peleas seguidas sin que te peguen |
+| Yesca | ganarle a un jefe con la bola de fuego |
+| Último Aliento | ganar una pelea con menos de 10 de vida |
+| Corona del Rey Caído | hacer un golpe de 10.000 o más |
+| Eco Infinito | que una clavija cuente 3 veces |
+| Mano de Midas | juntar 40 de oro en una partida |
+
+  Al desbloquear sale un aviso grande ("¡Nueva bola: Fuego!") cuando termina la animación del turno, por encima de todo (también del cofre). La tienda y el cofre solo ofrecen reliquias desbloqueadas. Un desbloqueo se guarda enseguida.
+- **Arreglos que salieron probando:**
+  - Al salir, la partida se borraba antes del guardado final y se perdía lo último (por ejemplo, la bola elegida). Ahora los datos se copian en el momento de salir.
+  - La pantalla de inicio se dibujaba con el progreso viejo. Ahora el servidor manda primero el progreso y la pantalla se redibuja cuando llega.
+  - El aviso de desbloqueo quedaba tapado por el cofre y salía antes de que terminara el tiro.
+- **Comando de prueba, solo en Studio:** **L** hace como si salieras y volvieras a entrar: cierra tu sesión guardando y la vuelve a cargar del almacén.
+- **Prueba con Lune** (`lune run plinko-knight/pruebas/progreso`): jugador nuevo, migración de datos rotos o viejos, cada logro una sola vez, tienda y cofre solo con desbloqueadas, y 40 partidas del bot donde el mejor piso guardado coincide con el jugado.
+- **En Studio:** entré con solo Hierro; el servidor rechazó bajar con Fuego y con un dato raro. Le gané al Rey Rata: se desbloquearon Fuego y Partida. Con L (salir y volver), la partida empezó de cero pero quedaron el mejor piso 3, 1 jefe, las 3 bolas y la bola elegida (Fuego).
+- **Pendiente (no se pudo probar acá):**
+  - **Guardado de verdad entre sesiones:** este place no está publicado, así que Studio usa la versión de prueba de ProfileStore ("data will not be saved"). Cuando Juani lo publique: Game Settings → Security → Enable Studio Access to API Services, y probar salir y volver de verdad.
+  - **Local Server con 2 jugadores:** el MCP no puede abrirlo. Cada jugador usa su propia clave ("Jugador_" + UserId), así que no se mezclan, pero hay que probarlo: Studio → Test → Clients and Servers → 2 jugadores → Start.
 

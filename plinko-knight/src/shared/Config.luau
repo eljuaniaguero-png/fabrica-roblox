@@ -291,15 +291,39 @@ Config.Reliquias = {
 	},
 	cadena = { Nombre = "Cadena", Rareza = "comun", Desbloqueo = "inicio", Multi = 2, Cada = 5 },
 	gemela = { Nombre = "Gemela", Rareza = "comun", Desbloqueo = "inicio", Toque = 6 },
-	enjambre = { Nombre = "Enjambre", Rareza = "rara", Desbloqueo = "logro", PorBola = 1.5 },
+	enjambre = {
+		Nombre = "Enjambre",
+		Rareza = "rara",
+		Desbloqueo = "logro",
+		Logro = "Tené 4 bolas en juego en un tiro",
+		PorBola = 1.5,
+	},
 	hoja = { Nombre = "Hoja Afilada", Rareza = "comun", Desbloqueo = "inicio", Factor = 2 },
 	bolsa = { Nombre = "Bolsa de Cuero", Rareza = "comun", Desbloqueo = "inicio", InteresTope = 10 },
-	avaro = { Nombre = "Avaro", Rareza = "rara", Desbloqueo = "logro", Multi = 1, Cada = 2 },
+	avaro = {
+		Nombre = "Avaro",
+		Rareza = "rara",
+		Desbloqueo = "logro",
+		Logro = "Terminá una zona con 20 de oro o más",
+		Multi = 1,
+		Cada = 2,
+	},
 	toqueOro = { Nombre = "Toque de Oro", Rareza = "comun", Desbloqueo = "inicio", PorMulti = 1.5 },
 	trofeo = { Nombre = "Trofeo", Rareza = "rara", Desbloqueo = "inicio", Multi = 1 },
 	callo = { Nombre = "Callo", Rareza = "comun", Desbloqueo = "inicio", Fuerza = 3 },
-	racha = { Nombre = "Racha", Rareza = "rara", Desbloqueo = "logro", PorPelea = 0.25 },
-	yesca = { Nombre = "Yesca", Rareza = "rara", Desbloqueo = "logro" },
+	racha = {
+		Nombre = "Racha",
+		Rareza = "rara",
+		Desbloqueo = "logro",
+		Logro = "Ganá 3 peleas seguidas sin que te peguen",
+		PorPelea = 0.25,
+	},
+	yesca = {
+		Nombre = "Yesca",
+		Rareza = "rara",
+		Desbloqueo = "logro",
+		Logro = "Ganale a un jefe con la bola de fuego",
+	},
 	-- Vidrio: la azul ya es ×2 (paso 5a), así que con Vidrio pasa a ×3 y se rompe 1 de cada 2.
 	vidrio = {
 		Nombre = "Vidrio Frágil",
@@ -312,6 +336,7 @@ Config.Reliquias = {
 		Nombre = "Último Aliento",
 		Rareza = "rara",
 		Desbloqueo = "logro",
+		Logro = "Ganá una pelea con menos de 10 de vida",
 		Vida = 15,
 		Factor = 3,
 	},
@@ -320,15 +345,23 @@ Config.Reliquias = {
 		Nombre = "Corona del Rey Caído",
 		Rareza = "legendaria",
 		Desbloqueo = "logro",
+		Logro = "Hacé un golpe de 10.000 o más",
 		Factor = 2,
 	},
 	ecoInfinito = {
 		Nombre = "Eco Infinito",
 		Rareza = "legendaria",
 		Desbloqueo = "logro",
+		Logro = "Hacé que una clavija cuente 3 veces",
 		Veces = 4,
 	},
-	midas = { Nombre = "Mano de Midas", Rareza = "legendaria", Desbloqueo = "logro", Oro = 1 },
+	midas = {
+		Nombre = "Mano de Midas",
+		Rareza = "legendaria",
+		Desbloqueo = "logro",
+		Logro = "Juntá 40 de oro en una partida",
+		Oro = 1,
+	},
 }
 
 Config.LugaresPergamino = 2
@@ -344,17 +377,21 @@ Config.Pergaminos = {
 -- La de fuego y la partida son las mejoras de la etapa 5 convertidas.
 Config.OrdenBolas = { "hierro", "fuego", "partida" }
 Config.Bolas = {
-	hierro = { Nombre = "Hierro", Desbloqueo = "inicio" },
+	hierro = { Nombre = "Hierro", Desbloqueo = "inicio", Descripcion = "La de siempre" },
 	fuego = {
 		Nombre = "Fuego",
-		Desbloqueo = "zona2", -- llegar a la zona 2
+		Descripcion = "+1 Fuerza por clavija y el monstruo se quema",
+		Desbloqueo = "zona2",
+		Logro = "Llegá a la zona 2",
 		FuerzaExtra = 1, -- por cada clavija tocada
 		Quemadura = 3, -- daño por turno al monstruo
 		TurnosQuemadura = 2, -- cada tiro lo vuelve a prender por estos turnos
 	},
 	partida = {
 		Nombre = "Partida",
+		Descripcion = "Se parte en 2 en el toque 5",
 		Desbloqueo = "jefe",
+		Logro = "Ganale a un jefe",
 		ToqueParaDividir = 5,
 		Partes = 2,
 		-- Grados entre las dos bolas al partirse: AnguloDivision ± AnguloAzar (con la semilla).
@@ -367,6 +404,25 @@ Config.Bolas = {
 Config.TopeBolas = 4
 Config.TopeDanioTiro = 10000000
 Config.TopeMulti = 1000000
+
+-- Logros (etapa 6): los números de lo que desbloquea cada bola y cada reliquia (ver Desbloqueo y
+-- Logro en Config.Bolas y Config.Reliquias). Los revisa el servidor (shared/Progreso).
+Config.Logros = {
+	ZonaFuego = 2, -- llegar a esta zona desbloquea la bola de fuego
+	EnjambreBolas = 4,
+	AvaroOro = 20,
+	RachaPeleas = 3,
+	AlientoVida = 10,
+	CoronaGolpe = 10000,
+	EcoVeces = 3,
+	MidasOro = 40,
+}
+
+-- Guardado (etapa 6, server/Guardado): nombre del DataStore de ProfileStore. Cambiarlo borra
+-- todo lo guardado (es otro almacén), así que solo se cambia a propósito.
+Config.Guardado = {
+	Almacen = "PlinkoKnight_Jugadores_v1",
+}
 
 -- Revisión del servidor (etapa 3, server/Tiros.luau).
 Config.Servidor = {

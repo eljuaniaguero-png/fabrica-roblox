@@ -1,7 +1,11 @@
 --!strict
 -- Remotos de la mazmorra (los tiros están en Tiros.luau):
 --   ObtenerEstado() -> Mazmorra.Estado
---   VolverABajar() -> Mazmorra.Estado  (solo después de perder o de ganar la mazmorra)
+--   VolverABajar(bola) -> Mazmorra.Estado  (en la fase "inicio" o después de perder o ganar: arranca
+--   una partida con esa bola, si está desbloqueada)
+--   Progreso (servidor -> cliente): (datos, nuevos) el progreso guardado y lo que se acaba de
+--   desbloquear (para el aviso grande)
+--   ObtenerProgreso() -> datos  (nil mientras carga)
 --   Tienda(accion, indice, clavijas) -> (Mazmorra.Estado, error?)  acciones: "comprar" (el ítem
 --   indice; clavijas = { id } para una mejora de clavija), "vender" (la reliquia del lugar indice),
 --   "mover" (la reliquia del lugar indice al lugar que viene en clavijas), "cofre" (llevarse la
@@ -26,14 +30,34 @@ local Mazmorra = require(Shared:WaitForChild("Mazmorra"))
 local Clavijas = require(Shared:WaitForChild("Clavijas"))
 local TiendaModulo = require(Shared:WaitForChild("Tienda"))
 local Reliquias = require(Shared:WaitForChild("Reliquias"))
+local Progreso = require(Shared:WaitForChild("Progreso"))
 local Partida = require(script.Parent:WaitForChild("Partida"))
 
 local Peleas = {}
 
 local estadoCambio: RemoteEvent
 
-local function avisar(jugador: Player, p: Partida.Partida)
+local progresoRemoto: RemoteEvent
+
+local function avisarA(jugador: Player, p: Partida.Partida)
 	estadoCambio:FireClient(jugador, Mazmorra.copiar(p.Estado))
+end
+local avisar = avisarA
+
+-- Manda el estado de la partida (por ejemplo, al terminar de cargar).
+function Peleas.avisar(jugador: Player)
+	local p = Partida.de(jugador)
+	if p then
+		avisarA(jugador, p)
+	end
+end
+
+-- Manda el progreso guardado y lo nuevo que se desbloqueó.
+function Peleas.avisarProgreso(jugador: Player, nuevos: { Progreso.Nuevo })
+	local p = Partida.de(jugador)
+	if p and progresoRemoto then
+		progresoRemoto:FireClient(jugador, Progreso.copiar(p.Progreso), nuevos)
+	end
 end
 
 -- Comando de prueba: salta a la pelea del piso pedido (con el tiro pendiente anulado).
@@ -112,7 +136,7 @@ function Peleas.iniciar()
 
 	local volver = Instance.new("RemoteFunction")
 	volver.Name = "VolverABajar"
-	volver.OnServerInvoke = function(jugador: Player): Mazmorra.Estado?
+	volver.OnServerInvoke = function(jugador: Player, bola: any): Mazmorra.Estado?
 		local p = Partida.de(jugador)
 		if not p then
 			return nil
@@ -120,13 +144,15 @@ function Peleas.iniciar()
 		local ahora = os.clock()
 		local fase = p.Estado.Fase
 		if
-			(fase ~= "perdio" and fase ~= "gano")
+			(fase ~= "inicio" and fase ~= "perdio" and fase ~= "gano")
+			or not Progreso.tieneBola(p.Progreso, bola)
 			or ahora - p.UltimoVolver < Config.Servidor.TiempoMinimoVolver
 		then
 			return Mazmorra.copiar(p.Estado) -- no se puede: se devuelve como está
 		end
 		p.UltimoVolver = ahora
-		Partida.reiniciar(p)
+		Partida.empezar(p, bola)
+		Peleas.avisarProgreso(jugador, {}) -- partidas jugadas y bola elegida
 		return Mazmorra.copiar(p.Estado)
 	end
 	volver.Parent = carpeta
@@ -204,6 +230,19 @@ function Peleas.iniciar()
 	estadoCambio = Instance.new("RemoteEvent")
 	estadoCambio.Name = "EstadoCambio"
 	estadoCambio.Parent = carpeta
+
+	progresoRemoto = Instance.new("RemoteEvent")
+	progresoRemoto.Name = "Progreso"
+	progresoRemoto.Parent = carpeta
+
+	-- Por si el cliente se perdió el primer aviso: lo pide (nil mientras carga).
+	local obtenerProgreso = Instance.new("RemoteFunction")
+	obtenerProgreso.Name = "ObtenerProgreso"
+	obtenerProgreso.OnServerInvoke = function(jugador: Player): Progreso.Datos?
+		local p = Partida.de(jugador)
+		return if p then Progreso.copiar(p.Progreso) else nil
+	end
+	obtenerProgreso.Parent = carpeta
 
 	if RunService:IsStudio() then
 		local prueba = Instance.new("RemoteEvent")

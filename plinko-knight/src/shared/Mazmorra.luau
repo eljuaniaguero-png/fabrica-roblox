@@ -13,6 +13,8 @@
 -- Paso 5d: 3 zonas de 3 peleas. Cada jefe tiene una maña (sorteada al empezar la partida); acá
 -- están las que cambian el turno (avaricia, coraza, rabia). Al ganarle a un jefe queda un cofre
 -- pendiente para la tienda.
+-- Etapa 6: la fase "inicio" (elegir con qué bola bajar, antes de cada partida), las reliquias que
+-- puede ofrecer la tienda (las desbloqueadas) y la racha de peleas ganadas sin que te peguen.
 
 local Azar = require(script.Parent.Azar)
 local Clavijas = require(script.Parent.Clavijas)
@@ -22,7 +24,7 @@ local TableroModulo = require(script.Parent.Tablero)
 
 local CANTIDAD_CLAVIJAS = #TableroModulo.generar().Clavijas
 
-export type Fase = "peleando" | "tienda" | "perdio" | "gano"
+export type Fase = "inicio" | "peleando" | "tienda" | "perdio" | "gano"
 
 export type ItemTienda = {
 	Clase: string, -- "clavija" o "pergamino"
@@ -60,6 +62,8 @@ export type Estado = {
 	ManiasJefes: { string }, -- la maña de cada jefe (una por zona), sorteada al empezar
 	Mania: string, -- la de esta pelea ("" si no es un jefe)
 	CofrePendiente: boolean, -- le ganaste a un jefe: la próxima tienda trae el cofre
+	ReliquiasDisponibles: { string }, -- las que pueden salir en tienda y cofre (vacía = todas)
+	PeleasSinGolpe: number, -- peleas seguidas ganadas sin que te peguen (logro de la Racha)
 	TirosPelea: number, -- tiros en la pelea actual (para el bonus de oro)
 	UltimoOro: OroGanado,
 	Quemando: number, -- turnos que le quedan de quemadura al monstruo
@@ -86,7 +90,7 @@ function Mazmorra.monstruo(piso: number): Config.Monstruo
 	return Config.Monstruos[math.clamp(piso, 1, #Config.Monstruos)]
 end
 
-function Mazmorra.nueva(bola: string?): Estado
+function Mazmorra.nueva(bola: string?, disponibles: { string }?): Estado
 	return {
 		Piso = 1,
 		Vida = Config.VidaCaballero,
@@ -105,6 +109,8 @@ function Mazmorra.nueva(bola: string?): Estado
 		ManiasJefes = {},
 		Mania = "",
 		CofrePendiente = false,
+		ReliquiasDisponibles = if disponibles then table.clone(disponibles) else {},
+		PeleasSinGolpe = 0,
 		TirosPelea = 0,
 		UltimoOro = { Pelea = 0, Bonus = 0, Interes = 0 },
 		Quemando = 0,
@@ -134,6 +140,7 @@ function Mazmorra.copiar(e: Estado): Estado
 		CofreTomado = e.Tienda.CofreTomado,
 	}
 	copia.ManiasJefes = table.clone(e.ManiasJefes)
+	copia.ReliquiasDisponibles = table.clone(e.ReliquiasDisponibles)
 	return copia
 end
 
@@ -273,6 +280,7 @@ function Mazmorra.turno(e: Estado, danio: number, quemadura: number?): Turno
 		golpe = monstruo.Golpe * (if e.Mania == "rabia" then Config.Manias.rabia.Factor else 1)
 		e.Vida = math.max(e.Vida - golpe, 0)
 		e.Golpeado = true
+		e.PeleasSinGolpe = 0
 		local racha = Reliquias.buscar(e.Reliquias, "racha")
 		if racha then
 			racha.Contador = 0
@@ -300,6 +308,9 @@ function Mazmorra.turno(e: Estado, danio: number, quemadura: number?): Turno
 		local racha = Reliquias.buscar(e.Reliquias, "racha")
 		if racha and not e.Golpeado then
 			racha.Contador += 1
+		end
+		if not e.Golpeado then
+			e.PeleasSinGolpe += 1
 		end
 	end
 	if resultado == "piso" then
