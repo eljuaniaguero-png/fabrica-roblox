@@ -23,6 +23,7 @@ export type Escena = {
 	Clavijas: { [number]: BasePart },
 	Bola: BasePart,
 	Puntos: { BasePart },
+	AnclaTotal: BasePart,
 	aMundo: (x: number, y: number, z: number?) -> Vector3,
 	aTablero: (posicionPantalla: Vector2) -> (number, number),
 }
@@ -119,6 +120,16 @@ function Escena.armar(): Escena
 		Config.Colores.Gris
 	)
 
+	-- Ancla del TOTAL, arriba del monstruo (entre las columnas no entra: hay 3 studs).
+	local anclaTotal = parte(
+		"AnclaTotal",
+		modelo,
+		Vector3.new(1, 1, 1),
+		CFrame.new(aMundo(xMonstruo, centroY + ALTO_MONSTRUO / 2 + 3.5, 1)),
+		Config.Colores.Gris
+	)
+	anclaTotal.Transparency = 1
+
 	-- Clavijas: cilindros mirando a la cámara.
 	local clavijas: { [number]: BasePart } = {}
 	for _, c in tablero.Clavijas do
@@ -195,6 +206,7 @@ function Escena.armar(): Escena
 		Clavijas = clavijas,
 		Bola = bola,
 		Puntos = puntos,
+		AnclaTotal = anclaTotal,
 		aMundo = aMundo,
 		aTablero = aTablero,
 	}

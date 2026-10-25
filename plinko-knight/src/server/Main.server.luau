@@ -1,5 +1,7 @@
 --!strict
--- Arranque del servidor de Plinko Knight. Por ahora solo avisa que arrancó: la mecánica llega
--- en la etapa 2 (ver ideas/plinko-knight.md).
+-- Arranque del servidor de Plinko Knight: la partida de cada jugador y los remotos de los tiros.
 
-print("Plinko Knight arrancó")
+require(script.Parent:WaitForChild("Partida"))
+require(script.Parent:WaitForChild("Tiros")).iniciar()
+
+print("Plinko Knight: servidor listo")

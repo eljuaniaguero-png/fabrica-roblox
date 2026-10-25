@@ -1,7 +1,8 @@
 --!strict
--- Cliente de Plinko Knight (etapa 2): arma el tablero, apunta con mouse o dedo y, al soltar,
--- tira la bola. La bola sigue el recorrido de shared/Simulacion (interpolado, así se ve suave a
--- cualquier FPS) y cada clavija tocada brilla un momento. Todavía sin daño ni monstruos.
+-- Cliente de Plinko Knight (etapas 2 y 3): arma el tablero, apunta con mouse o dedo y, al
+-- soltar, pide el tiro al servidor (número y semilla) y tira la bola. La bola sigue el
+-- recorrido de shared/Simulacion (interpolado, así se ve suave a cualquier FPS); cada clavija tocada brilla, salta su "+2" y sube el TOTAL. Al terminar, el
+-- servidor revisa el daño y devuelve el que vale. Todavía sin monstruos.
 -- Input con UserInputService: los otros juegos no usan el Input Action System.
 
 local Players = game:GetService("Players")
@@ -12,6 +13,7 @@ local Shared = game:GetService("ReplicatedStorage"):WaitForChild("Shared")
 local Config = require(Shared:WaitForChild("Config"))
 local Simulacion = require(Shared:WaitForChild("Simulacion"))
 local Escena = require(script.Parent:WaitForChild("Escena"))
+local Numeros = require(script.Parent:WaitForChild("Numeros"))
 
 local jugador = Players.LocalPlayer
 
@@ -27,7 +29,14 @@ task.spawn(function()
 	end
 end)
 
+local carpetaRemotos = game:GetService("ReplicatedStorage"):WaitForChild("Remotos")
+local remotos = {
+	PedirTiro = carpetaRemotos:WaitForChild("PedirTiro") :: RemoteFunction,
+	Tirar = carpetaRemotos:WaitForChild("Tirar") :: RemoteFunction,
+}
+
 local escena = Escena.armar()
+local total = Numeros.crearTotal(escena.AnclaTotal)
 local tablero = escena.Tablero
 local colorClavija = Color3.fromHex(Config.Colores.Clavija)
 local colorBrillo = Color3.fromHex(Config.Colores.Brillo)
@@ -35,7 +44,6 @@ local colorBrillo = Color3.fromHex(Config.Colores.Brillo)
 local angulo = 0
 local apuntando = false -- dedo apoyado o botón del mouse apretado
 local tirando = false -- hay una bola en juego: no se puede tirar otra
-local tiros = 0
 
 -- Línea de puntos: solo el primer tramo del vuelo.
 local function dibujarLinea()
@@ -84,13 +92,23 @@ local function tirar()
 		return
 	end
 	tirando = true
-	tiros += 1
 	dibujarLinea()
-	-- Etapa 3: la semilla la va a dar el servidor. Por ahora, una del reloj (sin math.random).
-	local semilla = math.floor(os.clock() * 1000) + tiros
-	local res = Simulacion.simular(tablero, angulo, Config.Bola, {}, semilla)
+
+	-- El servidor da el número de tiro y la semilla; el ángulo se fija acá.
+	local ok, numeroTiro, semilla = pcall(function()
+		return remotos.PedirTiro:InvokeServer()
+	end)
+	if not ok or typeof(numeroTiro) ~= "number" or typeof(semilla) ~= "number" then
+		warn("No se pudo pedir el tiro al servidor")
+		tirando = false
+		dibujarLinea()
+		return
+	end
+	local anguloTiro = angulo
+	local res = Simulacion.simular(tablero, anguloTiro, Config.Bola, {}, semilla)
 	local bola = escena.Bola
 	bola.Transparency = 0
+	total.poner(0, false)
 
 	local paso = Config.Simulacion.Paso
 	local ultimo = #res.X
@@ -108,21 +126,35 @@ local function tirar()
 		bola.Position = escena.aMundo(x, y, 0.6)
 
 		while siguienteToque <= #res.Toques and res.Toques[siguienteToque].Paso <= i do
-			brillar(res.Toques[siguienteToque].Clavija)
+			local toque = res.Toques[siguienteToque]
+			brillar(toque.Clavija)
+			local clavija = escena.Clavijas[toque.Clavija]
+			if clavija then
+				Numeros.saltar(clavija, toque.Danio)
+			end
+			total.poner(toque.Total, true)
 			siguienteToque += 1
 		end
 
 		if i >= ultimo then
 			conexion:Disconnect()
 			bola.Transparency = 1
+			-- El servidor revisa y devuelve el daño que vale.
+			local okTiro, danio = pcall(function()
+				return remotos.Tirar:InvokeServer(numeroTiro, anguloTiro, res.Danio)
+			end)
+			local final = if okTiro and typeof(danio) == "number" then danio else res.Danio
+			if final ~= res.Danio then
+				total.poner(final, true)
+			end
 			print(
-				("[Tiro %d] ángulo %.1f° · %d clavijas distintas · %d toques · %.1f s · %s"):format(
-					tiros,
-					angulo,
+				("[Tiro %d] ángulo %.1f° · %d clavijas · daño %d (servidor: %s) · %.1f s"):format(
+					numeroTiro,
+					anguloTiro,
 					res.ClavijasDistintas,
-					#res.Toques,
-					(ultimo - 1) * paso,
-					res.Fin
+					res.Danio,
+					tostring(danio),
+					(ultimo - 1) * paso
 				)
 			)
 			tirando = false

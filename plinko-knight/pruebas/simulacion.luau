@@ -2,7 +2,8 @@
 -- Pruebas de la simulación de la bola. Se corren desde la raíz del repositorio:
 --   lune run plinko-knight/pruebas/simulacion
 -- 200 tiros a ángulos distintos: ninguno se traba ni sale por los costados, el mismo tiro da
--- siempre lo mismo, y el promedio de clavijas tocadas queda entre 10 y 18. Sale con error si falla.
+-- siempre lo mismo, y el promedio de clavijas tocadas queda entre 10 y 18. También el daño (cada
+-- clavija suma una sola vez) y la revisión del servidor. Sale con error si falla.
 
 local process = require("@lune/process")
 local cargar = require("./cargar")
@@ -10,6 +11,7 @@ local cargar = require("./cargar")
 local Config = cargar("Config")
 local Tablero = cargar("Tablero")
 local Simulacion = cargar("Simulacion")
+local Revision = cargar("Revision")
 
 local errores = 0
 local function chequear(ok: boolean, mensaje: string)
@@ -67,6 +69,36 @@ for i = 1, TIROS do
 		end
 	end
 	chequear(igual, ("tiro %d: repetirlo dio otro resultado"):format(i))
+
+	-- Daño: cada clavija suma una sola vez, y el total cierra.
+	local vistas: { [number]: boolean } = {}
+	local acumulado = 0
+	for _, t in res.Toques do
+		chequear(
+			not vistas[t.Clavija],
+			("tiro %d: la clavija %d sumó dos veces"):format(i, t.Clavija)
+		)
+		vistas[t.Clavija] = true
+		acumulado += t.Danio
+		chequear(t.Total == acumulado, ("tiro %d: el total acumulado no cierra"):format(i))
+	end
+	chequear(
+		res.Danio == res.ClavijasDistintas * Config.Danio.PorClavija,
+		("tiro %d: daño %d con %d clavijas"):format(i, res.Danio, res.ClavijasDistintas)
+	)
+
+	-- Revisión del servidor: con el daño del cliente (mismo módulo) coincide y no se corrige;
+	-- con un daño falso de 9999 vale el del servidor.
+	local bien = Revision.revisar(tablero, angulo, semilla, {}, res.Danio)
+	chequear(
+		bien.Danio == res.Danio and not bien.Corregido,
+		("tiro %d: cliente y servidor no coinciden"):format(i)
+	)
+	local falso = Revision.revisar(tablero, angulo, semilla, {}, 9999)
+	chequear(
+		falso.Danio == res.Danio and falso.Corregido,
+		("tiro %d: el daño falso no se corrigió"):format(i)
+	)
 
 	suma += res.ClavijasDistintas
 	minimo = math.min(minimo, res.ClavijasDistintas)

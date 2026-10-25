@@ -22,13 +22,17 @@ export type Mejoras = { [string]: number }
 export type Toque = {
 	Clavija: number, -- Id de la clavija
 	Paso: number, -- índice en el recorrido (1 = posición de salida)
+	Danio: number, -- lo que suma este toque
+	Total: number, -- daño acumulado del tiro hasta este toque (incluido)
 }
 
 export type Resultado = {
 	X: { number }, -- posición de la bola en cada paso
 	Y: { number },
-	Toques: { Toque }, -- en orden; un toque nuevo cada vez que la bola vuelve a chocar una clavija
+	-- En orden. Cada clavija aparece una sola vez: la segunda vez la bola rebota pero no suma.
+	Toques: { Toque },
 	ClavijasDistintas: number,
+	Danio: number, -- total del tiro
 	Empujones: number, -- cuántas veces actuó el anti-trabas
 	Fin: string, -- "abajo" (cruzó el borde de abajo) o "tope" (llegó al tiempo máximo)
 }
@@ -80,6 +84,8 @@ function Simulacion.simular(
 	local tocando: { [number]: boolean } = {}
 	local tocadas: { [number]: boolean } = {}
 	local distintas = 0
+	local danio = 0
+	local danioPorClavija = Config.Danio.PorClavija
 	local empujones = 0
 	local fin = "tope"
 
@@ -120,10 +126,16 @@ function Simulacion.simular(
 				end
 				if not tocando[c.Id] then
 					tocando[c.Id] = true
-					table.insert(toques, { Clavija = c.Id, Paso = paso + 1 })
 					if not tocadas[c.Id] then
 						tocadas[c.Id] = true
 						distintas += 1
+						danio += danioPorClavija
+						table.insert(toques, {
+							Clavija = c.Id,
+							Paso = paso + 1,
+							Danio = danioPorClavija,
+							Total = danio,
+						})
 					end
 				end
 			elseif tocando[c.Id] and d2 > (minimo + 0.05) ^ 2 then
@@ -180,6 +192,7 @@ function Simulacion.simular(
 		Y = ys,
 		Toques = toques,
 		ClavijasDistintas = distintas,
+		Danio = danio,
 		Empujones = empujones,
 		Fin = fin,
 	}

@@ -1,7 +1,7 @@
 # Plinko Knight — ficha del prototipo
 
 Origen: `plinko-knight/PLAN-Y-PROMPTS.md` (25/10/2026) + idea de arte aprobada (`plinko-knight/arte/IDEA-DE-ARTE.md`).
-Estado: **aprobada por Juani el 25/10/2026** (punto de control 1). Etapa 2 (tablero, puntería y bola) hecha el 25/10/2026; lo próximo es la etapa 3: daño y revisión del servidor.
+Estado: **aprobada por Juani el 25/10/2026** (punto de control 1). Etapas 2 (tablero, puntería y bola) y 3 (daño y revisión del servidor) hechas el 25/10/2026; lo próximo es la etapa 4: monstruos, contraataque y la mazmorra.
 Carpeta: `plinko-knight/` (código en `plinko-knight/src/`, Rojo con `rojo serve plinko-knight`, puerto 34876). Place propio: `plinko-knight/PlinkoKnight.rbxl`.
 
 ## Concepto
@@ -63,7 +63,7 @@ Objetivo de balance: un tiro normal toca entre 10 y 18 clavijas (20 a 36 de dañ
 
 ## Herramientas de arte y sonido
 
-Juani ya tiene **ForgeGUI** (suscripción paga, 25/10/2026). Es la herramienta principal; **Gemini** queda de reserva, con los prompts de `plinko-knight/PLAN-Y-PROMPTS.md`.
+**ForgeGUI está habilitada** para este juego: Juani la tiene paga, con **350.000 créditos** (25/10/2026). Es la herramienta principal; **Gemini** queda de reserva, con los prompts de `plinko-knight/PLAN-Y-PROMPTS.md`.
 
 - **Etapa 9 (arte final):** monstruos, caballero, íconos de mejoras y de bolas, y fondo de mazmorra.
   - Primero se crea un **estilo de ForgeGUI** con la guía de estilo de la ficha (la que se elija en la etapa 8) y se usa en **todas** las imágenes, así salen parecidas entre sí.
@@ -94,4 +94,13 @@ Mazos de bolas, reto diario, ranking, **cualquier cosa con Robux**, varias mazmo
 - **Pendiente:** la prueba en el emulador de celular (10 tiros y captura). Juani la salteó por ahora; hacerla antes de la etapa 7 (pantallas).
 - **Decisión:** el azar del rebote usa un generador propio con semilla, no `Random.new`, porque `Random` no existe en Lune. Así las pruebas y el juego dan exactamente los mismos números.
 - Cada rebote contra una clavija tiene un desvío chico (hasta 4°) que sale de la semilla: el mismo ángulo no da siempre el mismo recorrido. Por ahora la semilla sale del reloj; desde la etapa 3 la da el servidor.
+
+### Etapa 3 · Daño, números y revisión del servidor (25/10/2026)
+
+- **Daño:** la simulación suma `Config.Danio.PorClavija` (2) por cada clavija, **una sola vez por tiro**. La segunda vez la bola rebota pero no suma ni brilla.
+- **Números en pantalla:** cada toque hace saltar un "+2" amarillo que sube y se desvanece en 0,5 s (se ve entero la primera mitad; si se desvanece desde el arranque, casi no se lee). El **TOTAL** va **arriba del lugar del monstruo**, porque entre el tablero y el monstruo hay solo 3 studs y no entra. Sube con cada toque con un "pop".
+- **Servidor** (`server/Partida.luau` y `server/Tiros.luau`): lleva la partida de cada jugador (piso, vida, mejoras, número de tiro y semilla). `PedirTiro` da el número y la semilla; si se pide otra vez sin tirar, devuelve la misma (así no se puede "volver a sortear" la semilla). `Tirar` valida tipos, números finitos, el tiro que corresponde, el ángulo dentro del abanico y que haya pasado 1 s desde el anterior (`Config.Servidor.TiempoMinimoEntreTiros`).
+- **Revisión** (`shared/Revision.luau`): repite la simulación y **el daño que vale es siempre el del servidor** (con tope de 2000). Como es el mismo módulo, en un tiro normal coincide con el del cliente. Si el del cliente difiere más del 5 %, se avisa en la consola, sin castigar al jugador.
+- **Prueba con Lune:** en los 200 tiros cliente y servidor coinciden, y un daño falso de 9999 termina usando el del servidor.
+- **En Studio:** 5 tiros con daño de 20 a 30, todos iguales en cliente y servidor. Un tiro mandado a mano con 9999 se corrigió a 26 con aviso en la consola. Repetir el tiro, un ángulo de 85° y un número inválido (NaN) se rechazan.
 

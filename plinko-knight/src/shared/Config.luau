@@ -104,11 +104,19 @@ Config.Bolas = {
 	{ Id = "partida", Nombre = "Partida", Desbloqueo = "jefe" },
 }
 
--- Revisión del servidor (etapa 3).
+-- Revisión del servidor (etapa 3, server/Tiros.luau).
 Config.Servidor = {
-	MargenDanio = 2, -- diferencia aceptada entre el daño del cliente y el del servidor
-	TopeDanioPorTiro = 2000,
-	TirosPorSegundo = 2, -- límite de frecuencia por jugador
+	MargenDanio = 0.05, -- si el daño que vio el cliente difiere más que esto (5 %), se avisa
+	TopeDanioPorTiro = 2000, -- por si algo sale mal
+	TiempoMinimoEntreTiros = 1, -- segundos entre dos tiros del mismo jugador
+}
+
+-- Números que saltan en pantalla (cliente).
+Config.Numeros = {
+	Duracion = 0.5, -- segundos que tarda un "+2" en subir y desvanecerse
+	Subida = 2.5, -- studs que sube
+	PopTotal = 1.25, -- tamaño del TOTAL en el "pop" de cada toque (1 = normal)
+	DuracionPop = 0.12,
 }
 
 -- Colores del graybox (hasta la etapa 8).
@@ -119,6 +127,7 @@ Config.Colores = {
 	Gris = "#808080",
 	Fondo = "#3A3A3A",
 	Brillo = "#FFF6B0", -- clavija tocada
+	Numero = "#FFF200", -- amarillo de prueba de los "+2" y el TOTAL
 }
 
 return Config

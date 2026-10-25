@@ -485,7 +485,7 @@ de 13 o de 16 (el cuestionario de madurez lo completo yo). Commit "listo para pu
 
 ## Herramientas de arte y sonido
 
-Juani ya tiene **ForgeGUI** (suscripción paga, 25/10/2026). Es la herramienta principal; **Gemini** queda de reserva, con los prompts de `plinko-knight/PLAN-Y-PROMPTS.md`.
+**ForgeGUI está habilitada** para este juego: Juani la tiene paga, con **350.000 créditos** (25/10/2026). Es la herramienta principal; **Gemini** queda de reserva, con los prompts de `plinko-knight/PLAN-Y-PROMPTS.md`.
 
 - **Etapa 9 (arte final):** monstruos, caballero, íconos de mejoras y de bolas, y fondo de mazmorra.
   - Primero se crea un **estilo de ForgeGUI** con la guía de estilo de la ficha (la que se elija en la etapa 8) y se usa en **todas** las imágenes, así salen parecidas entre sí.
