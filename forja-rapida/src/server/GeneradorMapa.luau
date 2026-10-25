@@ -440,6 +440,32 @@ local function armarMarcador(m: Marcador, carpeta: Instance)
 	end
 end
 
+-- Color de una malla de decoración: GameConfig.Paleta pisa a DecoColores (D3). Las paredes de
+-- ladrillo del lobby (z < 0) van durazno aunque sean las mismas mallas que las de la Pradera.
+local function colorDeco(malla: string, base: string, pieza: string, z: number): string
+	local P = GameConfig.Paleta
+	if z < 0 and pieza:match("^Pared_Ladrillo") and malla:match("^Pared_Zona") then
+		return P.ParedLobby
+	end
+	if P.Deco[malla] then
+		return P.Deco[malla]
+	end
+	if malla:match("^Arbol_") or malla:match("^Pino_") then
+		if malla:match("_Copa$") then
+			return P.Copa
+		elseif
+			malla:match("_Tronco$")
+			and not malla:match("Seco")
+			and not malla:match("Nebuloso")
+			and not malla:match("Quemado")
+			and not malla:match("Rosa")
+		then
+			return P.Tronco
+		end
+	end
+	return base
+end
+
 -- Piezas del lobby (Lobby.fbx) --------------------------------------------------------------
 
 -- Pedestal de cada lugar de la parcela (como el render de lobby.py).
@@ -481,7 +507,14 @@ local function copiarPieza(
 			local color = colores[malla]
 			if color then
 				d.Color = Color3.fromHex(color)
-				d.Material = Enum.Material.SmoothPlastic
+				-- con studs como las referencias, salvo metal, fuego y carteles (D3)
+				if GameConfig.Modelos.LisasLobby[malla] then
+					d.Material = Enum.Material.SmoothPlastic
+				else
+					d.Material = Enum.Material.Plastic
+					d.MaterialVariant = GameConfig.Modelos.Studs
+				end
+				d.Reflectance = 0
 			end
 			if GameConfig.Modelos.BrillanLobby[malla] then
 				d.Material = Enum.Material.Neon
@@ -594,9 +627,11 @@ local function armarDeco(m: Marcador, carpetaDeco: Instance, padre: Instance)
 			d.CanCollide = choca
 			d.CanTouch = false
 			d.CanQuery = choca
-			local c = DecoColores[(d.Name:gsub("%.%d+$", ""))]
+			local malla = d.Name:gsub("%.%d+$", "")
+			local c = DecoColores[malla]
 			if c then
-				d.Color = Color3.fromHex(c.Color)
+				d.Color = Color3.fromHex(colorDeco(malla, c.Color, nombre, m.Pos[3]))
+				d.Reflectance = 0
 				-- con studs, como las referencias (salvo lo que brilla o se transparenta)
 				local studs = not c.Neon and c.Transparencia == 0
 				d.Material = if c.Neon

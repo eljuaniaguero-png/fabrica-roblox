@@ -436,6 +436,7 @@ De las capturas se toma el estilo, no el contenido: cielo celeste brillante, pis
 
 Guía de estilo (18/10/2026, elegida con las referencias de `forja-rapida/arte/referencias/`):
 - **Luz Referencia** (`GameConfig.Luz`, desde 25/10/2026, pedido D2): copiada de estilo-1, mapa-1, mapa-3 y lobby-2. Cielo de dibujo de Roblox sin sol, nubes 3D de algodón (Clouds), sombras claras (Ambient #9A9A9A), sin brillo de plástico, saturación 0,15 y bruma celeste (Haze 2) que aclara el fondo. Dos arcoíris al fondo de cada zona, uno por lado. La luz de antes queda guardada como estilo "Juani" (con su "Realistic Sky").
+- **Colores y studs (D3, 25/10/2026)**: studs cuadrados con borde fino oscuro y damero suave de 4 x 4 (`arte/scripts/texturas_studs.py`, IDs en `GameConfig.Pisos.Texturas`). Colores medidos en las referencias en `GameConfig.Paleta` (Ref = medido; Deco/Copa/Tronco/ParedLobby = lo que se usa). Lobby con studs salvo metal, fuego y carteles. Paredes del lobby durazno. Pendiente de decidir: tamaño de las geodas (`EscalaGeoda`), puesto y paredes del Glaciar (hielo o terracota).
 - **Todo con studs** (MaterialVariant `Studs_Liso`): geodas (roca y nido) y decoración, menos lo que brilla o es transparente.
 - **Geodas 1,5 veces más grandes** (`GameConfig.Modelos.EscalaGeoda`).
 - **Decoración a los costados de cada zona** (árboles, cactus, pinos, columnas: `GameConfig.Modelos.DecoExtra`), con el centro libre para las geodas.

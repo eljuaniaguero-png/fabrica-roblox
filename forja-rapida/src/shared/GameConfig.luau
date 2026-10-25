@@ -2929,17 +2929,64 @@ local GameConfig = {
 	-- Piso con studs (MaterialVariant en MaterialService). Cada textura es un damero de 8 x 8
 	-- studs (dos baldosas de 4 x 4 cruzadas; arte/texturas/Piso_<Zona>_Damero.png, hechas con
 	-- decoracion.py --pisos). Liso solo tiene los studs en gris: lo tiñe el color de la parte.
+	-- Paleta medida en las referencias (pedido D3, 25/10/2026): promedio de cuadrados de 9 x 9 px
+	-- con un script, en estilo-1, estilo-2, mapa-4, lobby-1 y lobby-2. "Ref" es lo que se ve en la
+	-- captura; el valor que se usa en la pieza va un poco más oscuro y menos saturado, porque la
+	-- luz "Referencia" aclara y satura (se ajustó comparando capturas lado a lado).
+	Paleta = {
+		Ref = {
+			PastoCerca = "#87DB37", -- estilo-1, piso al medio
+			PastoLejos = "#699767", -- estilo-1, al fondo (con bruma)
+			PastoLobby = "#9FF316", -- lobby-2
+			LadrilloPradera = "#CE6F66", -- estilo-1, pared al sol (terracota)
+			LadrilloPraderaSombra = "#A54F54",
+			ArenaPiso = "#FBD367", -- estilo-2
+			ParedDunas = "#D6AB75", -- estilo-1, la pared de arena del fondo
+			ParedRosa = "#D3A3A9", -- estilo-2, pared rosada del fondo
+			Nieve = "#FEF8FE", -- mapa-4
+			PisoRosa = "#F694FD", -- mapa-4
+			ParedTerracota = "#D69186", -- mapa-4
+			CaminoNaranja = "#FDAE32", -- lobby-2
+			Parcela = "#F9C05E", -- lobby-2
+			ParedLobby = "#FAB064", -- lobby-1 y lobby-2 (durazno)
+			MaderaClara = "#E1884B", -- lobby-1, puesto
+			MaderaCartel = "#A87B37", -- lobby-2
+			TechoPuesto = "#C60619", -- lobby-1
+			Tronco = "#963341", -- estilo-1 y mapa-4
+			Copa = "#4EA024", -- estilo-1, copa al sol
+			Cactus = "#01AD52", -- estilo-1 y estilo-2 (verde azulado)
+			ArbolSeco = "#584455", -- estilo-2
+			ArbolMagenta = "#C156EB", -- mapa-4
+			Roca = "#6A6E8F", -- estilo-1
+		},
+		-- Colores que pisan a DecoColores.luau (malla -> color), para acercarse a "Ref".
+		Deco = {
+			Pared_Zona1 = "#C25A48",
+			Pared_Zona2 = "#E09A50",
+			Cactus_Chico_Cactus = "#12AD52",
+			Cactus_Grande_Cactus = "#12AD52",
+			Cactus_Mediano_Cactus = "#12AD52",
+		} :: { [string]: string },
+		-- Copas y troncos de todos los árboles verdes (Arbol_*, Pino_*): por terminación de malla.
+		Copa = "#4FA82A",
+		Tronco = "#8A2E40",
+		-- Las paredes de ladrillo del lobby (las de la Pradera son las mismas mallas).
+		ParedLobby = "#FFAE50",
+	},
+
 	Pisos = {
 		StudsPorTeja = 8,
 		StudsPorTejaLiso = 4,
+		-- 25/10/2026 (D3): studs cuadrados con borde oscuro y damero suave, como las referencias
+		-- (arte/scripts/texturas_studs.py). Se cargan a mano en MaterialService.Studs_<Zona>.ColorMap.
 		Texturas = {
-			Pradera = "rbxassetid://131005297571173",
-			Dunas = "rbxassetid://126643885484855",
-			Glaciar = "rbxassetid://129401478154532",
-			Volcan = "rbxassetid://110353988890265",
-			Abismo = "rbxassetid://88981550634300",
-			Camino = "rbxassetid://80690464597039",
-			Liso = "rbxassetid://72139898020694",
+			Pradera = "rbxassetid://101373604430900",
+			Dunas = "rbxassetid://95523608505251",
+			Glaciar = "rbxassetid://98638945945266",
+			Volcan = "rbxassetid://120385568815060",
+			Abismo = "rbxassetid://93460952693939",
+			Camino = "rbxassetid://106871563894655",
+			Liso = "rbxassetid://80679412327654",
 		} :: { [string]: string },
 		-- material de MapaDatos -> textura; los que no están (salvo vidrio, neón y oro) van Liso
 		PorMaterial = {
@@ -3018,12 +3065,23 @@ local GameConfig = {
 		},
 		-- El FBX llega sin colores: cada malla se pinta con el de lobby.py (pieza -> malla -> color).
 		-- Las de BrillanLobby van en Neon (las alfombras con 0,4 de transparencia).
+		-- Mallas del lobby que van lisas (metal, fuego, carteles con texto); el resto lleva studs.
+		LisasLobby = {
+			Cadenas = true,
+			Balanza = true,
+			Cabeza = true,
+			Yunque = true,
+			Cartel = true,
+			Amuleto_1 = true,
+			Amuleto_2 = true,
+			Amuleto_3 = true,
+		} :: { [string]: boolean },
 		ColoresLobby = {
-			Puesto_Vender = {
-				Ladrillo = "#9A5B3A",
-				Madera = "#C98A4E",
-				Techo = "#D93A2E",
-				TechoBorde = "#9E2420",
+			Puesto_Vender = { -- D3: madera clara y techo rojo puro como lobby-1
+				Ladrillo = "#E0874A",
+				Madera = "#F09A58",
+				Techo = "#E01020",
+				TechoBorde = "#8B0007",
 				Cartel = "#E8C27A",
 				Cadenas = "#8A8C99",
 				Balanza = "#FFC83D",
@@ -3060,9 +3118,9 @@ local GameConfig = {
 			},
 			Spawn = { Piedra = "#D8D4CC", Oro = "#FFC83D", Cristal = "#7CF5FF" },
 			Parcela_Exhibicion = {
-				Terreno = "#E8C98A",
+				Terreno = "#F2B85A", -- D3: como lobby-2
 				Borde = "#6B3A26",
-				Camino = "#FF8C42",
+				Camino = "#F7A22E",
 				Lugares = "#D2AE6E",
 				Madera = "#7A4A2A",
 				Cartel = "#C98A4E",

@@ -16,7 +16,7 @@ Se hacen de a uno, en orden. Cuando un pedido dice "Prompt: X de PROMPTS-SECTORE
   - Cómo lo pruebo: Play, lado a lado con estilo-1, mapa-3 y lobby-2 hasta 3 veces; eventos que tiñen la luz siguen andando.
   - Prompt: D2 de PROMPTS-SECTORES.md
 
-- [ ] **D3 · Colores, studs y materiales de todo el mapa**
+- [x] ~~**D3 · Colores, studs y materiales de todo el mapa**~~ hecho 25/10 (tamaños y paredes del Glaciar quedan para después; falta emulador de celular)
   - Qué se hace: colores medidos de las referencias en `GameConfig.Paleta`, studs del tamaño y contraste de la referencia en todo lo opaco, sin brillos de plástico. Lista de proporciones para que la apruebes.
   - Qué hacés vos: aprobar la lista de tamaños antes de que los cambie.
   - Cómo lo pruebo: lado a lado de Pradera, Dunas, Glaciar y lobby.
@@ -111,3 +111,8 @@ Se hacen de a uno, en orden. Cuando un pedido dice "Prompt: X de PROMPTS-SECTORE
   - Qué hacés vos: nada.
   - Cómo lo pruebo: todo junto con 2 o 3 jugadores y emulador de celular; FPS, consola sin rojo, copia .rbxl.
   - Prompt: G4 de PROMPTS-SECTORES.md
+
+- [ ] **Tamaños como la referencia** (sale de D3)
+  - Qué se hace: geodas más chicas (`EscalaGeoda` 1,5 → 1 o 0,8), puesto de venta un 30 % más chico y decidir si las paredes del Glaciar van terracota como mapa-4.
+  - Qué hacés vos: elegir los números.
+  - Cómo lo pruebo: lado a lado con estilo-1, estilo-4 y lobby-1.
