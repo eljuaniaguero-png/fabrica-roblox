@@ -91,6 +91,7 @@ Mazos de bolas, reto diario, ranking, **cualquier cosa con Robux**, varias mazmo
 - **Medidas ajustadas:** con separación 4 y la bola chica tocaba solo 6,6 clavijas por tiro. Quedó: separación 3,25 entre clavijas y 3,5 entre filas, clavija de radio 0,7, bola de radio 0,6 y 1,3 de hueco junto a las paredes (si el hueco es más chico que la bola, se traba).
 - **Prueba con Lune** (`lune run plinko-knight/pruebas/simulacion`): 200 tiros, ninguno se traba ni sale por los costados, y el mismo tiro da siempre lo mismo. Promedio: **14 clavijas** (de 5 a 21), unos 5 s por tiro.
 - **En Studio:** 10 tiros con el mouse a los dos lados, con un promedio de **14,7 clavijas**. Todos terminan abajo y no se puede tirar otra bola mientras rebota.
+- **Pendiente:** la prueba en el emulador de celular (10 tiros y captura). Juani la salteó por ahora; hacerla antes de la etapa 7 (pantallas).
 - **Decisión:** el azar del rebote usa un generador propio con semilla, no `Random.new`, porque `Random` no existe en Lune. Así las pruebas y el juego dan exactamente los mismos números.
 - Cada rebote contra una clavija tiene un desvío chico (hasta 4°) que sale de la semilla: el mismo ángulo no da siempre el mismo recorrido. Por ahora la semilla sale del reloj; desde la etapa 3 la da el servidor.
 
