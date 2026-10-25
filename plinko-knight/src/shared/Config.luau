@@ -145,13 +145,14 @@ Config.Oro = {
 	BonusUnTiro = 2, -- si lo mataste en 1 tiro
 	BonusDosTiros = 1, -- si fue en 2
 	InteresCada = 5, -- +1 de interés por cada 5 que tengas al entrar a la tienda...
-	InteresTope = 5, -- ...hasta 5 (la reliquia Bolsa de Cuero sube el tope, paso 5c)
+	InteresTope = 5, -- ...hasta 5 (la reliquia Bolsa de Cuero lo sube a Config.Reliquias.bolsa)
 	Inicial = 0,
 }
 
 -- Tienda entre peleas (paso 5b). Lo que sale lo elige el servidor con la semilla de la partida.
 -- Las reliquias se suman en el paso 5c.
 Config.Tienda = {
+	Reliquias = 2, -- cuántas reliquias ofrece (paso 5c)
 	MejorasDeClavija = 2, -- cuántas mejoras de clavija ofrece
 	Pergaminos = 1, -- cuántos pergaminos ofrece
 	-- Convertir 1 clavija que elijas en ese tipo. A 3 (con 3 de oro por monstruo) comprando al
@@ -165,6 +166,93 @@ Config.Tienda = {
 -- Pergaminos (paso 5b): se compran en la tienda y se usan cuando querés (entre tiros o en la
 -- tienda). Hay 2 lugares. Peso = qué tan seguido sale en la tienda (la chance se ve en
 -- "¿Qué puede salir?"). Los "nivel:" suben un tipo de clavija y los "forja:" convierten 2.
+-- Reliquias (paso 5c): hasta LugaresReliquia a la vez. Las que actúan "al final del tiro" se
+-- aplican de izquierda a derecha (primero conviene lo que suma Multi, después lo que lo
+-- multiplica); las demás cambian cada toque o la partida. Se compran en la tienda (precio según la
+-- rareza) y se venden por la mitad. Las "crece" guardan un contador. Desbloqueo: "inicio" = está
+-- desde el principio; el resto se desbloquea con un logro cuando llegue el guardado (etapa 6).
+-- Por ahora todas pueden salir en la tienda.
+Config.LugaresReliquia = 5
+Config.Rarezas = {
+	comun = { Nombre = "Común", Peso = 70, Precio = 4, Color = "#B8B8B8" },
+	rara = { Nombre = "Rara", Peso = 25, Precio = 7, Color = "#4FA8FF" },
+	legendaria = { Nombre = "Legendaria", Peso = 5, Precio = 12, Color = "#F5C542" },
+}
+Config.OrdenRarezas = { "comun", "rara", "legendaria" }
+Config.OrdenReliquias = {
+	"brasa",
+	"rubi",
+	"martillo",
+	"cadena",
+	"gemela",
+	"enjambre",
+	"hoja",
+	"bolsa",
+	"avaro",
+	"toqueOro",
+	"trofeo",
+	"callo",
+	"racha",
+	"yesca",
+	"vidrio",
+	"aliento",
+	"paciencia",
+	"corona",
+	"ecoInfinito",
+	"midas",
+}
+Config.Reliquias = {
+	brasa = { Nombre = "Brasa", Rareza = "comun", Desbloqueo = "inicio", MultiPorRoja = 1 },
+	rubi = { Nombre = "Corazón de Rubí", Rareza = "rara", Desbloqueo = "inicio", Factor = 2 },
+	martillo = {
+		Nombre = "Martillo Pesado",
+		Rareza = "comun",
+		Desbloqueo = "inicio",
+		Fuerza = 30,
+		Clavijas = 15,
+	},
+	cadena = { Nombre = "Cadena", Rareza = "comun", Desbloqueo = "inicio", Multi = 2, Cada = 5 },
+	gemela = { Nombre = "Gemela", Rareza = "comun", Desbloqueo = "inicio", Toque = 6 },
+	enjambre = { Nombre = "Enjambre", Rareza = "rara", Desbloqueo = "logro", PorBola = 1.5 },
+	hoja = { Nombre = "Hoja Afilada", Rareza = "comun", Desbloqueo = "inicio", Factor = 2 },
+	bolsa = { Nombre = "Bolsa de Cuero", Rareza = "comun", Desbloqueo = "inicio", InteresTope = 10 },
+	avaro = { Nombre = "Avaro", Rareza = "rara", Desbloqueo = "logro", Multi = 1, Cada = 5 },
+	toqueOro = { Nombre = "Toque de Oro", Rareza = "comun", Desbloqueo = "inicio", Multi = 2 },
+	trofeo = { Nombre = "Trofeo", Rareza = "rara", Desbloqueo = "inicio", Multi = 1 },
+	callo = { Nombre = "Callo", Rareza = "comun", Desbloqueo = "inicio", Fuerza = 3 },
+	racha = { Nombre = "Racha", Rareza = "rara", Desbloqueo = "logro", PorPelea = 0.25 },
+	yesca = { Nombre = "Yesca", Rareza = "rara", Desbloqueo = "logro" },
+	-- Vidrio: la azul ya es ×2 (paso 5a), así que con Vidrio pasa a ×3 y se rompe 1 de cada 2.
+	vidrio = {
+		Nombre = "Vidrio Frágil",
+		Rareza = "rara",
+		Desbloqueo = "inicio",
+		PorMulti = 3,
+		Rotura = 0.5,
+	},
+	aliento = {
+		Nombre = "Último Aliento",
+		Rareza = "rara",
+		Desbloqueo = "logro",
+		Vida = 15,
+		Factor = 3,
+	},
+	paciencia = { Nombre = "Paciencia", Rareza = "rara", Desbloqueo = "inicio", Factor = 4 },
+	corona = {
+		Nombre = "Corona del Rey Caído",
+		Rareza = "legendaria",
+		Desbloqueo = "logro",
+		Factor = 2,
+	},
+	ecoInfinito = {
+		Nombre = "Eco Infinito",
+		Rareza = "legendaria",
+		Desbloqueo = "logro",
+		Veces = 4,
+	},
+	midas = { Nombre = "Mano de Midas", Rareza = "legendaria", Desbloqueo = "logro", Oro = 1 },
+}
+
 Config.LugaresPergamino = 2
 Config.Pergaminos = {
 	nivel = { Nombre = "Pergamino", Peso = 1 }, -- uno por tipo de clavija (6 en total)

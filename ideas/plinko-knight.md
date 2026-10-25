@@ -1,7 +1,7 @@
 # Plinko Knight — ficha del prototipo
 
 Origen: `plinko-knight/PLAN-Y-PROMPTS.md` (25/10/2026) + idea de arte aprobada (`plinko-knight/arte/IDEA-DE-ARTE.md`).
-Estado: **aprobada por Juani el 25/10/2026** (punto de control 1). Etapas 2 (tablero, puntería y bola), 3 (daño y revisión del servidor), 4 (monstruos y mazmorra) y 5 (mejoras 1 de 3) hechas el 25/10/2026. Juani jugó la prueba de 5 minutos (perdió en el piso 6: "está bueno") y pidió hacerlo **más roguelike, estilo Balatro**. **Rediseño aprobado el 25/10/2026.** Pasos 5a (Fuerza × Multi y clavijas especiales) y 5b (oro y tienda) hechos el 25/10; lo próximo es el 5c (reliquias).
+Estado: **aprobada por Juani el 25/10/2026** (punto de control 1). Etapas 2 (tablero, puntería y bola), 3 (daño y revisión del servidor), 4 (monstruos y mazmorra) y 5 (mejoras 1 de 3) hechas el 25/10/2026. Juani jugó la prueba de 5 minutos (perdió en el piso 6: "está bueno") y pidió hacerlo **más roguelike, estilo Balatro**. **Rediseño aprobado el 25/10/2026.** Pasos 5a (Fuerza × Multi y clavijas especiales), 5b (oro y tienda) y 5c (reliquias) hechos el 25/10; lo próximo es el 5d (zonas, jefes con maña, cofre y balance).
 Carpeta: `plinko-knight/` (código en `plinko-knight/src/`, Rojo con `rojo serve plinko-knight`, puerto 34876). Place propio: `plinko-knight/PlinkoKnight.rbxl`.
 
 ## Rediseño roguelike (aprobado el 25/10/2026)
@@ -88,7 +88,7 @@ Hasta **5** a la vez. Se compran en la tienda o salen del cofre del jefe; se ven
 | 12 | Callo | común | crece: +3 Fuerza para siempre cada vez que se rompe una azul | azules, Vidrio Frágil |
 | 13 | Racha | rara | crece: ×0,25 Multi más por cada pelea seguida que ganás sin que te peguen; se reinicia si te pegan | jugar arriesgado |
 | 14 | Yesca | rara | la quemadura de la bola de fuego hace tanto daño como tu Multi del último tiro | bola Fuego, rojas |
-| 15 | Vidrio Frágil | rara | las azules dan ×2 en vez de ×1,5, pero se rompen 1 de cada 2 | Callo |
+| 15 | Vidrio Frágil | rara | las azules dan ×3 en vez de ×2, pero se rompen 1 de cada 2 (la azul pasó a ×2 en el 5a) | Callo |
 | 16 | Último Aliento | rara | ×3 Multi si te queda menos de 15 de vida | Racha (al revés: riesgo) |
 | 17 | Paciencia | rara | el primer tiro de cada pelea no hace daño; el segundo tiene ×4 Multi | jefes con mucha vida |
 | 18 | Corona del Rey Caído | legendaria | ×2 Multi en todos los tiros | todo |
@@ -338,4 +338,32 @@ Cada pelea dura 2 a 3 tiros de promedio. Mezclar mejoras es lo que gana (las tre
 
 - Con la mejora de clavija a 3 de oro, comprando al azar con hierro se ganaba el 3 % (en el 5a, con 2 clavijas gratis por pelea, era 9 %). Con 4 de oro por monstruo se ganaba el 29 %. Quedó **3 de oro por monstruo y la mejora a 2**: comprando al azar se gana el **21 %** con hierro, 55 % con fuego y 83 % con la partida. Comprando siempre un solo tipo casi no se gana: conviene mezclar, y las reliquias del 5c van a premiar armar una familia.
 - El bot de `pruebas/mazmorra` ahora compra en la tienda: sin comprar, al azar (con cada bola), todo lo que puede o siempre un tipo. Usa los pergaminos enseguida, menos el martillo.
+
+### Paso 5c · Reliquias (25/10/2026)
+
+- **Las 20 reliquias de la tabla** (números en `Config.Reliquias`). Hay **5 lugares**, arriba a la derecha, en el orden en que se aplican. Tocar una abre su **ficha**: qué hace, su rareza y su lugar. En la tienda, la ficha tiene **Mover a la izquierda / a la derecha** y **Vender** (la mitad de lo que pagaste). **Decisión:** se mueven con botones y no arrastrando, porque es más fácil con el dedo en un celular.
+- **Cómo actúan** (`shared/Simulacion.luau`, así el servidor las repite igual):
+  - **En cada toque:** Corazón de Rubí, Toque de Oro, Vidrio Frágil, Eco Infinito, Hoja Afilada, Mano de Midas y Gemela (con Gemela, también las bolas nuevas se parten, hasta 4).
+  - **Al final del tiro, de izquierda a derecha:** Brasa, Martillo Pesado, Cadena, Enjambre, Avaro, Trofeo, Callo, Racha, Último Aliento, Paciencia y Corona. Después va la furia, y la Yesca cambia la quemadura. Cuando actúan, la reliquia salta y muestra lo que hizo ("+6 Multi", "×2"); después el panel muestra la Fuerza y el Multi finales.
+  - **En la partida** (`shared/Mazmorra.luau`): el Trofeo crece al matar de un tiro, el Callo con cada azul rota y la Racha con cada pelea ganada sin que te peguen (se reinicia si te pegan). La Bolsa de Cuero sube el tope del interés a 10.
+- **Tienda:** ahora ofrece **2 reliquias**, 2 mejoras de clavija y 1 pergamino. Primero se sortea la rareza (común 70 %, rara 25 %, legendaria 5 %, a la vista en "¿Qué sale?") y después una de esa rareza que no tengas. Precios: 4, 7 y 12. El servidor valida que haya lugar y que no la tengas. Vender y mover, solo en la tienda.
+- **Desbloqueos:** 12 reliquias están desde el principio y 8 se desbloquean con logros (en `Config.Reliquias`, campo `Desbloqueo`). Hasta que llegue el guardado (etapa 6), **las 20 pueden salir en la tienda**.
+- **Arreglo del azar:** la prueba de reliquias encontró que las rarezas salían 85/12/3 en vez de 70/25/5. Pasaba con semillas chicas, porque los primeros números del generador salían muy bajos. Ahora `shared/Azar.luau` tira los primeros 12 números de cada semilla. Los recorridos de la bola cambiaron un poco (todas las pruebas siguen pasando: 13,8 clavijas por tiro de promedio).
+- **Comando de prueba, solo en Studio:** además de los anteriores, **R** te da una reliquia (cada vez una distinta).
+- **Prueba con Lune** (`lune run plinko-knight/pruebas/reliquias`): cada reliquia sola (el mismo tiro con y sin ella), las que crecen, la Bolsa, que el orden importa (Brasa antes de Corona da más que después), 200 combinaciones de 5 reliquias al azar (nunca pasan los topes y el servidor coincide), las chances de rareza (70/25/5 con 4000 tiendas) y comprar, vender y mover con sus validaciones.
+- **En Studio:** con Brasa, Cadena, Gemela y Corona y 6 rojas, un tiro de 4 bolas hizo **58 × 54 = 3132**, igual en el servidor. Brasa sumó +6, Cadena +12 y Corona ×2, en orden. En la tienda salieron 2 reliquias; moví la Corona un lugar a la izquierda y vendí la Gemela (+2 de oro).
+
+#### Balance del paso 5c (lune, 150 mazmorras)
+
+| Cómo compra el bot | Mazmorras ganadas |
+|---|---|
+| Al azar sin reliquias (como el 5b) | 16 % |
+| Al azar con reliquias, bola de hierro | 37 % |
+| Al azar, bola de fuego / partida | 68 % / 81 % |
+| Familia de las rojas (rojas + Brasa, Rubí, Corona, Cadena, Trofeo) | **65 %** |
+| Familia de las bolas (verdes + Gemela, Enjambre, Hoja, Cadena, Martillo) | **60 %** |
+| Familia del oro (doradas + Toque de Oro, Avaro, Bolsa, Midas, Corona) | 7 % |
+| Siempre un solo tipo de clavija, sin reliquias | 0 a 4 % |
+
+Armar una familia rinde mucho más que comprar al azar: las sinergias funcionan. Ahora es demasiado fácil (37 % al azar con hierro) porque los monstruos son los de la etapa 4; eso se corrige en el **5d**, con las 3 zonas y sus vidas. También queda para el 5d mejorar la familia del oro, que casi no sube el golpe.
 

@@ -10,10 +10,14 @@
 -- existen para la bola. Las bolas de fuego y partida también pasan acá, así el servidor repite el
 -- tiro igual. La bola partida se simula al mismo tiempo que la original, paso por paso, para que
 -- los toques (y los × de las azules) queden en el orden en que pasan.
+-- Paso 5c: las reliquias. Algunas cambian cada toque (rojas, azules, doradas, violetas, bolas
+-- extra, Midas, Gemela); otras actúan al final del tiro, en el orden de la lista (de izquierda a
+-- derecha): por eso importa si una suma Multi antes o después de otra que lo multiplica.
 
 local Azar = require(script.Parent.Azar)
 local Config = require(script.Parent.Config)
 local Clavijas = require(script.Parent.Clavijas)
+local Reliquias = require(script.Parent.Reliquias)
 local TableroModulo = require(script.Parent.Tablero)
 
 type Tablero = TableroModulo.Tablero
@@ -30,6 +34,17 @@ export type Modificadores = {
 	Niveles: Clavijas.Niveles?,
 	Bola: string?, -- "hierro", "fuego" o "partida"
 	Furia: boolean?, -- pergamino Furia: el Multi se multiplica al final del tiro
+	Reliquias: { Reliquias.Tenida }?, -- en orden, de izquierda a derecha
+	Oro: number?, -- el que tenés antes del tiro (Avaro)
+	Vida: number?, -- la del caballero (Último Aliento)
+	TirosPelea: number?, -- tiros que ya hiciste en esta pelea (Paciencia)
+}
+
+-- Una reliquia que hizo algo al final del tiro (para que el cliente la sacuda y muestre el texto).
+export type Activacion = {
+	Lugar: number, -- en la lista de reliquias
+	Id: string,
+	Texto: string, -- "+6 Multi", "×2", "+30 Fuerza"…
 }
 
 export type Toque = {
@@ -70,6 +85,8 @@ export type Resultado = {
 	Quemadura: number, -- daño por turno que deja la bola de fuego (0 sin fuego)
 	Fuego: boolean,
 	Furia: number, -- por cuánto multiplicó la furia al final (1 = no había)
+	Activaciones: { Activacion }, -- reliquias que actuaron al final, en orden
+	Paciencia: boolean, -- el golpe fue 0 por la reliquia Paciencia (primer tiro de la pelea)
 	Empujones: number, -- cuántas veces actuó el anti-trabas
 	Fin: string, -- "abajo" (cayeron todas) o "tope" (llegó al tiempo máximo)
 }
@@ -85,6 +102,7 @@ type Viva = {
 	tocadas: { [number]: boolean }, -- clavijas que ya sumó esta bola
 	toques: number,
 	puedeDividir: boolean,
+	toqueDividir: number, -- en qué toque se parte (si puedeDividir)
 	eco: number, -- cuántas veces cuenta la próxima clavija (1 = normal)
 	yVentana: number,
 	activa: boolean,
@@ -131,9 +149,27 @@ function Simulacion.simular(
 	local fuego = nombreBola == "fuego"
 	local fuerzaExtra = if fuego then Config.Bolas.fuego.FuerzaExtra else 0
 	local divide = Config.Bolas.partida
-	local toquesDividir: number? = if nombreBola == "partida" then divide.ToqueParaDividir else nil
-	local rotura = Config.Clavijas.azul.Rotura
 	local impulso = Config.Clavijas.verde.Impulso
+
+	-- Reliquias que cambian cada toque.
+	local lista = mods.Reliquias or {}
+	local R = Config.Reliquias
+	local tiene = function(id: string): boolean
+		return Reliquias.tiene(lista, id)
+	end
+	local gemela = tiene("gemela")
+	local factorRojas = if tiene("rubi") then R.rubi.Factor else 1
+	local factorExtra = if tiene("hoja") then R.hoja.Factor else 1
+	local multiDoradas = if tiene("toqueOro") then R.toqueOro.Multi else 0
+	local vidrio = tiene("vidrio")
+	local rotura = if vidrio then R.vidrio.Rotura else Config.Clavijas.azul.Rotura
+	local ecoMinimo = if tiene("ecoInfinito") then R.ecoInfinito.Veces else 0
+	local oroMidas = if tiene("midas") then R.midas.Oro else 0
+	-- En qué toque se parte la bola que tirás: la partida en el suyo; si no, Gemela.
+	local toquePrimera: number? = if nombreBola == "partida"
+		then divide.ToqueParaDividir
+		elseif gemela then R.gemela.Toque
+		else nil
 
 	local fuerza = Config.Danio.FuerzaInicial
 	local multi = Config.Danio.MultiInicial
@@ -152,6 +188,7 @@ function Simulacion.simular(
 			tocadas = {},
 			toques = 0,
 			puedeDividir = false,
+			toqueDividir = 0,
 			eco = 1,
 			yVentana = y,
 			activa = true,
@@ -162,7 +199,10 @@ function Simulacion.simular(
 	local primera = nuevaBola(tablero.LanzadorX, tablero.LanzadorY, vx0, vy0, 1)
 	table.insert(primera.recorrido.X, primera.x)
 	table.insert(primera.recorrido.Y, primera.y)
-	primera.puedeDividir = toquesDividir ~= nil
+	if toquePrimera then
+		primera.puedeDividir = true
+		primera.toqueDividir = toquePrimera
+	end
 	local bolas: { Viva } = { primera }
 	local activas = 1
 
@@ -195,6 +235,11 @@ function Simulacion.simular(
 				-- La clavija donde se partió ya la tocó: no suma de nuevo enseguida.
 				nueva.tocando[clavija] = true
 				nueva.tocadas[clavija] = true
+				-- Con Gemela, las bolas nuevas también se parten (hasta el tope de bolas).
+				if gemela then
+					nueva.puedeDividir = true
+					nueva.toqueDividir = R.gemela.Toque
+				end
 				table.insert(bolas, nueva)
 				activas += 1
 			end
@@ -248,14 +293,34 @@ function Simulacion.simular(
 							local nivel = Clavijas.nivel(niveles, tipo)
 							local veces = b.eco
 							b.eco = 1
-							local sumaF = (Clavijas.fuerza(tipo, nivel) + fuerzaExtra) * veces
-							local sumaM = Clavijas.multi(tipo, nivel) * veces
-							local por = Clavijas.porMulti(tipo, nivel) ^ veces
-							local sumaOro = Clavijas.oro(tipo, nivel) * veces
+							local fuerzaToque = Clavijas.fuerza(tipo, nivel) + fuerzaExtra
+							local multiToque = Clavijas.multi(tipo, nivel)
+							local porToque = Clavijas.porMulti(tipo, nivel)
+							local oroToque = Clavijas.oro(tipo, nivel)
+							if tipo == "roja" then
+								multiToque *= factorRojas
+							elseif tipo == "dorada" then
+								multiToque += multiDoradas
+							elseif tipo == "azul" and vidrio then
+								porToque = R.vidrio.PorMulti
+									+ (porToque - Clavijas.porMulti("azul", 1))
+							end
+							if indice > 1 then
+								fuerzaToque *= factorExtra
+							else
+								oroToque += oroMidas
+							end
+							local sumaF = fuerzaToque * veces
+							local sumaM = multiToque * veces
+							local por = porToque ^ veces
+							local sumaOro = oroToque * veces
 							fuerza += sumaF
 							multi = math.min((multi + sumaM) * por, Config.TopeMulti)
 							oro += sumaOro
 							local eco = Clavijas.eco(tipo, nivel)
+							if eco > 0 and ecoMinimo > eco then
+								eco = ecoMinimo + (eco - Clavijas.eco("violeta", 1))
+							end
 							if eco > 0 then
 								b.eco = eco
 							end
@@ -284,7 +349,7 @@ function Simulacion.simular(
 								FuerzaTotal = fuerza,
 								MultiTotal = multi,
 							})
-							if b.puedeDividir and b.toques == toquesDividir then
+							if b.puedeDividir and b.toques == b.toqueDividir then
 								dividir(b, paso, c.Id)
 							end
 						end
@@ -352,9 +417,109 @@ function Simulacion.simular(
 		end
 	end
 
+	-- Reliquias al final del tiro, de izquierda a derecha.
+	local activaciones: { Activacion } = {}
+	local paciencia = false
+	local function activar(lugar: number, id: string, texto: string)
+		table.insert(activaciones, { Lugar = lugar, Id = id, Texto = texto })
+	end
+	local function corto(n: number): string
+		return Clavijas.numeroCorto(n)
+	end
+	for lugar, tenida in lista do
+		local id = tenida.Id
+		local d = R[id]
+		if id == "brasa" then
+			local rojas = 0
+			for _, tipo in tipos do
+				if tipo == "roja" then
+					rojas += 1
+				end
+			end
+			if rojas > 0 then
+				multi += rojas * d.MultiPorRoja
+				activar(lugar, id, ("+%s Multi"):format(corto(rojas * d.MultiPorRoja)))
+			end
+		elseif id == "martillo" then
+			if distintas >= d.Clavijas then
+				fuerza += d.Fuerza
+				activar(lugar, id, ("+%d Fuerza"):format(d.Fuerza))
+			end
+		elseif id == "cadena" then
+			local suma = math.floor(distintas / d.Cada) * d.Multi
+			if suma > 0 then
+				multi += suma
+				activar(lugar, id, ("+%d Multi"):format(suma))
+			end
+		elseif id == "enjambre" then
+			local extra = #bolas - 1
+			if extra > 0 then
+				local factor = d.PorBola ^ extra
+				multi *= factor
+				activar(lugar, id, "×" .. corto(factor))
+			end
+		elseif id == "avaro" then
+			local suma = math.floor((mods.Oro or 0) / d.Cada) * d.Multi
+			if suma > 0 then
+				multi += suma
+				activar(lugar, id, ("+%d Multi"):format(suma))
+			end
+		elseif id == "trofeo" then
+			if tenida.Contador > 0 then
+				multi += tenida.Contador * d.Multi
+				activar(lugar, id, ("+%d Multi"):format(tenida.Contador * d.Multi))
+			end
+		elseif id == "callo" then
+			if tenida.Contador > 0 then
+				fuerza += tenida.Contador * d.Fuerza
+				activar(lugar, id, ("+%d Fuerza"):format(tenida.Contador * d.Fuerza))
+			end
+		elseif id == "racha" then
+			if tenida.Contador > 0 then
+				local factor = 1 + tenida.Contador * d.PorPelea
+				multi *= factor
+				activar(lugar, id, "×" .. corto(factor))
+			end
+		elseif id == "aliento" then
+			if (mods.Vida or math.huge) < d.Vida then
+				multi *= d.Factor
+				activar(lugar, id, ("×%d"):format(d.Factor))
+			end
+		elseif id == "paciencia" then
+			local tiros = mods.TirosPelea or 0
+			if tiros == 0 then
+				paciencia = true
+				activar(lugar, id, "espera…")
+			elseif tiros == 1 then
+				multi *= d.Factor
+				activar(lugar, id, ("×%d"):format(d.Factor))
+			end
+		elseif id == "corona" then
+			multi *= d.Factor
+			activar(lugar, id, ("×%d"):format(d.Factor))
+		end
+		multi = math.min(multi, Config.TopeMulti)
+	end
+
 	-- Pergamino Furia: al final del tiro, el Multi se multiplica.
 	local furia = if mods.Furia then Config.Pergaminos.furia.PorMulti else 1
 	multi = math.min(multi * furia, Config.TopeMulti)
+
+	-- Quemadura de la bola de fuego (con Yesca, tanto como el Multi).
+	local quemadura = 0
+	if fuego then
+		quemadura = Config.Bolas.fuego.Quemadura
+		local lugarYesca = 0
+		for lugar, tenida in lista do
+			if tenida.Id == "yesca" then
+				lugarYesca = lugar
+			end
+		end
+		if lugarYesca > 0 and multi > quemadura then
+			quemadura = math.floor(multi)
+			activar(lugarYesca, "yesca", ("quema %s"):format(corto(quemadura)))
+		end
+	end
 
 	local recorridos: { Recorrido } = {}
 	for _, b in bolas do
@@ -370,12 +535,14 @@ function Simulacion.simular(
 		ClavijasDistintas = distintas,
 		Fuerza = fuerza,
 		Multi = multi,
-		Danio = math.min(math.floor(fuerza * multi), Config.TopeDanioTiro),
+		Danio = if paciencia then 0 else math.min(math.floor(fuerza * multi), Config.TopeDanioTiro),
 		Oro = oro,
 		Rotas = rotas,
-		Quemadura = if fuego then Config.Bolas.fuego.Quemadura else 0,
+		Quemadura = quemadura,
 		Fuego = fuego,
 		Furia = furia,
+		Activaciones = activaciones,
+		Paciencia = paciencia,
 		Empujones = empujones,
 		Fin = fin,
 	}

@@ -209,6 +209,45 @@ for _, tipo in Config.OrdenClavijas do
 	})
 end
 
+-- Al azar pero sin reliquias (para comparar con el paso 5b).
+table.insert(medidas, {
+	titulo = "Compra al azar sin reliquias",
+	medida = jugar(comprador(function(item: any): boolean
+		return item.Clase ~= "reliquia" and azar() < 0.7
+	end)),
+})
+
+-- Armar una familia (paso 5c): sus clavijas, sus pergaminos y sus reliquias.
+local familias = {
+	{
+		Nombre = "rojas",
+		Tipo = "roja",
+		Reliquias = { "brasa", "rubi", "corona", "cadena", "trofeo" },
+	},
+	{
+		Nombre = "bolas",
+		Tipo = "verde",
+		Reliquias = { "gemela", "enjambre", "hoja", "cadena", "martillo" },
+	},
+	{
+		Nombre = "oro",
+		Tipo = "dorada",
+		Reliquias = { "toqueOro", "avaro", "bolsa", "midas", "corona" },
+	},
+}
+for _, f in familias do
+	table.insert(medidas, {
+		titulo = "Familia " .. f.Nombre,
+		medida = jugar(comprador(function(item: any): boolean
+			local _, del = Tienda.partes(item.Id)
+			if item.Clase == "reliquia" then
+				return table.find(f.Reliquias, item.Id) ~= nil
+			end
+			return item.Id == f.Tipo or del == f.Tipo or item.Id == "vendaje"
+		end)),
+	})
+end
+
 -- El jefe solo, sin comprar y con vida de sobra (como con la tecla 0), para saber cuánto dura.
 local tirosJefe: { number } = {}
 for _ = 1, CORRIDAS do

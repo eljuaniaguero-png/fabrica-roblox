@@ -3,15 +3,17 @@
 --   ObtenerEstado() -> Mazmorra.Estado
 --   VolverABajar() -> Mazmorra.Estado  (solo después de perder o de ganar la mazmorra)
 --   Tienda(accion, indice, clavijas) -> (Mazmorra.Estado, error?)  acciones: "comprar" (el ítem
---   indice; clavijas = { id } para una mejora de clavija), "renovar" y "bajar"
+--   indice; clavijas = { id } para una mejora de clavija), "vender" (la reliquia del lugar indice),
+--   "mover" (la reliquia del lugar indice al lugar que viene en clavijas), "renovar" y "bajar"
 --   UsarPergamino(lugar, clavijas) -> (Mazmorra.Estado, error?)  (en la pelea o en la tienda)
 --   Todo lo valida shared/Tienda; si no se puede, devuelve el estado como está y el motivo.
 --   EstadoCambio (servidor -> cliente): el estado cambió fuera de un tiro (comandos de prueba)
 --   Prueba(comando, n) (SOLO existe en Studio): "piso" salta a la pelea n (7 = el jefe), "vida"
 --   te pone n de vida, "bola" cambia a la bola n de Config.OrdenBolas, "clavija" convierte
 --   grises en el tipo n de Config.OrdenClavijas, "nivel" sube 1 nivel todos los tipos, "oro" da n
---   de oro y "pergamino" agrega el pergamino n de Tienda.pergaminosPosibles. El cliente lo manda
---   con las teclas 1 a 7, 0, Z, X, C, 8 y 9 (ver Main.client).
+--   de oro, "pergamino" agrega el pergamino n de Tienda.pergaminosPosibles y "reliquia" agrega la
+--   n de Config.OrdenReliquias. El cliente lo manda con las teclas 1 a 7, 0, Z, X, C, 8, 9 y R
+--   (ver Main.client).
 -- Con teclas y no con el chat porque este place usa el chat viejo, que Roblox ya no carga.
 
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
@@ -22,6 +24,7 @@ local Config = require(Shared:WaitForChild("Config"))
 local Mazmorra = require(Shared:WaitForChild("Mazmorra"))
 local Clavijas = require(Shared:WaitForChild("Clavijas"))
 local TiendaModulo = require(Shared:WaitForChild("Tienda"))
+local Reliquias = require(Shared:WaitForChild("Reliquias"))
 local Partida = require(script.Parent:WaitForChild("Partida"))
 
 local Peleas = {}
@@ -53,6 +56,11 @@ function Peleas.probar(jugador: Player, comando: string, n: number)
 	local e = p.Estado
 	if comando == "oro" then
 		e.Oro += math.floor(n)
+	elseif comando == "reliquia" then
+		local id = Config.OrdenReliquias[(math.floor(n) - 1) % #Config.OrdenReliquias + 1]
+		if #e.Reliquias < Config.LugaresReliquia and not Reliquias.tiene(e.Reliquias, id) then
+			table.insert(e.Reliquias, { Id = id, Contador = 0, Precio = Reliquias.precio(id) })
+		end
 	elseif comando == "pergamino" then
 		local posibles = TiendaModulo.pergaminosPosibles()
 		local elegido = posibles[(math.floor(n) - 1) % #posibles + 1]
@@ -150,6 +158,10 @@ function Peleas.iniciar()
 		local ok, motivo = false, "Acción desconocida"
 		if accion == "comprar" then
 			ok, motivo = TiendaModulo.comprar(p.Estado, indice, clavijas)
+		elseif accion == "vender" then
+			ok, motivo = TiendaModulo.vender(p.Estado, indice)
+		elseif accion == "mover" then
+			ok, motivo = TiendaModulo.mover(p.Estado, indice, clavijas) -- de lugar indice a lugar clavijas
 		elseif accion == "renovar" then
 			ok, motivo = TiendaModulo.renovar(p.Estado, Partida.semilla())
 		elseif accion == "bajar" then
@@ -207,6 +219,7 @@ function Peleas.iniciar()
 				or comando == "nivel"
 				or comando == "oro"
 				or comando == "pergamino"
+				or comando == "reliquia"
 			then
 				Peleas.probar(jugador, comando, n)
 			end

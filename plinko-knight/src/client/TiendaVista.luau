@@ -1,14 +1,17 @@
 --!strict
--- Pantallas del paso 5b, en graybox: la tienda (en la columna derecha, tapando al monstruo,
--- así el tablero queda libre para tocar clavijas) y los 2 lugares de pergaminos (a la
--- izquierda, debajo del oro). Solo dibuja y avisa qué se tocó: comprar, renovar, bajar y usar
--- lo hace Main.client con el servidor.
+-- Pantallas de los pasos 5b y 5c, en graybox: la tienda (en la columna derecha, tapando al
+-- monstruo, así el tablero queda libre para tocar clavijas), los 2 lugares de pergaminos (a la
+-- izquierda, debajo del oro) y la fila de 5 reliquias (arriba a la derecha, en el orden en que se
+-- aplican). Tocar una reliquia abre su ficha; en la tienda, ahí se vende o se mueve. Solo dibuja
+-- y avisa qué se tocó: lo demás lo hace Main.client con el servidor.
 
 local Players = game:GetService("Players")
+local TweenService = game:GetService("TweenService")
 
 local Shared = game:GetService("ReplicatedStorage"):WaitForChild("Shared")
 local Config = require(Shared:WaitForChild("Config"))
 local Mazmorra = require(Shared:WaitForChild("Mazmorra"))
+local Reliquias = require(Shared:WaitForChild("Reliquias"))
 local TiendaModulo = require(Shared:WaitForChild("Tienda"))
 
 export type Acciones = {
@@ -16,12 +19,16 @@ export type Acciones = {
 	renovar: () -> (),
 	bajar: () -> (),
 	usar: (lugar: number) -> (), -- pergamino
+	vender: (lugar: number) -> (), -- reliquia
+	mover: (desde: number, hacia: number) -> (), -- reliquia
 }
 
 export type TiendaVista = {
 	mostrar: (estado: Mazmorra.Estado) -> (),
 	ocultar: () -> (),
 	ponerPergaminos: (estado: Mazmorra.Estado) -> (),
+	ponerReliquias: (estado: Mazmorra.Estado) -> (),
+	activar: (lugar: number, texto: string) -> (), -- la reliquia salta y muestra lo que hizo
 }
 
 local TiendaVista = {}
@@ -86,8 +93,8 @@ function TiendaVista.crear(acciones: Acciones): TiendaVista
 	local panel = Instance.new("Frame")
 	panel.Name = "Tienda"
 	panel.AnchorPoint = Vector2.new(1, 0.5)
-	panel.Position = UDim2.new(1, -10, 0.5, 10)
-	panel.Size = UDim2.fromScale(0.3, 0.84)
+	panel.Position = UDim2.new(1, -10, 0.5, 40) -- debajo de la fila de reliquias
+	panel.Size = UDim2.fromScale(0.3, 0.8)
 	panel.BackgroundColor3 = Color3.fromHex(Config.Colores.FondoBarra)
 	panel.BackgroundTransparency = 0.08
 	panel.BorderSizePixel = 0
@@ -110,7 +117,7 @@ function TiendaVista.crear(acciones: Acciones): TiendaVista
 	lista.BackgroundTransparency = 1
 	lista.Parent = panel
 	local ordenLista = Instance.new("UIListLayout")
-	ordenLista.Padding = UDim.new(0.025, 0)
+	ordenLista.Padding = UDim.new(0.02, 0)
 	ordenLista.SortOrder = Enum.SortOrder.LayoutOrder
 	ordenLista.Parent = lista
 
@@ -172,7 +179,7 @@ function TiendaVista.crear(acciones: Acciones): TiendaVista
 		local b = Instance.new("TextButton")
 		b.Name = "Item" .. indice
 		b.LayoutOrder = indice
-		b.Size = UDim2.fromScale(1, 0.3)
+		b.Size = UDim2.fromScale(1, 0.184)
 		b.BackgroundColor3 = Color3.fromHex(Config.Colores.Carta)
 		b.BorderSizePixel = 0
 		b.AutoButtonColor = not item.Vendido
@@ -209,6 +216,191 @@ function TiendaVista.crear(acciones: Acciones): TiendaVista
 				acciones.comprar(indice)
 			end)
 		end
+	end
+
+	-- Reliquias: fila de 5 arriba a la derecha, en el orden en que se aplican.
+	local filaReliquias = Instance.new("Frame")
+	filaReliquias.Name = "Reliquias"
+	filaReliquias.AnchorPoint = Vector2.new(1, 0)
+	filaReliquias.Position = UDim2.new(1, -10, 0, 6)
+	filaReliquias.Size = UDim2.new(0.42, 0, 0, 62)
+	filaReliquias.BackgroundTransparency = 1
+	filaReliquias.Parent = gui
+	local ordenFila = Instance.new("UIListLayout")
+	ordenFila.FillDirection = Enum.FillDirection.Horizontal
+	ordenFila.HorizontalAlignment = Enum.HorizontalAlignment.Right
+	ordenFila.Padding = UDim.new(0.01, 0)
+	ordenFila.SortOrder = Enum.SortOrder.LayoutOrder
+	ordenFila.Parent = filaReliquias
+	local lugaresReliquia: { TextButton } = {}
+	local escalas: { UIScale } = {}
+	local avisos: { TextLabel } = {}
+	local bordes: { UIStroke } = {}
+
+	-- Ficha de una reliquia (al tocarla): qué hace y, en la tienda, vender o mover.
+	local ficha = Instance.new("Frame")
+	ficha.Name = "FichaReliquia"
+	ficha.AnchorPoint = Vector2.new(0.5, 0.5)
+	ficha.Position = UDim2.fromScale(0.5, 0.5)
+	ficha.Size = UDim2.fromScale(0.42, 0.5)
+	ficha.BackgroundColor3 = Color3.fromHex(Config.Colores.FondoBarra)
+	ficha.BorderSizePixel = 0
+	ficha.Visible = false
+	ficha.ZIndex = 6
+	ficha.Parent = gui
+	local redondeoFicha = Instance.new("UICorner")
+	redondeoFicha.CornerRadius = UDim.new(0.05, 0)
+	redondeoFicha.Parent = ficha
+	local bordeFicha = Instance.new("UIStroke")
+	bordeFicha.Thickness = 4
+	bordeFicha.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+	bordeFicha.Parent = ficha
+	local fNombre = texto(ficha, "")
+	fNombre.Position = UDim2.fromScale(0.05, 0.05)
+	fNombre.Size = UDim2.fromScale(0.9, 0.15)
+	fNombre.ZIndex = 7
+	local fRareza = texto(ficha, "", Enum.Font.GothamBold)
+	fRareza.Position = UDim2.fromScale(0.05, 0.21)
+	fRareza.Size = UDim2.fromScale(0.9, 0.08)
+	fRareza.ZIndex = 7
+	local fTexto = texto(ficha, "", Enum.Font.GothamBold)
+	fTexto.TextWrapped = true
+	fTexto.Position = UDim2.fromScale(0.07, 0.32)
+	fTexto.Size = UDim2.fromScale(0.86, 0.26)
+	fTexto.ZIndex = 7
+	local fIzquierda = boton(ficha, "Mover a la izquierda", "#5A5A5A")
+	fIzquierda.Position = UDim2.fromScale(0.05, 0.62)
+	fIzquierda.Size = UDim2.fromScale(0.43, 0.15)
+	local fDerecha = boton(ficha, "Mover a la derecha", "#5A5A5A")
+	fDerecha.Position = UDim2.fromScale(0.52, 0.62)
+	fDerecha.Size = UDim2.fromScale(0.43, 0.15)
+	local fVender = boton(ficha, "", Config.Colores.Golpe)
+	fVender.Position = UDim2.fromScale(0.05, 0.8)
+	fVender.Size = UDim2.fromScale(0.43, 0.15)
+	local fCerrar = boton(ficha, "Cerrar", "#3A3A3A")
+	fCerrar.Position = UDim2.fromScale(0.52, 0.8)
+	fCerrar.Size = UDim2.fromScale(0.43, 0.15)
+	for _, b in { fIzquierda, fDerecha, fVender, fCerrar } do
+		b.ZIndex = 7
+		local minimo = Instance.new("UISizeConstraint") -- 44 px o más para el dedo
+		minimo.MinSize = Vector2.new(0, 44)
+		minimo.Parent = b
+	end
+	local lugarFicha = 0
+	fCerrar.Activated:Connect(function()
+		ficha.Visible = false
+	end)
+	fIzquierda.Activated:Connect(function()
+		ficha.Visible = false
+		acciones.mover(lugarFicha, lugarFicha - 1)
+	end)
+	fDerecha.Activated:Connect(function()
+		ficha.Visible = false
+		acciones.mover(lugarFicha, lugarFicha + 1)
+	end)
+	fVender.Activated:Connect(function()
+		ficha.Visible = false
+		acciones.vender(lugarFicha)
+	end)
+
+	local ultimoEstado: Mazmorra.Estado? = nil
+	local function abrirFicha(lugar: number)
+		local e = ultimoEstado
+		local r = if e then e.Reliquias[lugar] else nil
+		if not e or not r then
+			return
+		end
+		lugarFicha = lugar
+		local rareza = Reliquias.rareza(r.Id)
+		fNombre.Text = Reliquias.datos(r.Id).Nombre
+		fRareza.Text = rareza.Nombre .. (" · lugar %d de %d"):format(lugar, #e.Reliquias)
+		fRareza.TextColor3 = Color3.fromHex(rareza.Color)
+		bordeFicha.Color = Color3.fromHex(rareza.Color)
+		fTexto.Text = Reliquias.describir(r.Id, r.Contador)
+		local enTienda = e.Fase == "tienda"
+		fIzquierda.Visible = enTienda and lugar > 1
+		fDerecha.Visible = enTienda and lugar < #e.Reliquias
+		fVender.Visible = enTienda
+		fVender.Text = ("Vender · +%d oro"):format(Reliquias.venta(r))
+		ficha.Visible = true
+	end
+
+	for lugar = 1, Config.LugaresReliquia do
+		local b = boton(filaReliquias, "", Config.Colores.FondoBarra)
+		b.Name = "Reliquia" .. lugar
+		b.LayoutOrder = lugar
+		b.Size = UDim2.fromScale(0.19, 1)
+		b.Font = Enum.Font.GothamBold
+		b.TextWrapped = true
+		local borde = Instance.new("UIStroke")
+		borde.Thickness = 3
+		borde.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+		borde.Parent = b
+		local escala = Instance.new("UIScale")
+		escala.Parent = b
+		local aviso = texto(b, "")
+		aviso.TextColor3 = Color3.fromHex(Config.Colores.Numero)
+		aviso.TextStrokeTransparency = 0
+		aviso.Position = UDim2.fromScale(-0.1, 1.05)
+		aviso.Size = UDim2.fromScale(1.2, 0.6)
+		aviso.TextTransparency = 1
+		aviso.TextStrokeTransparency = 1
+		b.Activated:Connect(function()
+			abrirFicha(lugar)
+		end)
+		lugaresReliquia[lugar] = b
+		escalas[lugar] = escala
+		avisos[lugar] = aviso
+		bordes[lugar] = borde
+	end
+
+	local function ponerReliquias(e: Mazmorra.Estado)
+		ultimoEstado = e
+		for lugar, b in lugaresReliquia do
+			local r = e.Reliquias[lugar]
+			if r then
+				local d = Reliquias.datos(r.Id)
+				local crece = r.Id == "trofeo" or r.Id == "callo" or r.Id == "racha"
+				b.Text = if crece then ("%s (%d)"):format(d.Nombre, r.Contador) else d.Nombre
+				b.TextColor3 = Color3.new(1, 1, 1)
+				b.BackgroundTransparency = 0.1
+				bordes[lugar].Color = Color3.fromHex(Reliquias.rareza(r.Id).Color)
+				bordes[lugar].Transparency = 0
+			else
+				b.Text = "Reliquia: libre"
+				b.TextColor3 = Color3.fromRGB(140, 140, 140)
+				b.BackgroundTransparency = 0.5
+				bordes[lugar].Transparency = 1
+			end
+		end
+		if ficha.Visible then
+			abrirFicha(lugarFicha)
+		end
+	end
+
+	local avisosActivos: { [number]: number } = {}
+	local function activar(lugar: number, valor: string)
+		local escala, aviso = escalas[lugar], avisos[lugar]
+		if not escala then
+			return
+		end
+		escala.Scale = 1.35
+		TweenService:Create(
+			escala,
+			TweenInfo.new(0.25, Enum.EasingStyle.Back, Enum.EasingDirection.Out),
+			{ Scale = 1 }
+		):Play()
+		aviso.Text = valor
+		aviso.TextTransparency = 0
+		aviso.TextStrokeTransparency = 0
+		local marca = (avisosActivos[lugar] or 0) + 1
+		avisosActivos[lugar] = marca
+		task.delay(1.2, function()
+			if avisosActivos[lugar] == marca then
+				aviso.TextTransparency = 1
+				aviso.TextStrokeTransparency = 1
+			end
+		end)
 	end
 
 	local function ponerPergaminos(e: Mazmorra.Estado)
@@ -261,6 +453,8 @@ function TiendaVista.crear(acciones: Acciones): TiendaVista
 			chances.Visible = false
 		end,
 		ponerPergaminos = ponerPergaminos,
+		ponerReliquias = ponerReliquias,
+		activar = activar,
 	}
 end
 

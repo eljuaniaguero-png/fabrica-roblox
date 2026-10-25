@@ -11,6 +11,8 @@
 -- quedan como hueco. Abajo, la fila con tu bola y tus clavijas especiales.
 -- Paso 5b: al ganar una pelea se abre la tienda (TiendaVista). Las mejoras de clavija y los
 -- pergaminos de forja y martillo piden tocar clavijas (Seleccion); todo lo valida el servidor.
+-- Paso 5c: la fila de reliquias (TiendaVista). Al final de cada tiro, las que actuaron saltan en
+-- orden y muestran lo que sumaron o multiplicaron.
 -- Input con UserInputService: los otros juegos no usan el Input Action System.
 
 local Players = game:GetService("Players")
@@ -164,6 +166,7 @@ local function ponerEstado(e: Mazmorra.Estado)
 	pantallas.ponerEstado(e)
 	pantallas.ponerTablero(e)
 	tiendaVista.ponerPergaminos(e)
+	tiendaVista.ponerReliquias(e)
 	pintarClavijas()
 	panel.limpiar()
 	if e.Fase == "tienda" then
@@ -241,6 +244,15 @@ tiendaVista = TiendaVistaModulo.crear({
 		if not seleccion.activa() and pedir(remotos.Tienda, "bajar") then
 			pantallas.anunciar(("¡Piso %d!"):format(estado.Piso))
 		end
+	end,
+	vender = function(lugar: number)
+		local r = estado.Reliquias[lugar]
+		if r and pedir(remotos.Tienda, "vender", lugar) then
+			print(("[Tienda] Vendiste %s · oro %d"):format(r.Id, estado.Oro))
+		end
+	end,
+	mover = function(desde: number, hacia: number)
+		pedir(remotos.Tienda, "mover", desde, hacia)
 	end,
 	usar = function(lugar: number)
 		local id = estado.Pergaminos[lugar]
@@ -457,6 +469,14 @@ local function tirar()
 				return remotos.Tirar:InvokeServer(numeroTiro, anguloTiro, res.Danio)
 			end)
 			local danio = if okTiro and typeof(turno) == "table" then turno.Danio else nil
+			-- Reliquias que actuaron al final del tiro, de izquierda a derecha.
+			for _, a in res.Activaciones do
+				tiendaVista.activar(a.Lugar, a.Texto)
+				task.wait(0.22)
+			end
+			if #res.Activaciones > 0 then
+				panel.poner(res.Fuerza, res.Multi, "por")
+			end
 			if res.Furia > 1 then
 				panel.poner(res.Fuerza, res.Multi, "por") -- la furia multiplica al final
 				pantallas.anunciar(("¡Furia ×%d!"):format(res.Furia))
@@ -539,11 +559,12 @@ end)
 
 -- Comando de prueba, solo en Studio: teclas 1 a 7 saltan a esa pelea, 0 pone 999 de vida,
 -- Z cambia de bola, X convierte 2 grises (cada vez un tipo distinto), C sube de nivel todos los
--- tipos de clavija, 8 da 20 de oro y 9 agrega un pergamino (cada vez uno distinto).
+-- tipos de clavija, 8 da 20 de oro, 9 agrega un pergamino y R una reliquia (cada vez una distinta).
 local prueba = if RunService:IsStudio() then carpetaRemotos:WaitForChild("Prueba", 3) else nil
 if RunService:IsStudio() and prueba and prueba:IsA("RemoteEvent") then
 	local tipoPrueba = 0
 	local pergaminoPrueba = 0
+	local reliquiaPrueba = 0
 	local teclas = {
 		[Enum.KeyCode.One] = 1,
 		[Enum.KeyCode.Two] = 2,
@@ -575,6 +596,9 @@ if RunService:IsStudio() and prueba and prueba:IsA("RemoteEvent") then
 		elseif input.KeyCode == Enum.KeyCode.Nine then
 			pergaminoPrueba += 1
 			prueba:FireServer("pergamino", pergaminoPrueba)
+		elseif input.KeyCode == Enum.KeyCode.R then
+			reliquiaPrueba += 1
+			prueba:FireServer("reliquia", reliquiaPrueba)
 		end
 	end)
 end

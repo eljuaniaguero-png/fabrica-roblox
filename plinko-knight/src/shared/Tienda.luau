@@ -7,11 +7,15 @@
 --
 -- Pergaminos: "nivel:<tipo>" (sube ese tipo de clavija), "forja:<tipo>" (convierte 2 clavijas que
 -- elijas), "martillo" (borra 1), "vendaje" (cura) y "furia" (×2 Multi en el próximo tiro).
+-- Paso 5c: reliquias. Salen 2 por tienda (primero se sortea la rareza con Config.Rarezas y después
+-- una de esa rareza que no tengas ni esté ya en la tienda). Se venden por la mitad y se mueven de
+-- lugar (el orden importa: se aplican de izquierda a derecha). Vender y mover, solo en la tienda.
 
 local Azar = require(script.Parent.Azar)
 local Clavijas = require(script.Parent.Clavijas)
 local Config = require(script.Parent.Config)
 local Mazmorra = require(script.Parent.Mazmorra)
+local Reliquias = require(script.Parent.Reliquias)
 
 type Estado = Mazmorra.Estado
 type Item = Mazmorra.ItemTienda
@@ -72,6 +76,12 @@ end
 
 -- Nombre, frase y color (hex) para mostrar un ítem o un pergamino.
 function Tienda.describir(clase: string, id: string, e: Estado?): (string, string, string)
+	if clase == "reliquia" then
+		local tenida = if e then Reliquias.buscar(e.Reliquias, id) else nil
+		return Reliquias.datos(id).Nombre,
+			Reliquias.describir(id, if tenida then tenida.Contador else 0),
+			Reliquias.rareza(id).Color
+	end
 	if clase == "clavija" then
 		local d = (Config.Clavijas :: any)[id]
 		local nivel = Clavijas.nivel(if e then e.Niveles else nil, id)
@@ -114,6 +124,13 @@ end
 -- Las chances de lo que puede salir, en texto (botón "¿Qué puede salir?").
 function Tienda.chances(): { string }
 	local lineas = {}
+	table.insert(
+		lineas,
+		("Reliquias (%d por tienda): %s; después, cualquiera de esa rareza que no tengas"):format(
+			Config.Tienda.Reliquias,
+			Reliquias.chances()
+		)
+	)
 	local tipos = #Config.OrdenClavijas
 	table.insert(
 		lineas,
@@ -141,10 +158,51 @@ function Tienda.chances(): { string }
 	return lineas
 end
 
--- Lo que sale en una tienda (con la semilla): mejoras de clavija y pergaminos.
-function Tienda.generar(semilla: number): { Item }
+-- Lo que sale en una tienda (con la semilla): reliquias, mejoras de clavija y pergaminos. Las
+-- reliquias que ya tenés (en `e`) no salen.
+function Tienda.generar(semilla: number, e: Estado?): { Item }
 	local azar = Azar.nuevo(semilla)
 	local items: { Item } = {}
+	local pesoTotal = 0
+	for _, r in Config.Rarezas do
+		pesoTotal += r.Peso
+	end
+	local usadas: { [string]: boolean } = {}
+	for _, r in (if e then e.Reliquias else {}) :: { Reliquias.Tenida } do
+		usadas[r.Id] = true
+	end
+	for _ = 1, Config.Tienda.Reliquias do
+		local x = azar() * pesoTotal
+		local rareza = Config.OrdenRarezas[#Config.OrdenRarezas]
+		for _, id in Config.OrdenRarezas do
+			x -= (Config.Rarezas :: any)[id].Peso
+			if x < 0 then
+				rareza = id
+				break
+			end
+		end
+		local posibles = {}
+		for _, id in Config.OrdenReliquias do
+			if Reliquias.datos(id).Rareza == rareza and not usadas[id] then
+				table.insert(posibles, id)
+			end
+		end
+		if #posibles == 0 then -- ya tenés todas las de esa rareza: cualquiera que no tengas
+			for _, id in Config.OrdenReliquias do
+				if not usadas[id] then
+					table.insert(posibles, id)
+				end
+			end
+		end
+		if #posibles > 0 then
+			local id = posibles[math.floor(azar() * #posibles) + 1]
+			usadas[id] = true
+			table.insert(
+				items,
+				{ Clase = "reliquia", Id = id, Precio = Reliquias.precio(id), Vendido = false }
+			)
+		end
+	end
 	for _ = 1, Config.Tienda.MejorasDeClavija do
 		local tipo = Config.OrdenClavijas[math.floor(azar() * #Config.OrdenClavijas) + 1]
 		table.insert(
@@ -180,7 +238,7 @@ end
 -- Se abre la tienda (después de ganar una pelea, ya con el oro cobrado).
 function Tienda.abrir(e: Estado, semilla: number)
 	e.Fase = "tienda"
-	e.Tienda = { Items = Tienda.generar(semilla), Renovaciones = 0 }
+	e.Tienda = { Items = Tienda.generar(semilla, e), Renovaciones = 0 }
 end
 
 function Tienda.precioRenovar(e: Estado): number
@@ -196,7 +254,7 @@ function Tienda.renovar(e: Estado, semilla: number): (boolean, string?)
 		return false, "No te alcanza el oro"
 	end
 	e.Oro -= precio
-	e.Tienda = { Items = Tienda.generar(semilla), Renovaciones = e.Tienda.Renovaciones + 1 }
+	e.Tienda = { Items = Tienda.generar(semilla, e), Renovaciones = e.Tienda.Renovaciones + 1 }
 	return true, nil
 end
 
@@ -247,7 +305,15 @@ function Tienda.comprar(e: Estado, indice: any, objetivos: any): (boolean, strin
 	if e.Oro < item.Precio then
 		return false, "No te alcanza el oro"
 	end
-	if item.Clase == "clavija" then
+	if item.Clase == "reliquia" then
+		if #e.Reliquias >= Config.LugaresReliquia then
+			return false, "No tenés lugar: vendé una reliquia primero"
+		end
+		if Reliquias.tiene(e.Reliquias, item.Id) then
+			return false, "Ya la tenés"
+		end
+		table.insert(e.Reliquias, { Id = item.Id, Contador = 0, Precio = item.Precio })
+	elseif item.Clase == "clavija" then
 		local ids = clavijasValidas(e, objetivos, 1, item.Id)
 		if not ids then
 			return false, "Elegí una clavija que no sea hueco ni de ese tipo"
@@ -297,6 +363,39 @@ function Tienda.usar(e: Estado, lugar: any, objetivos: any): (boolean, string?)
 		return false, "Pergamino desconocido"
 	end
 	table.remove(e.Pergaminos, lugar)
+	return true, nil
+end
+
+-- Vender la reliquia del lugar `lugar` (solo en la tienda): te dan la mitad de lo que pagaste.
+function Tienda.vender(e: Estado, lugar: any): (boolean, string?)
+	if e.Fase ~= "tienda" then
+		return false, "Solo se vende en la tienda"
+	end
+	local r = if typeof(lugar) == "number" then e.Reliquias[lugar] else nil
+	if not r then
+		return false, "No hay reliquia ahí"
+	end
+	e.Oro += Reliquias.venta(r)
+	table.remove(e.Reliquias, lugar)
+	return true, nil
+end
+
+-- Mover la reliquia del lugar `desde` al lugar `hacia` (solo en la tienda). El orden importa:
+-- las que actúan al final del tiro se aplican de izquierda a derecha.
+function Tienda.mover(e: Estado, desde: any, hacia: any): (boolean, string?)
+	if e.Fase ~= "tienda" then
+		return false, "Solo se ordena en la tienda"
+	end
+	if
+		typeof(desde) ~= "number"
+		or typeof(hacia) ~= "number"
+		or not e.Reliquias[desde]
+		or not e.Reliquias[hacia]
+	then
+		return false, "No hay reliquia ahí"
+	end
+	local r = table.remove(e.Reliquias, desde)
+	table.insert(e.Reliquias, hacia, r)
 	return true, nil
 end
 

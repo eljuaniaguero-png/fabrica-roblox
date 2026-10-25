@@ -69,11 +69,16 @@ end
 do
 	local items = Tienda.generar(5)
 	chequear(
-		#items == Config.Tienda.MejorasDeClavija + Config.Tienda.Pergaminos,
+		#items
+			== Config.Tienda.Reliquias
+				+ Config.Tienda.MejorasDeClavija
+				+ Config.Tienda.Pergaminos,
 		"cantidad de ítems mal"
 	)
 	for _, item in items do
-		if item.Clase == "clavija" then
+		if item.Clase == "reliquia" then
+			chequear(Config.Reliquias[item.Id] ~= nil, "reliquia rara: " .. item.Id)
+		elseif item.Clase == "clavija" then
 			chequear(table.find(Config.OrdenClavijas, item.Id) ~= nil, "mejora de clavija rara")
 		else
 			chequear(Tienda.esPergamino(item.Id), "pergamino raro: " .. item.Id)

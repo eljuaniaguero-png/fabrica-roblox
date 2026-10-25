@@ -8,9 +8,12 @@
 -- Paso 5a: la partida tiene su tablero (tipo de cada clavija), el nivel de cada tipo, la bola y
 -- el oro. Las azules que se rompen quedan hueco hasta el final de la partida.
 -- Paso 5b: oro por pelea (con bonus por matar rápido e interés), pergaminos y furia.
+-- Paso 5c: reliquias. Acá crecen las que crecen (Trofeo al matar de un tiro, Callo con cada azul
+-- rota, Racha con cada pelea sin que te peguen) y la Bolsa de Cuero sube el tope del interés.
 
 local Clavijas = require(script.Parent.Clavijas)
 local Config = require(script.Parent.Config)
+local Reliquias = require(script.Parent.Reliquias)
 local TableroModulo = require(script.Parent.Tablero)
 
 local CANTIDAD_CLAVIJAS = #TableroModulo.generar().Clavijas
@@ -46,6 +49,8 @@ export type Estado = {
 	Tienda: TiendaEstado, -- lo que hay en la tienda (vale en la fase "tienda")
 	Pergaminos: { string }, -- los que tenés (hasta Config.LugaresPergamino)
 	Furia: boolean, -- el próximo tiro tiene ×2 Multi (pergamino Furia)
+	Reliquias: { Reliquias.Tenida }, -- en orden, de izquierda a derecha
+	Golpeado: boolean, -- el monstruo te pegó en esta pelea (Racha)
 	TirosPelea: number, -- tiros en la pelea actual (para el bonus de oro)
 	UltimoOro: OroGanado,
 	Quemando: number, -- turnos que le quedan de quemadura al monstruo
@@ -86,6 +91,8 @@ function Mazmorra.nueva(bola: string?): Estado
 		Tienda = { Items = {}, Renovaciones = 0 },
 		Pergaminos = {},
 		Furia = false,
+		Reliquias = {},
+		Golpeado = false,
 		TirosPelea = 0,
 		UltimoOro = { Pelea = 0, Bonus = 0, Interes = 0 },
 		Quemando = 0,
@@ -98,6 +105,11 @@ function Mazmorra.copiar(e: Estado): Estado
 	copia.Tablero = table.clone(e.Tablero)
 	copia.Niveles = table.clone(e.Niveles)
 	copia.Pergaminos = table.clone(e.Pergaminos)
+	local reliquias = {}
+	for i, r in e.Reliquias do
+		reliquias[i] = table.clone(r)
+	end
+	copia.Reliquias = reliquias
 	copia.UltimoOro = table.clone(e.UltimoOro)
 	local items = {}
 	for i, item in e.Tienda.Items do
@@ -113,8 +125,21 @@ function Mazmorra.modificadores(e: Estado): {
 	Niveles: Clavijas.Niveles,
 	Bola: string,
 	Furia: boolean,
+	Reliquias: { Reliquias.Tenida },
+	Oro: number,
+	Vida: number,
+	TirosPelea: number,
 }
-	return { Tablero = e.Tablero, Niveles = e.Niveles, Bola = e.Bola, Furia = e.Furia }
+	return {
+		Tablero = e.Tablero,
+		Niveles = e.Niveles,
+		Bola = e.Bola,
+		Furia = e.Furia,
+		Reliquias = e.Reliquias,
+		Oro = e.Oro,
+		Vida = e.Vida,
+		TirosPelea = e.TirosPelea,
+	}
 end
 
 -- Pelea nueva: se apaga la quemadura y se cuentan los tiros de cero.
@@ -122,14 +147,19 @@ function Mazmorra.empezarPelea(e: Estado)
 	e.Quemando = 0
 	e.Quemadura = 0
 	e.TirosPelea = 0
+	e.Golpeado = false
 end
 
 -- Lo que dejó el tiro además del golpe: el oro de las doradas y las azules rotas (quedan hueco).
 function Mazmorra.cobrarTiro(e: Estado, oro: number, rotas: { number })
 	e.Oro += math.max(math.floor(oro), 0)
+	local callo = Reliquias.buscar(e.Reliquias, "callo")
 	for _, id in rotas do
 		if e.Tablero[id] == "azul" then
 			e.Tablero[id] = "hueco"
+			if callo then
+				callo.Contador += 1
+			end
 		end
 	end
 end
@@ -152,7 +182,10 @@ function Mazmorra.cobrarPelea(e: Estado, esJefe: boolean): OroGanado
 		elseif e.TirosPelea == 2 then o.BonusDosTiros
 		else 0
 	e.Oro += pelea + bonus
-	local interes = math.min(math.floor(e.Oro / o.InteresCada), o.InteresTope)
+	local tope = if Reliquias.tiene(e.Reliquias, "bolsa")
+		then Config.Reliquias.bolsa.InteresTope
+		else o.InteresTope
+	local interes = math.min(math.floor(e.Oro / o.InteresCada), tope)
 	e.Oro += interes
 	e.UltimoOro = { Pelea = pelea, Bonus = bonus, Interes = interes }
 	return e.UltimoOro
@@ -181,6 +214,11 @@ function Mazmorra.turno(e: Estado, danio: number, quemadura: number?): Turno
 	if vidaMonstruo > 0 then
 		golpe = monstruo.Golpe
 		e.Vida = math.max(e.Vida - golpe, 0)
+		e.Golpeado = true
+		local racha = Reliquias.buscar(e.Reliquias, "racha")
+		if racha then
+			racha.Contador = 0
+		end
 		if e.Vida == 0 then
 			e.Fase = "perdio"
 			resultado = "perdio"
@@ -196,6 +234,16 @@ function Mazmorra.turno(e: Estado, danio: number, quemadura: number?): Turno
 	local vidaCaballero = e.Vida
 
 	local oro: OroGanado? = nil
+	if resultado == "piso" or resultado == "gano" then
+		local trofeo = Reliquias.buscar(e.Reliquias, "trofeo")
+		if trofeo and e.TirosPelea == 1 then
+			trofeo.Contador += 1
+		end
+		local racha = Reliquias.buscar(e.Reliquias, "racha")
+		if racha and not e.Golpeado then
+			racha.Contador += 1
+		end
+	end
 	if resultado == "piso" then
 		oro = Mazmorra.cobrarPelea(e, monstruo.EsJefe == true)
 		e.Piso += 1
