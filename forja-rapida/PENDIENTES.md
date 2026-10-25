@@ -4,13 +4,13 @@ Se hacen de a uno, en orden. Cuando un pedido dice "Prompt: X de PROMPTS-SECTORE
 
 ## Sectores 25/10
 
-- [ ] **D1 · Diagnóstico lado a lado** (no cambia nada)
+- [x] ~~**D1 · Diagnóstico lado a lado** (no cambia nada)~~ hecho 25/10
   - Qué se hace: capturas del juego con las mismas cámaras que 9 referencias, lado a lado, y tabla de diferencias ordenada por lo que más se nota (luz, colores, studs, tamaños, fondo, HUD).
   - Qué hacés vos: abrir Studio con Forja Rápida y conectar Rojo. Mirar la tabla.
   - Cómo lo pruebo: Play por MCP, capturas en `arte/comparaciones/diagnostico-<n>.png`.
   - Prompt: D1 de PROMPTS-SECTORES.md
 
-- [ ] **D2 · Luz y cielo** (reemplaza al prompt A de "mapa como la referencia" del 18/10)
+- [x] ~~**D2 · Luz y cielo** (reemplaza al prompt A de "mapa como la referencia" del 18/10)~~ hecho 25/10 (falta probar en emulador de celular)
   - Qué se hace: estilo de luz "Referencia" (tu luz queda guardada como "Juani"), cielo celeste de dibujo con nubes y 2 arcoíris de bloques lejos.
   - Qué hacés vos: Blender abierto para el arcoíris; si hay que subir las caras del cielo, te digo qué botón tocar.
   - Cómo lo pruebo: Play, lado a lado con estilo-1, mapa-3 y lobby-2 hasta 3 veces; eventos que tiñen la luz siguen andando.

@@ -63,6 +63,23 @@ function Iluminacion.aplicar(nombre: string?)
 	rayos.Spread = L.SunRays.Spread
 	rayos.Enabled = true
 
+	-- Nubes 3D de Roblox (solo si el estilo las pide); si no, se apagan.
+	local nubes = workspace.Terrain:FindFirstChildOfClass("Clouds")
+	local N = (L :: any).Nubes
+	if N then
+		if not nubes then
+			nubes = Instance.new("Clouds")
+			nubes.Parent = workspace.Terrain
+		end
+		local c = nubes :: Clouds
+		c.Cover = N.Cover
+		c.Density = N.Density
+		c.Color = Color3.fromHex(N.Color)
+		c.Enabled = true
+	elseif nubes then
+		(nubes :: Clouds).Enabled = false
+	end
+
 	if GameConfig.Luz.CieloDeFabrica then
 		-- Un Sky nuevo trae las texturas de fábrica de Roblox: celeste con nubes de dibujo.
 		for _, s in Lighting:GetChildren() do
@@ -70,7 +87,8 @@ function Iluminacion.aplicar(nombre: string?)
 				s:Destroy()
 			end
 		end
-		efecto("Sky", "CieloForja")
+		local cielo = efecto("Sky", "CieloForja") :: Sky
+		cielo.CelestialBodiesShown = false -- la referencia no muestra sol ni luna
 	end
 end
 

@@ -434,7 +434,8 @@ local function modeloImportado(id: string): Model?
 	if not carpetaModelos then
 		return nil
 	end
-	local original = carpetaModelos:FindFirstChild(id) or carpetaModelos:FindFirstChild("Mascota_" .. id)
+	local original = carpetaModelos:FindFirstChild(id)
+		or carpetaModelos:FindFirstChild("Mascota_" .. id)
 	if original and original:IsA("Model") then
 		return original
 	end

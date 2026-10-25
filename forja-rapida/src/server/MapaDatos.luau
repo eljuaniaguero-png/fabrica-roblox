@@ -1368,9 +1368,16 @@ return {
 		},
 		{
 			Tipo = "Deco",
-			Pos = { -40, 70, 148 },
+			Pos = { -66, 40, 196 },
 			Tam = { 72, 30, 16 },
-			Giro = 0,
+			Giro = -25,
+			Atributos = { Nombre = "Arcoiris", Escala = 1, Choca = false },
+		},
+		{
+			Tipo = "Deco",
+			Pos = { 66, 40, 196 },
+			Tam = { 72, 30, 16 },
+			Giro = 25,
 			Atributos = { Nombre = "Arcoiris", Escala = 1, Choca = false },
 		},
 		{
@@ -2194,9 +2201,16 @@ return {
 		},
 		{
 			Tipo = "Deco",
-			Pos = { 40, 76, 356 },
+			Pos = { -66, 46, 404 },
 			Tam = { 72, 30, 16 },
-			Giro = 0,
+			Giro = -25,
+			Atributos = { Nombre = "Arcoiris", Escala = 1, Choca = false },
+		},
+		{
+			Tipo = "Deco",
+			Pos = { 66, 46, 404 },
+			Tam = { 72, 30, 16 },
+			Giro = 25,
 			Atributos = { Nombre = "Arcoiris", Escala = 1, Choca = false },
 		},
 		{
@@ -3041,9 +3055,16 @@ return {
 		},
 		{
 			Tipo = "Deco",
-			Pos = { -40, 82, 564 },
+			Pos = { -66, 52, 612 },
 			Tam = { 72, 30, 16 },
-			Giro = 0,
+			Giro = -25,
+			Atributos = { Nombre = "Arcoiris", Escala = 1, Choca = false },
+		},
+		{
+			Tipo = "Deco",
+			Pos = { 66, 52, 612 },
+			Tam = { 72, 30, 16 },
+			Giro = 25,
 			Atributos = { Nombre = "Arcoiris", Escala = 1, Choca = false },
 		},
 		{
@@ -3895,9 +3916,16 @@ return {
 		},
 		{
 			Tipo = "Deco",
-			Pos = { 40, 88, 772 },
+			Pos = { -66, 58, 820 },
 			Tam = { 72, 30, 16 },
-			Giro = 0,
+			Giro = -25,
+			Atributos = { Nombre = "Arcoiris", Escala = 1, Choca = false },
+		},
+		{
+			Tipo = "Deco",
+			Pos = { 66, 58, 820 },
+			Tam = { 72, 30, 16 },
+			Giro = 25,
 			Atributos = { Nombre = "Arcoiris", Escala = 1, Choca = false },
 		},
 		{
@@ -4700,9 +4728,16 @@ return {
 		},
 		{
 			Tipo = "Deco",
-			Pos = { 40, 94, 980 },
+			Pos = { -66, 64, 1028 },
 			Tam = { 72, 30, 16 },
-			Giro = 0,
+			Giro = -25,
+			Atributos = { Nombre = "Arcoiris", Escala = 1, Choca = false },
+		},
+		{
+			Tipo = "Deco",
+			Pos = { 66, 64, 1028 },
+			Tam = { 72, 30, 16 },
+			Giro = 25,
 			Atributos = { Nombre = "Arcoiris", Escala = 1, Choca = false },
 		},
 		{

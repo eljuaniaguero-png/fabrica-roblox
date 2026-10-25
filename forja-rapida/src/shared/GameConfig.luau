@@ -1564,7 +1564,7 @@ local GameConfig = {
 	-- Luz y color. Estilos para elegir (punto de control 2, 18/10/2026); Elegido = el que se usa.
 	-- Para probar en Studio: ServerStorage.Prueba.Estilo:Invoke("B").
 	Luz = {
-		Elegido = "A", -- elegido el 18/10/2026: el más parecido a arte/referencias
+		Elegido = "Referencia", -- 25/10/2026 (pedido D2): copiado de estilo-1, mapa-1, mapa-3 y lobby-2
 		Estilos = {
 			-- El de antes: luz gris pareja, sombras duras.
 			Actual = {
@@ -1599,7 +1599,8 @@ local GameConfig = {
 			-- A · Juguete (como las referencias de arte/referencias): mediodía, luz blanca,
 			-- sombras nítidas, colores saturados y cielo limpio.
 			-- 19/10/2026: con los valores que Juani dejó en Studio (Lighting y ColorCorrection).
-			A = {
+			-- Se usó hasta el 25/10/2026 (con el "Realistic Sky"); se guarda para volver a usarlo.
+			Juani = {
 				Lighting = {
 					ClockTime = 14.5,
 					Brightness = 3,
@@ -1627,6 +1628,40 @@ local GameConfig = {
 					Haze = 0,
 				},
 				SunRays = { Intensity = 0.02, Spread = 0.5 },
+			},
+			-- Referencia (pedido D2, 25/10/2026): copiada de estilo-1, mapa-1, mapa-3 y lobby-2.
+			-- Sombras claras (la referencia casi no tiene negros), sin brillo de plástico, colores
+			-- saturados y bruma celeste que aclara el fondo. Cielo de dibujo (ver Cielo abajo).
+			Referencia = {
+				Lighting = {
+					ClockTime = 13.5,
+					Brightness = 2.6,
+					Ambient = "#9A9A9A",
+					OutdoorAmbient = "#B4B4B4",
+					EnvironmentDiffuseScale = 0.4,
+					EnvironmentSpecularScale = 0.1,
+					GlobalShadows = true,
+					ShadowSoftness = 0.15,
+					ExposureCompensation = 0,
+				},
+				ColorCorrection = {
+					Saturacion = 0.15,
+					Contraste = 0.08,
+					Brillo = 0.03,
+					Color = "#FFFFFF",
+				},
+				Bloom = { Intensity = 0.4, Size = 20, Threshold = 1.6 },
+				Atmosphere = {
+					Density = 0.34,
+					Offset = 0.1,
+					Color = "#CFE8FF",
+					Decay = "#A7D3FF",
+					Glare = 0,
+					Haze = 2,
+				},
+				SunRays = { Intensity = 0.02, Spread = 0.5 },
+				-- Nubes gordas de algodón (Clouds de Terrain); sin esto el cielo queda casi vacío.
+				Nubes = { Cover = 0.62, Density = 0.75, Color = "#FFFFFF" },
 			},
 			-- B · Caramelo: lo mismo pero más suave y pastel, sombras azuladas y bruma celeste.
 			B = {
@@ -1690,8 +1725,9 @@ local GameConfig = {
 			},
 		},
 		-- Cielo: true = el Sky de fábrica de Roblox (nubes de dibujo). false = se deja el cielo
-		-- que esté en Studio (19/10/2026: Juani eligió "Realistic Sky").
-		CieloDeFabrica = false,
+		-- que esté en Studio. 19/10/2026 Juani eligió "Realistic Sky" (va con el estilo "Juani");
+		-- 25/10/2026 (D2) se vuelve al de fábrica, que es el más parecido a la referencia.
+		CieloDeFabrica = true,
 	},
 
 	-- Eventos del mundo (Grupo 6). Uno por vez: se anuncia AvisoPrevio segundos antes, dura su

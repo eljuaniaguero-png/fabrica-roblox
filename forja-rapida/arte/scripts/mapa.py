@@ -1227,6 +1227,12 @@ CIMAS = {
 }
 
 
+ARCO_X = 66  # studs del centro del pasillo a cada arcoíris
+ARCO_ATRAS = 12  # studs antes del final de la zona
+ARCO_ALTO = 16  # studs arriba de la tapa de las paredes
+ARCO_GIRO = 25  # grados hacia el centro
+
+
 def cimas(g, rng, n, zs, ze, alto_izq=None, alto_der=None):
     """La cresta: una fila de piezas arriba de las paredes de ladrillo (a PARED de alto, un poco
     hacia afuera para que no se vea el borde), y en el cielo un arcoíris y nubes de bloques."""
@@ -1234,7 +1240,11 @@ def cimas(g, rng, n, zs, ze, alto_izq=None, alto_der=None):
         for i in range(11):
             z = par(zs + 4 + i * 19 + rng.randint(-3, 3))
             deco(CIMAS[n][i % len(CIMAS[n])], x, z, rng.choice([0, 90, 180, 270]), y=PARED - 1)
-    deco("Arcoiris", rng.choice([-1, 1]) * 40, ze - 60, 0, y=70)
+    # Dos arcoíris al fondo, uno a cada lado, apenas arriba de las paredes y un poco girados hacia
+    # el centro, como en estilo-1 y mapa-3 (pedido D2, 25/10/2026; antes había uno solo encima).
+    rng.choice([-1, 1])  # se sigue sacando para que el resto del mapa salga igual
+    for lado in (-1, 1):
+        deco("Arcoiris", lado * ARCO_X, ze - ARCO_ATRAS, lado * ARCO_GIRO, y=PARED + ARCO_ALTO)
     for i in range(2):
         deco("Nube_Bloques", rng.randint(-60, 60), zs + 60 + i * 110, rng.choice([0, 180]), y=80 + i * 12)
 
