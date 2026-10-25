@@ -1,7 +1,7 @@
 # Plinko Knight — ficha del prototipo
 
 Origen: `plinko-knight/PLAN-Y-PROMPTS.md` (25/10/2026) + idea de arte aprobada (`plinko-knight/arte/IDEA-DE-ARTE.md`).
-Estado: **borrador, esperando OK** (punto de control 1). Todavía no hay mecánica programada.
+Estado: **aprobada por Juani el 25/10/2026** (punto de control 1). Lo próximo es la etapa 2: tablero, puntería y bola.
 Carpeta: `plinko-knight/` (código en `plinko-knight/src/`, Rojo con `rojo serve plinko-knight`, puerto 34876). Place propio: `plinko-knight/PlinkoKnight.rbxl`.
 
 ## Concepto
