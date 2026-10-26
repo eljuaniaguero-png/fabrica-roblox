@@ -1,7 +1,7 @@
 # Plinko Knight — ficha del prototipo
 
 Origen: `plinko-knight/PLAN-Y-PROMPTS.md` (25/10/2026) + idea de arte aprobada (`plinko-knight/arte/IDEA-DE-ARTE.md`).
-Estado: **aprobada por Juani el 25/10/2026** (punto de control 1). Etapas 2 (tablero, puntería y bola), 3 (daño y revisión del servidor), 4 (monstruos y mazmorra) y 5 (mejoras 1 de 3) hechas el 25/10/2026. Juani jugó la prueba de 5 minutos (perdió en el piso 6: "está bueno") y pidió hacerlo **más roguelike, estilo Balatro**. **Rediseño aprobado el 25/10/2026.** Pasos 5a a 5d del rediseño hechos el 25/10; Juani lo jugó 10 minutos y dijo OK. Etapa 6 (guardado) hecha el 25/10. Etapas 7 (pantallas), 8 (estilo: Cripta azul) y 9 (arte y sonido con ForgeGUI) hechas el 25 y 26/10; Juani decidió no probar en celular (26/10). Etapa 7b-1 (sala en gris) y 7b-2 (13 modelos de la sala con ForgeGUI) hechas el 26/10; lo próximo es 7b-3 (limpiar, importar y luces) y después la etapa 10 (sensación).
+Estado: **aprobada por Juani el 25/10/2026** (punto de control 1). Etapas 2 (tablero, puntería y bola), 3 (daño y revisión del servidor), 4 (monstruos y mazmorra) y 5 (mejoras 1 de 3) hechas el 25/10/2026. Juani jugó la prueba de 5 minutos (perdió en el piso 6: "está bueno") y pidió hacerlo **más roguelike, estilo Balatro**. **Rediseño aprobado el 25/10/2026.** Pasos 5a a 5d del rediseño hechos el 25/10; Juani lo jugó 10 minutos y dijo OK. Etapa 6 (guardado) hecha el 25/10. Etapas 7 (pantallas), 8 (estilo: Cripta azul) y 9 (arte y sonido con ForgeGUI) hechas el 25 y 26/10; Juani decidió no probar en celular (26/10). Etapas 7b-1 (sala en gris), 7b-2 (13 modelos con ForgeGUI) y 7b-3 (modelos en la sala, neón y luces) hechas el 26/10; lo próximo es la etapa 10 (sensación).
 Carpeta: `plinko-knight/` (código en `plinko-knight/src/`, Rojo con `rojo serve plinko-knight`, puerto 34876). Place propio: `plinko-knight/PlinkoKnight.rbxl`.
 
 ## Rediseño roguelike (aprobado el 25/10/2026)
@@ -515,4 +515,16 @@ Juani pidió sacar al caballero del juego: **el personaje es el del jugador**.
 - Juani aprobó cada concepto antes del 3D. Se rehicieron 2 conceptos que traían cosas de otras marcas (fantasmas tipo Pac-Man en M4 y un joystick de Nintendo en M6).
 - **13 modelos en `plinko-knight/modelos/ia/`** (M1 a M13; M14 no va, la estatua es tu avatar). Todos de 1 malla y 1 material. Hoja: `modelos/ia/todos-los-modelos.png`. Prompts, ids y medidas en `plinko-knight/arte/prompts.md`.
 - **Para 7b-3:** salvo M1, todos tienen más triángulos que el máximo del plan (hasta 14.411) y vienen con el lado largo en 1,9 m: hay que bajar triángulos en Blender y escalarlos. Todavía no se subió nada a Roblox.
+
+### Etapa 7b-3 · Modelos en la sala, neón y luces (26/10/2026)
+
+- **Limpieza con ForgeGUI en vez de Blender:** "remesh" de ForgeGUI bajó cada modelo a su máximo de triángulos del plan (M1 ya estaba abajo). Se eligió así porque desde ForgeGUI se suben solos a Roblox; limpiándolos en Blender habría que importarlos a mano en Studio. Cada uno se revisó con un render de Blender sin ventana (`plinko-knight/modelos/limpios/todos-limpios.png`): ninguno se arruinó. Script: `plinko-knight/modelos/scripts/render_glb.py`.
+- **Subidos una vez a Roblox** (cuenta de Juani) e IDs en `Config.Sala.Modelos` con su medida (Alto o Largo en studs).
+- **`server/VestirSala.luau`** los carga con InsertService al arrancar el servidor (la sala sigue viviendo en git), los pone a su medida y los duplica: tu máquina con su banqueta y la mesita, 7 máquinas de fondo, mostrador con 2 cajitas de vidrio, marco de récords, 2 molinetes, 2 tachos, 4 macetas y 4 postes de neón. Los bloques grises quedan invisibles debajo (colisiones, tags y "E: Jugar"); si un modelo no carga, se ve el bloque gris y el juego anda igual.
+- **La cámara al sentarte** se acerca a la pantalla del modelo (1,5 studs) y de ahí se funde a la mazmorra.
+- **Sala con la paleta de las capturas:** piso de damero blanco y negro que brilla, paredes casi negras, carteles de neón con luz de su color (ARCADE magenta, PLINKO KNIGHT verde y amarillo, TIENDA cian), tubos de neón en las esquinas y la entrada, banda de neón en las 4 paredes y línea cian al pie. Las únicas luces son las de los carteles, sin sombras.
+- **Comparación** con las capturas en `plinko-knight/arte/comparaciones/`: mismo clima (oscuro, la luz sale del neón, damero). Diferencias: las paredes de la referencia están llenas de carteles (se agregó la banda de neón); el piso de la referencia refleja como espejo (Roblox no tiene reflejos de verdad: solo brillo); falta la alfombra con confeti (queda para después).
+- **Arreglos probando:** un error de Luau que cortaba la carga a la mitad; los postes salían de 6 studs de ancho (ahora 9 de alto); la máquina gris tapaba el contorno amarillo.
+- **Probado en Play (compu):** 60 FPS en la sala, sentarse y jugar en la máquina nueva, consola sin errores del juego. Los avisos "Asset content representation is being generated" son de Roblox procesando los modelos recién subidos y se van solos.
+- **Copia .rbxl:** no hace falta: la sala se arma por código y el place no cambió.
 

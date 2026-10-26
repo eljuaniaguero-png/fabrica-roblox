@@ -136,7 +136,7 @@ function Sala.crear(o: Opciones): Sala
 		end
 		-- La pantalla mira a +Z: la cámara queda delante, a la distancia justa para llenarla.
 		local frente = pantalla.CFrame.LookVector * -1
-		return CFrame.lookAt(pantalla.Position + frente * 2.6, pantalla.Position)
+		return CFrame.lookAt(pantalla.Position + frente * 1.5, pantalla.Position)
 	end
 
 	local function raiz(): BasePart?

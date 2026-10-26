@@ -69,3 +69,23 @@ Juani aprobó los 5 conceptos. Igual que la tanda anterior (Meshy por ForgeGUI, 
 
 **Etapa 7b-2 terminada:** 13 modelos (M1 a M13); M14 no va. Todos de 1 malla y 1 material. En 7b-3: escalar, bajar triángulos en Blender a los máximos y subirlos a Roblox.
 
+## Etapa 7b-3 · Limpieza (remesh) y subida a Roblox (26/10/2026)
+
+Remesh de ForgeGUI (topología triángulos) al máximo del plan; después publicados como Model en la cuenta de Juani. Glb limpios en `modelos/limpios/`.
+
+| # | Remesh (id) | Triángulos | Id de Roblox |
+|---|---|---|---|
+| M1 | (sin remesh, 11.916) | — | 128668549733552 |
+| M2 | `3de60c85-2460-477c-aae7-557b46fc54cd` | 6.000 | 117819448578361 |
+| M3 | `043e0587-b43a-4a2e-9cbe-77911ce82e86` | 6.000 | 119557592984296 |
+| M4 | `f213cc4d-6a02-400b-8ead-e3206c9d489a` | 6.000 | 131991761922226 |
+| M5 | `ed9e1a54-5b4e-43b7-9172-cecdf2f5b65e` | 1.500 | 113006751369088 |
+| M6 | `cf8b0927-e158-466b-9035-f316f1188ec9` | 6.000 | 120712174872373 |
+| M7 | `04e5d16f-9c57-400d-8172-a1c05aeef13f` | 8.000 | 112597161912739 |
+| M8 | `2d9c7320-5af2-4d0c-8a8b-44649df56cbf` | 1.500 | 94618219124890 |
+| M9 | `13157409-4a00-492c-81e6-ca7c9ef3316d` | 3.000 | 130935584485110 |
+| M10 | `a04d406a-cd16-4d3b-aae4-42f03adb2185` | 3.000 | 137841564443967 |
+| M11 | `c7a1af7b-e305-409a-a4da-060d02ab6707` | 3.000 | 105932246266763 |
+| M12 | `11b63e6c-21d3-47c2-854c-db44338b6d5b` | 1.500 | 75610856010776 |
+| M13 | `5bce06ba-ec59-470e-b1a7-7d822b28b6bf` | 2.000 | 79663817756766 |
+

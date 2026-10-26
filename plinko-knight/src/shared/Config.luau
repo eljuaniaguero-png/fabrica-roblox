@@ -565,16 +565,52 @@ Config.Sala = {
 	TiempoFundido = 0.2, -- fundido al entrar o salir de la pantalla
 	TiempoMinimoBola = 0.3, -- segundos entre dos "elegir bola" en el mostrador (servidor)
 	EscalaEstatua = 1.7, -- tamaño de la estatua de tu avatar (1 = tamaño real; más grande toca el techo)
-	-- Colores de la sala en gris (la paleta de neón llega en 7b-3).
+	-- Colores de la sala (7b-3, paleta medida de las capturas de Juani). Los bloques grises que
+	-- quedan debajo de los modelos usan Maquina/Fondo.
 	Colores = {
-		Piso = "#3A3A3A",
-		Pared = "#2A2A2A",
+		Piso = "#EDEDED", -- damero: blanco
+		PisoOscuro = "#121018", -- damero: negro
+		Pared = "#0D0A14", -- casi negro
 		Maquina = "#6A6A6A",
 		Pantalla = "#151B2E",
-		Fondo = "#4A4A4A", -- máquinas de fondo, molinete, banquetas
+		Fondo = "#4A4A4A",
 		Cartel = "#E0E0E0",
 		Borde = "#FFE600", -- contorno amarillo de lo que se puede tocar (como CloverPit)
+		Magenta = "#FF3FD0",
+		Cian = "#3FE8FF",
+		Amarillo = "#FFE14A",
+		Verde = "#7CFF6B",
 	},
+	Baldosa = 4, -- studs de cada baldosa del damero
+	ReflejoPiso = 0.25,
+	-- Modelos de la IA (ForgeGUI, 7b-2), subidos una vez y duplicados por código. Alto en studs
+	-- (o Largo: el lado más largo). Si un modelo no carga, queda el bloque gris.
+	Modelos = {
+		maquina = { Id = 128668549733552, Alto = 7 }, -- M1
+		naves = { Id = 117819448578361, Alto = 7 }, -- M2
+		autos = { Id = 119557592984296, Alto = 7 }, -- M3
+		laberinto = { Id = 131991761922226, Alto = 5.5 }, -- M4
+		banqueta = { Id = 113006751369088, Alto = 2.6 }, -- M5
+		mesa = { Id = 120712174872373, Alto = 3.2 }, -- M6
+		mostrador = { Id = 112597161912739, Largo = 10 }, -- M7
+		cajita = { Id = 94618219124890, Alto = 2.2 }, -- M8
+		records = { Id = 130935584485110, Largo = 18 }, -- M9
+		molinete = { Id = 137841564443967, Alto = 3.4 }, -- M10
+		maceta = { Id = 105932246266763, Alto = 4.5 }, -- M11
+		tacho = { Id = 75610856010776, Alto = 3 }, -- M12
+		poste = { Id = 79663817756766, Alto = 9 }, -- M13 (con 14 quedaba de 6 studs de ancho)
+	},
+	GiroModelos = 0, -- grados en Y para que el frente de los modelos mire a la sala
+	AlturaPantalla = 0.6, -- a qué altura de la máquina está su pantalla (0 a 1): ahí va la cámara
+	HundidoPantalla = 0.35, -- studs que la pantalla está hundida respecto del frente del modelo
+	AlturaRecords = 3, -- studs del piso a la base del marco de récords
+	Postes = {
+		Vector2.new(-20, -7),
+		Vector2.new(20, -7),
+		Vector2.new(-20, 10),
+		Vector2.new(20, 10),
+	},
+	LuzCartel = { Brillo = 2, Alcance = 22 }, -- PointLight de cada cartel de neón
 }
 
 return Config

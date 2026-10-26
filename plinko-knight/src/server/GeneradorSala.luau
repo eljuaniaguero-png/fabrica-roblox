@@ -16,6 +16,7 @@ local Workspace = game:GetService("Workspace")
 
 local Shared = game:GetService("ReplicatedStorage"):WaitForChild("Shared")
 local Config = require(Shared:WaitForChild("Config"))
+local VestirSala = require(script.Parent:WaitForChild("VestirSala"))
 
 local GeneradorSala = {}
 
@@ -49,6 +50,16 @@ end
 
 -- Cartel con texto sobre una cara de una parte.
 local function cartel(en: BasePart, cara: Enum.NormalId, texto: string, hex: string?): TextLabel
+	-- Cartel de neón: el texto brilla y la parte da luz de su color (la luz de la sala sale de
+	-- los carteles, como en las capturas).
+	if hex then
+		local luz = Instance.new("PointLight")
+		luz.Color = Color3.fromHex(hex)
+		luz.Brightness = S.LuzCartel.Brillo
+		luz.Range = S.LuzCartel.Alcance
+		luz.Shadows = false
+		luz.Parent = en
+	end
 	local gui = Instance.new("SurfaceGui")
 	gui.Face = cara
 	gui.LightInfluence = 0
@@ -61,6 +72,8 @@ local function cartel(en: BasePart, cara: Enum.NormalId, texto: string, hex: str
 	t.Font = Enum.Font.FredokaOne
 	t.TextScaled = true
 	t.TextColor3 = Color3.fromHex(hex or C.Cartel)
+	t.TextStrokeTransparency = 0.6
+	t.TextStrokeColor3 = Color3.fromHex(hex or C.Cartel)
 	t.Text = texto
 	t.Parent = gui
 	return t
@@ -80,7 +93,7 @@ local function maquina(padre: Instance, indice: number, x: number, z: number): M
 		CFrame.new(x, t.Y + 0.5, z + t.Z / 2 - 0.2),
 		C.Fondo
 	)
-	cartel(arriba, Enum.NormalId.Back, "PLINKO KNIGHT")
+	cartel(arriba, Enum.NormalId.Back, "PLINKO KNIGHT", C.Amarillo)
 	-- Pantalla (en la cara que mira a la sala, +Z).
 	local p = S.PantallaTamanio
 	local pantalla =
@@ -140,6 +153,7 @@ local function maquinaFondo(padre: Instance, indice: number, tipo: number, cf: C
 	)
 	pantalla.Material = Enum.Material.Neon
 	CollectionService:AddTag(pantalla, "PantallaDemo")
+	m:SetAttribute("Tipo", tipo) -- VestirSala pone el modelo de la IA que corresponde
 	m.Parent = padre
 end
 
@@ -153,7 +167,34 @@ function GeneradorSala.generar(): Folder
 	local medioX, medioZ = S.Ancho / 2, S.Largo / 2
 
 	-- Piso, techo y paredes (con un hueco de entrada en la pared sur).
-	parte("Piso", sala, Vector3.new(S.Ancho, 1, S.Largo), CFrame.new(0, -0.45, 0), C.Piso, true) -- apenas arriba de la Baseplate
+	parte(
+		"Piso",
+		sala,
+		Vector3.new(S.Ancho, 1, S.Largo),
+		CFrame.new(0, -0.45, 0),
+		C.PisoOscuro,
+		true
+	) -- apenas arriba de la Baseplate
+	-- Damero blanco y negro que brilla (Reflectance), arriba del piso.
+	local damero = Instance.new("Folder")
+	damero.Name = "Damero"
+	damero.Parent = sala
+	local b = S.Baldosa
+	for i = 0, S.Ancho / b - 1 do
+		for j = 0, S.Largo / b - 1 do
+			if (i + j) % 2 == 0 then
+				local baldosa = parte(
+					"Baldosa",
+					damero,
+					Vector3.new(b, 0.1, b),
+					CFrame.new(-S.Ancho / 2 + (i + 0.5) * b, 0.1, -S.Largo / 2 + (j + 0.5) * b),
+					C.Piso
+				)
+				baldosa.Reflectance = S.ReflejoPiso
+				baldosa.CanQuery = false
+			end
+		end
+	end
 	parte(
 		"Techo",
 		sala,
@@ -198,7 +239,7 @@ function GeneradorSala.generar(): Folder
 		C.Pared,
 		true
 	)
-	cartel(dintel, Enum.NormalId.Front, "ARCADE")
+	cartel(dintel, Enum.NormalId.Front, "ARCADE", C.Magenta)
 
 	-- Molinete de entrada.
 	parte("Molinete", sala, Vector3.new(1, 3, 1), CFrame.new(-1.5, 1.5, medioZ - 2), C.Fondo, true)
@@ -228,7 +269,7 @@ function GeneradorSala.generar(): Folder
 		CFrame.new(0, S.Alto - 2.5, -medioZ + 0.2),
 		C.Pared
 	)
-	cartel(tituloFila, Enum.NormalId.Back, "PLINKO KNIGHT")
+	cartel(tituloFila, Enum.NormalId.Back, "PLINKO KNIGHT", C.Verde)
 
 	-- 3 máquinas de fondo contra la pared oeste (naves, autos, laberinto): no se juegan.
 	for i, z in { -4, 2, 8 } do
@@ -261,7 +302,7 @@ function GeneradorSala.generar(): Folder
 		CFrame.new(medioX - 0.4, 8, 2),
 		C.Pared
 	)
-	cartel(cartelTienda, Enum.NormalId.Left, "TIENDA")
+	cartel(cartelTienda, Enum.NormalId.Left, "TIENDA", C.Cian)
 
 	-- Pared de récords: en la pared sur, a la izquierda de la entrada, mirando a la sala (-Z).
 	local records = parte(
@@ -272,6 +313,37 @@ function GeneradorSala.generar(): Folder
 		C.Pantalla
 	)
 	CollectionService:AddTag(records, "Records")
+
+	-- Tubos de neón: verticales en las 4 esquinas y a los costados de la entrada, y una línea cian
+	-- al pie de las paredes.
+	local neon = Instance.new("Folder")
+	neon.Name = "Neon"
+	neon.Parent = sala
+	local function tubo(tamanio: Vector3, donde: CFrame, hex: string)
+		local t = parte("Tubo", neon, tamanio, donde, hex)
+		t.Material = Enum.Material.Neon
+		t.CanQuery = false
+	end
+	for _, x in { -1, 1 } do
+		for _, z in { -1, 1 } do
+			tubo(
+				Vector3.new(0.4, S.Alto, 0.4),
+				CFrame.new(x * (medioX - 0.3), S.Alto / 2, z * (medioZ - 0.3)),
+				if x == z then C.Magenta else C.Cian
+			)
+		end
+		tubo(Vector3.new(0.4, 8, 0.4), CFrame.new(x * 4.4, 4, medioZ - 0.2), C.Magenta)
+	end
+	-- Banda de neón a media altura en las 4 paredes (en las capturas las paredes nunca están
+	-- vacías: carteles y franjas que brillan). Magenta norte y sur, cian este y oeste.
+	local banda = S.Alto * 0.72
+	tubo(Vector3.new(S.Ancho, 0.3, 0.2), CFrame.new(0, banda, -medioZ + 0.1), C.Magenta)
+	tubo(Vector3.new(S.Ancho, 0.3, 0.2), CFrame.new(0, banda, medioZ - 0.1), C.Magenta)
+	tubo(Vector3.new(0.2, 0.3, S.Largo), CFrame.new(-medioX + 0.1, banda, 0), C.Cian)
+	tubo(Vector3.new(0.2, 0.3, S.Largo), CFrame.new(medioX - 0.1, banda, 0), C.Cian)
+	tubo(Vector3.new(S.Ancho, 0.2, 0.2), CFrame.new(0, 0.3, -medioZ + 0.1), C.Cian)
+	tubo(Vector3.new(0.2, 0.2, S.Largo), CFrame.new(-medioX + 0.1, 0.3, 0), C.Cian)
+	tubo(Vector3.new(0.2, 0.2, S.Largo), CFrame.new(medioX - 0.1, 0.3, 0), C.Cian)
 
 	-- Aparecer adentro, al lado de la entrada.
 	local spawn = Workspace:FindFirstChildOfClass("SpawnLocation")
@@ -299,6 +371,7 @@ function GeneradorSala.generar(): Folder
 	sala:SetAttribute("Altura", altura)
 
 	sala.Parent = Workspace
+	task.spawn(VestirSala.vestir, sala) -- los modelos de la IA (cargar espera)
 	return sala
 end
 
