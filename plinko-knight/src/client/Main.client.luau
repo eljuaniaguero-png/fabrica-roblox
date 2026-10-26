@@ -21,7 +21,6 @@
 -- arranca otra partida con la misma bola en un toque.
 -- Input con UserInputService: los otros juegos no usan el Input Action System.
 
-local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 local TweenService = game:GetService("TweenService")
 local UserInputService = game:GetService("UserInputService")
@@ -41,20 +40,9 @@ local SeleccionModulo = require(script.Parent:WaitForChild("Seleccion"))
 local TiendaVistaModulo = require(script.Parent:WaitForChild("TiendaVista"))
 local Ajustes = require(script.Parent:WaitForChild("Ajustes"))
 local Sonidos = require(script.Parent:WaitForChild("Sonidos"))
+local SalaModulo = require(script.Parent:WaitForChild("Sala"))
 
-local jugador = Players.LocalPlayer
-
--- Durante la pelea no se camina: apagar los controles (también el joystick del celular).
-task.spawn(function()
-	local scripts = jugador:WaitForChild("PlayerScripts")
-	local modulo = scripts:WaitForChild("PlayerModule", 10)
-	if modulo and modulo:IsA("ModuleScript") then
-		local ok, playerModule = pcall(require, modulo)
-		if ok and playerModule then
-			(playerModule :: any):GetControls():Disable()
-		end
-	end
-end)
+-- Etapa 7b-1: se camina por la sala; los controles los apaga client/Sala al sentarse.
 
 local carpetaRemotos = game:GetService("ReplicatedStorage"):WaitForChild("Remotos")
 local remotos = {
@@ -67,6 +55,7 @@ local remotos = {
 	EstadoCambio = carpetaRemotos:WaitForChild("EstadoCambio") :: RemoteEvent,
 	Progreso = carpetaRemotos:WaitForChild("Progreso") :: RemoteEvent,
 	ObtenerProgreso = carpetaRemotos:WaitForChild("ObtenerProgreso") :: RemoteFunction,
+	ElegirBola = carpetaRemotos:WaitForChild("ElegirBola") :: RemoteEvent,
 }
 
 local escena = Escena.armar()
@@ -181,6 +170,7 @@ local function brillar(id: number)
 end
 
 local tiendaVista: TiendaVistaModulo.TiendaVista
+local sala: SalaModulo.Sala
 
 -- Dibuja el estado que mandó el servidor (pelea nueva, tienda, volver a bajar, pergamino o
 -- comando de prueba).
@@ -206,8 +196,6 @@ local function ponerEstado(e: Mazmorra.Estado)
 	if e.Fase == "peleando" then
 		pantallas.ocultarFinal()
 		pantallas.ocultarInicio()
-	elseif e.Fase == "inicio" then
-		abrirInicio()
 	end
 end
 
@@ -342,11 +330,26 @@ local function volverABajar(bola: string)
 	end
 end
 
--- Pantalla de inicio: elegir bola (necesita el progreso; si todavía no llegó, espera).
+-- Pantalla de elegir bola. Sentado en la máquina (si "Volver a bajar" no se aceptó) arranca la
+-- partida; en el mostrador de la sala solo guarda la bola elegida.
+local enMostrador = false
 abrirInicio = function()
 	if progreso then
+		enMostrador = false
 		pantallas.mostrarInicio(progreso, volverABajar)
 	end
+end
+local function abrirMostrador()
+	local p = progreso
+	if not p then
+		return
+	end
+	enMostrador = true
+	pantallas.mostrarInicio(p, function(bola: string)
+		p.BolaElegida = bola
+		remotos.ElegirBola:FireServer(bola)
+		pantallas.ocultarInicio()
+	end, "Elegir")
 end
 
 -- Pantalla de perder o ganar. "Volver a bajar" arranca con la misma bola; "Cambiar bola" abre el
@@ -365,8 +368,39 @@ mostrarFinal = function(e: Mazmorra.Estado)
 		Desbloqueos = desbloqueosPartida,
 	}, function()
 		volverABajar(if progreso then progreso.BolaElegida else e.Bola)
-	end, abrirInicio)
+	end, function()
+		sala.levantarse()
+	end)
 end
+
+-- La sala (etapa 7b-1): la pelea se ve solo sentado en la máquina. Al sentarte, si no hay una
+-- partida en curso arranca una con la bola elegida en el mostrador; si la había, sigue.
+pantallas.mostrarHud(false)
+tiendaVista.mostrarHud(false)
+sala = SalaModulo.crear({
+	escena = escena,
+	alSentarse = function()
+		pantallas.mostrarHud(true)
+		tiendaVista.mostrarHud(true)
+		if estado.Fase == "peleando" or estado.Fase == "tienda" then
+			ponerEstado(estado)
+		else
+			volverABajar(if progreso then progreso.BolaElegida else "hierro")
+		end
+	end,
+	alLevantarse = function()
+		pantallas.ocultarFinal()
+		pantallas.ocultarInicio()
+		pantallas.mostrarHud(false)
+		tiendaVista.mostrarHud(false)
+	end,
+	alMostrador = abrirMostrador,
+})
+pantallas.alSalir(function()
+	if not tirando then
+		sala.levantarse()
+	end
+end)
 
 -- Bolita de luz del TOTAL al cartel del monstruo.
 local function volarTotal()
@@ -460,6 +494,7 @@ local function tirar()
 		or pantallas.hayFinal()
 		or seleccion.activa()
 		or tiendaVista.abierta()
+		or not sala.enMaquina()
 	then
 		return
 	end
@@ -613,6 +648,7 @@ UserInputService.InputBegan:Connect(function(input: InputObject, procesado: bool
 		or pantallas.hayFinal()
 		or seleccion.activa()
 		or tiendaVista.abierta()
+		or not sala.enMaquina()
 		or os.clock() - pantallas.finalCerrado() < 0.3
 	then
 		return
@@ -734,8 +770,13 @@ remotos.Progreso.OnClientEvent:Connect(function(datos: any, nuevos: any)
 	end
 	progreso = datos
 	Ajustes.cargar(datos.Ajustes)
-	if estado.Fase == "inicio" then
-		abrirInicio() -- se dibuja con el progreso nuevo (mejor piso, bolas, la elegida)
+	if pantallas.inicioAbierto() then
+		-- se redibuja con el progreso nuevo (mejor piso, bolas, la elegida)
+		if enMostrador then
+			abrirMostrador()
+		else
+			abrirInicio()
+		end
 	end
 	if typeof(nuevos) == "table" then
 		for _, n in nuevos do

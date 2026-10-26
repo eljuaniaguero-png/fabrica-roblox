@@ -1,7 +1,7 @@
 # Plinko Knight — ficha del prototipo
 
 Origen: `plinko-knight/PLAN-Y-PROMPTS.md` (25/10/2026) + idea de arte aprobada (`plinko-knight/arte/IDEA-DE-ARTE.md`).
-Estado: **aprobada por Juani el 25/10/2026** (punto de control 1). Etapas 2 (tablero, puntería y bola), 3 (daño y revisión del servidor), 4 (monstruos y mazmorra) y 5 (mejoras 1 de 3) hechas el 25/10/2026. Juani jugó la prueba de 5 minutos (perdió en el piso 6: "está bueno") y pidió hacerlo **más roguelike, estilo Balatro**. **Rediseño aprobado el 25/10/2026.** Pasos 5a a 5d del rediseño hechos el 25/10; Juani lo jugó 10 minutos y dijo OK. Etapa 6 (guardado) hecha el 25/10. Etapas 7 (pantallas), 8 (estilo: Cripta azul) y 9 (arte y sonido con ForgeGUI) hechas el 25 y 26/10; falta probarlas en el emulador de celular. Lo próximo es la **etapa 7b (sala arcade 3D, aprobada el 26/10)** y después la etapa 10 (sensación).
+Estado: **aprobada por Juani el 25/10/2026** (punto de control 1). Etapas 2 (tablero, puntería y bola), 3 (daño y revisión del servidor), 4 (monstruos y mazmorra) y 5 (mejoras 1 de 3) hechas el 25/10/2026. Juani jugó la prueba de 5 minutos (perdió en el piso 6: "está bueno") y pidió hacerlo **más roguelike, estilo Balatro**. **Rediseño aprobado el 25/10/2026.** Pasos 5a a 5d del rediseño hechos el 25/10; Juani lo jugó 10 minutos y dijo OK. Etapa 6 (guardado) hecha el 25/10. Etapas 7 (pantallas), 8 (estilo: Cripta azul) y 9 (arte y sonido con ForgeGUI) hechas el 25 y 26/10; Juani decidió no probar en celular (26/10). Etapa 7b-1 (sala en gris) hecha el 26/10; lo próximo es 7b-2 (modelos de la sala con ForgeGUI) y después la etapa 10 (sensación).
 Carpeta: `plinko-knight/` (código en `plinko-knight/src/`, Rojo con `rojo serve plinko-knight`, puerto 34876). Place propio: `plinko-knight/PlinkoKnight.rbxl`.
 
 ## Rediseño roguelike (aprobado el 25/10/2026)
@@ -486,5 +486,17 @@ Juani dijo "elegí vos": **Cripta azul** (ver "Guía de estilo"). No se armaron 
 - **Clavijas: Neon.** Se probó metal brillante y con la luz cian el dorado se ve verde; con Neon todas brillan y se distinguen. La "Dorada" especial pasó a naranja `#FF5A00` para no confundirla con la normal.
 - **Pantallas** con la paleta: paneles azul noche, bordes cian, botón principal dorado con texto oscuro, fuente redonda en títulos, íconos en bolas, reliquias, cofre y tienda.
 - **En compu: 60 FPS**, consola sin errores del juego.
-- **Pendiente:** capturas y FPS en el emulador de celular; copia `.rbxl` en `backups/`. El place abierto ahora es la experiencia "10262026_1" (lo abrió Juani).
+- **Celular:** Juani decidió no probarlo en el emulador (26/10). El place abierto ahora es la experiencia "10262026_1" (lo abrió Juani).
+
+### Etapa 7b-1 · Sala arcade en gris (26/10/2026)
+
+**8 observaciones de las capturas de Juani:** (1) piso de damero blanco y negro que refleja; (2) la luz sale de los carteles y lo demás es oscuro; (3) tubos de neón verticales marcan esquinas y caminos; (4) "locales" con cartel de neón a lo largo de las paredes → nuestros carteles ARCADE, TIENDA, RÉCORDS; (5) algo grande al centro que llama la atención → la estatua del caballero; (6) en CloverPit la máquina llena la vista y tiene un marco físico alrededor de la pantalla; (7) lo que se puede tocar tiene contorno amarillo; (8) la tienda son cajitas de vidrio y cartas negras con título naranja. Quedan afuera rodillos, "666", sangre, cajero, tiques, animatrónicos y nombres de FNAF.
+
+- **`server/GeneradorSala.luau`** arma la sala por código (vive en git): 60 × 40 studs, entrada con molinete y cartel ARCADE, estatua al centro, fila de 8 máquinas Plinko Knight (tag `Maquina`, cada una con pantalla, botonera, banqueta y "E: Jugar"), 3 máquinas de fondo con demo de colores (`MaquinaFondo`), mostrador con cartel TIENDA (`Tienda`) y pared de récords (`Records`). Se apoya sobre la Baseplate (en este place su cara de arriba está en y = 10). Números en `Config.Sala`.
+- **`server/Sala.luau`**: cada jugador recibe una máquina libre (atributo `Dueno`), el personaje aparece en la entrada, el remoto `ElegirBola` (mostrador, validado) y la pared de récords con el mejor piso de los del servidor (cada 3 s).
+- **`client/Sala.luau`**: solo tu máquina muestra "E: Jugar" (en celular, el botón del prompt) y un contorno amarillo al acercarte. Al tocarlo te sentás, la cámara se acerca a la pantalla en 0,8 s, fundido a negro y adentro está la mazmorra con un marco de pantalla redondeado. "Salir" (arriba, al lado de ⚙) o "Salir" en la pantalla final te levanta. Si salís a mitad de partida y volvés a sentarte, sigue donde estaba.
+- **Decisión (la más simple):** la mazmorra no se achica para entrar en la pantalla 3D: la cámara entra en la pantalla y se ve la mazmorra de siempre a pantalla completa, con el marco alrededor. Así entran las 3 columnas sin achicar nada.
+- **Mostrador:** abre "Elegí tu bola" (la misma pantalla de antes, con botón "Elegir"). El estilo CloverPit (cajitas y cartas negras) queda para 7b-3, con los modelos. La tienda de oro sigue dentro de la máquina.
+- **Probado en Play (compu):** entrar, caminar a tu máquina, sentarse, tirar, salir a mitad de pelea, volver y seguir; mostrador; récords; consola sin errores.
+- **No probado:** Local Server con 2 jugadores (el MCP no lo puede abrir: Studio → Prueba → Clientes y servidores → 2 → Iniciar).
 

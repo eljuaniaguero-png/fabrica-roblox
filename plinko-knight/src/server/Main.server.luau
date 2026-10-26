@@ -11,6 +11,7 @@ local Partida = require(script.Parent:WaitForChild("Partida"))
 local Peleas = require(script.Parent:WaitForChild("Peleas"))
 require(script.Parent:WaitForChild("Tiros")).iniciar()
 Peleas.iniciar()
+require(script.Parent:WaitForChild("Sala")).iniciar() -- etapa 7b-1: la sala arcade
 
 Guardado.alGuardar(function(jugador: Player)
 	local p = Partida.de(jugador)

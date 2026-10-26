@@ -6,12 +6,12 @@
 -- botón de Ajustes (derecha); debajo de la vida, cuántas clavijas especiales tenés; la maña del
 -- jefe en la columna del monstruo; franja de abajo con tu bola (los pergaminos y las reliquias de
 -- esa franja los dibuja TiendaVista). La cámara deja libre el espacio de las dos franjas
--- (zonaLibre), así nada tapa el tablero. Durante la pelea se esconden el chat y la lista de
--- jugadores (Ajustes.modoPelea).
+-- (zonaLibre), así nada tapa el tablero. Etapa 7b: todo esto se ve solo sentado en la máquina
+-- (mostrarHud); "Salir" te levanta. El chat y la lista de jugadores los esconde client/Sala.
 -- Inicio: título, tu mejor, elegir bola (las bloqueadas con candado y cómo se consiguen), botón
 -- grande "Bajar a la mazmorra" y Ajustes.
 -- Final (perder o ganar): cuántas peleas ganaste, tu mejor, lo que desbloqueaste y "Volver a
--- bajar" (un toque y estás jugando, con la misma bola) o "Cambiar bola" (vuelve al inicio).
+-- bajar" (un toque y estás jugando, con la misma bola) o "Salir" (te levantás de la máquina).
 -- El cofre (elegir 1 de 3), la tienda y las reliquias están en TiendaVista.
 
 local Players = game:GetService("Players")
@@ -38,11 +38,14 @@ export type Pantallas = {
 	ponerEstado: (estado: Mazmorra.Estado) -> (),
 	ponerVida: (vida: number, maxima: number) -> (),
 	anunciar: (texto: string) -> (),
-	mostrarFinal: (final: Final, alVolver: () -> (), alCambiarBola: () -> ()) -> (),
+	mostrarFinal: (final: Final, alVolver: () -> (), alSalir: () -> ()) -> (),
 	ocultarFinal: () -> (),
 	ponerTablero: (estado: Mazmorra.Estado) -> (), -- tu bola, tus clavijas y el oro
 	-- Inicio: elegir bola y bajar. alBajar recibe el Id de la bola.
-	mostrarInicio: (progreso: Progreso.Datos, alBajar: (string) -> ()) -> (),
+	mostrarInicio: (progreso: Progreso.Datos, alBajar: (string) -> (), boton: string?) -> (),
+	inicioAbierto: () -> boolean,
+	mostrarHud: (si: boolean) -> (), -- la pelea se ve solo sentado en la máquina
+	alSalir: (f: () -> ()) -> (), -- botón "Salir" de arriba
 	ocultarInicio: () -> (),
 	hayFinal: () -> boolean, -- final, inicio o ajustes abiertos: mientras tanto no se tira
 	finalCerrado: () -> number, -- os.clock() de la última vez que se cerró una pantalla que tapa
@@ -115,6 +118,15 @@ function Pantallas.crear(): Pantallas
 	botonAjustes.AnchorPoint = Vector2.new(1, 0)
 	botonAjustes.Position = UDim2.new(1, -M.Margen, 0, 0)
 	botonAjustes.Size = UDim2.fromOffset(M.Boton, M.Boton)
+	local botonSalir = Estilo.boton(arriba, "Salir", "PanelClaro", T.Normal)
+	botonSalir.Name = "Salir"
+	botonSalir.AnchorPoint = Vector2.new(1, 0)
+	botonSalir.Position = UDim2.new(1, -(M.Margen + M.Boton + 8), 0, 0)
+	botonSalir.Size = UDim2.fromOffset(110, M.Boton)
+	local alSalir: () -> () = function() end
+	botonSalir.Activated:Connect(function()
+		alSalir()
+	end)
 	botonAjustes.Activated:Connect(function()
 		Ajustes.abrir(function()
 			cerrado = os.clock()
@@ -214,7 +226,7 @@ function Pantallas.crear(): Pantallas
 	volver.Name = "Volver"
 	volver.Position = UDim2.fromOffset(20, 300)
 	volver.Size = UDim2.new(0.62, -36, 0, M.BotonGrande)
-	local cambiar = Estilo.boton(caja, "Cambiar bola", "Boton", T.Normal)
+	local cambiar = Estilo.boton(caja, "Salir", "Boton", T.Normal)
 	cambiar.Name = "CambiarBola"
 	cambiar.AnchorPoint = Vector2.new(1, 0)
 	cambiar.Position = UDim2.new(1, -20, 0, 300)
@@ -287,6 +299,7 @@ function Pantallas.crear(): Pantallas
 	end)
 
 	local alBajar: ((string) -> ())? = nil
+	local textoBajar = "Bajar a la mazmorra" -- en el mostrador de la sala: "Elegir"
 	local elegida = "hierro"
 	local progresoInicio: Progreso.Datos? = nil
 	local dibujarInicio: () -> ()
@@ -364,7 +377,7 @@ function Pantallas.crear(): Pantallas
 			cartaBola(p, orden, id)
 		end
 		local d = (Config.Bolas :: any)[elegida]
-		bajar.Text = ("Bajar a la mazmorra · %s"):format(if d then d.Nombre else elegida)
+		bajar.Text = ("%s · %s"):format(textoBajar, if d then d.Nombre else elegida)
 	end
 
 	bajar.Activated:Connect(function()
@@ -443,7 +456,6 @@ function Pantallas.crear(): Pantallas
 			zonaTexto.Text = ("Zona %d · %s"):format(m.Zona, Config.Zonas[m.Zona] or "")
 			mania.Visible = e.Mania ~= "" and e.Fase == "peleando"
 			mania.Text = if e.Mania ~= "" then Mazmorra.textoMania(e.Mania, m.Zona) else ""
-			Ajustes.modoPelea(e.Fase == "peleando")
 		end,
 		ponerVida = ponerVida,
 		anunciar = function(valor: string)
@@ -480,11 +492,11 @@ function Pantallas.crear(): Pantallas
 			alVolver, alCambiar = cuandoVuelva, cuandoCambie
 			guiInicio.Enabled = false
 			guiFinal.Enabled = true
-			Ajustes.modoPelea(false)
 		end,
 		ocultarFinal = cerrarFinal,
 		ponerTablero = ponerTablero,
-		mostrarInicio = function(p: Progreso.Datos, cuandoBaje: (string) -> ())
+		mostrarInicio = function(p: Progreso.Datos, cuandoBaje: (string) -> (), boton: string?)
+			textoBajar = boton or "Bajar a la mazmorra"
 			if progresoInicio == nil or not guiInicio.Enabled then
 				elegida = p.BolaElegida -- al abrir, la que eligió la última vez
 			end
@@ -496,9 +508,17 @@ function Pantallas.crear(): Pantallas
 			dibujarInicio()
 			guiFinal.Enabled = false
 			guiInicio.Enabled = true
-			Ajustes.modoPelea(false)
 		end,
 		ocultarInicio = cerrarInicio,
+		inicioAbierto = function(): boolean
+			return guiInicio.Enabled
+		end,
+		mostrarHud = function(si: boolean)
+			gui.Enabled = si
+		end,
+		alSalir = function(f: () -> ())
+			alSalir = f
+		end,
 		hayFinal = function(): boolean
 			return guiFinal.Enabled or guiInicio.Enabled or Ajustes.abierto()
 		end,

@@ -40,6 +40,7 @@ export type Escena = {
 	-- De dónde a dónde (y en px de pantalla) queda libre entre las franjas de arriba y de abajo:
 	-- la cámara mete todo ahí, así ninguna pantalla tapa el tablero.
 	ponerZonaLibre: (zona: () -> (number, number)) -> (),
+	activarCamara: (si: boolean) -> (), -- sentado en la máquina: la cámara mira el tablero
 	aMundo: (x: number, y: number, z: number?) -> Vector3,
 	aTablero: (posicionPantalla: Vector2) -> (number, number),
 }
@@ -320,7 +321,11 @@ function Escena.armar(): Escena
 	-- Temblor: la cámara se corre un poco al azar y se va calmando.
 	local temblorFuerza, temblorFin, temblorDuracion = 0, 0, 1
 	local zonaLibre: (() -> (number, number))? = nil
+	local activa = false -- etapa 7b: la cámara del tablero solo manda sentado en la máquina
 	RunService:BindToRenderStep("CamaraTablero", Enum.RenderPriority.Last.Value + 10, function()
+		if not activa then
+			return
+		end
 		local vista = camara.ViewportSize
 		local aspecto = if vista.Y > 0 then vista.X / vista.Y else 16 / 9
 		-- Franja libre (en px de la vista): sin franjas, la pantalla entera.
@@ -386,6 +391,9 @@ function Escena.armar(): Escena
 		sacudir = sacudir,
 		ponerZonaLibre = function(zona: () -> (number, number))
 			zonaLibre = zona
+		end,
+		activarCamara = function(si: boolean)
+			activa = si
 		end,
 		aMundo = aMundo,
 		aTablero = aTablero,

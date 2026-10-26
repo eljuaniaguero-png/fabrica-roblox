@@ -37,6 +37,7 @@ export type TiendaVista = {
 	ponerReliquias: (estado: Mazmorra.Estado) -> (),
 	activar: (lugar: number, texto: string) -> (), -- la reliquia salta y muestra lo que hizo
 	abierta: () -> boolean, -- cofre, ficha o chances abiertos (tapan la pantalla)
+	mostrarHud: (si: boolean) -> (), -- etapa 7b: solo se ve sentado en la máquina
 }
 
 local TiendaVista = {}
@@ -618,6 +619,14 @@ function TiendaVista.crear(acciones: Acciones): TiendaVista
 		activar = activar,
 		abierta = function(): boolean
 			return guiVentanas.Enabled
+		end,
+		mostrarHud = function(si: boolean)
+			gui.Enabled = si
+			if si then
+				actualizarVentanas()
+			else
+				guiVentanas.Enabled = false
+			end
 		end,
 	}
 end

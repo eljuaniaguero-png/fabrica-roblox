@@ -552,4 +552,30 @@ Config.Sonidos = {
 	TonoToque = { 1, 1.8 }, -- PlaybackSpeed del primer toque y tope (sube con cada toque del tiro)
 }
 
+-- Etapa 7b-1: la sala arcade (en gris; los modelos de la IA llegan en 7b-2). Studs.
+Config.Sala = {
+	Ancho = 60, -- x
+	Largo = 40, -- z
+	Alto = 14,
+	Maquinas = 8, -- una por jugador
+	SeparacionMaquinas = 7,
+	MaquinaTamanio = Vector3.new(4, 7, 3),
+	PantallaTamanio = Vector3.new(3.2, 2.4, 0.1),
+	DistanciaJugar = 8, -- studs para que aparezca "E: Jugar"
+	TiempoCamara = 0.8, -- segundos que tarda la cámara en meterse en la pantalla
+	TiempoFundido = 0.2, -- fundido al entrar o salir de la pantalla
+	TiempoMinimoBola = 0.3, -- segundos entre dos "elegir bola" en el mostrador (servidor)
+	Records = 8, -- cuántos jugadores muestra la pared de récords
+	-- Colores de la sala en gris (la paleta de neón llega en 7b-3).
+	Colores = {
+		Piso = "#3A3A3A",
+		Pared = "#2A2A2A",
+		Maquina = "#6A6A6A",
+		Pantalla = "#151B2E",
+		Fondo = "#4A4A4A", -- máquinas de fondo, molinete, banquetas
+		Cartel = "#E0E0E0",
+		Borde = "#FFE600", -- contorno amarillo de lo que se puede tocar (como CloverPit)
+	},
+}
+
 return Config
