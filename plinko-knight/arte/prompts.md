@@ -43,3 +43,15 @@ Juani aprobó los 7 conceptos. 3D con ForgeGUI (Meshy, quality high), cada uno c
 
 Todos: 1 malla y 1 material. La IA los entrega con el lado más largo en 1,9 m, así que **en 7b-3 hay que escalarlos** (máquina ~7 studs, banqueta 2,5) y **bajar triángulos en Blender** a los máximos del plan (salvo M1).
 
+## Tanda M9 a M13 (conceptos, 26/10/2026)
+
+Mismo estilo y formato que M2 a M8 (icon_gfx, 1 opción cada uno). Hoja: `arte/forgegui/sala/m9-m13-conceptos.png`. M14 (figura del caballero) ya no va: la estatua es tu avatar, hecha por código.
+
+| # | Modelo | Prompt (lo del medio) | Id de ForgeGUI | Estado |
+|---|---|---|---|---|
+| M9 | pared-records | large wall-mounted frame for a high-score board, round marquee bulbs around the border, neon strips, plain flat empty dark panel inside, no numbers or letters | `5cdd9b7e-3216-497e-b22d-d6e19d5bda4a` | Esperando a Juani |
+| M10 | molinete-entrada | waist-high metal turnstile with three rotating arms, neon cyan strip and a small green arrow light, no card reader, no coin slot | `360778a2-0079-4315-aeea-45c917e680bd` | Esperando a Juani |
+| M11 | maceta-planta | big round dark navy planter with a neon magenta ring and a lush tropical plant | `a69afa59-0aaa-48c5-8adb-f7e85cb563df` | Esperando a Juani |
+| M12 | tacho-basura | rounded mall trash bin, domed lid with swinging flap, neon cyan band, empty and tidy, no symbols | `e6784746-4c44-47b3-ac51-c3a71375c97e` | Esperando a Juani |
+| M13 | poste-neon | tall dark round pillar, glowing neon magenta ring at the base, thin vertical cyan stripe | `ae3b6fe8-5684-4a04-b02f-e714cdbcb922` | Esperando a Juani |
+
