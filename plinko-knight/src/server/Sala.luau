@@ -105,6 +105,52 @@ local function armarRecords(): TextLabel?
 	return lista
 end
 
+-- Estatua de tu avatar en el pedestal del centro (la sala es solo tuya). Es una copia del
+-- personaje, agrandada, anclada y sin scripts; si Roblox no la puede armar, queda el pedestal solo.
+local function estatua(jugador: Player)
+	local sala = workspace:FindFirstChild("Sala")
+	local pedestal = sala and sala:FindFirstChild("Pedestal")
+	if not sala or not pedestal or not pedestal:IsA("BasePart") then
+		return
+	end
+	local ok, modelo = pcall(function()
+		return Players:CreateHumanoidModelFromUserId(jugador.UserId)
+	end)
+	if not ok or not modelo then
+		warn("[Sala] No se pudo armar la estatua: " .. tostring(modelo))
+		return
+	end
+	local vieja = sala:FindFirstChild("Estatua")
+	if vieja then
+		vieja:Destroy()
+	end
+	modelo.Name = "Estatua"
+	for _, d in modelo:GetDescendants() do
+		if d:IsA("BaseScript") then
+			d:Destroy()
+		elseif d:IsA("BasePart") then
+			d.Anchored = true
+			d.CanCollide = false
+			d.CanTouch = false
+			d.CanQuery = false
+		elseif d:IsA("Humanoid") then
+			d.DisplayDistanceType = Enum.HumanoidDisplayDistanceType.None
+		end
+	end
+	modelo:ScaleTo(Config.Sala.EscalaEstatua)
+	local arriba = pedestal.Position.Y + pedestal.Size.Y / 2
+	-- Mirando a la entrada (+Z), al centro del pedestal; después se baja hasta que los pies
+	-- toquen el pedestal (el punto de apoyo del modelo no está en los pies).
+	modelo:PivotTo(
+		CFrame.new(pedestal.Position.X, arriba, pedestal.Position.Z)
+			* CFrame.Angles(0, math.rad(180), 0)
+	)
+	local caja, tamanio = modelo:GetBoundingBox()
+	local abajo = caja.Position.Y - tamanio.Y / 2
+	modelo:PivotTo(modelo:GetPivot() + Vector3.new(0, arriba - abajo, 0))
+	modelo.Parent = sala
+end
+
 -- Personaje nuevo: a la entrada de la sala, mirando a las máquinas (si apareció antes de que
 -- existiera la sala, quedaba arriba del techo).
 local function aLaEntrada(personaje: Model)
@@ -118,6 +164,7 @@ end
 
 local function alEntrar(jugador: Player)
 	asignar(jugador)
+	task.spawn(estatua, jugador)
 	jugador.CharacterAdded:Connect(aLaEntrada)
 	if jugador.Character then
 		task.spawn(aLaEntrada, jugador.Character)

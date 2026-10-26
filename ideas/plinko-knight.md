@@ -501,3 +501,11 @@ Juani dijo "elegí vos": **Cripta azul** (ver "Guía de estilo"). No se armaron 
 - **No probado:** Local Server con 2 jugadores (el MCP no lo puede abrir: Studio → Prueba → Clientes y servidores → 2 → Iniciar).
 - **Cambio del 26/10: sala en solitario.** Juani pidió lobbys de un solo jugador. Ahora hay una sola máquina Plinko Knight (la tuya, al centro de la pared norte) con 2 máquinas de fondo a cada lado y las 3 de la pared oeste. La pared de récords muestra **tus** récords (mejor piso, mejor golpe, jefes vencidos, mazmorras ganadas, partidas jugadas). Ya no hace falta la prueba con 2 jugadores. **El tamaño del servidor (1 jugador) lo configura Juani** en los ajustes de la experiencia; mientras tanto el código asigna la máquina al primero que entra.
 
+### Cambio del 26/10: sin caballero, el personaje es tu avatar
+
+Juani pidió sacar al caballero del juego: **el personaje es el del jugador**.
+- En el tablero, al lado del lanzador, va el **busto de tu avatar de Roblox** (se pone rojo cuando te pegan). La imagen del caballero de ForgeGUI ya no se usa.
+- En la sala, el pedestal del centro tiene una **estatua de tu avatar** en grande (copia de tu personaje, ×1,7, anclada y sin scripts). Reemplaza a la estatua del caballero (M14 ya no se hace con IA).
+- La máquina M1 es el concepto C **sin el casco de caballero al costado** (solo ladrillos).
+- **Pendiente:** el nombre del juego ("Plinko Knight") habla de un caballero y además "Plinko" es marca registrada: hay que elegir otro nombre antes de publicar.
+

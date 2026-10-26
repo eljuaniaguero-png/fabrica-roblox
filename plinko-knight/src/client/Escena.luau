@@ -2,14 +2,15 @@
 -- Arma el tablero en Workspace solo para este jugador (lo crea el cliente, así que no se
 -- replica) y deja la cámara fija de frente. Pantalla en 3 columnas (ficha): panel a la
 -- izquierda (todavía vacío), tablero al centro y el monstruo a la derecha: un cartel plano con
--- su barra de vida arriba. El caballero es un bloque al lado del lanzador.
+-- su barra de vida arriba. Al lado del lanzador, tu avatar de Roblox (el busto).
 -- Etapa 9 (guía "Cripta azul"): piedra azulada, fondo de mazmorra (imagen de ForgeGUI) detrás de
--- todo, 2 velas cian con luz a los costados del tablero, niebla cian abajo, el caballero como
--- imagen plana. Todo anclado y sin colisión (CanCollide/CanTouch/CanQuery = false).
+-- todo, 2 velas cian con luz a los costados del tablero, niebla cian abajo, tu avatar como
+-- imagen plana (26/10: el caballero salió del juego; el personaje es el del jugador). Todo anclado y sin colisión (CanCollide/CanTouch/CanQuery = false).
 
 local GuiService = game:GetService("GuiService")
 local RunService = game:GetService("RunService")
 local Lighting = game:GetService("Lighting")
+local Players = game:GetService("Players")
 local Workspace = game:GetService("Workspace")
 
 local Shared = game:GetService("ReplicatedStorage"):WaitForChild("Shared")
@@ -143,7 +144,8 @@ function Escena.armar(): Escena
 		Config.Colores.Gris,
 		Enum.Material.Metal
 	)
-	-- Caballero: imagen plana a la izquierda del lanzador (una parte invisible con su SurfaceGui).
+	-- Tu avatar: el busto de tu personaje de Roblox, plano, a la izquierda del lanzador (una parte
+	-- invisible con su SurfaceGui). El campo se sigue llamando Caballero en el código.
 	local caballero = parte(
 		"Caballero",
 		modelo,
@@ -162,8 +164,20 @@ function Escena.armar(): Escena
 		imagenCaballero.BackgroundTransparency = 1
 		imagenCaballero.Size = UDim2.fromScale(1, 1)
 		imagenCaballero.ScaleType = Enum.ScaleType.Fit
-		imagenCaballero.Image = Config.Assets.Caballero
 		imagenCaballero.Parent = gui
+		task.spawn(function()
+			local ok, imagen = pcall(function()
+				local yo = Players.LocalPlayer
+				return Players:GetUserThumbnailAsync(
+					yo.UserId,
+					Enum.ThumbnailType.AvatarBust,
+					Enum.ThumbnailSize.Size420x420
+				)
+			end)
+			if ok then
+				imagenCaballero.Image = imagen
+			end
+		end)
 	end
 
 	-- Monstruo, a la derecha del tablero: un cartel fino (Monstruo.luau le pone color y nombre).

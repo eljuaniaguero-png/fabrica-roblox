@@ -70,7 +70,7 @@ Config.Danio = {
 	MultiInicial = 1,
 }
 
--- El caballero: vida al empezar la mazmorra y cuánto se cura al ganar cada pelea.
+-- Tu vida (la del jugador): al empezar la mazmorra y cuánto se cura al ganar cada pelea.
 Config.VidaCaballero = 50
 Config.CuraEntrePeleas = 10
 
@@ -473,7 +473,7 @@ Config.Colores = {
 	Numero = "#E8FF3A", -- amarillo flúor de los "+2" y el golpe
 	BordeNumero = "#151B2E",
 	Caballero = "#5A78B4",
-	Golpe = "#E2323F", -- el caballero se pone de este color cuando lo golpean
+	Golpe = "#E2323F", -- tu avatar se pone de este color cuando te golpean
 	VidaMonstruo = "#E2323F",
 	VidaCaballero = "#4CC46A",
 	FondoBarra = "#151B2E",
@@ -491,7 +491,6 @@ Config.Mundo = {
 -- Imágenes (etapa 9, ForgeGUI, estilo "Plinko Knight - Cripta azul"), subidas a la cuenta de Juani.
 Config.Assets = {
 	Fondo = "rbxassetid://87670022073361",
-	Caballero = "rbxassetid://78494523251389",
 	Monstruos = {
 		rata = "rbxassetid://80675382037335",
 		slime = "rbxassetid://109145942201870",
@@ -565,6 +564,7 @@ Config.Sala = {
 	TiempoCamara = 0.8, -- segundos que tarda la cámara en meterse en la pantalla
 	TiempoFundido = 0.2, -- fundido al entrar o salir de la pantalla
 	TiempoMinimoBola = 0.3, -- segundos entre dos "elegir bola" en el mostrador (servidor)
+	EscalaEstatua = 1.7, -- tamaño de la estatua de tu avatar (1 = tamaño real; más grande toca el techo)
 	-- Colores de la sala en gris (la paleta de neón llega en 7b-3).
 	Colores = {
 		Piso = "#3A3A3A",

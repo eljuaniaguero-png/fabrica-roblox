@@ -580,6 +580,8 @@ Esta paleta reemplaza a la de arriba (aprobada el 26/10).
 ## Etapa 7b · Sala arcade 3D con modelos hechos por IA (aprobada el 26/10)
 
 > **Cambio del 26/10 (Juani):** la sala es **en solitario**, servidores de 1 jugador. Una sola máquina Plinko Knight (M1) y máquinas de fondo; la pared de récords muestra tus récords. Donde abajo dice "8 máquinas", "una por jugador" o "2 jugadores", ya no aplica.
+>
+> **Cambio del 26/10 (Juani):** el caballero sale del juego; el personaje es el avatar del jugador. M14 (figura del caballero) se reemplaza por una estatua de tu avatar hecha por código, y M1 va sin dibujo de caballero.
 
 **Cómo se hace:** primero la sala en bloques grises para probar que caminar, sentarse y jugar se sienta bien (7b-1). Después **todos los modelos los hace una IA**: ForgeGUI, con un mismo estilo para todos (7b-2). Claude no modela a mano: escribe los prompts, revisa, y en Blender solo limpia, achica y exporta (7b-3). Va **antes de la etapa 10**. Dentro de la pantalla se mantiene la Cripta azul; la sala usa la paleta de tus capturas (combinan: las dos son oscuras con cian).
 

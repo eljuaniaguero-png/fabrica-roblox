@@ -7,7 +7,7 @@
 --   - pared oeste: 3 máquinas de fondo más (no se juegan; pantalla de demo, tag "PantallaDemo");
 --   - pared este: el mostrador de la sala (tag "Tienda", ProximityPrompt "Ver bolas");
 --   - pared sur: entrada con molinete y la pared de récords (tag "Records");
---   - al centro, la estatua del caballero.
+--   - al centro, el pedestal donde server/Sala pone la estatua de tu avatar.
 -- Todo anclado; la decoración sin CanTouch/CanQuery. Los carteles con texto son SurfaceGui.
 -- Caras: la parte frontal de Roblox (NormalId.Front) mira a -Z.
 
@@ -204,9 +204,8 @@ function GeneradorSala.generar(): Folder
 	parte("Molinete", sala, Vector3.new(1, 3, 1), CFrame.new(-1.5, 1.5, medioZ - 2), C.Fondo, true)
 	parte("Molinete", sala, Vector3.new(1, 3, 1), CFrame.new(1.5, 1.5, medioZ - 2), C.Fondo, true)
 
-	-- Estatua del caballero al centro.
+	-- Pedestal al centro: la estatua es tu avatar en grande (la pone server/Sala al entrar).
 	parte("Pedestal", sala, Vector3.new(5, 2, 5), CFrame.new(0, 1, 1), C.Fondo, true)
-	parte("Estatua", sala, Vector3.new(2.6, 6, 2), CFrame.new(0, 5, 1), C.Maquina, true)
 
 	-- Pared norte: tu máquina Plinko Knight al centro (la sala es solo tuya: servidores de 1
 	-- jugador) y 2 máquinas de fondo a cada lado, mirando a la sala.
