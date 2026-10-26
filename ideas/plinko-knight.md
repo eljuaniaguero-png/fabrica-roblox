@@ -1,7 +1,7 @@
 # Plinko Knight — ficha del prototipo
 
 Origen: `plinko-knight/PLAN-Y-PROMPTS.md` (25/10/2026) + idea de arte aprobada (`plinko-knight/arte/IDEA-DE-ARTE.md`).
-Estado: **aprobada por Juani el 25/10/2026** (punto de control 1). Etapas 2 (tablero, puntería y bola), 3 (daño y revisión del servidor), 4 (monstruos y mazmorra) y 5 (mejoras 1 de 3) hechas el 25/10/2026. Juani jugó la prueba de 5 minutos (perdió en el piso 6: "está bueno") y pidió hacerlo **más roguelike, estilo Balatro**. **Rediseño aprobado el 25/10/2026.** Pasos 5a a 5d del rediseño hechos el 25/10; Juani lo jugó 10 minutos y dijo OK. Etapa 6 (guardado) hecha el 25/10; lo próximo es la etapa 7 (pantallas).
+Estado: **aprobada por Juani el 25/10/2026** (punto de control 1). Etapas 2 (tablero, puntería y bola), 3 (daño y revisión del servidor), 4 (monstruos y mazmorra) y 5 (mejoras 1 de 3) hechas el 25/10/2026. Juani jugó la prueba de 5 minutos (perdió en el piso 6: "está bueno") y pidió hacerlo **más roguelike, estilo Balatro**. **Rediseño aprobado el 25/10/2026.** Pasos 5a a 5d del rediseño hechos el 25/10; Juani lo jugó 10 minutos y dijo OK. Etapa 6 (guardado) hecha el 25/10. Etapas 7 (pantallas), 8 (estilo: Cripta azul) y 9 (arte y sonido con ForgeGUI) hechas el 25 y 26/10; falta probarlas en el emulador de celular. Lo próximo es la etapa 10 (sensación).
 Carpeta: `plinko-knight/` (código en `plinko-knight/src/`, Rojo con `rojo serve plinko-knight`, puerto 34876). Place propio: `plinko-knight/PlinkoKnight.rbxl`.
 
 ## Rediseño roguelike (aprobado el 25/10/2026)
@@ -196,6 +196,24 @@ Objetivo de balance: con un bot que compra al azar, perder casi siempre en la zo
 
 - **Hasta la etapa 8, todo en bloques grises.** Los colores solo distinguen cosas: clavija normal gris claro, clavija que duplica roja y bola blanca.
 - **Para después (etapas 8 y 9):** mazmorra de piedra, clavijas doradas `#F5C542`, números de daño amarillo flúor y monstruos como imágenes planas. La paleta favorita es "Cripta azul" (fondo `#151B2E`, piedra `#2F3B57`, rubí `#E2323F`, cian `#4FE3F0`). Todo el detalle está en `plinko-knight/arte/IDEA-DE-ARTE.md`.
+
+## Guía de estilo: "Cripta azul" (etapa 8, 25/10/2026)
+
+Juani dijo "elegí vos": quedó la **B · Cripta azul**, que ya era la favorita en la idea de arte. Razón: fondo frío y oscuro donde las clavijas doradas y los números amarillo flúor se leen mejor en un celular (lo que mostraban las referencias que mejor se leen). No se armaron las muestras A y C porque la elección se delegó.
+
+| Uso | Color |
+|---|---|
+| Fondo de la mazmorra | `#151B2E` azul noche |
+| Piedra, paneles y marcos | `#2F3B57` gris azulado |
+| Clavija normal | `#F5C542` dorado |
+| Clavija roja (Multi) | `#E2323F` rojo rubí |
+| Magia: velas, cristales, niebla, bordes de botón | `#4FE3F0` cian |
+| Números de toque | `#E8FF3A` amarillo flúor con borde `#151B2E` |
+
+- **Materiales de Roblox:** Slate (pared y piso), Cobblestone (marco del tablero), Neon apenas para el brillo de clavijas y cristales, Glass para cristales.
+- **Luz:** Lighting oscuro y frío (Ambient azul, Brightness baja, ClockTime de noche), 2 luces de punto cian (velas a los costados del tablero), Atmosphere con niebla baja azulada. Sin sombras salvo esas dos luces.
+- **Imágenes (ForgeGUI, estilo "Plinko Knight - Cripta azul"):** dibujo caricatura grueso, contorno azul noche `#151B2E`, sombreado de dos tonos, de frente, sin texto. Monstruos y caballero como imagen plana recortada.
+- **Pantallas:** paneles `#2F3B57` sobre fondo `#151B2E`, borde cian en lo que se toca, títulos en dorado, botón principal en dorado con texto oscuro.
 
 ## Herramientas de arte y sonido
 
@@ -431,4 +449,29 @@ Armar una familia rinde mucho más que comprar al azar: las sinergias funcionan.
 - **Pendiente (no se pudo probar acá):**
   - **Guardado de verdad entre sesiones:** este place no está publicado, así que Studio usa la versión de prueba de ProfileStore ("data will not be saved"). Cuando Juani lo publique: Game Settings → Security → Enable Studio Access to API Services, y probar salir y volver de verdad.
   - **Local Server con 2 jugadores:** el MCP no puede abrirlo. Cada jugador usa su propia clave ("Jugador_" + UserId), así que no se mezclan, pero hay que probarlo: Studio → Test → Clients and Servers → 2 jugadores → Start.
+
+### Etapa 7 · Pantallas (25/10/2026)
+
+- **`client/Estilo.luau`**: el único lugar con colores, fuentes, tamaños y piezas comunes. Todo se dibuja en un lienzo de 960 × 480 con UIScale: en celular horizontal los botones quedan en unos 45 px y el texto más chico en unos 15.
+- **Inicio**: título, tu mejor, 3 bolas (las bloqueadas con candado y cómo se consiguen), "Bajar a la mazmorra · <bola>" y ⚙.
+- **Pelea**: vida y oro arriba a la izquierda, "Pelea N de 9" y la zona arriba al centro, ⚙ arriba a la derecha; tus clavijas especiales debajo de la vida; la maña del jefe en la columna del monstruo; abajo tu bola, pergaminos y reliquias. La cámara deja libres las dos franjas: nada tapa el tablero. El chat y la lista de jugadores se esconden durante la pelea.
+- **Mejoras (cofre del jefe)**: 3 cartas, un toque y listo. "Más tarde" la cierra.
+- **Derrota y Victoria**: peleas ganadas, tu mejor ("¡Récord nuevo!"), lo desbloqueado en la partida, "Volver a bajar" (misma bola, 68 ms) y "Cambiar bola".
+- **Ajustes**: sonido, música y efectos reducidos (temblor al 25 %). Se guardan con el progreso: `Config.VERSION = 2` con su migración y prueba en Lune.
+- **Decisión:** el panel FUERZA × MULTI quedó a la izquierda (3 columnas aprobadas), no entre tablero y monstruo.
+
+### Etapa 8 · Estilo (26/10/2026)
+
+Juani dijo "elegí vos": **Cripta azul** (ver "Guía de estilo"). No se armaron las muestras A y C.
+
+### Etapa 9 · Arte y sonido con ForgeGUI (26/10/2026)
+
+- **Estilo de ForgeGUI** "Plinko Knight - Cripta azul" para todas las imágenes. Imágenes recortadas (sin fondo), revisadas en `plinko-knight/arte/forgegui/hoja.png`; originales en `arte/forgegui/originales/`.
+- **Hechas y subidas a la cuenta de Juani** (IDs en `Config.Assets`): 9 monstruos, caballero, fondo de mazmorra, 3 bolas y 20 reliquias. Solo detalle: las monedas de Mano de Midas tienen una "C" chiquita.
+- **Sonidos y música** (IDs en `Config.Sonidos`, cada uso marcado con `-- SONIDO:`): toque de clavija (sube de tono en el tiro), tiro, golpe, contraataque, ×Multi, oro, rotura, botón, compra, ganar pelea, perder, victoria, desbloqueo; música de pelea y de jefe (90 s, en bucle). Todo generado, sin derechos de terceros.
+- **Mundo**: tablero de piedra (Slate y Cobblestone), fondo pintado detrás, 2 luces cian, niebla cian abajo, caballero y monstruos como imagen plana.
+- **Clavijas: Neon.** Se probó metal brillante y con la luz cian el dorado se ve verde; con Neon todas brillan y se distinguen. La "Dorada" especial pasó a naranja `#FF5A00` para no confundirla con la normal.
+- **Pantallas** con la paleta: paneles azul noche, bordes cian, botón principal dorado con texto oscuro, fuente redonda en títulos, íconos en bolas, reliquias, cofre y tienda.
+- **En compu: 60 FPS**, consola sin errores del juego.
+- **Pendiente:** capturas y FPS en el emulador de celular; copia `.rbxl` en `backups/`. El place abierto ahora es la experiencia "10262026_1" (lo abrió Juani).
 

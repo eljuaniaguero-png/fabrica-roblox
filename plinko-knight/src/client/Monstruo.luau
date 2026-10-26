@@ -1,6 +1,6 @@
 --!strict
--- El monstruo en graybox: el cartel plano de Escena con un rectángulo de su color y su nombre,
--- y la barra de vida arriba. Solo dibuja: la vida y los golpes los decide el servidor.
+-- El monstruo: el cartel plano de Escena (piedra) con su imagen (ForgeGUI, Config.Assets) y su
+-- nombre, y la barra de vida arriba. Si falta la imagen, queda el rectángulo de su color. Solo dibuja: la vida y los golpes los decide el servidor.
 
 local TweenService = game:GetService("TweenService")
 
@@ -39,7 +39,9 @@ function Monstruo.crear(cartel: BasePart, barra: BasePart): Monstruo
 	local tamanio = cartel.Size
 	local t = Config.Turno
 
-	-- Cartel: rectángulo de color y nombre abajo.
+	-- Cartel de piedra: imagen (o rectángulo de color) y nombre abajo.
+	cartel.Material = Enum.Material.Slate
+	cartel.Color = Color3.fromHex(Config.Colores.Gris)
 	local gui = Instance.new("SurfaceGui")
 	gui.Face = CARA
 	gui.LightInfluence = 0
@@ -51,6 +53,14 @@ function Monstruo.crear(cartel: BasePart, barra: BasePart): Monstruo
 	rectangulo.Size = UDim2.fromScale(0.75, 0.66)
 	rectangulo.BorderSizePixel = 0
 	rectangulo.Parent = gui
+	local imagen = Instance.new("ImageLabel")
+	imagen.Name = "Imagen"
+	imagen.AnchorPoint = Vector2.new(0.5, 0)
+	imagen.Position = UDim2.fromScale(0.5, 0.02)
+	imagen.Size = UDim2.fromScale(0.96, 0.76)
+	imagen.BackgroundTransparency = 1
+	imagen.ScaleType = Enum.ScaleType.Fit
+	imagen.Parent = gui
 	local nombre = texto(gui, "")
 	nombre.Position = UDim2.fromScale(0.05, 0.78)
 	nombre.Size = UDim2.fromScale(0.9, 0.16)
@@ -97,6 +107,9 @@ function Monstruo.crear(cartel: BasePart, barra: BasePart): Monstruo
 		mostrar = function(piso: number, vida: number)
 			local m = Mazmorra.monstruo(piso)
 			vidaMaxima = m.Vida
+			local id = (Config.Assets.Monstruos :: any)[m.Id] or ""
+			imagen.Image = id
+			rectangulo.Visible = id == ""
 			rectangulo.BackgroundColor3 = Color3.fromHex(m.Color)
 			nombre.Text = m.Nombre
 			cartel.Size = tamanio

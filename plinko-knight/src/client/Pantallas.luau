@@ -307,26 +307,14 @@ function Pantallas.crear(): Pantallas
 		carta.Parent = mesaBolas
 		Estilo.redondear(carta)
 		Estilo.borde(carta, if esta then "Oro" else "Borde", if esta then 6 else 2)
-		local muestra = Instance.new("Frame")
+		-- Ícono de la bola (ForgeGUI); las bloqueadas, apagadas y con candado.
+		local muestra = Estilo.icono(carta, (Config.Assets.Bolas :: any)[id])
+		muestra.Visible = true
 		muestra.AnchorPoint = Vector2.new(0.5, 0)
-		muestra.Position = UDim2.new(0.5, 0, 0, 12)
-		muestra.Size = UDim2.fromOffset(56, 56)
-		muestra.BackgroundColor3 =
-			Color3.fromHex(if id == "fuego" then Config.Colores.BolaFuego else Config.Colores.Bola)
-		muestra.BackgroundTransparency = if tiene then 0 else 0.7
-		muestra.BorderSizePixel = 0
-		muestra.Parent = carta
-		Estilo.redondear(muestra, 28)
-		if id == "partida" then
-			-- Graybox: una raya al medio (la bola que se parte en 2).
-			local raya = Instance.new("Frame")
-			raya.AnchorPoint = Vector2.new(0.5, 0)
-			raya.Position = UDim2.fromScale(0.5, 0)
-			raya.Size = UDim2.new(0, 6, 1, 0)
-			raya.BackgroundColor3 = Estilo.color("Carta")
-			raya.BorderSizePixel = 0
-			raya.Parent = muestra
-		end
+		muestra.Position = UDim2.new(0.5, 0, 0, 8)
+		muestra.Size = UDim2.fromOffset(64, 64)
+		muestra.ImageTransparency = if tiene then 0 else 0.6
+		muestra.ImageColor3 = if tiene then Color3.new(1, 1, 1) else Color3.fromRGB(120, 120, 140)
 		if not tiene then
 			local candado = Estilo.texto(muestra, "🔒", T.Grande)
 			candado.Size = UDim2.fromScale(1, 1)

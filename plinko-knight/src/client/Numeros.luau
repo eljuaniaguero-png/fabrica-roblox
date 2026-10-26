@@ -21,6 +21,7 @@ local function etiqueta(padre: Instance, texto: string): TextLabel
 	t.TextScaled = true
 	t.TextColor3 = amarillo
 	t.TextStrokeTransparency = 0
+	t.TextStrokeColor3 = Color3.fromHex(Config.Colores.BordeNumero)
 	t.Text = texto
 	t.Parent = padre
 	return t

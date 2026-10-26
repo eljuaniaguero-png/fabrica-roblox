@@ -40,6 +40,7 @@ local PantallasModulo = require(script.Parent:WaitForChild("Pantallas"))
 local SeleccionModulo = require(script.Parent:WaitForChild("Seleccion"))
 local TiendaVistaModulo = require(script.Parent:WaitForChild("TiendaVista"))
 local Ajustes = require(script.Parent:WaitForChild("Ajustes"))
+local Sonidos = require(script.Parent:WaitForChild("Sonidos"))
 
 local jugador = Players.LocalPlayer
 
@@ -123,9 +124,15 @@ end
 local function colorDe(id: number): Color3
 	return Color3.fromHex(Clavijas.color(Clavijas.tipo(estado.Tablero, id)))
 end
+-- Material: todas brillan (Neon, Config.Mundo.MaterialClavija) sobre el fondo oscuro; con la luz
+-- cian, el metal o el plástico se ven verdosos u oscuros.
+local function materialDe(_id: number): Enum.Material
+	return (Enum.Material :: any)[Config.Mundo.MaterialClavija] or Enum.Material.Neon
+end
 local function pintarClavijas()
 	for id, p in escena.Clavijas do
 		p.Color = colorDe(id)
+		p.Material = materialDe(id)
 		p.Transparency = if Clavijas.tipo(estado.Tablero, id) == "hueco" then 0.85 else 0
 	end
 end
@@ -168,7 +175,7 @@ local function brillar(id: number)
 	task.delay(Config.Simulacion.BrilloClavija, function()
 		if brillos[id] == marca then
 			p.Color = colorDe(id)
-			p.Material = Enum.Material.SmoothPlastic
+			p.Material = materialDe(id)
 		end
 	end)
 end
@@ -192,6 +199,10 @@ local function ponerEstado(e: Mazmorra.Estado)
 	else
 		tiendaVista.ocultar()
 	end
+	-- SONIDO: música de pelea o de jefe.
+	Sonidos.musica(
+		if e.Fase == "peleando" and Mazmorra.monstruo(e.Piso).EsJefe then "jefe" else "pelea"
+	)
 	if e.Fase == "peleando" then
 		pantallas.ocultarFinal()
 		pantallas.ocultarInicio()
@@ -251,6 +262,7 @@ tiendaVista = TiendaVistaModulo.crear({
 		local ids, seguir = elegirClavijas(item.Clase, item.Id)
 		if seguir and pedir(remotos.Tienda, "comprar", indice, ids) then
 			print(("[Tienda] Compraste %s %s · oro %d"):format(item.Clase, item.Id, estado.Oro))
+			Sonidos.tocar("Comprar") -- SONIDO
 			for _, id in ids or {} do
 				brillar(id)
 			end
@@ -356,9 +368,6 @@ mostrarFinal = function(e: Mazmorra.Estado)
 	end, abrirInicio)
 end
 
-local colorCaballero = Color3.fromHex(Config.Colores.Caballero)
-local colorGolpe = Color3.fromHex(Config.Colores.Golpe)
-
 -- Bolita de luz del TOTAL al cartel del monstruo.
 local function volarTotal()
 	local luz = Instance.new("Part")
@@ -389,6 +398,7 @@ local function animarTurno(turno: Mazmorra.Turno)
 	local t = Config.Turno
 	tirosPelea += 1
 	volarTotal()
+	Sonidos.tocar("Golpe") -- SONIDO
 	monstruo.recibir()
 	monstruo.ponerVida(turno.VidaMonstruo + turno.Quemadura, true)
 	task.wait(t.Sacudida)
@@ -407,12 +417,13 @@ local function animarTurno(turno: Mazmorra.Turno)
 
 	if turno.Golpe > 0 then
 		monstruo.atacar()
+		Sonidos.tocar("Ataque") -- SONIDO
 		task.wait(t.DuracionAtaque / 2)
 		escena.sacudir(t.TemblorPantalla, t.DuracionTemblor)
-		escena.Caballero.Color = colorGolpe
+		escena.golpearCaballero(true)
 		pantallas.ponerVida(turno.VidaCaballero, estado.VidaMaxima)
 		task.wait(t.DuracionAtaque / 2)
-		escena.Caballero.Color = colorCaballero
+		escena.golpearCaballero(false)
 	end
 
 	local e = turno.Estado
@@ -421,14 +432,19 @@ local function animarTurno(turno: Mazmorra.Turno)
 	pintarClavijas()
 	pantallas.ponerTablero(e)
 	if turno.Resultado == "piso" then
+		Sonidos.tocar("GanarPelea") -- SONIDO
 		print(("[Mazmorra] Pelea %d ganada en %d tiros"):format(estado.Piso, tirosPelea))
 		task.wait(0.3)
 		ponerEstado(e) -- fase "tienda": se abre la tienda; "¡Piso N!" sale al bajar
 	elseif turno.Resultado == "gano" then
+		Sonidos.musica(nil)
+		Sonidos.tocar("Victoria") -- SONIDO
 		print(("[Mazmorra] Jefe ganado en %d tiros"):format(tirosPelea))
 		estado = e
 		mostrarFinal(e)
 	elseif turno.Resultado == "perdio" then
+		Sonidos.musica(nil)
+		Sonidos.tocar("Perder") -- SONIDO
 		print(("[Mazmorra] Caíste en el piso %d (tiro %d de la pelea)"):format(e.Piso, tirosPelea))
 		estado = e
 		mostrarFinal(e)
@@ -461,12 +477,13 @@ local function tirar()
 		return
 	end
 	local anguloTiro = angulo
+	Sonidos.tocar("Tirar") -- SONIDO
 	-- Tablero, niveles y bola salen del estado del servidor (el servidor repite el tiro igual).
 	local mods = Mazmorra.modificadores(estado)
 	local res = Simulacion.simular(tablero, anguloTiro, Config.Bola, mods, semilla)
 	for _, bola in escena.Bolas do
 		bola.Color = if res.Fuego then colorFuego else colorBola
-		bola.Material = if res.Fuego then Enum.Material.Neon else Enum.Material.SmoothPlastic
+		bola.Material = Enum.Material.Neon -- brilla sobre el fondo oscuro
 		bola.Transparency = 1
 	end
 	panel.limpiar()
@@ -502,6 +519,17 @@ local function tirar()
 		while siguienteToque <= #res.Toques and res.Toques[siguienteToque].Paso <= i do
 			local toque = res.Toques[siguienteToque]
 			brillar(toque.Clavija)
+			-- SONIDO: "tink" que sube de tono con cada toque; aparte, ×Multi, oro y rotura.
+			Sonidos.tocar("Toque", siguienteToque)
+			if toque.PorMulti > 1 then
+				Sonidos.tocar("Multi")
+			end
+			if toque.Oro > 0 then
+				Sonidos.tocar("Oro")
+			end
+			if toque.Rota then
+				Sonidos.tocar("Rotura")
+			end
 			local clavija = escena.Clavijas[toque.Clavija]
 			if clavija then
 				local color = if toque.Tipo == "gris"
@@ -687,6 +715,7 @@ mostrarAvisos = function()
 	mostrandoAvisos = true
 	while #avisosPendientes > 0 do
 		local n = table.remove(avisosPendientes, 1)
+		Sonidos.tocar("Desbloqueo") -- SONIDO
 		pantallas.anunciar(
 			if n.Tipo == "bola"
 				then ("¡Nueva bola: %s!"):format(n.Nombre)

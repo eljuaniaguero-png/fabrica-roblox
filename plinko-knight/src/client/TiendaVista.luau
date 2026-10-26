@@ -303,6 +303,10 @@ function TiendaVista.crear(acciones: Acciones): TiendaVista
 		b.Font = Estilo.Fuentes.Texto
 		ajustar(b, T.Chico, 14)
 		local borde = Estilo.borde(b, "Borde")
+		local icono = Estilo.icono(b, nil)
+		icono.AnchorPoint = Vector2.new(0.5, 0.5)
+		icono.Position = UDim2.fromScale(0.5, 0.5)
+		icono.Size = UDim2.new(1, -8, 1, -8)
 		local escala = Instance.new("UIScale")
 		escala.Parent = b
 		-- Lo que sumó al final del tiro: salta arriba de la reliquia.
@@ -329,12 +333,26 @@ function TiendaVista.crear(acciones: Acciones): TiendaVista
 			if r then
 				local d = Reliquias.datos(r.Id)
 				local crece = r.Id == "trofeo" or r.Id == "callo" or r.Id == "racha"
-				b.Text = if crece then ("%s (%d)"):format(d.Nombre, r.Contador) else d.Nombre
+				-- Con ícono: solo el contador (si crece); sin ícono, el nombre.
+				local idIcono = (Config.Assets.Reliquias :: any)[r.Id] or ""
+				local icono = b:FindFirstChild("Icono") :: ImageLabel
+				icono.Image = idIcono
+				icono.Visible = idIcono ~= ""
+				b.TextYAlignment = if idIcono ~= ""
+					then Enum.TextYAlignment.Bottom
+					else Enum.TextYAlignment.Center
+				b.Text = if idIcono ~= ""
+					then (if crece then tostring(r.Contador) else "")
+					elseif crece then ("%s (%d)"):format(d.Nombre, r.Contador)
+					else d.Nombre
 				b.TextColor3 = Estilo.color("Texto")
 				b.BackgroundTransparency = Estilo.Transparencia.Panel
 				bordes[lugar].Color = Color3.fromHex(Reliquias.rareza(r.Id).Color)
 				bordes[lugar].Transparency = 0
 			else
+				local icono = b:FindFirstChild("Icono") :: ImageLabel
+				icono.Visible = false
+				b.TextYAlignment = Enum.TextYAlignment.Center
 				b.Text = "Reliquia libre"
 				b.TextColor3 = Estilo.color("Apagado")
 				b.BackgroundTransparency = 0.5
@@ -422,21 +440,25 @@ function TiendaVista.crear(acciones: Acciones): TiendaVista
 				escala.Scale = 1
 				borde.Thickness = 5
 			end)
+			local icono = Estilo.icono(carta, (Config.Assets.Reliquias :: any)[id])
+			icono.AnchorPoint = Vector2.new(0.5, 0)
+			icono.Position = UDim2.new(0.5, 0, 0, 10)
+			icono.Size = UDim2.fromOffset(96, 96)
 			local tNombre = Estilo.texto(carta, nombre, T.Grande)
-			tNombre.Position = UDim2.fromOffset(12, 16)
-			tNombre.Size = UDim2.new(1, -24, 0, 80)
-			ajustar(tNombre, T.Grande, T.Normal)
+			tNombre.Position = UDim2.fromOffset(12, 108)
+			tNombre.Size = UDim2.new(1, -24, 0, 44)
+			ajustar(tNombre, T.Grande, T.Chico)
 			local tRareza =
 				Estilo.texto(carta, Reliquias.rareza(id).Nombre, T.Chico, Estilo.Fuentes.Texto)
 			tRareza.TextColor3 = Color3.fromHex(hex)
-			tRareza.Position = UDim2.fromOffset(12, 100)
+			tRareza.Position = UDim2.fromOffset(12, 152)
 			tRareza.Size = UDim2.new(1, -24, 0, 26)
 			local tFrase = Estilo.texto(carta, frase, T.Normal, Estilo.Fuentes.Texto)
 			tFrase.TextStrokeTransparency = 1
-			tFrase.Position = UDim2.fromOffset(16, 136)
-			tFrase.Size = UDim2.new(1, -32, 1, -150)
+			tFrase.Position = UDim2.fromOffset(16, 182)
+			tFrase.Size = UDim2.new(1, -32, 1, -190)
 			tFrase.TextYAlignment = Enum.TextYAlignment.Top
-			ajustar(tFrase, T.Normal, T.Chico - 4)
+			ajustar(tFrase, T.Chico, 16)
 			carta.Activated:Connect(function()
 				abrir(cofre, false)
 				acciones.tomarCofre(indice)
@@ -458,17 +480,27 @@ function TiendaVista.crear(acciones: Acciones): TiendaVista
 		franja.BorderSizePixel = 0
 		franja.Parent = b
 		Estilo.redondear(franja)
+		-- Reliquias con su ícono a la izquierda.
+		local idIcono = if item.Clase == "reliquia"
+			then (Config.Assets.Reliquias :: any)[item.Id]
+			else nil
+		local x = if idIcono and idIcono ~= "" then 84 else 20
+		if x > 20 then
+			local icono = Estilo.icono(b, idIcono)
+			icono.Position = UDim2.fromOffset(16, 10)
+			icono.Size = UDim2.fromOffset(62, 62)
+		end
 		local tNombre = Estilo.texto(b, nombre, T.Normal)
 		tNombre.TextXAlignment = Enum.TextXAlignment.Left
-		tNombre.Position = UDim2.fromOffset(20, 4)
-		tNombre.Size = UDim2.new(1, -120, 0, 32)
+		tNombre.Position = UDim2.fromOffset(x, 4)
+		tNombre.Size = UDim2.new(1, -(x + 100), 0, 32)
 		ajustar(tNombre, T.Normal, 16)
 		local tFrase = Estilo.texto(b, frase, T.Chico, Estilo.Fuentes.Texto)
 		tFrase.TextXAlignment = Enum.TextXAlignment.Left
 		tFrase.TextYAlignment = Enum.TextYAlignment.Top
 		tFrase.TextStrokeTransparency = 1
-		tFrase.Position = UDim2.fromOffset(20, 38)
-		tFrase.Size = UDim2.new(1, -28, 1, -42)
+		tFrase.Position = UDim2.fromOffset(x, 38)
+		tFrase.Size = UDim2.new(1, -(x + 8), 1, -42)
 		ajustar(tFrase, T.Chico, 15)
 		-- Una reliquia que ya tenés (por ejemplo, la sacaste del cofre) no se puede comprar.
 		local laTenes = item.Clase == "reliquia" and Reliquias.tiene(e.Reliquias, item.Id)
@@ -504,10 +536,15 @@ function TiendaVista.crear(acciones: Acciones): TiendaVista
 			if id then
 				local nombre, _, hex = TiendaModulo.describir("pergamino", id, e)
 				b.Text = nombre
-				b.TextColor3 = Estilo.color("Texto")
 				b.BackgroundColor3 = Color3.fromHex(hex)
 				b.BackgroundTransparency = 0.15
-				b.TextStrokeTransparency = 0
+				-- Fondo claro: texto oscuro; fondo oscuro: texto blanco con borde.
+				local c = Color3.fromHex(hex)
+				local claro = 0.299 * c.R + 0.587 * c.G + 0.114 * c.B > 0.6
+				b.TextColor3 = if claro
+					then Estilo.color("TextoPrincipal")
+					else Estilo.color("Texto")
+				b.TextStrokeTransparency = if claro then 1 else 0
 			else
 				b.Text = "Pergamino libre"
 				b.TextColor3 = Estilo.color("Apagado")

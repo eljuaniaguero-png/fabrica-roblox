@@ -13,25 +13,27 @@ local Estilo = {}
 
 Estilo.Diseno = Vector2.new(960, 480)
 
+-- Paleta "Cripta azul" (guía de estilo de la ficha, etapa 9).
 Estilo.Colores = {
-	Velo = "#000000", -- fondo oscurecido de las pantallas que tapan todo
-	Panel = "#202020",
-	PanelClaro = "#3A3A3A",
-	Carta = "#4A4A4A",
-	Boton = "#5A5A5A",
-	Principal = "#4CC46A", -- el botón importante de cada pantalla ("Bajar", "Volver a bajar")
+	Velo = "#0B0F1C", -- fondo oscurecido de las pantallas que tapan todo
+	Panel = "#151B2E", -- azul noche
+	PanelClaro = "#2F3B57", -- piedra
+	Carta = "#2F3B57",
+	Boton = "#3A4A6E",
+	Principal = "#F5C542", -- dorado: el botón importante de cada pantalla (texto oscuro)
+	TextoPrincipal = "#151B2E",
 	Peligro = "#E2323F", -- vender, cancelar, la maña del jefe, sin oro
 	Oro = "#F5C542",
 	Texto = "#FFFFFF",
-	Apagado = "#9A9A9A", -- bloqueado, lugar libre
-	Borde = "#808080",
+	Apagado = "#8A96B8", -- bloqueado, lugar libre
+	Borde = "#4FE3F0", -- cian: bordes de lo que se toca
 	Vida = "#4CC46A",
 	Si = "#4CC46A", -- interruptor prendido
-	No = "#5A5A5A", -- interruptor apagado
+	No = "#3A4A6E", -- interruptor apagado
 }
 
 Estilo.Fuentes = {
-	Titulo = Enum.Font.GothamBlack,
+	Titulo = Enum.Font.FredokaOne, -- redonda y gruesa, va con el dibujo
 	Texto = Enum.Font.GothamBold,
 }
 
@@ -160,13 +162,36 @@ function Estilo.boton(padre: Instance, valor: string, color: string?, tamanio: n
 	b.TextColor3 = Estilo.color("Texto")
 	b.TextStrokeTransparency = 0.5
 	b.Text = valor
+	if color == "Principal" then
+		b.TextColor3 = Estilo.color("TextoPrincipal")
+		b.TextStrokeTransparency = 1
+	end
 	b.Size = UDim2.fromOffset(200, Estilo.Medidas.Boton)
+	-- SONIDO: click de botón (Config.Sonidos.Boton). Se pide recién al tocar: Sonidos usa Estilo.
+	b.Activated:Connect(function()
+		local ok, sonidos = pcall(require, script.Parent:FindFirstChild("Sonidos") :: any)
+		if ok and sonidos then
+			sonidos.tocar("Boton")
+		end
+	end)
 	b.Parent = padre
 	redondear(b)
 	local minimo = Instance.new("UISizeConstraint")
 	minimo.MinSize = Vector2.new(Estilo.Medidas.Boton, Estilo.Medidas.Boton)
 	minimo.Parent = b
 	return b
+end
+
+-- Imagen (ícono de ForgeGUI) que entra entera en su caja. Si no hay id, no se ve.
+function Estilo.icono(padre: Instance, id: string?): ImageLabel
+	local i = Instance.new("ImageLabel")
+	i.Name = "Icono"
+	i.BackgroundTransparency = 1
+	i.ScaleType = Enum.ScaleType.Fit
+	i.Image = id or ""
+	i.Visible = (id or "") ~= ""
+	i.Parent = padre
+	return i
 end
 
 -- Panel con fondo y esquinas redondeadas.

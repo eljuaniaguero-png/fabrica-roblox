@@ -141,9 +141,11 @@ Config.Monstruos = {
 -- ahora todas arrancan en 1. Cada valor: el de nivel 1 + PorNivel × (nivel - 1).
 Config.OrdenClavijas = { "roja", "azul", "dorada", "verde", "violeta" } -- las que salen en cartas
 Config.Clavijas = {
-	gris = { Nombre = "Gris", Fuerza = 2, FuerzaPorNivel = 1, Color = "#C8C8C8" },
+	-- Etapa 9 (Cripta azul): la normal es dorada #F5C542 (Neon); la "Dorada" especial pasa a
+	-- naranja, para no confundirlas.
+	gris = { Nombre = "Gris", Fuerza = 2, FuerzaPorNivel = 1, Color = "#F5C542" },
 	-- Roja: +2 Multi (era +3: eligiéndola siempre se ganaba el 60 %, el resto 5 a 18 %; lune, 25/10).
-	roja = { Nombre = "Roja", Plural = "rojas", Multi = 2, MultiPorNivel = 2, Color = "#D23232" },
+	roja = { Nombre = "Roja", Plural = "rojas", Multi = 2, MultiPorNivel = 2, Color = "#E2323F" },
 	azul = {
 		Nombre = "Azul",
 		Plural = "azules",
@@ -158,7 +160,7 @@ Config.Clavijas = {
 		Fuerza = 6,
 		Oro = 1,
 		OroPorNivel = 1,
-		Color = "#F5C542",
+		Color = "#FF5A00", -- naranja que brilla (la normal ya es dorada)
 	},
 	verde = {
 		Nombre = "Verde",
@@ -176,7 +178,7 @@ Config.Clavijas = {
 		EcoPorNivel = 1,
 		Color = "#A050E6",
 	},
-	hueco = { Nombre = "Hueco", Color = "#3A3A3A" }, -- azul rota: la bola pasa derecho
+	hueco = { Nombre = "Hueco", Color = "#2F3B57" }, -- azul rota: la bola pasa derecho
 }
 
 -- Oro (paso 5b): se gana al matar un monstruo y se gasta en la tienda. Es del juego, se pierde al
@@ -455,24 +457,99 @@ Config.Numeros = {
 	DuracionPopMulti = 0.2, -- el MULTI se agranda un poco más cuando lo multiplica una azul
 }
 
--- Colores del graybox (hasta la etapa 8).
+-- Colores del mundo (etapa 9, guía de estilo "Cripta azul" de la ficha). Las pantallas usan
+-- client/Estilo.luau.
 Config.Colores = {
 	Bola = "#FFFFFF",
 	BolaFuego = "#FF4A00", -- la bola con la mejora de fuego (con Neon brilla: más oscuro se ve naranja)
 	Quemadura = "#FF8A1F", -- el número de la quemadura sobre el monstruo
-	Fuerza = "#4FA8FF", -- caja de FUERZA del panel
-	Multi = "#FF4A4A", -- caja de MULTI del panel
+	Fuerza = "#3C8CFF", -- caja de FUERZA del panel
+	Multi = "#E2323F", -- caja de MULTI del panel
 	Oro = "#F5C542",
-	Carta = "#4A4A4A", -- graybox de las cartas
-	Gris = "#808080",
-	Fondo = "#3A3A3A",
-	Brillo = "#FFF6B0", -- clavija tocada
-	Numero = "#FFF200", -- amarillo de prueba de los "+2" y el TOTAL
+	Carta = "#2F3B57",
+	Gris = "#2F3B57", -- piedra: paredes, techo, piso, lanzador
+	Fondo = "#151B2E", -- detrás de las clavijas
+	Brillo = "#FFFBE0", -- clavija tocada
+	Numero = "#E8FF3A", -- amarillo flúor de los "+2" y el golpe
+	BordeNumero = "#151B2E",
 	Caballero = "#5A78B4",
 	Golpe = "#E2323F", -- el caballero se pone de este color cuando lo golpean
 	VidaMonstruo = "#E2323F",
 	VidaCaballero = "#4CC46A",
-	FondoBarra = "#202020",
+	FondoBarra = "#151B2E",
+	Magia = "#4FE3F0", -- velas, cristales y niebla
+}
+
+-- Mundo de la etapa 9: materiales y luz.
+Config.Mundo = {
+	MaterialClavija = "Neon", -- "Neon" (brilla) o "Metal": con la luz cian el metal dorado se ve verde
+	BrilloVela = 1.6, -- PointLight de las 2 velas cian
+	AlcanceVela = 22,
+	Niebla = 0.1, -- densidad de la Atmosphere (más alto tapa todo: la cámara está a 170 studs)
+}
+
+-- Imágenes (etapa 9, ForgeGUI, estilo "Plinko Knight - Cripta azul"), subidas a la cuenta de Juani.
+Config.Assets = {
+	Fondo = "rbxassetid://87670022073361",
+	Caballero = "rbxassetid://78494523251389",
+	Monstruos = {
+		rata = "rbxassetid://80675382037335",
+		slime = "rbxassetid://109145942201870",
+		reyRata = "rbxassetid://116157565396353",
+		murcielago = "rbxassetid://87724255448664",
+		esqueleto = "rbxassetid://77030035121515",
+		goblin = "rbxassetid://71269429801541",
+		golem = "rbxassetid://110798881890684",
+		hueco = "rbxassetid://102128709585550",
+		jefe = "rbxassetid://99368063328605",
+	},
+	Bolas = {
+		hierro = "rbxassetid://110340102452154",
+		fuego = "rbxassetid://128791166541987",
+		partida = "rbxassetid://121566479434441",
+	},
+	Reliquias = {
+		brasa = "rbxassetid://75069185725559",
+		rubi = "rbxassetid://112989603036364",
+		martillo = "rbxassetid://102599983685498",
+		cadena = "rbxassetid://94255213419577",
+		gemela = "rbxassetid://90260039639804",
+		enjambre = "rbxassetid://116223729669319",
+		hoja = "rbxassetid://136726061890392",
+		bolsa = "rbxassetid://101397062754426",
+		avaro = "rbxassetid://72011929348355",
+		toqueOro = "rbxassetid://80871627468378",
+		trofeo = "rbxassetid://103833117883642",
+		callo = "rbxassetid://75852312493601",
+		racha = "rbxassetid://78802874503070",
+		yesca = "rbxassetid://75658194741614",
+		vidrio = "rbxassetid://78167273329363",
+		aliento = "rbxassetid://126368591832705",
+		paciencia = "rbxassetid://124319147882952",
+		corona = "rbxassetid://127230860035006",
+		ecoInfinito = "rbxassetid://121321327583276",
+		midas = "rbxassetid://125474119435854",
+	},
+}
+
+-- SONIDO: IDs de los sonidos (ForgeGUI, subidos a la cuenta de Juani). Cambialos por los tuyos acá.
+Config.Sonidos = {
+	Toque = { Id = "rbxassetid://121804059050039", Volumen = 0.35 }, -- cada clavija; el tono sube
+	Tirar = { Id = "rbxassetid://87835338037561", Volumen = 0.5 },
+	Golpe = { Id = "rbxassetid://110365833201585", Volumen = 0.7 },
+	Ataque = { Id = "rbxassetid://138402372413303", Volumen = 0.6 },
+	Multi = { Id = "rbxassetid://110380641890734", Volumen = 0.5 }, -- azul (× Multi)
+	Oro = { Id = "rbxassetid://122502806374421", Volumen = 0.5 },
+	Rotura = { Id = "rbxassetid://112466097779824", Volumen = 0.5 },
+	Boton = { Id = "rbxassetid://101783326064996", Volumen = 0.4 },
+	Comprar = { Id = "rbxassetid://100338726048736", Volumen = 0.5 },
+	GanarPelea = { Id = "rbxassetid://105504200915241", Volumen = 0.5 },
+	Perder = { Id = "rbxassetid://100185737362376", Volumen = 0.5 },
+	Victoria = { Id = "rbxassetid://95661785992011", Volumen = 0.6 },
+	Desbloqueo = { Id = "rbxassetid://113597899831000", Volumen = 0.5 },
+	MusicaPelea = { Id = "rbxassetid://107838077520668", Volumen = 0.25 },
+	MusicaJefe = { Id = "rbxassetid://85707754733386", Volumen = 0.3 },
+	TonoToque = { 1, 1.8 }, -- PlaybackSpeed del primer toque y tope (sube con cada toque del tiro)
 }
 
 return Config
