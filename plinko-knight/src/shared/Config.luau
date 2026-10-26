@@ -557,7 +557,7 @@ Config.Sala = {
 	Ancho = 60, -- x
 	Largo = 40, -- z
 	Alto = 14,
-	Maquinas = 8, -- una por jugador
+	Maquinas = 1, -- la sala es en solitario (servidores de 1 jugador): solo tu máquina
 	SeparacionMaquinas = 7,
 	MaquinaTamanio = Vector3.new(4, 7, 3),
 	PantallaTamanio = Vector3.new(3.2, 2.4, 0.1),
@@ -565,7 +565,6 @@ Config.Sala = {
 	TiempoCamara = 0.8, -- segundos que tarda la cámara en meterse en la pantalla
 	TiempoFundido = 0.2, -- fundido al entrar o salir de la pantalla
 	TiempoMinimoBola = 0.3, -- segundos entre dos "elegir bola" en el mostrador (servidor)
-	Records = 8, -- cuántos jugadores muestra la pared de récords
 	-- Colores de la sala en gris (la paleta de neón llega en 7b-3).
 	Colores = {
 		Piso = "#3A3A3A",

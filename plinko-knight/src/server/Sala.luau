@@ -1,9 +1,10 @@
 --!strict
 -- Lo que pasa en la sala del lado del servidor (etapa 7b-1):
---   - Cada jugador que entra recibe una máquina libre (atributo Dueno = UserId); al salir se libera.
+--   - La sala es en solitario (servidores de 1 jugador): el que entra recibe la máquina (atributo
+--     Dueno = UserId); al salir se libera. La asignación sirve igual si algún día hay más.
 --   - Remoto ElegirBola(bola): el mostrador de la sala guarda la bola con la que arrancás
 --     (solo si la tenés desbloqueada y con límite de frecuencia).
---   - La pared de récords muestra el mejor piso de los jugadores de este servidor.
+--   - La pared de récords muestra tus récords (mejor piso, golpe, jefes, mazmorras, partidas).
 -- Sentarse en la máquina es solo de cámara (cliente): la partida la sigue decidiendo el servidor.
 
 local CollectionService = game:GetService("CollectionService")
@@ -54,26 +55,22 @@ local function liberar(jugador: Player)
 	end
 end
 
--- Pared de récords: un renglón por jugador del servidor, ordenado por mejor piso.
+-- Pared de récords: la sala es en solitario, así que muestra los tuyos.
 local function dibujarRecords(lista: TextLabel)
-	local filas = {}
-	for _, j in Players:GetPlayers() do
-		local p = Partida.de(j)
-		if p then
-			table.insert(filas, { Nombre = j.DisplayName, Piso = p.Progreso.MejorPiso })
-		end
+	local jugador = Players:GetPlayers()[1]
+	local p = jugador and Partida.de(jugador)
+	if not p then
+		lista.Text = ""
+		return
 	end
-	table.sort(filas, function(a, b)
-		return a.Piso > b.Piso
-	end)
-	local texto = {}
-	for i = 1, math.min(#filas, Config.Sala.Records) do
-		table.insert(
-			texto,
-			("%d. %s · %d de %d"):format(i, filas[i].Nombre, filas[i].Piso, #Config.Monstruos)
-		)
-	end
-	lista.Text = if #texto > 0 then table.concat(texto, "\n") else "Todavía nadie"
+	local d = p.Progreso
+	lista.Text = table.concat({
+		("Mejor piso: %d de %d"):format(d.MejorPiso, #Config.Monstruos),
+		("Mejor golpe: %d"):format(d.MejorGolpe),
+		("Jefes vencidos: %d"):format(d.JefesVencidos),
+		("Mazmorras ganadas: %d"):format(d.PartidasGanadas),
+		("Partidas jugadas: %d"):format(d.PartidasJugadas),
+	}, "\n")
 end
 
 local function armarRecords(): TextLabel?
@@ -93,7 +90,7 @@ local function armarRecords(): TextLabel?
 	titulo.Font = Enum.Font.FredokaOne
 	titulo.TextScaled = true
 	titulo.TextColor3 = Color3.fromHex(Config.Colores.Oro)
-	titulo.Text = "RÉCORDS (mejor piso)"
+	titulo.Text = "TUS RÉCORDS"
 	titulo.Parent = gui
 	local lista = Instance.new("TextLabel")
 	lista.BackgroundTransparency = 1

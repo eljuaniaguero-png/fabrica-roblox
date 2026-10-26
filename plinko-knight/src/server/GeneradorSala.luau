@@ -1,9 +1,10 @@
 --!strict
 -- La sala arcade en bloques grises (etapa 7b-1), generada por código para que viva en git.
 -- Sala de Config.Sala.Ancho × Largo studs centrada en el origen, sobre la Baseplate:
---   - pared norte (z negativo): fila de 8 máquinas Plinko Knight (tag "Maquina", atributo Indice),
---     cada una con su pantalla (tag "Pantalla"), su banqueta y su ProximityPrompt "Jugar";
---   - pared oeste: 3 máquinas de fondo que no se juegan (tag "MaquinaFondo", pantalla de demo);
+--   - pared norte (z negativo): tu máquina Plinko Knight al centro (tag "Maquina", atributo Indice)
+--     con su pantalla (tag "Pantalla"), su banqueta y su ProximityPrompt "Jugar", y 4 máquinas de
+--     fondo a los costados. La sala es en solitario: servidores de 1 jugador;
+--   - pared oeste: 3 máquinas de fondo más (no se juegan; pantalla de demo, tag "PantallaDemo");
 --   - pared este: el mostrador de la sala (tag "Tienda", ProximityPrompt "Ver bolas");
 --   - pared sur: entrada con molinete y la pared de récords (tag "Records");
 --   - al centro, la estatua del caballero.
@@ -123,17 +124,18 @@ local function maquina(padre: Instance, indice: number, x: number, z: number): M
 	return m
 end
 
-local function maquinaFondo(padre: Instance, indice: number, z: number)
+-- Máquina de fondo (no se juega): `cf` es el centro de la base mirando a la sala (LookVector).
+-- tipo: 1 naves, 2 autos, 3 laberinto (más baja).
+local function maquinaFondo(padre: Instance, indice: number, tipo: number, cf: CFrame)
 	local m = Instance.new("Model")
 	m.Name = "MaquinaFondo" .. indice
-	local x = -S.Ancho / 2 + 2
-	local t = Vector3.new(3, if indice == 3 then 5 else 7, 4) -- la de laberinto, más baja
-	parte("Cuerpo", m, t, CFrame.new(x, t.Y / 2, z), C.Fondo, true)
+	local t = Vector3.new(3.6, if tipo == 3 then 5 else 7, 3)
+	parte("Cuerpo", m, t, cf * CFrame.new(0, t.Y / 2, 0), C.Fondo, true)
 	local pantalla = parte(
 		"Pantalla",
 		m,
-		Vector3.new(0.1, 2, 2.8),
-		CFrame.new(x + t.X / 2 + 0.05, t.Y * 0.65, z),
+		Vector3.new(2.8, 2, 0.1),
+		cf * CFrame.new(0, t.Y * 0.65, -(t.Z / 2 + 0.05)),
 		C.Pantalla
 	)
 	pantalla.Material = Enum.Material.Neon
@@ -206,7 +208,8 @@ function GeneradorSala.generar(): Folder
 	parte("Pedestal", sala, Vector3.new(5, 2, 5), CFrame.new(0, 1, 1), C.Fondo, true)
 	parte("Estatua", sala, Vector3.new(2.6, 6, 2), CFrame.new(0, 5, 1), C.Maquina, true)
 
-	-- Fila de máquinas Plinko Knight contra la pared norte, mirando a la sala.
+	-- Pared norte: tu máquina Plinko Knight al centro (la sala es solo tuya: servidores de 1
+	-- jugador) y 2 máquinas de fondo a cada lado, mirando a la sala.
 	local maquinas = Instance.new("Folder")
 	maquinas.Name = "Maquinas"
 	maquinas.Parent = sala
@@ -214,6 +217,10 @@ function GeneradorSala.generar(): Folder
 	for i = 1, S.Maquinas do
 		local x = (i - (S.Maquinas + 1) / 2) * S.SeparacionMaquinas
 		maquina(maquinas, i, x, zMaquina)
+	end
+	for i, x in { -2, -1, 1, 2 } do
+		local pos = Vector3.new(x * S.SeparacionMaquinas, 0, zMaquina)
+		maquinaFondo(sala, 3 + i, (i - 1) % 3 + 1, CFrame.lookAt(pos, pos + Vector3.new(0, 0, 1)))
 	end
 	local tituloFila = parte(
 		"CartelFila",
@@ -226,7 +233,8 @@ function GeneradorSala.generar(): Folder
 
 	-- 3 máquinas de fondo contra la pared oeste (naves, autos, laberinto): no se juegan.
 	for i, z in { -4, 2, 8 } do
-		maquinaFondo(sala, i, z)
+		local pos = Vector3.new(-S.Ancho / 2 + 2, 0, z)
+		maquinaFondo(sala, i, i, CFrame.lookAt(pos, pos + Vector3.new(1, 0, 0)))
 	end
 
 	-- Mostrador de la sala contra la pared este, mirando a la sala (-X).
