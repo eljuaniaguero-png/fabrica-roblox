@@ -18,11 +18,28 @@ Todos con el estilo "Plinko Knight - Sala arcade", tipo icon_gfx, 1 opción cada
 
 | # | Modelo | Prompt (lo del medio) | Id de ForgeGUI | Estado |
 |---|---|---|---|---|
-| M2 | maquina-fondo-naves | background retro arcade cabinet for a space shooter game, screen in attract mode with a tiny pixel spaceship and stars, joystick and two buttons, side panels with planets and stars, neon cyan trim | `8c3bc166-e8af-4747-af8f-79a4b9cdfd53` | Esperando a Juani |
-| M3 | maquina-fondo-autos | sit-down racing cabinet with a small steering wheel and a pedal, screen with a simple road and a tiny car, checkered racing stripes, neon magenta trim | `f5f542b9-287b-467b-865b-9c18abc97f88` | Esperando a Juani |
-| M4 | maquina-fondo-laberinto | short squat cabinet, screen with only abstract glowing shapes and diagonal neon lines (no characters, no maze, no dots, no ghosts), zigzag side panels, "not based on any existing game" | `9426c1f7-c1a0-4f82-986a-1fcbbfca16a1` | Esperando a Juani. **Se rehízo:** la primera (`a4f61147-…`) tenía fantasmas como los de Pac-Man |
-| M5 | banqueta | round arcade stool, padded navy cushion, chrome pole, round base, neon magenta ring | `20319b2e-0ae0-4413-ae22-21c2aaef24de` | Esperando a Juani |
-| M6 | mesa-objetos | small side table with neon cyan edge; soda cup, plain cardboard box with no print, rounded generic controller with magenta and cyan buttons (not a real brand), rubber duck; no logos | `24ab3d65-a8c6-42c8-847b-b097166da093` | Esperando a Juani. **Se rehízo:** la primera (`3838b0b8-…`) tenía un joystick de Nintendo y una caja con etiqueta. Sin muñequito de caballero (el caballero salió del juego) |
-| M7 | mostrador-tienda | long low counter with a glass showcase and three small empty glass boxes, neon strips, no cash register, no coins, no prizes | `cbf22a22-a65a-4c98-85c0-0b9e30911997` | Esperando a Juani |
-| M8 | cajita-vidrio | glass cube on a short dark metal base, neon cyan strip at the bottom, empty | `5952d9f1-91b3-420e-9c4e-2d8ebe09a36a` | Esperando a Juani |
+| M2 | maquina-fondo-naves | background retro arcade cabinet for a space shooter game, screen in attract mode with a tiny pixel spaceship and stars, joystick and two buttons, side panels with planets and stars, neon cyan trim | `8c3bc166-e8af-4747-af8f-79a4b9cdfd53` | Concepto aprobado; 3D hecho (ver abajo) |
+| M3 | maquina-fondo-autos | sit-down racing cabinet with a small steering wheel and a pedal, screen with a simple road and a tiny car, checkered racing stripes, neon magenta trim | `f5f542b9-287b-467b-865b-9c18abc97f88` | Concepto aprobado; 3D hecho (ver abajo) |
+| M4 | maquina-fondo-laberinto | short squat cabinet, screen with only abstract glowing shapes and diagonal neon lines (no characters, no maze, no dots, no ghosts), zigzag side panels, "not based on any existing game" | `9426c1f7-c1a0-4f82-986a-1fcbbfca16a1` | Concepto aprobado; 3D hecho (ver abajo). **Se rehízo:** la primera (`a4f61147-…`) tenía fantasmas como los de Pac-Man |
+| M5 | banqueta | round arcade stool, padded navy cushion, chrome pole, round base, neon magenta ring | `20319b2e-0ae0-4413-ae22-21c2aaef24de` | Concepto aprobado; 3D hecho (ver abajo) |
+| M6 | mesa-objetos | small side table with neon cyan edge; soda cup, plain cardboard box with no print, rounded generic controller with magenta and cyan buttons (not a real brand), rubber duck; no logos | `24ab3d65-a8c6-42c8-847b-b097166da093` | Concepto aprobado; 3D hecho (ver abajo). **Se rehízo:** la primera (`3838b0b8-…`) tenía un joystick de Nintendo y una caja con etiqueta. Sin muñequito de caballero (el caballero salió del juego) |
+| M7 | mostrador-tienda | long low counter with a glass showcase and three small empty glass boxes, neon strips, no cash register, no coins, no prizes | `cbf22a22-a65a-4c98-85c0-0b9e30911997` | Concepto aprobado; 3D hecho (ver abajo) |
+| M8 | cajita-vidrio | glass cube on a short dark metal base, neon cyan strip at the bottom, empty | `5952d9f1-91b3-420e-9c4e-2d8ebe09a36a` | Concepto aprobado; 3D hecho (ver abajo) |
+
+## Tanda M2 a M8 (3D, 26/10/2026)
+
+Juani aprobó los 7 conceptos. 3D con ForgeGUI (Meshy, quality high), cada uno con su concepto como referencia y el prompt "…exactly like the reference image…". Bajados a `plinko-knight/modelos/ia/` (no subidos a Roblox todavía). Hoja con los 8: `modelos/ia/todos-los-modelos.png`.
+
+| # | Archivo | Id de ForgeGUI | Triángulos | Máx. del plan | Mide (m) |
+|---|---|---|---|---|---|
+| M1 | maquina-principal.glb | `81965f8d-1a56-4f63-b582-eb7c78b6273c` | 11.916 | 15.000 | 0,96 × 1,90 × 1,08 |
+| M2 | maquina-fondo-naves.glb | `88376c4f-10e7-4607-96c3-683bbc4da7e1` | 13.517 | 6.000 | 1,06 × 1,90 × 1,35 |
+| M3 | maquina-fondo-autos.glb | `058fd58b-fdf5-441e-98c4-67ec93b4b0c5` | 12.285 | 6.000 | 0,92 × 1,90 × 1,21 |
+| M4 | maquina-fondo-laberinto.glb | `c04da74b-56d1-46bd-97b0-75e6c064f43a` | 14.411 | 6.000 | 1,11 × 1,90 × 1,32 |
+| M5 | banqueta.glb | `44b9cc1a-acca-4257-8896-55d3329f0b06` | 14.282 | 1.500 | 1,69 × 1,90 × 1,69 |
+| M6 | mesa-objetos.glb | `b2717f50-ac81-4682-a216-a35c19671836` | 13.933 | 6.000 | 1,81 × 1,90 × 1,81 |
+| M7 | mostrador-tienda.glb | `797b2bd4-a58a-47e5-9525-ff60ff5fa856` | 9.733 | 8.000 | 1,90 × 0,68 × 0,64 |
+| M8 | cajita-vidrio.glb | `c1aef3d9-8fdf-4f1b-bdae-bf2bb7bd2679` | 10.118 | 1.500 | 1,26 × 1,90 × 1,26 |
+
+Todos: 1 malla y 1 material. La IA los entrega con el lado más largo en 1,9 m, así que **en 7b-3 hay que escalarlos** (máquina ~7 studs, banqueta 2,5) y **bajar triángulos en Blender** a los máximos del plan (salvo M1).
 
