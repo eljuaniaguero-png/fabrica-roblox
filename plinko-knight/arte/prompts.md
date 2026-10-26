@@ -49,9 +49,23 @@ Mismo estilo y formato que M2 a M8 (icon_gfx, 1 opción cada uno). Hoja: `arte/f
 
 | # | Modelo | Prompt (lo del medio) | Id de ForgeGUI | Estado |
 |---|---|---|---|---|
-| M9 | pared-records | large wall-mounted frame for a high-score board, round marquee bulbs around the border, neon strips, plain flat empty dark panel inside, no numbers or letters | `5cdd9b7e-3216-497e-b22d-d6e19d5bda4a` | Esperando a Juani |
-| M10 | molinete-entrada | waist-high metal turnstile with three rotating arms, neon cyan strip and a small green arrow light, no card reader, no coin slot | `360778a2-0079-4315-aeea-45c917e680bd` | Esperando a Juani |
-| M11 | maceta-planta | big round dark navy planter with a neon magenta ring and a lush tropical plant | `a69afa59-0aaa-48c5-8adb-f7e85cb563df` | Esperando a Juani |
-| M12 | tacho-basura | rounded mall trash bin, domed lid with swinging flap, neon cyan band, empty and tidy, no symbols | `e6784746-4c44-47b3-ac51-c3a71375c97e` | Esperando a Juani |
-| M13 | poste-neon | tall dark round pillar, glowing neon magenta ring at the base, thin vertical cyan stripe | `ae3b6fe8-5684-4a04-b02f-e714cdbcb922` | Esperando a Juani |
+| M9 | pared-records | large wall-mounted frame for a high-score board, round marquee bulbs around the border, neon strips, plain flat empty dark panel inside, no numbers or letters | `5cdd9b7e-3216-497e-b22d-d6e19d5bda4a` | Concepto aprobado; 3D hecho (ver abajo) |
+| M10 | molinete-entrada | waist-high metal turnstile with three rotating arms, neon cyan strip and a small green arrow light, no card reader, no coin slot | `360778a2-0079-4315-aeea-45c917e680bd` | Concepto aprobado; 3D hecho (ver abajo) |
+| M11 | maceta-planta | big round dark navy planter with a neon magenta ring and a lush tropical plant | `a69afa59-0aaa-48c5-8adb-f7e85cb563df` | Concepto aprobado; 3D hecho (ver abajo) |
+| M12 | tacho-basura | rounded mall trash bin, domed lid with swinging flap, neon cyan band, empty and tidy, no symbols | `e6784746-4c44-47b3-ac51-c3a71375c97e` | Concepto aprobado; 3D hecho (ver abajo) |
+| M13 | poste-neon | tall dark round pillar, glowing neon magenta ring at the base, thin vertical cyan stripe | `ae3b6fe8-5684-4a04-b02f-e714cdbcb922` | Concepto aprobado; 3D hecho (ver abajo) |
+
+## Tanda M9 a M13 (3D, 26/10/2026)
+
+Juani aprobó los 5 conceptos. Igual que la tanda anterior (Meshy por ForgeGUI, quality high, el concepto como referencia). Hoja con los 13: `modelos/ia/todos-los-modelos.png`.
+
+| # | Archivo | Id de ForgeGUI | Triángulos | Máx. del plan | Mide (m) |
+|---|---|---|---|---|---|
+| M9 | pared-records.glb | `1801bc3a-1623-4c29-aa9a-0156679c6c71` | 10.126 | 3.000 | 1,90 × 1,34 × 0,22 |
+| M10 | molinete-entrada.glb | `c8844e1f-b1cc-4748-8c05-47bff0c3a30e` | 12.115 | 3.000 | 1,52 × 1,90 × 1,85 |
+| M11 | maceta-planta.glb | `0337f0c0-0419-43fe-9b42-eb045fdc2b56` | 13.781 | 3.000 | 1,76 × 1,54 × 1,90 |
+| M12 | tacho-basura.glb | `c6051010-0861-4c07-8fbe-4d97efc1e9aa` | 14.275 | 1.500 | 1,38 × 1,90 × 1,33 |
+| M13 | poste-neon.glb | `a4b8755c-8717-4aba-a9eb-fd6b269dc1b9` | 9.580 | 2.000 | 0,81 × 1,90 × 0,82 |
+
+**Etapa 7b-2 terminada:** 13 modelos (M1 a M13); M14 no va. Todos de 1 malla y 1 material. En 7b-3: escalar, bajar triángulos en Blender a los máximos y subirlos a Roblox.
 

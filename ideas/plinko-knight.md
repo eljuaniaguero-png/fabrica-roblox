@@ -1,7 +1,7 @@
 # Plinko Knight — ficha del prototipo
 
 Origen: `plinko-knight/PLAN-Y-PROMPTS.md` (25/10/2026) + idea de arte aprobada (`plinko-knight/arte/IDEA-DE-ARTE.md`).
-Estado: **aprobada por Juani el 25/10/2026** (punto de control 1). Etapas 2 (tablero, puntería y bola), 3 (daño y revisión del servidor), 4 (monstruos y mazmorra) y 5 (mejoras 1 de 3) hechas el 25/10/2026. Juani jugó la prueba de 5 minutos (perdió en el piso 6: "está bueno") y pidió hacerlo **más roguelike, estilo Balatro**. **Rediseño aprobado el 25/10/2026.** Pasos 5a a 5d del rediseño hechos el 25/10; Juani lo jugó 10 minutos y dijo OK. Etapa 6 (guardado) hecha el 25/10. Etapas 7 (pantallas), 8 (estilo: Cripta azul) y 9 (arte y sonido con ForgeGUI) hechas el 25 y 26/10; Juani decidió no probar en celular (26/10). Etapa 7b-1 (sala en gris) hecha el 26/10; lo próximo es 7b-2 (modelos de la sala con ForgeGUI) y después la etapa 10 (sensación).
+Estado: **aprobada por Juani el 25/10/2026** (punto de control 1). Etapas 2 (tablero, puntería y bola), 3 (daño y revisión del servidor), 4 (monstruos y mazmorra) y 5 (mejoras 1 de 3) hechas el 25/10/2026. Juani jugó la prueba de 5 minutos (perdió en el piso 6: "está bueno") y pidió hacerlo **más roguelike, estilo Balatro**. **Rediseño aprobado el 25/10/2026.** Pasos 5a a 5d del rediseño hechos el 25/10; Juani lo jugó 10 minutos y dijo OK. Etapa 6 (guardado) hecha el 25/10. Etapas 7 (pantallas), 8 (estilo: Cripta azul) y 9 (arte y sonido con ForgeGUI) hechas el 25 y 26/10; Juani decidió no probar en celular (26/10). Etapa 7b-1 (sala en gris) y 7b-2 (13 modelos de la sala con ForgeGUI) hechas el 26/10; lo próximo es 7b-3 (limpiar, importar y luces) y después la etapa 10 (sensación).
 Carpeta: `plinko-knight/` (código en `plinko-knight/src/`, Rojo con `rojo serve plinko-knight`, puerto 34876). Place propio: `plinko-knight/PlinkoKnight.rbxl`.
 
 ## Rediseño roguelike (aprobado el 25/10/2026)
@@ -508,4 +508,11 @@ Juani pidió sacar al caballero del juego: **el personaje es el del jugador**.
 - En la sala, el pedestal del centro tiene una **estatua de tu avatar** en grande (copia de tu personaje, ×1,7, anclada y sin scripts). Reemplaza a la estatua del caballero (M14 ya no se hace con IA).
 - La máquina M1 es el concepto C **sin el casco de caballero al costado** (solo ladrillos).
 - **Pendiente:** el nombre del juego ("Plinko Knight") habla de un caballero y además "Plinko" es marca registrada: hay que elegir otro nombre antes de publicar.
+
+### Etapa 7b-2 · Modelos de la sala con IA (26/10/2026)
+
+- Estilo de ForgeGUI "Plinko Knight - Sala arcade" (solo texto: las capturas tienen cosas de FNAF y CloverPit que la IA podría copiar).
+- Juani aprobó cada concepto antes del 3D. Se rehicieron 2 conceptos que traían cosas de otras marcas (fantasmas tipo Pac-Man en M4 y un joystick de Nintendo en M6).
+- **13 modelos en `plinko-knight/modelos/ia/`** (M1 a M13; M14 no va, la estatua es tu avatar). Todos de 1 malla y 1 material. Hoja: `modelos/ia/todos-los-modelos.png`. Prompts, ids y medidas en `plinko-knight/arte/prompts.md`.
+- **Para 7b-3:** salvo M1, todos tienen más triángulos que el máximo del plan (hasta 14.411) y vienen con el lado largo en 1,9 m: hay que bajar triángulos en Blender y escalarlos. Todavía no se subió nada a Roblox.
 
