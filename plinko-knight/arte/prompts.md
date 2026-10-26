@@ -11,3 +11,18 @@ Solo con texto (la frase de estilo del plan): no se usaron las capturas de Juani
 | M1 | maquina-principal | 3D (quality high, Meshy por ForgeGUI) | A standing retro arcade cabinet, exactly like the reference image: chunky toy-like body, wide screen with a white bezel, blank lit marquee on top, control panel with a joystick and three round buttons (yellow, magenta, cyan), side panels painted with stone bricks, neon magenta and cyan trim lines along the edges. Game-ready single object, flat bottom standing on the floor, no text. | `81965f8d-1a56-4f63-b582-eb7c78b6273c` | Quedó: `modelos/ia/maquina-principal.glb`, 11.916 triángulos, 1 malla, 1 material, mide 0,96 × 1,90 × 1,08 m (escalar a ~7 studs en 7b-3). No subido a Roblox todavía |
 
 **Cambio respecto del plan:** la pantalla de M1 es **ancha** (el plan decía vertical), porque la cámara entra en la pantalla y adentro la mazmorra se ve ancha (3 columnas).
+
+## Tanda M2 a M8 (conceptos, 26/10/2026)
+
+Todos con el estilo "Plinko Knight - Sala arcade", tipo icon_gfx, 1 opción cada uno. Hoja: `arte/forgegui/sala/m2-m8-conceptos.png`. Empiezan todos con "Concept for a 3D game asset on a plain dark grey studio background:" y terminan con "front three-quarter view, centered, no text".
+
+| # | Modelo | Prompt (lo del medio) | Id de ForgeGUI | Estado |
+|---|---|---|---|---|
+| M2 | maquina-fondo-naves | background retro arcade cabinet for a space shooter game, screen in attract mode with a tiny pixel spaceship and stars, joystick and two buttons, side panels with planets and stars, neon cyan trim | `8c3bc166-e8af-4747-af8f-79a4b9cdfd53` | Esperando a Juani |
+| M3 | maquina-fondo-autos | sit-down racing cabinet with a small steering wheel and a pedal, screen with a simple road and a tiny car, checkered racing stripes, neon magenta trim | `f5f542b9-287b-467b-865b-9c18abc97f88` | Esperando a Juani |
+| M4 | maquina-fondo-laberinto | short squat cabinet, screen with only abstract glowing shapes and diagonal neon lines (no characters, no maze, no dots, no ghosts), zigzag side panels, "not based on any existing game" | `9426c1f7-c1a0-4f82-986a-1fcbbfca16a1` | Esperando a Juani. **Se rehízo:** la primera (`a4f61147-…`) tenía fantasmas como los de Pac-Man |
+| M5 | banqueta | round arcade stool, padded navy cushion, chrome pole, round base, neon magenta ring | `20319b2e-0ae0-4413-ae22-21c2aaef24de` | Esperando a Juani |
+| M6 | mesa-objetos | small side table with neon cyan edge; soda cup, plain cardboard box with no print, rounded generic controller with magenta and cyan buttons (not a real brand), rubber duck; no logos | `24ab3d65-a8c6-42c8-847b-b097166da093` | Esperando a Juani. **Se rehízo:** la primera (`3838b0b8-…`) tenía un joystick de Nintendo y una caja con etiqueta. Sin muñequito de caballero (el caballero salió del juego) |
+| M7 | mostrador-tienda | long low counter with a glass showcase and three small empty glass boxes, neon strips, no cash register, no coins, no prizes | `cbf22a22-a65a-4c98-85c0-0b9e30911997` | Esperando a Juani |
+| M8 | cajita-vidrio | glass cube on a short dark metal base, neon cyan strip at the bottom, empty | `5952d9f1-91b3-420e-9c4e-2d8ebe09a36a` | Esperando a Juani |
+
