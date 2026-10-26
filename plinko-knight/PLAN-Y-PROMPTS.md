@@ -536,3 +536,160 @@ Usalos en Gemini (Nano Banana). Pegá **la frase de estilo y después el prompt*
 ## Después de publicar (ideas que quedaron FUERA)
 
 En este orden, solo si la gente juega y vuelve: más mazmorras con monstruos nuevos, más mejoras (bola de hielo que congela un turno, clavija que cura, bola rebotona), reto diario con la misma semilla para todos, ranking de mejor piso, aspectos de bola y de tablero por Robux. Cada una se pide con el prompt modelo de la GUIA, sección 9.
+
+---
+
+> **Agregado el 26/10/2026 (desde el proyecto de Claude):** Juani aprobó la sala arcade 3D y pidió que **todos los modelos los haga una IA**. Esta sección se suma al plan; lo que ya está hecho y la ficha mandan sobre lo de arriba.
+
+## APROBADO (26/10): jugar dentro de una máquina arcade, en una sala 3D
+
+Idea de Juani: el tablero se juega dentro de una máquina arcade, como en *CloverPit*. La tienda está aparte y te movés por una sala.
+
+**Cómo quedaría:** una **sala de arcade retro de noche** (no un casino). Caminás con tu avatar entre máquinas con luces de neón, te acercás a la máquina "Plinko Knight" y tocás E (o el botón en celular). La cámara se mete despacio hasta la pantalla, como en CloverPit, y ahí se juega la mazmorra igual que en el plan. **Afuera es el arcade; adentro de la pantalla sigue la mazmorra del caballero.** Al terminar la partida, la cámara se aleja y volvés a caminar.
+
+- **La sala:** una fila de máquinas iguales, una por jugador (hasta 8 por servidor), un mostrador aparte que es la **tienda de la sala** (elegir bola, ver bolas y reliquias desbloqueadas y, después, aspectos; la tienda de oro de cada partida sigue dentro de la máquina para no cortar el ritmo), una pared de récords con el mejor piso de cada uno y luces de neón en carteles que dicen "ARCADE" y "PLINKO KNIGHT".
+- **Lo que NO puede haber (regla de apuestas simuladas de Roblox):** tragamonedas, ruletas, fichas, mesas de cartas o dados, carteles de "JACKPOT", premios al azar ni mostrador de premios sorpresa. Si se ve como un casino, Roblox lo puede bajar. Las máquinas de fondo son de juegos de habilidad (naves, autos, laberintos) y están apagadas o en modo demo.
+- **Cuándo se hace:** es la **etapa 7b** y va **ahora, antes de la etapa 10** (sensación), porque cambia la cámara y cómo empieza el juego. El tablero, Fuerza × Multi, la tienda de oro, las reliquias y los monstruos no cambian: todo eso sigue pasando dentro de la pantalla de la máquina.
+- **Arte (cambiado el 26/10):** **todos los modelos los hace una IA** (ForgeGUI, ya pago). Claude solo arma la sala en gris, escribe los prompts, limpia los modelos en Blender y los coloca. Ver etapa 7b más abajo.
+
+### Referencias y qué tomar de cada una
+
+| Referencia | Qué tomar | Qué NO tomar |
+|---|---|---|
+| **CloverPit** | Estar sentado frente a UNA máquina; la cámara que se acerca a la pantalla; la máquina como un mueble físico con luces que parpadean; la sala oscura alrededor | Tragamonedas, monedas, deuda, todo lo de apostar |
+| **FNAF: Security Breach** (el Pizzaplex, el arcade) | Neón rosa, violeta y cian; alfombra con dibujitos de confeti; pisos brillantes; filas de máquinas arcade con carteles que brillan | Los animatrónicos que asustan y los nombres o personajes de FNAF |
+| **Salones arcade reales de los 80 y 90** | Muebles de máquina con dibujo a los costados, el cartel de arriba iluminado, palanca y botones grandes | — |
+| **Pantallas de tubo (CRT)** | Líneas horizontales y el borde curvo de la pantalla de la máquina, para que el tablero se vea "adentro" | — |
+| **Peglin** | Lo que pasa adentro de la pantalla: el tablero, los monstruos y las mejoras (igual que antes) | — |
+
+**Búsquedas útiles:** "CloverPit gameplay", "FNAF Security Breach Fazer Blast arcade", "Pizzaplex arcade screenshot", "retro arcade room night neon", "80s arcade carpet pattern", "arcade cabinet side art", "CRT screen scanlines game".
+
+**Paleta propuesta para la sala:** paredes azul noche `#14112B`, neón rosa `#FF3EA5`, neón cian `#2DE2E6`, violeta `#7A2CF5`. Se mantienen las clavijas doradas `#F5C542` y los números amarillo flúor `#E6FF00`, que resaltan mucho sobre esa sala oscura.
+
+**Un tema aparte:** "Plinko" es una marca registrada (el juego del programa *The Price Is Right*). Para jugar en prueba no pasa nada, pero conviene elegir otro nombre antes de publicar.
+
+### Lo que salió de las 15 capturas de Juani (25/10, en plinko-knight/arte/referencias/)
+
+**Sala (de FNAF, 8 capturas):** casi negro `#0D0A14`, neón magenta `#FF3FD0`, cian `#3FE8FF`, amarillo `#FFE14A` y verde `#7CFF6B`. Piso de damero blanco y negro que refleja como un espejo (`Material = Glass` o `SmoothPlastic` con `Reflectance`) y techos con damero. La luz sale casi toda de los carteles: oscuridad alrededor y neón que marca el camino. Una máquina grande en el centro de la sala como punto de atención.
+**Máquina y tienda (de CloverPit, 7 capturas):** primera persona de frente a la máquina, el gabinete como mueble físico sobre una mesa con objetos, un contorno amarillo `#FFE600` en lo que se puede tocar, el HUD en cajas negras con letra blanca en mayúsculas y títulos naranja `#FF8A1E`. Tienda con cajitas de vidrio y un objeto 3D adentro, y cartas negras con título, ícono y descripción (sirve también para las 3 cartas de mejora).
+**Queda afuera:** rodillos, palanca, deuda, interés, cajero, cartel de porcentajes, el "666", la sangre, el cartel "PRIZES", los animatrónicos y cualquier nombre o letrero de FNAF.
+Esta paleta reemplaza a la de arriba (aprobada el 26/10).
+
+---
+
+## Etapa 7b · Sala arcade 3D con modelos hechos por IA (aprobada el 26/10)
+
+**Cómo se hace:** primero la sala en bloques grises para probar que caminar, sentarse y jugar se sienta bien (7b-1). Después **todos los modelos los hace una IA**: ForgeGUI, con un mismo estilo para todos (7b-2). Claude no modela a mano: escribe los prompts, revisa, y en Blender solo limpia, achica y exporta (7b-3). Va **antes de la etapa 10**. Dentro de la pantalla se mantiene la Cripta azul; la sala usa la paleta de tus capturas (combinan: las dos son oscuras con cian).
+
+**Herramientas, en este orden:**
+1. **ForgeGUI** (ya lo tenés pago): imagen de concepto → modelo 3D con texturas → lo sube a Roblox. Guarda el estilo "Plinko Knight - Sala arcade" para que todos los modelos salgan parecidos.
+2. **Reserva**, si ForgeGUI no da buen resultado en algún modelo: imagen en Gemini → Meshy (imagen a 3D) → limpieza en Blender.
+3. **Claude en Blender**: solo limpiar, bajar triángulos, centrar el pivote, poner escala y exportar. No esculpe.
+
+**Regla de ForgeGUI:** Claude te avisa antes de cada tanda de modelos, te dice cuántos va a generar, te muestra la imagen de concepto y espera tu "dale" antes de pasarla a 3D. Si ForgeGUI dice que no quedan créditos, frena y te avisa.
+
+### Lista de modelos (los que hace la IA)
+
+| # | Archivo | Qué es | Triángulos máx. |
+|---|---|---|---|
+| M1 | `maquina-principal` | **La máquina Plinko Knight**: gabinete arcade alto, pantalla grande vertical (ahí va el tablero), cartel arriba sin texto, botones grandes, costados con dibujo de caballero y mazmorra | 15.000 |
+| M2 | `maquina-fondo-naves` | Máquina de fondo, juego de naves (apagada o en demo) | 6.000 |
+| M3 | `maquina-fondo-autos` | Máquina de fondo, juego de autos con volante | 6.000 |
+| M4 | `maquina-fondo-laberinto` | Máquina de fondo, juego de laberinto, más baja | 6.000 |
+| M5 | `banqueta` | Banqueta redonda de arcade con tapizado | 1.500 |
+| M6 | `mesa-objetos` | Mesita al lado de la máquina con objetos (vaso de gaseosa, caja de pizza, joystick viejo, muñequito de caballero), al estilo CloverPit pero sin nada feo | 6.000 |
+| M7 | `mostrador-tienda` | Mostrador de la tienda con vidriera, luces de neón en el borde | 8.000 |
+| M8 | `cajita-vidrio` | Cajita de vidrio con base de metal, donde se exhibe cada bola en la tienda | 1.500 |
+| M9 | `pared-records` | Marco grande con luces para la pared de récords (los nombres los pone el juego) | 3.000 |
+| M10 | `molinete-entrada` | Molinete de entrada de metal | 3.000 |
+| M11 | `maceta-planta` | Maceta con planta tropical | 3.000 |
+| M12 | `tacho-basura` | Tacho de basura de shopping | 1.500 |
+| M13 | `poste-neon` | Columna con anillo de neón en la base (como la de tu captura 181825) | 2.000 |
+| M14 | `figura-caballero` | Estatua grande del caballero en el centro de la sala (lo que te llama la atención al entrar) | 15.000 |
+
+**Lo que NO hace la IA (lo arma Claude con partes de Roblox, porque sale mejor y pesa menos):** paredes, piso de damero que refleja, techo, los tubos de neón y los carteles con texto ("ARCADE", "PLINKO KNIGHT", "TIENDA", "RÉCORDS": la IA no escribe bien letras). La alfombra con confeti es una textura (ForgeGUI, ruta de textura).
+
+**Frase de estilo para los modelos 3D (va en el estilo de ForgeGUI y en cada prompt):**
+> Stylized game-ready 3D asset for a kids' Roblox game set in a retro arcade at night. Chunky, slightly toy-like proportions, clean readable shapes, simple flat colors with a light low-resolution PS1-style texture. Dark navy and black body #14112B / #0D0A14, glowing neon trims in magenta #FF3FD0 and cyan #3FE8FF, small yellow #FFE14A accents. Single object, centered, front three-quarter view, no text, no letters, no logos, no casino or gambling elements, no blood.
+
+### Prompt 7b-1 · Sala en gris y sentarse en la máquina
+
+```
+Juego: Plinko Knight. Leé las Reglas de plinko-knight/PLAN-Y-PROMPTS.md, la ficha y la sección
+"APROBADO (26/10): jugar dentro de una máquina arcade" con "Lo que salió de las 15 capturas".
+Mirá las capturas de plinko-knight/arte/referencias/ (las 8 de FNAF y las 7 de CloverPit) y
+escribime 8 observaciones antes de empezar. Etapa 7b-1: la sala en bloques grises.
+
+1) Sala de unos 60 × 40 studs, generada por código (server/GeneradorSala.luau) para que viva en
+   git: entrada con molinete, estatua del caballero al centro, una fila de 8 máquinas Plinko
+   Knight (una por jugador), 3 máquinas de fondo, mostrador de tienda en un costado, pared de
+   récords enfrente. Todo con bloques grises y partes con tags (Maquina, Tienda, Records).
+2) Al entrar, cada jugador tiene asignada una máquina libre (atributo Dueno). Se acerca, ve
+   "E: jugar" (en celular un botón) y al tocarlo: se sienta en la banqueta, la cámara pasa a
+   Scriptable y se acerca en 0,8 s hasta quedar de frente a la pantalla, en primera persona,
+   como en CloverPit. Todo lo que ya existe (tablero, panel FUERZA × MULTI, monstruo, tienda de
+   oro, cofre, derrota y victoria) se juega dentro de esa pantalla: mismo código, ahora ubicado
+   en la pantalla de su máquina y solo para ese jugador. Las 3 columnas tienen que entrar en la
+   pantalla de la máquina; si no entran, proponeme cómo antes de achicar nada.
+3) Al terminar o con "Salir", la cámara se aleja y vuelve a caminar.
+4) Mostrador de la sala: acercarse abre la parte de "elegir bola" de la pantalla de Inicio y lo
+   desbloqueado (bolas y reliquias), con el estilo CloverPit: cajitas, cartas negras con título
+   naranja, borde amarillo en lo elegido. La bola elegida es con la que arrancás en tu máquina.
+   La tienda de oro de la partida NO se mueve: sigue dentro de la pantalla de la máquina.
+5) Pared de récords: el mejor piso de los jugadores del servidor (no es un ranking global).
+6) Las máquinas de fondo no se juegan: muestran una pantalla de demo con colores que cambian.
+7) Nada de casino (Reglas, punto 5). Ni tragamonedas, ni ruletas, ni fichas, ni "jackpot".
+Probalo en Play y en Local Server con 2 jugadores (cada uno en su máquina sin ver la del otro).
+Capturas: entrar a la sala, sentarse, jugando, tienda. Compu y celular. Commit "sala en gris".
+```
+
+### Prompt 7b-2 · Modelos hechos por IA con ForgeGUI
+
+```
+Juego: Plinko Knight. Leé las Reglas de plinko-knight/PLAN-Y-PROMPTS.md y la sección "Etapa 7b"
+(lista de modelos M1 a M14 y la frase de estilo). Etapa 7b-2: que la IA haga los modelos.
+
+1) Revisá que tengas las herramientas de ForgeGUI. Si no aparecen, frená y decime (puedo
+   activarlas o los hacemos desde el chat del proyecto de Claude).
+2) Creá en ForgeGUI el estilo "Plinko Knight - Sala arcade" (aparte del de Cripta azul) con la frase de estilo y 2 a 4 de mis
+   capturas de referencia como imágenes de estilo (las de neón y damero de FNAF y la máquina de
+   CloverPit). Es gratis.
+3) AVISAME antes de gastar créditos: decime cuántos modelos vas a hacer en esta tanda.
+   Empezá solo con M1 (la máquina principal): primero una imagen de concepto con ese estilo,
+   mostrámela, y con mi "dale" pasala a 3D (quality high, con la imagen de concepto como
+   referencia). No publiques a Roblox todavía: bajá el .glb a plinko-knight/modelos/ia/.
+4) Con M1 aprobado, hacé el resto en 2 tandas (M2-M8 y M9-M14), igual: conceptos primero, los
+   mostrás todos juntos en una imagen, yo digo cuáles van, y después 3D.
+5) Para cada modelo anotá en plinko-knight/arte/prompts.md el prompt exacto, el id de ForgeGUI y
+   si quedó o se rehízo. Si uno sale mal 2 veces, pasalo a la reserva: imagen en Gemini (decime
+   el prompt y la hago yo) → Meshy → Blender.
+6) Ningún modelo puede tener texto, logos, sangre ni nada de casino. Si aparece, rehacelo.
+Mostrame una imagen con todos los modelos lado a lado. Commit "modelos IA de la sala".
+```
+
+### Prompt 7b-3 · Limpiar, importar y luces de la sala
+
+```
+Juego: Plinko Knight. Leé las Reglas de plinko-knight/PLAN-Y-PROMPTS.md y la sección 5 de la
+GUIA (modelos 3D). Etapa 7b-3: pasar los modelos de la IA al juego y dejar la sala como mis
+capturas.
+
+1) Blender (solo limpieza, no modelar): por cada .glb de plinko-knight/modelos/ia/, revisar
+   triángulos (máximo de la tabla de la etapa 7b), escala (la máquina mide unos 7 studs de alto,
+   la banqueta 2,5), pivote en la base, normales, un material por malla, texturas de 512 px
+   (1024 solo M1 y M14). Guardar .blend en plinko-knight/modelos/blender/ y exportar a
+   plinko-knight/modelos/exports/. Si el conector de Blender no está, usá la preparación de
+   modelos de ForgeGUI para escala y pivote.
+2) Subir cada modelo UNA vez (ForgeGUI a Roblox o por MCP) y duplicarlo en Studio. IDs en
+   Config.Assets. Reemplazar los bloques grises de 7b-1 por los modelos, manteniendo los tags.
+3) La pantalla de M1: el tablero tiene que quedar justo dentro de la pantalla del modelo. Si el
+   modelo no tiene una pantalla plana usable, poné una Part plana encima con el tablero.
+4) Sala con mis capturas: casi negro #0D0A14, neón magenta #FF3FD0, cian #3FE8FF, amarillo
+   #FFE14A, verde #7CFF6B (Parts Neon), piso de damero que refleja, alfombra con confeti en el
+   pasillo, la luz sale casi toda de los carteles. Pocas luces con sombra (celular).
+5) Carteles con texto hechos con partes y TextLabels: ARCADE, PLINKO KNIGHT, TIENDA, RÉCORDS.
+6) Comparación lado a lado con mis capturas (misma cámara) en arte/comparaciones/, tabla de
+   diferencias, corregir hasta 3 veces.
+Probalo: FPS en emulador de celular (30 o más), consola sin rojo, 2 jugadores. Copia .rbxl en
+backups/. Commit "sala arcade con modelos".
+```

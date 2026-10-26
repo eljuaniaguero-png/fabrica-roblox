@@ -1,7 +1,7 @@
 # Plinko Knight — ficha del prototipo
 
 Origen: `plinko-knight/PLAN-Y-PROMPTS.md` (25/10/2026) + idea de arte aprobada (`plinko-knight/arte/IDEA-DE-ARTE.md`).
-Estado: **aprobada por Juani el 25/10/2026** (punto de control 1). Etapas 2 (tablero, puntería y bola), 3 (daño y revisión del servidor), 4 (monstruos y mazmorra) y 5 (mejoras 1 de 3) hechas el 25/10/2026. Juani jugó la prueba de 5 minutos (perdió en el piso 6: "está bueno") y pidió hacerlo **más roguelike, estilo Balatro**. **Rediseño aprobado el 25/10/2026.** Pasos 5a a 5d del rediseño hechos el 25/10; Juani lo jugó 10 minutos y dijo OK. Etapa 6 (guardado) hecha el 25/10. Etapas 7 (pantallas), 8 (estilo: Cripta azul) y 9 (arte y sonido con ForgeGUI) hechas el 25 y 26/10; falta probarlas en el emulador de celular. Lo próximo es la etapa 10 (sensación).
+Estado: **aprobada por Juani el 25/10/2026** (punto de control 1). Etapas 2 (tablero, puntería y bola), 3 (daño y revisión del servidor), 4 (monstruos y mazmorra) y 5 (mejoras 1 de 3) hechas el 25/10/2026. Juani jugó la prueba de 5 minutos (perdió en el piso 6: "está bueno") y pidió hacerlo **más roguelike, estilo Balatro**. **Rediseño aprobado el 25/10/2026.** Pasos 5a a 5d del rediseño hechos el 25/10; Juani lo jugó 10 minutos y dijo OK. Etapa 6 (guardado) hecha el 25/10. Etapas 7 (pantallas), 8 (estilo: Cripta azul) y 9 (arte y sonido con ForgeGUI) hechas el 25 y 26/10; falta probarlas en el emulador de celular. Lo próximo es la **etapa 7b (sala arcade 3D, aprobada el 26/10)** y después la etapa 10 (sensación).
 Carpeta: `plinko-knight/` (código en `plinko-knight/src/`, Rojo con `rojo serve plinko-knight`, puerto 34876). Place propio: `plinko-knight/PlinkoKnight.rbxl`.
 
 ## Rediseño roguelike (aprobado el 25/10/2026)
@@ -227,6 +227,17 @@ Juani dijo "elegí vos": quedó la **B · Cripta azul**, que ya era la favorita 
 - **Antes de usarlo:** confirmar que lo que se genera con el plan pago es privado y se puede usar comercialmente. Si no, se frena y se le avisa a Juani.
 - **Cada vez que una etapa necesite arte o sonido con IA, avisarle a Juani antes de generar** (qué se va a hacer, con qué herramienta y cuántos créditos gasta, más o menos).
 
+## Sala arcade 3D (aprobada por Juani el 26/10/2026)
+
+El juego ya no arranca en una pantalla: arrancás **caminando por una sala de arcade de noche** (neón y damero, como el Pizzaplex de FNAF en tus capturas). Te acercás a **tu máquina Plinko Knight**, tocás E (o el botón en celular), te sentás y la cámara se mete en la pantalla en primera persona, como en CloverPit. **Adentro de la pantalla sigue todo igual**: tablero, FUERZA × MULTI, monstruos, tienda de oro, cofre. Al terminar, la cámara se aleja y volvés a caminar.
+
+- **Sala:** 8 máquinas Plinko Knight (una por jugador), 3 máquinas de fondo que no se juegan, estatua del caballero en el centro, **mostrador de la sala** (elegir bola, ver lo desbloqueado; después, aspectos) y pared de récords del servidor.
+- **No es un casino:** ni tragamonedas, ni ruletas, ni fichas, ni "jackpot", ni premios sorpresa, ni deuda. De CloverPit se toma solo la presentación (la máquina en primera persona, la mesa con cosas, las cajitas de la tienda, el borde al apuntar, el HUD en cajas negras). De FNAF solo el ambiente: ningún animatrónico ni nombre. Nada de sangre ni "666".
+- **Modelos: todos hechos por IA.** ForgeGUI (estilo "Plinko Knight - Sala arcade") hace los 14 modelos (lista M1 a M14 en `plinko-knight/PLAN-Y-PROMPTS.md`, etapa 7b): primero imagen de concepto, Juani la aprueba y recién ahí 3D. Reserva: Gemini → Meshy → Blender. Claude en Blender solo limpia, baja triángulos y exporta. Paredes, piso, tubos de neón y carteles con letras se arman con partes de Roblox.
+- **Paleta de la sala (medida de tus capturas):** casi negro `#0D0A14`, neón magenta `#FF3FD0`, cian `#3FE8FF`, amarillo `#FFE14A`, verde `#7CFF6B`, piso de damero que refleja. Dentro de la pantalla sigue la Cripta azul.
+- **Orden:** etapa 7b (7b-1 sala en gris, 7b-2 modelos IA, 7b-3 limpiar, importar y luces) **antes de la etapa 10**.
+- **Nombre:** "Plinko" es marca registrada (The Price Is Right). Antes de publicar hay que elegir otro nombre.
+
 ## Qué queda FUERA de la versión mínima ("después")
 
 Dificultades extra después de ganar (como las apuestas de color de Balatro, acá serían "profundidades"), más bolas y reliquias, reto diario con semilla fija, ranking, **cualquier cosa con Robux**, varias mazmorras, multijugador cooperativo, mascotas y tienda con Robux (la tienda de oro sí entra). Se anotan acá y no se programan. Cuando llegue Robux: aspectos de bola y de tablero. Si alguna vez hay algo al azar que se pague, van las probabilidades a la vista y PolicyService (sección 6 de la GUIA).
@@ -236,6 +247,8 @@ Dificultades extra después de ganar (como las apuestas de color de Balatro, ac�
 - **El monstruo va a la derecha, no abajo del tablero.** Lo aprobaste el 25/10 en la idea de arte: en un celular horizontal el tablero y el monstruo no entran uno arriba del otro.
 - **El panel de daño tiene dos cajas** (daño | ×2). La regla de la clavija roja no cambia: solo se muestra separado.
 - **Rediseño roguelike (25/10, propuesto):** el daño pasa a ser Fuerza × Multi, el "elegí 1 de 3" se cambia por una tienda con oro (el 1 de 3 queda para el cofre de cada jefe), aparecen reliquias, pergaminos, clavijas especiales, 3 zonas y jefes con maña. Las etapas 5a a 5d reemplazan a la etapa 5 del plan; las etapas 6 a 11 siguen, con más pantallas y más arte.
+
+- **Sala arcade 3D (26/10, aprobada):** el juego pasa a jugarse dentro de una máquina en una sala por la que caminás. Ver "Sala arcade 3D". La tienda de oro sigue dentro de la máquina; el mostrador de la sala es para elegir bola y ver lo desbloqueado.
 
 ## Avance
 
