@@ -19,6 +19,7 @@ local Reliquias = require(Shared:WaitForChild("Reliquias"))
 local TiendaModulo = require(Shared:WaitForChild("Tienda"))
 local Clavijas = require(Shared:WaitForChild("Clavijas"))
 local Estilo = require(script.Parent:WaitForChild("Estilo"))
+local Sonidos = require(script.Parent:WaitForChild("Sonidos"))
 
 export type Acciones = {
 	comprar: (indice: number) -> (),
@@ -413,11 +414,26 @@ function TiendaVista.crear(acciones: Acciones): TiendaVista
 	masTarde.Activated:Connect(function()
 		abrir(cofre, false)
 	end)
-	botonCofre.Activated:Connect(function()
+	-- Etapa 10: las cartas entran una por una con un "whoosh".
+	local escalasCartas: { UIScale } = {}
+	local function abrirCofre()
 		abrir(cofre, true)
-	end)
+		for i, escala in escalasCartas do
+			escala.Scale = 0
+			task.delay((i - 1) * Config.Feel.CartasEntrada, function()
+				Sonidos.tocar("Whoosh") -- SONIDO
+				TweenService:Create(
+					escala,
+					TweenInfo.new(0.25, Enum.EasingStyle.Back, Enum.EasingDirection.Out),
+					{ Scale = 1 }
+				):Play()
+			end)
+		end
+	end
+	botonCofre.Activated:Connect(abrirCofre)
 
 	local function ponerCofre(e: Mazmorra.Estado)
+		table.clear(escalasCartas)
 		for _, hijo in mesa:GetChildren() do
 			if hijo:IsA("GuiButton") then
 				hijo:Destroy()
@@ -432,6 +448,7 @@ function TiendaVista.crear(acciones: Acciones): TiendaVista
 			local borde = Estilo.borde(carta, hex, 5)
 			local escala = Instance.new("UIScale")
 			escala.Parent = carta
+			table.insert(escalasCartas, escala)
 			-- La que tenés debajo del mouse (o del dedo) brilla más y se agranda.
 			carta.MouseEnter:Connect(function()
 				escala.Scale = 1.05
@@ -461,8 +478,20 @@ function TiendaVista.crear(acciones: Acciones): TiendaVista
 			tFrase.TextYAlignment = Enum.TextYAlignment.Top
 			ajustar(tFrase, T.Chico, 16)
 			carta.Activated:Connect(function()
-				abrir(cofre, false)
-				acciones.tomarCofre(indice)
+				-- La elegida se agranda y brilla un instante antes de cerrar (etapa 10).
+				if borde.Thickness >= 10 then
+					return -- ya se eligió (doble toque)
+				end
+				borde.Thickness = 10
+				TweenService:Create(
+					escala,
+					TweenInfo.new(0.18, Enum.EasingStyle.Back, Enum.EasingDirection.Out),
+					{ Scale = 1.2 }
+				):Play()
+				task.delay(0.22, function()
+					abrir(cofre, false)
+					acciones.tomarCofre(indice)
+				end)
 			end)
 		end
 	end
@@ -601,7 +630,7 @@ function TiendaVista.crear(acciones: Acciones): TiendaVista
 			if hayCofre then
 				ponerCofre(e)
 				if cofreNuevo then
-					abrir(cofre, true)
+					abrirCofre()
 				end
 			else
 				abrir(cofre, false)

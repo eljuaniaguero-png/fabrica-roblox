@@ -12,7 +12,8 @@ local Ajustes = require(script.Parent:WaitForChild("Ajustes"))
 export type Monstruo = {
 	mostrar: (piso: number, vida: number) -> (),
 	ponerVida: (vida: number, animado: boolean) -> (),
-	recibir: () -> (), -- se sacude con el golpe
+	recibir: () -> (), -- se sacude con el golpe (etapa 10: flash blanco y se inclina)
+	romper: () -> (), -- etapa 10: al morir, el cartel se rompe en pedazos que caen
 	atacar: () -> (), -- se agranda y vuelve
 	centro: () -> Vector3,
 }
@@ -102,6 +103,17 @@ function Monstruo.crear(cartel: BasePart, barra: BasePart): Monstruo
 		end
 	end
 
+	-- Flash blanco (etapa 10): un cuadro blanco encima de la imagen que se apaga rápido.
+	local flash = Instance.new("Frame")
+	flash.Name = "Flash"
+	flash.Size = UDim2.fromScale(1, 1)
+	flash.BackgroundColor3 = Color3.new(1, 1, 1)
+	flash.BackgroundTransparency = 1
+	flash.BorderSizePixel = 0
+	flash.ZIndex = 5
+	flash.Parent = gui
+	local F = Config.Feel
+
 	local sacudida = 0 -- para cortar una sacudida vieja si empieza otra
 	return {
 		mostrar = function(piso: number, vida: number)
@@ -114,17 +126,26 @@ function Monstruo.crear(cartel: BasePart, barra: BasePart): Monstruo
 			nombre.Text = m.Nombre
 			cartel.Size = tamanio
 			cartel.CFrame = base
+			cartel.Transparency = 0
+			gui.Enabled = true
 			ponerVida(vida, false)
 		end,
 		ponerVida = ponerVida,
 		recibir = function()
 			sacudida += 1
 			local marca = sacudida
+			flash.BackgroundTransparency = 0.2
+			TweenService:Create(flash, TweenInfo.new(F.Destello), { BackgroundTransparency = 1 })
+				:Play()
 			task.spawn(function()
 				local fin = os.clock() + t.Sacudida
+				local lado = if math.random() < 0.5 then -1 else 1
 				while os.clock() < fin and sacudida == marca do
 					local queda = (fin - os.clock()) / t.Sacudida * Ajustes.factorEfectos()
-					cartel.CFrame = base * CFrame.new((math.random() * 2 - 1) * 0.6 * queda, 0, 0)
+					-- Se inclina hacia un lado y vuelve, temblando un poco.
+					cartel.CFrame = base
+						* CFrame.new((math.random() * 2 - 1) * 0.6 * queda, 0, 0)
+						* CFrame.Angles(0, 0, math.rad(F.Inclinar * lado * queda))
 					task.wait()
 				end
 				if sacudida == marca then
@@ -133,17 +154,65 @@ function Monstruo.crear(cartel: BasePart, barra: BasePart): Monstruo
 			end)
 		end,
 		atacar = function()
-			TweenService:Create(
-				cartel,
-				TweenInfo.new(
-					t.DuracionAtaque / 2,
-					Enum.EasingStyle.Quad,
-					Enum.EasingDirection.Out,
-					0,
-					true
-				),
-				{ Size = Vector3.new(tamanio.X * t.Agrandar, tamanio.Y * t.Agrandar, tamanio.Z) }
-			):Play()
+			-- Se agranda y se acerca a la cámara (que mira hacia -Z: acercarse es +Z), y vuelve.
+			local info = TweenInfo.new(
+				t.DuracionAtaque / 2,
+				Enum.EasingStyle.Quad,
+				Enum.EasingDirection.Out,
+				0,
+				true
+			)
+			TweenService:Create(cartel, info, {
+				Size = Vector3.new(tamanio.X * t.Agrandar, tamanio.Y * t.Agrandar, tamanio.Z),
+				CFrame = base + Vector3.new(0, 0, F.Acercar),
+			}):Play()
+		end,
+		romper = function()
+			-- Pedazos planos del color del cartel que caen girando; el cartel se esconde hasta
+			-- que aparece el próximo monstruo (mostrar).
+			sacudida += 1
+			gui.Enabled = false
+			cartel.Transparency = 1
+			local n = F.Pedazos
+			for i = 1, n do
+				local p = Instance.new("Part")
+				p.Name = "Pedazo"
+				p.Anchored = true
+				p.CanCollide = false
+				p.CanTouch = false
+				p.CanQuery = false
+				p.CastShadow = false
+				p.Material = Enum.Material.Slate
+				p.Color = cartel.Color
+				p.Size = Vector3.new(tamanio.X / 2.2, tamanio.Y / (n / 2), 0.2)
+				local col = (i - 1) % 2
+				local fila = math.floor((i - 1) / 2)
+				p.CFrame = base
+					* CFrame.new(
+						(col - 0.5) * tamanio.X / 2,
+						tamanio.Y / 2 - (fila + 0.5) * tamanio.Y / (n / 2),
+						0.2
+					)
+				p.Parent = cartel.Parent
+				local caida = TweenService:Create(
+					p,
+					TweenInfo.new(
+						0.7 + math.random() * 0.3,
+						Enum.EasingStyle.Quad,
+						Enum.EasingDirection.In
+					),
+					{
+						CFrame = p.CFrame
+							* CFrame.new((col - 0.5) * 3, -tamanio.Y * 1.3, 1)
+							* CFrame.Angles(0, 0, math.rad((math.random() * 2 - 1) * 160)),
+						Transparency = 1,
+					}
+				)
+				caida:Play()
+				caida.Completed:Once(function()
+					p:Destroy()
+				end)
+			end
 		end,
 		centro = function(): Vector3
 			return base.Position

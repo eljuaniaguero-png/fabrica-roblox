@@ -72,6 +72,9 @@ export type Panel = {
 	-- Pone las dos cajas. pop: "fuerza", "multi", "por" (la azul multiplicó) o nil.
 	poner: (fuerza: number, multi: number, pop: string?) -> (),
 	golpe: (valor: number) -> (), -- muestra "= GOLPE" grande al caer la bola
+	-- Etapa 10: el golpe en vivo mientras rebota. Devuelve true si pasó un umbral
+	-- (Config.Feel.Umbrales): el número crece y cambia de color.
+	vivo: (total: number) -> boolean,
 	limpiar: () -> (), -- tiro nuevo: Fuerza 0, Multi 1 y sin golpe
 }
 
@@ -122,9 +125,16 @@ function Numeros.crearPanel(ancla: BasePart): Panel
 
 	local info =
 		TweenInfo.new(Config.Numeros.DuracionPop, Enum.EasingStyle.Back, Enum.EasingDirection.Out)
-	local function saltar(escala: UIScale, tamanio: number)
+	local function saltar(escala: UIScale, tamanio: number, final: number?)
 		escala.Scale = tamanio
-		TweenService:Create(escala, info, { Scale = 1 }):Play()
+		TweenService:Create(escala, info, { Scale = final or 1 }):Play()
+	end
+
+	-- Umbrales del golpe (etapa 10).
+	local F = Config.Feel
+	local nivel = 0
+	local function base(): number
+		return 1 + nivel * F.UmbralEscala
 	end
 
 	return {
@@ -141,9 +151,29 @@ function Numeros.crearPanel(ancla: BasePart): Panel
 		end,
 		golpe = function(valor: number)
 			golpe.Text = "= " .. Clavijas.numeroCorto(valor)
-			saltar(escalaGolpe, 1.6)
+			saltar(escalaGolpe, base() * 1.6, base())
+		end,
+		vivo = function(total: number): boolean
+			golpe.Text = "= " .. Clavijas.numeroCorto(total)
+			local nuevo = 0
+			for _, u in F.Umbrales do
+				if total >= u then
+					nuevo += 1
+				end
+			end
+			if nuevo > nivel then
+				nivel = nuevo
+				golpe.TextColor3 =
+					Color3.fromHex(F.UmbralColores[nivel + 1] or F.UmbralColores[#F.UmbralColores])
+				saltar(escalaGolpe, base() * 1.5, base())
+				return true
+			end
+			return false
 		end,
 		limpiar = function()
+			nivel = 0
+			escalaGolpe.Scale = 1
+			golpe.TextColor3 = amarillo
 			fuerza.Text = Clavijas.numeroCorto(Config.Danio.FuerzaInicial)
 			multi.Text = Clavijas.numeroCorto(Config.Danio.MultiInicial)
 			golpe.Text = ""

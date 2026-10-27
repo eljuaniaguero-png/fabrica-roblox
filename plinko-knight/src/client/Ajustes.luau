@@ -5,7 +5,7 @@
 --
 -- Sonido y música: cada sonido del juego va en uno de estos dos SoundGroup de SoundService
 -- (todavía no hay sonidos; llegan en la etapa 10). Apagar = volumen 0.
--- Efectos reducidos: Ajustes.factorEfectos() da 1 o 0,25; lo usan el temblor de la
+-- Efectos reducidos: Ajustes.factorEfectos() da 1 o 0 (sin temblor); lo usan el temblor de la
 -- pantalla y la sacudida del monstruo (y las partículas de la etapa 10).
 
 local Players = game:GetService("Players")
@@ -18,7 +18,7 @@ export type Valores = { Sonido: boolean, Musica: boolean, EfectosReducidos: bool
 
 local Ajustes = {}
 
-local FACTOR_REDUCIDO = 0.25 -- cuánto queda del temblor con efectos reducidos
+local FACTOR_REDUCIDO = 0 -- etapa 10: con efectos reducidos no hay temblores (antes 0,25)
 
 local valores: Valores = { Sonido = true, Musica = true, EfectosReducidos = false }
 
@@ -46,7 +46,7 @@ function Ajustes.efectosReducidos(): boolean
 	return valores.EfectosReducidos
 end
 
--- 1 normal, 0,25 con efectos reducidos: multiplicar temblores y cantidad de partículas.
+-- 1 normal, 0 con efectos reducidos: multiplica los temblores (las chispas usan la mitad).
 function Ajustes.factorEfectos(): number
 	return if valores.EfectosReducidos then FACTOR_REDUCIDO else 1
 end

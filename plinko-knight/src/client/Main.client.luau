@@ -41,6 +41,7 @@ local TiendaVistaModulo = require(script.Parent:WaitForChild("TiendaVista"))
 local Ajustes = require(script.Parent:WaitForChild("Ajustes"))
 local Sonidos = require(script.Parent:WaitForChild("Sonidos"))
 local SalaModulo = require(script.Parent:WaitForChild("Sala"))
+local Efectos = require(script.Parent:WaitForChild("Efectos"))
 
 -- Etapa 7b-1: se camina por la sala; los controles los apaga client/Sala al sentarse.
 
@@ -270,11 +271,13 @@ tiendaVista = TiendaVistaModulo.crear({
 	bajar = function()
 		if not seleccion.activa() and pedir(remotos.Tienda, "bajar") then
 			local m = Mazmorra.monstruo(estado.Piso)
-			pantallas.anunciar(
-				if m.EsJefe
-					then ("¡Jefe: %s!"):format(m.Nombre)
-					else ("¡Piso %d!"):format(estado.Piso)
-			)
+			if m.EsJefe then
+				-- Etapa 10: entrada del jefe con la pantalla oscura y su nombre.
+				Efectos.entradaJefe(m.Nombre)
+				Sonidos.tocar("Jefe") -- SONIDO
+			else
+				pantallas.anunciar(("¡Piso %d!"):format(estado.Piso))
+			end
 		end
 	end,
 	vender = function(lugar: number)
@@ -434,6 +437,14 @@ local function animarTurno(turno: Mazmorra.Turno)
 	volarTotal()
 	Sonidos.tocar("Golpe") -- SONIDO
 	monstruo.recibir()
+	-- Etapa 10: el número del golpe, grande, sobre el monstruo.
+	Numeros.saltar(
+		escena.Cartel,
+		turno.Danio,
+		Clavijas.numeroCorto(turno.Danio),
+		Color3.new(1, 1, 1),
+		Vector2.new(9, 4)
+	)
 	monstruo.ponerVida(turno.VidaMonstruo + turno.Quemadura, true)
 	task.wait(t.Sacudida)
 	if turno.Quemadura > 0 then
@@ -449,8 +460,16 @@ local function animarTurno(turno: Mazmorra.Turno)
 		task.wait(t.Sacudida)
 	end
 
+	if turno.VidaMonstruo <= 0 then
+		-- Etapa 10: el cartel se rompe en pedazos.
+		monstruo.romper()
+		Sonidos.tocar("Muerte") -- SONIDO
+		task.wait(0.4)
+	end
+
 	if turno.Golpe > 0 then
 		monstruo.atacar()
+		Efectos.bordeRojo()
 		Sonidos.tocar("Ataque") -- SONIDO
 		task.wait(t.DuracionAtaque / 2)
 		escena.sacudir(t.TemblorPantalla, t.DuracionTemblor)
@@ -528,7 +547,11 @@ local function tirar()
 	local siguienteToque = 1
 	local tiempo = 0
 	local conexion: RBXScriptConnection
+	local pausaHasta = 0 -- hit-stop (etapa 10): la bola se congela un instante con la azul
 	conexion = RunService.RenderStepped:Connect(function(dt: number)
+		if os.clock() < pausaHasta then
+			return
+		end
 		tiempo += dt
 		local i = math.min(tiempo / paso + 1, ultimo)
 		-- Cada bola sigue su recorrido: aparece en su paso de inicio y se esconde al caer.
@@ -570,17 +593,32 @@ local function tirar()
 				local color = if toque.Tipo == "gris"
 					then nil
 					else Color3.fromHex(Clavijas.color(toque.Tipo))
-				local largo = if toque.Tipo == "gris" then 3 else 6
-				Numeros.saltar(clavija, 0, textoToque(toque), color, Vector2.new(largo, 1.6))
+				-- El "×N" de la azul sale el doble de grande.
+				local tamanio = if toque.PorMulti > 1
+					then Vector2.new(9, 3.2)
+					elseif toque.Tipo == "gris" then Vector2.new(3, 1.6)
+					else Vector2.new(6, 1.6)
+				Numeros.saltar(clavija, 0, textoToque(toque), color, tamanio)
+				-- Etapa 10: la clavija se aplasta y tira chispas de su color.
+				Efectos.aplastar(clavija)
+				Efectos.chispas(clavija.Position, color or Color3.fromHex(Config.Colores.Oro))
 				if toque.Rota then
 					clavija.Transparency = 0.85
 				end
+			end
+			if toque.PorMulti > 1 and not Ajustes.efectosReducidos() then
+				pausaHasta = os.clock() + Config.Feel.HitStop
+				escena.sacudir(Config.Feel.SacudidaMulti, 0.12)
 			end
 			local pop = if toque.PorMulti > 1
 				then "por"
 				elseif toque.Multi > 0 then "multi"
 				else "fuerza"
 			panel.poner(toque.FuerzaTotal, toque.MultiTotal, pop)
+			-- El golpe en vivo; al pasar 50, 100 o 200 crece, cambia de color y suena.
+			if panel.vivo(math.floor(toque.FuerzaTotal * toque.MultiTotal)) then
+				Sonidos.tocar("Umbral") -- SONIDO
+			end
 			siguienteToque += 1
 		end
 

@@ -548,7 +548,34 @@ Config.Sonidos = {
 	Desbloqueo = { Id = "rbxassetid://113597899831000", Volumen = 0.5 },
 	MusicaPelea = { Id = "rbxassetid://107838077520668", Volumen = 0.25 },
 	MusicaJefe = { Id = "rbxassetid://85707754733386", Volumen = 0.3 },
+	Whoosh = { Id = "rbxassetid://80528866577946", Volumen = 0.5 }, -- cartas del cofre (etapa 10)
+	Umbral = { Id = "rbxassetid://74888225212588", Volumen = 0.6 }, -- el golpe pasa 50, 100 o 200
+	Jefe = { Id = "rbxassetid://109953782069845", Volumen = 0.7 }, -- entrada del jefe
+	Muerte = { Id = "rbxassetid://71720678959465", Volumen = 0.6 }, -- el cartel del monstruo se rompe
 	TonoToque = { 1, 1.8 }, -- PlaybackSpeed del primer toque y tope (sube con cada toque del tiro)
+}
+
+-- Etapa 10: sensación (cliente). Todo lo que se mueve, brilla o tiembla, para ajustarlo acá.
+-- Con "Efectos reducidos" no hay temblores ni hit-stop y salen la mitad de las chispas.
+Config.Feel = {
+	Aplastar = 0.12, -- segundos que tarda una clavija tocada en aplastarse y volver
+	AplastarCuanto = 0.7, -- tamaño al aplastarse (1 = normal)
+	Chispas = 4, -- chispas doradas por clavija tocada
+	ChispasDuracion = 0.35,
+	ChispasDistancia = 1.6, -- studs que vuelan
+	Umbrales = { 50, 100, 200 }, -- el golpe crece y cambia de color al pasar estos valores
+	UmbralEscala = 0.18, -- cuánto más grande queda el número en cada umbral
+	UmbralColores = { "#E8FF3A", "#FFB020", "#FF6A20", "#FF2E4D" }, -- antes y después de cada umbral
+	HitStop = 0.08, -- segundos que se congela la bola cuando una azul multiplica
+	SacudidaMulti = 0.15, -- studs que tiembla la cámara con la azul
+	DanioGrande = 0.9, -- segundos que se ve el número grande sobre el monstruo
+	Inclinar = 12, -- grados que se inclina el cartel del monstruo al recibir el golpe
+	Destello = 0.12, -- segundos del flash blanco en el cartel
+	Pedazos = 6, -- pedazos en que se rompe el cartel al morir el monstruo
+	Acercar = 4, -- studs que el cartel se acerca a la cámara al contraatacar
+	BordeRojo = 0.4, -- segundos del borde rojo en la pantalla cuando te pegan
+	JefeOscuro = 1.4, -- segundos de la entrada del jefe (pantalla oscura y su nombre)
+	CartasEntrada = 0.12, -- segundos entre la entrada de una carta del cofre y la siguiente
 }
 
 -- Etapa 7b-1: la sala arcade (en gris; los modelos de la IA llegan en 7b-2). Studs.
