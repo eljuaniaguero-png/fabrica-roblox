@@ -68,13 +68,69 @@ function Numeros.saltar(
 	end)
 end
 
+-- 27/10: el número del golpe sobre el monstruo cuenta de 0 a su valor mientras crece, y después
+-- sube y se desvanece como los demás.
+function Numeros.contar(parte: BasePart, valor: number, color: Color3?, tamanio: Vector2?)
+	local medida = tamanio or Vector2.new(9, 4)
+	local cartel = Instance.new("BillboardGui")
+	cartel.Name = "NumeroGolpe"
+	cartel.Size = UDim2.fromScale(medida.X, medida.Y) -- studs
+	cartel.StudsOffsetWorldSpace = Vector3.new(0, 1, 2.5)
+	cartel.LightInfluence = 0
+	cartel.Adornee = parte
+	local t = etiqueta(cartel, "0")
+	t.Font = Enum.Font.Arcade
+	if color then
+		t.TextColor3 = color
+	end
+	local escala = Instance.new("UIScale")
+	escala.Scale = 0.4
+	escala.Parent = t
+	cartel.Parent = parte
+	local duracion = Config.Feel.ConteoGolpe
+	TweenService
+		:Create(escala, TweenInfo.new(duracion, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
+			Scale = 1.15,
+		})
+		:Play()
+	task.spawn(function()
+		local t0 = os.clock()
+		while true do
+			local f = math.min((os.clock() - t0) / duracion, 1)
+			t.Text = Clavijas.numeroCorto(math.floor(valor * (1 - (1 - f) ^ 3)))
+			if f >= 1 then
+				break
+			end
+			task.wait()
+		end
+		t.Text = Clavijas.numeroCorto(valor)
+		task.wait(Config.Feel.DanioGrande - duracion)
+		local n = Config.Numeros
+		TweenService:Create(
+			cartel,
+			TweenInfo.new(n.Duracion),
+			{ StudsOffsetWorldSpace = Vector3.new(0, 1 + n.Subida, 2.5) }
+		):Play()
+		TweenService
+			:Create(
+				t,
+				TweenInfo.new(n.Duracion),
+				{ TextTransparency = 1, TextStrokeTransparency = 1 }
+			)
+			:Play()
+		task.wait(n.Duracion)
+		cartel:Destroy()
+	end)
+end
+
 export type Panel = {
 	-- Pone las dos cajas. pop: "fuerza", "multi", "por" (la azul multiplicó) o nil.
 	poner: (fuerza: number, multi: number, pop: string?) -> (),
 	golpe: (valor: number) -> (), -- muestra "= GOLPE" grande al caer la bola
 	-- Etapa 10: el golpe en vivo mientras rebota. Devuelve true si pasó un umbral
-	-- (Config.Feel.Umbrales): el número crece y cambia de color.
-	vivo: (total: number) -> boolean,
+	-- (Config.Feel.Umbrales): el número crece y cambia de color. 27/10: devuelve el nivel nuevo
+	-- (1, 2, 3...) o nil.
+	vivo: (total: number) -> number?,
 	limpiar: () -> (), -- tiro nuevo: Fuerza 0, Multi 1 y sin golpe
 }
 
@@ -157,7 +213,7 @@ function Numeros.crearPanel(ancla: BasePart): Panel
 			golpe.Text = "= " .. Clavijas.numeroCorto(valor)
 			saltar(escalaGolpe, base() * 1.6, base())
 		end,
-		vivo = function(total: number): boolean
+		vivo = function(total: number): number?
 			golpe.Text = "= " .. Clavijas.numeroCorto(total)
 			local nuevo = 0
 			for _, u in F.Umbrales do
@@ -170,9 +226,9 @@ function Numeros.crearPanel(ancla: BasePart): Panel
 				golpe.TextColor3 =
 					Color3.fromHex(F.UmbralColores[nivel + 1] or F.UmbralColores[#F.UmbralColores])
 				saltar(escalaGolpe, base() * 1.5, base())
-				return true
+				return nivel
 			end
-			return false
+			return nil
 		end,
 		limpiar = function()
 			nivel = 0

@@ -29,6 +29,7 @@ local SEPARACION_COLUMNAS = 3
 export type Escena = {
 	Tablero: TableroModulo.Tablero,
 	Clavijas: { [number]: BasePart },
+	Halos: { [number]: BasePart }, -- 27/10: aro de luz detrás de cada clavija (se prende al tocarla)
 	Bola: BasePart, -- = Bolas[1]
 	Bolas: { BasePart }, -- Config.TopeBolas bolas (las de más, para la bola que se divide)
 	Puntos: { BasePart },
@@ -42,6 +43,7 @@ export type Escena = {
 	-- la cámara mete todo ahí, así ninguna pantalla tapa el tablero.
 	ponerZonaLibre: (zona: () -> (number, number)) -> (),
 	activarCamara: (si: boolean) -> (), -- sentado en la máquina: la cámara mira el tablero
+	zoom: (cuanto: number) -> (), -- 27/10: la cámara se acerca de golpe y vuelve (fracción)
 	aMundo: (x: number, y: number, z: number?) -> Vector3,
 	aTablero: (posicionPantalla: Vector2) -> (number, number),
 }
@@ -101,6 +103,34 @@ function Escena.armar(): Escena
 		v.Tablero,
 		Enum.Material.SmoothPlastic
 	)
+	-- 27/10: grilla de luz tenue sobre el fondo (pantalla futurista).
+	do
+		local fondo = modelo:FindFirstChild("Fondo") :: BasePart
+		local gui = Instance.new("SurfaceGui")
+		gui.Face = Enum.NormalId.Back
+		gui.LightInfluence = 0
+		gui.SizingMode = Enum.SurfaceGuiSizingMode.PixelsPerStud
+		gui.PixelsPerStud = 10
+		gui.Parent = fondo
+		local function linea(vertical: boolean, f: number)
+			local l = Instance.new("Frame")
+			l.BorderSizePixel = 0
+			l.BackgroundColor3 = Color3.fromHex(v.Neon2)
+			l.BackgroundTransparency = 0.86
+			l.AnchorPoint = Vector2.new(0.5, 0.5)
+			l.Position = if vertical then UDim2.fromScale(f, 0.5) else UDim2.fromScale(0.5, f)
+			l.Size = if vertical then UDim2.new(0, 2, 1, 0) else UDim2.new(1, 0, 0, 2)
+			l.Parent = gui
+		end
+		local ancho = der - izq
+		for k = 1, math.floor(ancho / 2) - 1 do
+			linea(true, k * 2 / ancho)
+		end
+		for k = 1, math.floor(alto / 2) - 1 do
+			linea(false, k * 2 / alto)
+		end
+	end
+	local pulsos: { BasePart } = {} -- neón que late (Escena lo anima)
 	for _, x in { izq - 0.5, der + 0.5 } do
 		parte(
 			"Pared",
@@ -118,6 +148,31 @@ function Escena.armar(): Escena
 		CFrame.new(aMundo(0, arriba + 0.5, 0)),
 		v.Marco,
 		materialMarco
+	)
+	-- Filo de neón en el borde de adentro de las paredes y el techo (marco de máquina).
+	for i, x in { izq - 0.08, der + 0.08 } do
+		table.insert(
+			pulsos,
+			parte(
+				"FiloNeon",
+				modelo,
+				Vector3.new(0.16, alto, 0.16),
+				CFrame.new(aMundo(x, centroY, 0.8)),
+				if i == 1 then v.Neon2 else v.Neon1,
+				Enum.Material.Neon
+			)
+		)
+	end
+	table.insert(
+		pulsos,
+		parte(
+			"FiloNeon",
+			modelo,
+			Vector3.new(der - izq + 0.3, 0.16, 0.16),
+			CFrame.new(aMundo(0, arriba - 0.08, 0.8)),
+			v.Neon1,
+			Enum.Material.Neon
+		)
 	)
 	-- Piso liso (sin casilleros): la bola lo cruza y termina el tiro.
 	parte(
@@ -138,15 +193,56 @@ function Escena.armar(): Escena
 		Enum.Material.Neon
 	)
 	niebla.Transparency = 0.82
+	-- Luces chiquitas en el piso que corren (Escena las anima).
+	local leds: { BasePart } = {}
+	do
+		local n = math.floor((der - izq) / 1.2)
+		for k = 0, n - 1 do
+			local x = izq + 0.6 + k * (der - izq - 1.2) / math.max(n - 1, 1)
+			local l = parte(
+				"LedPiso",
+				modelo,
+				Vector3.new(0.35, 0.35, 0.35),
+				CFrame.new(aMundo(x, abajo - 0.3, 0.8)),
+				v.Neon1,
+				Enum.Material.Neon
+			)
+			l.Shape = Enum.PartType.Ball
+			table.insert(leds, l)
+		end
+	end
 	-- Lanzador: un bloque arriba, de donde sale la bola.
-	parte(
-		"Lanzador",
-		modelo,
-		Vector3.new(2.4, 1.6, 1.5),
-		CFrame.new(aMundo(tablero.LanzadorX, tablero.LanzadorY + 1.6, 0)),
-		v.Marco,
-		Enum.Material.Metal
-	)
+	-- 27/10: cuerpo de metal, cañón redondo para abajo y un aro de neón en la boca.
+	local aroLanzador: BasePart
+	do
+		local lx, ly = tablero.LanzadorX, tablero.LanzadorY
+		parte(
+			"Lanzador",
+			modelo,
+			Vector3.new(3, 1.2, 1.5),
+			CFrame.new(aMundo(lx, ly + 2.1, 0)),
+			v.Marco,
+			Enum.Material.DiamondPlate
+		)
+		local canio = parte(
+			"Canio",
+			modelo,
+			Vector3.new(1.4, 1.5, 1.5),
+			CFrame.new(aMundo(lx, ly + 1.1, 0)) * CFrame.Angles(0, 0, math.rad(90)),
+			"#1A1A16",
+			Enum.Material.Metal
+		)
+		canio.Shape = Enum.PartType.Cylinder
+		aroLanzador = parte(
+			"AroLanzador",
+			modelo,
+			Vector3.new(0.25, 1.75, 1.75),
+			CFrame.new(aMundo(lx, ly + 0.45, 0)) * CFrame.Angles(0, 0, math.rad(90)),
+			v.Neon2,
+			Enum.Material.Neon
+		)
+		aroLanzador.Shape = Enum.PartType.Cylinder
+	end
 	-- Tu avatar: el busto de tu personaje de Roblox, plano, a la izquierda del lanzador (una parte
 	-- invisible con su SurfaceGui). El campo se sigue llamando Caballero en el código.
 	local caballero = parte(
@@ -214,6 +310,7 @@ function Escena.armar(): Escena
 
 	-- Clavijas: cilindros mirando a la cámara.
 	local clavijas: { [number]: BasePart } = {}
+	local halos: { [number]: BasePart } = {}
 	for _, c in tablero.Clavijas do
 		local p = parte(
 			"Clavija",
@@ -225,6 +322,27 @@ function Escena.armar(): Escena
 		p.Shape = Enum.PartType.Cylinder
 		p:SetAttribute("Clavija", c.Id)
 		clavijas[c.Id] = p
+		-- 27/10: zócalo de metal oscuro atrás y un aro de luz que se prende al tocarla.
+		local zocalo = parte(
+			"Zocalo",
+			modelo,
+			Vector3.new(0.3, c.Radio * 2 + 0.45, c.Radio * 2 + 0.45),
+			CFrame.new(aMundo(c.X, c.Y, -0.55)) * CFrame.Angles(0, math.rad(90), 0),
+			"#121210",
+			Enum.Material.Metal
+		)
+		zocalo.Shape = Enum.PartType.Cylinder
+		local halo = parte(
+			"Halo",
+			modelo,
+			Vector3.new(0.1, c.Radio * 4.4, c.Radio * 4.4),
+			CFrame.new(aMundo(c.X, c.Y, -0.35)) * CFrame.Angles(0, math.rad(90), 0),
+			Config.Clavijas.gris.Color,
+			Enum.Material.Neon
+		)
+		halo.Shape = Enum.PartType.Cylinder
+		halo.Transparency = 0.95
+		halos[c.Id] = halo
 	end
 
 	local radio = Config.Bola.Radio
@@ -240,6 +358,31 @@ function Escena.armar(): Escena
 		bola.Shape = Enum.PartType.Ball
 		bola.Transparency = 1
 		bolas[i] = bola
+		-- 27/10: estela que mira a la cámara (ancho = distancia entre los 2 enganches) y luz propia.
+		local a0 = Instance.new("Attachment")
+		a0.Position = Vector3.new(0, 0, radio)
+		a0.Parent = bola
+		local a1 = Instance.new("Attachment")
+		a1.Position = Vector3.new(0, 0, -radio)
+		a1.Parent = bola
+		local estela = Instance.new("Trail")
+		estela.Name = "Estela"
+		estela.Attachment0 = a0
+		estela.Attachment1 = a1
+		estela.FaceCamera = true
+		estela.Lifetime = Config.Feel.Estela
+		estela.LightEmission = 1
+		estela.WidthScale = NumberSequence.new(1, 0)
+		estela.Transparency = NumberSequence.new(0.1, 1)
+		estela.Enabled = false
+		estela.Parent = bola
+		local luzBola = Instance.new("PointLight")
+		luzBola.Name = "Luz"
+		luzBola.Brightness = Config.Feel.LuzBola.Brillo
+		luzBola.Range = Config.Feel.LuzBola.Alcance
+		luzBola.Shadows = false
+		luzBola.Enabled = false
+		luzBola.Parent = bola
 	end
 
 	local puntos: { BasePart } = {}
@@ -270,7 +413,7 @@ function Escena.armar(): Escena
 			(Enum.Material :: any)[v.MaterialPared] or Enum.Material.CorrodedMetal
 		)
 		for i, x in { izq - 1.6, der + 1.6 } do
-			parte(
+			local tubo = parte(
 				"TuboNeon",
 				modelo,
 				Vector3.new(0.35, alto + 4, 0.35),
@@ -278,6 +421,7 @@ function Escena.armar(): Escena
 				if i == 1 then v.Neon1 else v.Neon2,
 				Enum.Material.Neon
 			)
+			table.insert(pulsos, tubo)
 		end
 		parte(
 			"LineaNeon",
@@ -370,6 +514,7 @@ function Escena.armar(): Escena
 	local camara = Workspace.CurrentCamera
 	-- Temblor: la cámara se corre un poco al azar y se va calmando.
 	local temblorFuerza, temblorFin, temblorDuracion = 0, 0, 1
+	local zoomFuerza, zoomFin, ZOOM_DURACION = 0, 0, 0.3
 	local zonaLibre: (() -> (number, number))? = nil
 	local activa = false -- etapa 7b: la cámara del tablero solo manda sentado en la máquina
 	RunService:BindToRenderStep("CamaraTablero", Enum.RenderPriority.Last.Value + 10, function()
@@ -402,8 +547,39 @@ function Escena.armar(): Escena
 		end
 		camara.CameraType = Enum.CameraType.Scriptable
 		camara.FieldOfView = FOV
+		local quedaZoom = zoomFin - os.clock()
+		if quedaZoom > 0 then
+			-- Entra rápido y vuelve suave.
+			local f = quedaZoom / ZOOM_DURACION
+			distancia *= 1 - zoomFuerza * f * f
+		end
 		local mira = centro + Vector3.new(0, subir, 0)
 		camara.CFrame = CFrame.lookAt(mira + Vector3.new(0, 0, distancia), mira) + corrimiento
+	end)
+
+	-- 27/10: el neón late, el aro del lanzador gira de color y las luces del piso corren (solo
+	-- sentado en la máquina).
+	table.insert(pulsos, aroLanzador)
+	local brilloPulsos: { [BasePart]: number } = {}
+	for _, p in pulsos do
+		brilloPulsos[p] = p.Transparency
+	end
+	local colorLedA, colorLedB = Color3.fromHex(v.Neon1), Color3.fromHex(v.Neon2)
+	RunService.Heartbeat:Connect(function()
+		if not activa then
+			return
+		end
+		local t = os.clock()
+		local latido = (math.sin(t * math.pi * 2 / Config.Feel.Pulso) + 1) / 2
+		for p, base in brilloPulsos do
+			p.Transparency = base + latido * 0.35
+		end
+		local cabeza = (t * 8) % #leds
+		for k, l in leds do
+			local d = (cabeza - (k - 1)) % #leds
+			l.Transparency = math.clamp(d / 5, 0, 0.85)
+			l.Color = if d < 1 then colorLedB else colorLedA
+		end
 	end)
 
 	local function sacudir(fuerza: number, duracion: number)
@@ -426,6 +602,7 @@ function Escena.armar(): Escena
 	return {
 		Tablero = tablero,
 		Clavijas = clavijas,
+		Halos = halos,
 		Bola = bolas[1],
 		Bolas = bolas,
 		Puntos = puntos,
@@ -444,6 +621,16 @@ function Escena.armar(): Escena
 		end,
 		activarCamara = function(si: boolean)
 			activa = si
+		end,
+		zoom = function(cuanto: number)
+			if Ajustes.factorEfectos() <= 0 then
+				return
+			end
+			if zoomFin < os.clock() then
+				zoomFuerza = 0
+			end
+			zoomFuerza = math.max(cuanto, zoomFuerza)
+			zoomFin = os.clock() + ZOOM_DURACION
 		end,
 		aMundo = aMundo,
 		aTablero = aTablero,

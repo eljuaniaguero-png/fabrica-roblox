@@ -665,7 +665,7 @@ function GeneradorSala.generar(): Folder
 			sala,
 			Vector3.new(0.1, 1.1, 0.35),
 			CFrame.new(6.5, 8, -medioZ + 0.5)
-				* CFrame.Angles(0, 0, math.rad(k * 45))
+				* CFrame.Angles(0, 0, math.rad(k * 90))
 				* CFrame.new(0, 0.5, 0),
 			"#5A5A50",
 			Enum.Material.Metal

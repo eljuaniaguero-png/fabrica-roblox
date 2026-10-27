@@ -63,6 +63,18 @@ function Monstruo.crear(cartel: BasePart, barra: BasePart): Monstruo
 	imagen.BackgroundTransparency = 1
 	imagen.ScaleType = Enum.ScaleType.Fit
 	imagen.Parent = gui
+	-- 27/10: quieto, el monstruo respira (se balancea y se estira apenas).
+	local respirar = Instance.new("UIScale")
+	respirar.Parent = imagen
+	game:GetService("RunService").Heartbeat:Connect(function()
+		if not gui.Enabled then
+			return
+		end
+		local ahora = os.clock()
+		local f = Ajustes.factorEfectos()
+		imagen.Rotation = math.sin(ahora * 1.3) * Config.Feel.Respirar * f
+		respirar.Scale = 1 + math.sin(ahora * 2.6) * 0.025 * f
+	end)
 	local nombre = texto(gui, "")
 	nombre.Font = Enum.Font.Arcade
 	nombre.TextColor3 = Color3.fromHex(Config.Sala.Colores.Led)

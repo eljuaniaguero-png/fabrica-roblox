@@ -576,6 +576,21 @@ Config.Feel = {
 	BordeRojo = 0.4, -- segundos del borde rojo en la pantalla cuando te pegan
 	JefeOscuro = 1.4, -- segundos de la entrada del jefe (pantalla oscura y su nombre)
 	CartasEntrada = 0.12, -- segundos entre la entrada de una carta del cofre y la siguiente
+	-- 27/10 "más dopamina":
+	Onda = 0.45, -- segundos del anillo de luz que se abre en cada clavija tocada
+	OndaTamanio = 3.4, -- studs que mide el anillo al final
+	BrilloApagar = 0.45, -- segundos que tarda una clavija tocada en volver a su color
+	Estela = 0.3, -- segundos de la estela de la bola
+	LuzBola = { Brillo = 2.2, Alcance = 7 }, -- la bola ilumina las clavijas al pasar
+	ComboMinimo = 3, -- desde cuántos toques sale el contador de combo
+	Gritos = { "¡BIEN!", "¡GENIAL!", "¡BRUTAL!" }, -- al pasar cada umbral del golpe
+	Zoom = 0.05, -- cuánto se acerca la cámara (fracción) en cada umbral; el doble al pegar fuerte
+	Flash = 0.18, -- segundos del destello de pantalla
+	Confeti = 40, -- partículas al romper el monstruo (la mitad con efectos reducidos)
+	ChispasCaida = 14, -- partículas cuando la bola cae abajo
+	ConteoGolpe = 0.45, -- segundos que tarda el número de daño en contar hasta su valor
+	Respirar = 2.5, -- grados que se balancea el monstruo quieto
+	Pulso = 1.6, -- segundos de cada latido de los tubos de neón
 }
 
 -- Cómo se ve la pantalla de juego (26/10: CloverPit + futurista). 3 variantes para que Juani

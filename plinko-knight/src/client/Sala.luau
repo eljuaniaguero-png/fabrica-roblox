@@ -14,6 +14,7 @@ local CollectionService = game:GetService("CollectionService")
 local Players = game:GetService("Players")
 local ProximityPromptService = game:GetService("ProximityPromptService")
 local TweenService = game:GetService("TweenService")
+local RunService = game:GetService("RunService")
 local Workspace = game:GetService("Workspace")
 
 local Shared = game:GetService("ReplicatedStorage"):WaitForChild("Shared")
@@ -250,18 +251,66 @@ function Sala.crear(o: Opciones): Sala
 		end
 	end)
 
-	-- Pantallas de demo de las máquinas de fondo: colores que cambian.
+	-- 27/10: la sala se mueve (solo en tu pantalla): el ventilador gira, el fluorescente titila de vez
+	-- en cuando y los tubos de neón laten.
 	task.spawn(function()
-		local colores = { "#FF3FD0", "#3FE8FF", "#FFE14A", "#7CFF6B", "#7A2CF5" }
-		local paso = 0
-		while true do
-			paso += 1
-			for i, p in CollectionService:GetTagged("PantallaDemo") do
-				if p:IsA("BasePart") then
-					p.Color = Color3.fromHex(colores[(paso + i) % #colores + 1])
-				end
+		local sala = Workspace:WaitForChild("Sala", 30)
+		if not sala then
+			return
+		end
+		local ventilador = sala:WaitForChild("Ventilador", 10)
+		local aspas: { { Parte: BasePart, Relativo: CFrame } } = {}
+		local tubos: { BasePart } = {}
+		for _, d in sala:GetChildren() do
+			if
+				d:IsA("BasePart")
+				and d.Name == "Aspa"
+				and ventilador
+				and ventilador:IsA("BasePart")
+			then
+				-- Centro del giro: la boca del ventilador, mirando a la sala (+Z).
+				local centro = CFrame.new(ventilador.Position + Vector3.new(0, 0, 0.25))
+				table.insert(aspas, { Parte = d, Relativo = centro:ToObjectSpace(d.CFrame) })
+			elseif d:IsA("BasePart") and d.Name == "Tubo" then
+				table.insert(tubos, d)
 			end
-			task.wait(0.6)
+		end
+		local centroAspas = if ventilador and ventilador:IsA("BasePart")
+			then CFrame.new(ventilador.Position + Vector3.new(0, 0, 0.25))
+			else CFrame.identity
+		RunService.Heartbeat:Connect(function()
+			if sentado and not ocupado then
+				return -- jugando, la sala no se ve
+			end
+			local t = os.clock()
+			local giro = CFrame.Angles(0, 0, t * 5)
+			for _, a in aspas do
+				a.Parte.CFrame = centroAspas * giro * a.Relativo
+			end
+			local latido = (math.sin(t * 2.2) + 1) / 2
+			for _, tubo in tubos do
+				tubo.Transparency = latido * 0.3
+			end
+		end)
+		local fluor = sala:FindFirstChild("Fluorescente")
+		if not fluor or not fluor:IsA("BasePart") then
+			return
+		end
+		local luzFluor = fluor:FindFirstChildOfClass("PointLight")
+		while true do
+			task.wait(4 + math.random() * 6)
+			for _ = 1, math.random(2, 4) do
+				fluor.Transparency = 0.7
+				if luzFluor then
+					luzFluor.Enabled = false
+				end
+				task.wait(0.04 + math.random() * 0.06)
+				fluor.Transparency = 0
+				if luzFluor then
+					luzFluor.Enabled = true
+				end
+				task.wait(0.05 + math.random() * 0.1)
+			end
 		end
 	end)
 

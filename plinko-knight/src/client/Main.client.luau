@@ -66,6 +66,7 @@ local colorBrillo = Color3.fromHex(Config.Colores.Brillo)
 local colorBola = Color3.fromHex(Config.Colores.Bola)
 local colorFuego = Color3.fromHex(Config.Colores.BolaFuego)
 local colorQuemadura = Color3.fromHex(Config.Colores.Quemadura)
+local colorNumero = Color3.fromHex(Config.Colores.Numero)
 local monstruo = MonstruoVista.crear(escena.Cartel, escena.BarraMonstruo)
 local pantallas = PantallasModulo.crear()
 local seleccion = SeleccionModulo.crear(escena)
@@ -120,6 +121,9 @@ local function materialDe(_id: number): Enum.Material
 	return (Enum.Material :: any)[Config.Mundo.MaterialClavija] or Enum.Material.Neon
 end
 local function pintarClavijas()
+	for id, h in escena.Halos do
+		h.Color = colorDe(id)
+	end
 	for id, p in escena.Clavijas do
 		p.Color = colorDe(id)
 		p.Material = materialDe(id)
@@ -162,10 +166,20 @@ local function brillar(id: number)
 	brillos[id] = marca
 	p.Color = colorBrillo
 	p.Material = Enum.Material.Neon
+	-- 27/10: el aro de atrás se prende y la clavija vuelve a su color de a poco.
+	local halo = escena.Halos[id]
+	if halo then
+		halo.Color = colorDe(id)
+		halo.Transparency = 0.15
+		TweenService
+			:Create(halo, TweenInfo.new(Config.Feel.BrilloApagar * 1.5), { Transparency = 0.95 })
+			:Play()
+	end
 	task.delay(Config.Simulacion.BrilloClavija, function()
 		if brillos[id] == marca then
-			p.Color = colorDe(id)
 			p.Material = materialDe(id)
+			TweenService:Create(p, TweenInfo.new(Config.Feel.BrilloApagar), { Color = colorDe(id) })
+				:Play()
 		end
 	end)
 end
@@ -420,13 +434,50 @@ local function volarTotal()
 	luz.CastShadow = false
 	luz.Position = escena.AnclaTotal.Position
 	luz.Parent = escena.Cartel.Parent
-	local tween = TweenService:Create(
-		luz,
-		TweenInfo.new(Config.Turno.VueloTotal, Enum.EasingStyle.Quad, Enum.EasingDirection.In),
-		{ Position = monstruo.centro() + Vector3.new(0, 0, 1) }
-	)
-	tween:Play()
-	tween.Completed:Wait()
+	-- 27/10: con estela y luz, crece al salir y se achica al llegar (más rápido al final).
+	local a0 = Instance.new("Attachment")
+	a0.Position = Vector3.new(0, 0, 0.7)
+	a0.Parent = luz
+	local a1 = Instance.new("Attachment")
+	a1.Position = Vector3.new(0, 0, -0.7)
+	a1.Parent = luz
+	local estela = Instance.new("Trail")
+	estela.Attachment0 = a0
+	estela.Attachment1 = a1
+	estela.FaceCamera = true
+	estela.Lifetime = 0.25
+	estela.LightEmission = 1
+	estela.Color = ColorSequence.new(luz.Color)
+	estela.WidthScale = NumberSequence.new(1, 0)
+	estela.Transparency = NumberSequence.new(0, 1)
+	estela.Parent = luz
+	local brillo = Instance.new("PointLight")
+	brillo.Color = luz.Color
+	brillo.Brightness = 3
+	brillo.Range = 10
+	brillo.Parent = luz
+	luz.Size = Vector3.new(0.4, 0.4, 0.4)
+	TweenService
+		:Create(
+			luz,
+			TweenInfo.new(0.12, Enum.EasingStyle.Back),
+			{ Size = Vector3.new(2.2, 2.2, 2.2) }
+		)
+		:Play()
+	local destino = monstruo.centro() + Vector3.new(0, 0, 1)
+	local inicio = luz.Position
+	local duracion = Config.Turno.VueloTotal
+	local t0 = os.clock()
+	-- Va en arco (sube y baja) en vez de en línea recta.
+	while true do
+		local f = math.min((os.clock() - t0) / duracion, 1)
+		local e = f * f
+		luz.Position = inicio:Lerp(destino, e) + Vector3.new(0, math.sin(f * math.pi) * 6, 0)
+		if f >= 1 then
+			break
+		end
+		RunService.RenderStepped:Wait()
+	end
 	luz:Destroy()
 end
 
@@ -437,13 +488,27 @@ local function animarTurno(turno: Mazmorra.Turno)
 	volarTotal()
 	Sonidos.tocar("Golpe") -- SONIDO
 	monstruo.recibir()
-	-- Etapa 10: el número del golpe, grande, sobre el monstruo.
-	Numeros.saltar(
+	-- 27/10: impacto según cuánto pegó (respecto de la vida del monstruo): estallido, destello,
+	-- zoom y temblor más fuertes cuanto más grande.
+	local m = Mazmorra.monstruo(estado.Piso)
+	local peso = math.clamp(turno.Danio / math.max(m.Vida, 1), 0.15, 1)
+	local centro = monstruo.centro()
+	Efectos.estallido(
+		centro,
+		{ colorNumero, Color3.new(1, 1, 1) },
+		math.floor(10 + 30 * peso),
+		0.6 + peso
+	)
+	Efectos.onda(centro, colorNumero, true)
+	Efectos.destello(Color3.new(1, 1, 1), 0.15 + 0.3 * peso)
+	escena.zoom(Config.Feel.Zoom * (1 + peso * 2))
+	escena.sacudir(0.3 + peso * 0.8, 0.25)
+	-- Etapa 10: el número del golpe, grande, sobre el monstruo (27/10: cuenta de 0 al valor).
+	Numeros.contar(
 		escena.Cartel,
 		turno.Danio,
-		Clavijas.numeroCorto(turno.Danio),
 		Color3.new(1, 1, 1),
-		Vector2.new(9, 4)
+		Vector2.new(9 + 4 * peso, 4 + 2 * peso)
 	)
 	monstruo.ponerVida(turno.VidaMonstruo + turno.Quemadura, true)
 	task.wait(t.Sacudida)
@@ -464,6 +529,16 @@ local function animarTurno(turno: Mazmorra.Turno)
 		-- Etapa 10: el cartel se rompe en pedazos.
 		monstruo.romper()
 		Sonidos.tocar("Muerte") -- SONIDO
+		-- 27/10: confeti, monedas y "¡KO!".
+		Efectos.estallido(centro, {
+			colorNumero,
+			Color3.fromHex("#FF3FD0"),
+			Color3.fromHex("#3FE8FF"),
+			Color3.fromHex(Config.Colores.Oro),
+		}, Config.Feel.Confeti, 1.4)
+		Efectos.destello(colorNumero, 0.45)
+		Efectos.grito("¡KO!", colorNumero)
+		escena.zoom(Config.Feel.Zoom * 3)
 		task.wait(0.4)
 	end
 
@@ -492,6 +567,14 @@ local function animarTurno(turno: Mazmorra.Turno)
 	elseif turno.Resultado == "gano" then
 		Sonidos.musica(nil)
 		Sonidos.tocar("Victoria") -- SONIDO
+		for k = 1, 3 do
+			Efectos.estallido(
+				escena.aMundo((k - 2) * 8, escena.Tablero.Techo - 4, 1),
+				{ colorNumero, Color3.fromHex("#FF3FD0"), Color3.fromHex("#3FE8FF") },
+				Config.Feel.Confeti,
+				1.6
+			)
+		end
 		print(("[Mazmorra] Jefe ganado en %d tiros"):format(tirosPelea))
 		estado = e
 		mostrarFinal(e)
@@ -503,6 +586,26 @@ local function animarTurno(turno: Mazmorra.Turno)
 		mostrarFinal(e)
 	else
 		estado = e
+	end
+end
+
+-- 27/10: la bola aparece o se esconde con su estela y su luz (la estela se borra al aparecer, si
+-- no dibujaba una raya desde donde estaba antes).
+local function mostrarBola(bola: BasePart, si: boolean)
+	if (bola.Transparency < 1) == si then
+		return
+	end
+	bola.Transparency = if si then 0 else 1
+	local estela = bola:FindFirstChild("Estela") :: Trail?
+	if estela then
+		if si then
+			estela:Clear()
+		end
+		estela.Enabled = si
+	end
+	local luzBola = bola:FindFirstChild("Luz") :: PointLight?
+	if luzBola then
+		luzBola.Enabled = si
 	end
 end
 
@@ -539,6 +642,14 @@ local function tirar()
 		bola.Color = if res.Fuego then colorFuego else colorBola
 		bola.Material = Enum.Material.Neon -- brilla sobre el fondo oscuro
 		bola.Transparency = 1
+		local estela = bola:FindFirstChild("Estela") :: Trail?
+		if estela then
+			estela.Color = ColorSequence.new(bola.Color)
+		end
+		local luzBola = bola:FindFirstChild("Luz") :: PointLight?
+		if luzBola then
+			luzBola.Color = bola.Color
+		end
 	end
 	panel.limpiar()
 
@@ -562,7 +673,11 @@ local function tirar()
 			end
 			local j = i - rec.Inicio + 1
 			if j < 1 or j > #rec.X then
-				bola.Transparency = 1
+				if bola.Transparency < 1 then
+					-- Cayó abajo: chispas de su color.
+					Efectos.estallido(bola.Position, { bola.Color }, Config.Feel.ChispasCaida, 0.5)
+				end
+				mostrarBola(bola, false)
 				continue
 			end
 			local j0 = math.floor(j)
@@ -571,7 +686,7 @@ local function tirar()
 			local x = rec.X[j0] + (rec.X[j1] - rec.X[j0]) * f
 			local y = rec.Y[j0] + (rec.Y[j1] - rec.Y[j0]) * f
 			bola.Position = escena.aMundo(x, y, 0.6)
-			bola.Transparency = 0
+			mostrarBola(bola, true)
 		end
 
 		while siguienteToque <= #res.Toques and res.Toques[siguienteToque].Paso <= i do
@@ -602,13 +717,17 @@ local function tirar()
 				-- Etapa 10: la clavija se aplasta y tira chispas de su color.
 				Efectos.aplastar(clavija)
 				Efectos.chispas(clavija.Position, color or Color3.fromHex(Config.Colores.Oro))
+				Efectos.onda(clavija.Position, color or colorDe(toque.Clavija), toque.PorMulti > 1)
 				if toque.Rota then
 					clavija.Transparency = 0.85
 				end
 			end
+			Efectos.combo(siguienteToque)
 			if toque.PorMulti > 1 and not Ajustes.efectosReducidos() then
 				pausaHasta = os.clock() + Config.Feel.HitStop
 				escena.sacudir(Config.Feel.SacudidaMulti, 0.12)
+				Efectos.destello(Color3.fromHex(Config.Colores.Multi), 0.2)
+				escena.zoom(Config.Feel.Zoom)
 			end
 			local pop = if toque.PorMulti > 1
 				then "por"
@@ -616,8 +735,16 @@ local function tirar()
 				else "fuerza"
 			panel.poner(toque.FuerzaTotal, toque.MultiTotal, pop)
 			-- El golpe en vivo; al pasar 50, 100 o 200 crece, cambia de color y suena.
-			if panel.vivo(math.floor(toque.FuerzaTotal * toque.MultiTotal)) then
+			local nivel = panel.vivo(math.floor(toque.FuerzaTotal * toque.MultiTotal))
+			if nivel then
 				Sonidos.tocar("Umbral") -- SONIDO
+				-- 27/10: grito, destello y zoom al pasar cada umbral.
+				local F = Config.Feel
+				local colorNivel =
+					Color3.fromHex(F.UmbralColores[nivel + 1] or F.UmbralColores[#F.UmbralColores])
+				Efectos.grito(F.Gritos[nivel] or F.Gritos[#F.Gritos], colorNivel)
+				Efectos.destello(colorNivel, 0.25)
+				escena.zoom(F.Zoom * nivel)
 			end
 			siguienteToque += 1
 		end
@@ -625,8 +752,9 @@ local function tirar()
 		if i >= ultimo then
 			conexion:Disconnect()
 			for _, bola in escena.Bolas do
-				bola.Transparency = 1
+				mostrarBola(bola, false)
 			end
+			Efectos.comboFin()
 			-- El servidor revisa el daño, juega el turno y devuelve qué pasó.
 			local okTiro, turno = pcall(function()
 				return remotos.Tirar:InvokeServer(numeroTiro, anguloTiro, res.Danio)

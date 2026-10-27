@@ -539,3 +539,17 @@ Juani: "ForgeGUI solo hará el HUD y los íconos, vos harás los modelos, la hab
 
 **Plan:** sala chica armada con partes por código (máquina industrial con neón, terminal de la tienda, tablero de récords LED), y la pantalla de juego con el HUD en cajas negras y LED naranja sobre el tablero. Los 13 modelos de IA quedan en `plinko-knight/modelos/` sin usar.
 
+
+**Elegida: B · Mezcla** (27/10). Juani: "sigue siendo feo, necesito más animaciones, modelos más lindos y más dopamina".
+
+### Más dopamina y animaciones (27/10/2026)
+
+Números en `Config.Feel` (Onda, Estela, LuzBola, ComboMinimo, Gritos, Zoom, Flash, Confeti, ConteoGolpe, Respirar, Pulso).
+- **Tablero:** clavijas con zócalo de metal y aro de luz que se prende al tocarlas y se apaga de a poco; grilla de neón tenue en el fondo; filo de neón en el marco; cañón redondo con aro de neón; luces del piso que corren; los tubos laten.
+- **Tiro:** la bola deja estela y tiene luz propia; cada toque abre un anillo de luz; contador "COMBO ×N" que crece y cambia de color; al pasar 50/100/200 sale "¡BIEN!/¡GENIAL!/¡BRUTAL!" con destello y zoom; la azul que multiplica da destello rojo y zoom; la bola que cae tira chispas.
+- **Golpe:** la luz del total va en arco con estela; al llegar, estallido de chispas, destello, zoom y temblor según cuánto pegó; el número grande cuenta de 0 hasta el daño.
+- **Monstruo:** quieto respira (se balancea); al morir, confeti de colores, "¡KO!" y zoom. Victoria final con confeti.
+- **Sala:** el ventilador gira, el fluorescente titila de vez en cuando, los tubos de neón laten.
+- Con "Efectos reducidos": sin destellos ni zoom y la mitad de partículas.
+- Probado en Play: pelea 1 ganada en 3 tiros, sin errores. Capturas en `plinko-knight/arte/comparaciones/v3/`. El aviso `rbxassetid://203785492` ya estaba antes (no es de este cambio).
+- **Pendiente de este pedido:** modelos más lindos de la sala (máquina, terminal) — el tablero ya cambió.
