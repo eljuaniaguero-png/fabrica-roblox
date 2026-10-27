@@ -586,5 +586,5 @@ Variante **D · Pixel** en `Config.Pantalla` (ahora la elegida): letra Arcade, p
 - **Clavijas:** las especiales con aro que late; las tocadas quedan con aro oscuro hasta que termina el tiro.
 - **Fondo:** remolino violeta y cian que gira despacio, con rayitas de monitor.
 - Probado en Play: pelea 1 ganada, tienda, compra de clavija (se corre y vuelve al cancelar), sin errores. Capturas en `plinko-knight/arte/comparaciones/v4/`.
-- **Falta de la 10b:** revisar con capturas inicio, final, cofre y ajustes (ya toman el estilo nuevo, pero no los miré); que las cartas se inclinen hacia el mouse; que al caer la bola las dos cajas se junten en una cifra gigante.
+- **10b terminada (27/10):** al caer la bola las cajas azul y roja se juntan en el medio, chocan y sale el "= GOLPE" gigante (después vuelven); la carta de la tienda que tenés debajo del mouse se inclina hacia él; el fondo del cofre es más oscuro (no se mezcla con la tienda); la caja de la maña del jefe tiene más margen. Revisadas con capturas: elegir bola, ajustes, cofre (con la reliquia volando a su casillero) y la pantalla final, todas en pixel. 4 tiros, cofre y derrota sin errores en consola.
 

@@ -178,9 +178,20 @@ function TiendaVista.crear(acciones: Acciones): TiendaVista
 			return
 		end
 		local t = os.clock()
+		-- La carta que tenés debajo del mouse se inclina hacia él; las demás se balancean.
+		local mouse = game:GetService("UserInputService"):GetMouseLocation()
+			- game:GetService("GuiService"):GetGuiInset()
 		for k, c in cartasTienda do
 			if c.Parent then
-				c.Rotation = math.sin(t * 1.6 + k * 1.3) * 1.5
+				local pos, tam = c.AbsolutePosition, c.AbsoluteSize
+				local adentro = mouse.X >= pos.X
+					and mouse.X <= pos.X + tam.X
+					and mouse.Y >= pos.Y
+					and mouse.Y <= pos.Y + tam.Y
+				local destino = if adentro
+					then math.clamp((mouse.X - (pos.X + tam.X / 2)) / (tam.X / 2), -1, 1) * 6
+					else math.sin(t * 1.6 + k * 1.3) * 1.5
+				c.Rotation += (destino - c.Rotation) * 0.25
 			end
 		end
 		escalaBajar.Scale = 1 + math.sin(t * 4) * 0.025
@@ -189,7 +200,7 @@ function TiendaVista.crear(acciones: Acciones): TiendaVista
 	-- ── Ventanas que tapan todo (en su propio ScreenGui, con velo) ─────────────────────────────
 	local guiVentanas = Estilo.pantalla("VentanasTienda", 9, playerGui)
 	guiVentanas.Enabled = false
-	Estilo.velo(guiVentanas)
+	Estilo.velo(guiVentanas, 0.12) -- etapa 10b: más oscuro, la tienda de atrás no se mezcla
 	local ventanas = Estilo.lienzo(guiVentanas)
 	local function ventana(nombre: string): Frame
 		local f = Instance.new("Frame")

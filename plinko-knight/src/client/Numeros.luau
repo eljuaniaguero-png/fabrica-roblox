@@ -280,8 +280,37 @@ function Numeros.crearPanel(contenedor: Frame): Panel
 			end
 		end,
 		golpe = function(valor: number)
-			golpe.Text = "= " .. Clavijas.numeroCorto(valor)
-			saltar(escalaGolpe, base() * 1.6, base())
+			-- Etapa 10b (como Balatro): las cajas azul y roja se juntan en el medio, chocan y sale
+			-- el golpe gigante; después vuelven a su lugar.
+			local cajaF = cartel:FindFirstChild("FUERZA") :: Frame?
+			local cajaM = cartel:FindFirstChild("MULTI") :: Frame?
+			if not cajaF or not cajaM then
+				golpe.Text = "= " .. Clavijas.numeroCorto(valor)
+				saltar(escalaGolpe, base() * 1.6, base())
+				return
+			end
+			local posF, posM = cajaF.Position, cajaM.Position
+			local medio = UDim2.new(0.3, 0, posF.Y.Scale, posF.Y.Offset)
+			local ida = TweenInfo.new(0.14, Enum.EasingStyle.Quad, Enum.EasingDirection.In)
+			por.TextTransparency = 1
+			por.TextStrokeTransparency = 1
+			TweenService:Create(cajaF, ida, { Position = medio }):Play()
+			TweenService:Create(cajaM, ida, { Position = medio }):Play()
+			task.delay(0.14, function()
+				golpe.Text = "= " .. Clavijas.numeroCorto(valor)
+				saltar(escalaGolpe, base() * 2.4, base())
+				escalaFuerza.Scale = 1.25
+				escalaMulti.Scale = 1.25
+				local vuelta = TweenInfo.new(0.3, Enum.EasingStyle.Back, Enum.EasingDirection.Out)
+				TweenService:Create(cajaF, vuelta, { Position = posF }):Play()
+				TweenService:Create(cajaM, vuelta, { Position = posM }):Play()
+				TweenService:Create(escalaFuerza, vuelta, { Scale = 1 }):Play()
+				TweenService:Create(escalaMulti, vuelta, { Scale = 1 }):Play()
+				task.delay(0.2, function()
+					por.TextTransparency = 0
+					por.TextStrokeTransparency = 0
+				end)
+			end)
 		end,
 		vivo = function(total: number): number?
 			golpe.Text = "= " .. Clavijas.numeroCorto(total)

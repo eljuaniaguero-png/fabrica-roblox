@@ -210,10 +210,10 @@ function Pantallas.crear(): Pantallas
 	mania.Visible = false
 	Estilo.redondear(mania)
 	local margenMania = Instance.new("UIPadding")
-	margenMania.PaddingTop = UDim.new(0, 8)
-	margenMania.PaddingBottom = UDim.new(0, 8)
-	margenMania.PaddingLeft = UDim.new(0, 10)
-	margenMania.PaddingRight = UDim.new(0, 10)
+	margenMania.PaddingTop = UDim.new(0, 14)
+	margenMania.PaddingBottom = UDim.new(0, 14)
+	margenMania.PaddingLeft = UDim.new(0, 16)
+	margenMania.PaddingRight = UDim.new(0, 16)
 	margenMania.Parent = mania
 	Estilo.marco(mania, "Panel")
 
