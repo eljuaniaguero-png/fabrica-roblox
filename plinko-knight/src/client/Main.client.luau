@@ -171,15 +171,12 @@ local function brillar(id: number)
 	if halo then
 		halo.Color = colorDe(id)
 		halo.Transparency = 0.15
-		TweenService
-			:Create(halo, TweenInfo.new(Config.Feel.BrilloApagar * 1.5), { Transparency = 0.95 })
-			:Play()
+		TweenService:Create(halo, TweenInfo.new(Config.Feel.BrilloApagar * 1.5), { Transparency = 0.95 }):Play()
 	end
 	task.delay(Config.Simulacion.BrilloClavija, function()
 		if brillos[id] == marca then
 			p.Material = materialDe(id)
-			TweenService:Create(p, TweenInfo.new(Config.Feel.BrilloApagar), { Color = colorDe(id) })
-				:Play()
+			TweenService:Create(p, TweenInfo.new(Config.Feel.BrilloApagar), { Color = colorDe(id) }):Play()
 		end
 	end)
 end
@@ -205,9 +202,7 @@ local function ponerEstado(e: Mazmorra.Estado)
 		tiendaVista.ocultar()
 	end
 	-- SONIDO: música de pelea o de jefe.
-	Sonidos.musica(
-		if e.Fase == "peleando" and Mazmorra.monstruo(e.Piso).EsJefe then "jefe" else "pelea"
-	)
+	Sonidos.musica(if e.Fase == "peleando" and Mazmorra.monstruo(e.Piso).EsJefe then "jefe" else "pelea")
 	if e.Fase == "peleando" then
 		pantallas.ocultarFinal()
 		pantallas.ocultarInicio()
@@ -332,12 +327,7 @@ local function volverABajar(bola: string)
 			desbloqueosPartida = {}
 		end
 		ponerEstado(e)
-		print(
-			("[Mazmorra] Bajás con la bola %s: jugando en %d ms"):format(
-				bola,
-				(os.clock() - inicio) * 1000
-			)
-		)
+		print(("[Mazmorra] Bajás con la bola %s: jugando en %d ms"):format(bola, (os.clock() - inicio) * 1000))
 		if estado.Fase ~= "peleando" then
 			abrirInicio() -- no se aceptó: elegir de nuevo
 		end
@@ -457,13 +447,7 @@ local function volarTotal()
 	brillo.Range = 10
 	brillo.Parent = luz
 	luz.Size = Vector3.new(0.4, 0.4, 0.4)
-	TweenService
-		:Create(
-			luz,
-			TweenInfo.new(0.12, Enum.EasingStyle.Back),
-			{ Size = Vector3.new(2.2, 2.2, 2.2) }
-		)
-		:Play()
+	TweenService:Create(luz, TweenInfo.new(0.12, Enum.EasingStyle.Back), { Size = Vector3.new(2.2, 2.2, 2.2) }):Play()
 	local destino = monstruo.centro() + Vector3.new(0, 0, 1)
 	local inicio = luz.Position
 	local duracion = Config.Turno.VueloTotal
@@ -493,23 +477,13 @@ local function animarTurno(turno: Mazmorra.Turno)
 	local m = Mazmorra.monstruo(estado.Piso)
 	local peso = math.clamp(turno.Danio / math.max(m.Vida, 1), 0.15, 1)
 	local centro = monstruo.centro()
-	Efectos.estallido(
-		centro,
-		{ colorNumero, Color3.new(1, 1, 1) },
-		math.floor(10 + 30 * peso),
-		0.6 + peso
-	)
+	Efectos.estallido(centro, { colorNumero, Color3.new(1, 1, 1) }, math.floor(10 + 30 * peso), 0.6 + peso)
 	Efectos.onda(centro, colorNumero, true)
 	Efectos.destello(Color3.new(1, 1, 1), 0.15 + 0.3 * peso)
 	escena.zoom(Config.Feel.Zoom * (1 + peso * 2))
 	escena.sacudir(0.3 + peso * 0.8, 0.25)
 	-- Etapa 10: el número del golpe, grande, sobre el monstruo (27/10: cuenta de 0 al valor).
-	Numeros.contar(
-		escena.Cartel,
-		turno.Danio,
-		Color3.new(1, 1, 1),
-		Vector2.new(9 + 4 * peso, 4 + 2 * peso)
-	)
+	Numeros.contar(escena.Cartel, turno.Danio, Color3.new(1, 1, 1), Vector2.new(9 + 4 * peso, 4 + 2 * peso))
 	monstruo.ponerVida(turno.VidaMonstruo + turno.Quemadura, true)
 	task.wait(t.Sacudida)
 	if turno.Quemadura > 0 then
@@ -705,9 +679,7 @@ local function tirar()
 			end
 			local clavija = escena.Clavijas[toque.Clavija]
 			if clavija then
-				local color = if toque.Tipo == "gris"
-					then nil
-					else Color3.fromHex(Clavijas.color(toque.Tipo))
+				local color = if toque.Tipo == "gris" then nil else Color3.fromHex(Clavijas.color(toque.Tipo))
 				-- El "×N" de la azul sale el doble de grande.
 				local tamanio = if toque.PorMulti > 1
 					then Vector2.new(9, 3.2)
@@ -729,10 +701,7 @@ local function tirar()
 				Efectos.destello(Color3.fromHex(Config.Colores.Multi), 0.2)
 				escena.zoom(Config.Feel.Zoom)
 			end
-			local pop = if toque.PorMulti > 1
-				then "por"
-				elseif toque.Multi > 0 then "multi"
-				else "fuerza"
+			local pop = if toque.PorMulti > 1 then "por" elseif toque.Multi > 0 then "multi" else "fuerza"
 			panel.poner(toque.FuerzaTotal, toque.MultiTotal, pop)
 			-- El golpe en vivo; al pasar 50, 100 o 200 crece, cambia de color y suena.
 			local nivel = panel.vivo(math.floor(toque.FuerzaTotal * toque.MultiTotal))
@@ -740,8 +709,7 @@ local function tirar()
 				Sonidos.tocar("Umbral") -- SONIDO
 				-- 27/10: grito, destello y zoom al pasar cada umbral.
 				local F = Config.Feel
-				local colorNivel =
-					Color3.fromHex(F.UmbralColores[nivel + 1] or F.UmbralColores[#F.UmbralColores])
+				local colorNivel = Color3.fromHex(F.UmbralColores[nivel + 1] or F.UmbralColores[#F.UmbralColores])
 				Efectos.grito(F.Gritos[nivel] or F.Gritos[#F.Gritos], colorNivel)
 				Efectos.destello(colorNivel, 0.25)
 				escena.zoom(F.Zoom * nivel)
@@ -829,19 +797,14 @@ end)
 UserInputService.InputChanged:Connect(function(input: InputObject)
 	local tipo = input.UserInputType
 	-- El mouse apunta siempre; el dedo, mientras está apoyado.
-	if
-		tipo == Enum.UserInputType.MouseMovement
-		or (tipo == Enum.UserInputType.Touch and apuntando)
-	then
+	if tipo == Enum.UserInputType.MouseMovement or (tipo == Enum.UserInputType.Touch and apuntando) then
 		apuntarA(Vector2.new(input.Position.X, input.Position.Y))
 	end
 end)
 
 UserInputService.InputEnded:Connect(function(input: InputObject)
 	local tipo = input.UserInputType
-	if
-		(tipo == Enum.UserInputType.MouseButton1 or tipo == Enum.UserInputType.Touch) and apuntando
-	then
+	if (tipo == Enum.UserInputType.MouseButton1 or tipo == Enum.UserInputType.Touch) and apuntando then
 		apuntando = false
 		if pantallas.hayFinal() or os.clock() - pantallas.finalCerrado() < 0.3 then
 			return
@@ -947,10 +910,7 @@ remotos.Progreso.OnClientEvent:Connect(function(datos: any, nuevos: any)
 	if typeof(nuevos) == "table" then
 		for _, n in nuevos do
 			print(("[Progreso] Desbloqueaste %s: %s"):format(n.Tipo, n.Nombre))
-			table.insert(
-				desbloqueosPartida,
-				if n.Tipo == "bola" then ("bola %s"):format(n.Nombre) else n.Nombre
-			)
+			table.insert(desbloqueosPartida, if n.Tipo == "bola" then ("bola %s"):format(n.Nombre) else n.Nombre)
 			table.insert(avisosPendientes, n)
 		end
 		if not tirando then

@@ -51,9 +51,7 @@ function Reliquias.describir(id: string, contador: number?): string
 	local d = Reliquias.datos(id)
 	local n = contador or 0
 	if id == "brasa" then
-		return ("Al final del tiro: +%d Multi por cada clavija roja de tu tablero"):format(
-			d.MultiPorRoja
-		)
+		return ("Al final del tiro: +%d Multi por cada clavija roja de tu tablero"):format(d.MultiPorRoja)
 	elseif id == "rubi" then
 		return ("Las rojas dan ×%d Multi de lo normal"):format(d.Factor)
 	elseif id == "martillo" then
@@ -63,9 +61,7 @@ function Reliquias.describir(id: string, contador: number?): string
 	elseif id == "gemela" then
 		return ("Cada bola se parte en 2 en su toque %d"):format(d.Toque)
 	elseif id == "enjambre" then
-		return ("Al final: ×%s Multi por cada bola extra"):format(
-			tostring(d.PorBola):gsub("%.", ",")
-		)
+		return ("Al final: ×%s Multi por cada bola extra"):format(tostring(d.PorBola):gsub("%.", ","))
 	elseif id == "hoja" then
 		return ("Las bolas extra suman ×%d Fuerza"):format(d.Factor)
 	elseif id == "bolsa" then
@@ -73,14 +69,9 @@ function Reliquias.describir(id: string, contador: number?): string
 	elseif id == "avaro" then
 		return ("Al final: +%d Multi por cada %d de oro que tengas"):format(d.Multi, d.Cada)
 	elseif id == "toqueOro" then
-		return ("Las doradas también dan ×%s Multi"):format(
-			(tostring(d.PorMulti):gsub("%.", ","))
-		)
+		return ("Las doradas también dan ×%s Multi"):format((tostring(d.PorMulti):gsub("%.", ",")))
 	elseif id == "trofeo" then
-		return ("Crece: +%d Multi cada vez que matás de un tiro (ahora +%d)"):format(
-			d.Multi,
-			n * d.Multi
-		)
+		return ("Crece: +%d Multi cada vez que matás de un tiro (ahora +%d)"):format(d.Multi, n * d.Multi)
 	elseif id == "callo" then
 		return ("Crece: +%d Fuerza por cada azul rota (ahora +%d)"):format(d.Fuerza, n * d.Fuerza)
 	elseif id == "racha" then
@@ -90,16 +81,11 @@ function Reliquias.describir(id: string, contador: number?): string
 	elseif id == "yesca" then
 		return "Con la bola de fuego: la quemadura hace tanto daño como tu Multi"
 	elseif id == "vidrio" then
-		return ("Las azules dan ×%d, pero se rompen 1 de cada %d"):format(
-			d.PorMulti,
-			math.floor(1 / d.Rotura + 0.5)
-		)
+		return ("Las azules dan ×%d, pero se rompen 1 de cada %d"):format(d.PorMulti, math.floor(1 / d.Rotura + 0.5))
 	elseif id == "aliento" then
 		return ("Al final: ×%d Multi si te queda menos de %d de vida"):format(d.Factor, d.Vida)
 	elseif id == "paciencia" then
-		return ("El 1.er tiro de cada pelea no hace daño; el 2.º tiene ×%d Multi"):format(
-			d.Factor
-		)
+		return ("El 1.er tiro de cada pelea no hace daño; el 2.º tiene ×%d Multi"):format(d.Factor)
 	elseif id == "corona" then
 		return ("Al final: ×%d Multi en todos los tiros"):format(d.Factor)
 	elseif id == "ecoInfinito" then

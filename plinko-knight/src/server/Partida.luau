@@ -43,9 +43,7 @@ end
 
 -- Con el progreso ya cargado: la partida arranca en la fase "inicio" (elegir bola).
 function Partida.iniciar(jugador: Player, datos: Progreso.Datos): Partida
-	local bola = if Progreso.tieneBola(datos, datos.BolaElegida)
-		then datos.BolaElegida
-		else "hierro"
+	local bola = if Progreso.tieneBola(datos, datos.BolaElegida) then datos.BolaElegida else "hierro"
 	local p: Partida = {
 		Estado = Mazmorra.nueva(bola, datos.ReliquiasDesbloqueadas),
 		NumeroTiro = 0,

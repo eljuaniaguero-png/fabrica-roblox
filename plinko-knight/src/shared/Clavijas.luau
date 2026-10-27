@@ -77,12 +77,7 @@ function Clavijas.nuevoTablero(cantidad: number): TableroPartida
 end
 
 -- Convierte hasta `cantidad` clavijas grises (elegidas con la semilla) en `tipo`. Devuelve los Id.
-function Clavijas.convertir(
-	tablero: TableroPartida,
-	tipo: string,
-	cantidad: number,
-	semilla: number
-): { number }
+function Clavijas.convertir(tablero: TableroPartida, tipo: string, cantidad: number, semilla: number): { number }
 	local grises: { number } = {}
 	for id, t in tablero do
 		if t == "gris" then
@@ -113,14 +108,9 @@ function Clavijas.efecto(tipo: string, nivel: number): string
 	if tipo == "roja" then
 		return ("+%d Multi"):format(Clavijas.multi(tipo, nivel))
 	elseif tipo == "azul" then
-		return ("×%s Multi, a veces se rompe"):format(
-			Clavijas.numeroCorto(Clavijas.porMulti(tipo, nivel))
-		)
+		return ("×%s Multi, a veces se rompe"):format(Clavijas.numeroCorto(Clavijas.porMulti(tipo, nivel)))
 	elseif tipo == "dorada" then
-		return ("+%d Fuerza y +%d oro"):format(
-			Clavijas.fuerza(tipo, nivel),
-			Clavijas.oro(tipo, nivel)
-		)
+		return ("+%d Fuerza y +%d oro"):format(Clavijas.fuerza(tipo, nivel), Clavijas.oro(tipo, nivel))
 	elseif tipo == "verde" then
 		return ("+%d Fuerza y la bola sale disparada"):format(Clavijas.fuerza(tipo, nivel))
 	elseif tipo == "violeta" then

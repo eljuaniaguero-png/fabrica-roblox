@@ -41,8 +41,7 @@ end)
 -- Comando de prueba, solo en Studio (tecla L): hace lo mismo que salir y volver a entrar (cierra
 -- la sesión guardando y la vuelve a cargar del almacén), para probar el guardado sin publicar.
 if RunService:IsStudio() then
-	local prueba =
-		game:GetService("ReplicatedStorage"):WaitForChild("Remotos"):WaitForChild("Prueba")
+	local prueba = game:GetService("ReplicatedStorage"):WaitForChild("Remotos"):WaitForChild("Prueba")
 	local recargando: { [Player]: boolean } = {}
 	prueba.OnServerEvent:Connect(function(jugador: Player, comando: any)
 		if comando ~= "recargar" or recargando[jugador] then

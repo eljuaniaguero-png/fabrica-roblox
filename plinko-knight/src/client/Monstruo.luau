@@ -151,8 +151,7 @@ function Monstruo.crear(cartel: BasePart, barra: BasePart): Monstruo
 			sacudida += 1
 			local marca = sacudida
 			flash.BackgroundTransparency = 0.2
-			TweenService:Create(flash, TweenInfo.new(F.Destello), { BackgroundTransparency = 1 })
-				:Play()
+			TweenService:Create(flash, TweenInfo.new(F.Destello), { BackgroundTransparency = 1 }):Play()
 			task.spawn(function()
 				local fin = os.clock() + t.Sacudida
 				local lado = if math.random() < 0.5 then -1 else 1
@@ -171,13 +170,7 @@ function Monstruo.crear(cartel: BasePart, barra: BasePart): Monstruo
 		end,
 		atacar = function()
 			-- Se agranda y se acerca a la cámara (que mira hacia -Z: acercarse es +Z), y vuelve.
-			local info = TweenInfo.new(
-				t.DuracionAtaque / 2,
-				Enum.EasingStyle.Quad,
-				Enum.EasingDirection.Out,
-				0,
-				true
-			)
+			local info = TweenInfo.new(t.DuracionAtaque / 2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out, 0, true)
 			TweenService:Create(cartel, info, {
 				Size = Vector3.new(tamanio.X * t.Agrandar, tamanio.Y * t.Agrandar, tamanio.Z),
 				CFrame = base + Vector3.new(0, 0, F.Acercar),
@@ -204,19 +197,11 @@ function Monstruo.crear(cartel: BasePart, barra: BasePart): Monstruo
 				local col = (i - 1) % 2
 				local fila = math.floor((i - 1) / 2)
 				p.CFrame = base
-					* CFrame.new(
-						(col - 0.5) * tamanio.X / 2,
-						tamanio.Y / 2 - (fila + 0.5) * tamanio.Y / (n / 2),
-						0.2
-					)
+					* CFrame.new((col - 0.5) * tamanio.X / 2, tamanio.Y / 2 - (fila + 0.5) * tamanio.Y / (n / 2), 0.2)
 				p.Parent = cartel.Parent
 				local caida = TweenService:Create(
 					p,
-					TweenInfo.new(
-						0.7 + math.random() * 0.3,
-						Enum.EasingStyle.Quad,
-						Enum.EasingDirection.In
-					),
+					TweenInfo.new(0.7 + math.random() * 0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.In),
 					{
 						CFrame = p.CFrame
 							* CFrame.new((col - 0.5) * 3, -tamanio.Y * 1.3, 1)

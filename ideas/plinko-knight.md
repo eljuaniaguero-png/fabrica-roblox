@@ -560,3 +560,12 @@ Hechas con partes por código en `server/GeneradorSala.luau` (sin modelos de IA)
 - **Tienda:** kiosco con marquesina "TIENDA", vitrina de vidrio que sale del frente con 3 bolas que flotan y giran, display "TU BOLA", ranura, botón de arcade, bandeja con luz, laterales negros con neón cian y franjas abajo.
 - Arreglo: al sentarse, la cámara entra de frente a la pantalla (antes quedaba atrás y lo tapaba el fundido).
 - Probado en Play sin errores. Fotos: `plinko-knight/arte/comparaciones/v3/maquina.jpg` y `tienda.jpg`.
+
+### Etapa 10 · Sensación y sonido: terminada (27/10/2026)
+
+Los 7 puntos del prompt 10 están hechos (con lo de "más dopamina" encima):
+1. Clavijas que se aplastan, chispas, aro de luz y "tink" que sube de tono. 2. Golpe en vivo que crece y cambia de color en 50/100/200 (con grito y sonido), hit-stop en la azul. 3. Total que vuela en arco, flash, inclinación, número que cuenta, cartel que se rompe; entrada del jefe. 4. Contraataque: se acerca, temblor, borde rojo. 5. Cartas del cofre con whoosh; la elegida se agranda y **su ícono vuela a la fila de reliquias** (nuevo). 6. Música de pelea y de jefe (ForgeGUI, `Config.Sonidos`). 7. "Efectos reducidos".
+- `Config.Feel.UmbralEscala` bajó a 0,08 (el "= 128" tapaba el borde del tablero).
+- Probado: jefe de la zona 1 ganado, cofre elegido, ícono volando, consola sin errores, **60 FPS en PC**. En celular no se probó (decisión de Juani).
+- El aviso `rbxassetid://203785492 ... Asset type does not match` no sale del juego (no está en ninguna pieza ni en el código); parece de Roblox.
+- El video corto no se puede grabar por MCP: las capturas de `arte/comparaciones/v3/` hacen de clip.

@@ -88,10 +88,7 @@ function Tienda.describir(clase: string, id: string, e: Estado?): (string, strin
 		local d = (Config.Clavijas :: any)[id]
 		local nivel = Clavijas.nivel(if e then e.Niveles else nil, id)
 		return ("Clavija %s"):format(d.Nombre:lower()),
-			("Tocá una clavija y se vuelve %s: %s"):format(
-				d.Nombre:lower(),
-				Clavijas.efecto(id, nivel)
-			),
+			("Tocá una clavija y se vuelve %s: %s"):format(d.Nombre:lower(), Clavijas.efecto(id, nivel)),
 			d.Color
 	end
 	local tipoPergamino, tipo = Tienda.partes(id)
@@ -100,11 +97,7 @@ function Tienda.describir(clase: string, id: string, e: Estado?): (string, strin
 		local d = (Config.Clavijas :: any)[tipo]
 		local nivel = Clavijas.nivel(if e then e.Niveles else nil, tipo) + 1
 		return ("Pergamino de %s"):format(d.Plural or "grises"),
-			("Las %s suben a nivel %d: %s"):format(
-				d.Plural or "grises",
-				nivel,
-				Clavijas.efecto(tipo, nivel)
-			),
+			("Las %s suben a nivel %d: %s"):format(d.Plural or "grises", nivel, Clavijas.efecto(tipo, nivel)),
 			d.Color
 	elseif tipoPergamino == "forja" and tipo then
 		local d = (Config.Clavijas :: any)[tipo]
@@ -116,9 +109,7 @@ function Tienda.describir(clase: string, id: string, e: Estado?): (string, strin
 	elseif tipoPergamino == "vendaje" then
 		return p.vendaje.Nombre, ("+%d de vida"):format(p.vendaje.Cura), "#4CC46A"
 	elseif tipoPergamino == "furia" then
-		return p.furia.Nombre,
-			("El próximo tiro: ×%d Multi al final"):format(p.furia.PorMulti),
-			"#FF4A4A"
+		return p.furia.Nombre, ("El próximo tiro: ×%d Multi al final"):format(p.furia.PorMulti), "#FF4A4A"
 	end
 	return id, "", "#FFFFFF"
 end
@@ -151,10 +142,7 @@ function Tienda.chances(): { string }
 		local nombre = Tienda.describir("pergamino", p.Id)
 		table.insert(
 			lineas,
-			("  %s: %s %%"):format(
-				nombre,
-				Clavijas.numeroCorto(math.floor(p.Peso / total * 1000 + 0.5) / 10)
-			)
+			("  %s: %s %%"):format(nombre, Clavijas.numeroCorto(math.floor(p.Peso / total * 1000 + 0.5) / 10))
 		)
 	end
 	return lineas
@@ -227,17 +215,11 @@ function Tienda.generar(semilla: number, e: Estado?): { Item }
 	end
 	local disponibles = if e then e.ReliquiasDisponibles else nil
 	for _, id in sortearReliquias(azar, usadas, Config.Tienda.Reliquias, disponibles) do
-		table.insert(
-			items,
-			{ Clase = "reliquia", Id = id, Precio = Reliquias.precio(id), Vendido = false }
-		)
+		table.insert(items, { Clase = "reliquia", Id = id, Precio = Reliquias.precio(id), Vendido = false })
 	end
 	for _ = 1, Config.Tienda.MejorasDeClavija do
 		local tipo = Config.OrdenClavijas[math.floor(azar() * #Config.OrdenClavijas) + 1]
-		table.insert(
-			items,
-			{ Clase = "clavija", Id = tipo, Precio = Config.Tienda.PrecioClavija, Vendido = false }
-		)
+		table.insert(items, { Clase = "clavija", Id = tipo, Precio = Config.Tienda.PrecioClavija, Vendido = false })
 	end
 	local posibles = Tienda.pergaminosPosibles()
 	local total = 0
@@ -274,16 +256,10 @@ function Tienda.abrir(e: Estado, semilla: number)
 			usadas[r.Id] = true
 		end
 		-- Otra semilla para el cofre (así no repite las reliquias de la tienda).
-		cofre = sortearReliquias(
-			Azar.nuevo(semilla + 7919),
-			usadas,
-			Config.Cofre.Reliquias,
-			e.ReliquiasDisponibles
-		)
+		cofre = sortearReliquias(Azar.nuevo(semilla + 7919), usadas, Config.Cofre.Reliquias, e.ReliquiasDisponibles)
 		e.CofrePendiente = false
 	end
-	e.Tienda =
-		{ Items = Tienda.generar(semilla, e), Renovaciones = 0, Cofre = cofre, CofreTomado = false }
+	e.Tienda = { Items = Tienda.generar(semilla, e), Renovaciones = 0, Cofre = cofre, CofreTomado = false }
 end
 
 -- Llevarse la reliquia `indice` del cofre (gratis, una sola).
@@ -330,12 +306,7 @@ end
 
 -- Lista de Id de clavijas que mandó el cliente: tienen que ser `cantidad` números distintos de
 -- clavijas que existen y no son hueco (ni del tipo `noEste`).
-local function clavijasValidas(
-	e: Estado,
-	objetivos: any,
-	cantidad: number,
-	noEste: string?
-): { number }?
+local function clavijasValidas(e: Estado, objetivos: any, cantidad: number, noEste: string?): { number }?
 	if cantidad == 0 then
 		return {}
 	end
@@ -456,12 +427,7 @@ function Tienda.mover(e: Estado, desde: any, hacia: any): (boolean, string?)
 	if e.Fase ~= "tienda" then
 		return false, "Solo se ordena en la tienda"
 	end
-	if
-		typeof(desde) ~= "number"
-		or typeof(hacia) ~= "number"
-		or not e.Reliquias[desde]
-		or not e.Reliquias[hacia]
-	then
+	if typeof(desde) ~= "number" or typeof(hacia) ~= "number" or not e.Reliquias[desde] or not e.Reliquias[hacia] then
 		return false, "No hay reliquia ahí"
 	end
 	local r = table.remove(e.Reliquias, desde)

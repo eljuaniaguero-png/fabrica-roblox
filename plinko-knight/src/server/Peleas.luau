@@ -168,8 +168,7 @@ function Peleas.iniciar()
 		if
 			not p
 			or typeof(valor) ~= "table"
-			or ahora - (ultimosAjustes[jugador] or -math.huge)
-				< Config.Servidor.TiempoMinimoAjustes
+			or ahora - (ultimosAjustes[jugador] or -math.huge) < Config.Servidor.TiempoMinimoAjustes
 		then
 			return
 		end
@@ -230,11 +229,7 @@ function Peleas.iniciar()
 
 	local usar = Instance.new("RemoteFunction")
 	usar.Name = "UsarPergamino"
-	usar.OnServerInvoke = function(
-		jugador: Player,
-		lugar: any,
-		clavijas: any
-	): (Mazmorra.Estado?, string?)
+	usar.OnServerInvoke = function(jugador: Player, lugar: any, clavijas: any): (Mazmorra.Estado?, string?)
 		local p = Partida.de(jugador)
 		if not p then
 			return nil, nil

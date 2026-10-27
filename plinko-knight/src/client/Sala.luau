@@ -110,11 +110,7 @@ function Sala.crear(o: Opciones): Sala
 	borde.Parent = marco
 
 	local function fundir(hacia: number)
-		local t = TweenService:Create(
-			negro,
-			TweenInfo.new(S.TiempoFundido),
-			{ BackgroundTransparency = hacia }
-		)
+		local t = TweenService:Create(negro, TweenInfo.new(S.TiempoFundido), { BackgroundTransparency = hacia })
 		t:Play()
 		t.Completed:Wait()
 	end
@@ -243,9 +239,7 @@ function Sala.crear(o: Opciones): Sala
 	CollectionService:GetInstanceAddedSignal("Maquina"):Connect(prepararMaquina)
 
 	ProximityPromptService.PromptTriggered:Connect(function(prompt: ProximityPrompt)
-		if
-			prompt.Name == "Jugar" and prompt:IsDescendantOf(miMaquina() or Instance.new("Folder"))
-		then
+		if prompt.Name == "Jugar" and prompt:IsDescendantOf(miMaquina() or Instance.new("Folder")) then
 			task.spawn(sentarse)
 		elseif prompt.Name == "VerBolas" and not sentado then
 			o.alMostrador()
@@ -265,22 +259,14 @@ function Sala.crear(o: Opciones): Sala
 		local bolas: { { Parte: BasePart, Base: CFrame, Fase: number } } = {}
 		local puntos: { Frame } = {}
 		for _, d in sala:GetChildren() do
-			if
-				d:IsA("BasePart")
-				and d.Name == "Aspa"
-				and ventilador
-				and ventilador:IsA("BasePart")
-			then
+			if d:IsA("BasePart") and d.Name == "Aspa" and ventilador and ventilador:IsA("BasePart") then
 				-- Centro del giro: la boca del ventilador, mirando a la sala (+Z).
 				local centro = CFrame.new(ventilador.Position + Vector3.new(0, 0, 0.25))
 				table.insert(aspas, { Parte = d, Relativo = centro:ToObjectSpace(d.CFrame) })
 			elseif d:IsA("BasePart") and d.Name == "Tubo" then
 				table.insert(tubos, d)
 			elseif d:IsA("BasePart") and d.Name == "BolaVitrina" then
-				table.insert(
-					bolas,
-					{ Parte = d, Base = d.CFrame, Fase = d:GetAttribute("Fase") or 0 }
-				)
+				table.insert(bolas, { Parte = d, Base = d.CFrame, Fase = d:GetAttribute("Fase") or 0 })
 			end
 		end
 		-- Los puntitos de la pantalla de tu máquina titilan como una demo de arcade.

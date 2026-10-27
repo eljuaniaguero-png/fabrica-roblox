@@ -105,12 +105,7 @@ end
 
 -- Texto sin fondo. tamanio: uno de Estilo.Texto (por defecto Normal). Con contorno oscuro, así se
 -- lee sobre el tablero.
-function Estilo.texto(
-	padre: Instance,
-	valor: string,
-	tamanio: number?,
-	fuente: Enum.Font?
-): TextLabel
+function Estilo.texto(padre: Instance, valor: string, tamanio: number?, fuente: Enum.Font?): TextLabel
 	local t = Instance.new("TextLabel")
 	t.BackgroundTransparency = 1
 	t.Font = fuente or Estilo.Fuentes.Titulo
@@ -234,14 +229,10 @@ end
 -- Fila o columna automática.
 function Estilo.lista(padre: Instance, horizontal: boolean, separacion: number?): UIListLayout
 	local l = Instance.new("UIListLayout")
-	l.FillDirection = if horizontal
-		then Enum.FillDirection.Horizontal
-		else Enum.FillDirection.Vertical
+	l.FillDirection = if horizontal then Enum.FillDirection.Horizontal else Enum.FillDirection.Vertical
 	l.Padding = UDim.new(0, separacion or Estilo.Medidas.Margen)
 	l.SortOrder = Enum.SortOrder.LayoutOrder
-	l.VerticalAlignment = if horizontal
-		then Enum.VerticalAlignment.Center
-		else Enum.VerticalAlignment.Top
+	l.VerticalAlignment = if horizontal then Enum.VerticalAlignment.Center else Enum.VerticalAlignment.Top
 	l.Parent = padre
 	return l
 end

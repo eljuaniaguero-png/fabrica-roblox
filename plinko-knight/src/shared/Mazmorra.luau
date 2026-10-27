@@ -235,14 +235,9 @@ end
 function Mazmorra.cobrarPelea(e: Estado, esJefe: boolean): OroGanado
 	local o = Config.Oro
 	local pelea = if esJefe then o.PorJefe else o.PorMonstruo
-	local bonus = if e.TirosPelea <= 1
-		then o.BonusUnTiro
-		elseif e.TirosPelea == 2 then o.BonusDosTiros
-		else 0
+	local bonus = if e.TirosPelea <= 1 then o.BonusUnTiro elseif e.TirosPelea == 2 then o.BonusDosTiros else 0
 	e.Oro += pelea + bonus
-	local tope = if Reliquias.tiene(e.Reliquias, "bolsa")
-		then Config.Reliquias.bolsa.InteresTope
-		else o.InteresTope
+	local tope = if Reliquias.tiene(e.Reliquias, "bolsa") then Config.Reliquias.bolsa.InteresTope else o.InteresTope
 	local interes = math.min(math.floor(e.Oro / o.InteresCada), tope)
 	e.Oro += interes
 	e.UltimoOro = { Pelea = pelea, Bonus = bonus, Interes = interes }
@@ -255,8 +250,7 @@ function Mazmorra.turno(e: Estado, danio: number, quemadura: number?): Turno
 	local monstruo = Mazmorra.monstruo(e.Piso)
 	e.TirosPelea += 1
 	if e.Mania == "coraza" then
-		local minimo =
-			Config.Manias.coraza.Minimo[math.clamp(monstruo.Zona, 1, #Config.Manias.coraza.Minimo)]
+		local minimo = Config.Manias.coraza.Minimo[math.clamp(monstruo.Zona, 1, #Config.Manias.coraza.Minimo)]
 		if danio < minimo then
 			danio = 0
 		end

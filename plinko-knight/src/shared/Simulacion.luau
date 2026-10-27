@@ -247,8 +247,7 @@ function Simulacion.simular(
 
 	local pasosMaximos = math.floor(s.TiempoMaximo / dt)
 	local pasosTraba = math.floor(s.TiempoTraba / dt)
-	local desvioMaximo = math.rad(s.Desvio)
-		* (if mania == "viento" then Config.Manias.viento.Desvio else 1)
+	local desvioMaximo = math.rad(s.Desvio) * (if mania == "viento" then Config.Manias.viento.Desvio else 1)
 
 	-- La bola se parte: ella y las nuevas salen abiertas en abanico desde el mismo punto.
 	local function dividir(b: Viva, paso: number, clavija: number)
@@ -336,8 +335,7 @@ function Simulacion.simular(
 							elseif tipo == "dorada" then
 								porToque *= porDoradas
 							elseif tipo == "azul" and vidrio then
-								porToque = R.vidrio.PorMulti
-									+ (porToque - Clavijas.porMulti("azul", 1))
+								porToque = R.vidrio.PorMulti + (porToque - Clavijas.porMulti("azul", 1))
 							end
 							if indice > 1 then
 								fuerzaToque *= factorExtra
@@ -583,11 +581,7 @@ function Simulacion.simular(
 end
 
 -- Puntos de la línea de puntería: solo el primer tramo, en vuelo libre (sin choques).
-function Simulacion.primerTramo(
-	tablero: Tablero,
-	angulo: number,
-	bola: Bola
-): { { X: number, Y: number } }
+function Simulacion.primerTramo(tablero: Tablero, angulo: number, bola: Bola): { { X: number, Y: number } }
 	local p = Config.Punteria
 	local g = Config.Simulacion.Gravedad
 	local vx, vy = velocidadInicial(Simulacion.limitarAngulo(angulo), bola)

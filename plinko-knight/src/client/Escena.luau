@@ -132,14 +132,7 @@ function Escena.armar(): Escena
 	end
 	local pulsos: { BasePart } = {} -- neón que late (Escena lo anima)
 	for _, x in { izq - 0.5, der + 0.5 } do
-		parte(
-			"Pared",
-			modelo,
-			Vector3.new(1, alto, 1.5),
-			CFrame.new(aMundo(x, centroY, 0)),
-			v.Marco,
-			materialMarco
-		)
+		parte("Pared", modelo, Vector3.new(1, alto, 1.5), CFrame.new(aMundo(x, centroY, 0)), v.Marco, materialMarco)
 	end
 	parte(
 		"Techo",
@@ -387,13 +380,7 @@ function Escena.armar(): Escena
 
 	local puntos: { BasePart } = {}
 	for i = 1, Config.Punteria.PuntosLinea do
-		local p = parte(
-			"Punto",
-			modelo,
-			Vector3.new(0.4, 0.4, 0.4),
-			CFrame.new(ORIGEN),
-			Config.Colores.Bola
-		)
+		local p = parte("Punto", modelo, Vector3.new(0.4, 0.4, 0.4), CFrame.new(ORIGEN), Config.Colores.Bola)
 		p.Shape = Enum.PartType.Ball
 		p.Material = Enum.Material.Neon
 		p.Transparency = 1
@@ -534,8 +521,7 @@ function Escena.armar(): Escena
 			end
 		end
 		local fraccion = math.max((abajoLibre - arribaLibre) / math.max(vista.Y, 1), 0.3)
-		local distancia =
-			math.max(mitadAlto / (tangente * fraccion), mitadAncho / (tangente * aspecto))
+		local distancia = math.max(mitadAlto / (tangente * fraccion), mitadAncho / (tangente * aspecto))
 		-- Correr la cámara para que el centro de las 3 columnas caiga en el centro de la franja libre.
 		local corridoPx = (arribaLibre + abajoLibre) / 2 - vista.Y / 2
 		local subir = corridoPx * 2 * distancia * tangente / math.max(vista.Y, 1)
@@ -611,9 +597,7 @@ function Escena.armar(): Escena
 		BarraMonstruo = barraMonstruo,
 		Caballero = caballero,
 		golpearCaballero = function(golpeado: boolean)
-			imagenCaballero.ImageColor3 = if golpeado
-				then Color3.fromHex(Config.Colores.Golpe)
-				else Color3.new(1, 1, 1)
+			imagenCaballero.ImageColor3 = if golpeado then Color3.fromHex(Config.Colores.Golpe) else Color3.new(1, 1, 1)
 		end,
 		sacudir = sacudir,
 		ponerZonaLibre = function(zona: () -> (number, number))

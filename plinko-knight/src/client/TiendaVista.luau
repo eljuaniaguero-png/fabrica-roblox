@@ -203,12 +203,7 @@ function TiendaVista.crear(acciones: Acciones): TiendaVista
 	textoChances.AutomaticCanvasSize = Enum.AutomaticSize.Y
 	textoChances.CanvasSize = UDim2.new()
 	textoChances.Parent = cajaChances
-	local lineas = Estilo.texto(
-		textoChances,
-		table.concat(TiendaModulo.chances(), "\n"),
-		T.Chico,
-		Estilo.Fuentes.Texto
-	)
+	local lineas = Estilo.texto(textoChances, table.concat(TiendaModulo.chances(), "\n"), T.Chico, Estilo.Fuentes.Texto)
 	lineas.TextXAlignment = Enum.TextXAlignment.Left
 	lineas.TextYAlignment = Enum.TextYAlignment.Top
 	lineas.TextStrokeTransparency = 1
@@ -340,9 +335,7 @@ function TiendaVista.crear(acciones: Acciones): TiendaVista
 				local icono = b:FindFirstChild("Icono") :: ImageLabel
 				icono.Image = idIcono
 				icono.Visible = idIcono ~= ""
-				b.TextYAlignment = if idIcono ~= ""
-					then Enum.TextYAlignment.Bottom
-					else Enum.TextYAlignment.Center
+				b.TextYAlignment = if idIcono ~= "" then Enum.TextYAlignment.Bottom else Enum.TextYAlignment.Center
 				b.Text = if idIcono ~= ""
 					then (if crece then tostring(r.Contador) else "")
 					elseif crece then ("%s (%d)"):format(d.Nombre, r.Contador)
@@ -373,11 +366,8 @@ function TiendaVista.crear(acciones: Acciones): TiendaVista
 			return
 		end
 		escala.Scale = 1.3
-		TweenService:Create(
-			escala,
-			TweenInfo.new(0.25, Enum.EasingStyle.Back, Enum.EasingDirection.Out),
-			{ Scale = 1 }
-		):Play()
+		TweenService:Create(escala, TweenInfo.new(0.25, Enum.EasingStyle.Back, Enum.EasingDirection.Out), { Scale = 1 })
+			:Play()
 		aviso.Text = valor
 		aviso.TextTransparency = 0
 		aviso.TextStrokeTransparency = 0
@@ -387,6 +377,48 @@ function TiendaVista.crear(acciones: Acciones): TiendaVista
 			if avisosActivos[lugar] == marca then
 				aviso.TextTransparency = 1
 				aviso.TextStrokeTransparency = 1
+			end
+		end)
+	end
+
+	-- Etapa 10: una copia del ícono vuela (girando y achicándose) hasta un lugar de la fila; al
+	-- llegar, el lugar da un saltito. Va en una capa propia, arriba de todo.
+	local capaVuelo = Instance.new("ScreenGui")
+	capaVuelo.Name = "VueloReliquia"
+	capaVuelo.ResetOnSpawn = false
+	capaVuelo.IgnoreGuiInset = gui.IgnoreGuiInset
+	capaVuelo.ScreenInsets = gui.ScreenInsets
+	capaVuelo.DisplayOrder = 50
+	capaVuelo.Parent = playerGui
+	local function volar(origen: GuiObject, destino: GuiObject)
+		local copia = Instance.new("ImageLabel")
+		copia.BackgroundTransparency = 1
+		copia.Image = if origen:IsA("ImageLabel") then origen.Image else ""
+		copia.ScaleType = Enum.ScaleType.Fit
+		copia.AnchorPoint = Vector2.new(0.5, 0.5)
+		copia.Size = UDim2.fromOffset(origen.AbsoluteSize.X, origen.AbsoluteSize.Y)
+		copia.Position = UDim2.fromOffset(
+			origen.AbsolutePosition.X + origen.AbsoluteSize.X / 2,
+			origen.AbsolutePosition.Y + origen.AbsoluteSize.Y / 2
+		)
+		copia.Parent = capaVuelo
+		local llegada = destino.AbsolutePosition + destino.AbsoluteSize / 2
+		local lado = math.min(destino.AbsoluteSize.X, destino.AbsoluteSize.Y)
+		local vuelo = TweenService:Create(copia, TweenInfo.new(0.55, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {
+			Position = UDim2.fromOffset(llegada.X, llegada.Y),
+			Size = UDim2.fromOffset(lado, lado),
+			Rotation = 360,
+		})
+		vuelo:Play()
+		vuelo.Completed:Once(function()
+			copia:Destroy()
+			Sonidos.tocar("Comprar") -- SONIDO
+			local escala = destino:FindFirstChildOfClass("UIScale")
+			if escala then
+				escala.Scale = 1.35
+				TweenService
+					:Create(escala, TweenInfo.new(0.3, Enum.EasingStyle.Back, Enum.EasingDirection.Out), { Scale = 1 })
+					:Play()
 			end
 		end)
 	end
@@ -422,11 +454,9 @@ function TiendaVista.crear(acciones: Acciones): TiendaVista
 			escala.Scale = 0
 			task.delay((i - 1) * Config.Feel.CartasEntrada, function()
 				Sonidos.tocar("Whoosh") -- SONIDO
-				TweenService:Create(
-					escala,
-					TweenInfo.new(0.25, Enum.EasingStyle.Back, Enum.EasingDirection.Out),
-					{ Scale = 1 }
-				):Play()
+				TweenService
+					:Create(escala, TweenInfo.new(0.25, Enum.EasingStyle.Back, Enum.EasingDirection.Out), { Scale = 1 })
+					:Play()
 			end)
 		end
 	end
@@ -466,8 +496,7 @@ function TiendaVista.crear(acciones: Acciones): TiendaVista
 			tNombre.Position = UDim2.fromOffset(12, 108)
 			tNombre.Size = UDim2.new(1, -24, 0, 44)
 			ajustar(tNombre, T.Grande, T.Chico)
-			local tRareza =
-				Estilo.texto(carta, Reliquias.rareza(id).Nombre, T.Chico, Estilo.Fuentes.Texto)
+			local tRareza = Estilo.texto(carta, Reliquias.rareza(id).Nombre, T.Chico, Estilo.Fuentes.Texto)
 			tRareza.TextColor3 = Color3.fromHex(hex)
 			tRareza.Position = UDim2.fromOffset(12, 152)
 			tRareza.Size = UDim2.new(1, -24, 0, 26)
@@ -483,11 +512,22 @@ function TiendaVista.crear(acciones: Acciones): TiendaVista
 					return -- ya se eligió (doble toque)
 				end
 				borde.Thickness = 10
-				TweenService:Create(
-					escala,
-					TweenInfo.new(0.18, Enum.EasingStyle.Back, Enum.EasingDirection.Out),
-					{ Scale = 1.2 }
-				):Play()
+				TweenService
+					:Create(
+						escala,
+						TweenInfo.new(0.18, Enum.EasingStyle.Back, Enum.EasingDirection.Out),
+						{ Scale = 1.2 }
+					)
+					:Play()
+				-- Etapa 10: el ícono vuela de la carta a su lugar en la fila de reliquias.
+				local destino = lugaresReliquia[#lugaresReliquia]
+				for _, lugarLibre in lugaresReliquia do
+					if lugarLibre.Text == "Reliquia libre" then
+						destino = lugarLibre
+						break
+					end
+				end
+				volar(icono, destino)
 				task.delay(0.22, function()
 					abrir(cofre, false)
 					acciones.tomarCofre(indice)
@@ -511,9 +551,7 @@ function TiendaVista.crear(acciones: Acciones): TiendaVista
 		franja.Parent = b
 		Estilo.redondear(franja)
 		-- Reliquias con su ícono a la izquierda.
-		local idIcono = if item.Clase == "reliquia"
-			then (Config.Assets.Reliquias :: any)[item.Id]
-			else nil
+		local idIcono = if item.Clase == "reliquia" then (Config.Assets.Reliquias :: any)[item.Id] else nil
 		local x = if idIcono and idIcono ~= "" then 84 else 20
 		if x > 20 then
 			local icono = Estilo.icono(b, idIcono)
@@ -537,10 +575,7 @@ function TiendaVista.crear(acciones: Acciones): TiendaVista
 		local apagado = item.Vendido or laTenes
 		local tPrecio = Estilo.texto(
 			b,
-			if item.Vendido
-				then "Vendido"
-				elseif laTenes then "La tenés"
-				else ("%d oro"):format(item.Precio),
+			if item.Vendido then "Vendido" elseif laTenes then "La tenés" else ("%d oro"):format(item.Precio),
 			T.Normal
 		)
 		tPrecio.TextXAlignment = Enum.TextXAlignment.Right
@@ -571,9 +606,7 @@ function TiendaVista.crear(acciones: Acciones): TiendaVista
 				-- Fondo claro: texto oscuro; fondo oscuro: texto blanco con borde.
 				local c = Color3.fromHex(hex)
 				local claro = 0.299 * c.R + 0.587 * c.G + 0.114 * c.B > 0.6
-				b.TextColor3 = if claro
-					then Estilo.color("TextoPrincipal")
-					else Estilo.color("Texto")
+				b.TextColor3 = if claro then Estilo.color("TextoPrincipal") else Estilo.color("Texto")
 				b.TextStrokeTransparency = if claro then 1 else 0
 			else
 				b.Text = "Pergamino libre"
@@ -608,9 +641,7 @@ function TiendaVista.crear(acciones: Acciones): TiendaVista
 			ganado.Text = ("%d oro (%s)"):format(e.Oro, table.concat(partes, ", "))
 			local precio = TiendaModulo.precioRenovar(e)
 			renovar.Text = ("Renovar · %d"):format(precio)
-			renovar.TextColor3 = if e.Oro >= precio
-				then Estilo.color("Texto")
-				else Estilo.color("Peligro")
+			renovar.TextColor3 = if e.Oro >= precio then Estilo.color("Texto") else Estilo.color("Peligro")
 			-- Próxima pelea (y la maña, si es un jefe), para decidir qué comprar.
 			local m = Mazmorra.monstruo(e.Piso)
 			local maniaProxima = if m.EsJefe then e.ManiasJefes[m.Zona] else nil
@@ -619,9 +650,7 @@ function TiendaVista.crear(acciones: Acciones): TiendaVista
 				Clavijas.numeroCorto(m.Vida),
 				if maniaProxima then " · " .. Mazmorra.textoMania(maniaProxima, m.Zona) else ""
 			)
-			proximo.TextColor3 = if m.EsJefe
-				then Estilo.color("Peligro")
-				else Estilo.color("Apagado")
+			proximo.TextColor3 = if m.EsJefe then Estilo.color("Peligro") else Estilo.color("Apagado")
 			-- Cofre: se abre solo la primera vez que entrás con un cofre nuevo.
 			local hayCofre = #e.Tienda.Cofre > 0 and not e.Tienda.CofreTomado
 			local cofreNuevo = hayCofre and not panel.Visible

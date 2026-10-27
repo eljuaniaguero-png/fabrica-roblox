@@ -426,9 +426,7 @@ function Pantallas.crear(): Pantallas
 				local nivel = Clavijas.nivel(e.Niveles, tipo)
 				local nombre = (Config.Clavijas :: any)[tipo].Nombre
 				chip(
-					if nivel > 1
-						then ("%d %s · Nv %d"):format(n, nombre, nivel)
-						else ("%d %s"):format(n, nombre),
+					if nivel > 1 then ("%d %s · Nv %d"):format(n, nombre, nivel) else ("%d %s"):format(n, nombre),
 					Clavijas.color(tipo),
 					orden
 				)
@@ -466,19 +464,15 @@ function Pantallas.crear(): Pantallas
 			anuncio.TextStrokeTransparency = 0
 			task.delay(Config.Turno.CartelPiso, function()
 				if anuncios == marca then
-					TweenService:Create(
-						anuncio,
-						TweenInfo.new(0.25),
-						{ TextTransparency = 1, TextStrokeTransparency = 1 }
-					):Play()
+					TweenService
+						:Create(anuncio, TweenInfo.new(0.25), { TextTransparency = 1, TextStrokeTransparency = 1 })
+						:Play()
 				end
 			end)
 		end,
 		mostrarFinal = function(f: Final, cuandoVuelva: () -> (), cuandoCambie: () -> ())
 			local ganadasAhora = if f.Gano then #Config.Monstruos else f.Piso - 1
-			titulo.Text = if f.Gano
-				then "¡Ganaste la mazmorra!"
-				else ("Caíste en el piso %d"):format(f.Piso)
+			titulo.Text = if f.Gano then "¡Ganaste la mazmorra!" else ("Caíste en el piso %d"):format(f.Piso)
 			titulo.TextColor3 = if f.Gano then Estilo.color("Oro") else Estilo.color("Texto")
 			bordeFinal.Color = if f.Gano then Estilo.color("Oro") else Estilo.color("Peligro")
 			ganadas.Text = ("Ganaste %s peleas"):format(numeroPelea(ganadasAhora))

@@ -29,13 +29,7 @@ end
 
 -- "+2" sobre una clavija (o el texto que se pase, por ejemplo la quemadura sobre el monstruo):
 -- sube y se desvanece. tamanio: en studs (por defecto 3 × 1,6).
-function Numeros.saltar(
-	parte: BasePart,
-	danio: number,
-	texto: string?,
-	color: Color3?,
-	tamanio: Vector2?
-)
+function Numeros.saltar(parte: BasePart, danio: number, texto: string?, color: Color3?, tamanio: Vector2?)
 	local n = Config.Numeros
 	local medida = tamanio or Vector2.new(3, 1.6)
 	local cartel = Instance.new("BillboardGui")
@@ -51,17 +45,10 @@ function Numeros.saltar(
 	cartel.Parent = parte
 
 	local info = TweenInfo.new(n.Duracion, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
-	TweenService:Create(cartel, info, { StudsOffsetWorldSpace = Vector3.new(0, 1 + n.Subida, 2.5) })
-		:Play()
+	TweenService:Create(cartel, info, { StudsOffsetWorldSpace = Vector3.new(0, 1 + n.Subida, 2.5) }):Play()
 	-- Se ve entero la primera mitad y se desvanece en la segunda (si no, casi no se llega a leer).
-	local desvanecer = TweenInfo.new(
-		n.Duracion / 2,
-		Enum.EasingStyle.Quad,
-		Enum.EasingDirection.In,
-		0,
-		false,
-		n.Duracion / 2
-	)
+	local desvanecer =
+		TweenInfo.new(n.Duracion / 2, Enum.EasingStyle.Quad, Enum.EasingDirection.In, 0, false, n.Duracion / 2)
 	TweenService:Create(t, desvanecer, { TextTransparency = 1, TextStrokeTransparency = 1 }):Play()
 	task.delay(n.Duracion, function()
 		cartel:Destroy()
@@ -88,11 +75,9 @@ function Numeros.contar(parte: BasePart, valor: number, color: Color3?, tamanio:
 	escala.Parent = t
 	cartel.Parent = parte
 	local duracion = Config.Feel.ConteoGolpe
-	TweenService
-		:Create(escala, TweenInfo.new(duracion, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
-			Scale = 1.15,
-		})
-		:Play()
+	TweenService:Create(escala, TweenInfo.new(duracion, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
+		Scale = 1.15,
+	}):Play()
 	task.spawn(function()
 		local t0 = os.clock()
 		while true do
@@ -106,18 +91,10 @@ function Numeros.contar(parte: BasePart, valor: number, color: Color3?, tamanio:
 		t.Text = Clavijas.numeroCorto(valor)
 		task.wait(Config.Feel.DanioGrande - duracion)
 		local n = Config.Numeros
-		TweenService:Create(
-			cartel,
-			TweenInfo.new(n.Duracion),
-			{ StudsOffsetWorldSpace = Vector3.new(0, 1 + n.Subida, 2.5) }
-		):Play()
 		TweenService
-			:Create(
-				t,
-				TweenInfo.new(n.Duracion),
-				{ TextTransparency = 1, TextStrokeTransparency = 1 }
-			)
+			:Create(cartel, TweenInfo.new(n.Duracion), { StudsOffsetWorldSpace = Vector3.new(0, 1 + n.Subida, 2.5) })
 			:Play()
+		TweenService:Create(t, TweenInfo.new(n.Duracion), { TextTransparency = 1, TextStrokeTransparency = 1 }):Play()
 		task.wait(n.Duracion)
 		cartel:Destroy()
 	end)
@@ -183,8 +160,7 @@ function Numeros.crearPanel(ancla: BasePart): Panel
 	escalaGolpe.Parent = golpe
 	cartel.Parent = ancla
 
-	local info =
-		TweenInfo.new(Config.Numeros.DuracionPop, Enum.EasingStyle.Back, Enum.EasingDirection.Out)
+	local info = TweenInfo.new(Config.Numeros.DuracionPop, Enum.EasingStyle.Back, Enum.EasingDirection.Out)
 	local function saltar(escala: UIScale, tamanio: number, final: number?)
 		escala.Scale = tamanio
 		TweenService:Create(escala, info, { Scale = final or 1 }):Play()
@@ -223,8 +199,7 @@ function Numeros.crearPanel(ancla: BasePart): Panel
 			end
 			if nuevo > nivel then
 				nivel = nuevo
-				golpe.TextColor3 =
-					Color3.fromHex(F.UmbralColores[nivel + 1] or F.UmbralColores[#F.UmbralColores])
+				golpe.TextColor3 = Color3.fromHex(F.UmbralColores[nivel + 1] or F.UmbralColores[#F.UmbralColores])
 				saltar(escalaGolpe, base() * 1.5, base())
 				return nivel
 			end
