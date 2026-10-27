@@ -147,3 +147,12 @@ Medidas en el lienzo de 960 × 480 (en celular horizontal, 1 unidad ≈ 1 px).
   - En la píldora de la pelea va la **Corona** de la hoja de Forja (el ícono "Jefe" es otro dibujo).
   - Los nombres largos ("Corona del Rey Caído") se achican para entrar.
 - **Para 12b en adelante:** la mano del tutorial (DisplayOrder 40) queda encima de las ventanas (30), así que hay que bajarla. El corazón de la píldora de vida es el pixel de 10b; si se nota, se pide uno nuevo a ForgeGUI.
+
+### 12b · Pelea (27/10/2026)
+- **Monstruo** (`client/Monstruo.luau`): sigue en 3D, así los números del golpe, la luz que vuela y el estallido salen delante. Ahora el cartel es transparente y mide 21 × 28 (antes 10 × 12): el dibujo pasó de unos 110 a unos 240 px en una pantalla de 1292. En su cara van, de arriba a abajo, la **cinta roja de la maña** (nombre grande y la regla), el dibujo sobre un halo de su color, el **nombre** (dorado si es jefe) y la **barra de Forja** con "654 / 750". El jefe va un 12 % más grande y con **rayos dorados que giran** (`Config.Feel.GiroRayos`). Cuando se rompe, los pedazos son del color del monstruo.
+- **Columna izquierda** (`client/Pantallas.luau`): 3 **píldoras** del kit (vida con el corazón, oro con la moneda de Forja y "PELEA 3/9" / "JEFE 9/9" / "PRÁCTICA" con la corona) que **saltan cuando cambian**, la zona debajo, el **panel** con borde celeste y centro oscuro, y las clavijas especiales como **bolitas de color** con cuántas hay y un **globito rojo con el nivel**.
+- **Panel FUERZA × MULTI** (`client/Numeros.luau`): cajas azul y roja con degradé y brillo, letra redonda con borde oscuro. Se juntan y chocan igual que antes.
+- **Salir y Ajustes:** botones del kit (rojo con la puerta, gris con el engranaje).
+- **Arreglo del kit:** las esquinas de las piezas salían dobles con el lienzo de Plinko (×2 en 1080p). `Kit` ahora calcula el 9-slice con el tamaño propio del objeto.
+- **Probado en Play** (`arte/comparaciones/v5/12b-*.jpg`): práctica, jefe de zona 2 con Rabia (el golpe baja la barra y el contraataque pega el doble) y jefe final con Cristal Maldito. La consola no tiene errores.
+- **Queda para los pasos que siguen:** la bandeja de abajo (12c) y la letra pixel del tutorial y de "COMBO" (12e).

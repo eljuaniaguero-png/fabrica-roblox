@@ -203,7 +203,7 @@ local sala: SalaModulo.Sala
 local function ponerEstado(e: Mazmorra.Estado)
 	estado = e
 	tirosPelea = 0
-	monstruo.mostrar(e.Piso, e.VidaMonstruo)
+	monstruo.mostrar(e.Piso, e.VidaMonstruo, if e.Fase == "peleando" then e.Mania else "")
 	pantallas.ponerEstado(e)
 	pantallas.ponerTablero(e)
 	tiendaVista.ponerPergaminos(e)

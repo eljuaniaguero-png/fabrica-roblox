@@ -629,6 +629,7 @@ Config.Feel = {
 	Destello = 0.12, -- segundos del flash blanco en el cartel
 	Pedazos = 6, -- pedazos en que se rompe el cartel al morir el monstruo
 	Acercar = 4, -- studs que el cartel se acerca a la cámara al contraatacar
+	GiroRayos = 12, -- etapa 12b: grados por segundo que giran los rayos detrás del jefe
 	BordeRojo = 0.4, -- segundos del borde rojo en la pantalla cuando te pegan
 	JefeOscuro = 1.4, -- segundos de la entrada del jefe (pantalla oscura y su nombre)
 	CartasEntrada = 0.12, -- segundos entre la entrada de una carta del cofre y la siguiente

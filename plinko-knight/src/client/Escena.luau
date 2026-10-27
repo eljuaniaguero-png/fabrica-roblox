@@ -22,8 +22,10 @@ local Ajustes = require(script.Parent:WaitForChild("Ajustes"))
 local ORIGEN = Vector3.new(0, 500, 0)
 local FOV = 20 -- bajo, para que se vea casi plano
 local MARGEN = 1.12 -- aire alrededor de lo que tiene que entrar en pantalla
-local ANCHO_MONSTRUO, ALTO_MONSTRUO = 10, 12
-local BAJADA_MONSTRUO = 2 -- el cartel va un poco más abajo del centro, para que entren barra y TOTAL
+-- Etapa 12b: el monstruo más grande (antes 10 × 12); el cartel lleva arriba la cinta de
+-- la maña y abajo el nombre y la barra (Monstruo.luau), con la proporción de su lienzo (600 × 800).
+local ANCHO_MONSTRUO, ALTO_MONSTRUO = 21, 28
+local BAJADA_MONSTRUO = 0.5
 local SEPARACION_COLUMNAS = 3
 
 export type Escena = {

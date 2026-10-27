@@ -97,11 +97,14 @@ local function imagen(p: Config.PiezaGui, obj: GuiObject): ImageLabel
 	if corte then
 		img.ScaleType = Enum.ScaleType.Slice
 		img.SliceCenter = Rect.new(corte[1], corte[2], corte[3], corte[4])
+		-- Etapa 12b: SliceScale va en unidades del objeto, antes de los UIScale de arriba (el lienzo
+		-- de Plinko escala ×2 en 1080p). Forja multiplicaba por esa escala y las esquinas salían
+		-- dobles; acá se usa el tamaño propio del objeto.
 		local function ajustar()
 			if p.Escala then
-				img.SliceScale = p.Escala * escalaDe(obj)
+				img.SliceScale = p.Escala
 			else
-				local alto = obj.AbsoluteSize.Y
+				local alto = obj.AbsoluteSize.Y / math.max(escalaDe(obj), 0.01)
 				if alto > 0 then
 					img.SliceScale = math.clamp(alto / p.Alto, 0.05, 2)
 				end
@@ -414,6 +417,23 @@ function Kit.baldosa(colores: { string }, tam: number): Frame
 	f.Size = UDim2.fromOffset(tam, tam)
 	Kit.superficie(f, { "Baldosa" }, colores, math.floor(tam * 0.14), 4)
 	return f
+end
+
+-- Etapa 12a: panel de Forja (borde celeste con brillo) con el centro oscuro "Noche", el clima de
+-- la mazmorra (el Panel entero es celeste y queda pesado). Lo de adentro va encima (ZIndex 2).
+function Kit.panel(obj: GuiObject, borde: number?)
+	Kit.superficie(obj, { "Panel" }, Kit.Colores.Noche, 18, 5, true)
+	local b = borde or 9
+	local centro = Instance.new("Frame")
+	centro.Name = "Centro"
+	centro.Position = UDim2.fromOffset(b, b)
+	centro.Size = UDim2.new(1, -2 * b, 1, -2 * b)
+	centro.BackgroundColor3 = Color3.new(1, 1, 1)
+	centro.BorderSizePixel = 0
+	centro.ZIndex = 0
+	Kit.esquinas(centro, 12)
+	degradado(centro, hex(Kit.Colores.Noche))
+	centro.Parent = obj
 end
 
 -- Globito rojo de aviso ("!" o un número) para la esquina de un botón.

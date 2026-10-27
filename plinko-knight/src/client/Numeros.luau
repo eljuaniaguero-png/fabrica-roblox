@@ -178,80 +178,60 @@ function Numeros.crearPanel(contenedor: Frame): Panel
 	local Estilo = require(script.Parent:WaitForChild("Estilo"))
 	local cartel = contenedor
 
-	local function caja(titulo: string, hex: string, x: number, icono: string): (TextLabel, UIScale)
+	-- Etapa 12b: cajas del kit de Forja (baldosa azul y roja con brillo), letra redonda con borde
+	-- oscuro y el golpe en dorado abajo.
+	local Kit = require(script.Parent:WaitForChild("Kit"))
+	local function letra(t: TextLabel, tam: number)
+		t.TextScaled = false
+		t.TextSize = tam
+		t.Font = Kit.Fuente
+		t.TextColor3 = Color3.new(1, 1, 1)
+		t.TextStrokeTransparency = 1
+		local borde = Instance.new("UIStroke")
+		borde.Thickness = math.max(2, tam / 9)
+		borde.Color = Kit.Oscuro
+		borde.LineJoinMode = Enum.LineJoinMode.Round
+		borde.Parent = t
+	end
+
+	local function caja(titulo: string, colores: { string }, x: number): (TextLabel, UIScale)
 		local fondo = Instance.new("Frame")
 		fondo.Name = titulo
-		fondo.Position = UDim2.new(x, 0, 0, 30)
-		fondo.Size = UDim2.new(0.4, 0, 0, 86)
-		fondo.BackgroundColor3 = Color3.fromHex(hex)
-		fondo.BorderSizePixel = 0
+		fondo.Position = UDim2.new(x, 0, 0, 16)
+		fondo.Size = UDim2.new(0.4, 0, 0, 96)
+		fondo.ZIndex = 2
+		Kit.superficie(fondo, { "Baldosa" }, colores, 14, 4)
 		fondo.Parent = cartel
-		local esquina = Instance.new("UICorner")
-		esquina.CornerRadius = UDim.new(0, 6)
-		esquina.Parent = fondo
-		local borde = Instance.new("UIStroke")
-		borde.Thickness = 3
-		borde.Color = Color3.fromHex("#0E0F18")
-		borde.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
-		borde.Parent = fondo
-		-- Sombra dura abajo (pixel).
-		local sombra = Instance.new("Frame")
-		sombra.BackgroundColor3 = Color3.fromHex("#0E0F18")
-		sombra.BorderSizePixel = 0
-		sombra.Position = UDim2.new(0, 3, 1, -2)
-		sombra.Size = UDim2.new(1, -6, 0, 7)
-		sombra.ZIndex = 0
-		sombra.Parent = fondo
 		local escala = Instance.new("UIScale")
 		escala.Parent = fondo
-		local dibujo = Estilo.iconoHud(cartel, icono)
-		dibujo.AnchorPoint = Vector2.new(0.5, 0.5)
-		dibujo.Position = UDim2.new(x + 0.2, 0, 0, 16)
-		dibujo.Size = UDim2.fromOffset(26, 26)
-		local t = etiqueta(cartel, titulo)
-		t.TextScaled = false
-		t.TextSize = 16
-		t.Font = Enum.Font.Arcade
-		t.TextColor3 = Color3.fromHex(hex)
-		t.TextXAlignment = if x < 0.5 then Enum.TextXAlignment.Right else Enum.TextXAlignment.Left
-		t.Position = UDim2.new(if x < 0.5 then x - 0.06 else x + 0.32, 0, 0, 6)
-		t.Size = UDim2.new(0.18, 0, 0, 20)
-		t.Visible = false -- con el ícono alcanza; el nombre va dentro de la caja
 		local nombre = etiqueta(fondo, titulo)
-		nombre.TextScaled = false
-		nombre.TextSize = 16
-		nombre.Font = Enum.Font.Arcade
-		nombre.TextColor3 = Color3.new(1, 1, 1)
-		nombre.Position = UDim2.fromScale(0.08, 0.06)
-		nombre.Size = UDim2.fromScale(0.84, 0.24)
+		letra(nombre, 15)
+		nombre.Position = UDim2.fromScale(0.08, 0.08)
+		nombre.Size = UDim2.fromScale(0.84, 0.22)
+		nombre.ZIndex = 3
 		local valor = etiqueta(fondo, "0")
-		valor.TextScaled = false
-		valor.TextSize = 40
-		valor.Font = Enum.Font.Arcade
-		valor.TextColor3 = Color3.new(1, 1, 1)
+		letra(valor, 38)
 		valor.Position = UDim2.fromScale(0.06, 0.34)
-		valor.Size = UDim2.fromScale(0.88, 0.58)
+		valor.Size = UDim2.fromScale(0.88, 0.56)
+		valor.ZIndex = 3
 		-- Etapa 11: un Multi con decimales ("20,25") no entraba y se cortaba: se achica.
-		Estilo.ajustar(valor, 40, 18)
+		Estilo.ajustar(valor, 38, 18)
 		return valor, escala
 	end
 
-	local fuerza, escalaFuerza = caja("FUERZA", Config.Colores.Fuerza, 0.05, "Espada")
-	local multi, escalaMulti = caja("MULTI", Config.Colores.Multi, 0.55, "Llama")
+	local fuerza, escalaFuerza = caja("FUERZA", Kit.Colores.Azul, 0.06)
+	local multi, escalaMulti = caja("MULTI", Kit.Colores.Rojo, 0.54)
 	local por = etiqueta(cartel, "×")
-	por.TextScaled = false
-	por.TextSize = 34
-	por.Font = Enum.Font.Arcade
-	por.TextColor3 = Color3.new(1, 1, 1)
+	letra(por, 30)
 	por.AnchorPoint = Vector2.new(0.5, 0)
-	por.Position = UDim2.new(0.5, 0, 0, 52)
-	por.Size = UDim2.new(0.1, 0, 0, 40)
+	por.Position = UDim2.new(0.5, 0, 0, 46)
+	por.Size = UDim2.new(0.1, 0, 0, 36)
+	por.ZIndex = 3
 	local golpe = etiqueta(cartel, "")
-	golpe.TextScaled = false
-	golpe.TextSize = 40
-	golpe.Font = Enum.Font.Arcade
-	golpe.Position = UDim2.new(0.04, 0, 0, 126)
-	golpe.Size = UDim2.new(0.92, 0, 0, 42)
+	letra(golpe, 40)
+	golpe.Position = UDim2.new(0.04, 0, 0, 120)
+	golpe.Size = UDim2.new(0.92, 0, 0, 44)
+	golpe.ZIndex = 3
 	Estilo.ajustar(golpe, 40, 18) -- etapa 11: "= 80,4 mil" se cortaba en "= 80,"
 	local escalaGolpe = Instance.new("UIScale")
 	escalaGolpe.Parent = golpe
@@ -296,7 +276,6 @@ function Numeros.crearPanel(contenedor: Frame): Panel
 			local medio = UDim2.new(0.3, 0, posF.Y.Scale, posF.Y.Offset)
 			local ida = TweenInfo.new(0.14, Enum.EasingStyle.Quad, Enum.EasingDirection.In)
 			por.TextTransparency = 1
-			por.TextStrokeTransparency = 1
 			TweenService:Create(cajaF, ida, { Position = medio }):Play()
 			TweenService:Create(cajaM, ida, { Position = medio }):Play()
 			task.delay(0.14, function()
@@ -311,7 +290,6 @@ function Numeros.crearPanel(contenedor: Frame): Panel
 				TweenService:Create(escalaMulti, vuelta, { Scale = 1 }):Play()
 				task.delay(0.2, function()
 					por.TextTransparency = 0
-					por.TextStrokeTransparency = 0
 				end)
 			end)
 		end,
