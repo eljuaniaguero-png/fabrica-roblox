@@ -45,7 +45,9 @@ function Efectos.chispas(pos: Vector3, color: Color3)
 		c.Parent = carpeta
 		local angulo = (i / cantidad) * math.pi * 2 + math.random() * 0.8
 		local destino = c.Position
-			+ Vector3.new(math.cos(angulo), math.sin(angulo), 0) * F.ChispasDistancia * (0.6 + math.random() * 0.6)
+			+ Vector3.new(math.cos(angulo), math.sin(angulo), 0)
+				* F.ChispasDistancia
+				* (0.6 + math.random() * 0.6)
 		local t = TweenService:Create(
 			c,
 			TweenInfo.new(F.ChispasDuracion, Enum.EasingStyle.Quad, Enum.EasingDirection.Out),
@@ -127,12 +129,16 @@ function Efectos.entradaJefe(nombre: string)
 	nombreJefe.TextTransparency = 0
 	nombreJefe.TextStrokeTransparency = 0
 	escalaJefe.Scale = 1.6
-	TweenService:Create(escalaJefe, TweenInfo.new(0.35, Enum.EasingStyle.Back, Enum.EasingDirection.Out), { Scale = 1 })
-		:Play()
+	TweenService:Create(
+		escalaJefe,
+		TweenInfo.new(0.35, Enum.EasingStyle.Back, Enum.EasingDirection.Out),
+		{ Scale = 1 }
+	):Play()
 	task.delay(F.JefeOscuro, function()
 		local info = TweenInfo.new(0.3)
 		TweenService:Create(oscuro, info, { BackgroundTransparency = 1 }):Play()
-		TweenService:Create(nombreJefe, info, { TextTransparency = 1, TextStrokeTransparency = 1 }):Play()
+		TweenService:Create(nombreJefe, info, { TextTransparency = 1, TextStrokeTransparency = 1 })
+			:Play()
 	end)
 end
 
@@ -157,7 +163,11 @@ function Efectos.onda(pos: Vector3, color: Color3, grande: boolean?)
 	o.Parent = carpeta
 	local t = TweenService:Create(
 		o,
-		TweenInfo.new(F.Onda * (if grande then 1.6 else 1), Enum.EasingStyle.Quart, Enum.EasingDirection.Out),
+		TweenInfo.new(
+			F.Onda * (if grande then 1.6 else 1),
+			Enum.EasingStyle.Quart,
+			Enum.EasingDirection.Out
+		),
 		{ Size = Vector3.new(0.05, tam, tam), Transparency = 1 }
 	)
 	t:Play()
@@ -252,15 +262,23 @@ function Efectos.grito(texto: string, color: Color3)
 	grito.TextStrokeTransparency = 0
 	grito.Rotation = math.random(-12, 12)
 	escalaGrito.Scale = 2.4
-	TweenService
-		:Create(escalaGrito, TweenInfo.new(0.35, Enum.EasingStyle.Back, Enum.EasingDirection.Out), { Scale = 1 })
-		:Play()
+	TweenService:Create(
+		escalaGrito,
+		TweenInfo.new(0.35, Enum.EasingStyle.Back, Enum.EasingDirection.Out),
+		{ Scale = 1 }
+	):Play()
 	TweenService:Create(grito, TweenInfo.new(0.35, Enum.EasingStyle.Back), { Rotation = 0 }):Play()
 	task.delay(0.8, function()
 		if gritos ~= marca then
 			return
 		end
-		TweenService:Create(grito, TweenInfo.new(0.25), { TextTransparency = 1, TextStrokeTransparency = 1 }):Play()
+		TweenService
+			:Create(
+				grito,
+				TweenInfo.new(0.25),
+				{ TextTransparency = 1, TextStrokeTransparency = 1 }
+			)
+			:Play()
 		TweenService:Create(escalaGrito, TweenInfo.new(0.25), { Scale = 0.6 }):Play()
 	end)
 end
@@ -270,8 +288,8 @@ end
 local combo = Estilo.texto(lienzo, "", Estilo.Texto.Titulo)
 combo.Name = "Combo"
 combo.AnchorPoint = Vector2.new(0.5, 0.5)
-combo.Position = UDim2.fromScale(0.31, 0.7)
-combo.Size = UDim2.fromScale(0.22, 0.07)
+combo.Position = UDim2.fromScale(0.5, 0.035)
+combo.Size = UDim2.fromScale(0.26, 0.055)
 combo.TextScaled = true
 combo.TextTransparency = 1
 combo.TextStrokeTransparency = 1

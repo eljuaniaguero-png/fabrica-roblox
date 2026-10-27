@@ -131,8 +131,16 @@ function Escena.armar(): Escena
 		end
 	end
 	local pulsos: { BasePart } = {} -- neón que late (Escena lo anima)
+	local remolino: UIGradient? = nil -- etapa 10b: fondo que gira (variante pixel)
 	for _, x in { izq - 0.5, der + 0.5 } do
-		parte("Pared", modelo, Vector3.new(1, alto, 1.5), CFrame.new(aMundo(x, centroY, 0)), v.Marco, materialMarco)
+		parte(
+			"Pared",
+			modelo,
+			Vector3.new(1, alto, 1.5),
+			CFrame.new(aMundo(x, centroY, 0)),
+			v.Marco,
+			materialMarco
+		)
 	end
 	parte(
 		"Techo",
@@ -380,7 +388,13 @@ function Escena.armar(): Escena
 
 	local puntos: { BasePart } = {}
 	for i = 1, Config.Punteria.PuntosLinea do
-		local p = parte("Punto", modelo, Vector3.new(0.4, 0.4, 0.4), CFrame.new(ORIGEN), Config.Colores.Bola)
+		local p = parte(
+			"Punto",
+			modelo,
+			Vector3.new(0.4, 0.4, 0.4),
+			CFrame.new(ORIGEN),
+			Config.Colores.Bola
+		)
 		p.Shape = Enum.PartType.Ball
 		p.Material = Enum.Material.Neon
 		p.Transparency = 1
@@ -391,7 +405,7 @@ function Escena.armar(): Escena
 	-- ve, con tubos de neón a los costados del tablero y franjas de peligro abajo (CloverPit).
 	do
 		local ancho = (xMonstruo + ANCHO_MONSTRUO) * 4.2
-		parte(
+		local paredFondo = parte(
 			"Pared",
 			modelo,
 			Vector3.new(ancho, ancho * 9 / 16, 0.2),
@@ -399,6 +413,39 @@ function Escena.armar(): Escena
 			v.Pared,
 			(Enum.Material :: any)[v.MaterialPared] or Enum.Material.CorrodedMetal
 		)
+		-- Etapa 10b: remolino lento violeta y cian (degradé que gira) con rayitas, para que se vea
+		-- pixelado. Lo anima el Heartbeat de abajo.
+		if v.Remolino then
+			local gui = Instance.new("SurfaceGui")
+			gui.Face = Enum.NormalId.Back
+			gui.LightInfluence = 0
+			gui.SizingMode = Enum.SurfaceGuiSizingMode.PixelsPerStud
+			gui.PixelsPerStud = 4
+			gui.Parent = paredFondo
+			local fondo = Instance.new("Frame")
+			fondo.Size = UDim2.fromScale(1, 1)
+			fondo.BackgroundColor3 = Color3.new(1, 1, 1)
+			fondo.BorderSizePixel = 0
+			fondo.Parent = gui
+			remolino = Instance.new("UIGradient")
+			remolino.Color = ColorSequence.new({
+				ColorSequenceKeypoint.new(0, Color3.fromHex("#1A0F2E")),
+				ColorSequenceKeypoint.new(0.3, Color3.fromHex("#4A1E6E")),
+				ColorSequenceKeypoint.new(0.5, Color3.fromHex("#14324A")),
+				ColorSequenceKeypoint.new(0.7, Color3.fromHex("#4A1E6E")),
+				ColorSequenceKeypoint.new(1, Color3.fromHex("#1A0F2E")),
+			})
+			remolino.Parent = fondo
+			for k = 0, 120 do
+				local raya = Instance.new("Frame")
+				raya.Position = UDim2.fromScale(0, k / 120)
+				raya.Size = UDim2.new(1, 0, 0, 2)
+				raya.BackgroundColor3 = Color3.new(0, 0, 0)
+				raya.BackgroundTransparency = 0.55
+				raya.BorderSizePixel = 0
+				raya.Parent = fondo
+			end
+		end
 		for i, x in { izq - 1.6, der + 1.6 } do
 			local tubo = parte(
 				"TuboNeon",
@@ -521,7 +568,8 @@ function Escena.armar(): Escena
 			end
 		end
 		local fraccion = math.max((abajoLibre - arribaLibre) / math.max(vista.Y, 1), 0.3)
-		local distancia = math.max(mitadAlto / (tangente * fraccion), mitadAncho / (tangente * aspecto))
+		local distancia =
+			math.max(mitadAlto / (tangente * fraccion), mitadAncho / (tangente * aspecto))
 		-- Correr la cámara para que el centro de las 3 columnas caiga en el centro de la franja libre.
 		local corridoPx = (arribaLibre + abajoLibre) / 2 - vista.Y / 2
 		local subir = corridoPx * 2 * distancia * tangente / math.max(vista.Y, 1)
@@ -560,6 +608,17 @@ function Escena.armar(): Escena
 		for p, base in brilloPulsos do
 			p.Transparency = base + latido * 0.35
 		end
+		-- Etapa 10b: el aro de las clavijas especiales late (si no la tocaron en este tiro).
+		for _, h in halos do
+			if h:GetAttribute("Especial") and not h:GetAttribute("Tocada") then
+				h.Transparency = 0.45 + latido * 0.35
+			end
+		end
+		local r = remolino
+		if r then
+			r.Rotation = (t * 6) % 360
+			r.Offset = Vector2.new(math.sin(t * 0.3) * 0.25, math.cos(t * 0.23) * 0.25)
+		end
 		local cabeza = (t * 8) % #leds
 		for k, l in leds do
 			local d = (cabeza - (k - 1)) % #leds
@@ -597,7 +656,9 @@ function Escena.armar(): Escena
 		BarraMonstruo = barraMonstruo,
 		Caballero = caballero,
 		golpearCaballero = function(golpeado: boolean)
-			imagenCaballero.ImageColor3 = if golpeado then Color3.fromHex(Config.Colores.Golpe) else Color3.new(1, 1, 1)
+			imagenCaballero.ImageColor3 = if golpeado
+				then Color3.fromHex(Config.Colores.Golpe)
+				else Color3.new(1, 1, 1)
 		end,
 		sacudir = sacudir,
 		ponerZonaLibre = function(zona: () -> (number, number))

@@ -97,7 +97,11 @@ function Seleccion.crear(escena: any): Seleccion
 	end)
 
 	return {
-		elegir = function(cantidad: number, valorTexto: string, valida: (id: number) -> boolean): { number }?
+		elegir = function(
+			cantidad: number,
+			valorTexto: string,
+			valida: (id: number) -> boolean
+		): { number }?
 			activa, cancelada = true, false
 			elegidas, hacenFalta, validaActual = {}, cantidad, valida
 			texto.Text = valorTexto

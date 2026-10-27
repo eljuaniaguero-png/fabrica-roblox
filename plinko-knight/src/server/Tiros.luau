@@ -44,7 +44,12 @@ local function pedirTiro(jugador: Player): (number?, number?)
 	return p.NumeroTiro, p.Semilla
 end
 
-local function tirar(jugador: Player, numeroTiro: any, angulo: any, danioVisto: any): Mazmorra.Turno?
+local function tirar(
+	jugador: Player,
+	numeroTiro: any,
+	angulo: any,
+	danioVisto: any
+): Mazmorra.Turno?
 	local p = Partida.de(jugador)
 	if not p or p.Estado.Fase ~= "peleando" then
 		return nil

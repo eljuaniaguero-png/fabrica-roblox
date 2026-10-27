@@ -22,19 +22,20 @@ local variante = Config.variantePantalla()
 Estilo.Colores = table.clone(variante.Hud)
 Estilo.Colores.BordePanel = variante.BordePanel
 
+-- Etapa 10b (variante "D · Pixel"): marcos e íconos pixel de ForgeGUI (Config.Assets.Hud).
+Estilo.Pixel = variante.Pixel == true
+Estilo.Hud = Config.Assets.Hud
+
 Estilo.Fuentes = {
 	Titulo = (Enum.Font :: any)[variante.Fuente] or Enum.Font.Oswald, -- mayúsculas angostas, como CloverPit
 	Texto = (Enum.Font :: any)[variante.FuenteTexto] or Enum.Font.GothamBold,
 }
 
--- Tamaños de texto en unidades del lienzo (nada más chico que Chico).
-Estilo.Texto = {
-	Chico = 22,
-	Normal = 26,
-	Grande = 34,
-	Enorme = 52,
-	Titulo = 72,
-}
+-- Tamaños de texto en unidades del lienzo (nada más chico que Chico). La letra pixel es más ancha:
+-- con ella todo va un poco más chico.
+Estilo.Texto = if Estilo.Pixel
+	then { Chico = 18, Normal = 22, Grande = 28, Enorme = 44, Titulo = 60 }
+	else { Chico = 22, Normal = 26, Grande = 34, Enorme = 52, Titulo = 72 }
 
 Estilo.Medidas = {
 	Boton = 64, -- alto mínimo de cualquier botón (≈ 45 px en celular)
@@ -105,7 +106,12 @@ end
 
 -- Texto sin fondo. tamanio: uno de Estilo.Texto (por defecto Normal). Con contorno oscuro, así se
 -- lee sobre el tablero.
-function Estilo.texto(padre: Instance, valor: string, tamanio: number?, fuente: Enum.Font?): TextLabel
+function Estilo.texto(
+	padre: Instance,
+	valor: string,
+	tamanio: number?,
+	fuente: Enum.Font?
+): TextLabel
 	local t = Instance.new("TextLabel")
 	t.BackgroundTransparency = 1
 	t.Font = fuente or Estilo.Fuentes.Titulo
@@ -113,9 +119,54 @@ function Estilo.texto(padre: Instance, valor: string, tamanio: number?, fuente: 
 	t.TextWrapped = true
 	t.TextColor3 = Estilo.color("Texto")
 	t.TextStrokeTransparency = 0.4
+	if Estilo.Pixel then
+		-- Contorno duro y oscuro, como en los juegos pixel.
+		t.TextStrokeColor3 = Estilo.color("Sombra")
+		t.TextStrokeTransparency = 0
+	end
 	t.Text = valor
 	t.Parent = padre
 	return t
+end
+
+-- Marco pixel de ForgeGUI encima de un objeto (9-slice, el centro es hueco: el texto y el fondo
+-- del objeto se ven a través). cual: "Panel" o "Casillero". Sin variante pixel, no hace nada.
+function Estilo.marco(objeto: GuiObject, cual: string?, grosor: number?): ImageLabel?
+	if not Estilo.Pixel then
+		return nil
+	end
+	local id = (Estilo.Hud :: any)[cual or "Panel"]
+	if typeof(id) ~= "string" or id == "" then
+		return nil
+	end
+	local corte = Estilo.Hud.CortePanel
+	local m = Instance.new("ImageLabel")
+	m.Name = "Marco"
+	m.BackgroundTransparency = 1
+	m.Image = id
+	m.ScaleType = Enum.ScaleType.Slice
+	m.SliceCenter = Rect.new(corte, corte, 256 - corte, 256 - corte)
+	m.SliceScale = (grosor or 10) / corte
+	m.ResampleMode = Enum.ResamplerMode.Pixelated
+	m.Size = UDim2.new(1, 4, 1, 4)
+	m.AnchorPoint = Vector2.new(0.5, 0.5)
+	m.Position = UDim2.fromScale(0.5, 0.5)
+	m.ZIndex = 0 -- debajo de los hijos del objeto (texto, íconos)
+	m.Active = false
+	m.Parent = objeto
+	return m
+end
+
+-- Ícono pixel del HUD (Config.Assets.Hud: Corazon, Moneda, Engranaje, Puerta, Espada, Llama).
+function Estilo.iconoHud(padre: Instance, nombre: string): ImageLabel
+	local i = Instance.new("ImageLabel")
+	i.Name = "Icono" .. nombre
+	i.BackgroundTransparency = 1
+	i.ScaleType = Enum.ScaleType.Fit
+	i.ResampleMode = Enum.ResamplerMode.Pixelated
+	i.Image = (Estilo.Hud :: any)[nombre] or ""
+	i.Parent = padre
+	return i
 end
 
 -- Texto que se achica de a 1 solo si no entra (nombres largos), nunca por debajo de `minimo`.
@@ -152,6 +203,25 @@ function Estilo.boton(padre: Instance, valor: string, color: string?, tamanio: n
 		b.TextStrokeTransparency = 1
 	end
 	b.Size = UDim2.fromOffset(200, Estilo.Medidas.Boton)
+	if Estilo.Pixel then
+		-- Botón pixel: contorno oscuro y un labio de sombra abajo (se ve "apretable").
+		b.TextStrokeColor3 = Estilo.color("Sombra")
+		b.TextStrokeTransparency = if color == "Principal" then 1 else 0
+		local contorno = Instance.new("UIStroke")
+		contorno.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+		contorno.Color = Estilo.color("Sombra")
+		contorno.Thickness = 2
+		contorno.Parent = b
+		local labio = Instance.new("Frame")
+		labio.Name = "Labio"
+		labio.BackgroundColor3 = Estilo.color("Sombra")
+		labio.BorderSizePixel = 0
+		labio.Position = UDim2.new(0, 2, 1, -2)
+		labio.Size = UDim2.new(1, -4, 0, 6)
+		labio.ZIndex = 0
+		labio.Parent = b
+		redondear(labio)
+	end
 	-- SONIDO: click de botón (Config.Sonidos.Boton). Se pide recién al tocar: Sonidos usa Estilo.
 	b.Activated:Connect(function()
 		local ok, sonidos = pcall(require, script.Parent:FindFirstChild("Sonidos") :: any)
@@ -187,6 +257,7 @@ function Estilo.panel(padre: Instance, color: string?): Frame
 	f.BorderSizePixel = 0
 	f.Parent = padre
 	redondear(f)
+	Estilo.marco(f, "Panel")
 	-- Borde fino de neón (variantes B y C): lo futurista sobre las cajas negras de CloverPit.
 	if Estilo.Colores.BordePanel ~= "" then
 		local b = Instance.new("UIStroke")
@@ -229,10 +300,14 @@ end
 -- Fila o columna automática.
 function Estilo.lista(padre: Instance, horizontal: boolean, separacion: number?): UIListLayout
 	local l = Instance.new("UIListLayout")
-	l.FillDirection = if horizontal then Enum.FillDirection.Horizontal else Enum.FillDirection.Vertical
+	l.FillDirection = if horizontal
+		then Enum.FillDirection.Horizontal
+		else Enum.FillDirection.Vertical
 	l.Padding = UDim.new(0, separacion or Estilo.Medidas.Margen)
 	l.SortOrder = Enum.SortOrder.LayoutOrder
-	l.VerticalAlignment = if horizontal then Enum.VerticalAlignment.Center else Enum.VerticalAlignment.Top
+	l.VerticalAlignment = if horizontal
+		then Enum.VerticalAlignment.Center
+		else Enum.VerticalAlignment.Top
 	l.Parent = padre
 	return l
 end

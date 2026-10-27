@@ -490,6 +490,19 @@ Config.Mundo = {
 
 -- Imágenes (etapa 9, ForgeGUI, estilo "Plinko Knight - Cripta azul"), subidas a la cuenta de Juani.
 Config.Assets = {
+	-- Etapa 10b: HUD pixel de ForgeGUI (estilo "Plinko Knight - Pixel mazmorra"), limpiado con
+	-- modelos/scripts/limpiar_hud.py (íconos sin fondo, marcos con el centro hueco, 256 px).
+	Hud = {
+		Panel = "rbxassetid://138945775857831",
+		Casillero = "rbxassetid://100244443496769",
+		Corazon = "rbxassetid://129853496528485",
+		Moneda = "rbxassetid://97289009429732",
+		Engranaje = "rbxassetid://91125595300717",
+		Puerta = "rbxassetid://89100178839447",
+		Espada = "rbxassetid://88779764970340",
+		Llama = "rbxassetid://94788486250427",
+		CortePanel = 30, -- px del borde de los marcos (9-slice, en la imagen de 256)
+	},
 	Fondo = "rbxassetid://87670022073361",
 	Monstruos = {
 		rata = "rbxassetid://80675382037335",
@@ -597,7 +610,7 @@ Config.Feel = {
 -- elija; manda Variante (en Studio se puede probar otra con el atributo "EstiloPantalla" de
 -- Workspace). Cada una tiene la paleta del HUD (client/Estilo) y la del mundo (client/Escena).
 Config.Pantalla = {
-	Variante = "B",
+	Variante = "D",
 	Variantes = {
 		-- A · CloverPit puro: metal gastado oliva, LED naranja, contorno amarillo, sin neón.
 		A = {
@@ -664,6 +677,45 @@ Config.Pantalla = {
 			Neon2 = "#3FE8FF",
 			Ambiente = "#1C1828",
 			Franjas = true,
+		},
+		-- D · Pixel (27/10, etapa 10b): pixel art tipo Balatro, marcos de ForgeGUI (Config.Assets.Hud),
+		-- letra pixel, azul = Fuerza, rojo = Multi, dorado = oro, menta = vida.
+		D = {
+			Hud = {
+				Velo = "#0E0F18",
+				Panel = "#1A1C2C",
+				PanelClaro = "#3B3F58",
+				Carta = "#262A40",
+				Boton = "#3B3F58",
+				Principal = "#F5C542",
+				TextoPrincipal = "#1A1C2C",
+				Peligro = "#E2323F",
+				Oro = "#F5C542",
+				Texto = "#F4F1E8",
+				Apagado = "#8A8FA8",
+				Borde = "#5D637E",
+				Vida = "#4CC46A",
+				Si = "#4CC46A",
+				No = "#3B3F58",
+				Fuerza = "#3C8CFF",
+				Multi = "#E2323F",
+				Sombra = "#0E0F18",
+			},
+			BordePanel = "",
+			Pixel = true, -- paneles y casilleros con los marcos de Config.Assets.Hud
+			Fuente = "Arcade",
+			FuenteTexto = "Arcade",
+			Esquina = 6,
+			Pared = "#14121F",
+			MaterialPared = "SmoothPlastic",
+			Marco = "#3B3F58",
+			MaterialMarco = "Slate",
+			Tablero = "#10111C",
+			Neon1 = "#FF3FD0",
+			Neon2 = "#3FE8FF",
+			Ambiente = "#1C1828",
+			Franjas = false,
+			Remolino = true, -- remolino lento violeta y cian en la pared de atrás del tablero
 		},
 		-- C · Futurista: paneles negros brillantes, neón por todos lados, naranja solo en números.
 		C = {

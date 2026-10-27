@@ -60,7 +60,6 @@ local remotos = {
 }
 
 local escena = Escena.armar()
-local panel = Numeros.crearPanel(escena.AnclaTotal)
 local tablero = escena.Tablero
 local colorBrillo = Color3.fromHex(Config.Colores.Brillo)
 local colorBola = Color3.fromHex(Config.Colores.Bola)
@@ -69,6 +68,7 @@ local colorQuemadura = Color3.fromHex(Config.Colores.Quemadura)
 local colorNumero = Color3.fromHex(Config.Colores.Numero)
 local monstruo = MonstruoVista.crear(escena.Cartel, escena.BarraMonstruo)
 local pantallas = PantallasModulo.crear()
+local panel = Numeros.crearPanel(pantallas.formula)
 local seleccion = SeleccionModulo.crear(escena)
 escena.ponerZonaLibre(pantallas.zonaLibre)
 
@@ -122,7 +122,12 @@ local function materialDe(_id: number): Enum.Material
 end
 local function pintarClavijas()
 	for id, h in escena.Halos do
+		-- Etapa 10b: el aro de las especiales late (lo anima Escena); las tocadas se apagan.
+		local tipo = Clavijas.tipo(estado.Tablero, id)
 		h.Color = colorDe(id)
+		h.Transparency = 0.95
+		h:SetAttribute("Especial", tipo ~= "gris" and tipo ~= "hueco")
+		h:SetAttribute("Tocada", false)
 	end
 	for id, p in escena.Clavijas do
 		p.Color = colorDe(id)
@@ -169,14 +174,21 @@ local function brillar(id: number)
 	-- 27/10: el aro de atrás se prende y la clavija vuelve a su color de a poco.
 	local halo = escena.Halos[id]
 	if halo then
+		-- Se prende y queda como un aro oscuro hasta que termina el tiro (como en Peglin).
+		halo:SetAttribute("Tocada", true)
 		halo.Color = colorDe(id)
 		halo.Transparency = 0.15
-		TweenService:Create(halo, TweenInfo.new(Config.Feel.BrilloApagar * 1.5), { Transparency = 0.95 }):Play()
+		TweenService:Create(
+			halo,
+			TweenInfo.new(Config.Feel.BrilloApagar * 1.5),
+			{ Transparency = 0.3, Color = Color3.fromHex("#0E0F18") }
+		):Play()
 	end
 	task.delay(Config.Simulacion.BrilloClavija, function()
 		if brillos[id] == marca then
 			p.Material = materialDe(id)
-			TweenService:Create(p, TweenInfo.new(Config.Feel.BrilloApagar), { Color = colorDe(id) }):Play()
+			TweenService:Create(p, TweenInfo.new(Config.Feel.BrilloApagar), { Color = colorDe(id) })
+				:Play()
 		end
 	end)
 end
@@ -202,7 +214,9 @@ local function ponerEstado(e: Mazmorra.Estado)
 		tiendaVista.ocultar()
 	end
 	-- SONIDO: música de pelea o de jefe.
-	Sonidos.musica(if e.Fase == "peleando" and Mazmorra.monstruo(e.Piso).EsJefe then "jefe" else "pelea")
+	Sonidos.musica(
+		if e.Fase == "peleando" and Mazmorra.monstruo(e.Piso).EsJefe then "jefe" else "pelea"
+	)
 	if e.Fase == "peleando" then
 		pantallas.ocultarFinal()
 		pantallas.ocultarInicio()
@@ -240,10 +254,13 @@ local function elegirClavijas(clase: string, id: string): ({ number }?, boolean)
 	local texto = if cantidad == 1
 		then ("%s: tocá 1 clavija"):format(nombre)
 		else ("%s: tocá %d clavijas"):format(nombre, cantidad)
+	-- Etapa 10b: la tienda es una pantalla aparte; se corre mientras tocás las clavijas.
+	tiendaVista.apartar(true)
 	local ids = seleccion.elegir(cantidad, texto, function(clavija: number): boolean
 		local actual = Clavijas.tipo(estado.Tablero, clavija)
 		return actual ~= "hueco" and actual ~= noEste
 	end)
+	tiendaVista.apartar(false)
 	return ids, ids ~= nil
 end
 
@@ -327,7 +344,12 @@ local function volverABajar(bola: string)
 			desbloqueosPartida = {}
 		end
 		ponerEstado(e)
-		print(("[Mazmorra] Bajás con la bola %s: jugando en %d ms"):format(bola, (os.clock() - inicio) * 1000))
+		print(
+			("[Mazmorra] Bajás con la bola %s: jugando en %d ms"):format(
+				bola,
+				(os.clock() - inicio) * 1000
+			)
+		)
 		if estado.Fase ~= "peleando" then
 			abrirInicio() -- no se aceptó: elegir de nuevo
 		end
@@ -422,7 +444,10 @@ local function volarTotal()
 	luz.CanTouch = false
 	luz.CanQuery = false
 	luz.CastShadow = false
-	luz.Position = escena.AnclaTotal.Position
+	-- Etapa 10b: sale del "= GOLPE" de la columna izquierda (2D), llevado al plano del tablero.
+	local px = panel.centro()
+	local x, y = escena.aTablero(px)
+	luz.Position = escena.aMundo(x, y, 1)
 	luz.Parent = escena.Cartel.Parent
 	-- 27/10: con estela y luz, crece al salir y se achica al llegar (más rápido al final).
 	local a0 = Instance.new("Attachment")
@@ -447,7 +472,13 @@ local function volarTotal()
 	brillo.Range = 10
 	brillo.Parent = luz
 	luz.Size = Vector3.new(0.4, 0.4, 0.4)
-	TweenService:Create(luz, TweenInfo.new(0.12, Enum.EasingStyle.Back), { Size = Vector3.new(2.2, 2.2, 2.2) }):Play()
+	TweenService
+		:Create(
+			luz,
+			TweenInfo.new(0.12, Enum.EasingStyle.Back),
+			{ Size = Vector3.new(2.2, 2.2, 2.2) }
+		)
+		:Play()
 	local destino = monstruo.centro() + Vector3.new(0, 0, 1)
 	local inicio = luz.Position
 	local duracion = Config.Turno.VueloTotal
@@ -477,13 +508,23 @@ local function animarTurno(turno: Mazmorra.Turno)
 	local m = Mazmorra.monstruo(estado.Piso)
 	local peso = math.clamp(turno.Danio / math.max(m.Vida, 1), 0.15, 1)
 	local centro = monstruo.centro()
-	Efectos.estallido(centro, { colorNumero, Color3.new(1, 1, 1) }, math.floor(10 + 30 * peso), 0.6 + peso)
+	Efectos.estallido(
+		centro,
+		{ colorNumero, Color3.new(1, 1, 1) },
+		math.floor(10 + 30 * peso),
+		0.6 + peso
+	)
 	Efectos.onda(centro, colorNumero, true)
 	Efectos.destello(Color3.new(1, 1, 1), 0.15 + 0.3 * peso)
 	escena.zoom(Config.Feel.Zoom * (1 + peso * 2))
 	escena.sacudir(0.3 + peso * 0.8, 0.25)
 	-- Etapa 10: el número del golpe, grande, sobre el monstruo (27/10: cuenta de 0 al valor).
-	Numeros.contar(escena.Cartel, turno.Danio, Color3.new(1, 1, 1), Vector2.new(9 + 4 * peso, 4 + 2 * peso))
+	Numeros.contar(
+		escena.Cartel,
+		turno.Danio,
+		Color3.new(1, 1, 1),
+		Vector2.new(9 + 4 * peso, 4 + 2 * peso)
+	)
 	monstruo.ponerVida(turno.VidaMonstruo + turno.Quemadura, true)
 	task.wait(t.Sacudida)
 	if turno.Quemadura > 0 then
@@ -679,11 +720,13 @@ local function tirar()
 			end
 			local clavija = escena.Clavijas[toque.Clavija]
 			if clavija then
-				local color = if toque.Tipo == "gris" then nil else Color3.fromHex(Clavijas.color(toque.Tipo))
+				local color = if toque.Tipo == "gris"
+					then nil
+					else Color3.fromHex(Clavijas.color(toque.Tipo))
 				-- El "×N" de la azul sale el doble de grande.
 				local tamanio = if toque.PorMulti > 1
 					then Vector2.new(9, 3.2)
-					elseif toque.Tipo == "gris" then Vector2.new(3, 1.6)
+					elseif toque.Tipo == "gris" then Vector2.new(4.2, 2.2)
 					else Vector2.new(6, 1.6)
 				Numeros.saltar(clavija, 0, textoToque(toque), color, tamanio)
 				-- Etapa 10: la clavija se aplasta y tira chispas de su color.
@@ -701,7 +744,10 @@ local function tirar()
 				Efectos.destello(Color3.fromHex(Config.Colores.Multi), 0.2)
 				escena.zoom(Config.Feel.Zoom)
 			end
-			local pop = if toque.PorMulti > 1 then "por" elseif toque.Multi > 0 then "multi" else "fuerza"
+			local pop = if toque.PorMulti > 1
+				then "por"
+				elseif toque.Multi > 0 then "multi"
+				else "fuerza"
 			panel.poner(toque.FuerzaTotal, toque.MultiTotal, pop)
 			-- El golpe en vivo; al pasar 50, 100 o 200 crece, cambia de color y suena.
 			local nivel = panel.vivo(math.floor(toque.FuerzaTotal * toque.MultiTotal))
@@ -709,7 +755,8 @@ local function tirar()
 				Sonidos.tocar("Umbral") -- SONIDO
 				-- 27/10: grito, destello y zoom al pasar cada umbral.
 				local F = Config.Feel
-				local colorNivel = Color3.fromHex(F.UmbralColores[nivel + 1] or F.UmbralColores[#F.UmbralColores])
+				local colorNivel =
+					Color3.fromHex(F.UmbralColores[nivel + 1] or F.UmbralColores[#F.UmbralColores])
 				Efectos.grito(F.Gritos[nivel] or F.Gritos[#F.Gritos], colorNivel)
 				Efectos.destello(colorNivel, 0.25)
 				escena.zoom(F.Zoom * nivel)
@@ -723,6 +770,19 @@ local function tirar()
 				mostrarBola(bola, false)
 			end
 			Efectos.comboFin()
+			-- Las tocadas vuelven a su aro de siempre.
+			for idHalo, h in escena.Halos do
+				if h:GetAttribute("Tocada") then
+					h:SetAttribute("Tocada", false)
+					TweenService
+						:Create(
+							h,
+							TweenInfo.new(0.4),
+							{ Transparency = 0.95, Color = colorDe(idHalo) }
+						)
+						:Play()
+				end
+			end
 			-- El servidor revisa el daño, juega el turno y devuelve qué pasó.
 			local okTiro, turno = pcall(function()
 				return remotos.Tirar:InvokeServer(numeroTiro, anguloTiro, res.Danio)
@@ -797,14 +857,18 @@ end)
 UserInputService.InputChanged:Connect(function(input: InputObject)
 	local tipo = input.UserInputType
 	-- El mouse apunta siempre; el dedo, mientras está apoyado.
-	if tipo == Enum.UserInputType.MouseMovement or (tipo == Enum.UserInputType.Touch and apuntando) then
+	if
+		tipo == Enum.UserInputType.MouseMovement or (tipo == Enum.UserInputType.Touch and apuntando)
+	then
 		apuntarA(Vector2.new(input.Position.X, input.Position.Y))
 	end
 end)
 
 UserInputService.InputEnded:Connect(function(input: InputObject)
 	local tipo = input.UserInputType
-	if (tipo == Enum.UserInputType.MouseButton1 or tipo == Enum.UserInputType.Touch) and apuntando then
+	if
+		(tipo == Enum.UserInputType.MouseButton1 or tipo == Enum.UserInputType.Touch) and apuntando
+	then
 		apuntando = false
 		if pantallas.hayFinal() or os.clock() - pantallas.finalCerrado() < 0.3 then
 			return
@@ -910,7 +974,10 @@ remotos.Progreso.OnClientEvent:Connect(function(datos: any, nuevos: any)
 	if typeof(nuevos) == "table" then
 		for _, n in nuevos do
 			print(("[Progreso] Desbloqueaste %s: %s"):format(n.Tipo, n.Nombre))
-			table.insert(desbloqueosPartida, if n.Tipo == "bola" then ("bola %s"):format(n.Nombre) else n.Nombre)
+			table.insert(
+				desbloqueosPartida,
+				if n.Tipo == "bola" then ("bola %s"):format(n.Nombre) else n.Nombre
+			)
 			table.insert(avisosPendientes, n)
 		end
 		if not tirando then

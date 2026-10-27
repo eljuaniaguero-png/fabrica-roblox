@@ -29,7 +29,13 @@ end
 
 -- "+2" sobre una clavija (o el texto que se pase, por ejemplo la quemadura sobre el monstruo):
 -- sube y se desvanece. tamanio: en studs (por defecto 3 × 1,6).
-function Numeros.saltar(parte: BasePart, danio: number, texto: string?, color: Color3?, tamanio: Vector2?)
+function Numeros.saltar(
+	parte: BasePart,
+	danio: number,
+	texto: string?,
+	color: Color3?,
+	tamanio: Vector2?
+)
 	local n = Config.Numeros
 	local medida = tamanio or Vector2.new(3, 1.6)
 	local cartel = Instance.new("BillboardGui")
@@ -38,17 +44,61 @@ function Numeros.saltar(parte: BasePart, danio: number, texto: string?, color: C
 	cartel.StudsOffsetWorldSpace = Vector3.new(0, 1, 2.5)
 	cartel.LightInfluence = 0
 	cartel.Adornee = parte
-	local t = etiqueta(cartel, texto or ("+" .. danio))
-	if color then
+	local valor = texto or ("+" .. danio)
+	local t = etiqueta(cartel, valor)
+	t.Font = Enum.Font.Arcade
+	-- Etapa 10b (Balatro/Peglin): los ×Multi salen en un cartelito rojo inclinado que crece un
+	-- poco; el resto, blanco con borde azul (o del color de la clavija especial).
+	local esPor = string.find(valor, "×", 1, true) ~= nil
+		and string.find(valor, "eco", 1, true) == nil
+	if esPor then
+		local fondo = Instance.new("Frame")
+		fondo.AnchorPoint = Vector2.new(0.5, 0.5)
+		fondo.Position = UDim2.fromScale(0.5, 0.5)
+		fondo.Size = UDim2.fromScale(1, 0.8)
+		fondo.Rotation = -8
+		fondo.BackgroundColor3 = Color3.fromHex(Config.Colores.Multi)
+		fondo.BorderSizePixel = 0
+		fondo.Parent = cartel
+		local borde = Instance.new("UIStroke")
+		borde.Thickness = 3
+		borde.Color = Color3.fromHex("#0E0F18")
+		borde.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+		borde.Parent = fondo
+		t.Parent = fondo
+		t.Text = valor .. " MULTI"
+		t.TextColor3 = Color3.new(1, 1, 1)
+		t.TextStrokeColor3 = Color3.fromHex("#0E0F18")
+		local crece = Instance.new("UIScale")
+		crece.Scale = 0.8
+		crece.Parent = fondo
+		TweenService
+			:Create(crece, TweenInfo.new(0.15, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
+				Scale = 1.2,
+			})
+			:Play()
+		TweenService:Create(fondo, TweenInfo.new(n.Duracion), { BackgroundTransparency = 1 }):Play()
+		TweenService:Create(borde, TweenInfo.new(n.Duracion), { Transparency = 1 }):Play()
+	elseif color then
 		t.TextColor3 = color
+	else
+		t.TextColor3 = Color3.new(1, 1, 1)
+		t.TextStrokeColor3 = Color3.fromHex(Config.Colores.Fuerza)
 	end
 	cartel.Parent = parte
 
 	local info = TweenInfo.new(n.Duracion, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
-	TweenService:Create(cartel, info, { StudsOffsetWorldSpace = Vector3.new(0, 1 + n.Subida, 2.5) }):Play()
+	TweenService:Create(cartel, info, { StudsOffsetWorldSpace = Vector3.new(0, 1 + n.Subida, 2.5) })
+		:Play()
 	-- Se ve entero la primera mitad y se desvanece en la segunda (si no, casi no se llega a leer).
-	local desvanecer =
-		TweenInfo.new(n.Duracion / 2, Enum.EasingStyle.Quad, Enum.EasingDirection.In, 0, false, n.Duracion / 2)
+	local desvanecer = TweenInfo.new(
+		n.Duracion / 2,
+		Enum.EasingStyle.Quad,
+		Enum.EasingDirection.In,
+		0,
+		false,
+		n.Duracion / 2
+	)
 	TweenService:Create(t, desvanecer, { TextTransparency = 1, TextStrokeTransparency = 1 }):Play()
 	task.delay(n.Duracion, function()
 		cartel:Destroy()
@@ -75,9 +125,11 @@ function Numeros.contar(parte: BasePart, valor: number, color: Color3?, tamanio:
 	escala.Parent = t
 	cartel.Parent = parte
 	local duracion = Config.Feel.ConteoGolpe
-	TweenService:Create(escala, TweenInfo.new(duracion, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
-		Scale = 1.15,
-	}):Play()
+	TweenService
+		:Create(escala, TweenInfo.new(duracion, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
+			Scale = 1.15,
+		})
+		:Play()
 	task.spawn(function()
 		local t0 = os.clock()
 		while true do
@@ -91,10 +143,18 @@ function Numeros.contar(parte: BasePart, valor: number, color: Color3?, tamanio:
 		t.Text = Clavijas.numeroCorto(valor)
 		task.wait(Config.Feel.DanioGrande - duracion)
 		local n = Config.Numeros
+		TweenService:Create(
+			cartel,
+			TweenInfo.new(n.Duracion),
+			{ StudsOffsetWorldSpace = Vector3.new(0, 1 + n.Subida, 2.5) }
+		):Play()
 		TweenService
-			:Create(cartel, TweenInfo.new(n.Duracion), { StudsOffsetWorldSpace = Vector3.new(0, 1 + n.Subida, 2.5) })
+			:Create(
+				t,
+				TweenInfo.new(n.Duracion),
+				{ TextTransparency = 1, TextStrokeTransparency = 1 }
+			)
 			:Play()
-		TweenService:Create(t, TweenInfo.new(n.Duracion), { TextTransparency = 1, TextStrokeTransparency = 1 }):Play()
 		task.wait(n.Duracion)
 		cartel:Destroy()
 	end)
@@ -109,58 +169,92 @@ export type Panel = {
 	-- (1, 2, 3...) o nil.
 	vivo: (total: number) -> number?,
 	limpiar: () -> (), -- tiro nuevo: Fuerza 0, Multi 1 y sin golpe
+	centro: () -> Vector2, -- etapa 10b: centro del "= GOLPE" en la pantalla (px), de ahí vuela al monstruo
 }
 
--- Panel de la columna izquierda: FUERZA (azul) × MULTI (rojo) y abajo el GOLPE. Colgado de una
--- parte invisible (la pone Escena a la izquierda del tablero), en studs, como el resto.
-function Numeros.crearPanel(ancla: BasePart): Panel
-	local cartel = Instance.new("BillboardGui")
-	cartel.Name = "Panel"
-	cartel.Size = UDim2.fromScale(11, 10) -- studs
-	cartel.LightInfluence = 0
-	cartel.Adornee = ancla
+-- Panel FUERZA × MULTI = GOLPE (etapa 10b: 2D, en la caja `contenedor` de la columna izquierda de
+-- Pantallas, como en Balatro): caja azul con la espada, ×, caja roja con la llama y el golpe abajo.
+function Numeros.crearPanel(contenedor: Frame): Panel
+	local Estilo = require(script.Parent:WaitForChild("Estilo"))
+	local cartel = contenedor
 
-	local function caja(titulo: string, hex: string, x: number): (TextLabel, UIScale)
+	local function caja(titulo: string, hex: string, x: number, icono: string): (TextLabel, UIScale)
 		local fondo = Instance.new("Frame")
-		fondo.Position = UDim2.fromScale(x, 0)
-		fondo.Size = UDim2.fromScale(0.42, 0.5)
-		-- Display LED (26/10, CloverPit): caja negra con borde y números del color de la caja.
-		fondo.BackgroundColor3 = Color3.fromHex("#050505")
+		fondo.Name = titulo
+		fondo.Position = UDim2.new(x, 0, 0, 30)
+		fondo.Size = UDim2.new(0.4, 0, 0, 86)
+		fondo.BackgroundColor3 = Color3.fromHex(hex)
 		fondo.BorderSizePixel = 0
 		fondo.Parent = cartel
+		local esquina = Instance.new("UICorner")
+		esquina.CornerRadius = UDim.new(0, 6)
+		esquina.Parent = fondo
 		local borde = Instance.new("UIStroke")
 		borde.Thickness = 3
-		borde.Color = Color3.fromHex(hex)
+		borde.Color = Color3.fromHex("#0E0F18")
+		borde.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
 		borde.Parent = fondo
+		-- Sombra dura abajo (pixel).
+		local sombra = Instance.new("Frame")
+		sombra.BackgroundColor3 = Color3.fromHex("#0E0F18")
+		sombra.BorderSizePixel = 0
+		sombra.Position = UDim2.new(0, 3, 1, -2)
+		sombra.Size = UDim2.new(1, -6, 0, 7)
+		sombra.ZIndex = 0
+		sombra.Parent = fondo
 		local escala = Instance.new("UIScale")
 		escala.Parent = fondo
-		local t = etiqueta(fondo, titulo)
-		t.Font = Enum.Font.Oswald
+		local dibujo = Estilo.iconoHud(cartel, icono)
+		dibujo.AnchorPoint = Vector2.new(0.5, 0.5)
+		dibujo.Position = UDim2.new(x + 0.2, 0, 0, 16)
+		dibujo.Size = UDim2.fromOffset(26, 26)
+		local t = etiqueta(cartel, titulo)
+		t.TextScaled = false
+		t.TextSize = 16
+		t.Font = Enum.Font.Arcade
 		t.TextColor3 = Color3.fromHex(hex)
-		t.Position = UDim2.fromScale(0.05, 0.04)
-		t.Size = UDim2.fromScale(0.9, 0.3)
+		t.TextXAlignment = if x < 0.5 then Enum.TextXAlignment.Right else Enum.TextXAlignment.Left
+		t.Position = UDim2.new(if x < 0.5 then x - 0.06 else x + 0.32, 0, 0, 6)
+		t.Size = UDim2.new(0.18, 0, 0, 20)
+		t.Visible = false -- con el ícono alcanza; el nombre va dentro de la caja
+		local nombre = etiqueta(fondo, titulo)
+		nombre.TextScaled = false
+		nombre.TextSize = 16
+		nombre.Font = Enum.Font.Arcade
+		nombre.TextColor3 = Color3.new(1, 1, 1)
+		nombre.Position = UDim2.fromScale(0.08, 0.06)
+		nombre.Size = UDim2.fromScale(0.84, 0.24)
 		local valor = etiqueta(fondo, "0")
+		valor.TextScaled = false
+		valor.TextSize = 40
 		valor.Font = Enum.Font.Arcade
-		valor.TextColor3 = Color3.fromHex(hex)
-		valor.Position = UDim2.fromScale(0.05, 0.36)
-		valor.Size = UDim2.fromScale(0.9, 0.58)
+		valor.TextColor3 = Color3.new(1, 1, 1)
+		valor.Position = UDim2.fromScale(0.06, 0.34)
+		valor.Size = UDim2.fromScale(0.88, 0.58)
 		return valor, escala
 	end
 
-	local fuerza, escalaFuerza = caja("FUERZA", Config.Colores.Fuerza, 0)
-	local multi, escalaMulti = caja("MULTI", Config.Colores.Multi, 0.58)
+	local fuerza, escalaFuerza = caja("FUERZA", Config.Colores.Fuerza, 0.05, "Espada")
+	local multi, escalaMulti = caja("MULTI", Config.Colores.Multi, 0.55, "Llama")
 	local por = etiqueta(cartel, "×")
+	por.TextScaled = false
+	por.TextSize = 34
+	por.Font = Enum.Font.Arcade
 	por.TextColor3 = Color3.new(1, 1, 1)
-	por.Position = UDim2.fromScale(0.42, 0.1)
-	por.Size = UDim2.fromScale(0.16, 0.3)
+	por.AnchorPoint = Vector2.new(0.5, 0)
+	por.Position = UDim2.new(0.5, 0, 0, 52)
+	por.Size = UDim2.new(0.1, 0, 0, 40)
 	local golpe = etiqueta(cartel, "")
-	golpe.Position = UDim2.fromScale(0, 0.55)
-	golpe.Size = UDim2.fromScale(1, 0.45)
+	golpe.TextScaled = false
+	golpe.TextSize = 40
+	golpe.Font = Enum.Font.Arcade
+	golpe.Position = UDim2.new(0.04, 0, 0, 126)
+	golpe.Size = UDim2.new(0.92, 0, 0, 42)
 	local escalaGolpe = Instance.new("UIScale")
 	escalaGolpe.Parent = golpe
-	cartel.Parent = ancla
 
-	local info = TweenInfo.new(Config.Numeros.DuracionPop, Enum.EasingStyle.Back, Enum.EasingDirection.Out)
+	local info =
+		TweenInfo.new(Config.Numeros.DuracionPop, Enum.EasingStyle.Back, Enum.EasingDirection.Out)
 	local function saltar(escala: UIScale, tamanio: number, final: number?)
 		escala.Scale = tamanio
 		TweenService:Create(escala, info, { Scale = final or 1 }):Play()
@@ -199,11 +293,15 @@ function Numeros.crearPanel(ancla: BasePart): Panel
 			end
 			if nuevo > nivel then
 				nivel = nuevo
-				golpe.TextColor3 = Color3.fromHex(F.UmbralColores[nivel + 1] or F.UmbralColores[#F.UmbralColores])
+				golpe.TextColor3 =
+					Color3.fromHex(F.UmbralColores[nivel + 1] or F.UmbralColores[#F.UmbralColores])
 				saltar(escalaGolpe, base() * 1.5, base())
 				return nivel
 			end
 			return nil
+		end,
+		centro = function(): Vector2
+			return golpe.AbsolutePosition + golpe.AbsoluteSize / 2
 		end,
 		limpiar = function()
 			nivel = 0

@@ -576,3 +576,15 @@ Juani: "quiero más pixel art, como Balatro; mejorá la distribución; la tienda
 - Quedó en el plan como **etapas 10b (pantallas pixel) y 10c (sala neón)**, con prompt cada una y una tabla de lo que se toma y lo que no (nada de fichas, deuda, cajero ni tragamonedas).
 - Ya hecho: estilo de ForgeGUI "Plinko Knight - Pixel mazmorra" (`d3da0e22-4d00-42cb-9a61-0ff5537197a1`) y 9 imágenes del HUD generadas (ids en el plan), sin subir todavía.
 
+### Etapa 10b · Pantallas pixel tipo Balatro (27/10/2026)
+
+Variante **D · Pixel** en `Config.Pantalla` (ahora la elegida): letra Arcade, paleta azul Fuerza / rojo Multi / dorado oro / menta vida, marcos de piedra pixel.
+- **Imágenes (ForgeGUI, estilo "Plinko Knight - Pixel mazmorra"):** panel, casillero, corazón, moneda, engranaje, puerta, espada y llama. Limpiadas con `plinko-knight/modelos/scripts/limpiar_hud.py` (íconos sin fondo, marcos con el centro hueco) y subidas por Studio: IDs en `Config.Assets.Hud`. El botón de ForgeGUI no se usó (los botones pixel se dibujan por código: contorno oscuro y labio de sombra).
+- **3 columnas:** izquierda con PELEA N de 9 y zona, corazón + barra de vida, moneda + oro, la fórmula FUERZA × MULTI en 2D (cajas azul y roja con espada y llama, "= GOLPE" abajo; antes era un cartel 3D) y tus clavijas especiales; centro el tablero; derecha el monstruo con Salir (puerta) y Ajustes (engranaje). Abajo, una bandeja de piedra con casilleros para bola, pergaminos y reliquias.
+- **Tienda aparte:** pantalla entera con "TIENDA", el oro ganado, cartas altas en fila (precio dorado arriba, dibujo, nombre y qué hace; se balancean y crecen con el mouse), Renovar, ¿Qué sale?, el próximo monstruo y BAJAR enorme que late. Si la compra pide tocar clavijas, la tienda se corre y vuelve (también al cancelar).
+- **Números:** "+2" blanco con borde azul (más grande); los ×Multi en cartelito rojo inclinado "×2 MULTI" que crece. El COMBO pasó arriba del tablero.
+- **Clavijas:** las especiales con aro que late; las tocadas quedan con aro oscuro hasta que termina el tiro.
+- **Fondo:** remolino violeta y cian que gira despacio, con rayitas de monitor.
+- Probado en Play: pelea 1 ganada, tienda, compra de clavija (se corre y vuelve al cancelar), sin errores. Capturas en `plinko-knight/arte/comparaciones/v4/`.
+- **Falta de la 10b:** revisar con capturas inicio, final, cofre y ajustes (ya toman el estilo nuevo, pero no los miré); que las cartas se inclinen hacia el mouse; que al caer la bola las dos cajas se junten en una cifra gigante.
+

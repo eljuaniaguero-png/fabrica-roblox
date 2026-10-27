@@ -127,7 +127,10 @@ function Progreso.migrar(guardado: any): Datos
 	lista("Logros", function(id: string): boolean
 		return (Config.Bolas :: any)[id] ~= nil or (Config.Reliquias :: any)[id] ~= nil
 	end)
-	if typeof(guardado.BolaElegida) == "string" and table.find(d.BolasDesbloqueadas, guardado.BolaElegida) then
+	if
+		typeof(guardado.BolaElegida) == "string"
+		and table.find(d.BolasDesbloqueadas, guardado.BolaElegida)
+	then
 		d.BolaElegida = guardado.BolaElegida
 	end
 	-- Versión 2: los ajustes (si no estaban, quedan los de un jugador nuevo).
@@ -161,7 +164,9 @@ local function desbloquear(d: Datos, tipo: string, id: string): Nuevo?
 	if not table.find(d.Logros, id) then
 		table.insert(d.Logros, id)
 	end
-	local datos = if tipo == "bola" then (Config.Bolas :: any)[id] else (Config.Reliquias :: any)[id]
+	local datos = if tipo == "bola"
+		then (Config.Bolas :: any)[id]
+		else (Config.Reliquias :: any)[id]
 	return { Tipo = tipo, Id = id, Nombre = datos.Nombre }
 end
 

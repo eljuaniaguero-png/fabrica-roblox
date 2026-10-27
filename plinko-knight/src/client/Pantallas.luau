@@ -50,6 +50,7 @@ export type Pantallas = {
 	hayFinal: () -> boolean, -- final, inicio o ajustes abiertos: mientras tanto no se tira
 	finalCerrado: () -> number, -- os.clock() de la última vez que se cerró una pantalla que tapa
 	zonaLibre: () -> (number, number), -- y de arriba y de abajo (px de pantalla) libres para el tablero
+	formula: Frame, -- etapa 10b: caja de la columna izquierda donde va FUERZA × MULTI
 }
 
 local Pantallas = {}
@@ -69,60 +70,123 @@ function Pantallas.crear(): Pantallas
 	local gui = Estilo.pantalla("Pantallas", 0, playerGui)
 	local hud = Estilo.lienzo(gui)
 
+	-- Etapa 10b (27/10): 3 columnas tipo Balatro. Izquierda: pelea y zona, vida, oro, la fórmula
+	-- FUERZA × MULTI (la dibuja Numeros.crearPanel en `formula`) y tus clavijas especiales. Centro:
+	-- el tablero (3D). Derecha: el monstruo (3D) con Salir y Ajustes arriba y la maña del jefe.
+	-- Abajo, la bandeja: tu bola (acá) y los pergaminos y reliquias (TiendaVista).
+	local ANCHO_COLUMNA = 250
 	local arriba = Instance.new("Frame")
 	arriba.Name = "BarraArriba"
-	arriba.Size = UDim2.new(1, 0, 0, M.BarraArriba)
+	arriba.Size = UDim2.fromScale(1, 0) -- sin franja: el tablero usa todo el alto
 	arriba.BackgroundTransparency = 1
 	arriba.Parent = hud
 
-	-- Vida (barra con número) y oro, arriba a la izquierda.
-	local vidaCaja = Estilo.panel(arriba)
+	local izquierda = Instance.new("Frame")
+	izquierda.Name = "Izquierda"
+	izquierda.Position = UDim2.fromOffset(M.Margen, M.Margen)
+	izquierda.Size = UDim2.new(0, ANCHO_COLUMNA, 1, -(M.BarraAbajo + 2 * M.Margen + 4))
+	izquierda.BackgroundTransparency = 1
+	izquierda.Parent = hud
+
+	-- Pelea y zona.
+	local pelea = Estilo.panel(izquierda)
+	pelea.Name = "Pelea"
+	pelea.Size = UDim2.new(1, 0, 0, 62)
+	pelea.BackgroundTransparency = 0
+	local peleaTexto = Estilo.texto(pelea, "", T.Grande)
+	peleaTexto.Position = UDim2.fromOffset(0, 6)
+	peleaTexto.Size = UDim2.new(1, 0, 0, 28)
+	local zonaTexto = Estilo.texto(pelea, "", T.Chico, Estilo.Fuentes.Texto)
+	zonaTexto.TextColor3 = Estilo.color("Apagado")
+	zonaTexto.Position = UDim2.fromOffset(0, 34)
+	zonaTexto.Size = UDim2.new(1, 0, 0, 22)
+
+	-- Vida: corazón y barra verde con el número.
+	local filaVida = Instance.new("Frame")
+	filaVida.Name = "FilaVida"
+	filaVida.Position = UDim2.fromOffset(0, 70)
+	filaVida.Size = UDim2.new(1, 0, 0, 40)
+	filaVida.BackgroundTransparency = 1
+	filaVida.Parent = izquierda
+	local corazon = Estilo.iconoHud(filaVida, "Corazon")
+	corazon.Size = UDim2.fromOffset(40, 40)
+	local vidaCaja = Estilo.panel(filaVida, "Sombra")
 	vidaCaja.Name = "Vida"
-	vidaCaja.Position = UDim2.fromOffset(M.Margen, 6)
-	vidaCaja.Size = UDim2.fromOffset(196, M.BarraArriba - 12)
-	vidaCaja.ClipsDescendants = true
+	vidaCaja.Position = UDim2.fromOffset(46, 4)
+	vidaCaja.Size = UDim2.new(1, -46, 0, 32)
+	vidaCaja.BackgroundTransparency = 0
 	local vidaRelleno = Instance.new("Frame")
 	vidaRelleno.Size = UDim2.fromScale(1, 1)
 	vidaRelleno.BackgroundColor3 = Estilo.color("Vida")
 	vidaRelleno.BorderSizePixel = 0
 	vidaRelleno.Parent = vidaCaja
 	Estilo.redondear(vidaRelleno)
-	local vidaTexto = Estilo.texto(vidaCaja, "", T.Grande)
+	local vidaTexto = Estilo.texto(vidaCaja, "", T.Normal)
 	vidaTexto.Size = UDim2.fromScale(1, 1)
 	vidaTexto.ZIndex = 2
 
-	local oro = Estilo.texto(arriba, "", T.Normal)
+	-- Oro: moneda y número dorado.
+	local filaOro = Instance.new("Frame")
+	filaOro.Name = "FilaOro"
+	filaOro.Position = UDim2.fromOffset(0, 114)
+	filaOro.Size = UDim2.new(1, 0, 0, 34)
+	filaOro.BackgroundTransparency = 1
+	filaOro.Parent = izquierda
+	local moneda = Estilo.iconoHud(filaOro, "Moneda")
+	moneda.Size = UDim2.fromOffset(34, 34)
+	moneda.Position = UDim2.fromOffset(3, 0)
+	local oro = Estilo.texto(filaOro, "", T.Grande)
 	oro.Name = "Oro"
 	oro.TextXAlignment = Enum.TextXAlignment.Left
 	oro.TextColor3 = Estilo.color("Oro")
-	oro.Position = UDim2.fromOffset(M.Margen + 204, 6)
-	oro.Size = UDim2.fromOffset(112, M.BarraArriba - 12)
+	oro.Position = UDim2.fromOffset(46, 0)
+	oro.Size = UDim2.new(1, -46, 1, 0)
 
-	-- Pelea y zona, arriba al centro.
-	local pelea = Estilo.panel(arriba)
-	pelea.Name = "Pelea"
-	pelea.AnchorPoint = Vector2.new(0.5, 0)
-	pelea.Position = UDim2.new(0.5, 0, 0, 4)
-	pelea.Size = UDim2.fromOffset(280, M.BarraArriba - 8)
-	local peleaTexto = Estilo.texto(pelea, "", T.Normal)
-	peleaTexto.Position = UDim2.fromOffset(0, 2)
-	peleaTexto.Size = UDim2.new(1, 0, 0, 28)
-	local zonaTexto = Estilo.texto(pelea, "", T.Chico, Estilo.Fuentes.Texto)
-	zonaTexto.TextColor3 = Estilo.color("Apagado")
-	zonaTexto.Position = UDim2.fromOffset(0, 29)
-	zonaTexto.Size = UDim2.new(1, 0, 0, 22)
+	-- Fórmula FUERZA × MULTI = GOLPE (la llena Numeros.crearPanel).
+	local formula = Estilo.panel(izquierda)
+	formula.Name = "Formula"
+	formula.Position = UDim2.fromOffset(0, 154)
+	formula.Size = UDim2.new(1, 0, 0, 176)
+	formula.BackgroundTransparency = 0
 
-	-- Ajustes, arriba a la derecha.
-	local botonAjustes = Estilo.boton(arriba, "⚙", "PanelClaro", T.Enorme)
-	botonAjustes.Name = "Ajustes"
-	botonAjustes.AnchorPoint = Vector2.new(1, 0)
-	botonAjustes.Position = UDim2.new(1, -M.Margen, 0, 0)
+	-- Clavijas especiales que tenés.
+	local chips = Instance.new("Frame")
+	chips.Name = "Clavijas"
+	chips.Position = UDim2.fromOffset(0, 338)
+	chips.Size = UDim2.new(1, 0, 1, -338)
+	chips.BackgroundTransparency = 1
+	chips.ClipsDescendants = true
+	chips.Parent = izquierda
+	local grilla = Instance.new("UIGridLayout")
+	grilla.CellSize = UDim2.new(0.5, -3, 0, 26)
+	grilla.CellPadding = UDim2.fromOffset(6, 4)
+	grilla.SortOrder = Enum.SortOrder.LayoutOrder
+	grilla.Parent = chips
+
+	-- Salir y Ajustes, arriba a la derecha, con íconos pixel.
+	local function botonIcono(nombre: string, icono: string, texto: string?): TextButton
+		local b = Estilo.boton(hud, "", "PanelClaro", T.Normal)
+		b.Name = nombre
+		b.AnchorPoint = Vector2.new(1, 0)
+		local dibujo = Estilo.iconoHud(b, icono)
+		dibujo.AnchorPoint = Vector2.new(0, 0.5)
+		dibujo.Position = UDim2.new(0, 8, 0.5, 0)
+		dibujo.Size = UDim2.fromOffset(40, 40)
+		if texto then
+			b.Text = texto
+			b.TextXAlignment = Enum.TextXAlignment.Right
+			local margen = Instance.new("UIPadding")
+			margen.PaddingRight = UDim.new(0, 12)
+			margen.Parent = b
+		end
+		return b
+	end
+	local botonAjustes = botonIcono("Ajustes", "Engranaje")
+	botonAjustes.Position = UDim2.new(1, -M.Margen, 0, M.Margen)
 	botonAjustes.Size = UDim2.fromOffset(M.Boton, M.Boton)
-	local botonSalir = Estilo.boton(arriba, "Salir", "PanelClaro", T.Normal)
-	botonSalir.Name = "Salir"
-	botonSalir.AnchorPoint = Vector2.new(1, 0)
-	botonSalir.Position = UDim2.new(1, -(M.Margen + M.Boton + 8), 0, 0)
-	botonSalir.Size = UDim2.fromOffset(110, M.Boton)
+	local botonSalir = botonIcono("Salir", "Puerta", "Salir")
+	botonSalir.Position = UDim2.new(1, -(M.Margen + M.Boton + 10), 0, M.Margen)
+	botonSalir.Size = UDim2.fromOffset(130, M.Boton)
 	local alSalir: () -> () = function() end
 	botonSalir.Activated:Connect(function()
 		alSalir()
@@ -133,25 +197,12 @@ function Pantallas.crear(): Pantallas
 		end)
 	end)
 
-	-- Clavijas especiales que tenés (debajo de la vida, en la columna de la izquierda).
-	local chips = Instance.new("Frame")
-	chips.Name = "Clavijas"
-	chips.Position = UDim2.fromOffset(M.Margen, M.BarraArriba + 4)
-	chips.Size = UDim2.fromOffset(300, 140)
-	chips.BackgroundTransparency = 1
-	chips.Parent = hud
-	local grilla = Instance.new("UIGridLayout")
-	grilla.CellSize = UDim2.fromOffset(146, 30)
-	grilla.CellPadding = UDim2.fromOffset(6, 4)
-	grilla.SortOrder = Enum.SortOrder.LayoutOrder
-	grilla.Parent = chips
-
-	-- Maña del jefe: en la columna del monstruo, debajo de la franja.
+	-- Maña del jefe: en la columna del monstruo, debajo de Salir y Ajustes.
 	local mania = Estilo.texto(hud, "", T.Chico, Estilo.Fuentes.Titulo)
 	mania.Name = "Mania"
 	mania.AnchorPoint = Vector2.new(1, 0)
-	mania.Position = UDim2.new(1, -M.Margen, 0, M.BarraArriba + 4)
-	mania.Size = UDim2.fromOffset(300, 0)
+	mania.Position = UDim2.new(1, -M.Margen, 0, M.Margen + M.Boton + 12)
+	mania.Size = UDim2.fromOffset(ANCHO_COLUMNA, 0)
 	mania.AutomaticSize = Enum.AutomaticSize.Y
 	mania.BackgroundTransparency = 0.1
 	mania.BackgroundColor3 = Estilo.color("Panel")
@@ -159,31 +210,36 @@ function Pantallas.crear(): Pantallas
 	mania.Visible = false
 	Estilo.redondear(mania)
 	local margenMania = Instance.new("UIPadding")
-	margenMania.PaddingTop = UDim.new(0, 6)
-	margenMania.PaddingBottom = UDim.new(0, 6)
-	margenMania.PaddingLeft = UDim.new(0, 8)
-	margenMania.PaddingRight = UDim.new(0, 8)
+	margenMania.PaddingTop = UDim.new(0, 8)
+	margenMania.PaddingBottom = UDim.new(0, 8)
+	margenMania.PaddingLeft = UDim.new(0, 10)
+	margenMania.PaddingRight = UDim.new(0, 10)
 	margenMania.Parent = mania
+	Estilo.marco(mania, "Panel")
 
-	-- Franja de abajo: tu bola (pergaminos y reliquias: TiendaVista, en la misma franja).
-	local abajo = Instance.new("Frame")
+	-- Bandeja de abajo: un panel de punta a punta; adentro, tu bola (los pergaminos y las
+	-- reliquias los pone TiendaVista encima, en sus casilleros).
+	local abajo = Estilo.panel(hud)
 	abajo.Name = "BarraAbajo"
 	abajo.AnchorPoint = Vector2.new(0, 1)
-	abajo.Position = UDim2.fromScale(0, 1)
-	abajo.Size = UDim2.new(1, 0, 0, M.BarraAbajo)
-	abajo.BackgroundTransparency = 1
-	abajo.Parent = hud
-	local bolaCaja = Estilo.panel(abajo)
+	abajo.Position = UDim2.new(0, M.Margen, 1, -4)
+	abajo.Size = UDim2.new(1, -2 * M.Margen, 0, M.BarraAbajo)
+	abajo.BackgroundTransparency = 0.05
+	local bolaCaja = Instance.new("Frame")
 	bolaCaja.Name = "Bola"
-	bolaCaja.Position = UDim2.fromOffset(M.Margen, 4)
-	bolaCaja.Size = UDim2.fromOffset(120, M.BarraAbajo - 10)
+	bolaCaja.Position = UDim2.fromOffset(8, 6)
+	bolaCaja.Size = UDim2.fromOffset(110, M.BarraAbajo - 12)
+	bolaCaja.BackgroundColor3 = Estilo.color("Sombra")
+	bolaCaja.BorderSizePixel = 0
+	bolaCaja.Parent = abajo
+	Estilo.marco(bolaCaja, "Casillero")
 	local bolaTitulo = Estilo.texto(bolaCaja, "Bola", T.Chico, Estilo.Fuentes.Texto)
 	bolaTitulo.TextColor3 = Estilo.color("Apagado")
-	bolaTitulo.Position = UDim2.fromOffset(0, 4)
-	bolaTitulo.Size = UDim2.new(1, 0, 0, 22)
+	bolaTitulo.Position = UDim2.fromOffset(0, 6)
+	bolaTitulo.Size = UDim2.new(1, 0, 0, 20)
 	local bolaNombre = Estilo.texto(bolaCaja, "", T.Normal)
-	bolaNombre.Position = UDim2.fromOffset(0, 26)
-	bolaNombre.Size = UDim2.new(1, 0, 0, 30)
+	bolaNombre.Position = UDim2.fromOffset(0, 28)
+	bolaNombre.Size = UDim2.new(1, 0, 0, 26)
 
 	-- Cartel grande en el medio ("¡Piso 2!", "¡Nueva bola: Fuego!"), arriba de todo.
 	local guiAvisos = Estilo.pantalla("Avisos", 30, playerGui)
@@ -398,7 +454,18 @@ function Pantallas.crear(): Pantallas
 
 	-- ── Partes que se actualizan ───────────────────────────────────────────────────────────────
 	local function chip(valor: string, hex: string?, orden: number)
-		local c = Estilo.panel(chips)
+		local c = Instance.new("Frame")
+		c.BackgroundColor3 = Estilo.color("Panel")
+		c.BorderSizePixel = 0
+		c.Parent = chips
+		Estilo.redondear(c)
+		if hex then
+			local borde = Instance.new("UIStroke")
+			borde.Color = Color3.fromHex(hex)
+			borde.Thickness = 2
+			borde.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+			borde.Parent = c
+		end
 		c.LayoutOrder = orden
 		local t = Estilo.texto(c, valor, T.Chico, Estilo.Fuentes.Texto)
 		t.Size = UDim2.fromScale(1, 1)
@@ -408,7 +475,7 @@ function Pantallas.crear(): Pantallas
 	end
 
 	local function ponerTablero(e: Mazmorra.Estado)
-		oro.Text = ("%d oro"):format(e.Oro)
+		oro.Text = tostring(e.Oro)
 		local bola = (Config.Bolas :: any)[e.Bola]
 		bolaNombre.Text = if bola then bola.Nombre else e.Bola
 		bolaNombre.TextColor3 = if e.Bola == "fuego"
@@ -426,7 +493,9 @@ function Pantallas.crear(): Pantallas
 				local nivel = Clavijas.nivel(e.Niveles, tipo)
 				local nombre = (Config.Clavijas :: any)[tipo].Nombre
 				chip(
-					if nivel > 1 then ("%d %s · Nv %d"):format(n, nombre, nivel) else ("%d %s"):format(n, nombre),
+					if nivel > 1
+						then ("%d %s · Nv %d"):format(n, nombre, nivel)
+						else ("%d %s"):format(n, nombre),
 					Clavijas.color(tipo),
 					orden
 				)
@@ -439,7 +508,7 @@ function Pantallas.crear(): Pantallas
 	end
 
 	local function ponerVida(vida: number, maxima: number)
-		vidaTexto.Text = ("♥ %d/%d"):format(vida, maxima)
+		vidaTexto.Text = ("%d/%d"):format(vida, maxima)
 		vidaRelleno.Size = UDim2.fromScale(math.clamp(vida / math.max(maxima, 1), 0, 1), 1)
 	end
 
@@ -449,8 +518,11 @@ function Pantallas.crear(): Pantallas
 			ponerVida(e.Vida, e.VidaMaxima)
 			local m = Mazmorra.monstruo(e.Piso)
 			peleaTexto.Text = if m.EsJefe
-				then ("Pelea %s · Jefe"):format(numeroPelea(e.Piso))
-				else ("Pelea %s"):format(numeroPelea(e.Piso))
+				then ("JEFE %s"):format(numeroPelea(e.Piso))
+				else ("PELEA %s"):format(numeroPelea(e.Piso))
+			peleaTexto.TextColor3 = if m.EsJefe
+				then Estilo.color("Peligro")
+				else Estilo.color("Texto")
 			zonaTexto.Text = ("Zona %d · %s"):format(m.Zona, Config.Zonas[m.Zona] or "")
 			mania.Visible = e.Mania ~= "" and e.Fase == "peleando"
 			mania.Text = if e.Mania ~= "" then Mazmorra.textoMania(e.Mania, m.Zona) else ""
@@ -464,15 +536,19 @@ function Pantallas.crear(): Pantallas
 			anuncio.TextStrokeTransparency = 0
 			task.delay(Config.Turno.CartelPiso, function()
 				if anuncios == marca then
-					TweenService
-						:Create(anuncio, TweenInfo.new(0.25), { TextTransparency = 1, TextStrokeTransparency = 1 })
-						:Play()
+					TweenService:Create(
+						anuncio,
+						TweenInfo.new(0.25),
+						{ TextTransparency = 1, TextStrokeTransparency = 1 }
+					):Play()
 				end
 			end)
 		end,
 		mostrarFinal = function(f: Final, cuandoVuelva: () -> (), cuandoCambie: () -> ())
 			local ganadasAhora = if f.Gano then #Config.Monstruos else f.Piso - 1
-			titulo.Text = if f.Gano then "¡Ganaste la mazmorra!" else ("Caíste en el piso %d"):format(f.Piso)
+			titulo.Text = if f.Gano
+				then "¡Ganaste la mazmorra!"
+				else ("Caíste en el piso %d"):format(f.Piso)
 			titulo.TextColor3 = if f.Gano then Estilo.color("Oro") else Estilo.color("Texto")
 			bordeFinal.Color = if f.Gano then Estilo.color("Oro") else Estilo.color("Peligro")
 			ganadas.Text = ("Ganaste %s peleas"):format(numeroPelea(ganadasAhora))
@@ -519,6 +595,7 @@ function Pantallas.crear(): Pantallas
 		finalCerrado = function(): number
 			return cerrado
 		end,
+		formula = formula,
 		zonaLibre = function(): (number, number)
 			local y0 = arriba.AbsolutePosition.Y + arriba.AbsoluteSize.Y
 			local y1 = abajo.AbsolutePosition.Y

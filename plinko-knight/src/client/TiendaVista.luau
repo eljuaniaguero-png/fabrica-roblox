@@ -3,8 +3,9 @@
 -- - Franja de abajo de la pelea: los 2 lugares de pergaminos (al lado de tu bola) y las 5
 --   reliquias (a la derecha, en el orden en que se aplican). Tocar una reliquia abre su ficha; en
 --   la tienda, ahí se vende o se mueve.
--- - La tienda: en la columna derecha, tapando al monstruo, así el tablero queda libre para tocar
---   clavijas. La lista de cosas se desliza si no entra (celular).
+-- - La tienda (etapa 10b): una pantalla aparte, como en Balatro: cartas grandes en fila (se
+--   deslizan si no entran), Renovar y ¿Qué sale? abajo a la izquierda y BAJAR enorme abajo a la
+--   derecha. Si hay que tocar clavijas, se corre (apartar) y vuelve.
 -- - El cofre del jefe (la pantalla de mejoras): 3 cartas grandes, se elige con un toque, sin
 --   confirmar. "Más tarde" la cierra y el botón Cofre de la tienda la vuelve a abrir.
 -- Solo dibuja y avisa qué se tocó: lo demás lo hace Main.client con el servidor.
@@ -37,6 +38,7 @@ export type TiendaVista = {
 	ponerPergaminos: (estado: Mazmorra.Estado) -> (),
 	ponerReliquias: (estado: Mazmorra.Estado) -> (),
 	activar: (lugar: number, texto: string) -> (), -- la reliquia salta y muestra lo que hizo
+	apartar: (si: boolean) -> (), -- etapa 10b: la tienda se corre mientras tocás clavijas
 	abierta: () -> boolean, -- cofre, ficha o chances abiertos (tapan la pantalla)
 	mostrarHud: (si: boolean) -> (), -- etapa 7b: solo se ve sentado en la máquina
 }
@@ -58,16 +60,17 @@ function TiendaVista.crear(acciones: Acciones): TiendaVista
 	local lugares = Instance.new("Frame")
 	lugares.Name = "Pergaminos"
 	lugares.AnchorPoint = Vector2.new(0, 1)
-	lugares.Position = UDim2.new(0, M.Margen + 128, 1, -6)
+	lugares.Position = UDim2.new(0, M.Margen + 128, 1, -10)
 	lugares.Size = UDim2.fromOffset(270, altoFranja)
 	lugares.BackgroundTransparency = 1
 	lugares.Parent = lienzo
 	Estilo.lista(lugares, true, 8)
 	local botonesLugar: { TextButton } = {}
 	for lugar = 1, Config.LugaresPergamino do
-		local b = Estilo.boton(lugares, "", "Panel", T.Chico)
+		local b = Estilo.boton(lugares, "", "Sombra", T.Chico)
 		b.Name = "Lugar" .. lugar
 		b.Size = UDim2.fromOffset(130, altoFranja)
+		Estilo.marco(b, "Casillero")
 		b.LayoutOrder = lugar
 		ajustar(b, T.Chico, 16)
 		b.Activated:Connect(function()
@@ -79,82 +82,109 @@ function TiendaVista.crear(acciones: Acciones): TiendaVista
 	local filaReliquias = Instance.new("Frame")
 	filaReliquias.Name = "Reliquias"
 	filaReliquias.AnchorPoint = Vector2.new(1, 1)
-	filaReliquias.Position = UDim2.new(1, -M.Margen, 1, -6)
+	filaReliquias.Position = UDim2.new(1, -(M.Margen + 8), 1, -10)
 	filaReliquias.Size = UDim2.fromOffset(5 * 92 + 4 * 6, altoFranja)
 	filaReliquias.BackgroundTransparency = 1
 	filaReliquias.Parent = lienzo
 	local ordenFila = Estilo.lista(filaReliquias, true, 6)
 	ordenFila.HorizontalAlignment = Enum.HorizontalAlignment.Right
 
-	-- ── La tienda (columna derecha) ────────────────────────────────────────────────────────────
+	-- ── La tienda: pantalla aparte (etapa 10b) ─────────────────────────────────────────────────
 	local panel = Estilo.panel(lienzo)
 	panel.Name = "Tienda"
-	panel.AnchorPoint = Vector2.new(1, 0)
-	panel.Position = UDim2.new(1, -M.Margen, 0, M.BarraArriba + 2)
-	panel.Size = UDim2.new(0, 330, 1, -(M.BarraArriba + M.BarraAbajo + 6))
-	panel.BackgroundTransparency = 0.04
+	panel.AnchorPoint = Vector2.new(0.5, 0)
+	panel.Position = UDim2.new(0.5, 0, 0, M.Margen)
+	panel.Size = UDim2.new(1, -2 * M.Margen, 1, -(M.BarraAbajo + 2 * M.Margen + 8))
+	panel.BackgroundTransparency = 0
 	panel.Visible = false
-	local titulo = Estilo.texto(panel, "Tienda", T.Grande)
+	local titulo = Estilo.texto(panel, "TIENDA", T.Enorme)
 	titulo.TextXAlignment = Enum.TextXAlignment.Left
-	titulo.Position = UDim2.fromOffset(12, 6)
-	titulo.Size = UDim2.new(1, -24, 0, 36)
-	local botonCofre = Estilo.boton(panel, "Cofre", "Oro", T.Normal)
-	botonCofre.Name = "Cofre"
-	botonCofre.AnchorPoint = Vector2.new(1, 0)
-	botonCofre.Position = UDim2.new(1, -10, 0, 6)
-	botonCofre.Size = UDim2.fromOffset(110, M.Boton)
-	botonCofre.TextColor3 = Estilo.color("Panel")
-	botonCofre.TextStrokeTransparency = 1
-	botonCofre.Visible = false
-	local ganado = Estilo.texto(panel, "", T.Chico, Estilo.Fuentes.Texto)
+	titulo.TextColor3 = Estilo.color("Oro")
+	titulo.Position = UDim2.fromOffset(24, 12)
+	titulo.Size = UDim2.fromOffset(190, 48)
+	local monedaTienda = Estilo.iconoHud(panel, "Moneda")
+	monedaTienda.Position = UDim2.fromOffset(226, 22)
+	monedaTienda.Size = UDim2.fromOffset(28, 28)
+	local ganado = Estilo.texto(panel, "", T.Normal, Estilo.Fuentes.Texto)
 	ganado.TextXAlignment = Enum.TextXAlignment.Left
 	ganado.TextColor3 = Estilo.color("Oro")
-	ganado.Position = UDim2.fromOffset(12, 42)
-	ganado.Size = UDim2.new(1, -130, 0, 26)
-	ajustar(ganado, T.Chico, 16)
+	ganado.Position = UDim2.fromOffset(262, 22)
+	ganado.Size = UDim2.new(1, -470, 0, 28)
+	ajustar(ganado, T.Normal, 14)
+	local botonCofre = Estilo.boton(panel, "Cofre", "Oro", T.Grande)
+	botonCofre.Name = "Cofre"
+	botonCofre.AnchorPoint = Vector2.new(1, 0)
+	botonCofre.Position = UDim2.new(1, -24, 0, 12)
+	botonCofre.Size = UDim2.fromOffset(170, M.Boton)
+	botonCofre.TextColor3 = Estilo.color("TextoPrincipal")
+	botonCofre.TextStrokeTransparency = 1
+	botonCofre.Visible = false
 
-	-- Lista de cosas en venta (se desliza) y, al final, qué viene después.
+	-- Cartas en venta, en fila (se deslizan si no entran).
 	local lista = Instance.new("ScrollingFrame")
 	lista.Name = "Lista"
-	lista.Position = UDim2.fromOffset(8, 74)
-	lista.Size = UDim2.new(1, -16, 1, -(74 + M.Boton + 16))
+	lista.Position = UDim2.fromOffset(20, 66)
+	lista.Size = UDim2.new(1, -40, 1, -(66 + M.BotonGrande + 30))
 	lista.BackgroundTransparency = 1
 	lista.BorderSizePixel = 0
 	lista.ScrollBarThickness = 6
-	lista.AutomaticCanvasSize = Enum.AutomaticSize.Y
+	lista.AutomaticCanvasSize = Enum.AutomaticSize.X
 	lista.CanvasSize = UDim2.new()
-	lista.ScrollingDirection = Enum.ScrollingDirection.Y
+	lista.ScrollingDirection = Enum.ScrollingDirection.X
+	lista.ClipsDescendants = true
 	lista.Parent = panel
-	Estilo.lista(lista, false, 6)
-	local proximo = Estilo.texto(lista, "", T.Chico, Estilo.Fuentes.Texto)
+	local ordenLista = Estilo.lista(lista, true, 16)
+	ordenLista.HorizontalAlignment = Enum.HorizontalAlignment.Left
+	local margenLista = Instance.new("UIPadding")
+	margenLista.PaddingTop = UDim.new(0, 20)
+	margenLista.PaddingLeft = UDim.new(0, 10)
+	margenLista.PaddingRight = UDim.new(0, 10)
+	margenLista.Parent = lista
+	-- Qué viene después (y la maña si es un jefe), arriba de los botones.
+	local proximo = Estilo.texto(panel, "", T.Chico, Estilo.Fuentes.Texto)
 	proximo.Name = "Proximo"
-	proximo.LayoutOrder = 99
 	proximo.TextXAlignment = Enum.TextXAlignment.Left
-	proximo.Size = UDim2.new(1, -8, 0, 0)
-	proximo.AutomaticSize = Enum.AutomaticSize.Y
+	proximo.TextWrapped = true
+	proximo.AnchorPoint = Vector2.new(0, 1)
+	proximo.Position = UDim2.new(0, 400, 1, -18)
+	proximo.Size = UDim2.new(1, -(400 + 300 + 48), 0, M.BotonGrande)
+	ajustar(proximo, T.Chico, 13)
 
-	-- Botones de abajo: Renovar, ¿Qué sale? y Bajar.
-	local fila = Instance.new("Frame")
-	fila.AnchorPoint = Vector2.new(0, 1)
-	fila.Position = UDim2.new(0, 8, 1, -8)
-	fila.Size = UDim2.new(1, -16, 0, M.Boton)
-	fila.BackgroundTransparency = 1
-	fila.Parent = panel
-	Estilo.lista(fila, true, 6)
-	local renovar = Estilo.boton(fila, "", "Boton", T.Chico)
+	-- Botones de abajo: Renovar y ¿Qué sale? a la izquierda; BAJAR enorme a la derecha.
+	local renovar = Estilo.boton(panel, "", "Boton", T.Normal)
 	renovar.Name = "Renovar"
-	renovar.LayoutOrder = 1
-	renovar.Size = UDim2.new(0.34, -4, 1, 0)
+	renovar.AnchorPoint = Vector2.new(0, 1)
+	renovar.Position = UDim2.new(0, 24, 1, -18)
+	renovar.Size = UDim2.fromOffset(180, M.BotonGrande)
 	renovar.Activated:Connect(acciones.renovar)
-	local info = Estilo.boton(fila, "¿Qué sale?", "PanelClaro", T.Chico)
+	local info = Estilo.boton(panel, "¿Qué sale?", "PanelClaro", T.Normal)
 	info.Name = "Info"
-	info.LayoutOrder = 2
-	info.Size = UDim2.new(0.3, -4, 1, 0)
-	local bajar = Estilo.boton(fila, "Bajar", "Principal", T.Grande)
+	info.AnchorPoint = Vector2.new(0, 1)
+	info.Position = UDim2.new(0, 214, 1, -18)
+	info.Size = UDim2.fromOffset(170, M.BotonGrande)
+	local bajar = Estilo.boton(panel, "BAJAR", "Principal", T.Enorme)
 	bajar.Name = "Bajar"
-	bajar.LayoutOrder = 3
-	bajar.Size = UDim2.new(0.36, -4, 1, 0)
+	bajar.AnchorPoint = Vector2.new(1, 1)
+	bajar.Position = UDim2.new(1, -24, 1, -18)
+	bajar.Size = UDim2.fromOffset(300, M.BotonGrande)
 	bajar.Activated:Connect(acciones.bajar)
+	local escalaBajar = Instance.new("UIScale")
+	escalaBajar.Parent = bajar
+
+	-- Las cartas se balancean apenas (cada una a su ritmo) y el BAJAR late (etapa 10b).
+	local cartasTienda: { GuiObject } = {}
+	game:GetService("RunService").Heartbeat:Connect(function()
+		if not panel.Visible then
+			return
+		end
+		local t = os.clock()
+		for k, c in cartasTienda do
+			if c.Parent then
+				c.Rotation = math.sin(t * 1.6 + k * 1.3) * 1.5
+			end
+		end
+		escalaBajar.Scale = 1 + math.sin(t * 4) * 0.025
+	end)
 
 	-- ── Ventanas que tapan todo (en su propio ScreenGui, con velo) ─────────────────────────────
 	local guiVentanas = Estilo.pantalla("VentanasTienda", 9, playerGui)
@@ -203,7 +233,12 @@ function TiendaVista.crear(acciones: Acciones): TiendaVista
 	textoChances.AutomaticCanvasSize = Enum.AutomaticSize.Y
 	textoChances.CanvasSize = UDim2.new()
 	textoChances.Parent = cajaChances
-	local lineas = Estilo.texto(textoChances, table.concat(TiendaModulo.chances(), "\n"), T.Chico, Estilo.Fuentes.Texto)
+	local lineas = Estilo.texto(
+		textoChances,
+		table.concat(TiendaModulo.chances(), "\n"),
+		T.Chico,
+		Estilo.Fuentes.Texto
+	)
 	lineas.TextXAlignment = Enum.TextXAlignment.Left
 	lineas.TextYAlignment = Enum.TextYAlignment.Top
 	lineas.TextStrokeTransparency = 1
@@ -293,8 +328,9 @@ function TiendaVista.crear(acciones: Acciones): TiendaVista
 	local avisos: { TextLabel } = {}
 	local bordes: { UIStroke } = {}
 	for lugar = 1, Config.LugaresReliquia do
-		local b = Estilo.boton(filaReliquias, "", "Panel", T.Chico)
+		local b = Estilo.boton(filaReliquias, "", "Sombra", T.Chico)
 		b.Name = "Reliquia" .. lugar
+		Estilo.marco(b, "Casillero")
 		b.LayoutOrder = lugar
 		b.Size = UDim2.fromOffset(92, altoFranja)
 		b.Font = Estilo.Fuentes.Texto
@@ -335,7 +371,9 @@ function TiendaVista.crear(acciones: Acciones): TiendaVista
 				local icono = b:FindFirstChild("Icono") :: ImageLabel
 				icono.Image = idIcono
 				icono.Visible = idIcono ~= ""
-				b.TextYAlignment = if idIcono ~= "" then Enum.TextYAlignment.Bottom else Enum.TextYAlignment.Center
+				b.TextYAlignment = if idIcono ~= ""
+					then Enum.TextYAlignment.Bottom
+					else Enum.TextYAlignment.Center
 				b.Text = if idIcono ~= ""
 					then (if crece then tostring(r.Contador) else "")
 					elseif crece then ("%s (%d)"):format(d.Nombre, r.Contador)
@@ -348,7 +386,7 @@ function TiendaVista.crear(acciones: Acciones): TiendaVista
 				local icono = b:FindFirstChild("Icono") :: ImageLabel
 				icono.Visible = false
 				b.TextYAlignment = Enum.TextYAlignment.Center
-				b.Text = "Reliquia libre"
+				b.Text = "Libre"
 				b.TextColor3 = Estilo.color("Apagado")
 				b.BackgroundTransparency = 0.5
 				bordes[lugar].Transparency = 1
@@ -366,8 +404,11 @@ function TiendaVista.crear(acciones: Acciones): TiendaVista
 			return
 		end
 		escala.Scale = 1.3
-		TweenService:Create(escala, TweenInfo.new(0.25, Enum.EasingStyle.Back, Enum.EasingDirection.Out), { Scale = 1 })
-			:Play()
+		TweenService:Create(
+			escala,
+			TweenInfo.new(0.25, Enum.EasingStyle.Back, Enum.EasingDirection.Out),
+			{ Scale = 1 }
+		):Play()
 		aviso.Text = valor
 		aviso.TextTransparency = 0
 		aviso.TextStrokeTransparency = 0
@@ -404,11 +445,15 @@ function TiendaVista.crear(acciones: Acciones): TiendaVista
 		copia.Parent = capaVuelo
 		local llegada = destino.AbsolutePosition + destino.AbsoluteSize / 2
 		local lado = math.min(destino.AbsoluteSize.X, destino.AbsoluteSize.Y)
-		local vuelo = TweenService:Create(copia, TweenInfo.new(0.55, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {
-			Position = UDim2.fromOffset(llegada.X, llegada.Y),
-			Size = UDim2.fromOffset(lado, lado),
-			Rotation = 360,
-		})
+		local vuelo = TweenService:Create(
+			copia,
+			TweenInfo.new(0.55, Enum.EasingStyle.Quad, Enum.EasingDirection.In),
+			{
+				Position = UDim2.fromOffset(llegada.X, llegada.Y),
+				Size = UDim2.fromOffset(lado, lado),
+				Rotation = 360,
+			}
+		)
 		vuelo:Play()
 		vuelo.Completed:Once(function()
 			copia:Destroy()
@@ -416,9 +461,11 @@ function TiendaVista.crear(acciones: Acciones): TiendaVista
 			local escala = destino:FindFirstChildOfClass("UIScale")
 			if escala then
 				escala.Scale = 1.35
-				TweenService
-					:Create(escala, TweenInfo.new(0.3, Enum.EasingStyle.Back, Enum.EasingDirection.Out), { Scale = 1 })
-					:Play()
+				TweenService:Create(
+					escala,
+					TweenInfo.new(0.3, Enum.EasingStyle.Back, Enum.EasingDirection.Out),
+					{ Scale = 1 }
+				):Play()
 			end
 		end)
 	end
@@ -454,9 +501,11 @@ function TiendaVista.crear(acciones: Acciones): TiendaVista
 			escala.Scale = 0
 			task.delay((i - 1) * Config.Feel.CartasEntrada, function()
 				Sonidos.tocar("Whoosh") -- SONIDO
-				TweenService
-					:Create(escala, TweenInfo.new(0.25, Enum.EasingStyle.Back, Enum.EasingDirection.Out), { Scale = 1 })
-					:Play()
+				TweenService:Create(
+					escala,
+					TweenInfo.new(0.25, Enum.EasingStyle.Back, Enum.EasingDirection.Out),
+					{ Scale = 1 }
+				):Play()
 			end)
 		end
 	end
@@ -496,7 +545,8 @@ function TiendaVista.crear(acciones: Acciones): TiendaVista
 			tNombre.Position = UDim2.fromOffset(12, 108)
 			tNombre.Size = UDim2.new(1, -24, 0, 44)
 			ajustar(tNombre, T.Grande, T.Chico)
-			local tRareza = Estilo.texto(carta, Reliquias.rareza(id).Nombre, T.Chico, Estilo.Fuentes.Texto)
+			local tRareza =
+				Estilo.texto(carta, Reliquias.rareza(id).Nombre, T.Chico, Estilo.Fuentes.Texto)
 			tRareza.TextColor3 = Color3.fromHex(hex)
 			tRareza.Position = UDim2.fromOffset(12, 152)
 			tRareza.Size = UDim2.new(1, -24, 0, 26)
@@ -512,17 +562,15 @@ function TiendaVista.crear(acciones: Acciones): TiendaVista
 					return -- ya se eligió (doble toque)
 				end
 				borde.Thickness = 10
-				TweenService
-					:Create(
-						escala,
-						TweenInfo.new(0.18, Enum.EasingStyle.Back, Enum.EasingDirection.Out),
-						{ Scale = 1.2 }
-					)
-					:Play()
+				TweenService:Create(
+					escala,
+					TweenInfo.new(0.18, Enum.EasingStyle.Back, Enum.EasingDirection.Out),
+					{ Scale = 1.2 }
+				):Play()
 				-- Etapa 10: el ícono vuela de la carta a su lugar en la fila de reliquias.
 				local destino = lugaresReliquia[#lugaresReliquia]
 				for _, lugarLibre in lugaresReliquia do
-					if lugarLibre.Text == "Reliquia libre" then
+					if lugarLibre.Text == "Libre" then
 						destino = lugarLibre
 						break
 					end
@@ -536,64 +584,98 @@ function TiendaVista.crear(acciones: Acciones): TiendaVista
 		end
 	end
 
-	-- Una cosa en venta: franja de color, nombre, precio y una frase.
+	-- Una cosa en venta (etapa 10b): carta alta con el precio arriba, el dibujo (ícono de la
+	-- reliquia o un bloque del color de la cosa), el nombre y lo que hace. Crece al pasar el mouse.
 	local function itemTienda(e: Mazmorra.Estado, indice: number, item: Mazmorra.ItemTienda)
 		local nombre, frase, hex = TiendaModulo.describir(item.Clase, item.Id, e)
 		local b = Estilo.boton(lista, "", "Carta")
 		b.Name = "Item" .. indice
 		b.LayoutOrder = indice
-		b.Size = UDim2.new(1, -8, 0, 92)
-		b.AutoButtonColor = not item.Vendido
-		local franja = Instance.new("Frame")
-		franja.Size = UDim2.new(0, 10, 1, 0)
-		franja.BackgroundColor3 = Color3.fromHex(hex)
-		franja.BorderSizePixel = 0
-		franja.Parent = b
-		Estilo.redondear(franja)
-		-- Reliquias con su ícono a la izquierda.
-		local idIcono = if item.Clase == "reliquia" then (Config.Assets.Reliquias :: any)[item.Id] else nil
-		local x = if idIcono and idIcono ~= "" then 84 else 20
-		if x > 20 then
-			local icono = Estilo.icono(b, idIcono)
-			icono.Position = UDim2.fromOffset(16, 10)
-			icono.Size = UDim2.fromOffset(62, 62)
-		end
-		local tNombre = Estilo.texto(b, nombre, T.Normal)
-		tNombre.TextXAlignment = Enum.TextXAlignment.Left
-		tNombre.Position = UDim2.fromOffset(x, 4)
-		tNombre.Size = UDim2.new(1, -(x + 100), 0, 32)
-		ajustar(tNombre, T.Normal, 16)
-		local tFrase = Estilo.texto(b, frase, T.Chico, Estilo.Fuentes.Texto)
-		tFrase.TextXAlignment = Enum.TextXAlignment.Left
-		tFrase.TextYAlignment = Enum.TextYAlignment.Top
-		tFrase.TextStrokeTransparency = 1
-		tFrase.Position = UDim2.fromOffset(x, 38)
-		tFrase.Size = UDim2.new(1, -(x + 8), 1, -42)
-		ajustar(tFrase, T.Chico, 15)
+		b.Size = UDim2.new(0, 172, 1, -28)
+		b.AutoButtonColor = false
+		local borde = Estilo.borde(b, hex, 3)
+		local escala = Instance.new("UIScale")
+		escala.Parent = b
+		table.insert(cartasTienda, b)
 		-- Una reliquia que ya tenés (por ejemplo, la sacaste del cofre) no se puede comprar.
 		local laTenes = item.Clase == "reliquia" and Reliquias.tiene(e.Reliquias, item.Id)
 		local apagado = item.Vendido or laTenes
+		-- Precio arriba, en una etiqueta dorada.
+		local etiquetaPrecio = Instance.new("Frame")
+		etiquetaPrecio.AnchorPoint = Vector2.new(0.5, 0.5)
+		etiquetaPrecio.Position = UDim2.fromScale(0.5, 0)
+		etiquetaPrecio.Size = UDim2.fromOffset(110, 32)
+		etiquetaPrecio.BackgroundColor3 = Estilo.color("Sombra")
+		etiquetaPrecio.BorderSizePixel = 0
+		etiquetaPrecio.ZIndex = 3
+		etiquetaPrecio.Parent = b
+		Estilo.redondear(etiquetaPrecio)
+		Estilo.borde(etiquetaPrecio, "Oro", 2)
 		local tPrecio = Estilo.texto(
-			b,
-			if item.Vendido then "Vendido" elseif laTenes then "La tenés" else ("%d oro"):format(item.Precio),
-			T.Normal
+			etiquetaPrecio,
+			if item.Vendido
+				then "Vendido"
+				elseif laTenes then "La tenés"
+				else ("%d oro"):format(item.Precio),
+			T.Chico
 		)
-		tPrecio.TextXAlignment = Enum.TextXAlignment.Right
+		tPrecio.Size = UDim2.fromScale(1, 1)
+		tPrecio.ZIndex = 3
 		tPrecio.TextColor3 = if apagado
 			then Estilo.color("Apagado")
 			elseif e.Oro >= item.Precio then Estilo.color("Oro")
 			else Estilo.color("Peligro")
-		tPrecio.AnchorPoint = Vector2.new(1, 0)
-		tPrecio.Position = UDim2.new(1, -10, 0, 4)
-		tPrecio.Size = UDim2.fromOffset(100, 32)
+		-- Dibujo.
+		local idIcono = if item.Clase == "reliquia"
+			then (Config.Assets.Reliquias :: any)[item.Id]
+			else nil
+		if idIcono and idIcono ~= "" then
+			local icono = Estilo.icono(b, idIcono)
+			icono.AnchorPoint = Vector2.new(0.5, 0)
+			icono.Position = UDim2.new(0.5, 0, 0, 22)
+			icono.Size = UDim2.fromOffset(66, 66)
+		else
+			local bloque = Instance.new("Frame")
+			bloque.AnchorPoint = Vector2.new(0.5, 0)
+			bloque.Position = UDim2.new(0.5, 0, 0, 26)
+			bloque.Size = UDim2.fromOffset(56, 56)
+			bloque.BackgroundColor3 = Color3.fromHex(hex)
+			bloque.BorderSizePixel = 0
+			bloque.Parent = b
+			local redondo = Instance.new("UICorner")
+			redondo.CornerRadius = UDim.new(0.5, 0)
+			redondo.Parent = bloque
+			Estilo.borde(bloque, "Sombra", 3)
+		end
+		local tNombre = Estilo.texto(b, nombre, T.Normal)
+		tNombre.Position = UDim2.fromOffset(8, 92)
+		tNombre.Size = UDim2.new(1, -16, 0, 30)
+		ajustar(tNombre, T.Normal, 14)
+		local tFrase = Estilo.texto(b, frase, T.Chico, Estilo.Fuentes.Texto)
+		tFrase.TextYAlignment = Enum.TextYAlignment.Top
+		tFrase.TextColor3 = Estilo.color("Apagado")
+		tFrase.Position = UDim2.fromOffset(10, 124)
+		tFrase.Size = UDim2.new(1, -20, 1, -130)
+		ajustar(tFrase, T.Chico, 12)
 		if apagado then
 			b.BackgroundTransparency = 0.6
+			borde.Transparency = 0.6
 		else
+			b.MouseEnter:Connect(function()
+				TweenService
+					:Create(escala, TweenInfo.new(0.12, Enum.EasingStyle.Back), { Scale = 1.07 })
+					:Play()
+			end)
+			b.MouseLeave:Connect(function()
+				TweenService:Create(escala, TweenInfo.new(0.12), { Scale = 1 }):Play()
+			end)
 			b.Activated:Connect(function()
 				acciones.comprar(indice)
 			end)
 		end
 	end
+
+	local apartada = false -- la tienda se corrió para tocar clavijas
 
 	local function ponerPergaminos(e: Mazmorra.Estado)
 		for lugar, b in botonesLugar do
@@ -606,10 +688,12 @@ function TiendaVista.crear(acciones: Acciones): TiendaVista
 				-- Fondo claro: texto oscuro; fondo oscuro: texto blanco con borde.
 				local c = Color3.fromHex(hex)
 				local claro = 0.299 * c.R + 0.587 * c.G + 0.114 * c.B > 0.6
-				b.TextColor3 = if claro then Estilo.color("TextoPrincipal") else Estilo.color("Texto")
+				b.TextColor3 = if claro
+					then Estilo.color("TextoPrincipal")
+					else Estilo.color("Texto")
 				b.TextStrokeTransparency = if claro then 1 else 0
 			else
-				b.Text = "Pergamino libre"
+				b.Text = "Pergamino"
 				b.TextColor3 = Estilo.color("Apagado")
 				b.BackgroundColor3 = Estilo.color("Panel")
 				b.BackgroundTransparency = 0.5
@@ -624,11 +708,12 @@ function TiendaVista.crear(acciones: Acciones): TiendaVista
 					hijo:Destroy()
 				end
 			end
+			table.clear(cartasTienda)
 			for indice, item in e.Tienda.Items do
 				itemTienda(e, indice, item)
 			end
 			if not panel.Visible then
-				lista.CanvasPosition = Vector2.zero -- tienda nueva: arriba de todo
+				lista.CanvasPosition = Vector2.zero -- tienda nueva: desde la primera carta
 			end
 			local o = e.UltimoOro
 			local partes = { ("+%d por ganar"):format(o.Pelea) }
@@ -641,7 +726,9 @@ function TiendaVista.crear(acciones: Acciones): TiendaVista
 			ganado.Text = ("%d oro (%s)"):format(e.Oro, table.concat(partes, ", "))
 			local precio = TiendaModulo.precioRenovar(e)
 			renovar.Text = ("Renovar · %d"):format(precio)
-			renovar.TextColor3 = if e.Oro >= precio then Estilo.color("Texto") else Estilo.color("Peligro")
+			renovar.TextColor3 = if e.Oro >= precio
+				then Estilo.color("Texto")
+				else Estilo.color("Peligro")
 			-- Próxima pelea (y la maña, si es un jefe), para decidir qué comprar.
 			local m = Mazmorra.monstruo(e.Piso)
 			local maniaProxima = if m.EsJefe then e.ManiasJefes[m.Zona] else nil
@@ -650,12 +737,13 @@ function TiendaVista.crear(acciones: Acciones): TiendaVista
 				Clavijas.numeroCorto(m.Vida),
 				if maniaProxima then " · " .. Mazmorra.textoMania(maniaProxima, m.Zona) else ""
 			)
-			proximo.TextColor3 = if m.EsJefe then Estilo.color("Peligro") else Estilo.color("Apagado")
+			proximo.TextColor3 = if m.EsJefe
+				then Estilo.color("Peligro")
+				else Estilo.color("Apagado")
 			-- Cofre: se abre solo la primera vez que entrás con un cofre nuevo.
 			local hayCofre = #e.Tienda.Cofre > 0 and not e.Tienda.CofreTomado
 			local cofreNuevo = hayCofre and not panel.Visible
 			botonCofre.Visible = hayCofre
-			ganado.Size = UDim2.new(1, if hayCofre then -130 else -24, 0, 26)
 			if hayCofre then
 				ponerCofre(e)
 				if cofreNuevo then
@@ -664,13 +752,23 @@ function TiendaVista.crear(acciones: Acciones): TiendaVista
 			else
 				abrir(cofre, false)
 			end
-			panel.Visible = true
+			panel.Visible = not apartada
 			ponerPergaminos(e)
 		end,
 		ocultar = function()
 			abrir(cofre, false)
 			abrir(chances, false)
 			panel.Visible = false
+			apartada = false
+		end,
+		apartar = function(si: boolean)
+			if si and panel.Visible then
+				apartada = true
+				panel.Visible = false
+			elseif not si and apartada then
+				apartada = false
+				panel.Visible = true
+			end
 		end,
 		ponerPergaminos = ponerPergaminos,
 		ponerReliquias = ponerReliquias,

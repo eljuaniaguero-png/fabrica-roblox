@@ -70,7 +70,9 @@ end
 -- Avisa al servidor un rato después del último toque (si tocás varias veces, va uno solo).
 local remoto: RemoteEvent? = nil
 task.spawn(function()
-	local r = game:GetService("ReplicatedStorage"):WaitForChild("Remotos"):WaitForChild("GuardarAjustes", 10)
+	local r = game:GetService("ReplicatedStorage")
+		:WaitForChild("Remotos")
+		:WaitForChild("GuardarAjustes", 10)
 	if r and r:IsA("RemoteEvent") then
 		remoto = r
 	end
