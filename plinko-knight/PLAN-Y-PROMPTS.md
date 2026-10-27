@@ -33,6 +33,7 @@ Hay una copia de este archivo en tu PC en `plinko-knight/PLAN-Y-PROMPTS.md`. Tod
 | 10b | Pantallas pixel (27/10) | 3 columnas tipo Balatro, tienda aparte, HUD de ForgeGUI | Capturas |
 | 10c | Sala neón (27/10) | Damero, paneles, vitrina de reliquias, puerta blindada | Capturas |
 | 11 | Antes de publicar | Tutorial del primer minuto, analítica, checklist | **Publicás vos** |
+| 12 | Pantallas nuevas (27/10) | Kit de Forja Rápida en todas las pantallas, monstruos ×2,3, tienda con pestañas (ver `PLAN-PANTALLAS.md`) | **Aprobás maquetas** |
 
 > **Cambio del 25/10/2026:** después de la prueba de 5 minutos, Juani pidió hacerlo más roguelike, estilo Balatro. La ficha (`ideas/plinko-knight.md`, sección "Rediseño roguelike") manda sobre este plan: la etapa 5 sigue con los pasos 5a a 5d (Fuerza × Multi, tienda, reliquias, zonas y jefes con maña) antes del guardado. Los prompts 6 a 11 de abajo se adaptan a eso.
 
