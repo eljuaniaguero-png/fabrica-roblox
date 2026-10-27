@@ -569,3 +569,10 @@ Los 7 puntos del prompt 10 están hechos (con lo de "más dopamina" encima):
 - Probado: jefe de la zona 1 ganado, cofre elegido, ícono volando, consola sin errores, **60 FPS en PC**. En celular no se probó (decisión de Juani).
 - El aviso `rbxassetid://203785492 ... Asset type does not match` no sale del juego (no está en ninguna pieza ni en el código); parece de Roblox.
 - El video corto no se puede grabar por MCP: las capturas de `arte/comparaciones/v3/` hacen de clip.
+
+### Cambio del 27/10: pixel art tipo Balatro y sala neón (planificado)
+
+Juani: "quiero más pixel art, como Balatro; mejorá la distribución; la tienda en una pantalla aparte; HUD e imágenes con ForgeGUI, vos animaciones y modelos". Pasó una captura y dos propuestas de Gemini (HUD en 3 columnas y sala CloverPit + arcade de los 80).
+- Quedó en el plan como **etapas 10b (pantallas pixel) y 10c (sala neón)**, con prompt cada una y una tabla de lo que se toma y lo que no (nada de fichas, deuda, cajero ni tragamonedas).
+- Ya hecho: estilo de ForgeGUI "Plinko Knight - Pixel mazmorra" (`d3da0e22-4d00-42cb-9a61-0ff5537197a1`) y 9 imágenes del HUD generadas (ids en el plan), sin subir todavía.
+

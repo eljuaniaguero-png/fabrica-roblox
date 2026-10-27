@@ -30,6 +30,8 @@ Hay una copia de este archivo en tu PC en `plinko-knight/PLAN-Y-PROMPTS.md`. Tod
 | 8 | Elegir estilo visual | 3 muestras de mazmorra y vos elegís una | **Elegís estilo** |
 | 9 | Arte final | Mazmorra de piedra, clavijas doradas, monstruos planos de Gemini | Lado a lado |
 | 10 | Sensación y sonido | Golpes que se sienten, números que explotan, sonidos | Video corto |
+| 10b | Pantallas pixel (27/10) | 3 columnas tipo Balatro, tienda aparte, HUD de ForgeGUI | Capturas |
+| 10c | Sala neón (27/10) | Damero, paneles, vitrina de reliquias, puerta blindada | Capturas |
 | 11 | Antes de publicar | Tutorial del primer minuto, analítica, checklist | **Publicás vos** |
 
 > **Cambio del 25/10/2026:** después de la prueba de 5 minutos, Juani pidió hacerlo más roguelike, estilo Balatro. La ficha (`ideas/plinko-knight.md`, sección "Rediseño roguelike") manda sobre este plan: la etapa 5 sigue con los pasos 5a a 5d (Fuerza × Multi, tienda, reliquias, zonas y jefes con maña) antes del guardado. Los prompts 6 a 11 de abajo se adaptan a eso.
@@ -700,3 +702,125 @@ capturas.
 Probalo: FPS en emulador de celular (30 o más), consola sin rojo, 2 jugadores. Copia .rbxl en
 backups/. Commit "sala arcade con modelos".
 ```
+
+---
+
+> **Agregado el 27/10/2026 (Juani, con propuestas de Gemini):** "quiero más pixel art, como Balatro; mejorá la distribución de las pantallas; la tienda en una pantalla aparte; el HUD y las imágenes con ForgeGUI, vos las animaciones y los modelos. Sigue siendo feo". Juani pasó una captura armada por Gemini (3 columnas) y dos textos de Gemini: uno del HUD y otro de la sala. Acá queda **lo que se toma y lo que no**. Van como **etapas 10b y 10c, antes de la 11**, un prompt por sesión.
+
+## Filtro de las propuestas de Gemini (reglas de apuestas de Roblox y regla 5)
+
+| Gemini propuso | Se hace así | Por qué |
+|---|---|---|
+| Ficha de póker en el "Objetivo" | Ícono de calavera o del monstruo | Fichas = casino |
+| "Meta 50.000 / Actual 18.433" | Vida del monstruo: barra y "18.433 / 50.000" | El objetivo ya existe: bajarle la vida |
+| Cajero ATM de deuda, "rondas restantes / deuda", ranura de tarjeta | **Terminal de la tienda** con display "PELEAS 3/9" y ranura de bolas | Nada de deuda ni dinero |
+| "Slot machine console", "game odds" en la pantalla | Máquina arcade con el logo y una demo del tablero | Tragamonedas prohibidas |
+| Puerta que se abre "al liquidar la deuda" | Puerta blindada que **se abre al ganar la mazmorra** (adorno: luces verdes y sube) | Mismo efecto, sin deuda |
+| Mesa de amuletos | **Vitrina de tus reliquias** (las de la partida, en 3D chiquitas) | Encaja con las reliquias |
+| Clavijas golpeadas que se desintegran (Peglin) | Durante el tiro, la clavija tocada queda con un aro oscuro; vuelve al terminar | Acá se pueden volver a tocar |
+| Fondo de mesa verde (Balatro) | Fondo oscuro de mazmorra con un remolino lento violeta y cian | El paño verde parece mesa de casino |
+
+## Etapa 10b · Pantallas en pixel art, tipo Balatro (27/10)
+
+**Lo que ya se hizo (27/10, antes de frenar):** estilo de ForgeGUI **"Plinko Knight - Pixel mazmorra"** (id `d3da0e22-4d00-42cb-9a61-0ff5537197a1`, versión 1) y 9 imágenes generadas, todavía sin subir ni usar (ids de trabajo de ForgeGUI):
+
+| Pieza | Job |
+|---|---|
+| Panel | `98a23356-9b8b-487b-8302-2da375690b6e` |
+| Botón | `f5b41844-0425-4ff7-851c-a3e2bc20708f` |
+| Casillero | `8feb336d-bae6-4f37-af18-c8ec3ac06b07` |
+| Corazón | `a9393fbf-b648-4faf-8774-f5670bdb815b` |
+| Moneda | `35011646-e319-43d1-a6b4-df9461407473` |
+| Engranaje | `8e8ebeb8-698a-432e-9055-6c37f177bfff` |
+| Puerta (salir) | `46483bdb-efee-4de1-93f5-1077939d8ed7` |
+| Espada (Fuerza) | `25bd60ff-e9ae-4a89-ae1f-878d297f27c8` |
+| Llama (Multi) | `4fd00267-5e17-4e67-aa3e-e47f5dbb4178` |
+
+**Distribución (3 columnas + bandeja):**
+```
+┌────────────────┬──────────────────────────┬────────────────┐
+│ IZQUIERDA      │ CENTRO: TABLERO          │ DERECHA        │
+│ Pelea 5 de 9   │ (más ancho, con aire,    │ [Salir] [⚙]    │
+│ Zona 2         │  marco fino)             │ Monstruo       │
+│ ♥ vida (verde) │                          │ (cartel 3D,    │
+│ ● oro          │                          │  vida y maña)  │
+│ ──────────     │                          │                │
+│ FUERZA × MULTI │                          │                │
+│ (azul) (rojo)  │                          │                │
+│ = GOLPE grande │                          │                │
+│ tus clavijas   │                          │                │
+├────────────────┴──────────────────────────┴────────────────┤
+│ BANDEJA: [bola] [perg.] [perg.] [rel][rel][rel][rel][rel]   │
+└─────────────────────────────────────────────────────────────┘
+```
+- **Tienda en pantalla aparte:** al ganar una pelea, la pantalla cambia entera a la tienda (como Balatro), con cartas grandes en fila, precio dorado, "Renovar", "¿Qué sale?" y el botón **BAJAR** enorme abajo a la derecha. Si comprás una mejora de clavija, la tienda se corre, aparece el tablero para tocar las clavijas y después vuelve.
+- **Paleta:** verde menta = vida y cosas buenas; azul = Fuerza; rojo = Multi y daño; dorado = oro y tienda; magenta y cian = neón de adorno.
+- **Letra pixel** en todo (Arcade de Roblox; si se ve chica, otra pixel de Roblox), números grandes con borde oscuro.
+
+```
+Juego: Plinko Knight. Leé las Reglas de plinko-knight/PLAN-Y-PROMPTS.md, la ficha y la sección
+"Agregado el 27/10" (filtro de Gemini y etapa 10b). Si está la skill game-ui-ux, usala de apoyo.
+Etapa 10b: pantallas en pixel art tipo Balatro. ForgeGUI hace el HUD y los íconos; Claude hace
+el código, las animaciones y lo 3D.
+
+1) Imágenes: usá las 9 ya generadas con el estilo "Plinko Knight - Pixel mazmorra" (si alguna
+   no sirve, generala de nuevo con el mismo estilo; avisame cuántas antes). Los marcos tienen que
+   tener el centro transparente para ir encima de los botones (9-slice). Subilas a Roblox con la
+   conexión de ForgeGUI y anotá los IDs en Config.Assets.Hud.
+2) Estilo.luau: variante "D · Pixel" en Config.Pantalla (letra pixel, paneles con marco pixel,
+   botones con labio oscuro abajo que se hunden al tocarlos, sombra dura). Que cambiar la
+   variante siga cambiando todo.
+3) Distribución en 3 columnas + bandeja (dibujo de la etapa 10b). El panel FUERZA × MULTI pasa
+   de cartel 3D a la columna izquierda (2D): caja azul, ×, caja roja y "= GOLPE" grande. La
+   cámara del tablero usa el espacio libre del centro.
+4) Tienda como pantalla aparte, con cartas que se balancean y se inclinan hacia el mouse, precio
+   dorado y BAJAR enorme. Si hay que tocar clavijas, se corre y vuelve.
+5) Números como Balatro/Peglin: "+2" blanco con borde azul que salta de la clavija; los ×Multi
+   en un cartelito rojo inclinado ("×2 MULTI") que crece 20 % y sube; cada toque hace saltar la
+   caja azul o la roja (1,1 y vuelve). Al caer la bola: golpe seco, las dos cajas se juntan en
+   una cifra gigante que vuela al monstruo.
+6) Clavijas por estado: las normales doradas con brillo; las especiales con borde que late o
+   runa; las tocadas en este tiro con un aro oscuro hasta que termina.
+7) Fondo: remolino lento violeta y cian detrás del tablero (pixelado, en la pared del fondo).
+8) Inicio, final, cofre, ajustes y ficha de reliquia con el mismo estilo.
+Probalo: una pelea entera, una compra con clavijas y un cofre; capturas antes/después en
+plinko-knight/arte/comparaciones/v4/. Consola sin rojo. Commit "pantallas pixel".
+```
+
+## Etapa 10c · Sala neón: CloverPit + arcade de los 80 (27/10)
+
+Sala en primera persona, chica y cerrada, con la máquina en el centro. Todo con partes por código (vive en git), sin modelos de IA.
+
+- **Máquina (centro):** silueta de CloverPit (palanca al costado, bandeja abajo) en carcasa arcade con bordes de luz cian y fucsia; pantalla CRT con letra pixel naranja o amarilla, el logo y una demo del tablero. *(Ya hecha en parte el 27/10: gabinete con marquesina, botones y bisel.)*
+- **Terminal de la tienda (izquierda):** metal satinado, franja LED magenta vertical, display "PELEAS 3/9" y "MEJOR 5/9", botón grande de confirmar y ranura de bolas. *(Ya hecho en parte: kiosco con vitrina de bolas.)*
+- **Vitrina de reliquias (derecha):** mesa con cajas de vidrio iluminadas por dentro; en cada una, una reliquia de las que tenés en la partida (modelito simple que gira) y un monitor chico con botones de arcade.
+- **Piso:** baldosas oscuras en damero que reflejan un poco las luces de neón.
+- **Paredes:** paneles acústicos oscuros en relieve con tubos de neón que forman flechas hacia la máquina y siluetas simples (una espada, una calavera).
+- **Columnas de neón:** verticales en las esquinas, que laten.
+- **Puerta blindada (al fondo):** compuerta con franjas amarillas y negras iluminadas por detrás y luces rojas; **al ganar la mazmorra** se ponen verdes y la puerta sube (solo adorno).
+- **Ambiente:** niebla suave y luz que sale casi toda del neón.
+
+```
+Juego: Plinko Knight. Leé las Reglas de plinko-knight/PLAN-Y-PROMPTS.md, la ficha y la sección
+"Agregado el 27/10" (filtro de Gemini y etapa 10c).
+Etapa 10c: la sala neón, en primera persona, todo con partes por código en GeneradorSala.
+
+1) Piso de damero oscuro que refleja; paredes con paneles acústicos y flechas/siluetas de neón;
+   columnas de neón en las esquinas que laten (cliente).
+2) Terminal de la tienda: franja LED magenta vertical y display con PELEAS y MEJOR (datos de tu
+   progreso), además de lo que ya tiene.
+3) Vitrina de reliquias a la derecha: cajas de vidrio con luz adentro; cada reliquia que tenés en
+   la partida aparece como un modelito simple que gira (forma y color de su rareza).
+4) Puerta blindada al fondo con franjas iluminadas y luces rojas; al ganar la mazmorra, verdes y
+   se levanta (cliente, solo adorno).
+5) Niebla suave y luz del neón. Pocas luces con sombra.
+6) Nada de cajero, deuda, monedas, fichas ni "odds" (ver el filtro).
+Probalo: caminar la sala, sentarse y levantarse, ganar la mazmorra (con los atajos de prueba) y
+ver la puerta; capturas en plinko-knight/arte/comparaciones/v4/. 60 FPS en compu, consola sin
+rojo. Copia .rbxl en backups/ si cambia el place. Commit "sala neón".
+```
+
+### Más ideas de Gemini para después de 10b y 10c (no entran todavía)
+- Cuando el golpe es enorme, la pantalla CRT de la sala muestra la cifra (se ve al levantarte).
+- Sonido "seco" para el golpe final y un "ding" más agudo para cada ×Multi.
+- Contadores digitales en la máquina con tus récords en vivo.
