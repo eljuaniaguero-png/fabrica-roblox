@@ -33,6 +33,7 @@ local TiendaModulo = require(Shared:WaitForChild("Tienda"))
 local Reliquias = require(Shared:WaitForChild("Reliquias"))
 local Progreso = require(Shared:WaitForChild("Progreso"))
 local Partida = require(script.Parent:WaitForChild("Partida"))
+local Analitica = require(script.Parent:WaitForChild("Analitica"))
 
 local Peleas = {}
 
@@ -152,7 +153,18 @@ function Peleas.iniciar()
 			return Mazmorra.copiar(p.Estado) -- no se puede: se devuelve como está
 		end
 		p.UltimoVolver = ahora
+		if p.Progreso.PartidasJugadas >= 1 then
+			Analitica.paso(jugador, "Volvió a bajar")
+		end
 		Partida.empezar(p, bola)
+		if p.Estado.Piso >= 1 then
+			Analitica.piso(
+				jugador,
+				"empezo",
+				p.Estado.Piso,
+				Mazmorra.monstruo(p.Estado.Piso).Nombre
+			)
+		end
 		Peleas.avisarProgreso(jugador, {}) -- partidas jugadas y bola elegida
 		return Mazmorra.copiar(p.Estado)
 	end
@@ -207,6 +219,16 @@ function Peleas.iniciar()
 			return Mazmorra.copiar(p.Estado), "Más despacio"
 		end
 		local ok, motivo = false, "Acción desconocida"
+		local e = p.Estado
+		local oroAntes = e.Oro
+		-- Lo que se lleva, leído antes de comprar (para la analítica; lo valida shared/Tienda).
+		local elegido: string? = nil
+		if accion == "comprar" and typeof(indice) == "number" then
+			local item = e.Tienda.Items[indice]
+			elegido = if item then item.Id else nil
+		elseif accion == "cofre" and typeof(indice) == "number" then
+			elegido = e.Tienda.Cofre[indice]
+		end
 		if accion == "comprar" then
 			ok, motivo = TiendaModulo.comprar(p.Estado, indice, clavijas)
 		elseif accion == "cofre" then
@@ -222,6 +244,22 @@ function Peleas.iniciar()
 			motivo = if ok then nil else "La tienda está cerrada"
 			if ok then
 				p.Semilla = nil
+			end
+		end
+		if ok then
+			-- Etapa 11: analítica de mejoras, oro y pisos.
+			if elegido and (accion == "comprar" or accion == "cofre") then
+				Analitica.paso(jugador, "Eligió una mejora")
+				Analitica.mejora(jugador, elegido, if accion == "cofre" then "cofre" else "tienda")
+			end
+			local motivoOro = if accion == "vender"
+				then "Venta"
+				elseif accion == "renovar" then "Renovar"
+				else "Compra"
+			Analitica.oro(jugador, p.Estado.Oro - oroAntes, p.Estado.Oro, motivoOro)
+			if accion == "bajar" then
+				local piso = p.Estado.Piso
+				Analitica.piso(jugador, "empezo", piso, Mazmorra.monstruo(piso).Nombre)
 			end
 		end
 		return Mazmorra.copiar(p.Estado), if ok then nil else motivo

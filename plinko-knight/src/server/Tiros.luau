@@ -21,6 +21,7 @@ local Partida = require(script.Parent:WaitForChild("Partida"))
 local Guardado = require(script.Parent:WaitForChild("Guardado"))
 local Peleas = require(script.Parent:WaitForChild("Peleas"))
 local Progreso = require(Shared:WaitForChild("Progreso"))
+local Analitica = require(script.Parent:WaitForChild("Analitica"))
 
 local Tiros = {}
 
@@ -42,6 +43,36 @@ local function pedirTiro(jugador: Player): (number?, number?)
 		p.Semilla = azar:NextInteger(1, 2 ^ 31 - 1)
 	end
 	return p.NumeroTiro, p.Semilla
+end
+
+-- Etapa 11: lo que el turno le cuenta a la analítica (embudo, pisos y oro de la pelea).
+local function registrar(jugador: Player, p: Partida.Partida, turno: Mazmorra.Turno, piso: number)
+	if p.NumeroTiro == 1 then
+		Analitica.paso(jugador, "Primer tiro")
+	end
+	local nombre = Mazmorra.monstruo(piso).Nombre
+	if turno.Resultado == "practica" then
+		Analitica.piso(jugador, "empezo", 1, Mazmorra.monstruo(1).Nombre)
+	elseif turno.Resultado == "perdio" then
+		Analitica.piso(jugador, "cayo", piso, nombre)
+	elseif turno.Resultado == "piso" or turno.Resultado == "gano" then
+		Analitica.piso(jugador, "paso", piso, nombre)
+		if piso == 1 then
+			Analitica.paso(jugador, "Ganó la pelea 1")
+		end
+		local siguiente = piso + 1
+		if siguiente == 3 then
+			Analitica.paso(jugador, "Llegó al piso 3")
+		elseif siguiente == 5 then
+			Analitica.paso(jugador, "Llegó al piso 5")
+		elseif siguiente == #Config.Monstruos then
+			Analitica.paso(jugador, "Llegó al jefe final")
+		end
+		local o = turno.Oro
+		if o then
+			Analitica.oro(jugador, o.Pelea + o.Bonus + o.Interes, p.Estado.Oro, "Pelea ganada")
+		end
+	end
 end
 
 local function tirar(
@@ -83,7 +114,9 @@ local function tirar(
 			)
 		)
 	end
+	local oroAntes = e.Oro
 	Mazmorra.cobrarTiro(e, r.Oro, r.Rotas)
+	Analitica.oro(jugador, e.Oro - oroAntes, e.Oro, "Clavijas")
 	e.Furia = false
 	-- Logros (etapa 6): lo que pasó en el tiro y en el turno.
 	local nuevos = Progreso.alTirar(p.Progreso, e, r.Resultado)
@@ -92,6 +125,7 @@ local function tirar(
 	for _, n in Progreso.alTurno(p.Progreso, e, turno, piso, bola) do
 		table.insert(nuevos, n)
 	end
+	registrar(jugador, p, turno, piso)
 	if #nuevos > 0 then
 		Guardado.guardarYa(jugador) -- un desbloqueo no se pierde aunque se caiga el servidor
 	end

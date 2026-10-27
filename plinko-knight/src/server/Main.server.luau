@@ -9,6 +9,7 @@ local RunService = game:GetService("RunService")
 local Guardado = require(script.Parent:WaitForChild("Guardado"))
 local Partida = require(script.Parent:WaitForChild("Partida"))
 local Peleas = require(script.Parent:WaitForChild("Peleas"))
+local Analitica = require(script.Parent:WaitForChild("Analitica"))
 require(script.Parent:WaitForChild("Tiros")).iniciar()
 Peleas.iniciar()
 require(script.Parent:WaitForChild("Sala")).iniciar() -- etapa 7b-1: la sala arcade
@@ -25,6 +26,7 @@ local function entrar(jugador: Player)
 		return
 	end
 	Partida.iniciar(jugador, datos)
+	Analitica.paso(jugador, "Entró")
 	Peleas.avisarProgreso(jugador, {}) -- primero el progreso: la pantalla de inicio lo usa
 	Peleas.avisar(jugador)
 end

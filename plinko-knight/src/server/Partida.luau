@@ -63,10 +63,12 @@ function Partida.iniciar(jugador: Player, datos: Progreso.Datos): Partida
 end
 
 -- Mazmorra nueva desde el piso 1 con la bola elegida: tablero todo gris otra vez, sin el tiro
--- pendiente y con las reliquias desbloqueadas hasta ahora.
+-- pendiente y con las reliquias desbloqueadas hasta ahora. La primera partida del jugador arranca
+-- con el monstruo de práctica (piso 0, etapa 11).
 function Partida.empezar(p: Partida, bola: string)
 	p.Bola = bola
-	p.Estado = Mazmorra.nueva(bola, p.Progreso.ReliquiasDesbloqueadas)
+	local practica = p.Progreso.PartidasJugadas == 0
+	p.Estado = Mazmorra.nueva(bola, p.Progreso.ReliquiasDesbloqueadas, practica)
 	p.Semilla = nil
 	sortear(p)
 	Progreso.alEmpezar(p.Progreso, bola)

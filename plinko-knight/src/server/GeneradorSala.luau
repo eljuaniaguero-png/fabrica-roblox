@@ -507,7 +507,7 @@ local function maquina(padre: Instance, cf: CFrame): Model
 		titulo.Font = Enum.Font.Arcade
 		titulo.TextScaled = true
 		titulo.TextColor3 = Color3.fromHex(C.Led)
-		titulo.Text = "PLINKO KNIGHT"
+		titulo.Text = string.upper(Config.NombreJuego)
 		titulo.Parent = gui
 		for fila = 0, 3 do
 			for col = 0, 6 - fila % 2 do
@@ -548,7 +548,7 @@ local function maquina(padre: Instance, cf: CFrame): Model
 	)
 	local cartel =
 		parte("Cartel", m, Vector3.new(w - 0.2, 0.72, 0.05), L(0, h + 0.47, -0.82), "#050505")
-	cartelLuz(cartel, Enum.NormalId.Front, "PLINKO KNIGHT", C.Magenta, "#7A2CF5")
+	cartelLuz(cartel, Enum.NormalId.Front, string.upper(Config.NombreJuego), C.Magenta, "#7A2CF5")
 	luz(cartel, C.Magenta, 1, 8)
 	neon("TuboMarquesina", m, Vector3.new(w + 0.1, 0.08, 0.08), L(0, h + 0.02, -0.84), C.Cian)
 	neon("TuboMarquesina", m, Vector3.new(w + 0.1, 0.08, 0.08), L(0, h + 0.92, -0.84), C.Cian)
@@ -579,7 +579,7 @@ local function maquina(padre: Instance, cf: CFrame): Model
 	local prompt = Instance.new("ProximityPrompt")
 	prompt.Name = "Jugar"
 	prompt.ActionText = "Jugar"
-	prompt.ObjectText = "Plinko Knight"
+	prompt.ObjectText = Config.NombreJuego
 	prompt.KeyboardKeyCode = Enum.KeyCode.E
 	prompt.MaxActivationDistance = S.DistanciaJugar
 	prompt.RequiresLineOfSight = false

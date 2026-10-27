@@ -71,7 +71,8 @@ export type Estado = {
 }
 
 -- "sigue": el monstruo sigue vivo · "piso": lo mataste y bajás · "perdio" · "gano" (el jefe)
-export type Resultado = "sigue" | "piso" | "perdio" | "gano"
+-- · "practica": mataste al de práctica (etapa 11) y empieza la pelea 1, sin tienda
+export type Resultado = "sigue" | "piso" | "perdio" | "gano" | "practica"
 
 export type Turno = {
 	Danio: number,
@@ -86,16 +87,22 @@ export type Turno = {
 
 local Mazmorra = {}
 
+-- El piso 0 es el monstruo de práctica (etapa 11).
 function Mazmorra.monstruo(piso: number): Config.Monstruo
+	if piso == 0 then
+		return Config.Practica
+	end
 	return Config.Monstruos[math.clamp(piso, 1, #Config.Monstruos)]
 end
 
-function Mazmorra.nueva(bola: string?, disponibles: { string }?): Estado
+-- practica: la primera partida del jugador arranca en el piso 0 (etapa 11).
+function Mazmorra.nueva(bola: string?, disponibles: { string }?, practica: boolean?): Estado
+	local piso = if practica then 0 else 1
 	return {
-		Piso = 1,
+		Piso = piso,
 		Vida = Config.VidaCaballero,
 		VidaMaxima = Config.VidaCaballero,
-		VidaMonstruo = Mazmorra.monstruo(1).Vida,
+		VidaMonstruo = Mazmorra.monstruo(piso).Vida,
 		Fase = "peleando",
 		Tablero = Clavijas.nuevoTablero(CANTIDAD_CLAVIJAS),
 		Niveles = {},
@@ -275,6 +282,23 @@ function Mazmorra.turno(e: Estado, danio: number, quemadura: number?): Turno
 	local vidaMonstruo = e.VidaMonstruo
 	local golpe = 0
 	local resultado: Resultado
+
+	if vidaMonstruo <= 0 and e.Piso == 0 then
+		-- Práctica: no hay oro, tienda ni logros; arranca la pelea 1 de verdad.
+		e.Piso = 1
+		e.VidaMonstruo = Mazmorra.monstruo(1).Vida
+		Mazmorra.empezarPelea(e)
+		return {
+			Danio = danio,
+			Oro = nil,
+			Quemadura = quemo,
+			VidaMonstruo = vidaMonstruo,
+			Golpe = 0,
+			VidaCaballero = e.Vida,
+			Resultado = "practica",
+			Estado = Mazmorra.copiar(e),
+		}
+	end
 
 	if vidaMonstruo > 0 then
 		golpe = monstruo.Golpe * (if e.Mania == "rabia" then Config.Manias.rabia.Factor else 1)

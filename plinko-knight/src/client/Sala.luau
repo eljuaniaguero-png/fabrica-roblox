@@ -1,7 +1,8 @@
 --!strict
 -- La sala desde el cliente (etapa 7b-1): caminar, sentarse en tu máquina y volver a caminar.
---   - Solo tu máquina (atributo Dueno) muestra "E: Jugar" (en celular, el botón del prompt) y un
---     contorno amarillo cuando estás cerca, como en CloverPit.
+--   - La máquina muestra "E: Jugar" (en celular, el botón del prompt) y un contorno amarillo
+--     cuando estás cerca, como en CloverPit. Etapa 11: la usan todos los del servidor (sentarse es
+--     solo de cámara y cada uno tiene su tablero y su partida), así nadie se traba si entran varios.
 --   - Sentarse: el personaje queda quieto en la banqueta, la cámara se acerca a la pantalla en
 --     Config.Sala.TiempoCamara, fundido a negro y adentro de la pantalla está la mazmorra (la
 --     cámara del tablero de Escena), con un marco de pantalla alrededor.
@@ -30,6 +31,7 @@ export type Opciones = {
 
 export type Sala = {
 	enMaquina: () -> boolean, -- sentado y con la cámara adentro de la pantalla
+	sentarse: () -> boolean, -- etapa 11: sentarse sin tocar E (false si la máquina no llegó todavía)
 	levantarse: () -> (),
 }
 
@@ -59,13 +61,18 @@ local function mover(si: boolean)
 	end
 end
 
+-- La tuya si el servidor te asignó una (atributo Dueno); si no, la primera (etapa 11).
 local function miMaquina(): Model?
+	local primera: Model? = nil
 	for _, m in CollectionService:GetTagged("Maquina") do
-		if m:IsA("Model") and m:GetAttribute("Dueno") == jugador.UserId then
-			return m
+		if m:IsA("Model") then
+			if m:GetAttribute("Dueno") == jugador.UserId then
+				return m
+			end
+			primera = primera or m
 		end
 	end
-	return nil
+	return primera
 end
 
 function Sala.crear(o: Opciones): Sala
@@ -226,7 +233,7 @@ function Sala.crear(o: Opciones): Sala
 		contorno.Adornee = m
 		contorno.Parent = m
 		local function actualizar()
-			prompt.Enabled = m:GetAttribute("Dueno") == jugador.UserId
+			prompt.Enabled = miMaquina() == m
 		end
 		m:GetAttributeChangedSignal("Dueno"):Connect(actualizar)
 		actualizar()
@@ -391,6 +398,13 @@ function Sala.crear(o: Opciones): Sala
 	return {
 		enMaquina = function(): boolean
 			return adentro and not ocupado
+		end,
+		sentarse = function(): boolean
+			if not miMaquina() then
+				return false
+			end
+			task.spawn(sentarse)
+			return true
 		end,
 		levantarse = function()
 			task.spawn(levantarse)

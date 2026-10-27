@@ -15,6 +15,11 @@ export type Monstruo = {
 
 local Config = {}
 
+-- Etapa 11: el nombre que se ve en el juego (carteles de la sala, la máquina y la pantalla de
+-- inicio). "Plinko" es marca registrada y además es un juego de casinos online: hay que cambiarlo
+-- antes de publicar. Cambiándolo acá se cambia en todos lados.
+Config.NombreJuego = "Plinko Knight"
+
 -- Versión de los datos guardados: se sube (con su migración) cada vez que cambia lo que se guarda.
 Config.VERSION = 2 -- 2: se suman los Ajustes (etapa 7)
 
@@ -135,6 +140,43 @@ Config.Monstruos = {
 		EsJefe = true,
 	},
 } :: { Monstruo }
+
+-- Etapa 11: la primera partida de un jugador nuevo arranca con este monstruo (piso 0). Tiene poca
+-- vida, no pega y no cuenta como piso: al matarlo se pasa directo a la pelea 1, sin tienda ni oro.
+Config.Practica = {
+	Id = "practica",
+	Nombre = "Slime de Práctica",
+	Zona = 1,
+	Vida = 12,
+	Golpe = 0,
+	Color = "#5FBF4A",
+} :: Monstruo
+
+-- Etapa 11: el primer minuto. Un jugador nuevo (0 partidas jugadas) se sienta solo en la máquina
+-- y una mano le muestra cómo tirar hasta que tira la primera bola.
+Config.Tutorial = {
+	EsperaSentarse = 0.5, -- segundos desde que llega el progreso hasta sentarlo
+	Recorrido = 70, -- píxeles que la mano va y viene arrastrando
+	Vuelta = 1.6, -- segundos de una ida y vuelta de la mano
+	Texto = "ARRASTRÁ Y SOLTÁ",
+}
+
+-- Etapa 11: analítica (AnalyticsService). El embudo de los primeros pasos va en este orden; cada
+-- paso se manda una vez por jugador (Roblox ignora los repetidos).
+Config.Analitica = {
+	Embudo = {
+		"Entró",
+		"Primer tiro",
+		"Ganó la pelea 1",
+		"Eligió una mejora",
+		"Llegó al piso 3",
+		"Llegó al piso 5",
+		"Llegó al jefe final",
+		"Volvió a bajar",
+	},
+	Camino = "Mazmorra", -- nombre del recorrido de pisos (empezó, pasó o cayó en cada piso)
+	Moneda = "Oro",
+}
 
 -- Clavijas especiales (paso 5a). El tablero es de la partida: empieza todo gris y las cartas
 -- (después, la tienda) convierten clavijas. "Nivel" lo suben los pergaminos (paso 5b); por
@@ -507,6 +549,7 @@ Config.Assets = {
 	Monstruos = {
 		rata = "rbxassetid://80675382037335",
 		slime = "rbxassetid://109145942201870",
+		practica = "rbxassetid://109145942201870", -- etapa 11: el mismo dibujo que el slime
 		reyRata = "rbxassetid://116157565396353",
 		murcielago = "rbxassetid://87724255448664",
 		esqueleto = "rbxassetid://77030035121515",

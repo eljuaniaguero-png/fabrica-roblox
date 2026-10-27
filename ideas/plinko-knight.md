@@ -1,7 +1,7 @@
 # Plinko Knight — ficha del prototipo
 
 Origen: `plinko-knight/PLAN-Y-PROMPTS.md` (25/10/2026) + idea de arte aprobada (`plinko-knight/arte/IDEA-DE-ARTE.md`).
-Estado: **aprobada por Juani el 25/10/2026** (punto de control 1). Etapas 2 (tablero, puntería y bola), 3 (daño y revisión del servidor), 4 (monstruos y mazmorra) y 5 (mejoras 1 de 3) hechas el 25/10/2026. Juani jugó la prueba de 5 minutos (perdió en el piso 6: "está bueno") y pidió hacerlo **más roguelike, estilo Balatro**. **Rediseño aprobado el 25/10/2026.** Pasos 5a a 5d del rediseño hechos el 25/10; Juani lo jugó 10 minutos y dijo OK. Etapa 6 (guardado) hecha el 25/10. Etapas 7 (pantallas), 8 (estilo: Cripta azul) y 9 (arte y sonido con ForgeGUI) hechas el 25 y 26/10; Juani decidió no probar en celular (26/10). Etapas 7b-1 (sala en gris), 7b-2 (13 modelos con ForgeGUI) y 7b-3 (modelos en la sala, neón y luces) hechas el 26/10; lo próximo es la etapa 10 (sensación).
+Estado: **etapa 11 hecha el 27/10/2026: lista para que Juani la publique** (falta el nombre). Aprobada por Juani el 25/10/2026 (punto de control 1). Etapas 2 (tablero, puntería y bola), 3 (daño y revisión del servidor), 4 (monstruos y mazmorra) y 5 (mejoras 1 de 3) hechas el 25/10/2026. Juani jugó la prueba de 5 minutos (perdió en el piso 6: "está bueno") y pidió hacerlo **más roguelike, estilo Balatro**. **Rediseño aprobado el 25/10/2026.** Pasos 5a a 5d del rediseño hechos el 25/10; Juani lo jugó 10 minutos y dijo OK. Etapa 6 (guardado) hecha el 25/10. Etapas 7 (pantallas), 8 (estilo: Cripta azul) y 9 (arte y sonido con ForgeGUI) hechas el 25 y 26/10; Juani decidió no probar en celular (26/10). Etapas 7b-1 (sala en gris), 7b-2 (13 modelos con ForgeGUI) y 7b-3 (modelos en la sala, neón y luces) hechas el 26/10; lo próximo es la etapa 10 (sensación).
 Carpeta: `plinko-knight/` (código en `plinko-knight/src/`, Rojo con `rojo serve plinko-knight`, puerto 34876). Place propio: `plinko-knight/PlinkoKnight.rbxl`.
 
 ## Rediseño roguelike (aprobado el 25/10/2026)
@@ -602,3 +602,14 @@ Todo con partes por código (`server/GeneradorSala.luau`), números en `Config.S
 - Copia `.rbxl`: no hace falta, el place no cambió (la sala se arma por código y vive en git).
 - **Para más adelante (ideas de Gemini, sin hacer):** cifra del golpe enorme en la pantalla de la sala, sonido seco del golpe final y "ding" más agudo del ×Multi, contadores de récords en la máquina.
 
+
+### Etapa 11 · Antes de publicar (27/10/2026)
+
+- **Primer minuto:** un jugador nuevo (0 partidas jugadas) se sienta solo en la máquina apenas carga (no tiene que buscarla ni tocar E) y arranca con el **Slime de Práctica** (`Config.Practica`: 12 de vida, no pega, piso 0, no cuenta como piso, sin oro ni tienda). Una mano animada (`client/Tutorial.luau`, números en `Config.Tutorial`) muestra "ARRASTRÁ Y SOLTÁ" hasta el primer tiro. Al matarlo: "¡Bien! Ahora, el piso 1" y empieza la pelea 1. **Medido en Play: sentado con la mano a los 2,3 s de cargar**; el primer tiro queda a lo que tarde el jugador. La práctica se decide con `PartidasJugadas == 0` (si sale a la mitad, la próxima vez ya no la tiene: se eligió así para no cambiar lo que se guarda).
+- **Analítica** (`server/Analitica.luau`, `Config.Analitica`): embudo de 8 pasos (entró, primer tiro, ganó la pelea 1, eligió una mejora, piso 3, piso 5, jefe final, volvió a bajar); recorrido de pisos "Mazmorra" (empezó / pasó / cayó en cada piso: dónde se pierde más); evento "Mejora elegida" (id y si fue tienda o cofre); oro que entra y sale. Probado en Play: salen todos los eventos.
+- **Varios jugadores:** la máquina la puede usar cualquiera del servidor (antes solo el primero: los demás se trababan). Cada uno tiene su tablero, partida y monstruo. La pared de récords y la vitrina siguen mostrando los del primero (la sala es para servidores de 1).
+- **Arreglos:** textos que se cortaban (Multi con decimales, "= GOLPE" con miles, la maña del jefe, la lista de clavijas especiales). Las pruebas de Lune volvieron a andar (Config tenía un Vector3) y se sumó la de la práctica.
+- **Nombre:** `Config.NombreJuego` (carteles, máquina, inicio). **Falta elegir el nombre nuevo**: "Plinko" es marca y juego de casinos online.
+- **StreamingEnabled: queda apagado** a propósito: la sala mide 20 × 16 studs y entra entera siempre; apagado, la máquina y la vitrina nunca llegan tarde.
+- **Para publicar:** `plinko-knight/publicar/` tiene el ícono, 3 miniaturas, la descripción y los pasos (`COMO-PUBLICAR.md`).
+- **No probado:** Local Server con 3 jugadores (el MCP no lo abre; pasos en `COMO-PUBLICAR.md`), celular (decisión de Juani) y guardado real (hasta publicar).

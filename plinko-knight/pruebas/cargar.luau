@@ -10,6 +10,14 @@ local CARPETA = "plinko-knight/src/shared"
 
 local cache: { [string]: any } = {}
 
+-- Config tiene algunos números de la sala como Vector3 (no se usan en las reglas): en Lune
+-- alcanza con una tabla que guarde X, Y y Z.
+local Vector3 = {
+	new = function(x: number?, y: number?, z: number?)
+		return { X = x or 0, Y = y or 0, Z = z or 0 }
+	end,
+}
+
 local function cargar(nombre: string): any
 	if cache[nombre] ~= nil then
 		return cache[nombre]
@@ -24,6 +32,7 @@ local function cargar(nombre: string): any
 	})
 	local entorno = {
 		script = { Parent = padre },
+		Vector3 = Vector3,
 		require = function(x: any): any
 			if type(x) == "table" and x.__modulo then
 				return cargar(x.__modulo)

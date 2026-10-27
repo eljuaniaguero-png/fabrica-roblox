@@ -202,8 +202,9 @@ function Pantallas.crear(): Pantallas
 	mania.Name = "Mania"
 	mania.AnchorPoint = Vector2.new(1, 0)
 	mania.Position = UDim2.new(1, -M.Margen, 0, M.Margen + M.Boton + 12)
-	mania.Size = UDim2.fromOffset(ANCHO_COLUMNA, 0)
-	mania.AutomaticSize = Enum.AutomaticSize.Y
+	-- Etapa 11: alto fijo y letra que se achica (con alto automático, la segunda línea se cortaba).
+	mania.Size = UDim2.fromOffset(ANCHO_COLUMNA, 70)
+	Estilo.ajustar(mania, T.Chico, 12)
 	mania.BackgroundTransparency = 0.1
 	mania.BackgroundColor3 = Estilo.color("Panel")
 	mania.TextColor3 = Estilo.color("Peligro")
@@ -317,7 +318,7 @@ function Pantallas.crear(): Pantallas
 	guiInicio.Enabled = false
 	Estilo.velo(guiInicio, 0.15)
 	local inicio = Estilo.lienzo(guiInicio)
-	local tituloInicio = Estilo.texto(inicio, "Plinko Knight", T.Titulo)
+	local tituloInicio = Estilo.texto(inicio, Config.NombreJuego, T.Titulo)
 	tituloInicio.AnchorPoint = Vector2.new(0.5, 0)
 	tituloInicio.Position = UDim2.new(0.5, 0, 0, 14)
 	tituloInicio.Size = UDim2.fromOffset(640, 84)
@@ -469,6 +470,7 @@ function Pantallas.crear(): Pantallas
 		c.LayoutOrder = orden
 		local t = Estilo.texto(c, valor, T.Chico, Estilo.Fuentes.Texto)
 		t.Size = UDim2.fromScale(1, 1)
+		Estilo.ajustar(t, T.Chico, 11) -- etapa 11: "6 Roja · Nv 4" se cortaba
 		if hex then
 			t.TextColor3 = Color3.fromHex(hex)
 		end
@@ -517,8 +519,9 @@ function Pantallas.crear(): Pantallas
 		ponerEstado = function(e: Mazmorra.Estado)
 			ponerVida(e.Vida, e.VidaMaxima)
 			local m = Mazmorra.monstruo(e.Piso)
-			peleaTexto.Text = if m.EsJefe
-				then ("JEFE %s"):format(numeroPelea(e.Piso))
+			peleaTexto.Text = if e.Piso == 0
+				then "PRÁCTICA"
+				elseif m.EsJefe then ("JEFE %s"):format(numeroPelea(e.Piso))
 				else ("PELEA %s"):format(numeroPelea(e.Piso))
 			peleaTexto.TextColor3 = if m.EsJefe
 				then Estilo.color("Peligro")

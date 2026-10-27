@@ -42,6 +42,7 @@ local Ajustes = require(script.Parent:WaitForChild("Ajustes"))
 local Sonidos = require(script.Parent:WaitForChild("Sonidos"))
 local SalaModulo = require(script.Parent:WaitForChild("Sala"))
 local Efectos = require(script.Parent:WaitForChild("Efectos"))
+local TutorialModulo = require(script.Parent:WaitForChild("Tutorial"))
 
 -- Etapa 7b-1: se camina por la sala; los controles los apaga client/Sala al sentarse.
 
@@ -71,6 +72,7 @@ local pantallas = PantallasModulo.crear()
 local panel = Numeros.crearPanel(pantallas.formula)
 local seleccion = SeleccionModulo.crear(escena)
 escena.ponerZonaLibre(pantallas.zonaLibre)
+local tutorial = TutorialModulo.crear(escena)
 
 local estado: Mazmorra.Estado = Mazmorra.nueva() -- se pisa con el del servidor al arrancar
 estado.Fase = "inicio" -- hasta que el servidor termine de cargar el progreso, no se tira
@@ -220,6 +222,12 @@ local function ponerEstado(e: Mazmorra.Estado)
 	if e.Fase == "peleando" then
 		pantallas.ocultarFinal()
 		pantallas.ocultarInicio()
+	end
+	-- Etapa 11: la mano de "arrastrá y soltá" en la pelea de práctica, hasta el primer tiro.
+	if e.Fase == "peleando" and e.Piso == 0 and e.TirosPelea == 0 then
+		tutorial.mostrar()
+	else
+		tutorial.ocultar()
 	end
 end
 
@@ -418,6 +426,7 @@ sala = SalaModulo.crear({
 		end
 	end,
 	alLevantarse = function()
+		tutorial.ocultar()
 		pantallas.ocultarFinal()
 		pantallas.ocultarInicio()
 		pantallas.mostrarHud(false)
@@ -574,7 +583,14 @@ local function animarTurno(turno: Mazmorra.Turno)
 	estado.Tablero = e.Tablero
 	pintarClavijas()
 	pantallas.ponerTablero(e)
-	if turno.Resultado == "piso" then
+	if turno.Resultado == "practica" then
+		-- Etapa 11: le ganaste al de práctica; sin tienda, directo a la pelea 1.
+		Sonidos.tocar("GanarPelea") -- SONIDO
+		print(("[Mazmorra] Práctica ganada en %d tiros"):format(tirosPelea))
+		task.wait(0.3)
+		ponerEstado(e)
+		pantallas.anunciar("¡Bien! Ahora, el piso 1")
+	elseif turno.Resultado == "piso" then
 		Sonidos.tocar("GanarPelea") -- SONIDO
 		print(("[Mazmorra] Pelea %d ganada en %d tiros"):format(estado.Piso, tirosPelea))
 		task.wait(0.3)
@@ -636,6 +652,7 @@ local function tirar()
 		return
 	end
 	tirando = true
+	tutorial.ocultar()
 	dibujarLinea()
 
 	-- El servidor da el número de tiro y la semilla; el ángulo se fija acá.
@@ -955,6 +972,25 @@ mostrarAvisos = function()
 	mostrandoAvisos = false
 end
 
+-- Etapa 11: un jugador nuevo (0 partidas) no tiene que buscar la máquina: se sienta solo apenas
+-- llega su progreso, y al sentarse arranca la pelea de práctica.
+local sentadoSolo = false
+local function sentarJugadorNuevo()
+	local p = progreso
+	if sentadoSolo or not p or p.PartidasJugadas > 0 then
+		return
+	end
+	sentadoSolo = true
+	task.delay(Config.Tutorial.EsperaSentarse, function()
+		for _ = 1, 40 do -- la máquina la arma el servidor: se espera hasta 10 s
+			if sala.enMaquina() or sala.sentarse() then
+				return
+			end
+			task.wait(0.25)
+		end
+	end)
+end
+
 -- Progreso guardado: llega al cargar y cada vez que cambia (mejor piso, desbloqueos). Lo nuevo
 -- sale en un aviso grande, uno por uno.
 remotos.Progreso.OnClientEvent:Connect(function(datos: any, nuevos: any)
@@ -963,6 +999,7 @@ remotos.Progreso.OnClientEvent:Connect(function(datos: any, nuevos: any)
 	end
 	progreso = datos
 	Ajustes.cargar(datos.Ajustes)
+	sentarJugadorNuevo()
 	if pantallas.inicioAbierto() then
 		-- se redibuja con el progreso nuevo (mejor piso, bolas, la elegida)
 		if enMostrador then
@@ -1003,6 +1040,7 @@ task.spawn(function()
 				end
 			end
 			ponerEstado(inicial)
+			sentarJugadorNuevo()
 			return
 		end
 		task.wait(0.5)

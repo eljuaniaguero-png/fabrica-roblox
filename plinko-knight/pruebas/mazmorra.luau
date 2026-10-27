@@ -52,6 +52,17 @@ do
 	t = Mazmorra.turno(e, 1)
 	chequear(t.Resultado == "perdio" and e.Fase == "perdio" and e.Vida == 0, "no perdió")
 
+	-- Etapa 11: la práctica (piso 0) no pega, no da oro ni tienda y lleva a la pelea 1.
+	e = Mazmorra.nueva("hierro", nil, true)
+	chequear(e.Piso == 0 and e.VidaMonstruo == Config.Practica.Vida, "la práctica no arranca")
+	t = Mazmorra.turno(e, 1)
+	chequear(t.Resultado == "sigue" and t.Golpe == 0, "la práctica pegó")
+	local oro = e.Oro
+	t = Mazmorra.turno(e, 1000)
+	chequear(t.Resultado == "practica" and e.Fase == "peleando", "la práctica abrió la tienda")
+	chequear(e.Piso == 1 and e.VidaMonstruo == Config.Monstruos[1].Vida, "no pasó a la pelea 1")
+	chequear(e.Oro == oro and e.TirosPelea == 0, "la práctica dio oro o no reinició la pelea")
+
 	e = Mazmorra.nueva()
 	Mazmorra.irAPiso(e, 9)
 	chequear(

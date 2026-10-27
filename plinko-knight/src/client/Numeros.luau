@@ -231,6 +231,8 @@ function Numeros.crearPanel(contenedor: Frame): Panel
 		valor.TextColor3 = Color3.new(1, 1, 1)
 		valor.Position = UDim2.fromScale(0.06, 0.34)
 		valor.Size = UDim2.fromScale(0.88, 0.58)
+		-- Etapa 11: un Multi con decimales ("20,25") no entraba y se cortaba: se achica.
+		Estilo.ajustar(valor, 40, 18)
 		return valor, escala
 	end
 
@@ -250,6 +252,7 @@ function Numeros.crearPanel(contenedor: Frame): Panel
 	golpe.Font = Enum.Font.Arcade
 	golpe.Position = UDim2.new(0.04, 0, 0, 126)
 	golpe.Size = UDim2.new(0.92, 0, 0, 42)
+	Estilo.ajustar(golpe, 40, 18) -- etapa 11: "= 80,4 mil" se cortaba en "= 80,"
 	local escalaGolpe = Instance.new("UIScale")
 	escalaGolpe.Parent = golpe
 
