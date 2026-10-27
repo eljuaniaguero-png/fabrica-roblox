@@ -588,3 +588,17 @@ Variante **D · Pixel** en `Config.Pantalla` (ahora la elegida): letra Arcade, p
 - Probado en Play: pelea 1 ganada, tienda, compra de clavija (se corre y vuelve al cancelar), sin errores. Capturas en `plinko-knight/arte/comparaciones/v4/`.
 - **10b terminada (27/10):** al caer la bola las cajas azul y roja se juntan en el medio, chocan y sale el "= GOLPE" gigante (después vuelven); la carta de la tienda que tenés debajo del mouse se inclina hacia él; el fondo del cofre es más oscuro (no se mezcla con la tienda); la caja de la maña del jefe tiene más margen. Revisadas con capturas: elegir bola, ajustes, cofre (con la reliquia volando a su casillero) y la pantalla final, todas en pixel. 4 tiros, cofre y derrota sin errores en consola.
 
+### Etapa 10c · Sala neón (27/10/2026)
+
+Todo con partes por código (`server/GeneradorSala.luau`), números en `Config.Sala` (Baldosa, ReflejoDamero, DameroA/B, PanelA/B, Alarma).
+- **Piso:** damero de baldosas oscuras violeta que reflejan un poco (reemplaza la grilla de neón).
+- **Paredes:** paneles acústicos de tela en la pared sur entera y en la oeste (menos donde está la terminal); flechas de neón en las paredes oeste y este que apuntan a la máquina; en la pared sur, una espada magenta y un tablerito cian con su bola.
+- **Columnas de neón** en las 4 esquinas (las del sur son nuevas), laten.
+- **Terminal de la tienda:** franjas LED magenta a los dos lados; el display muestra **MEJOR N/9** (lo escribe server/Sala cada 3 s).
+- **Vitrina de reliquias** (pared sur, derecha): mesa con 5 cajas de vidrio con parantes, tapa y luz abajo; en cada una, una gema del color de la rareza de la reliquia que tenés en ese lugar (gris común, celeste rara, dorada legendaria) que gira y flota.
+- **Puerta blindada** (pared este, reemplaza la de rejas): compuerta con franjas, marco de franjas con luz ámbar atrás, caja de metal arriba y dos luces rojas. **Al ganar la mazmorra** (server/Sala pone el atributo `Abierta`) la compuerta sube y se guarda en la caja, las luces se ponen verdes y atrás se ve un pasillo oscuro con luz verde.
+- La letra de "Tus récords" bajó a 25 (se cortaba "de 9").
+- Probado en Play: reliquias con el atajo de prueba → 3 gemas prendidas; puerta abierta; 60 FPS en compu; consola sin errores. Capturas en `plinko-knight/arte/comparaciones/v4/sala-*.jpg`.
+- Copia `.rbxl`: no hace falta, el place no cambió (la sala se arma por código y vive en git).
+- **Para más adelante (ideas de Gemini, sin hacer):** cifra del golpe enorme en la pantalla de la sala, sonido seco del golpe final y "ding" más agudo del ×Multi, contadores de récords en la máquina.
+

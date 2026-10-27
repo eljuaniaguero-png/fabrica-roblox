@@ -263,6 +263,7 @@ function Sala.crear(o: Opciones): Sala
 		local aspas: { { Parte: BasePart, Relativo: CFrame } } = {}
 		local tubos: { BasePart } = {}
 		local bolas: { { Parte: BasePart, Base: CFrame, Fase: number } } = {}
+		local gemas: { { Parte: BasePart, Base: CFrame } } = {} -- etapa 10c: vitrina de reliquias
 		local puntos: { Frame } = {}
 		for _, d in sala:GetChildren() do
 			if
@@ -276,6 +277,8 @@ function Sala.crear(o: Opciones): Sala
 				table.insert(aspas, { Parte = d, Relativo = centro:ToObjectSpace(d.CFrame) })
 			elseif d:IsA("BasePart") and d.Name == "Tubo" then
 				table.insert(tubos, d)
+			elseif d:IsA("BasePart") and d.Name == "GemaReliquia" then
+				table.insert(gemas, { Parte = d, Base = d.CFrame })
 			elseif d:IsA("BasePart") and d.Name == "BolaVitrina" then
 				table.insert(
 					bolas,
@@ -305,6 +308,15 @@ function Sala.crear(o: Opciones): Sala
 			for _, tubo in tubos do
 				tubo.Transparency = latido * 0.3
 			end
+			for k, g in gemas do
+				g.Parte.CFrame = CFrame.new(
+					g.Base.Position + Vector3.new(0, math.sin(t * 1.7 + k) * 0.06, 0)
+				) * CFrame.Angles(0, t * 1.2 + k, 0) * CFrame.Angles(
+					math.rad(45),
+					0,
+					math.rad(45)
+				)
+			end
 			for _, b in bolas do
 				b.Parte.CFrame = b.Base
 					* CFrame.new(0, math.sin(t * 2 + b.Fase * 2.1) * 0.12, 0)
@@ -316,6 +328,44 @@ function Sala.crear(o: Opciones): Sala
 				punto.BackgroundTransparency = if d < 6 then 0 else 0.55
 			end
 		end)
+		-- Etapa 10c: la puerta blindada sube y las luces se ponen verdes al ganar la mazmorra.
+		local luces: { BasePart } = {}
+		for _, d in sala:GetChildren() do
+			if d:IsA("BasePart") and d.Name == "LuzPuerta" then
+				table.insert(luces, d)
+			end
+		end
+		for _, compuerta in CollectionService:GetTagged("Compuerta") do
+			if not compuerta:IsA("BasePart") then
+				continue
+			end
+			local cerrada = compuerta.CFrame
+			local function poner()
+				local abierta = compuerta:GetAttribute("Abierta") == true
+				TweenService:Create(
+					compuerta,
+					TweenInfo.new(2.2, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut),
+					{
+						CFrame = if abierta
+							then cerrada + Vector3.new(0, compuerta.Size.Y - 0.6, 0)
+							else cerrada,
+					}
+				):Play()
+				local color = Color3.fromHex(
+					if abierta then Config.Colores.VidaCaballero else S.Colores.Alarma
+				)
+				for _, l in luces do
+					l.Color = color
+					local pl = l:FindFirstChildOfClass("PointLight")
+					if pl then
+						pl.Color = color
+					end
+				end
+			end
+			compuerta:GetAttributeChangedSignal("Abierta"):Connect(poner)
+			poner()
+		end
+
 		local fluor = sala:FindFirstChild("Fluorescente")
 		if not fluor or not fluor:IsA("BasePart") then
 			return

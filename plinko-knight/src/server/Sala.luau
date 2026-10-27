@@ -5,6 +5,9 @@
 --   - Remoto ElegirBola(bola): el mostrador de la sala guarda la bola con la que arrancás
 --     (solo si la tenés desbloqueada y con límite de frecuencia).
 --   - La pared de récords muestra tus récords (mejor piso, golpe, jefes, mazmorras, partidas).
+--   - Etapa 10c: el display de la terminal muestra tu MEJOR; la vitrina prende una gema del color
+--     de la rareza de cada reliquia que tenés en la partida; la puerta blindada queda "Abierta"
+--     mientras ganaste la mazmorra (la anima client/Sala).
 -- Sentarse en la máquina es solo de cámara (cliente): la partida la sigue decidiendo el servidor.
 
 local CollectionService = game:GetService("CollectionService")
@@ -14,6 +17,7 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Shared = ReplicatedStorage:WaitForChild("Shared")
 local Config = require(Shared:WaitForChild("Config"))
 local Progreso = require(Shared:WaitForChild("Progreso"))
+local Reliquias = require(Shared:WaitForChild("Reliquias"))
 local Partida = require(script.Parent:WaitForChild("Partida"))
 local GeneradorSala = require(script.Parent:WaitForChild("GeneradorSala"))
 
@@ -101,12 +105,52 @@ local function armarRecords(): TextLabel?
 	lista.Position = UDim2.fromScale(0.06, 0.22)
 	lista.Size = UDim2.fromScale(0.88, 0.74)
 	lista.Font = Enum.Font.Arcade
-	lista.TextSize = 30
+	lista.TextSize = 25
 	lista.TextXAlignment = Enum.TextXAlignment.Left
 	lista.TextYAlignment = Enum.TextYAlignment.Top
 	lista.TextColor3 = Color3.fromHex(Config.Sala.Colores.Led)
 	lista.Parent = gui
 	return lista
+end
+
+-- Etapa 10c: lo de la sala que depende de tu partida (cada 3 segundos, con los récords).
+local function actualizarSala()
+	local jugador = Players:GetPlayers()[1]
+	local p = jugador and Partida.de(jugador)
+	-- Display de la terminal.
+	for _, display in CollectionService:GetTagged("ProgresoTienda") do
+		local gui = display:FindFirstChildOfClass("SurfaceGui")
+		local texto = gui and gui:FindFirstChildOfClass("TextLabel")
+		if texto then
+			texto.Text = if p
+				then ("MEJOR %d/%d"):format(p.Progreso.MejorPiso, #Config.Monstruos)
+				else "TU BOLA"
+		end
+	end
+	-- Gemas de la vitrina: una por lugar de reliquia.
+	local sala = workspace:FindFirstChild("Sala")
+	if sala then
+		for _, gema in sala:GetChildren() do
+			local lugar = gema:GetAttribute("Lugar")
+			if
+				gema:IsA("BasePart")
+				and gema.Name == "GemaReliquia"
+				and typeof(lugar) == "number"
+			then
+				local r = p and p.Estado.Reliquias[lugar]
+				if r then
+					gema.Color = Color3.fromHex(Reliquias.rareza(r.Id).Color)
+					gema.Transparency = 0
+				else
+					gema.Transparency = 1
+				end
+			end
+		end
+	end
+	-- Puerta blindada: abierta mientras ganaste la mazmorra.
+	for _, compuerta in CollectionService:GetTagged("Compuerta") do
+		compuerta:SetAttribute("Abierta", p ~= nil and p.Estado.Fase == "gano")
+	end
 end
 
 -- Estatua de tu avatar en el pedestal del centro (la sala es solo tuya). Es una copia del
@@ -211,6 +255,7 @@ function Sala.iniciar()
 		task.spawn(function()
 			while true do
 				dibujarRecords(lista)
+				actualizarSala()
 				task.wait(3)
 			end
 		end)

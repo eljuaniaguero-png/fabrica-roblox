@@ -9,6 +9,12 @@
 --   - pared este: la puerta de metal y el tablero LED de récords (tag "Records");
 --   - pared sur: el pedestal donde server/Sala pone la estatua de tu avatar;
 --   - techo: un tubo fluorescente.
+-- Etapa 10c (27/10, sala neón: CloverPit + arcade de los 80): piso damero oscuro que refleja,
+-- paneles acústicos en las paredes sur y oeste, flechas de neón que apuntan a la máquina, una
+-- espada y un tablerito de neón en la pared sur, columnas de neón en las 4 esquinas, franjas LED
+-- magenta al lado de la terminal (su display muestra tu MEJOR: lo escribe server/Sala), la
+-- vitrina de reliquias (tag "VitrinaReliquias": server/Sala prende las gemas) y la puerta
+-- blindada (tag "Compuerta": se abre al ganar la mazmorra, la anima client/Sala).
 -- Caras: la parte frontal de Roblox (NormalId.Front) mira a -Z.
 
 local CollectionService = game:GetService("CollectionService")
@@ -620,16 +626,23 @@ function GeneradorSala.generar(): Folder
 		true
 	)
 	piso.Reflectance = S.ReflejoPiso
-	local g = S.Grilla
-	for x = -medioX + g, medioX - g, g do
-		local l =
-			neon("Grilla", sala, Vector3.new(0.1, 0.06, S.Largo), CFrame.new(x, 0.08, 0), C.GrillaB)
-		l.Transparency = 0.45
-	end
-	for z = -medioZ + g, medioZ - g, g do
-		local l =
-			neon("Grilla", sala, Vector3.new(S.Ancho, 0.06, 0.1), CFrame.new(0, 0.09, z), C.GrillaA)
-		l.Transparency = 0.45
+	-- Etapa 10c: baldosas oscuras en damero que reflejan un poco el neón.
+	local ladoBaldosa = S.Baldosa
+	for i = 0, S.Ancho / ladoBaldosa - 1 do
+		for j = 0, S.Largo / ladoBaldosa - 1 do
+			local b = parte(
+				"Baldosa",
+				sala,
+				Vector3.new(ladoBaldosa - 0.04, 0.05, ladoBaldosa - 0.04),
+				CFrame.new(
+					-medioX + (i + 0.5) * ladoBaldosa,
+					0.075,
+					-medioZ + (j + 0.5) * ladoBaldosa
+				),
+				if (i + j) % 2 == 0 then C.DameroA else C.DameroB
+			)
+			b.Reflectance = S.ReflejoDamero
+		end
 	end
 
 	-- Paredes de concreto oscuro y techo de chapa.
@@ -723,6 +736,95 @@ function GeneradorSala.generar(): Folder
 		C.Cian,
 		true
 	)
+
+	for _, x in { -medioX + 0.25, medioX - 0.25 } do
+		neon(
+			"Tubo",
+			sala,
+			Vector3.new(0.25, S.Alto, 0.25),
+			CFrame.new(x, S.Alto / 2, medioZ - 0.25),
+			if x < 0 then C.Cian else C.Magenta,
+			true
+		)
+	end
+
+	-- Etapa 10c: paneles acústicos oscuros (pared sur entera y pared oeste sin la terminal).
+	local function panelAcustico(cf: CFrame, k: number)
+		local pa = parte(
+			"PanelAcustico",
+			sala,
+			Vector3.new(1.8, 1.8, 0.16),
+			cf,
+			if k % 2 == 0 then C.PanelA else C.PanelB,
+			Enum.Material.Fabric
+		)
+		pa.CastShadow = false
+	end
+	local cuenta = 0
+	for x = -medioX + 1, medioX - 1, 2 do
+		for y = 1.5, S.Alto - 1.5, 2 do
+			cuenta += 1
+			panelAcustico(CFrame.new(x, y, medioZ - 0.08), cuenta)
+		end
+	end
+	for z = -medioZ + 1, medioZ - 1, 2 do
+		if z > -2 and z < 4 then
+			continue -- ahí va la terminal de la tienda
+		end
+		for y = 1.5, S.Alto - 1.5, 2 do
+			cuenta += 1
+			panelAcustico(
+				CFrame.new(-medioX + 0.08, y, z) * CFrame.Angles(0, math.rad(90), 0),
+				cuenta
+			)
+		end
+	end
+
+	-- Flechas de neón en las paredes oeste y este que apuntan a la máquina (hacia -Z).
+	local function flecha(base: CFrame, hex: string)
+		neon("Flecha", sala, Vector3.new(0.12, 0.12, 2.4), base, hex)
+		local punta = base * CFrame.new(0, 0, -1.2)
+		neon(
+			"Flecha",
+			sala,
+			Vector3.new(0.12, 0.12, 0.9),
+			punta * CFrame.Angles(math.rad(-45), 0, 0) * CFrame.new(0, 0, 0.42),
+			hex
+		)
+		neon(
+			"Flecha",
+			sala,
+			Vector3.new(0.12, 0.12, 0.9),
+			punta * CFrame.Angles(math.rad(45), 0, 0) * CFrame.new(0, 0, 0.42),
+			hex
+		)
+	end
+	flecha(CFrame.new(-medioX + 0.22, 7.6, -4.6), C.Cian)
+	flecha(CFrame.new(medioX - 0.22, 8.4, -3.5), C.Magenta)
+
+	-- Siluetas de neón en la pared sur: una espada y un tablerito con su bola.
+	do
+		local zs = medioZ - 0.2
+		neon("Silueta", sala, Vector3.new(0.16, 3, 0.08), CFrame.new(-1.6, 6.3, zs), C.Magenta)
+		neon("Silueta", sala, Vector3.new(1.5, 0.16, 0.08), CFrame.new(-1.6, 4.75, zs), C.Magenta)
+		neon("Silueta", sala, Vector3.new(0.16, 0.8, 0.08), CFrame.new(-1.6, 4.25, zs), C.Magenta)
+		neon("Silueta", sala, Vector3.new(0.35, 0.35, 0.08), CFrame.new(-1.6, 3.75, zs), C.Magenta)
+		for fila = 0, 2 do
+			for col = 0, fila do
+				local d = neon(
+					"Silueta",
+					sala,
+					Vector3.new(0.3, 0.3, 0.3),
+					CFrame.new(1.6 + (col - fila / 2) * 0.7, 6.6 - fila * 0.7, zs),
+					C.Cian
+				)
+				d.Shape = Enum.PartType.Ball
+			end
+		end
+		local bolaSilueta =
+			neon("Silueta", sala, Vector3.new(0.4, 0.4, 0.4), CFrame.new(1.6, 7.5, zs), C.Peligro)
+		bolaSilueta.Shape = Enum.PartType.Ball
+	end
 
 	-- Mesa de trabajo contra la pared norte, con tu máquina arriba.
 	local zMesa = -medioZ + 2.2
@@ -1050,6 +1152,17 @@ function GeneradorSala.generar(): Folder
 	local display =
 		parte("DisplayTienda", sala, Vector3.new(2.4, 0.5, 0.05), T(0, 3.05, -0.93), "#050505")
 	led(display, Enum.NormalId.Front, "TU BOLA")
+	CollectionService:AddTag(display, "ProgresoTienda") -- server/Sala escribe tu MEJOR
+	for _, ladoFranja in { -1, 1 } do
+		neon(
+			"FranjaLed",
+			sala,
+			Vector3.new(0.14, 6.2, 0.14),
+			T(ladoFranja * 1.95, 3.4, 0.6),
+			C.Magenta,
+			true
+		)
+	end
 	parte("Ranura", sala, Vector3.new(1.1, 0.18, 0.06), T(-0.55, 2.3, -0.93), "#050505")
 	neon("LabioRanura", sala, Vector3.new(1.2, 0.05, 0.05), T(-0.55, 2.15, -0.95), C.Led)
 	botonArcade(
@@ -1078,40 +1191,85 @@ function GeneradorSala.generar(): Folder
 	prompt.RequiresLineOfSight = false
 	prompt.Parent = tienda
 
-	-- Pared este: puerta de metal con ventanita de rejas y marco de neón, y el tablero de récords.
-	local puerta = parte(
-		"Puerta",
+	-- Pared este: puerta blindada (compuerta con franjas, marco de franjas iluminado por detrás y
+	-- dos luces de aviso rojas) y el tablero de récords. Al ganar la mazmorra, client/Sala sube la
+	-- compuerta y pone las luces verdes (atributo "Abierta", lo pone server/Sala).
+	local compuerta = parte(
+		"Compuerta",
 		sala,
-		Vector3.new(0.4, 7, 4),
-		CFrame.new(medioX - 0.2, 3.5, 3.5),
+		Vector3.new(0.4, 6.4, 3.6),
+		CFrame.new(medioX - 0.25, 3.2, 3.5),
 		C.Metal,
-		Enum.Material.DiamondPlate
-	)
-	parte(
-		"Ventanita",
-		sala,
-		Vector3.new(0.1, 1.2, 1.4),
-		puerta.CFrame * CFrame.new(-0.22, 1.8, 0),
-		"#050505"
-	)
-	for k = -1, 1 do
-		parte(
-			"Reja",
-			sala,
-			Vector3.new(0.12, 1.2, 0.1),
-			puerta.CFrame * CFrame.new(-0.28, 1.8, k * 0.4),
-			"#6A6A60",
-			Enum.Material.Metal
-		)
-	end
-	neon(
-		"MarcoPuerta",
-		sala,
-		Vector3.new(0.12, 0.12, 4.3),
-		CFrame.new(medioX - 0.15, 7.1, 3.5),
-		C.Cian,
+		Enum.Material.DiamondPlate,
 		true
 	)
+	peligro(compuerta, Enum.NormalId.Left)
+	compuerta:SetAttribute("Abierta", false)
+	CollectionService:AddTag(compuerta, "Compuerta")
+	for _, z in { 3.5 - 2.05, 3.5 + 2.05 } do
+		local lateralPuerta = parte(
+			"MarcoPuerta",
+			sala,
+			Vector3.new(0.5, 7, 0.5),
+			CFrame.new(medioX - 0.25, 3.5, z),
+			C.MetalOscuro,
+			Enum.Material.Metal
+		)
+		peligro(lateralPuerta, Enum.NormalId.Left)
+	end
+	local dintel = parte(
+		"MarcoPuerta",
+		sala,
+		Vector3.new(0.5, 0.6, 4.6),
+		CFrame.new(medioX - 0.25, 6.7, 3.5),
+		C.MetalOscuro,
+		Enum.Material.Metal
+	)
+	peligro(dintel, Enum.NormalId.Left)
+	-- Caja de metal arriba del marco: ahí se guarda la compuerta cuando sube.
+	parte(
+		"CajaPuerta",
+		sala,
+		Vector3.new(0.7, S.Alto - 7, 4.6),
+		CFrame.new(medioX - 0.3, 7 + (S.Alto - 7) / 2, 3.5),
+		C.MetalOscuro,
+		Enum.Material.DiamondPlate
+	)
+	-- Atrás de la compuerta: un pasillo oscuro con una luz verde en el piso (se ve al abrirse).
+	parte(
+		"Pasillo",
+		sala,
+		Vector3.new(0.04, 6.4, 3.6),
+		CFrame.new(medioX - 0.02, 3.2, 3.5),
+		"#030306"
+	)
+	neon(
+		"LuzPasillo",
+		sala,
+		Vector3.new(0.06, 0.12, 3.4),
+		CFrame.new(medioX - 0.06, 0.25, 3.5),
+		"#4CC46A"
+	)
+	-- Luz de atrás del marco (ámbar) y las luces de aviso.
+	neon(
+		"LuzMarco",
+		sala,
+		Vector3.new(0.08, 0.1, 4.7),
+		CFrame.new(medioX - 0.05, 7.05, 3.5),
+		C.Peligro,
+		true
+	)
+	for _, z in { 3.5 - 1.5, 3.5 + 1.5 } do
+		local aviso = neon(
+			"LuzPuerta",
+			sala,
+			Vector3.new(0.4, 0.4, 0.4),
+			CFrame.new(medioX - 0.85, 7.6, z),
+			C.Alarma
+		)
+		aviso.Shape = Enum.PartType.Ball
+		luz(aviso, C.Alarma, 1.2, 6)
+	end
 	local records = parte(
 		"Records",
 		sala,
@@ -1128,6 +1286,100 @@ function GeneradorSala.generar(): Folder
 		CFrame.new(medioX - 0.3, 6.95, -3.5),
 		C.Magenta
 	)
+
+	-- Vitrina de reliquias (pared sur, a la derecha): una mesa con una caja de vidrio con luz por
+	-- cada lugar de reliquia; adentro, una gema del color de la rareza de la reliquia que tenés en
+	-- ese lugar (la prende server/Sala; client/Sala la hace girar).
+	do
+		local xV, zV = 6, medioZ - 0.95
+		local mesaV = parte(
+			"MesaReliquias",
+			sala,
+			Vector3.new(5.8, 0.25, 1.6),
+			CFrame.new(xV, 2.6, zV),
+			C.MetalOscuro,
+			Enum.Material.Metal,
+			true
+		)
+		CollectionService:AddTag(mesaV, "VitrinaReliquias")
+		parte(
+			"FrenteReliquias",
+			sala,
+			Vector3.new(5.8, 2.45, 0.1),
+			CFrame.new(xV, 1.25, zV - 0.75),
+			C.Metal,
+			Enum.Material.DiamondPlate,
+			true
+		)
+		neon(
+			"FiloReliquias",
+			sala,
+			Vector3.new(5.8, 0.08, 0.08),
+			CFrame.new(xV, 2.45, zV - 0.82),
+			C.Magenta
+		)
+		local n = Config.LugaresReliquia
+		for lugar = 1, n do
+			local x = xV + (lugar - (n + 1) / 2) * 1.08
+			local baseCaja = neon(
+				"BaseCaja",
+				sala,
+				Vector3.new(0.86, 0.05, 0.86),
+				CFrame.new(x, 2.75, zV),
+				"#FFF6E0"
+			)
+			luz(baseCaja, "#FFF6E0", 0.5, 3)
+			local caja = parte(
+				"CajaReliquia",
+				sala,
+				Vector3.new(0.9, 0.95, 0.9),
+				CFrame.new(x, 3.25, zV),
+				"#BFE8FF",
+				Enum.Material.Glass
+			)
+			caja.Transparency = 0.6
+			caja.Reflectance = 0.3
+			-- Parantes de metal en las 4 esquinas, así se ve que es una caja.
+			for _, dx in { -0.43, 0.43 } do
+				for _, dz in { -0.43, 0.43 } do
+					parte(
+						"ParanteCaja",
+						sala,
+						Vector3.new(0.06, 0.95, 0.06),
+						CFrame.new(x + dx, 3.25, zV + dz),
+						"#8A8FA8",
+						Enum.Material.Metal
+					)
+				end
+			end
+			parte(
+				"TapaCaja",
+				sala,
+				Vector3.new(0.92, 0.05, 0.92),
+				CFrame.new(x, 3.74, zV),
+				"#5D637E",
+				Enum.Material.Metal
+			)
+			local gema = parte(
+				"GemaReliquia",
+				sala,
+				Vector3.new(0.38, 0.38, 0.38),
+				CFrame.new(x, 3.25, zV) * CFrame.Angles(math.rad(45), 0, math.rad(45)),
+				"#FFFFFF",
+				Enum.Material.Neon
+			)
+			gema.Transparency = 1
+			gema:SetAttribute("Lugar", lugar)
+		end
+		local cartelV = parte(
+			"CartelReliquias",
+			sala,
+			Vector3.new(4.6, 0.6, 0.1),
+			CFrame.new(xV, 4.4, medioZ - 0.3),
+			"#050505"
+		)
+		led(cartelV, Enum.NormalId.Front, "TUS RELIQUIAS")
+	end
 
 	-- Pedestal de la estatua de tu avatar, contra la pared sur.
 	local pedestal = parte(
