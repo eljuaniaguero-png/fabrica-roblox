@@ -552,4 +552,11 @@ Números en `Config.Feel` (Onda, Estela, LuzBola, ComboMinimo, Gritos, Zoom, Fla
 - **Sala:** el ventilador gira, el fluorescente titila de vez en cuando, los tubos de neón laten.
 - Con "Efectos reducidos": sin destellos ni zoom y la mitad de partículas.
 - Probado en Play: pelea 1 ganada en 3 tiros, sin errores. Capturas en `plinko-knight/arte/comparaciones/v3/`. El aviso `rbxassetid://203785492` ya estaba antes (no es de este cambio).
-- **Pendiente de este pedido:** modelos más lindos de la sala (máquina, terminal) — el tablero ya cambió.
+
+### Máquina y tienda más lindas (27/10/2026)
+
+Hechas con partes por código en `server/GeneradorSala.luau` (sin modelos de IA).
+- **Máquina:** gabinete arcade de mesa. Base de chapa con franjas de peligro, display "- JUGAR -" y dos parlantes con rejilla; laterales negros brillantes con filo de neón (magenta y cian) y remaches; tablero de botones inclinado con joystick, 3 botones chicos y el grande rojo; pantalla hundida en un bisel con rayitas de monitor viejo y los puntitos que titilan; marquesina iluminada con degradé y tubos de neón; la palanca al costado.
+- **Tienda:** kiosco con marquesina "TIENDA", vitrina de vidrio que sale del frente con 3 bolas que flotan y giran, display "TU BOLA", ranura, botón de arcade, bandeja con luz, laterales negros con neón cian y franjas abajo.
+- Arreglo: al sentarse, la cámara entra de frente a la pantalla (antes quedaba atrás y lo tapaba el fundido).
+- Probado en Play sin errores. Fotos: `plinko-knight/arte/comparaciones/v3/maquina.jpg` y `tienda.jpg`.

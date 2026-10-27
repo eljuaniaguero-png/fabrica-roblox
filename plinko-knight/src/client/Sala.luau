@@ -135,9 +135,10 @@ function Sala.crear(o: Opciones): Sala
 		if not pantalla or not pantalla:IsA("BasePart") then
 			return nil
 		end
-		-- La pantalla mira a +Z: la cámara queda delante, a la distancia justa para llenarla.
-		local frente = pantalla.CFrame.LookVector * -1
-		return CFrame.lookAt(pantalla.Position + frente * 1.5, pantalla.Position)
+		-- La cara de adelante de la pantalla (Front = LookVector) mira a la sala: la cámara queda
+		-- delante, a la distancia justa para llenarla.
+		local frente = pantalla.CFrame.LookVector
+		return CFrame.lookAt(pantalla.Position + frente * 2.4, pantalla.Position)
 	end
 
 	local function raiz(): BasePart?
@@ -261,6 +262,8 @@ function Sala.crear(o: Opciones): Sala
 		local ventilador = sala:WaitForChild("Ventilador", 10)
 		local aspas: { { Parte: BasePart, Relativo: CFrame } } = {}
 		local tubos: { BasePart } = {}
+		local bolas: { { Parte: BasePart, Base: CFrame, Fase: number } } = {}
+		local puntos: { Frame } = {}
 		for _, d in sala:GetChildren() do
 			if
 				d:IsA("BasePart")
@@ -273,6 +276,17 @@ function Sala.crear(o: Opciones): Sala
 				table.insert(aspas, { Parte = d, Relativo = centro:ToObjectSpace(d.CFrame) })
 			elseif d:IsA("BasePart") and d.Name == "Tubo" then
 				table.insert(tubos, d)
+			elseif d:IsA("BasePart") and d.Name == "BolaVitrina" then
+				table.insert(
+					bolas,
+					{ Parte = d, Base = d.CFrame, Fase = d:GetAttribute("Fase") or 0 }
+				)
+			end
+		end
+		-- Los puntitos de la pantalla de tu máquina titilan como una demo de arcade.
+		for _, d in sala:GetDescendants() do
+			if d:IsA("Frame") and d.Name == "Punto" then
+				table.insert(puntos, d)
 			end
 		end
 		local centroAspas = if ventilador and ventilador:IsA("BasePart")
@@ -290,6 +304,16 @@ function Sala.crear(o: Opciones): Sala
 			local latido = (math.sin(t * 2.2) + 1) / 2
 			for _, tubo in tubos do
 				tubo.Transparency = latido * 0.3
+			end
+			for _, b in bolas do
+				b.Parte.CFrame = b.Base
+					* CFrame.new(0, math.sin(t * 2 + b.Fase * 2.1) * 0.12, 0)
+					* CFrame.Angles(0, t * 1.5, 0)
+			end
+			local cabeza = math.floor(t * 10) % math.max(#puntos, 1)
+			for k, punto in puntos do
+				local d = (cabeza - k) % #puntos
+				punto.BackgroundTransparency = if d < 6 then 0 else 0.55
 			end
 		end)
 		local fluor = sala:FindFirstChild("Fluorescente")

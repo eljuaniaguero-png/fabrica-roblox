@@ -179,55 +179,315 @@ local function cartelPapel(
 	return p
 end
 
--- Tu máquina: una caja industrial compacta arriba de la mesa (base en `cf`, frente hacia
--- cf.LookVector), con pantalla, display LED, botón rojo y palanca.
+-- Cartel iluminado (27/10): fondo con degradé de dos colores y texto blanco con borde.
+local function cartelLuz(
+	en: BasePart,
+	cara: Enum.NormalId,
+	texto: string,
+	hexA: string,
+	hexB: string
+)
+	local gui = Instance.new("SurfaceGui")
+	gui.Face = cara
+	gui.LightInfluence = 0
+	gui.SizingMode = Enum.SurfaceGuiSizingMode.PixelsPerStud
+	gui.PixelsPerStud = 60
+	gui.Parent = en
+	local fondo = Instance.new("Frame")
+	fondo.Size = UDim2.fromScale(1, 1)
+	fondo.BackgroundColor3 = Color3.new(1, 1, 1)
+	fondo.BorderSizePixel = 0
+	fondo.Parent = gui
+	local degrade = Instance.new("UIGradient")
+	degrade.Color = ColorSequence.new(Color3.fromHex(hexA), Color3.fromHex(hexB))
+	degrade.Parent = fondo
+	local t = Instance.new("TextLabel")
+	t.BackgroundTransparency = 1
+	t.Position = UDim2.fromScale(0.04, 0.12)
+	t.Size = UDim2.fromScale(0.92, 0.76)
+	t.Font = Enum.Font.Michroma
+	t.TextScaled = true
+	t.TextColor3 = Color3.new(1, 1, 1)
+	t.TextStrokeColor3 = Color3.fromHex("#140A1E")
+	t.TextStrokeTransparency = 0
+	t.Text = texto
+	t.Parent = fondo
+	-- Rayitas horizontales encima, como un cartel de tubos.
+	for k = 1, 7 do
+		local r = Instance.new("Frame")
+		r.Position = UDim2.fromScale(0, k / 8)
+		r.Size = UDim2.new(1, 0, 0, 2)
+		r.BackgroundColor3 = Color3.new(0, 0, 0)
+		r.BackgroundTransparency = 0.8
+		r.BorderSizePixel = 0
+		r.ZIndex = 2
+		r.Parent = fondo
+	end
+end
+
+-- Rejilla de parlante o ventilación: agujeritos redondos en una cara.
+local function rejilla(en: BasePart, cara: Enum.NormalId)
+	local gui = Instance.new("SurfaceGui")
+	gui.Face = cara
+	gui.LightInfluence = 1
+	gui.SizingMode = Enum.SurfaceGuiSizingMode.PixelsPerStud
+	gui.PixelsPerStud = 40
+	gui.Parent = en
+	local fondo = Instance.new("Frame")
+	fondo.Size = UDim2.fromScale(1, 1)
+	fondo.BackgroundColor3 = Color3.fromHex(C.MetalOscuro)
+	fondo.BorderSizePixel = 0
+	fondo.Parent = gui
+	local rejas = Instance.new("UIGridLayout")
+	rejas.CellSize = UDim2.fromOffset(4, 4)
+	rejas.CellPadding = UDim2.fromOffset(4, 4)
+	rejas.HorizontalAlignment = Enum.HorizontalAlignment.Center
+	rejas.VerticalAlignment = Enum.VerticalAlignment.Center
+	rejas.Parent = fondo
+	for _ = 1, 120 do
+		local a = Instance.new("Frame")
+		a.BackgroundColor3 = Color3.fromHex("#030303")
+		a.BorderSizePixel = 0
+		a.Parent = fondo
+		local r = Instance.new("UICorner")
+		r.CornerRadius = UDim.new(0.5, 0)
+		r.Parent = a
+	end
+end
+
+-- Botón de arcade: aro negro y cúpula de color. cf: centro de la base, mirando hacia arriba (Y).
+local function botonArcade(
+	padre: Instance,
+	nombre: string,
+	cf: CFrame,
+	diametro: number,
+	hex: string
+)
+	local aro = parte(
+		nombre .. "Aro",
+		padre,
+		Vector3.new(0.12, diametro * 1.3, diametro * 1.3),
+		cf * CFrame.Angles(0, 0, math.rad(90)),
+		"#0A0A0C",
+		Enum.Material.SmoothPlastic
+	)
+	aro.Shape = Enum.PartType.Cylinder
+	local cupula = parte(
+		nombre,
+		padre,
+		Vector3.new(diametro, diametro * 0.75, diametro),
+		cf * CFrame.new(0, 0.08, 0),
+		hex,
+		Enum.Material.SmoothPlastic
+	)
+	cupula.Shape = Enum.PartType.Ball
+	cupula.Reflectance = 0.2
+	return cupula
+end
+
+-- Remaches en las esquinas de una cara (cilindros chiquitos).
+local function remaches(padre: Instance, centro: CFrame, ancho: number, alto: number)
+	for _, x in { -1, 1 } do
+		for _, y in { -1, 1 } do
+			local r = parte(
+				"Remache",
+				padre,
+				Vector3.new(0.06, 0.14, 0.14),
+				centro
+					* CFrame.new(x * ancho / 2, y * alto / 2, 0)
+					* CFrame.Angles(0, math.rad(90), 0),
+				"#8A8A80",
+				Enum.Material.Metal
+			)
+			r.Shape = Enum.PartType.Cylinder
+		end
+	end
+end
+
+-- Tu máquina (27/10, "modelos más lindos"): un gabinete arcade de mesa. Base de chapa con
+-- franjas y "JUGAR" en LED, laterales negros brillantes con filo de neón y remaches, tablero de
+-- botones inclinado (joystick, 3 botones chicos y el grande rojo), pantalla hundida en un bisel y
+-- marquesina iluminada arriba. Base en `cf`, frente hacia cf.LookVector (-Z local).
 local function maquina(padre: Instance, cf: CFrame): Model
 	local m = Instance.new("Model")
 	m.Name = "Maquina1"
 	local t = S.MaquinaTamanio
 	local w, h, d = t.X, t.Y, t.Z
 	local frente = -(d / 2)
+	local function L(x: number, y: number, z: number): CFrame
+		return cf * CFrame.new(x, y, z)
+	end
+
+	-- Base (con el "E: Jugar").
 	local cuerpo = parte(
 		"Cuerpo",
 		m,
-		Vector3.new(w, h, d),
-		cf * CFrame.new(0, h / 2, 0),
+		Vector3.new(w - 0.3, 1.2, d),
+		L(0, 0.6, 0),
 		C.Metal,
 		Enum.Material.DiamondPlate,
 		true
 	)
 	m.PrimaryPart = cuerpo
-	-- Franjas de peligro a los costados.
-	for _, lado in { -1, 1 } do
-		local panel = parte(
-			"Franja",
+	local zocalo = parte(
+		"Franja",
+		m,
+		Vector3.new(w - 0.3, 0.32, 0.05),
+		L(0, 0.18, frente - 0.03),
+		C.MetalOscuro
+	)
+	peligro(zocalo, Enum.NormalId.Front)
+	local cartelJugar =
+		parte("CartelJugar", m, Vector3.new(1.8, 0.42, 0.05), L(0, 0.72, frente - 0.03), "#050505")
+	led(cartelJugar, Enum.NormalId.Front, "- JUGAR -")
+	for _, x in { -1.45, 1.45 } do
+		local parlante = parte(
+			"Parlante",
 			m,
-			Vector3.new(0.1, h * 0.3, d * 0.9),
-			cf * CFrame.new(lado * (w / 2 + 0.05), h * 0.18, 0),
+			Vector3.new(0.7, 0.55, 0.05),
+			L(x, 0.72, frente - 0.03),
 			C.MetalOscuro
 		)
-		peligro(panel, if lado < 0 then Enum.NormalId.Left else Enum.NormalId.Right)
+		rejilla(parlante, Enum.NormalId.Front)
 	end
-	-- Marco negro y pantalla (mira a la sala).
-	local alto = h * 0.58
+
+	-- Parte de arriba, un poco más atrás (ahí va la pantalla).
+	parte(
+		"Gabinete",
+		m,
+		Vector3.new(w - 0.3, h - 1.2, d * 0.6),
+		L(0, 1.2 + (h - 1.2) / 2, d * 0.2),
+		C.Metal,
+		Enum.Material.Metal
+	)
+
+	-- Laterales negros brillantes, con filo de neón adelante y remaches.
+	for _, lado in { -1, 1 } do
+		local x = lado * (w / 2 - 0.075)
+		local lateral = parte(
+			"Lateral",
+			m,
+			Vector3.new(0.15, h, d),
+			L(x, h / 2, 0),
+			"#141416",
+			Enum.Material.SmoothPlastic,
+			true
+		)
+		lateral.Reflectance = 0.12
+		neon(
+			"Borde",
+			m,
+			Vector3.new(0.18, h, 0.08),
+			L(x, h / 2, frente - 0.02),
+			if lado < 0 then C.Magenta else C.Cian
+		)
+		remaches(
+			m,
+			L(lado * (w / 2 + 0.005), h / 2, 0) * CFrame.Angles(0, math.rad(90), 0),
+			d - 0.5,
+			h - 0.5
+		)
+	end
+
+	-- Tablero de botones, inclinado hacia vos.
+	local deck = L(0, 1.42, frente + 0.72) * CFrame.Angles(math.rad(-15), 0, 0)
+	parte(
+		"Botonera",
+		m,
+		Vector3.new(w - 0.3, 0.2, 1.45),
+		deck,
+		C.MetalOscuro,
+		Enum.Material.DiamondPlate,
+		true
+	)
+	neon(
+		"FiloBotonera",
+		m,
+		Vector3.new(w - 0.3, 0.07, 0.07),
+		deck * CFrame.new(0, -0.02, -0.74),
+		C.Magenta
+	)
+	local arribaDeck = deck * CFrame.new(0, 0.1, 0)
+	botonArcade(m, "Boton", arribaDeck * CFrame.new(1.25, 0, 0.05), 0.75, C.Boton)
+	for k, hex in { C.Peligro, C.Cian, C.Magenta } do
+		botonArcade(
+			m,
+			"BotonChico",
+			arribaDeck * CFrame.new(-0.75 + (k - 1) * 0.55, 0, 0.15),
+			0.4,
+			hex
+		)
+	end
+	do
+		local base = arribaDeck * CFrame.new(-1.5, 0, 0)
+		local placa = parte(
+			"BaseJoystick",
+			m,
+			Vector3.new(0.1, 0.55, 0.55),
+			base * CFrame.Angles(0, 0, math.rad(90)),
+			"#0A0A0C"
+		)
+		placa.Shape = Enum.PartType.Cylinder
+		parte(
+			"Joystick",
+			m,
+			Vector3.new(0.09, 0.55, 0.09),
+			base * CFrame.new(0, 0.3, 0),
+			"#9A9A90",
+			Enum.Material.Metal
+		)
+		local bola = parte(
+			"BolaJoystick",
+			m,
+			Vector3.new(0.38, 0.38, 0.38),
+			base * CFrame.new(0, 0.6, 0),
+			C.Boton
+		)
+		bola.Shape = Enum.PartType.Ball
+		bola.Reflectance = 0.2
+	end
+
+	-- Pantalla hundida en un bisel negro.
+	local alto = 2.62
+	local zPantalla = d * 0.2 - d * 0.3 -- cara de adelante del gabinete
+	local pw, ph = S.PantallaTamanio.X, S.PantallaTamanio.Y
 	parte(
 		"Marco",
 		m,
-		Vector3.new(w * 0.88, h * 0.66, 0.3),
-		cf * CFrame.new(0, alto, frente - 0.15),
-		C.MetalOscuro,
+		Vector3.new(pw + 0.4, ph + 0.4, 0.1),
+		L(0, alto, zPantalla - 0.05),
+		"#08080A",
 		Enum.Material.Metal
 	)
+	for _, lado in { -1, 1 } do
+		parte(
+			"Bisel",
+			m,
+			Vector3.new(pw + 0.4, 0.16, 0.3),
+			L(0, alto + lado * (ph / 2 + 0.12), zPantalla - 0.2),
+			"#0A0A0C",
+			Enum.Material.Metal
+		)
+		parte(
+			"Bisel",
+			m,
+			Vector3.new(0.16, ph + 0.4, 0.3),
+			L(lado * (pw / 2 + 0.12), alto, zPantalla - 0.2),
+			"#0A0A0C",
+			Enum.Material.Metal
+		)
+	end
 	local pantalla = parte(
 		"Pantalla",
 		m,
 		S.PantallaTamanio,
-		cf * CFrame.new(0, alto, frente - 0.33),
+		L(0, alto, zPantalla - 0.12),
 		C.Pantalla,
 		Enum.Material.Neon
 	)
 	CollectionService:AddTag(pantalla, "Pantalla")
-	-- Lo que muestra mientras no estás sentado: el logo y las clavijas.
+	luz(pantalla, C.Cian, 0.8, 7)
+	-- Lo que muestra mientras no estás sentado: el logo, las clavijas y rayitas de monitor viejo.
 	do
 		local gui = Instance.new("SurfaceGui")
 		gui.Face = Enum.NormalId.Front
@@ -246,6 +506,7 @@ local function maquina(padre: Instance, cf: CFrame): Model
 		for fila = 0, 3 do
 			for col = 0, 6 - fila % 2 do
 				local punto = Instance.new("Frame")
+				punto.Name = "Punto"
 				punto.AnchorPoint = Vector2.new(0.5, 0.5)
 				punto.Position =
 					UDim2.fromScale(0.14 + col * 0.12 + (fila % 2) * 0.06, 0.42 + fila * 0.15)
@@ -258,69 +519,56 @@ local function maquina(padre: Instance, cf: CFrame): Model
 				r.Parent = punto
 			end
 		end
+		for k = 0, 34 do
+			local raya = Instance.new("Frame")
+			raya.Position = UDim2.fromOffset(0, k * 6)
+			raya.Size = UDim2.new(1, 0, 0, 2)
+			raya.BackgroundColor3 = Color3.new(0, 0, 0)
+			raya.BackgroundTransparency = 0.75
+			raya.BorderSizePixel = 0
+			raya.ZIndex = 3
+			raya.Parent = gui
+		end
 	end
-	-- Display LED arriba.
-	local cartel = parte(
-		"Cartel",
+
+	-- Marquesina iluminada arriba, con tubos de neón arriba y abajo.
+	parte(
+		"Marquesina",
 		m,
-		Vector3.new(w * 0.7, 0.6, 0.6),
-		cf * CFrame.new(0, h + 0.3, frente + 0.4),
-		"#050505"
+		Vector3.new(w + 0.1, 0.95, 1.2),
+		L(0, h + 0.47, -0.2),
+		"#0A0A0C",
+		Enum.Material.Metal
 	)
-	led(cartel, Enum.NormalId.Front, "PLINKO KNIGHT")
-	-- Bordes de neón (lo futurista).
-	for _, lado in { -1, 1 } do
-		neon(
-			"Borde",
-			m,
-			Vector3.new(0.12, h, 0.12),
-			cf * CFrame.new(lado * (w / 2 + 0.02), h / 2, frente - 0.02),
-			if lado < 0 then C.Magenta else C.Cian
-		)
-	end
-	-- Botón rojo grande y dos chicos en una repisa al frente.
-	local repisa = parte(
-		"Botonera",
-		m,
-		Vector3.new(w * 0.9, 0.3, 0.9),
-		cf * CFrame.new(0, 0.35, frente - 0.45),
-		C.MetalOscuro,
-		Enum.Material.DiamondPlate,
-		true
-	)
-	local boton = parte(
-		"Boton",
-		m,
-		Vector3.new(0.3, 0.75, 0.75),
-		repisa.CFrame * CFrame.new(w * 0.2, 0.2, 0) * CFrame.Angles(0, 0, math.rad(90)),
-		C.Boton
-	)
-	boton.Shape = Enum.PartType.Cylinder
-	for i, hex in { C.Peligro, C.Cian } do
-		local chico = parte(
-			"BotonChico",
-			m,
-			Vector3.new(0.2, 0.4, 0.4),
-			repisa.CFrame
-				* CFrame.new(-w * 0.05 - i * 0.55, 0.15, 0)
-				* CFrame.Angles(0, 0, math.rad(90)),
-			hex
-		)
-		chico.Shape = Enum.PartType.Cylinder
-	end
+	local cartel =
+		parte("Cartel", m, Vector3.new(w - 0.2, 0.72, 0.05), L(0, h + 0.47, -0.82), "#050505")
+	cartelLuz(cartel, Enum.NormalId.Front, "PLINKO KNIGHT", C.Magenta, "#7A2CF5")
+	luz(cartel, C.Magenta, 1, 8)
+	neon("TuboMarquesina", m, Vector3.new(w + 0.1, 0.08, 0.08), L(0, h + 0.02, -0.84), C.Cian)
+	neon("TuboMarquesina", m, Vector3.new(w + 0.1, 0.08, 0.08), L(0, h + 0.92, -0.84), C.Cian)
+
 	-- Palanca al costado derecho, con bocha roja.
-	local base = cf * CFrame.new(w / 2 + 0.3, h * 0.45, frente + 0.8)
+	local base = cf * CFrame.new(w / 2 + 0.25, h * 0.45, frente + 0.8)
+	parte(
+		"Eje",
+		m,
+		Vector3.new(0.3, 0.5, 0.5),
+		base * CFrame.new(-0.1, 0, 0),
+		C.MetalOscuro,
+		Enum.Material.Metal
+	)
 	parte(
 		"Palanca",
 		m,
-		Vector3.new(0.2, 2, 0.2),
+		Vector3.new(0.16, 2, 0.16),
 		base * CFrame.new(0, 0.9, 0) * CFrame.Angles(math.rad(-20), 0, 0),
 		"#9A9A90",
 		Enum.Material.Metal
 	)
 	local bocha =
-		parte("Bocha", m, Vector3.new(0.65, 0.65, 0.65), base * CFrame.new(0, 1.9, 0.35), C.Boton)
+		parte("Bocha", m, Vector3.new(0.6, 0.6, 0.6), base * CFrame.new(0, 1.9, 0.35), C.Boton)
 	bocha.Shape = Enum.PartType.Ball
+	bocha.Reflectance = 0.2
 
 	local prompt = Instance.new("ProximityPrompt")
 	prompt.Name = "Jugar"
@@ -672,59 +920,155 @@ function GeneradorSala.generar(): Folder
 		)
 	end
 
-	-- Terminal de la tienda contra la pared oeste, mirando a la sala (+X): caja de metal con
-	-- pantalla LED, ranura, botón y franjas (como la máquina de tiques de CloverPit, sin dinero).
+	-- Terminal de la tienda contra la pared oeste, mirando a la sala (+X). 27/10: un kiosco con
+	-- marquesina iluminada, vitrina con 3 bolas que flotan (las mueve el cliente), display LED,
+	-- ranura, botón de arcade y bandeja, laterales negros con filo de neón (sin dinero).
 	local posTienda = Vector3.new(-medioX + 1.2, 0, 1)
 	local cfTienda = CFrame.lookAt(posTienda, posTienda + Vector3.new(1, 0, 0))
+	local function T(x: number, y: number, z: number): CFrame
+		return cfTienda * CFrame.new(x, y, z)
+	end
+	parte(
+		"ZocaloTienda",
+		sala,
+		Vector3.new(3.2, 0.4, 2),
+		T(0, 0.2, 0),
+		C.MetalOscuro,
+		Enum.Material.Metal,
+		true
+	)
+	local patada =
+		parte("FranjaTienda", sala, Vector3.new(3.2, 0.36, 0.05), T(0, 0.2, -1.02), C.MetalOscuro)
+	peligro(patada, Enum.NormalId.Front)
 	local tienda = parte(
 		"Tienda",
 		sala,
-		Vector3.new(3, 6, 1.8),
-		cfTienda * CFrame.new(0, 3, 0),
+		Vector3.new(3, 5.2, 1.8),
+		T(0, 3, 0),
 		C.Metal,
 		Enum.Material.DiamondPlate,
 		true
 	)
 	CollectionService:AddTag(tienda, "Tienda")
-	local pantallaTienda = parte(
-		"PantallaTienda",
-		sala,
-		Vector3.new(2.4, 1.3, 0.2),
-		cfTienda * CFrame.new(0, 4.6, -0.95),
-		"#050505"
-	)
-	led(pantallaTienda, Enum.NormalId.Front, "TIENDA")
-	local franjaTienda = parte(
-		"FranjaTienda",
-		sala,
-		Vector3.new(3, 0.8, 0.1),
-		cfTienda * CFrame.new(0, 0.8, -0.95),
-		C.MetalOscuro
-	)
-	peligro(franjaTienda, Enum.NormalId.Front)
+	for _, lado in { -1, 1 } do
+		local lateral = parte(
+			"LateralTienda",
+			sala,
+			Vector3.new(0.15, 5.2, 1.9),
+			T(lado * 1.57, 3, 0),
+			"#141416",
+			Enum.Material.SmoothPlastic,
+			true
+		)
+		lateral.Reflectance = 0.12
+		neon("BordeTienda", sala, Vector3.new(0.18, 5.2, 0.08), T(lado * 1.57, 3, -0.97), C.Cian)
+	end
+	remaches(sala, T(0, 3, -0.91), 2.7, 4.9)
+	-- Marquesina.
 	parte(
-		"Ranura",
+		"MarquesinaTienda",
 		sala,
-		Vector3.new(1.6, 0.22, 0.22),
-		cfTienda * CFrame.new(0, 3, -0.95),
-		"#050505"
+		Vector3.new(3.45, 0.95, 2.1),
+		T(0, 6.05, -0.1),
+		"#0A0A0C",
+		Enum.Material.Metal
 	)
-	local botonTienda = parte(
-		"BotonTienda",
+	local cartelTienda =
+		parte("PantallaTienda", sala, Vector3.new(3.15, 0.72, 0.05), T(0, 6.05, -1.17), "#050505")
+	cartelLuz(cartelTienda, Enum.NormalId.Front, "TIENDA", C.Cian, "#7A2CF5")
+	neon("TuboTienda", sala, Vector3.new(3.45, 0.08, 0.08), T(0, 5.6, -1.18), C.Magenta, true)
+	-- Vitrina con 3 bolas: una caja de vidrio que sale del frente.
+	local yVitrina = 4.3
+	parte("FondoVitrina", sala, Vector3.new(2.6, 1.8, 0.05), T(0, yVitrina, -0.93), "#08080A")
+	for _, lado in { -1, 1 } do
+		parte(
+			"MarcoVitrina",
+			sala,
+			Vector3.new(2.8, 0.12, 0.45),
+			T(0, yVitrina + lado * 0.96, -1.15),
+			"#0A0A0C",
+			Enum.Material.Metal
+		)
+		parte(
+			"MarcoVitrina",
+			sala,
+			Vector3.new(0.12, 2.04, 0.45),
+			T(lado * 1.34, yVitrina, -1.15),
+			"#0A0A0C",
+			Enum.Material.Metal
+		)
+	end
+	parte(
+		"RepisaVitrina",
 		sala,
-		Vector3.new(0.25, 0.6, 0.6),
-		cfTienda * CFrame.new(0.9, 2.2, -1) * CFrame.Angles(0, math.rad(90), 0),
+		Vector3.new(2.6, 0.08, 0.4),
+		T(0, yVitrina - 0.75, -1.15),
+		C.MetalOscuro,
+		Enum.Material.Metal
+	)
+	local luzVitrina = neon(
+		"LuzVitrina",
+		sala,
+		Vector3.new(2.5, 0.06, 0.06),
+		T(0, yVitrina + 0.85, -1.15),
+		"#FFF6E0"
+	)
+	luz(luzVitrina, "#FFF6E0", 0.8, 4)
+	local vidrio = parte(
+		"Vidrio",
+		sala,
+		Vector3.new(2.6, 1.8, 0.04),
+		T(0, yVitrina, -1.38),
+		"#BFE8FF",
+		Enum.Material.Glass
+	)
+	vidrio.Transparency = 0.8
+	vidrio.Reflectance = 0.2
+	for k, hex in { Config.Colores.Bola, Config.Colores.BolaFuego, C.Cian } do
+		local x = (k - 2) * 0.8
+		local pie = parte(
+			"PieVitrina",
+			sala,
+			Vector3.new(0.15, 0.5, 0.5),
+			T(x, yVitrina - 0.63, -1.15) * CFrame.Angles(0, 0, math.rad(90)),
+			C.Metal,
+			Enum.Material.Metal
+		)
+		pie.Shape = Enum.PartType.Cylinder
+		local bola = parte(
+			"BolaVitrina",
+			sala,
+			Vector3.new(0.6, 0.6, 0.6),
+			T(x, yVitrina - 0.15, -1.15),
+			hex,
+			Enum.Material.Neon
+		)
+		bola.Shape = Enum.PartType.Ball
+		bola:SetAttribute("Fase", k)
+	end
+	-- Display, ranura, botón y bandeja.
+	local display =
+		parte("DisplayTienda", sala, Vector3.new(2.4, 0.5, 0.05), T(0, 3.05, -0.93), "#050505")
+	led(display, Enum.NormalId.Front, "TU BOLA")
+	parte("Ranura", sala, Vector3.new(1.1, 0.18, 0.06), T(-0.55, 2.3, -0.93), "#050505")
+	neon("LabioRanura", sala, Vector3.new(1.2, 0.05, 0.05), T(-0.55, 2.15, -0.95), C.Led)
+	botonArcade(
+		sala,
+		"BotonTienda",
+		T(0.85, 2.3, -0.9) * CFrame.Angles(math.rad(-90), 0, 0),
+		0.6,
 		C.Boton
 	)
-	botonTienda.Shape = Enum.PartType.Cylinder
-	neon(
-		"BordeTienda",
+	parte("Bandeja", sala, Vector3.new(1.6, 0.6, 0.05), T(0, 1.3, -0.93), "#050505")
+	parte(
+		"LabioBandeja",
 		sala,
-		Vector3.new(3.1, 0.12, 0.12),
-		cfTienda * CFrame.new(0, 6.05, -0.9),
-		C.Cian,
-		true
+		Vector3.new(1.7, 0.1, 0.3),
+		T(0, 1.02, -1.05),
+		C.MetalOscuro,
+		Enum.Material.Metal
 	)
+	neon("LuzBandeja", sala, Vector3.new(1.5, 0.05, 0.05), T(0, 1.58, -0.95), C.Magenta)
 	local prompt = Instance.new("ProximityPrompt")
 	prompt.Name = "VerBolas"
 	prompt.ActionText = "Elegir bola"
