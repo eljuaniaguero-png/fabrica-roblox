@@ -79,6 +79,9 @@ function Escena.armar(): Escena
 	local tablero = TableroModulo.generar()
 	local modelo = Instance.new("Model")
 	modelo.Name = "TableroLocal"
+	-- 26/10: el adentro de la máquina, CloverPit + futurista (Config.Pantalla, variante elegida).
+	local v = Config.variantePantalla()
+	local materialMarco = (Enum.Material :: any)[v.MaterialMarco] or Enum.Material.CorrodedMetal
 
 	local function aMundo(x: number, y: number, z: number?): Vector3
 		return ORIGEN + Vector3.new(x, y, z or 0)
@@ -95,8 +98,8 @@ function Escena.armar(): Escena
 		modelo,
 		Vector3.new(der - izq, alto, 0.5),
 		CFrame.new(aMundo(0, centroY, -1)),
-		Config.Colores.Fondo,
-		Enum.Material.Slate
+		v.Tablero,
+		Enum.Material.SmoothPlastic
 	)
 	for _, x in { izq - 0.5, der + 0.5 } do
 		parte(
@@ -104,8 +107,8 @@ function Escena.armar(): Escena
 			modelo,
 			Vector3.new(1, alto, 1.5),
 			CFrame.new(aMundo(x, centroY, 0)),
-			Config.Colores.Gris,
-			Enum.Material.Cobblestone
+			v.Marco,
+			materialMarco
 		)
 	end
 	parte(
@@ -113,8 +116,8 @@ function Escena.armar(): Escena
 		modelo,
 		Vector3.new(der - izq + 2, 1, 1.5),
 		CFrame.new(aMundo(0, arriba + 0.5, 0)),
-		Config.Colores.Gris,
-		Enum.Material.Cobblestone
+		v.Marco,
+		materialMarco
 	)
 	-- Piso liso (sin casilleros): la bola lo cruza y termina el tiro.
 	parte(
@@ -122,8 +125,8 @@ function Escena.armar(): Escena
 		modelo,
 		Vector3.new(der - izq + 2, 0.6, 1.5),
 		CFrame.new(aMundo(0, abajo - 0.3, 0)),
-		Config.Colores.Gris,
-		Enum.Material.Cobblestone
+		v.Marco,
+		materialMarco
 	)
 	-- Niebla cian abajo de todo (solo decoración: sin casilleros ni números).
 	local niebla = parte(
@@ -131,7 +134,7 @@ function Escena.armar(): Escena
 		modelo,
 		Vector3.new(der - izq, 1.6, 0.2),
 		CFrame.new(aMundo(0, abajo + 0.8, -0.6)),
-		Config.Colores.Magia,
+		v.Neon2,
 		Enum.Material.Neon
 	)
 	niebla.Transparency = 0.82
@@ -141,7 +144,7 @@ function Escena.armar(): Escena
 		modelo,
 		Vector3.new(2.4, 1.6, 1.5),
 		CFrame.new(aMundo(tablero.LanzadorX, tablero.LanzadorY + 1.6, 0)),
-		Config.Colores.Gris,
+		v.Marco,
 		Enum.Material.Metal
 	)
 	-- Tu avatar: el busto de tu personaje de Roblox, plano, a la izquierda del lanzador (una parte
@@ -254,33 +257,66 @@ function Escena.armar(): Escena
 		puntos[i] = p
 	end
 
-	-- Fondo de mazmorra (imagen de ForgeGUI) bien atrás, más grande que lo que se ve.
+	-- Atrás: una pared de metal (o negra brillante, según la variante) más grande que lo que se
+	-- ve, con tubos de neón a los costados del tablero y franjas de peligro abajo (CloverPit).
 	do
 		local ancho = (xMonstruo + ANCHO_MONSTRUO) * 4.2
-		local fondo = parte(
-			"FondoMazmorra",
+		parte(
+			"Pared",
 			modelo,
 			Vector3.new(ancho, ancho * 9 / 16, 0.2),
-			CFrame.new(aMundo(0, centroY, -20)),
-			Config.Colores.Fondo
+			CFrame.new(aMundo(0, centroY, -6)),
+			v.Pared,
+			(Enum.Material :: any)[v.MaterialPared] or Enum.Material.CorrodedMetal
 		)
-		local gui = Instance.new("SurfaceGui")
-		gui.Face = Enum.NormalId.Back
-		gui.LightInfluence = 0
-		gui.Brightness = 0.8
-		gui.CanvasSize = Vector2.new(1600, 900)
-		gui.Parent = fondo
-		local imagen = Instance.new("ImageLabel")
-		imagen.BackgroundTransparency = 1
-		imagen.Size = UDim2.fromScale(1, 1)
-		imagen.ScaleType = Enum.ScaleType.Crop
-		imagen.Image = Config.Assets.Fondo
-		imagen.Parent = gui
+		for i, x in { izq - 1.6, der + 1.6 } do
+			parte(
+				"TuboNeon",
+				modelo,
+				Vector3.new(0.35, alto + 4, 0.35),
+				CFrame.new(aMundo(x, centroY, -0.5)),
+				if i == 1 then v.Neon1 else v.Neon2,
+				Enum.Material.Neon
+			)
+		end
+		parte(
+			"LineaNeon",
+			modelo,
+			Vector3.new(der - izq + 3.6, 0.3, 0.3),
+			CFrame.new(aMundo(0, arriba + 1.4, -0.5)),
+			v.Neon1,
+			Enum.Material.Neon
+		)
+		if v.Franjas then
+			local franja = parte(
+				"Franjas",
+				modelo,
+				Vector3.new(der - izq + 2, 1.4, 0.2),
+				CFrame.new(aMundo(0, abajo - 1.3, 0.3)),
+				"#1C1C1A"
+			)
+			local gui = Instance.new("SurfaceGui")
+			gui.Face = Enum.NormalId.Back
+			gui.LightInfluence = 0.3
+			gui.SizingMode = Enum.SurfaceGuiSizingMode.PixelsPerStud
+			gui.PixelsPerStud = 20
+			gui.ClipsDescendants = true
+			gui.Parent = franja
+			for k = -4, 30 do
+				local f = Instance.new("Frame")
+				f.AnchorPoint = Vector2.new(0.5, 0.5)
+				f.Position = UDim2.fromScale(k * 0.05, 0.5)
+				f.Size = UDim2.fromScale(0.022, 3)
+				f.Rotation = 35
+				f.BackgroundColor3 = Color3.fromHex("#E8C21C")
+				f.BorderSizePixel = 0
+				f.Parent = gui
+			end
+		end
 	end
 
-	-- 2 luces cian a los costados del tablero (las velas que se ven son las del fondo pintado):
-	-- partes invisibles, solo para colgar la luz.
-	for _, x in { izq - 2.2, der + 2.2 } do
+	-- 2 luces de neón a los costados del tablero (partes invisibles, solo para colgar la luz).
+	for i, x in { izq - 2.2, der + 2.2 } do
 		local base = parte(
 			"Vela",
 			modelo,
@@ -301,24 +337,24 @@ function Escena.armar(): Escena
 		base.Transparency = 1
 		llama.Transparency = 1
 		local luz = Instance.new("PointLight")
-		luz.Color = Color3.fromHex(Config.Colores.Magia)
+		luz.Color = Color3.fromHex(if i == 1 then v.Neon1 else v.Neon2)
 		luz.Brightness = Config.Mundo.BrilloVela
 		luz.Range = Config.Mundo.AlcanceVela
 		luz.Shadows = false
 		luz.Parent = llama
 	end
 
-	-- Luz fría de mazmorra (solo en este cliente).
-	Lighting.Ambient = Color3.fromHex("#3A4A6E")
-	Lighting.OutdoorAmbient = Color3.fromHex("#2F3B57")
+	-- Luz oscura del adentro de la máquina (solo en este cliente; también ilumina la sala).
+	Lighting.Ambient = Color3.fromHex(v.Ambiente)
+	Lighting.OutdoorAmbient = Color3.fromHex(v.Ambiente)
 	Lighting.Brightness = 1
 	Lighting.ClockTime = 0
 	Lighting.GlobalShadows = false
 	local atmosfera = Lighting:FindFirstChildOfClass("Atmosphere") or Instance.new("Atmosphere")
 	atmosfera.Density = Config.Mundo.Niebla
 	atmosfera.Offset = 0
-	atmosfera.Color = Color3.fromHex("#2F3B57")
-	atmosfera.Decay = Color3.fromHex("#151B2E")
+	atmosfera.Color = Color3.fromHex(v.Ambiente)
+	atmosfera.Decay = Color3.fromHex("#08070C")
 	atmosfera.Glare = 0
 	atmosfera.Haze = 0
 	atmosfera.Parent = Lighting

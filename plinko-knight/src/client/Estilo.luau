@@ -13,28 +13,18 @@ local Estilo = {}
 
 Estilo.Diseno = Vector2.new(960, 480)
 
--- Paleta "Cripta azul" (guía de estilo de la ficha, etapa 9).
-Estilo.Colores = {
-	Velo = "#0B0F1C", -- fondo oscurecido de las pantallas que tapan todo
-	Panel = "#151B2E", -- azul noche
-	PanelClaro = "#2F3B57", -- piedra
-	Carta = "#2F3B57",
-	Boton = "#3A4A6E",
-	Principal = "#F5C542", -- dorado: el botón importante de cada pantalla (texto oscuro)
-	TextoPrincipal = "#151B2E",
-	Peligro = "#E2323F", -- vender, cancelar, la maña del jefe, sin oro
-	Oro = "#F5C542",
-	Texto = "#FFFFFF",
-	Apagado = "#8A96B8", -- bloqueado, lugar libre
-	Borde = "#4FE3F0", -- cian: bordes de lo que se toca
-	Vida = "#4CC46A",
-	Si = "#4CC46A", -- interruptor prendido
-	No = "#3A4A6E", -- interruptor apagado
-}
+-- Paleta y fuentes: las de la variante elegida de la pantalla de juego (Config.Pantalla, 26/10:
+-- CloverPit + futurista). Cambiar de variante cambia todas las pantallas.
+local Shared = game:GetService("ReplicatedStorage"):WaitForChild("Shared")
+local Config = require(Shared:WaitForChild("Config"))
+local variante = Config.variantePantalla()
+
+Estilo.Colores = table.clone(variante.Hud)
+Estilo.Colores.BordePanel = variante.BordePanel
 
 Estilo.Fuentes = {
-	Titulo = Enum.Font.FredokaOne, -- redonda y gruesa, va con el dibujo
-	Texto = Enum.Font.GothamBold,
+	Titulo = (Enum.Font :: any)[variante.Fuente] or Enum.Font.Oswald, -- mayúsculas angostas, como CloverPit
+	Texto = (Enum.Font :: any)[variante.FuenteTexto] or Enum.Font.GothamBold,
 }
 
 -- Tamaños de texto en unidades del lienzo (nada más chico que Chico).
@@ -52,7 +42,7 @@ Estilo.Medidas = {
 	BarraArriba = 68, -- franja de arriba en la pelea (vida, pelea, ajustes)
 	BarraAbajo = 70, -- franja de abajo en la pelea (bola, pergaminos, reliquias)
 	Margen = 10,
-	Esquina = 12,
+	Esquina = variante.Esquina,
 	Borde = 3,
 }
 
@@ -202,6 +192,15 @@ function Estilo.panel(padre: Instance, color: string?): Frame
 	f.BorderSizePixel = 0
 	f.Parent = padre
 	redondear(f)
+	-- Borde fino de neón (variantes B y C): lo futurista sobre las cajas negras de CloverPit.
+	if Estilo.Colores.BordePanel ~= "" then
+		local b = Instance.new("UIStroke")
+		b.Thickness = 1.5
+		b.Color = Color3.fromHex(Estilo.Colores.BordePanel)
+		b.Transparency = 0.2
+		b.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+		b.Parent = f
+	end
 	return f
 end
 

@@ -579,6 +579,9 @@ Esta paleta reemplaza a la de arriba (aprobada el 26/10).
 
 ## Etapa 7b · Sala arcade 3D con modelos hechos por IA (aprobada el 26/10)
 
+> **Cambio del 26/10 (Juani, después de 7b-3):** ForgeGUI **solo hace el HUD y los íconos**; **los modelos los hace Claude** (con partes de Roblox por código o en Blender). La **sala tiene que ser más chica**. La estética principal es **mezclar CloverPit con algo futurista como FNAF Security Breach**. La pantalla de juego (el plinko) "es muy fea": se rehace con esa estética. Los 13 modelos de IA de 7b-2/7b-3 quedan guardados pero no se usan.
+
+
 > **Cambio del 26/10 (Juani):** la sala es **en solitario**, servidores de 1 jugador. Una sola máquina Plinko Knight (M1) y máquinas de fondo; la pared de récords muestra tus récords. Donde abajo dice "8 máquinas", "una por jugador" o "2 jugadores", ya no aplica.
 >
 > **Cambio del 26/10 (Juani):** el caballero sale del juego; el personaje es el avatar del jugador. M14 (figura del caballero) se reemplaza por una estatua de tu avatar hecha por código, y M1 va sin dibujo de caballero.

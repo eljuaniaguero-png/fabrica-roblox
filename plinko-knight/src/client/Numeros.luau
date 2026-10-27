@@ -91,20 +91,24 @@ function Numeros.crearPanel(ancla: BasePart): Panel
 		local fondo = Instance.new("Frame")
 		fondo.Position = UDim2.fromScale(x, 0)
 		fondo.Size = UDim2.fromScale(0.42, 0.5)
-		fondo.BackgroundColor3 = Color3.fromHex(hex)
+		-- Display LED (26/10, CloverPit): caja negra con borde y números del color de la caja.
+		fondo.BackgroundColor3 = Color3.fromHex("#050505")
 		fondo.BorderSizePixel = 0
 		fondo.Parent = cartel
-		local esquinas = Instance.new("UICorner")
-		esquinas.CornerRadius = UDim.new(0.12, 0)
-		esquinas.Parent = fondo
+		local borde = Instance.new("UIStroke")
+		borde.Thickness = 3
+		borde.Color = Color3.fromHex(hex)
+		borde.Parent = fondo
 		local escala = Instance.new("UIScale")
 		escala.Parent = fondo
 		local t = etiqueta(fondo, titulo)
-		t.TextColor3 = Color3.new(1, 1, 1)
+		t.Font = Enum.Font.Oswald
+		t.TextColor3 = Color3.fromHex(hex)
 		t.Position = UDim2.fromScale(0.05, 0.04)
 		t.Size = UDim2.fromScale(0.9, 0.3)
 		local valor = etiqueta(fondo, "0")
-		valor.TextColor3 = Color3.new(1, 1, 1)
+		valor.Font = Enum.Font.Arcade
+		valor.TextColor3 = Color3.fromHex(hex)
 		valor.Position = UDim2.fromScale(0.05, 0.36)
 		valor.Size = UDim2.fromScale(0.9, 0.58)
 		return valor, escala

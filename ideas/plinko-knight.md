@@ -528,3 +528,14 @@ Juani pidió sacar al caballero del juego: **el personaje es el del jugador**.
 - **Probado en Play (compu):** 60 FPS en la sala, sentarse y jugar en la máquina nueva, consola sin errores del juego. Los avisos "Asset content representation is being generated" son de Roblox procesando los modelos recién subidos y se van solos.
 - **Copia .rbxl:** no hace falta: la sala se arma por código y el place no cambió.
 
+### Cambio del 26/10: CloverPit + futurista, sala chica, modelos hechos por Claude
+
+Juani: "ForgeGUI solo hará el HUD y los íconos, vos harás los modelos, la habitación tiene que ser más chica, usá las referencias; la principal es mezclar la estética de CloverPit con algo futurista como FNAF Security Breach. La pantalla de juego (plinko) es muy fea".
+
+**Lo que se toma de las capturas:**
+- *CloverPit:* habitación chica y oscura; máquina física de metal gastado, industrial, con franjas de peligro amarillas y negras; displays LED naranja con letra de máquina; botón rojo grande y palanca; HUD en cajas negras con mayúsculas angostas y títulos naranja `#FF8A1E`; contorno amarillo `#FFE600` en lo que se toca.
+- *FNAF Security Breach:* tubos de neón magenta `#FF3FD0` y cian `#3FE8FF`, piso negro brillante con líneas de grilla que brillan, la luz sale del neón.
+- *Afuera:* tragamonedas, 666, sangre, cajero, deuda, animatrónicos y nombres de FNAF.
+
+**Plan:** sala chica armada con partes por código (máquina industrial con neón, terminal de la tienda, tablero de récords LED), y la pantalla de juego con el HUD en cajas negras y LED naranja sobre el tablero. Los 13 modelos de IA quedan en `plinko-knight/modelos/` sin usar.
+

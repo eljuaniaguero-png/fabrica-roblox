@@ -87,20 +87,20 @@ local function armarRecords(): TextLabel?
 	local titulo = Instance.new("TextLabel")
 	titulo.BackgroundTransparency = 1
 	titulo.Size = UDim2.fromScale(1, 0.18)
-	titulo.Font = Enum.Font.FredokaOne
+	titulo.Font = Enum.Font.Arcade -- display LED, como en CloverPit
 	titulo.TextScaled = true
-	titulo.TextColor3 = Color3.fromHex(Config.Colores.Oro)
+	titulo.TextColor3 = Color3.fromHex(Config.Sala.Colores.Led)
 	titulo.Text = "TUS RÉCORDS"
 	titulo.Parent = gui
 	local lista = Instance.new("TextLabel")
 	lista.BackgroundTransparency = 1
 	lista.Position = UDim2.fromScale(0.06, 0.22)
 	lista.Size = UDim2.fromScale(0.88, 0.74)
-	lista.Font = Enum.Font.GothamBold
-	lista.TextSize = 40
+	lista.Font = Enum.Font.Arcade
+	lista.TextSize = 30
 	lista.TextXAlignment = Enum.TextXAlignment.Left
 	lista.TextYAlignment = Enum.TextYAlignment.Top
-	lista.TextColor3 = Color3.new(1, 1, 1)
+	lista.TextColor3 = Color3.fromHex(Config.Sala.Colores.Led)
 	lista.Parent = gui
 	return lista
 end

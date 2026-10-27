@@ -578,66 +578,160 @@ Config.Feel = {
 	CartasEntrada = 0.12, -- segundos entre la entrada de una carta del cofre y la siguiente
 }
 
--- Etapa 7b-1: la sala arcade (en gris; los modelos de la IA llegan en 7b-2). Studs.
+-- Cómo se ve la pantalla de juego (26/10: CloverPit + futurista). 3 variantes para que Juani
+-- elija; manda Variante (en Studio se puede probar otra con el atributo "EstiloPantalla" de
+-- Workspace). Cada una tiene la paleta del HUD (client/Estilo) y la del mundo (client/Escena).
+Config.Pantalla = {
+	Variante = "B",
+	Variantes = {
+		-- A · CloverPit puro: metal gastado oliva, LED naranja, contorno amarillo, sin neón.
+		A = {
+			Hud = {
+				Velo = "#0A0A08",
+				Panel = "#0C0C0A",
+				PanelClaro = "#2A2A24",
+				Carta = "#1A1A16",
+				Boton = "#3A3A30",
+				Principal = "#FFE600",
+				TextoPrincipal = "#0C0C0A",
+				Peligro = "#D8261E",
+				Oro = "#FF8A1E",
+				Texto = "#F2EFE6",
+				Apagado = "#8C887A",
+				Borde = "#FFE600",
+				Vida = "#6BCB3A",
+				Si = "#6BCB3A",
+				No = "#3A3A30",
+			},
+			BordePanel = "", -- sin borde de neón en los paneles
+			Fuente = "Oswald",
+			FuenteTexto = "Oswald",
+			Esquina = 0,
+			Pared = "#3A3A30",
+			MaterialPared = "CorrodedMetal",
+			Marco = "#4A4A40",
+			MaterialMarco = "CorrodedMetal",
+			Tablero = "#0B0B09",
+			Neon1 = "#FF8A1E",
+			Neon2 = "#FFE600",
+			Ambiente = "#2E2A22",
+			Franjas = true,
+		},
+		-- B · Mezcla: lo de A con bordes de neón magenta y cian (lo futurista).
+		B = {
+			Hud = {
+				Velo = "#08070C",
+				Panel = "#0C0B10",
+				PanelClaro = "#26242C",
+				Carta = "#16151C",
+				Boton = "#34323C",
+				Principal = "#FFE600",
+				TextoPrincipal = "#0C0C0A",
+				Peligro = "#D8261E",
+				Oro = "#FF8A1E",
+				Texto = "#F2EFE6",
+				Apagado = "#8C8896",
+				Borde = "#3FE8FF",
+				Vida = "#6BCB3A",
+				Si = "#6BCB3A",
+				No = "#34323C",
+			},
+			BordePanel = "#FF3FD0",
+			Fuente = "Oswald",
+			FuenteTexto = "Oswald",
+			Esquina = 4,
+			Pared = "#2E2D26",
+			MaterialPared = "CorrodedMetal",
+			Marco = "#4A4A40",
+			MaterialMarco = "CorrodedMetal",
+			Tablero = "#0A0910",
+			Neon1 = "#FF3FD0",
+			Neon2 = "#3FE8FF",
+			Ambiente = "#2A2238",
+			Franjas = true,
+		},
+		-- C · Futurista: paneles negros brillantes, neón por todos lados, naranja solo en números.
+		C = {
+			Hud = {
+				Velo = "#05040A",
+				Panel = "#07060C",
+				PanelClaro = "#1C1830",
+				Carta = "#100E1C",
+				Boton = "#241F3C",
+				Principal = "#FF3FD0",
+				TextoPrincipal = "#FFFFFF",
+				Peligro = "#FF3355",
+				Oro = "#FF8A1E",
+				Texto = "#FFFFFF",
+				Apagado = "#7E78A0",
+				Borde = "#3FE8FF",
+				Vida = "#3FE8FF",
+				Si = "#3FE8FF",
+				No = "#241F3C",
+			},
+			BordePanel = "#3FE8FF",
+			Fuente = "Michroma",
+			FuenteTexto = "GothamBold",
+			Esquina = 10,
+			Pared = "#0B0A10",
+			MaterialPared = "SmoothPlastic",
+			Marco = "#14121C",
+			MaterialMarco = "SmoothPlastic",
+			Tablero = "#05040A",
+			Neon1 = "#FF3FD0",
+			Neon2 = "#3FE8FF",
+			Ambiente = "#1A1830",
+			Franjas = false,
+		},
+	},
+}
+
+-- La variante que se usa (la de Config, o la del atributo de Workspace para probar en Studio).
+function Config.variantePantalla(): any
+	local nombre = Config.Pantalla.Variante
+	local ok, atributo = pcall(function()
+		return workspace:GetAttribute("EstiloPantalla")
+	end)
+	if ok and typeof(atributo) == "string" and (Config.Pantalla.Variantes :: any)[atributo] then
+		nombre = atributo
+	end
+	return (Config.Pantalla.Variantes :: any)[nombre]
+end
+
+-- Sala (etapa 7b, rehecha el 26/10): chica, CloverPit + futurista (FNAF Security Breach). Todo
+-- armado con partes por código en server/GeneradorSala. Studs.
 Config.Sala = {
-	Ancho = 60, -- x
-	Largo = 40, -- z
-	Alto = 14,
+	Ancho = 28, -- x
+	Largo = 22, -- z
+	Alto = 11,
 	Maquinas = 1, -- la sala es en solitario (servidores de 1 jugador): solo tu máquina
-	SeparacionMaquinas = 7,
-	MaquinaTamanio = Vector3.new(4, 7, 3),
-	PantallaTamanio = Vector3.new(3.2, 2.4, 0.1),
+	MaquinaTamanio = Vector3.new(5, 8, 3.5),
+	PantallaTamanio = Vector3.new(3.8, 2.8, 0.1),
 	DistanciaJugar = 8, -- studs para que aparezca "E: Jugar"
 	TiempoCamara = 0.8, -- segundos que tarda la cámara en meterse en la pantalla
 	TiempoFundido = 0.2, -- fundido al entrar o salir de la pantalla
 	TiempoMinimoBola = 0.3, -- segundos entre dos "elegir bola" en el mostrador (servidor)
-	EscalaEstatua = 1.7, -- tamaño de la estatua de tu avatar (1 = tamaño real; más grande toca el techo)
-	-- Colores de la sala (7b-3, paleta medida de las capturas de Juani). Los bloques grises que
-	-- quedan debajo de los modelos usan Maquina/Fondo.
+	EscalaEstatua = 1.4, -- tamaño de la estatua de tu avatar (la sala es más baja)
+	Grilla = 4, -- studs entre las líneas de neón del piso
+	ReflejoPiso = 0.35,
+	-- Paleta medida de las capturas (CloverPit + FNAF Security Breach).
 	Colores = {
-		Piso = "#EDEDED", -- damero: blanco
-		PisoOscuro = "#121018", -- damero: negro
-		Pared = "#0D0A14", -- casi negro
-		Maquina = "#6A6A6A",
-		Pantalla = "#151B2E",
-		Fondo = "#4A4A4A",
-		Cartel = "#E0E0E0",
+		Piso = "#0B0A10", -- negro brillante
+		GrillaA = "#7A2A80", -- líneas del piso (neón apagado)
+		GrillaB = "#1F6A78",
+		Pared = "#26251F", -- metal gastado, casi negro
+		Metal = "#4A4A40", -- máquinas y terminales
+		MetalOscuro = "#1C1C1A",
+		Peligro = "#E8C21C", -- franjas amarillas y negras
+		Led = "#FF8A1E", -- displays naranja
+		Boton = "#D8261E",
+		Pantalla = "#0E1612",
 		Borde = "#FFE600", -- contorno amarillo de lo que se puede tocar (como CloverPit)
 		Magenta = "#FF3FD0",
 		Cian = "#3FE8FF",
-		Amarillo = "#FFE14A",
-		Verde = "#7CFF6B",
+		Lampara = "#FFB060", -- luz cálida sobre la máquina
 	},
-	Baldosa = 4, -- studs de cada baldosa del damero
-	ReflejoPiso = 0.25,
-	-- Modelos de la IA (ForgeGUI, 7b-2), subidos una vez y duplicados por código. Alto en studs
-	-- (o Largo: el lado más largo). Si un modelo no carga, queda el bloque gris.
-	Modelos = {
-		maquina = { Id = 128668549733552, Alto = 7 }, -- M1
-		naves = { Id = 117819448578361, Alto = 7 }, -- M2
-		autos = { Id = 119557592984296, Alto = 7 }, -- M3
-		laberinto = { Id = 131991761922226, Alto = 5.5 }, -- M4
-		banqueta = { Id = 113006751369088, Alto = 2.6 }, -- M5
-		mesa = { Id = 120712174872373, Alto = 3.2 }, -- M6
-		mostrador = { Id = 112597161912739, Largo = 10 }, -- M7
-		cajita = { Id = 94618219124890, Alto = 2.2 }, -- M8
-		records = { Id = 130935584485110, Largo = 18 }, -- M9
-		molinete = { Id = 137841564443967, Alto = 3.4 }, -- M10
-		maceta = { Id = 105932246266763, Alto = 4.5 }, -- M11
-		tacho = { Id = 75610856010776, Alto = 3 }, -- M12
-		poste = { Id = 79663817756766, Alto = 9 }, -- M13 (con 14 quedaba de 6 studs de ancho)
-	},
-	GiroModelos = 0, -- grados en Y para que el frente de los modelos mire a la sala
-	AlturaPantalla = 0.6, -- a qué altura de la máquina está su pantalla (0 a 1): ahí va la cámara
-	HundidoPantalla = 0.35, -- studs que la pantalla está hundida respecto del frente del modelo
-	AlturaRecords = 3, -- studs del piso a la base del marco de récords
-	Postes = {
-		Vector2.new(-20, -7),
-		Vector2.new(20, -7),
-		Vector2.new(-20, 10),
-		Vector2.new(20, 10),
-	},
-	LuzCartel = { Brillo = 2, Alcance = 22 }, -- PointLight de cada cartel de neón
+	LuzNeon = { Brillo = 1.6, Alcance = 16 },
 }
 
 return Config

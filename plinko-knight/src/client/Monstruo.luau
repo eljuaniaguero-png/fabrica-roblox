@@ -41,8 +41,9 @@ function Monstruo.crear(cartel: BasePart, barra: BasePart): Monstruo
 	local t = Config.Turno
 
 	-- Cartel de piedra: imagen (o rectángulo de color) y nombre abajo.
-	cartel.Material = Enum.Material.Slate
-	cartel.Color = Color3.fromHex(Config.Colores.Gris)
+	-- 26/10: monitor negro con el nombre en LED naranja (CloverPit + futurista).
+	cartel.Material = Enum.Material.Metal
+	cartel.Color = Color3.fromHex("#0A0A0C")
 	local gui = Instance.new("SurfaceGui")
 	gui.Face = CARA
 	gui.LightInfluence = 0
@@ -63,6 +64,9 @@ function Monstruo.crear(cartel: BasePart, barra: BasePart): Monstruo
 	imagen.ScaleType = Enum.ScaleType.Fit
 	imagen.Parent = gui
 	local nombre = texto(gui, "")
+	nombre.Font = Enum.Font.Arcade
+	nombre.TextColor3 = Color3.fromHex(Config.Sala.Colores.Led)
+	nombre.TextStrokeTransparency = 1
 	nombre.Position = UDim2.fromScale(0.05, 0.78)
 	nombre.Size = UDim2.fromScale(0.9, 0.16)
 
