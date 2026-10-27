@@ -79,7 +79,11 @@ local function armarRecords(): TextLabel?
 		return nil
 	end
 	local gui = Instance.new("SurfaceGui")
-	gui.Face = Enum.NormalId.Front -- mira a la sala (-Z)
+	-- La cara que mira a la sala la dice GeneradorSala (atributo Cara).
+	local cara = pared:GetAttribute("Cara")
+	gui.Face = if typeof(cara) == "string" and (Enum.NormalId :: any)[cara]
+		then (Enum.NormalId :: any)[cara]
+		else Enum.NormalId.Front
 	gui.LightInfluence = 0
 	gui.SizingMode = Enum.SurfaceGuiSizingMode.PixelsPerStud
 	gui.PixelsPerStud = 40
@@ -139,11 +143,11 @@ local function estatua(jugador: Player)
 	end
 	modelo:ScaleTo(Config.Sala.EscalaEstatua)
 	local arriba = pedestal.Position.Y + pedestal.Size.Y / 2
-	-- Mirando a la entrada (+Z), al centro del pedestal; después se baja hasta que los pies
+	-- Mirando a la sala (Config.Sala.GiroEstatua), al centro del pedestal; después se baja hasta que los pies
 	-- toquen el pedestal (el punto de apoyo del modelo no está en los pies).
 	modelo:PivotTo(
 		CFrame.new(pedestal.Position.X, arriba, pedestal.Position.Z)
-			* CFrame.Angles(0, math.rad(180), 0)
+			* CFrame.Angles(0, math.rad(Config.Sala.GiroEstatua), 0)
 	)
 	local caja, tamanio = modelo:GetBoundingBox()
 	local abajo = caja.Position.Y - tamanio.Y / 2

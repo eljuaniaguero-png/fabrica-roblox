@@ -483,7 +483,7 @@ Config.Colores = {
 -- Mundo de la etapa 9: materiales y luz.
 Config.Mundo = {
 	MaterialClavija = "Neon", -- "Neon" (brilla) o "Metal": con la luz cian el metal dorado se ve verde
-	BrilloVela = 1.6, -- PointLight de las 2 velas cian
+	BrilloVela = 0.7, -- PointLight de las 2 velas cian
 	AlcanceVela = 22,
 	Niebla = 0.1, -- densidad de la Atmosphere (más alto tapa todo: la cámara está a 170 studs)
 }
@@ -607,14 +607,14 @@ Config.Pantalla = {
 			Fuente = "Oswald",
 			FuenteTexto = "Oswald",
 			Esquina = 0,
-			Pared = "#3A3A30",
-			MaterialPared = "CorrodedMetal",
-			Marco = "#4A4A40",
-			MaterialMarco = "CorrodedMetal",
+			Pared = "#24231D",
+			MaterialPared = "Concrete",
+			Marco = "#3F3E35",
+			MaterialMarco = "DiamondPlate",
 			Tablero = "#0B0B09",
 			Neon1 = "#FF8A1E",
 			Neon2 = "#FFE600",
-			Ambiente = "#2E2A22",
+			Ambiente = "#1E1C17",
 			Franjas = true,
 		},
 		-- B · Mezcla: lo de A con bordes de neón magenta y cian (lo futurista).
@@ -640,14 +640,14 @@ Config.Pantalla = {
 			Fuente = "Oswald",
 			FuenteTexto = "Oswald",
 			Esquina = 4,
-			Pared = "#2E2D26",
-			MaterialPared = "CorrodedMetal",
-			Marco = "#4A4A40",
-			MaterialMarco = "CorrodedMetal",
+			Pared = "#1E1D18",
+			MaterialPared = "Concrete",
+			Marco = "#3F3E35",
+			MaterialMarco = "DiamondPlate",
 			Tablero = "#0A0910",
 			Neon1 = "#FF3FD0",
 			Neon2 = "#3FE8FF",
-			Ambiente = "#2A2238",
+			Ambiente = "#1C1828",
 			Franjas = true,
 		},
 		-- C · Futurista: paneles negros brillantes, neón por todos lados, naranja solo en números.
@@ -680,7 +680,7 @@ Config.Pantalla = {
 			Tablero = "#05040A",
 			Neon1 = "#FF3FD0",
 			Neon2 = "#3FE8FF",
-			Ambiente = "#1A1830",
+			Ambiente = "#12101E",
 			Franjas = false,
 		},
 	},
@@ -698,40 +698,47 @@ function Config.variantePantalla(): any
 	return (Config.Pantalla.Variantes :: any)[nombre]
 end
 
--- Sala (etapa 7b, rehecha el 26/10): chica, CloverPit + futurista (FNAF Security Breach). Todo
--- armado con partes por código en server/GeneradorSala. Studs.
+-- Sala (etapa 7b, rehecha el 26/10 con las capturas nuevas de Juani): una celda chica y sucia
+-- como CloverPit (paredes de concreto, puerta de metal, ventilador, tubo fluorescente, mesa de
+-- trabajo con la máquina arriba, estante, cartel de reglas en la pared) con toques futuristas de
+-- neón como FNAF Security Breach. Todo armado con partes por código en server/GeneradorSala.
 Config.Sala = {
-	Ancho = 28, -- x
-	Largo = 22, -- z
-	Alto = 11,
+	Ancho = 20, -- x
+	Largo = 16, -- z
+	Alto = 10,
 	Maquinas = 1, -- la sala es en solitario (servidores de 1 jugador): solo tu máquina
-	MaquinaTamanio = Vector3.new(5, 8, 3.5),
-	PantallaTamanio = Vector3.new(3.8, 2.8, 0.1),
+	MaquinaTamanio = Vector3.new(4.4, 3.8, 3), -- la máquina, arriba de la mesa
+	PantallaTamanio = Vector3.new(3.2, 2.1, 0.1),
+	AltoMesa = 3.2,
 	DistanciaJugar = 8, -- studs para que aparezca "E: Jugar"
 	TiempoCamara = 0.8, -- segundos que tarda la cámara en meterse en la pantalla
 	TiempoFundido = 0.2, -- fundido al entrar o salir de la pantalla
 	TiempoMinimoBola = 0.3, -- segundos entre dos "elegir bola" en el mostrador (servidor)
-	EscalaEstatua = 1.4, -- tamaño de la estatua de tu avatar (la sala es más baja)
+	EscalaEstatua = 1, -- tamaño de la estatua de tu avatar (la celda es baja)
+	GiroEstatua = 0, -- grados: 0 mira hacia -Z (la estatua está contra la pared sur)
 	Grilla = 4, -- studs entre las líneas de neón del piso
-	ReflejoPiso = 0.35,
+	ReflejoPiso = 0.15,
 	-- Paleta medida de las capturas (CloverPit + FNAF Security Breach).
 	Colores = {
-		Piso = "#0B0A10", -- negro brillante
-		GrillaA = "#7A2A80", -- líneas del piso (neón apagado)
-		GrillaB = "#1F6A78",
-		Pared = "#26251F", -- metal gastado, casi negro
-		Metal = "#4A4A40", -- máquinas y terminales
-		MetalOscuro = "#1C1C1A",
-		Peligro = "#E8C21C", -- franjas amarillas y negras
+		Piso = "#17160F", -- concreto sucio
+		GrillaA = "#5A2160", -- líneas del piso (neón apagado)
+		GrillaB = "#164C56",
+		Pared = "#2B2A22", -- concreto oscuro, oliva
+		Metal = "#3F3E35", -- máquina, terminal, puerta
+		MetalOscuro = "#1C1C18",
+		Madera = "#3A2A1E", -- mesa de trabajo
+		Papel = "#A89F86", -- carteles pegados en la pared
+		Peligro = "#D8B41C", -- franjas amarillas y negras
 		Led = "#FF8A1E", -- displays naranja
-		Boton = "#D8261E",
+		Boton = "#C8261E",
 		Pantalla = "#0E1612",
 		Borde = "#FFE600", -- contorno amarillo de lo que se puede tocar (como CloverPit)
 		Magenta = "#FF3FD0",
 		Cian = "#3FE8FF",
+		Fluor = "#D8F0D0", -- tubo fluorescente
 		Lampara = "#FFB060", -- luz cálida sobre la máquina
 	},
-	LuzNeon = { Brillo = 1.6, Alcance = 16 },
+	LuzNeon = { Brillo = 0.9, Alcance = 12 },
 }
 
 return Config
