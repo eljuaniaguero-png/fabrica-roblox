@@ -135,3 +135,15 @@ Medidas en el lienzo de 960 × 480 (en celular horizontal, 1 unidad ≈ 1 px).
 - Todo número (tamaños, colores, IDs) va en `Config.luau`, y todo lo visual queda en `client/Estilo.luau`.
 - Nada de casino: no hay monedas cayendo de una bandeja, ni "premio", ni rayos de "jackpot" en cosas compradas. Los rayos van solo en la reliquia legendaria del cofre, que es gratis y se ve antes de elegir.
 - Sin emojis en el juego (los de este plan son solo para el dibujo). La mano del tutorial pasa a imagen.
+
+## Avance
+
+### 12a · Kit y maquetas (27/10/2026)
+- **Kit copiado de Forja:** `client/Kit.luau` (botones, superficie 9-slice, píldora, barra, baldosa, marco Destacado, X, globito, rayas, íconos de la hoja de Forja o cualquier `rbxassetid://`, textos con FredokaOne), `client/Ventanas.luau` (ventana con cabecera, pestañas, lista con scroll, panel) y los IDs y medidas en `Config.Kit`. Todavía no lo usa ninguna pantalla: `client/Estilo` sigue mandando hasta el paso 12b.
+- **Probado en Studio** (`arte/maquetas/12a-kit-en-studio.jpg`): una ventana de prueba con botones, baldosa con el jefe y barra se ve igual que en Forja, sin errores.
+- **Maquetas** (`arte/maquetas/12a-pelea.png`, `12a-tienda.png`, `12a-cofre.png`), armadas con `arte/maquetas/maquetas.py` y las piezas reales. Cambios respecto del plan que salieron armándolas:
+  - **Paneles con el centro oscuro:** el Panel de Forja es celeste brillante; entero, en la mazmorra se ve pesado. Queda el borde celeste con brillo y adentro un degradé "Noche".
+  - **El marco "Destacado" va detrás de la carta**, porque encima la tapa.
+  - En la píldora de la pelea va la **Corona** de la hoja de Forja (el ícono "Jefe" es otro dibujo).
+  - Los nombres largos ("Corona del Rey Caído") se achican para entrar.
+- **Para 12b en adelante:** la mano del tutorial (DisplayOrder 40) queda encima de las ventanas (30), así que hay que bajarla. El corazón de la píldora de vida es el pixel de 10b; si se nota, se pide uno nuevo a ForgeGUI.
