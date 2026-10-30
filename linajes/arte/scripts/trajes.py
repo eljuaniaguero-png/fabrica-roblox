@@ -217,6 +217,7 @@ SUFIJOS = {
     "tela-oscura": "Tela",
     "tela-dorada": "Tela",
     "oro": "Oro",
+    "neon-aviso": "Neon",
     "blanco-armadura": "Armadura",
     "liga": "Liga",
 }

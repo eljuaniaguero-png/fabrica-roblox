@@ -65,6 +65,10 @@ MATERIALES = {
     "oro": {"hex": "d9a441", "rugosidad": 0.3, "metal": 1.0},
     "blanco-armadura": {"hex": "e8e6e0", "rugosidad": 0.4},
     "tela-dorada": {"hex": "d9a441", "rugosidad": 0.6},  # capa de Centinela Solar
+    "negro": {"hex": "121216", "rugosidad": 0.6},  # Mascarada
+    "charol": {"hex": "0a0a0c", "rugosidad": 0.08},
+    "cofradia-oscura": {"hex": "7a1424", "rugosidad": 0.8},
+    "espejo": {"hex": "c8d0dc", "rugosidad": 0.22, "metal": 0.75},
     "neon-cian": {"hex": "3fe0f0", "brillo": 5.0},
     "neon-eclipse": {"hex": "f2652b", "brillo": 5.0},
     "neon-aviso": {"hex": "ff2a2a", "brillo": 6.0},
