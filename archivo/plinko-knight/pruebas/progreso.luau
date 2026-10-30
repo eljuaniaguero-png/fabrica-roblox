@@ -1,6 +1,6 @@
 --!strict
 -- Pruebas de la etapa 6: lo que se guarda, la migración y los logros. Se corren desde la raíz:
---   lune run plinko-knight/pruebas/progreso
+--   lune run archivo/plinko-knight/pruebas/progreso
 -- (ProfileStore no corre en Lune: el guardado de verdad se prueba en Studio.)
 -- 1) Jugador nuevo y migración de datos guardados (rotos, viejos o con cosas que ya no existen).
 -- 2) Cada logro desbloquea lo suyo una sola vez.

@@ -14,8 +14,8 @@ esac
 # desordena el código.)
 raiz="${CLAUDE_PROJECT_DIR:-.}"
 case "$archivo" in
-*mutant-lab*) raiz="$raiz/mutant-lab" ;;
-*forja-rapida*) raiz="$raiz/forja-rapida" ;;
+*mutant-lab*) raiz="$raiz/archivo/mutant-lab" ;;
+*forja-rapida*) raiz="$raiz/archivo/forja-rapida" ;;
 esac
 (cd "$raiz" && stylua "$archivo") 2>&1 >/dev/null
 

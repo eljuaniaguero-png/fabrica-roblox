@@ -1,6 +1,6 @@
 --!strict
 -- Pruebas del paso 5c: las 20 reliquias. Se corren desde la raíz del repositorio:
---   lune run plinko-knight/pruebas/reliquias
+--   lune run archivo/plinko-knight/pruebas/reliquias
 -- 1) Cada reliquia sola: hace lo que dice (comparando el mismo tiro con y sin ella).
 -- 2) Las que crecen (Trofeo, Callo, Racha) y la Bolsa de Cuero, en la mazmorra.
 -- 3) El orden importa: sumar Multi antes o después de multiplicarlo.

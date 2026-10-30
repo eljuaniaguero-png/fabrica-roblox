@@ -1,13 +1,13 @@
 --!strict
 -- Pruebas de las reglas de la mazmorra y del balance. Se corren desde la raíz del repositorio:
---   lune run plinko-knight/pruebas/mazmorra
+--   lune run archivo/plinko-knight/pruebas/mazmorra
 -- 1) Reglas: contraataque, curarse al ganar, perder y ganarle al jefe.
 -- 2) Balance: juega muchas mazmorras con tiros a ángulos al azar y un bot en la tienda (sin
 --    comprar, comprando al azar con cada bola, comprando todo y comprando siempre el mismo tipo)
 --    y cuenta cuántos tiros dura cada pelea y en qué piso se pierde. Sale con error si una regla falla; el balance solo
 --    se informa.
 -- Para probar otras vidas de monstruos sin tocar Config (y menos corridas):
---   lune run plinko-knight/pruebas/mazmorra 50,90,160,300,500,900,1600,2800,5000 100
+--   lune run archivo/plinko-knight/pruebas/mazmorra 50,90,160,300,500,900,1600,2800,5000 100
 -- y con "rapido" al final mide solo 4 formas de jugar (al azar con hierro y las 3 familias).
 
 local process = require("@lune/process")

@@ -1,6 +1,6 @@
 --!strict
 -- Pruebas del paso 5d: zonas, mañas de jefe y cofre. Se corren desde la raíz del repositorio:
---   lune run plinko-knight/pruebas/zonas
+--   lune run archivo/plinko-knight/pruebas/zonas
 -- 1) Las 3 zonas: 9 peleas, un jefe al final de cada zona, la vida sube.
 -- 2) Mañas: se sortean distintas, solo valen en los jefes y cada una hace lo suyo.
 -- 3) Cofre: aparece después de un jefe, trae reliquias que no tenés y te llevás una sola.

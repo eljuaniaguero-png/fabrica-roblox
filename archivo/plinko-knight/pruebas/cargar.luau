@@ -6,7 +6,7 @@
 local fs = require("@lune/fs")
 local luau = require("@lune/luau")
 
-local CARPETA = "plinko-knight/src/shared"
+local CARPETA = "archivo/plinko-knight/src/shared"
 
 local cache: { [string]: any } = {}
 

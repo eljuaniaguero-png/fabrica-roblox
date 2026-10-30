@@ -1,6 +1,6 @@
 --!strict
 -- Pruebas de la simulación de la bola. Se corren desde la raíz del repositorio:
---   lune run plinko-knight/pruebas/simulacion
+--   lune run archivo/plinko-knight/pruebas/simulacion
 -- 200 tiros a ángulos distintos: ninguno se traba ni sale por los costados, el mismo tiro da
 -- siempre lo mismo, y el promedio de clavijas tocadas queda entre 10 y 18. También el daño (cada
 -- clavija suma una sola vez) y la revisión del servidor. Sale con error si falla.

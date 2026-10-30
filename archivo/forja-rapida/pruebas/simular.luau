@@ -1,10 +1,10 @@
 --!strict
 -- Simula a un jugador que juega solo, sin parar, para medir el ritmo del juego con los
 -- números de GameConfig. Se corre desde la raíz del repositorio:
---   lune run forja-rapida/pruebas/simular            (4 golpes por segundo)
---   lune run forja-rapida/pruebas/simular 6          (otro ritmo de golpes)
---   lune run forja-rapida/pruebas/simular 4 sin-forja (sin La Forja, para comparar)
---   lune run forja-rapida/pruebas/simular 4 con-forja sin-coleccion
+--   lune run archivo/forja-rapida/pruebas/simular            (4 golpes por segundo)
+--   lune run archivo/forja-rapida/pruebas/simular 6          (otro ritmo de golpes)
+--   lune run archivo/forja-rapida/pruebas/simular 4 sin-forja (sin La Forja, para comparar)
+--   lune run archivo/forja-rapida/pruebas/simular 4 con-forja sin-coleccion
 --     (sin el requisito de gemas de GameConfig.Zonas[n].GemasParaAbrir, para comparar)
 -- El jugador: le pega a geodas de su mejor zona (tamaño al azar, como en el mapa), vende
 -- todo apenas rompe (con un 15 % de tiempo extra por los viajes al Banco) y compra lo que más

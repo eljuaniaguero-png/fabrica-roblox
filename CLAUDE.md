@@ -11,6 +11,8 @@ Esto vale para todas las respuestas, también las cortas, las preguntas y los in
 
 ## Varios juegos en esta carpeta
 
+**Desde el 2026-10-30 todos los juegos de abajo están archivados en `archivo/<juego>/` (ver `archivo/README.md`); las rutas de esta sección hay que leerlas con ese prefijo. El juego activo nuevo (un RPG) todavía no tiene carpeta.**
+
 Hay tres juegos. Cada uno tiene su propio código, su propio archivo de Rojo y su propio place de Studio. Nunca mezcles archivos de uno con el otro.
 
 | Juego | Código | Proyecto de Rojo | Ficha |

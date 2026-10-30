@@ -1,6 +1,6 @@
 --!strict
 -- Pruebas de lógica pura de Forja Rápida. Se corren desde la raíz del repositorio:
---   lune run forja-rapida/pruebas/reglas
+--   lune run archivo/forja-rapida/pruebas/reglas
 -- Sale con error si algo falla.
 
 local process = require("@lune/process")

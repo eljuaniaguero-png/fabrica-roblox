@@ -6,7 +6,7 @@
 local fs = require("@lune/fs")
 local luau = require("@lune/luau")
 
-local CARPETA = "forja-rapida/src/shared"
+local CARPETA = "archivo/forja-rapida/src/shared"
 
 local cache: { [string]: any } = {}
 

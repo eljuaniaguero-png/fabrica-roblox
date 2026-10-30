@@ -1,6 +1,6 @@
 --!strict
 -- Pruebas del paso 5b: oro, tienda y pergaminos. Se corren desde la raíz del repositorio:
---   lune run plinko-knight/pruebas/tienda
+--   lune run archivo/plinko-knight/pruebas/tienda
 -- 1) Oro al ganar: base, bonus por matar rápido e interés con tope.
 -- 2) Tienda: qué sale, comprar (oro, vendido, lugares, clavija elegida), renovar y bajar.
 -- 3) Pergaminos: cada uno hace lo suyo y valida las clavijas elegidas.

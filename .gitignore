@@ -2,20 +2,22 @@
 *.rbxlx.lock
 sourcemap.json
 .env
-mutant-lab/*.rbxlx
+archivo/mutant-lab/*.rbxlx
 capturas/
+archivo/*/capturas/
 # Copias del place (pesan mucho; quedan en disco, fuera de git)
 backups/
+archivo/*/backups/
 # Blender: copias automáticas y exportaciones
 *.blend1
 modelos/exports/
 
-# Blender: los .blend se regeneran con los scripts de mutant-lab/arte/scripts
-mutant-lab/arte/blend/
+# Blender: los .blend se regeneran con los scripts de archivo/mutant-lab/arte/scripts
+archivo/mutant-lab/arte/blend/
 __pycache__/
 
 # Std mínimo de Selene para sesiones en la nube (en la compu se genera el completo)
-forja-rapida/roblox.yml
+archivo/forja-rapida/roblox.yml
 
 # Capturas de referencia (pesan mucho)
-pesca-compas/referencias/
+archivo/pesca-compas/referencias/

@@ -1,6 +1,6 @@
 --!strict
 -- Pruebas del paso 5a: golpe = Fuerza × Multi y clavijas especiales. Se corren desde la raíz:
---   lune run plinko-knight/pruebas/clavijas
+--   lune run archivo/plinko-knight/pruebas/clavijas
 -- 1) Todo gris: el golpe es la Fuerza (Multi 1).
 -- 2) Cada tipo de clavija: lo que suma cada toque y que las cajas cierren.
 -- 3) Niveles, bola de fuego y bola partida.
