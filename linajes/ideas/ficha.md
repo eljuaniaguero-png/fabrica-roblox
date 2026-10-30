@@ -42,11 +42,11 @@ Un eclipse cubre **Ciudad Vórtice** y despierta poderes en parte de la gente: l
 | Lista de linajes con rareza y % a la derecha | Igual, con nuestros Linajes y las probabilidades siempre a la vista. |
 | Árbol de habilidades con nodos conectados (íconos encendidos = desbloqueado) | Igual, en 3 ramas, con nodos que cambian cómo funcionan las habilidades. |
 | Barras de vida y energía con escudo | Barra de **Vida**, **Energía** y **Escudo** (escudo viene de la tecnología). |
-| Lista de jugadores agrupada por pueblo con rangos (Genin, Chunin, Clase S) | Lista agrupada por **bando**: Liga de Guardianes, Sindicato Carmesí, Vigilantes, Neutral. Rangos: Novato → Clase C → B → A → S. |
+| Lista de jugadores agrupada por pueblo con rangos (Genin, Chunin, Clase S) | Lista agrupada por **bando**: Liga de Guardianes, Cofradía Carmesí, Vigilantes, Neutral. Rangos: Novato → Clase C → B → A → S. |
 
 ## 3. Bandos (como los pueblos de la referencia)
 - **Liga de Guardianes** (héroes): misiones de proteger y rescatar.
-- **Sindicato Carmesí** (villanos): robos, sabotajes, peleas contra la Liga.
+- **Cofradía Carmesí** (villanos): robos, sabotajes, peleas contra la Liga.
 - **Vigilantes** (la "noche" de la ciudad, estilo detective oscuro): investigación, gadgets, más daño de noche.
 - **Neutral**: todos empiezan así; eligen bando al terminar el prólogo.
 La historia cambia un poco según el bando (misiones y diálogos propios), el mundo es el mismo.
@@ -128,7 +128,7 @@ Cada trabajo sube de nivel (Aprendiz → Experto) y da acceso a misiones nuevas.
 
 ## 9. Plan por etapas (una por sesión en tu PC)
 
-**Cambio pedido por Juani: primero los modelos, después el código.** Etapa M: hojas de concepto en Claude Design → modelos en ForgeGUI → limpieza en Blender, siguiendo el sistema de diseño Linajes del Eclipse 3D. Se empieza por Cuervo, Centinela Solar, Mascarada, 3 matones y la calle del Puerto Óxido. Después siguen las etapas de código de abajo.
+**Cambio pedido por Juani: primero los modelos, después el código.** Etapa M: Claude hace los modelos en Blender (boceto de bloques → detalle → animaciones), siguiendo el sistema de diseño Linajes del Eclipse 3D. Se empieza por Cuervo, Centinela Solar, Mascarada, 3 matones y la calle del Puerto Óxido. Después siguen las etapas de código de abajo.
 
 | Etapa | Qué queda andando |
 |---|---|
@@ -141,11 +141,11 @@ Cada trabajo sube de nivel (Aprendiz → Experto) y da acceso a misiones nuevas.
 | 6 | Implantes (3 ranuras) y Carga Cibernética |
 | 7 | Capítulo 1 + jefe Remache + Transferencia de su fragmento |
 | 8 | Despertar 1 |
-| 9 | Arte con ForgeGUI (ciudad, enemigos, íconos, sonidos) y prueba con amigos |
+| 9 | Arte: modelos de ciudad y enemigos en Blender (Claude); íconos, sonidos y música con ForgeGUI; y prueba con amigos |
 | 10 | Analytics, celular, publicar beta |
 
 ## 10. Arte
-Graybox primero. Después: **ForgeGUI** para enemigos, jefes, íconos de Linajes/implantes/gadgets, interfaz y sonido. Gemini solo de respaldo (te aviso si hace falta). Estilo sugerido: ciudad nocturna, neón y lluvia, con el contraste rojo y negro del menú de la referencia.
+Graybox primero. Después: **Blender** (lo hace Claude) para todos los modelos y animaciones: personajes, enemigos, jefes, ciudad y gadgets. **ForgeGUI** para sonidos y música, y también íconos de Linajes/implantes/gadgets e interfaz. Gemini solo de respaldo (te aviso si hace falta). Estilo sugerido: ciudad nocturna, neón y lluvia, con el contraste rojo y negro del menú de la referencia.
 
 ## 11. Prompt para Claude en tu PC (etapas 0 y 1)
 ```
