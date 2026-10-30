@@ -16,6 +16,7 @@ Esto vale para todas las respuestas, también las cortas, las preguntas y los in
 - Todo lo que este archivo dice de `src/` vale para `linajes/src/`: el código va ahí, y los chequeos son `stylua linajes/src` y `selene linajes/src`.
 - Rojo: `rojo serve linajes/linajes.project.json`. Solo puede haber un `rojo serve` corriendo a la vez.
 - Ficha: `linajes/ideas/ficha.md`. Números de balance en `linajes/src/shared/Config.luau`.
+- La copia oficial del juego Linajes es la bóveda linajes/boveda/ (y linajes/ideas/ficha.md + PROMPTS.md, que son la misma información). No escribas otra ficha ni otro PROMPTS: si hay que cambiar el diseño, se cambia ahí.
 - Arte en `linajes/arte/` (`referencias/`, `scripts/`, `blender/`, `exports/`, `renders/`, `animaciones/`, `sonidos/`). Las imágenes de `referencias/` son de otros juegos: solo para ideas, nunca se suben a Roblox ni se copian.
 - Antes de cualquier modelo o animación, leé linajes/arte/GUIA-ESTILO.md.
 - Los modelos y animaciones los hace Claude en Blender. Los sonidos y la música, ForgeGUI.
