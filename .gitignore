@@ -21,3 +21,6 @@ archivo/forja-rapida/roblox.yml
 
 # Capturas de referencia (pesan mucho)
 archivo/pesca-compas/referencias/
+
+# Configuración local de Obsidian
+.obsidian/
