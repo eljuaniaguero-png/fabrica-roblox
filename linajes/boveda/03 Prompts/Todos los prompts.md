@@ -19,9 +19,9 @@ Uno por sesión, en este orden. Cuando termina uno, mirás los renders o probás
 Cada prompt sigue el mismo orden: **1) boceto de bloques → aprobar silueta, 2) detalle → aprobar, 3) exportar**. No se pasa al detalle sin tu OK.
 
 - [ ] [[P03 Cuervo]]
-- [ ] [[P04 Centinela Solar]]
-- [ ] [[P05 Mascarada]]
-- [ ] [[P06 Remache]]
+- [x] [[P04 Centinela Solar]]
+- [x] [[P05 Mascarada]]
+- [x] [[P06 Remache]]
 - [ ] [[P07 Estela]]
 - [ ] [[P08 Atalanta]]
 - [ ] [[P09 Arquitecto]]
