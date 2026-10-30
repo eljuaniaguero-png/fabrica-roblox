@@ -188,6 +188,15 @@ def cilindro(bm, base, hacia, radio, lados=12, radio_fin=None):
     return hecho["verts"]
 
 
+def remache(bm, centro, radio=0.007, afuera=(0, -1, 0)):
+    """Remache o tornillo: media esfera achatada que mira hacia `afuera`."""
+    hecho = bmesh.ops.create_uvsphere(bm, u_segments=6, v_segments=4, radius=radio)
+    giro = Vector((0, 0, 1)).rotation_difference(Vector(afuera)).to_matrix().to_4x4()
+    m = Matrix.Translation(centro) @ giro @ Matrix.Diagonal((1, 1, 0.45, 1))
+    bmesh.ops.transform(bm, matrix=m, verts=hecho["verts"])
+    return hecho["verts"]
+
+
 def sobre_superficie(bvh, desde, hacia_adentro, separacion=0.0):
     """Punto y normal de la superficie que encuentra un rayo (para pegar detalles encima)."""
     d = Vector(hacia_adentro).normalized()

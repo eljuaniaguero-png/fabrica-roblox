@@ -85,6 +85,125 @@ def _pluma_plana(bm, centro, alto, espesor, giro_grados=0.0, crece=0.0):
     bmesh.ops.triangulate(bm, faces=caras, quad_method="BEAUTY", ngon_method="EAR_CLIP")
 
 
+# ---------------------------------------------------------------------------
+# Logo del pecho: figuras planas (contornos de alto 1, x a la derecha, z arriba, en sentido
+# antihorario) extruidas hacia atrás, con borde de neón que asoma alrededor.
+# ---------------------------------------------------------------------------
+
+
+def _ensanchar(puntos, d):
+    """El contorno corrido `d` hacia afuera (borde parejo, también en las puntas hacia adentro)."""
+    n = len(puntos)
+    salida = []
+    for i in range(n):
+        a, p, b = Vector(puntos[i - 1]), Vector(puntos[i]), Vector(puntos[(i + 1) % n])
+        e1, e2 = (p - a).normalized(), (b - p).normalized()
+        n1, n2 = Vector((e1.y, -e1.x)), Vector((e2.y, -e2.x))
+        bis = (n1 + n2).normalized() if (n1 + n2).length > 1e-6 else n1
+        salida.append(tuple(p + bis * (d / max(0.35, bis.dot(n1)))))
+    return salida
+
+
+def _plana(bm, puntos, centro, alto, espesor, giro_grados=0.0, ensanche=0.0):
+    """Figura plana extruida hacia atrás (+Y) desde `centro`. `ensanche` (en unidades del
+    contorno) la agranda parejo para hacer bordes."""
+    import bmesh
+
+    if ensanche:
+        puntos = _ensanchar(puntos, ensanche)
+    giro = _g(giro_grados, "Y")
+    frente, atras = [], []
+    for x, z in puntos:
+        p = giro @ Vector((x * alto, 0, z * alto))
+        frente.append(bm.verts.new(centro + p))
+        atras.append(bm.verts.new(centro + p + Vector((0, espesor, 0))))
+    caras = [bm.faces.new(frente), bm.faces.new(list(reversed(atras)))]
+    for i in range(len(puntos)):
+        j = (i + 1) % len(puntos)
+        bm.faces.new((frente[j], frente[i], atras[i], atras[j]))
+    bmesh.ops.triangulate(bm, faces=caras, quad_method="BEAUTY", ngon_method="EAR_CLIP")
+
+
+def _hoja(largo, ancho, muescas=(), curva=0.0, pasos=10):
+    """Contorno de una pluma fina (base abajo en z=-largo/2, punta arriba), con muescas
+    [(t, lado, hondo)] y curvada `curva` hacia la derecha."""
+    der, izq = [], []
+    for k in range(pasos + 1):
+        t = k / pasos
+        z = -largo / 2 + largo * t
+        cx = curva * math.sin(math.pi * t)
+        w = ancho / 2 * math.sin(math.pi * min(1.0, 0.15 + t * 0.95)) ** 0.7
+        wd = wi = w
+        for tm, lado, hondo in muescas:
+            if abs(t - tm) < 0.5 / pasos:
+                if lado > 0:
+                    wd *= 1 - hondo
+                else:
+                    wi *= 1 - hondo
+        der.append((cx + wd, z))
+        izq.append((cx - wi, z))
+    der[0] = izq[0] = (0.0, -largo / 2)
+    return [der[0]] + der[1:-1] + [(0.0, largo / 2)] + list(reversed(izq[1:-1]))
+
+
+# A: cabeza de cuervo de perfil, mirando a la izquierda, con plumas sueltas en la nuca.
+CABEZA = [
+    (-0.62, 0.04), (-0.3, -0.06), (-0.05, -0.2), (0.2, -0.32), (0.46, -0.4), (0.36, -0.17),
+    (0.54, -0.1), (0.4, 0.05), (0.52, 0.18), (0.36, 0.32), (0.15, 0.44), (-0.08, 0.41),
+    (-0.22, 0.25), (-0.36, 0.14),
+]
+OJO = [(-0.1, 0.17), (-0.02, 0.22), (0.06, 0.17), (-0.02, 0.12)]
+PICO_LINEA = [(-0.58, 0.04), (-0.26, 0.03), (-0.26, 0.055), (-0.58, 0.05)]
+# B: placa hexagonal alta.
+HEXAGONO = [(0.0, 0.5), (-0.32, 0.3), (-0.32, -0.3), (0.0, -0.5), (0.32, -0.3), (0.32, 0.3)]
+
+
+def logo_capas(variante, centro, alto):
+    """Capas (material, función) del logo `variante` ("A", "B" o "C") centrado en `centro`."""
+    if variante == "A":
+
+        def relleno(bm):
+            _plana(bm, CABEZA, centro, alto, 0.012)
+
+        def neon(bm):
+            _plana(bm, CABEZA, centro + Vector((0, 0.006, 0)), alto, 0.008, ensanche=0.035)
+            _plana(bm, OJO, centro + Vector((0, -0.003, 0)), alto, 0.006)
+            _plana(bm, PICO_LINEA, centro + Vector((0, -0.003, 0)), alto, 0.006)
+
+        return [("vigilantes", relleno), ("neon-cian", neon)]
+
+    if variante == "B":
+        pluma = _hoja(0.78, 0.2, muescas=((0.35, 1, 0.55), (0.55, -1, 0.5), (0.72, 1, 0.45)), curva=0.05)
+
+        def placa(bm):
+            _plana(bm, HEXAGONO, centro + Vector((0, 0.004, 0)), alto, 0.012, ensanche=0.03)
+
+        def relleno(bm):
+            _plana(bm, HEXAGONO, centro, alto, 0.01)
+
+        def neon(bm):
+            _plana(bm, pluma, centro + Vector((0, -0.004, 0)), alto, 0.008, giro_grados=-12)
+
+        return [("acero", placa), ("vigilantes", relleno), ("neon-cian", neon)]
+
+    # C: tres plumas que se abren hacia arriba desde un punto, como una cresta.
+    plumas = [(-28, 0.7), (0, 0.9), (28, 0.7)]
+
+    def _tres(bm, desplaza, ensanche, espesor):
+        for grados, largo in plumas:
+            hoja = _hoja(largo, 0.2, muescas=((0.6, 1, 0.5), (0.45, -1, 0.4)))
+            hoja = [(x, z + largo / 2 - 0.45) for x, z in hoja]  # la base de todas en el mismo punto
+            _plana(bm, hoja, centro + desplaza, alto, espesor, giro_grados=grados, ensanche=ensanche)
+
+    def relleno(bm):
+        _tres(bm, Vector((0, 0, 0)), 0.0, 0.012)
+
+    def neon(bm):
+        _tres(bm, Vector((0, 0.006, 0)), 0.03, 0.008)
+
+    return [("vigilantes", relleno), ("neon-cian", neon)]
+
+
 def _pico(bm, base, largo, ancho, alto, caida, anillos=10):
     """Pico de cuervo: sale de `base` hacia adelante (-Y), se afina y la punta se curva hacia
     abajo. Arriba tiene lomo (cresta) y abajo es casi plano."""
@@ -431,9 +550,13 @@ def d_capucha():
         return p.y < c.y - m.y * 0.5 and hc.z - hm.z * 0.8 < p.z < mascara_abajo + 0.01 and abs(p.x - hc.x) < m.x * 0.62
 
     def capucha_tela(bm):
-        _cascara(bm, c, m, 0.5, 40, 26, lambda p: not es_cara(p), 0.012)
+        _cascara(bm, c, m, 0.62, 40, 26, lambda p: not es_cara(p), 0.012)
+        # Cuello de la capucha: una banda de tela que baja y se apoya en los hombros.
+        cuello = Vector((hc.x, hc.y + 0.008, hc.z - hm.z - 0.012))
+        mc = Vector((m.x * 1.08, m.y * 1.12, 0.05))
+        _cascara(bm, cuello, mc, 0.55, 40, 12, lambda p: abs(p.z - cuello.z) < mc.z * 0.75, 0.01)
 
-    arbol = _bvh(lambda bm: T.bloque_redondo(bm, c, m, 0.5, 40, 26))
+    arbol = _bvh(lambda bm: T.bloque_redondo(bm, c, m, 0.62, 40, 26))
 
     def costuras(bm):
         # Tres costuras de adelante hacia atrás por arriba de la cabeza, y una alrededor de la cara.
@@ -459,6 +582,18 @@ def d_capucha():
             26,
             lambda p: p.y < c.y - mm.y * 0.4 and mascara_abajo < p.z < mascara_arriba and abs(p.x - c.x) < mm.x * 0.85,
             0.01,
+        )
+        # Labio levantado en el borde de abajo de la máscara (placa en capas, con grosor).
+        ml = mm + Vector((0.006, 0.006, 0.006))
+        _cascara(
+            bm,
+            c,
+            ml,
+            0.5,
+            40,
+            26,
+            lambda p: p.y < c.y - ml.y * 0.4 and mascara_abajo - 0.004 < p.z < mascara_abajo + 0.012 and abs(p.x - c.x) < ml.x * 0.85,
+            0.006,
         )
         # Pico: nace entre los ojos, 0,4 studs hacia adelante, punta curva; cresta por la frente.
         y = frente - 0.022
@@ -575,18 +710,10 @@ def d_peto():
         for z in (tmax.z - 0.025, tc.z - tm.z + 0.02):
             T.bloque_redondo(bm, Vector((tc.x, tc.y, z)), Vector((tm.x + 0.03, tm.y + 0.03, 0.012)), 0.3, 24, 4)
 
-    def emblema(bm):
-        _pluma_plana(bm, centro_logo, alto_logo, 0.012, giro_grados=-18)
-
-    def borde_emblema(bm):
-        _pluma_plana(bm, centro_logo + Vector((0, 0.006, 0)), alto_logo, 0.008, giro_grados=-18, crece=0.14)
-        giro = _g(-18, "Y")
-        T.caja(bm, centro_logo + giro @ Vector((0, -0.003, -alto_logo * 0.05)), Vector((0.006, 0.006, alto_logo * 0.85)), giro)
-
     arriba = T.pieza_separada(
         f"{NOMBRE}_Peto",
         "UpperTorso",
-        [("tela-oscura", base), ("acero", bordes), ("vigilantes", emblema), ("neon-cian", borde_emblema)],
+        [("tela-oscura", base), ("acero", bordes)],
     )
     _, _, lc, lm = T.caja_parte("LowerTorso")
 
@@ -597,7 +724,37 @@ def d_peto():
         T.bloque_redondo(bm, Vector((lc.x, lc.y, lc.z - lm.z + 0.01)), Vector((lm.x + 0.028, lm.y + 0.028, 0.01)), 0.3, 32, 6)
 
     abajo = T.pieza_separada(f"{NOMBRE}_PetoBajo", "LowerTorso", [("tela-oscura", bajo), ("acero", ribete)])
-    return arriba + abajo
+    return arriba + abajo + d_logo(LOGO)
+
+
+LOGO = "A"  # el que eligió Juani (opciones: A, B, C; ver `opciones_logo`)
+
+
+def _lugar_logo():
+    _, _, tc, tm = T.caja_parte("UpperTorso")
+    sup = tc.y - tm.y - 0.02
+    return Vector((tc.x, sup - 0.06, tc.z + tm.z * 0.12)), 0.9 * S
+
+
+def d_logo(variante):
+    """Logo del pecho: pieza aparte (Cuervo_Logo, _Neon, _Acero) pegada a UpperTorso."""
+    for o in [o for o in bpy.data.objects if o.name.startswith(f"{NOMBRE}_Logo")]:
+        bpy.data.objects.remove(o)
+    centro, alto = _lugar_logo()
+    return T.pieza_separada(f"{NOMBRE}_Logo", "UpperTorso", logo_capas(variante, centro, alto))
+
+
+def opciones_logo():
+    """Renderiza las 3 opciones de logo sobre el pecho (renders/cuervo_logo_<A|B|C>.png)."""
+    bpy.ops.wm.open_mainfile(filepath=BLEND)
+    for viejo in ("Peto_Emblema", "Peto_Neon"):
+        o = bpy.data.objects.get(f"{NOMBRE}_{viejo}")
+        if o:
+            bpy.data.objects.remove(o)
+    torso = [o for o in bpy.data.objects if o.type == "MESH" and o.name.startswith((f"{NOMBRE}_Peto", f"{NOMBRE}_Cinturon"))]
+    for v in "ABC":
+        logo = d_logo(v)
+        print(v, B.contar_triangulos(logo)["_total"], B.render_primer_plano(f"cuervo_logo_{v}", torso + logo, giro=12, altura=4, margen=0.75))
 
 
 def d_hombreras():
@@ -607,8 +764,11 @@ def d_hombreras():
         afuera = 1 if ac.x > 0 else -1
 
         def abanico(bm, ac=ac, amax=amax, am=am, afuera=afuera):
-            # Base chica de acero sobre el hombro.
-            T.bloque_redondo(bm, Vector((ac.x, ac.y, amax.z + 0.07)), Vector((am.x * 0.7, am.y * 0.8, 0.025)), 0.55, 16, 8)
+            # Hombrera curva: dos placas en capas (la de arriba más chica), con grosor.
+            for k, (crece, sube) in enumerate(((0.03, 0.0), (0.012, 0.022))):
+                c = Vector((ac.x + afuera * 0.01, ac.y, amax.z - am.z * 0.25 + sube))
+                mh = Vector((am.x + crece, am.y + crece, am.z * 0.42 - k * 0.02))
+                _cascara(bm, c, mh, 0.6, 24, 14, lambda p, c=c, mh=mh: p.z > c.z - mh.z * 0.15, 0.009)
             # Tres plumas en abanico, abiertas hacia afuera y arriba, con la cara mirando al
             # frente: así se leen de frente y de espalda (hombros anchos de cuervo).
             for k, (y, angulo) in enumerate(((-0.03, 38), (0.0, 16), (0.03, -6))):
@@ -687,6 +847,8 @@ def d_antebrazos():
             T.bloque_redondo(bm, lc + Vector((0, 0, -lm.z * 0.1)), Vector((lm.x + 0.02, lm.y + 0.02, lm.z * 0.85)), 0.4, 24, 12)
             for z in (lc.z + lm.z * 0.72, lc.z - lm.z * 0.9):
                 T.bloque_redondo(bm, Vector((lc.x, lc.y, z)), Vector((lm.x + 0.03, lm.y + 0.03, 0.012)), 0.35, 24, 6)
+            for k in range(4):
+                T.remache(bm, Vector((lc.x + (k % 2 - 0.5) * lm.x, lc.y - lm.y - 0.022, lc.z + lm.z * (0.4 - 0.9 * (k // 2)))), 0.006)
             # Tres púas cortas hacia atrás.
             for k in range(3):
                 base = Vector((lc.x, lc.y + lm.y + 0.015, lc.z + lm.z * 0.45 - k * lm.z * 0.5))
@@ -781,6 +943,8 @@ def d_botas():
             c = Vector((pc.x, pc.y, pmin.z + alto * 0.55))
             _cascara(bm, c, Vector((pm.x + 0.035, pm.y + 0.035, alto * 0.42)), 0.45, 16, 10,
                      lambda p: p.y < c.y - (pm.y + 0.035) * 0.35, 0.008)
+            for k in range(4):
+                T.remache(bm, Vector((pc.x + (k % 2 - 0.5) * pm.x * 1.1, pc.y - pm.y - 0.045, pmin.z + alto * (0.3 + 0.45 * (k // 2)))), 0.006)
             # Rodillera.
             T.bloque_redondo(bm, Vector((pc.x, pc.y - pm.y - 0.03, pmax.z - 0.01)), Vector((pm.x * 0.6, 0.02, 0.04)), 0.5, 14, 8)
 
@@ -792,7 +956,7 @@ def _pieza_de(nombre_obj):
     """Cuervo_HombreraIzq_Acero -> Hombreras; Cuervo_PetoBajo -> Peto (para el presupuesto)."""
     base = nombre_obj.split("_")[1]
     for clave, prefijo in (("Hombreras", "Hombrera"), ("Antebrazos", "Antebrazo"), ("Guantes", "Guante"),
-                           ("Botas", "Bota"), ("Peto", "Peto"), ("Mangas", "Manga"), ("Piernas", "Pierna")):
+                           ("Botas", "Bota"), ("Peto", "Peto"), ("Peto", "Logo"), ("Mangas", "Manga"), ("Piernas", "Pierna")):
         if base.startswith(prefijo):
             return clave
     return base
@@ -846,7 +1010,7 @@ def detalle():
     print(tabla_triangulos(piezas))
     print("Render:", B.render_vistas("cuervo", B.partes() + piezas))
     capucha_ = [o for o in piezas if o.name.startswith(f"{NOMBRE}_Capucha")]
-    emblema_ = [bpy.data.objects[f"{NOMBRE}_Peto_Emblema"], bpy.data.objects[f"{NOMBRE}_Peto_Neon"]]
+    emblema_ = [o for o in piezas if o.name.startswith(f"{NOMBRE}_Logo")]
     gancho_ = [o for o in piezas if o.name.startswith(f"{NOMBRE}_AntebrazoDer")] + [B.parte("RightHand")]
     print(B.render_primer_plano("cuervo_capucha", capucha_, giro=30, margen=1.1))
     print(B.render_primer_plano("cuervo_emblema", emblema_, giro=10, margen=1.8))
@@ -854,9 +1018,100 @@ def detalle():
     return piezas
 
 
+# ---------------------------------------------------------------------------
+# Detalle v2: NIVEL DE DETALLE OBLIGATORIO (bisel, horneado, texturas con desgaste) con detalle.py
+# ---------------------------------------------------------------------------
+
+# Topes por pieza para que el total quede ≤ 36.000 (con el bisel la malla crece).
+PRESUPUESTO_V2 = {
+    "Capucha": 7000,
+    "Capa": 7400,
+    "Peto": 6500,
+    "Hombreras": 2600,
+    "Antebrazos": 2800,
+    "Guantes": 1900,
+    "Cinturon": 1800,
+    "Botas": 2800,
+    "Mangas": 1500,
+    "Piernas": 1600,
+}
+# Triángulos del primer detalle (v1), para la tabla.
+V1 = {"Capucha": 4888, "Capa": 6248, "Peto": 4996, "Hombreras": 964, "Antebrazos": 2516, "Guantes": 1920,
+      "Cinturon": 1752, "Botas": 2568, "Mangas": 1880, "Piernas": 2288}
+
+
+def tabla_v2(objs):
+    cuenta = B.contar_triangulos(objs)
+    por_pieza = {}
+    for nombre, n in cuenta.items():
+        if nombre != "_total":
+            por_pieza[_pieza_de(nombre)] = por_pieza.get(_pieza_de(nombre), 0) + n
+    filas = ["| Pieza | v1 | v2 | Tope v2 | Mallas |", "|---|---|---|---|---|"]
+    for clave, tope in PRESUPUESTO_V2.items():
+        mallas = ", ".join(sorted(n.replace(NOMBRE + "_", "") for n in cuenta if n != "_total" and _pieza_de(n) == clave))
+        filas.append(f"| {clave} | {_miles(V1[clave])} | {_miles(por_pieza.get(clave, 0))} | {_miles(tope)} | {mallas} |")
+    filas.append(f"| **Total** | **{_miles(sum(V1.values()))}** | **{_miles(cuenta['_total'])}** | **36.000** | |")
+    mayor = max((n for k, n in cuenta.items() if k != "_total"), default=0)
+    filas += ["", f"Malla más pesada: {_miles(mayor)} triángulos (Roblox acepta hasta 20.000 por malla)."]
+    texto = "\n".join(filas)
+    with open(os.path.join(B.RENDERS, "cuervo_v2_triangulos.md"), "w", encoding="utf-8") as f:
+        f.write("# Cuervo v2: triángulos por pieza\n\n" + texto + "\n\n"
+                "Texturas por malla (1024 px color y normal OpenGL, 512 px rugosidad) en "
+                "linajes/arte/blender/texturas/cuervo/.\n")
+    return texto
+
+
+def detalle_v2():
+    import detalle as D
+
+    v1 = {n: os.path.join(B.RENDERS, f"cuervo_{n}.png") for n in ("vistas", "capucha", "emblema", "gancho")}
+    copias = {}
+    for n, ruta in v1.items():  # el render anterior se guarda para comparar
+        copias[n] = os.path.join(B.RENDERS, f"_v1_{n}.png")
+        if os.path.exists(ruta):
+            with open(ruta, "rb") as a, open(copias[n], "wb") as b:
+                b.write(a.read())
+    bpy.ops.wm.open_mainfile(filepath=B.KIT)
+    bpy.ops.wm.save_as_mainfile(filepath=BLEND)
+    B.configurar_luz()
+    for armar in (d_capucha, d_capa, d_peto, d_hombreras, d_mangas, d_piernas, d_antebrazos, d_guantes, d_cinturon, d_botas):
+        armar()
+    piezas = piezas_detalle()
+    grupos = {clave: (tope, [o.name for o in piezas if _pieza_de(o.name) == clave]) for clave, tope in PRESUPUESTO_V2.items()}
+    # Las plumas de la capa no llevan líneas de panel ni remaches: solo rayones y bordes gastados.
+    plumas = {"rayones": 1.0, "bordes": 0.6, "suciedad": 0.5}
+    D.terminar(piezas, grupos, "cuervo", recetas={f"{NOMBRE}_Capa_Acero": plumas})
+    bpy.ops.wm.save_as_mainfile(filepath=BLEND)
+    print(tabla_v2(piezas))
+    print("Render:", B.render_vistas("cuervo_v2", B.partes() + piezas))
+    capucha_ = [o for o in piezas if o.name.startswith(f"{NOMBRE}_Capucha")]
+    emblema_ = [o for o in piezas if o.name.startswith(f"{NOMBRE}_Logo")]
+    gancho_ = [o for o in piezas if o.name.startswith(f"{NOMBRE}_AntebrazoDer")] + [B.parte("RightHand")]
+    B.render_primer_plano("cuervo_v2_capucha", capucha_, giro=30, margen=1.1)
+    B.render_primer_plano("cuervo_v2_emblema", emblema_, giro=10, margen=1.8)
+    B.render_primer_plano("cuervo_v2_gancho", gancho_, giro=70, margen=1.15)
+    # Comparación: arriba v1, abajo v2; y los primeros planos v1 | v2.
+    R = B.RENDERS
+    B.hoja([[copias["vistas"]], [os.path.join(R, "cuervo_v2_vistas.png")]], os.path.join(R, "cuervo_v2_vs_v1.png"))
+    B.hoja(
+        [[copias[n], os.path.join(R, f"cuervo_v2_{n}.png")] for n in ("capucha", "emblema", "gancho")],
+        os.path.join(R, "cuervo_v2_vs_v1_primeros_planos.png"),
+        reducir=2,
+    )
+    for ruta in copias.values():
+        if os.path.exists(ruta):
+            os.remove(ruta)
+    bpy.ops.wm.save_as_mainfile(filepath=BLEND)
+    return piezas
+
+
 if __name__ == "__main__":
     argumentos = sys.argv[sys.argv.index("--") + 1 :] if "--" in sys.argv else []
+    if "v2" in argumentos:
+        detalle_v2()
     if "boceto" in argumentos:
         boceto()
     if "detalle" in argumentos:
         detalle()
+    if "logos" in argumentos:
+        opciones_logo()

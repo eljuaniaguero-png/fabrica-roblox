@@ -64,6 +64,7 @@ MATERIALES = {
     "bronce": {"hex": "a0703a", "rugosidad": 0.4, "metal": 0.9},
     "oro": {"hex": "d9a441", "rugosidad": 0.3, "metal": 1.0},
     "blanco-armadura": {"hex": "e8e6e0", "rugosidad": 0.4},
+    "tela-dorada": {"hex": "d9a441", "rugosidad": 0.6},  # capa de Centinela Solar
     "neon-cian": {"hex": "3fe0f0", "brillo": 5.0},
     "neon-eclipse": {"hex": "f2652b", "brillo": 5.0},
     "neon-aviso": {"hex": "ff2a2a", "brillo": 6.0},
@@ -75,6 +76,7 @@ MATERIALES = {
 FONDO = "0e1016"
 LUZ_PRINCIPAL = {"hex": "9fb4ff", "fuerza": 3.0}
 LUZ_BORDE = {"hex": "f2652b", "fuerza": 4.0}
+LUZ_RELLENO = {"hex": "c8ccd6", "fuerza": 0.8}
 NIEBLA = 0.02
 RESOLUCION = (1600, 1000)
 LENTE = 50
@@ -231,6 +233,8 @@ def configurar_luz():
     e = math.radians(45)
     _sol("LuzPrincipal", LUZ_PRINCIPAL, LUZ_PRINCIPAL["fuerza"], (-math.cos(e) * 0.7071, -math.cos(e) * 0.7071, math.sin(e)))
     _sol("LuzBorde", LUZ_BORDE, LUZ_BORDE["fuerza"], (0.7071, 0.7071, 0.35))
+    # Relleno suave desde adelante-derecha: sin él los trajes oscuros se pierden en el fondo.
+    _sol("LuzRelleno", LUZ_RELLENO, LUZ_RELLENO["fuerza"], (0.6, -0.8, 0.15))
 
     motores = {m.identifier for m in bpy.types.RenderSettings.bl_rna.properties["engine"].enum_items}
     escena.render.engine = "BLENDER_EEVEE_NEXT" if "BLENDER_EEVEE_NEXT" in motores else "BLENDER_EEVEE"
@@ -322,9 +326,15 @@ def render_vistas(nombre, objs=None):
     escena.render.use_crop_to_border = True
     escena.render.border_min_x, escena.render.border_max_x = 1 / 3, 2 / 3
     escena.render.border_min_y, escena.render.border_max_y = 0.0, 1.0
+    # Las luces giran con la cámara: la de borde queda siempre detrás del personaje visto desde
+    # la cámara (si no, en la Espalda la naranja le pega de frente y quema la capa).
+    luces = [o for o in (bpy.data.objects.get(n) for n in ("LuzPrincipal", "LuzBorde", "LuzRelleno")) if o]
+    originales = {o.name: o.matrix_world.copy() for o in luces}
     tiras = []
     try:
-        for vista in VISTAS:
+        for vista, grados in VISTAS.items():
+            for o in luces:
+                o.matrix_world = Matrix.Rotation(math.radians(grados), 4, "Z") @ originales[o.name]
             escena.camera = camaras[vista]
             ruta = os.path.join(RENDERS, f"_{nombre}_{vista}.png")
             escena.render.filepath = ruta
@@ -335,6 +345,8 @@ def render_vistas(nombre, objs=None):
             bpy.data.images.remove(img)
             os.remove(ruta)
     finally:
+        for o in luces:
+            o.matrix_world = originales[o.name]
         escena.render.use_border = False
         escena.render.use_crop_to_border = False
         escena.camera = camaras["Frente"]
@@ -376,6 +388,38 @@ def render_primer_plano(nombre, objs, giro=25.0, altura=10.0, margen=1.25):
         escena.camera, escena.render.resolution_x, escena.render.resolution_y = antes
         bpy.data.objects.remove(cam)
         bpy.data.cameras.remove(datos)
+    return ruta
+
+
+def hoja(filas, ruta, reducir=1):
+    """Junta imágenes PNG en una sola: `filas` es una lista de filas, cada una una lista de rutas
+    (se ponen una al lado de la otra). `reducir` = cada cuántos píxeles se toma uno."""
+    import numpy as np
+
+    def leer(r):
+        img = bpy.data.images.load(r)
+        ancho, alto = img.size
+        px = np.array(img.pixels[:], dtype=np.float32).reshape(alto, ancho, 4)
+        bpy.data.images.remove(img)
+        return px[::reducir, ::reducir]
+
+    fondo = np.array(color(FONDO), dtype=np.float32)
+    bloques = []
+    for fila in filas:
+        imgs = [leer(r) for r in fila]
+        alto = max(i.shape[0] for i in imgs)
+        imgs = [np.concatenate([np.tile(fondo, (alto - i.shape[0], i.shape[1], 1)), i]) if i.shape[0] < alto else i for i in imgs]
+        bloques.append(np.concatenate(imgs, axis=1))
+    ancho = max(b.shape[1] for b in bloques)
+    bloques = [np.concatenate([b, np.tile(fondo, (b.shape[0], ancho - b.shape[1], 1))], axis=1) if b.shape[1] < ancho else b for b in bloques]
+    # En los píxeles de Blender la fila 0 es la de abajo: la primera fila va arriba.
+    total = np.concatenate(list(reversed(bloques)), axis=0)
+    img = bpy.data.images.new("Hoja", total.shape[1], total.shape[0], alpha=True)
+    img.pixels[:] = total.ravel()
+    img.filepath_raw = ruta
+    img.file_format = "PNG"
+    img.save()
+    bpy.data.images.remove(img)
     return ruta
 
 
