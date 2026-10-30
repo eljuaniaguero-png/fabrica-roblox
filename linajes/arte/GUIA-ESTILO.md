@@ -1,9 +1,9 @@
-# Guía de estilo — Linajes del Eclipse 3D
+# Guía de estilo: Linajes del Eclipse 3D
 
-Copia del sistema de diseño "Linajes del Eclipse 3D" (https://claude.ai/artifact/WJxLkCEZEGJWzWzuyeU49y), 30/10/2026.
-**Leela antes de cualquier modelo o animación.** Si cambia el sistema de diseño, actualizá este archivo.
+Copia del sistema de diseño https://claude.ai/artifact/WJxLkCEZEGJWzWzuyeU49y (30 oct 2026).
 
-Las imágenes de `referencias/` son capturas de otros juegos: sirven solo para sacar ideas. Nunca se suben a Roblox ni se copian.
+
+La guía para hacer los modelos 3D de Linajes del Eclipse: superhéroes de cómic oscuro en una ciudad nocturna, con mucho detalle de forma. Sirve para pedir un modelo nuevo y revisar que quede igual que los demás.
 
 ## Frase de estilo
 
@@ -22,6 +22,18 @@ Pegala en cada pedido de modelo, con la ficha del personaje de **Modelos**.
 5. **Studio**: importar, `RenderFidelity = Automatic` en lo pesado, probar en compu y celular.
 
 Cada modelo y animación se hace con un script para poder rehacerlo cambiando números. Los prompts detallados de cada pieza están en `linajes-guia-y-prompts-en-orden-2026-10-30.md`.
+
+## Nivel de detalle (lo que separa un boceto de un modelo terminado)
+
+El boceto de bloques es a propósito simple: sirve para aprobar la forma. Un modelo terminado cumple todo esto:
+
+- Bisel en todos los bordes (0,02 a 0,05 studs, 2 segmentos).
+- Placas en capas, con grosor y borde levantado, nunca un color pintado sobre una caja.
+- Líneas de panel, costuras, remaches y tornillos (mínimo 10 detalles chicos por pieza grande).
+- Curvas donde corresponde (hombreras, cascos, músculos del peto).
+- Telas con simulación de tela horneada.
+- Versión esculpida de mucho detalle horneada como normal map (OpenGL, 1024 px) sobre la versión del presupuesto.
+- Texturas con desgaste: rayones, bordes claros, suciedad en las juntas.
 
 ## Triángulos: complejo, pero que corra
 
@@ -44,37 +56,6 @@ Roblox acepta como máximo **20.000 triángulos por malla**, así que lo pesado 
 - Los poderes (fuego, hielo, rayo, luz sólida) son **partículas y Neon**, no mallas.
 - Los jugadores usan **su avatar de Roblox**; los trajes, la tecnología y los implantes van encima como piezas (las del traje según la tabla, gadgets e implantes ≤ 5.000 cada uno).
 
-## Colores
-
-| Nombre | Hex (Noche) | Hex (Día) | Para qué |
-|---|---|---|---|
-| `fondo` | `#0e1016` | `#f1efe9` | Fondo de los menús (el menú de espacios va siempre en Noche) |
-| `superficie` | `#1b1f2a` | `#e2dfd6` | Paneles, marco de los nodos del árbol |
-| `tinta` | `#eef0f4` | `#14161d` | Texto principal |
-| `tinta-suave` | `#a3a9b6` | `#4a4f5c` | Texto secundario y medidas |
-| `eclipse` | `#f2652b` | `#c94a15` | Color de marca: anillo del eclipse, títulos destacados, botón principal |
-| `corona` | `#ffb347` | | Borde brillante del eclipse y Neon de los poderes de luz |
-| `asfalto` | `#3a3f4b` | | Calles, techos, concreto mojado |
-| `ladrillo` | `#6e3b2e` | | Fachadas viejas de Ciudad Vórtice y Puerto Óxido |
-| `acero` | `#8a94a6` | | Metal de implantes, gadgets, rejas, estructuras de Distrito Corona |
-| `neon-cian` | `#3fe0f0` | | Carteles, luces de tecnología e implantes encendidos (Neon) |
-| `liga` | `#2f6fdb` | | Bando Liga de Guardianes |
-| `cofradia` | `#c2213a` | | Bando Cofradía Carmesí |
-| `vigilantes` | `#6b5ba8` | | Bando Vigilantes |
-| `neutral` | `#b8bcc6` | | Bando Neutral (todos al empezar) |
-| `rareza-comun` | `#9aa3ad` | | Linajes Comunes |
-| `rareza-poco-comun` | `#4ed68a` | | Linajes Poco comunes |
-| `rareza-raro` | `#4fb3f2` | | Linajes Raros |
-| `rareza-epico` | `#a15cf0` | | Linajes Épicos |
-| `rareza-legendario` | `#f2a23a` | | Linajes Legendarios |
-| `rareza-mitico` | `#ff4d6d` | | Linaje Mítico (Eclipse) |
-| `vida` | `#d23a4a` | | Barra de vida |
-| `energia` | `#2c7be5` | | Barra de energía de habilidades |
-| `escudo` | `#3fc1b0` | | Barra de escudo (del traje tecnológico) |
-| `aviso` | `#ff2a2a` | | Brillo rojo en el piso antes de un ataque de jefe (Neon, 0,4 s antes) |
-
-Letras: títulos en Saira Condensed, texto en Barlow, datos en JetBrains Mono. Bordes: `radio-0` (HUD, cortes rectos), `radio-s` 4 px (nodos y botones), `radio-disco` 50 % (eclipse e íconos de habilidad).
-
 ## Color y material
 
 - La ciudad es oscura: `asfalto`, `ladrillo`, `acero`. La luz viene de `neon-cian` (carteles, tecnología) y del eclipse (`eclipse`, `corona`).
@@ -85,7 +66,7 @@ Letras: títulos en Saira Condensed, texto en Barlow, datos en JetBrains Mono. B
 
 ## Interfaz (de las capturas de referencia)
 
-Las capturas que mandó Juani son de otro juego de Roblox: se toma **la idea de cada pantalla**, nunca sus nombres, íconos ni textos.
+Las 5 capturas que mandó Juani son de otro juego de Roblox: se toma **la idea de cada pantalla**, nunca sus nombres, íconos ni textos.
 
 | Pantalla | Cómo va en el nuestro |
 |---|---|
@@ -109,7 +90,34 @@ Las capturas que mandó Juani son de otro juego de Roblox: se toma **la idea de 
 - Nada de logos, emblemas, trajes ni frases de DC. Los nombres de DC de **Modelos** son nombres de trabajo y se cambian antes de publicar; el **diseño** tiene que ser nuestro desde la primera hoja de concepto, porque un traje igual al de Batman sigue siendo Batman aunque se llame distinto.
 - Ningún personaje con la silueta y los colores exactos de uno de DC: cambiar al menos tema visual, colores y forma de la capa o la máscara.
 
----
+## Colores (hex)
+
+| Token | Noche | Día | Uso |
+|---|---|---|---|
+| fondo | #0e1016 | #f1efe9 | Fondo de la guía y de los menús del juego (el menú de espacios va siempre en Noche). |
+| superficie | #1b1f2a | #e2dfd6 | Paneles, fichas de modelo, marco de los nodos del árbol. |
+| tinta | #eef0f4 | #14161d | Texto principal sobre `fondo` y `superficie`. |
+| tinta-suave | #a3a9b6 | #4a4f5c | Texto secundario y medidas sobre `fondo` y `superficie`. |
+| eclipse | #f2652b | #c94a15 | Color de marca: el anillo del eclipse, títulos destacados, botón principal. En Día se oscurece para leerse sobre `fondo`. |
+| corona | #ffb347 | #ffb347 | Borde brillante del eclipse y Neon de los poderes de luz. |
+| asfalto | #3a3f4b | #3a3f4b | Material base de la ciudad: calles, techos, concreto mojado. |
+| ladrillo | #6e3b2e | #6e3b2e | Fachadas viejas de Ciudad Vórtice y Puerto Óxido. |
+| acero | #8a94a6 | #8a94a6 | Metal de implantes, gadgets, rejas y estructuras del Distrito Corona. |
+| neon-cian | #3fe0f0 | #3fe0f0 | Carteles, luces de tecnología e implantes encendidos (material Neon). |
+| liga | #2f6fdb | #2f6fdb | Bando Liga de Guardianes: capas, banderas, cabecera en la lista de jugadores. |
+| cofradia | #c2213a | #c2213a | Bando Cofradía Carmesí: detalles de villanos, banderas, cabecera en la lista. |
+| vigilantes | #6b5ba8 | #6b5ba8 | Bando Vigilantes: detalles violeta oscuro, cabecera en la lista. |
+| neutral | #b8bcc6 | #b8bcc6 | Bando Neutral (todos al empezar). |
+| rareza-comun | #9aa3ad | #9aa3ad | Linajes Comunes en la lista de probabilidades y en sus efectos 3D. |
+| rareza-poco-comun | #4ed68a | #4ed68a | Linajes Poco comunes. |
+| rareza-raro | #4fb3f2 | #4fb3f2 | Linajes Raros. |
+| rareza-epico | #a15cf0 | #a15cf0 | Linajes Épicos. |
+| rareza-legendario | #f2a23a | #f2a23a | Linajes Legendarios. |
+| rareza-mitico | #ff4d6d | #ff4d6d | Linaje Mítico (Eclipse). |
+| vida | #d23a4a | #d23a4a | Barra de vida. |
+| energia | #2c7be5 | #2c7be5 | Barra de energía de habilidades. |
+| escudo | #3fc1b0 | #3fc1b0 | Barra de escudo (viene del traje tecnológico). |
+| aviso | #ff2a2a | #ff2a2a | Brillo rojo en el piso antes de un ataque de jefe (Neon, 0,4 s antes del golpe). |
 
 # Modelos
 

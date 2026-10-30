@@ -350,6 +350,35 @@ def render_vistas(nombre, objs=None):
     return ruta
 
 
+def render_primer_plano(nombre, objs, giro=25.0, altura=10.0, margen=1.25):
+    """Primer plano de `objs` desde adelante, girado `giro` grados hacia la derecha del
+    personaje y `altura` grados desde arriba: renders/<nombre>.png (1000x1000)."""
+    escena = bpy.context.scene
+    minimo, maximo = caja_de(objs)
+    centro = (minimo + maximo) / 2
+    radio = (maximo - minimo).length / 2 * margen
+    datos = bpy.data.cameras.new("PrimerPlano")
+    datos.lens = LENTE
+    cam = bpy.data.objects.new("PrimerPlano", datos)
+    escena.collection.objects.link(cam)
+    distancia = radio / math.tan(datos.angle / 2)
+    a, e = math.radians(giro), math.radians(altura)
+    desde = centro + Vector((-math.sin(a) * math.cos(e), -math.cos(a) * math.cos(e), math.sin(e))) * distancia
+    _apuntar(cam, desde, centro)
+    antes = (escena.camera, escena.render.resolution_x, escena.render.resolution_y)
+    escena.camera = cam
+    escena.render.resolution_x = escena.render.resolution_y = 1000
+    ruta = os.path.join(RENDERS, f"{nombre}.png")
+    escena.render.filepath = ruta
+    try:
+        bpy.ops.render.render(write_still=True)
+    finally:
+        escena.camera, escena.render.resolution_x, escena.render.resolution_y = antes
+        bpy.data.objects.remove(cam)
+        bpy.data.cameras.remove(datos)
+    return ruta
+
+
 # ---------------------------------------------------------------------------
 # Exportar a Roblox
 # ---------------------------------------------------------------------------

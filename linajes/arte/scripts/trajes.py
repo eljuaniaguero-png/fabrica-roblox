@@ -30,7 +30,7 @@ import math
 
 import bmesh
 import bpy
-from mathutils import Vector
+from mathutils import Matrix, Vector
 
 import base as B
 
@@ -96,6 +96,124 @@ def _aplicar(obj):
     nombre = vieja.name
     bpy.data.meshes.remove(vieja)
     nueva.name = nombre
+
+
+def caja(bm, centro, tam, giro=None):
+    """Caja de tamaño `tam` centrada en `centro`, girada con la matriz `giro` (3x3 o 4x4)."""
+    hecho = bmesh.ops.create_cube(bm, size=1.0)
+    m = Matrix.Translation(centro) @ (giro.to_4x4() if giro else Matrix.Identity(4)) @ Matrix.Diagonal((*tam, 1.0))
+    bmesh.ops.transform(bm, matrix=m, verts=hecho["verts"])
+    return hecho["verts"]
+
+
+def punta(bm, base, hacia, radio, lados=4):
+    """Cono (pirámide si `lados` = 4) con la base centrada en `base` y la punta en `hacia`."""
+    base, hacia = Vector(base), Vector(hacia)
+    eje = hacia - base
+    hecho = bmesh.ops.create_cone(
+        bm, cap_ends=True, segments=lados, radius1=radio, radius2=0.0, depth=eje.length
+    )
+    giro = eje.to_track_quat("Z", "Y").to_matrix().to_4x4()
+    m = Matrix.Translation(base + eje / 2) @ giro
+    bmesh.ops.transform(bm, matrix=m, verts=hecho["verts"])
+    return hecho["verts"]
+
+
+def pieza(nombre, hueso, capas, suave=40):
+    """Pieza armada por capas: `capas` es una lista de (material, función(bm)). Cada capa agrega
+    su geometría y queda con su material. Devuelve el objeto pegado al hueso."""
+    bm = bmesh.new()
+    materiales = []
+    for mat, armar in capas:
+        antes = set(bm.faces)
+        armar(bm)
+        if mat not in materiales:
+            materiales.append(mat)
+        for f in bm.faces:
+            if f not in antes:
+                f.material_index = materiales.index(mat)
+    bmesh.ops.recalc_face_normals(bm, faces=bm.faces)
+    me = bpy.data.meshes.new(nombre)
+    bm.to_mesh(me)
+    bm.free()
+    viejo = bpy.data.objects.get(nombre)
+    if viejo:
+        bpy.data.objects.remove(viejo)
+    obj = bpy.data.objects.new(nombre, me)
+    bpy.context.scene.collection.objects.link(obj)
+    for mat in materiales:
+        me.materials.append(B.material(mat))
+    me.shade_smooth()
+    me.set_sharp_from_angle(angle=math.radians(suave))
+    B.pegar_a_hueso(obj, hueso)
+    return obj
+
+
+def tubo(bm, camino, radio, lados=8, tapas=True):
+    """Tubo que sigue un camino de puntos. `radio` es un número o una lista (uno por punto),
+    así se puede afinar (garras, costuras, cables)."""
+    pts = [Vector(p) for p in camino]
+    radios = radio if isinstance(radio, (list, tuple)) else [radio] * len(pts)
+    tangentes = [(pts[min(i + 1, len(pts) - 1)] - pts[max(i - 1, 0)]).normalized() for i in range(len(pts))]
+    normal = tangentes[0].orthogonal().normalized()
+    aros = []
+    for i, p in enumerate(pts):
+        t = tangentes[i]
+        normal = (normal - t * normal.dot(t)).normalized()
+        binormal = t.cross(normal)
+        aros.append(
+            [
+                bm.verts.new(p + (normal * math.cos(2 * math.pi * k / lados) + binormal * math.sin(2 * math.pi * k / lados)) * radios[i])
+                for k in range(lados)
+            ]
+        )
+    for a, b in zip(aros, aros[1:]):
+        for k in range(lados):
+            q = (k + 1) % lados
+            bm.faces.new((a[k], a[q], b[q], b[k]))
+    if tapas:
+        bm.faces.new(list(reversed(aros[0])))
+        bm.faces.new(aros[-1])
+
+
+def cilindro(bm, base, hacia, radio, lados=12, radio_fin=None):
+    """Cilindro (o cono truncado) de `base` a `hacia`."""
+    base, hacia = Vector(base), Vector(hacia)
+    eje = hacia - base
+    hecho = bmesh.ops.create_cone(
+        bm, cap_ends=True, segments=lados, radius1=radio, radius2=radio if radio_fin is None else radio_fin, depth=eje.length
+    )
+    m = Matrix.Translation(base + eje / 2) @ eje.to_track_quat("Z", "Y").to_matrix().to_4x4()
+    bmesh.ops.transform(bm, matrix=m, verts=hecho["verts"])
+    return hecho["verts"]
+
+
+def sobre_superficie(bvh, desde, hacia_adentro, separacion=0.0):
+    """Punto y normal de la superficie que encuentra un rayo (para pegar detalles encima)."""
+    d = Vector(hacia_adentro).normalized()
+    punto, normal, _, _ = bvh.ray_cast(Vector(desde), d)
+    if punto is None:
+        return None, None
+    if normal.dot(d) > 0:
+        normal = -normal
+    return punto + normal * separacion, normal
+
+
+SUFIJOS = {"acero": "Acero", "neon-cian": "Neon", "vigilantes": "Emblema", "cuero": "Cuero", "tela-oscura": "Tela"}
+
+
+def pieza_separada(nombre, hueso, capas, suave=40):
+    """Como `pieza`, pero una malla por material (Roblox: un material por malla, y el Neon tiene
+    que ser su propia pieza). La del primer material se llama `nombre`; las otras,
+    `nombre_<Sufijo>` (Acero, Neon, Emblema...). Devuelve la lista de objetos."""
+    grupos = {}
+    for mat, armar in capas:
+        grupos.setdefault(mat, []).append((mat, armar))
+    objs = []
+    for i, (mat, lista) in enumerate(grupos.items()):
+        sufijo = "" if i == 0 else "_" + SUFIJOS.get(mat, mat.replace("-", " ").title().replace(" ", ""))
+        objs.append(pieza(nombre + sufijo, hueso, lista, suave))
+    return objs
 
 
 def _lados(nombre):
