@@ -23,7 +23,8 @@ Leé la sección 0c de linajes/ideas/ficha.md.
 5. Señal por radio: "Si me escuchás, no estás solo." Pelea guiada contra 3 matones (combo, bloqueo, dash, Z).
 6. En la plaza, Centinela Solar, Mascarada y Cuervo (NPCs) ofrecen reclutarte, cada uno con 3 líneas propias
    que cambian según tu inicio. Elegís bando o seguís Neutral.
-7. Te manda con tu primer NPC de trabajo según el bando.
+7. Te manda con tu primer NPC de trabajo según el bando. Desde ahí no hay más misión obligatoria: el Narrador
+   (Prompt 41) empieza a repartir ganchos. El primero llega a los 3 minutos y depende de tu origen.
 Probá los 6 inicios. Commit y push.
 ```
 

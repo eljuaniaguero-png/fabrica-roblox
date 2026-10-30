@@ -46,6 +46,8 @@ Decímelo acá ("más oscuro", "cambiá el color de la Liga", "subí los triáng
 
 ## Parte 3. Todos los prompts en orden (versión detallada)
 
+**Cambios de Juani (30 oct, 23:12): historia viva.** No hay historia lineal: un Narrador del servidor reparte ganchos (charlas, llamados, eventos inesperados, rivales, noticias) que llevan a hilos de misiones según tu partida; un gran misterio de 40 Fragmentos con 8 Revelaciones en cualquier orden; villanos con agenda semanal que la comunidad frena o no; otros jugadores como rivales, socios o deudores. Ver sección 0f de la ficha (prompts 37, 39, 41, 41a, 41c y el de después de la beta).
+
 **Cambios de Juani (30 oct, 22:41): calle viva.** Lugares donde se puede entrar, policía y vigilancia (testigos que llaman a la policía, cámaras, 5 niveles de búsqueda), ladrones, callejones peligrosos, atracos de 3 tamaños y noticias de El Faro. Todo está en el documento del juego, sección "Calle viva". Modelos nuevos en los prompts 19, 20, 20d, 20e, 25d y 29b; código en 38c, 38d y 38e.
 
 **Cambios de Juani (30 oct, 22:35):** el juego es **mundo abierto** con 3 ciudades (Ciudad Vórtice, Distrito Corona, Puerto Óxido) más el Penal Islaroca, el Cráter del Eclipse y la Ciudad Hundida, hasta 24 jugadores en el mismo mapa. La historia son **arcos por ciudad en cualquier orden**, y la **Reputación** (ciudad, bando, confianza con NPCs y fama) es central, con búsqueda, recompensas y control de barrios. Ver sección 0d de la ficha (prompts 20c, 22 a 25, 38, 38b, 39, 41 y el de después de la beta).
@@ -1063,7 +1065,10 @@ XP: matón 15, matón con implantes 25, élite 60, jefe 300, misión 50 a 200, c
 Nivel siguiente = 100 x nivel^1,4. Niveles 1-60 (el contenido llega al 20 por ahora). 1 punto por nivel.
 ÁRBOL por Linaje: 3 ramas (Poder, Cuerpo, Técnica) x 4 nodos, en orden dentro de cada rama.
 Los nodos de Técnica cambian cómo funciona una habilidad (ejemplos en la ficha).
-DESPERTAR 1 (nivel 25): misión con el mentor → elegir UNA de 2 ramas de evolución de tu Linaje
+DESPERTAR 1 (nivel 25): no es una misión fija. Al llegar al nivel, el Narrador (Prompt 41) manda un gancho
+de evolución distinto según tu Linaje y tu historia (tu poder se descontrola en público, un mentor te
+encuentra, un villano te quiere reclutar). Mientras no exista el Narrador, dejá un hilo de prueba con el mentor.
+El hilo termina en elegir UNA de 2 ramas de evolución de tu Linaje
 (Piroquinesis: Fénix o Infierno; Fuerza Bruta: Coloso o Demoledor; Reflejos: Sombra o Maestro).
 Cada rama: 4 nodos nuevos, una definitiva V propia y cambio de color del poder.
 LA ELECCIÓN ES A CIEGAS: la pantalla muestra solo el nombre de cada rama, su símbolo y una frase misteriosa
@@ -1275,7 +1280,8 @@ Leé la sección 0c de linajes/ideas/ficha.md.
 5. Señal por radio: "Si me escuchás, no estás solo." Pelea guiada contra 3 matones (combo, bloqueo, dash, Z).
 6. En la plaza, Centinela Solar, Mascarada y Cuervo (NPCs) ofrecen reclutarte, cada uno con 3 líneas propias
    que cambian según tu inicio. Elegís bando o seguís Neutral.
-7. Te manda con tu primer NPC de trabajo según el bando.
+7. Te manda con tu primer NPC de trabajo según el bando. Desde ahí no hay más misión obligatoria: el Narrador
+   (Prompt 41) empieza a repartir ganchos. El primero llega a los 3 minutos y depende de tu origen.
 Probá los 6 inicios. Commit y push.
 ```
 
@@ -1292,12 +1298,47 @@ de Linaje recargan +25 % más lento. Instalar cuesta chips y dinero; sacar es gr
 Los implantes se ven en el personaje (modelos chicos hechos en Blender con el mismo formato).
 ```
 
-#### Prompt 41 💻 Primer arco: Los muelles rojos (Puerto Óxido)
+#### Prompt 41 💻 El Narrador: ganchos e hilos (la historia viva)
 ```
-Leé la sección 0d de linajes/ideas/ficha.md: los arcos se hacen en CUALQUIER ORDEN y los enemigos de
-las misiones del arco se ajustan al nivel del jugador (nivel del jugador ±2, mínimo 5).
-ARCO "Los muelles rojos" en Puerto Óxido, con los modelos de los Prompts 6, 13, 20 y 21.
-Se abre hablando con Tano o con El Albatros (dos puertas de entrada distintas, misma historia desde otro lado):
+Leé la sección 0f de linajes/ideas/ficha.md. Todo en el servidor, números en Config.luau.
+1. DATOS DEL JUGADOR (ProfileStore, por espacio): hilos activos (máx. 2 impuestos + los que pidió), ganchos
+   vistos, rivales (máx. 5, cada uno con nombre, qué pasó la última vez, mejora nueva), deudas y favores con
+   otros jugadores, pactos, Fragmentos de verdad (de 40), Revelaciones vistas (de 8), capítulos de Tu crónica.
+2. GANCHOS: módulo Narrador.luau con una lista de ganchos en linajes/src/shared/Historia/Ganchos/*.luau
+   (datos, no código). Cada gancho tiene: condiciones (origen, reputaciones, Rasgos, Linaje, nivel, ciudad,
+   hora, rivales, hechos recientes, jugadores cerca), peso, forma de llegar (llamada al teléfono, NPC que te
+   para en la calle, nota en el refugio, emboscada, noticia de El Faro), hilo que abre, vencimiento y qué pasa
+   si vence. Al lanzar: al menos 20 ganchos de los 6 tipos de la ficha.
+3. RITMO: cada 8 a 12 minutos de juego activo el Narrador elige un gancho entre los que cumplen condiciones
+   (al azar con pesos, sin repetir los últimos 10). Si el jugador peleó más de 5 minutos seguidos, prefiere
+   uno tranquilo (charla, trabajo, pista). Nunca más de 2 hilos impuestos a la vez. El jugador puede pedir
+   uno llamando a un contacto, en La Gárgola o en El Faro.
+4. HILOS: definidos como datos en linajes/src/shared/Historia/Hilos/*.luau: pasos (hablar con, ir a, vencer,
+   proteger, seguir sin ser visto, conseguir, elegir a ciegas), variables a llenar (civil, barrio, pandilla,
+   objeto, rival) y consecuencias (reputación, confianza, rival nuevo, Fragmento, favor, ganchos nuevos).
+   Al lanzar: 10 plantillas armadas por el sistema (después llegan a 40) + los hilos hechos a mano.
+5. RIVALES: cuando un enemigo con nombre escapa, lo dejás ir o sale del penal, se agrega a tus rivales con
+   una mejora al azar de una lista (implante, banda, cicatriz) y vuelve en un gancho con una frase sobre la
+   última vez. Con 3 encuentros, puede ofrecer un trato.
+6. EL MISTERIO: 40 Fragmentos (lista en Config con dónde puede salir cada uno); cada 5 se dispara una
+   Revelación (escena corta). Tablero de pistas en el teléfono: unir 3 fragmentos correctos adelanta una.
+7. GANCHOS ENTRE JUGADORES: si dos jugadores cumplen condiciones opuestas en el mismo lugar, el mismo
+   gancho les llega a los dos desde lados distintos. Deudas: si un jugador te ayuda en un hilo, queda un
+   favor que puede cobrar con un gancho. Rival jugador: si otro jugador te vence o te arruina un hilo,
+   puede volverse tu rival (los dos reciben ganchos).
+8. TU CRÓNICA: cada consecuencia importante escribe una línea con plantillas de texto; cada 5 líneas se
+   cierra un capítulo con título. Pantalla en el teléfono, botón para compartir.
+Probá con 2 jugadores de orígenes distintos durante 30 minutos: anotá qué ganchos les tocaron a cada uno
+y mostrame que fueron distintos. Commit y push.
+```
+
+#### Prompt 41a 💻 Primer hilo hecho a mano: Los muelles rojos (Puerto Óxido)
+```
+Leé las secciones 0d y 0f de linajes/ideas/ficha.md. Este es un HILO HECHO A MANO del Narrador (Prompt 41):
+no es obligatorio ni va primero; se abre con 3 ganchos distintos (Tano te pide ayuda con un mecánico
+desaparecido; el Albatros te ofrece un trabajo si tenés −100 en el puerto; ves desde un techo un cargamento
+de implantes). Los enemigos se ajustan al nivel del jugador (±2, mínimo 5).
+HILO "Los muelles rojos" en Puerto Óxido, con los modelos de los Prompts 6, 13, 20 y 21:
 MISIONES DE HISTORIA (todas empiezan y terminan hablando con un NPC):
 1. Rivas: "Algo pasa en el puerto" → investigar 3 galpones (pistas: cajas con logo de Corona Corp).
 2. Vega: fotos del cargamento ilegal → descubrís implantes robados.
@@ -1335,6 +1376,24 @@ Leé la sección 0c de linajes/ideas/ficha.md.
 Commit y push.
 ```
 
+#### Prompt 41c 💻 La agenda de los villanos y la Crónica de la ciudad
+```
+Leé "Los villanos tienen su propia agenda" en la sección 0f de linajes/ideas/ficha.md.
+1. PLAN SEMANAL: cada lunes, cada villano principal activo (Mascarada, Halden, el Albatros al empezar) elige
+   un plan de una lista en Config (por ejemplo: noche de caos en Vórtice, implante nuevo en Corona,
+   cargamento grande en el puerto), con una barra de avance global.
+2. Los planes avanzan solos con el tiempo y con lo que hacen los jugadores que los ayudan; retroceden con lo
+   que hacen los que los frenan. Se suma en todos los servidores con MemoryStore + DataStore cada 5 min.
+3. El Narrador (Prompt 41) reparte ganchos para frenar o ayudar cada plan, según el bando y la reputación.
+4. EL DOMINGO se resuelve: si la barra no llegó, el villano pierde algo (un barrio, un teniente, dinero); si
+   llegó, el plan sale y cambia el mundo esa semana (barrio tomado, precios más caros, criatura suelta,
+   evento especial). Los cambios viven en un módulo EstadoDelMundo que leen los otros sistemas.
+5. CRÓNICA DE LA CIUDAD: El Faro (Prompt 38e) publica cada día cómo va cada plan y, el domingo, el
+   resultado con los 3 jugadores que más pesaron de cada lado.
+Probá adelantando el reloj: forzá un domingo con el plan logrado y otro frenado, y mostrame qué cambió.
+Commit y push.
+```
+
 #### Prompt 42 💻 Piezas de traje de los NPCs y pantalla de trajes
 ```
 Las piezas inspiradas en cada NPC principal (capa de plumas de Cuervo, corona solar de Centinela, etc.)
@@ -1362,9 +1421,10 @@ Los trajes se ponen sobre el avatar del jugador, cada pieza soldada a su hueso d
    público para 16+ o todas las edades).
 ```
 
-#### Después de la beta (un prompt por arco)
+#### Después de la beta (un prompt por hilo grande)
 ```
-Hacé el arco [NOMBRE] de la sección 0d de linajes/ideas/ficha.md:
+Hacé el hilo hecho a mano [NOMBRE] de las secciones 0d y 0f de linajes/ideas/ficha.md, como datos del
+Narrador (Prompt 41), con 2 o 3 ganchos de entrada:
 1. Modelos que falten (prompts 3 a 25c con el mismo detalle), animaciones (26 a 30) y sonidos (31 y 32).
 2. Misiones del arco (todas por NPC), con 2 puertas de entrada, enemigos ajustados al nivel del jugador,
    2 o 3 finales según reputación y decisiones, y cómo cambia la ciudad con cada final.
@@ -1372,4 +1432,5 @@ Hacé el arco [NOMBRE] de la sección 0d de linajes/ideas/ficha.md:
    el evento o raid en grupo de la ficha, y lo que se desbloquea (Linajes, nodos, trajes, Despertar).
 4. Números en Config.luau. Commit y push por cada parte que funcione.
 ```
-Orden sugerido (vos elegís, se pueden hacer en cualquier orden): El teatro de máscaras (Vórtice) → La torre de cristal (Corona) → Fuga en Islaroca (raid) → Lo que hay abajo (Ciudad Hundida, secreto) → Eclipse total (con 2 de los 3 arcos de ciudad hechos) → Umbra (raid final de 8) → Ciudad rota (temporadas).
+Además, en cada actualización sumá 5 plantillas de hilos, 5 ganchos y 5 Fragmentos de verdad nuevos.
+Orden sugerido de hilos grandes (vos elegís): El teatro de máscaras (Vórtice) → La torre de cristal (Corona) → Fuga en Islaroca (raid) → Lo que hay abajo (Ciudad Hundida, secreto) → Eclipse total (con 2 de los 3 arcos de ciudad hechos) → Umbra (raid final de 8) → Ciudad rota (temporadas).

@@ -25,4 +25,4 @@ Commit y push.
 ```
 
 ---
-[[P41 Primer arco Los muelles rojos|← P41 Primer arco Los muelles rojos]]   ·   [[Todos los prompts]]   ·   [[P42 Piezas de traje de los NPCs y pantalla de trajes|P42 Piezas de traje de los NPCs y pantalla de trajes →]]
+[[P41a Primer hilo hecho a mano Los muelles rojos|← P41a Primer hilo hecho a mano Los muelles rojos]]   ·   [[Todos los prompts]]   ·   [[P41c La agenda de los villanos y la Crónica de la ciudad|P41c La agenda de los villanos y la Crónica de la ciudad →]]
