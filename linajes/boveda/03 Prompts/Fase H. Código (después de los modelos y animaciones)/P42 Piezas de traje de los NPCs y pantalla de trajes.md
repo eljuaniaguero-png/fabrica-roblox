@@ -15,4 +15,4 @@ Los trajes se ponen sobre el avatar del jugador, cada pieza soldada a su hueso d
 ```
 
 ---
-[[P41b Que cada partida sea distinta|← P41b Que cada partida sea distinta]]   ·   [[Todos los prompts]]   ·   [[P43 Probar, medir y publicar la beta|P43 Probar, medir y publicar la beta →]]
+[[P41c La agenda de los villanos y la Crónica de la ciudad|← P41c La agenda de los villanos y la Crónica de la ciudad]]   ·   [[Todos los prompts]]   ·   [[P43 Probar, medir y publicar la beta|P43 Probar, medir y publicar la beta →]]

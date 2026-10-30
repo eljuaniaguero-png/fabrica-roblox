@@ -12,6 +12,7 @@ Actualizado: 30 oct 2026.
 - [ ] [[P03 Cuervo]]: v2 con [[Nivel de detalle]] listo (35.140 de 36.000 triángulos). **Falta tu OK** para exportarlo a Roblox (PASO 3).
   - Mirá `cuervo_v2_vs_v1.png` y `cuervo_v2_vs_v1_primeros_planos.png`
 - [ ] [[P04 Centinela Solar]]: boceto de bloques listo. **Falta tu OK** de la forma para pasar al detalle.
+- [ ] [[P05 Mascarada]]: traje en curso (boceto, texturas y materiales).
   - Mirá `centinela_boceto_vistas.png` (el oro se ve oscuro porque todavía no tiene textura)
 
 ## Dónde ver los resultados

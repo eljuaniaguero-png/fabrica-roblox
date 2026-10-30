@@ -20,4 +20,4 @@ Los implantes se ven en el personaje (modelos chicos hechos en Blender con el mi
 ```
 
 ---
-[[P39 Prólogo tu origen y la Noche del Eclipse|← P39 Prólogo tu origen y la Noche del Eclipse]]   ·   [[Todos los prompts]]   ·   [[P41 Primer arco Los muelles rojos|P41 Primer arco Los muelles rojos →]]
+[[P39 Prólogo tu origen y la Noche del Eclipse|← P39 Prólogo tu origen y la Noche del Eclipse]]   ·   [[Todos los prompts]]   ·   [[P41 El Narrador ganchos e hilos|P41 El Narrador ganchos e hilos →]]
