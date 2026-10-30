@@ -15,7 +15,7 @@ Leé "Noticias de El Faro" en la sección "Calle viva" de linajes/ideas/ficha.md
    con la reputación con la Prensa del protagonista (favorable, neutro, en contra).
 2. DÓNDE SE VE: Último momento = cartel arriba de la pantalla 6 s + pantallas gigantes de Corona (SurfaceGui).
    Portada del día (3 más famosos, mejor atraco, mejor captura, sumando todos los servidores con
-   MemoryStore) = kioscos, diarieros, teléfono. Buscados con imagen del avatar (ViewportFrame) en carteles
+   MemoryStore) = kioscos, diarieros, teléfono. Buscados con imagen del personaje del juego (ViewportFrame) en carteles
    de la comisaría y de la calle. Barrios y rumores en el teléfono y en la TV de los bares.
 3. EFECTOS: "Ola de crimen en [barrio]" → +50 % policía ahí la hora siguiente; "[héroe] salva [lugar]" →
    +reputación de ciudad al héroe; villano en portada → +25 % a su recompensa.

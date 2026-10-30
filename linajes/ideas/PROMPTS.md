@@ -23,6 +23,8 @@ Las capturas de `Descargas\referencias` son de 4 tipos. De cada una tomamos **la
 En todos los juegos que mandaste, **el cuerpo es de avatar de Roblox (bloques)** y lo que impresiona es **el traje**: capa con pliegues, casco con detalle, placas, líneas que brillan. Por eso actualicé el sistema de diseño:
 - Héroes y villanos jugables o NPC: **cuerpo de avatar de Roblox + traje de piezas 3D con mucho detalle** (20.000 a 40.000 triángulos entre todas las piezas).
 - Jefes gigantes que no son humanos (El Eclipsador, robots, criaturas): **modelo completo** de hasta 60.000 triángulos en varias mallas.
+(Cambio del 30 oct: el juego ya no usa el avatar de Roblox sino un cuerpo propio con el mismo esqueleto R15, ver ficha 0g. La idea de poner el detalle en el traje se mantiene.)
+
 Así se ve como lo que te gusta, tiene muchos triángulos donde se notan, y los jugadores pueden usar los trajes sobre su propio avatar.
 
 ---
@@ -659,6 +661,34 @@ PASO 3: exportá a linajes/arte/exports/calle-viva/<grupo>/<pieza>.fbx, commit y
 
 ---
 
+#### Prompt 20f 💻 Cuerpo propio del jugador (reemplaza al avatar de Roblox)
+
+Antes de pegarlo: Blender abierto con el conector de Claude, en Claude Code en `C:\Users\eljua\fabrica-roblox`. Reglas: Reglas de los prompts · Nivel de detalle · Colores · Cuerpo propio (sin avatar de Roblox)
+
+```
+Leé linajes/arte/GUIA-ESTILO.md y la nota "Cuerpo propio (sin avatar de Roblox)" de la bóveda. El juego NO
+usa el avatar de Roblox: todos usan este cuerpo. Guardá kit-base.blend como linajes/arte/blender/cuerpo.blend.
+Usá EL MISMO esqueleto R15 del maniquí (mismos huesos y mismas posiciones), así los trajes y las
+animaciones que ya existen siguen sirviendo.
+
+PIEZAS (una malla por parte del R15, pegada a su hueso, 4.000 a 6.000 tris en total):
+1. Cuerpo de cómic, proporcionado (cabeza un poco grande para que se lea en celular), manos con dedos
+   juntos (pulgar aparte), sin ropa interior detallada: un traje base liso gris oscuro.
+2. 3 contexturas como shape keys: normal, ancha (hombros +20 %), delgada (hombros y cadera -12 %).
+3. Cara: 12 texturas de ojos, cejas y boca (en una hoja 4x3) + 8 expresiones (neutral, enojado, contento,
+   sorprendido, dolor, concentrado, cansado, derrotado) para cambiarlas por código.
+4. 12 peinados (1.000 a 2.000 tris cada uno), un material con color libre.
+5. 10 tonos de piel (anotalos en Config.luau) y 6 cicatrices o marcas como calcomanías.
+
+PASO 1: boceto de las 3 contexturas al lado del maniquí, de frente, costado y espalda, con un traje de
+Cuervo puesto encima para ver que encaja. Esperá mi OK.
+PASO 2: detalle, hoja de caras y expresiones, hoja de peinados. Esperá mi OK.
+PASO 3: exportá a linajes/arte/exports/cuerpo/. En Studio, por código en linajes/src/: StarterCharacter
+con este cuerpo (Roblox deja de cargar el avatar), el servidor lo arma con lo que eligió el jugador y
+reemplaza el script Animate por el nuestro. Probalo con Play: que aparezca el cuerpo propio y no el avatar.
+Captura, commit y push.
+```
+
 ### Fase D. Lugares en Blender (kits modulares)
 
 #### Prompt 20c 💻 Mapa del mundo abierto (graybox, antes de los kits)
@@ -769,6 +799,8 @@ commit y push.
 
 ### Fase E. Animaciones (las hace Claude en Blender)
 
+**El plan completo** (todo lo que se mueve, cuántas son y en qué orden) está en la sección 0h de linajes/ideas/ficha.md y en la nota "Animaciones (plan completo)" de la bóveda. Manda sobre las listas de abajo.
+
 **Cómo se hacen:** Claude anima en Blender sobre el esqueleto R15 del maniquí (o el rig propio del jefe), a **30 cuadros por segundo**, con un script por animación en `linajes/arte/scripts/animaciones/`. Exporta FBX a `linajes/arte/animaciones/`. Después, en Studio: **Animation Editor → ⋯ → Import → From FBX Animation**, y **Publish to Roblox**. Ese último botón lo tenés que tocar vos (Roblox lo pide desde tu cuenta); Claude te dice cuál en cada caso y anota los IDs en `Config.luau`.
 
 **Reglas de todas las animaciones:**
@@ -813,6 +845,29 @@ Para cada animación: render de 3 cuadros clave en una tira (linajes/arte/render
 Mostrame una hoja con todas las tiras y esperá mi OK. Con mi OK: exportá cada Action a
 linajes/arte/animaciones/base/<nombre>.fbx, importalas en Studio sobre un Dummy R15 y decime exactamente
 qué tengo que tocar para publicarlas. Anotá los IDs en Config.luau. Commit y push.
+```
+
+#### Prompt 26b 💻 Animaciones de tecnología, gadgets y vehículos
+
+Antes de pegarlo: Blender abierto con el conector de Claude, en Claude Code en `C:\Users\eljua\fabrica-roblox`. Reglas: Reglas de los prompts · Animaciones (plan completo)
+
+```
+Leé las secciones 5 y 6 de la nota "Animaciones (plan completo)" de la bóveda. Abrí animaciones-base.blend
+y guardalo como linajes/arte/blender/animaciones-tecnologia.blend. 30 fps sobre el cuerpo propio (R15),
+marcador Impacto en cada golpe o disparo. Script en linajes/arte/scripts/animaciones/tecnologia.py.
+
+GADGETS (cuerpo + objeto): gancho (tirar, colgarse en loop, soltarse), granada de humo (tirar), dron
+(lanzar y recibir), boomerang (tirar y atrapar), red (disparar), linterna cegadora (apuntar),
+escudo plegable (abrir, loop, cerrar), botiquín (curarse).
+IMPLANTES: cañón del brazo (apuntar loop y disparar), puño hidráulico (cargar y pegar), doble salto.
+ESCENAS: instalar implante en la camilla (Kessler y el jugador), fabricar en el banco del taller,
+probarse un traje nuevo, transferencia de Linaje (el fragmento entra en el pecho).
+VEHÍCULOS: subir, bajar, manejar (loop), salir corriendo de un choque.
+
+Lo que no es cuerpo (ruedas, sirenas, pistones, dron volando) va por código en linajes/src/client/,
+con los números en Config.luau.
+Cierre igual que el Prompt 26: tiras de cuadros → mi OK → exportá a linajes/arte/animaciones/tecnologia/
+→ importá en Studio → decime qué publicar → IDs en Config.luau → commit y push.
 ```
 
 #### Prompt 27 💻 Animaciones de los 3 primeros Linajes
@@ -904,6 +959,28 @@ Probá cada una con Play. Commit y push.
 ```
 
 ---
+
+#### Prompt 30b 💻 Efectos especiales e interfaz (por código en Studio)
+
+Antes de pegarlo: Studio abierto con el place de Linajes, `rojo serve linajes/linajes.project.json` corriendo, en Claude Code en `C:\Users\eljua\fabrica-roblox`. Reglas: Colores · Animaciones (plan completo)
+
+```
+Leé las secciones 2, 3, 4 (columna Efecto), 13 y 14 de la nota "Animaciones (plan completo)" de la bóveda.
+Todo por código, en linajes/src/client/efectos/ (un módulo por tema) con plantillas en ReplicatedStorage
+y números en Config.luau. Un solo bucle del cliente para lo que se mueve siempre, pausado si no se ve.
+
+1. EFECTOS GENERALES: golpe, crítico, bloqueo, parry, hit-stop de 0,05 s, sacudida de cámara (3 fuerzas),
+   zona roja de Aviso, curarse, subir de nivel, Despertar, aparecer, teletransporte, polvo, charcos, vapor,
+   humo, explosión chica y grande, vidrios. Se disparan desde el marcador Impacto de la animación.
+2. EFECTOS DE LOS 3 PRIMEROS LINAJES (Fuerza Bruta, Reflejos, Piroquinesis), uno por habilidad.
+3. CARA: cambiar expresiones, parpadeo al azar y boca que se mueve al hablar.
+4. INTERFAZ: botones, ventanas, barras con rastro, recargas, números de daño, nivel, nodos del árbol,
+   "???" que se revela, máquina de escribir, ruleta (frena y rebota, destello del color de la rareza).
+5. CALIDAD: opción Alto/Bajo en Ajustes; en celular arranca en Bajo (mitad de partículas, sin luces).
+Probá cada efecto con Play en compu y en el emulador de celular. Leé la consola: sin errores.
+Captura de cada grupo, mostramelas y esperá mi OK. Commit y push.
+```
+Para cada Linaje nuevo se repite el punto 2 con sus 3 habilidades, sus Variantes y su definitiva.
 
 ### Fase F. Sonidos y música (ForgeGUI)
 
@@ -1044,7 +1121,7 @@ Todo validado en el servidor igual que el combo. Probá 1.000 tiradas simuladas 
 ```
 Leé la sección 0c de linajes/ideas/ficha.md. Usá las piezas del Prompt 20b.
 1. CREADOR (al crear un espacio y después en tu base): elegir casco, capa, peto, hombreras, guantes, botas
-   sobre tu avatar de Roblox; 3 colores por pieza con selector libre (rueda de color + 12 colores de la guía);
+   sobre el cuerpo propio (P20f: contextura, altura, piel, cara, pelo; NUNCA el avatar de Roblox); 3 colores por pieza con selector libre (rueda de color + 12 colores de la guía);
    material por pieza (tela, cuero, metal, neon); largo de capa; vista girando.
 2. EMBLEMA: 20 formas, color, borde y brillo; se ve en el peto, la capa y la bandera de la base.
 3. NOMBRE DE HÉROE + TÍTULO (lista de títulos ganados).
@@ -1249,7 +1326,7 @@ Leé "Noticias de El Faro" en la sección "Calle viva" de linajes/ideas/ficha.md
    con la reputación con la Prensa del protagonista (favorable, neutro, en contra).
 2. DÓNDE SE VE: Último momento = cartel arriba de la pantalla 6 s + pantallas gigantes de Corona (SurfaceGui).
    Portada del día (3 más famosos, mejor atraco, mejor captura, sumando todos los servidores con
-   MemoryStore) = kioscos, diarieros, teléfono. Buscados con imagen del avatar (ViewportFrame) en carteles
+   MemoryStore) = kioscos, diarieros, teléfono. Buscados con imagen del personaje del juego (ViewportFrame) en carteles
    de la comisaría y de la calle. Barrios y rumores en el teléfono y en la TV de los bares.
 3. EFECTOS: "Ola de crimen en [barrio]" → +50 % policía ahí la hora siguiente; "[héroe] salva [lugar]" →
    +reputación de ciudad al héroe; villano en portada → +25 % a su recompensa.
@@ -1399,7 +1476,7 @@ Commit y push.
 Las piezas inspiradas en cada NPC principal (capa de plumas de Cuervo, corona solar de Centinela, etc.)
 se ganan completando su cadena de 3 misiones y aparecen en el creador (Prompt 36b) para mezclar.
 Pantalla de trajes del Prompt 33: guardar hasta 10 trajes armados por espacio y cambiar en la base.
-Los trajes se ponen sobre el avatar del jugador, cada pieza soldada a su hueso del avatar R15.
+Los trajes se ponen sobre el cuerpo propio del jugador (no el avatar de Roblox), cada pieza soldada a su hueso R15.
 ```
 
 #### Prompt 43 💻 Probar, medir y publicar la beta

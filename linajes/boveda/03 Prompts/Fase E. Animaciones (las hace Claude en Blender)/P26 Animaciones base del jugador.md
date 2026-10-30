@@ -8,8 +8,10 @@ estado: pendiente
 Antes de pegarlo: Blender abierto con el conector de Claude, en Claude Code en `C:\Users\eljua\fabrica-roblox`. Reglas: [[Reglas de los prompts]] · [[Nivel de detalle]] · [[Colores]]
 
 ```
-Leé linajes/arte/GUIA-ESTILO.md. Abrí linajes/arte/blender/kit-base.blend y guardalo como
-linajes/arte/blender/animaciones-base.blend. Animá el esqueleto R15 del maniquí a 30 fps.
+Leé linajes/arte/GUIA-ESTILO.md y las secciones 1, 2 y 3 de la nota "Animaciones (plan completo)" de la
+bóveda: la lista de abajo es el mínimo, el plan manda (incluye los 5 estilos de pelea y las poses del menú).
+Abrí linajes/arte/blender/kit-base.blend y guardalo como
+linajes/arte/blender/animaciones-base.blend. Animá el esqueleto R15 del cuerpo propio (P20f) a 30 fps.
 Cada animación es una Action separada, con su script en linajes/arte/scripts/animaciones/base.py.
 
 LOCOMOCIÓN (loops):
@@ -45,4 +47,4 @@ qué tengo que tocar para publicarlas. Anotá los IDs en Config.luau. Commit y p
 ```
 
 ---
-[[P25d Interiores donde se puede entrar|← P25d Interiores donde se puede entrar]]   ·   [[Todos los prompts]]   ·   [[P27 Animaciones de los 3 primeros Linajes|P27 Animaciones de los 3 primeros Linajes →]]
+[[P25d Interiores donde se puede entrar|← P25d Interiores donde se puede entrar]]   ·   [[Todos los prompts]]   ·   [[P26b Animaciones de tecnología, gadgets y vehículos|P26b Animaciones de tecnología, gadgets y vehículos →]]

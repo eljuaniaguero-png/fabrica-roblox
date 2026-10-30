@@ -21,6 +21,8 @@ RPG de superhéroes para Roblox: combate en tiempo real, multijugador, historia 
 - [[Elenco]]: todos los personajes con su nombre de DC y el nombre final.
 - [[Poderes, inicio y personalización]]: cómo conseguís tus poderes (manda sobre lo demás).
 - **Documento completo del juego** (para leer de corrido): https://claude.ai/artifact/MQo9fGEHaN2EATVw2us2P1
+- [[Cuerpo propio (sin avatar de Roblox)]]: el juego no usa tu avatar de Roblox; todos usan el cuerpo del juego.
+- [[Animaciones (plan completo)]]: todo lo que se mueve (jugador, menús, poderes, NPCs, jefes, efectos).
 - [[Historia viva]]: cómo se arma tu historia (Narrador, ganchos, hilos, misterio, agenda de los villanos). Manda sobre la historia.
 - [[Calle viva]]: lugares donde se entra, policía y vigilancia, testigos, ladrones, callejones, atracos y noticias.
 - [[Mundo abierto y reputación]]: las 3 ciudades, los arcos en cualquier orden y la reputación (manda sobre la historia).

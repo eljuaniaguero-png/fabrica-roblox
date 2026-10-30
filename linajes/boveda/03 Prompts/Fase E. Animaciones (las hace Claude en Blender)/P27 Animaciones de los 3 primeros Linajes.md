@@ -29,7 +29,7 @@ con los brazos abiertos (Impacto 36), aterriza.
 Mismo cierre que el Prompt 26: tiras de cuadros → mi OK → exportar a linajes/arte/animaciones/linajes/ →
 importar en Studio → decime qué publicar → IDs en Config.luau → commit y push.
 ```
-Para cada Linaje nuevo (Electro, Criogenia, Telequinesis, Velocista Cinético, Sombra Viva, Sangre Abisal, Origen Estelar, Herencia Olímpica, Eclipse) se usa el mismo prompt cambiando el bloque: **3 habilidades (Z, X, C), cada una con cuadros de anticipación, Impacto y recuperación, y qué hace el cuerpo**.
+Cada Linaje lleva 14 animaciones (Z, X, C, 6 de Variantes, 2 definitivas, carga, aura y Despertar): ver la sección 4 de [[Animaciones (plan completo)]]. Para cada Linaje nuevo (Electro, Criogenia, Telequinesis, Velocista Cinético, Sombra Viva, Sangre Abisal, Origen Estelar, Herencia Olímpica, Eclipse) se usa el mismo prompt cambiando el bloque: **3 habilidades (Z, X, C), cada una con cuadros de anticipación, Impacto y recuperación, y qué hace el cuerpo**.
 
 ---
-[[P26 Animaciones base del jugador|← P26 Animaciones base del jugador]]   ·   [[Todos los prompts]]   ·   [[P28 Animaciones de un jefe|P28 Animaciones de un jefe →]]
+[[P26b Animaciones de tecnología, gadgets y vehículos|← P26b Animaciones de tecnología, gadgets y vehículos]]   ·   [[Todos los prompts]]   ·   [[P28 Animaciones de un jefe|P28 Animaciones de un jefe →]]

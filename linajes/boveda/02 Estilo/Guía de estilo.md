@@ -40,13 +40,14 @@ El boceto de bloques es a propósito simple: sirve para aprobar la forma. Un mod
 
 ## Triángulos: complejo, pero que corra
 
-Como en las referencias de Juani, **el cuerpo es de avatar de Roblox (bloques, R15) y el detalle va en el traje**: casco o capucha, capa con pliegues, peto, hombreras, guantes, botas y accesorios, cada uno una pieza 3D con textura (líneas que brillan, costuras, placas). Así los jugadores pueden ponerse los trajes sobre su avatar.
+**El cuerpo es el cuerpo propio de Linajes** (esqueleto R15, proporcionado y simple; el juego no usa el avatar de Roblox, cambio de Juani del 30 oct) **y el detalle va en el traje**: casco o capucha, capa con pliegues, peto, hombreras, guantes, botas y accesorios, cada uno una pieza 3D con textura (líneas que brillan, costuras, placas). Así los jugadores se arman su héroe y se ponen los trajes sobre ese cuerpo.
 
 Roblox acepta como máximo **20.000 triángulos por malla**, así que lo pesado se reparte en varias piezas.
 
 | Pieza | Total | Mallas | Textura |
 |---|---|---|---|
-| Traje de héroe o villano (sobre avatar R15) | 20.000 a 40.000 | 5 a 8 piezas (casco 6.000 a 10.000, capa 4.000 a 8.000, peto y hombreras 6.000 a 12.000, guantes y botas 2.000 a 4.000 cada par) | 1024 px |
+| Cuerpo propio (jugadores, NPCs, enemigos) | 4.000 a 6.000 + pelo 1.000 a 2.000 | 1 por parte del R15 | 1024 px |
+| Traje de héroe o villano (sobre el cuerpo propio) | 20.000 a 40.000 | 5 a 8 piezas (casco 6.000 a 10.000, capa 4.000 a 8.000, peto y hombreras 6.000 a 12.000, guantes y botas 2.000 a 4.000 cada par) | 1024 px |
 | Jefe gigante que no es humano (El Eclipsador, robots, criaturas) | 40.000 a 60.000 | 4 a 6, con rig propio | 1024 px |
 | NPC con nombre (comisaria, cirujana, periodista) | 12.000 a 20.000 | 2 a 3 | 512 px |
 | Enemigo común (matón, dron, robot) | 6.000 a 10.000 | 1 a 2 | 512 px |
@@ -57,7 +58,7 @@ Roblox acepta como máximo **20.000 triángulos por malla**, así que lo pesado 
 
 - En pantalla, apuntar a **≤ 500.000 triángulos visibles** en celular. Los enemigos comunes van livianos porque aparecen de a muchos.
 - Los poderes (fuego, hielo, rayo, luz sólida) son **partículas y Neon**, no mallas.
-- Los jugadores usan **su avatar de Roblox**; los trajes, la tecnología y los implantes van encima como piezas (las del traje según la tabla, gadgets e implantes ≤ 5.000 cada uno).
+- Los jugadores usan **el cuerpo propio de Linajes, nunca su avatar de Roblox**; los trajes, la tecnología y los implantes van encima como piezas (las del traje según la tabla, gadgets e implantes ≤ 5.000 cada uno).
 
 ## Color y material
 

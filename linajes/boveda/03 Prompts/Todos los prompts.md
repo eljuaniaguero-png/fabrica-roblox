@@ -39,6 +39,7 @@ Cada prompt sigue el mismo orden: **1) boceto de bloques → aprobar silueta, 2)
 - [ ] [[P20b Piezas del creador de personaje]]
 - [ ] [[P20d Civiles y testigos]]
 - [ ] [[P20e Vehículos y objetos de la calle viva]]
+- [ ] [[P20f Cuerpo propio del jugador]]
 
 ## Fase D. Lugares en Blender (kits modulares)
 
@@ -49,7 +50,9 @@ Cada prompt sigue el mismo orden: **1) boceto de bloques → aprobar silueta, 2)
 
 ## Fase E. Animaciones (las hace Claude en Blender)
 
-**Cómo se hacen:** Claude anima en Blender sobre el esqueleto R15 del maniquí (o el rig propio del jefe), a **30 cuadros por segundo**, con un script por animación en `linajes/arte/scripts/animaciones/`. Exporta FBX a `linajes/arte/animaciones/`. Después, en Studio: **Animation Editor → ⋯ → Import → From FBX Animation**, y **Publish to Roblox**. Ese último botón lo tenés que tocar vos (Roblox lo pide desde tu cuenta); Claude te dice cuál en cada caso y anota los IDs en `Config.luau`.
+**El plan completo** (todo lo que se mueve, cuántas son y en qué orden) está en [[Animaciones (plan completo)]].
+
+**Cómo se hacen:** Claude anima en Blender sobre el esqueleto R15 del cuerpo propio (o el rig propio del jefe), a **30 cuadros por segundo**, con un script por animación en `linajes/arte/scripts/animaciones/`. Exporta FBX a `linajes/arte/animaciones/`. Después, en Studio: **Animation Editor → ⋯ → Import → From FBX Animation**, y **Publish to Roblox**. Ese último botón lo tenés que tocar vos (Roblox lo pide desde tu cuenta); Claude te dice cuál en cada caso y anota los IDs en `Config.luau`.
 
 **Reglas de todas las animaciones:**
 - Exageradas, estilo cómic: anticipación (se carga hacia atrás), golpe rápido, pausa corta en el final del golpe, recuperación.
@@ -58,11 +61,13 @@ Cada prompt sigue el mismo orden: **1) boceto de bloques → aprobar silueta, 2)
 - Cada golpe marca el **cuadro de impacto** con un marcador (Animation Event) llamado `Impacto`, para que el código haga el daño justo ahí.
 
 - [ ] [[P26 Animaciones base del jugador]]
+- [ ] [[P26b Animaciones de tecnología, gadgets y vehículos]]
 - [ ] [[P27 Animaciones de los 3 primeros Linajes]]
 - [ ] [[P28 Animaciones de un jefe]]
 - [ ] [[P29 Animaciones de NPCs y enemigos]]
 - [ ] [[P29b Animaciones de la calle viva]]
 - [ ] [[P30 Animaciones de objetos]]
+- [ ] [[P30b Efectos especiales e interfaz]]
 
 ## Fase F. Sonidos y música (ForgeGUI)
 

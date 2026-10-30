@@ -45,4 +45,4 @@ PASO 3: exportá a linajes/arte/exports/calle-viva/<grupo>/<pieza>.fbx, commit y
 ```
 
 ---
-[[P20d Civiles y testigos|← P20d Civiles y testigos]]   ·   [[Todos los prompts]]   ·   [[P20c Mapa del mundo abierto|P20c Mapa del mundo abierto →]]
+[[P20d Civiles y testigos|← P20d Civiles y testigos]]   ·   [[Todos los prompts]]   ·   [[P20f Cuerpo propio del jugador|P20f Cuerpo propio del jugador →]]

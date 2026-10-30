@@ -31,4 +31,4 @@ Commit "Linajes: mapa graybox del mundo abierto" y push. Mostrame una captura de
 ```
 
 ---
-[[P20e Vehículos y objetos de la calle viva|← P20e Vehículos y objetos de la calle viva]]   ·   [[Todos los prompts]]   ·   [[P21 Puerto Óxido|P21 Puerto Óxido →]]
+[[P20f Cuerpo propio del jugador|← P20f Cuerpo propio del jugador]]   ·   [[Todos los prompts]]   ·   [[P21 Puerto Óxido|P21 Puerto Óxido →]]

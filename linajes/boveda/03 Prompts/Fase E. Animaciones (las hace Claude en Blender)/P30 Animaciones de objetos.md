@@ -22,4 +22,4 @@ Probá cada una con Play. Commit y push.
 ```
 
 ---
-[[P29b Animaciones de la calle viva|← P29b Animaciones de la calle viva]]   ·   [[Todos los prompts]]   ·   [[P31 Sonidos de combate y menús|P31 Sonidos de combate y menús →]]
+[[P29b Animaciones de la calle viva|← P29b Animaciones de la calle viva]]   ·   [[Todos los prompts]]   ·   [[P30b Efectos especiales e interfaz|P30b Efectos especiales e interfaz →]]

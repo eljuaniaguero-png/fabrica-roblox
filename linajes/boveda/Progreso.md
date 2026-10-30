@@ -17,6 +17,7 @@ Actualizado: 30 oct 2026.
 - [x] [[P06 Remache]]: exportado en `exports/remache/` (jefe a 1,6x, 29.222 triángulos, pistones aparte para animar)
   - Mirá `remache_vistas.png`, `remache_brazo.png` y `remache_columna.png`
 - [ ] Siguiente: [[P07 Estela]]
+- [ ] Nuevo (30 oct): [[P20f Cuerpo propio del jugador]] (el juego no usa el avatar de Roblox) y el [[Animaciones (plan completo)|plan de animaciones]]
 - [ ] Ningún traje está importado a Studio todavía.
 
 ## Dónde ver los resultados

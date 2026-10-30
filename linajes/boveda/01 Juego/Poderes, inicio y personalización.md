@@ -85,7 +85,7 @@ Sangre fría (+15 % daño de hielo, -10 % de fuego) · Volátil (habilidades +20
 Hay **12 combinaciones con técnica propia** al principio, y algunas son secretas (no se muestran hasta que alguien las descubre en el servidor, con aviso a todos).
 
 ## Personalización
-- **Creador de personaje**: tu avatar de Roblox + piezas de traje para mezclar (8 cascos/máscaras, 8 capas, 8 petos, 6 hombreras, 6 guantes, 6 botas al empezar; se ganan más), **3 canales de color** por pieza con selector libre, material (tela, cuero, metal, neon), y largo de capa.
+- **Creador de personaje**: el **cuerpo propio de Linajes** (no el avatar de Roblox, ver [[Cuerpo propio (sin avatar de Roblox)]]) con contextura, altura, piel, cara y pelo + piezas de traje para mezclar (8 cascos/máscaras, 8 capas, 8 petos, 6 hombreras, 6 guantes, 6 botas al empezar; se ganan más), **3 canales de color** por pieza con selector libre, material (tela, cuero, metal, neon), y largo de capa.
 - **Emblema propio**: forma (20 formas), color, borde y brillo; aparece en el pecho, la capa y la bandera de tu base.
 - **Nombre de héroe + título** (los títulos se ganan: "El que venció a Remache", "Rey del puerto").
 - **Estilo de pelea**: Puños, Espada, Bastón, Armas de fuego no letales, Gadgets. Cambia el combo de 4 golpes y su animación.

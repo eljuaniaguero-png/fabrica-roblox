@@ -20,6 +20,8 @@ Las capturas de `Descargas\referencias` son de 4 tipos. De cada una tomamos **la
 En todos los juegos que mandaste, **el cuerpo es de avatar de Roblox (bloques)** y lo que impresiona es **el traje**: capa con pliegues, casco con detalle, placas, líneas que brillan. Por eso actualicé el sistema de diseño:
 - Héroes y villanos jugables o NPC: **cuerpo de avatar de Roblox + traje de piezas 3D con mucho detalle** (20.000 a 40.000 triángulos entre todas las piezas).
 - Jefes gigantes que no son humanos (El Eclipsador, robots, criaturas): **modelo completo** de hasta 60.000 triángulos en varias mallas.
+> [!note] Cambio del 30 oct: el juego ya no usa el avatar de Roblox, sino un cuerpo propio con el mismo esqueleto R15 (ver [[Cuerpo propio (sin avatar de Roblox)]]). La idea de poner el detalle en el traje se mantiene.
+
 Así se ve como lo que te gusta, tiene muchos triángulos donde se notan, y los jugadores pueden usar los trajes sobre su propio avatar.
 
 Las imágenes están en tu PC en `linajes/arte/referencias/`.

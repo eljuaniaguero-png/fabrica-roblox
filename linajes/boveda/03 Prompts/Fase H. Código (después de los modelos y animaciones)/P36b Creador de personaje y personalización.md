@@ -10,7 +10,7 @@ Antes de pegarlo: Blender abierto con el conector de Claude, en Claude Code en `
 ```
 Leé la sección 0c de linajes/ideas/ficha.md. Usá las piezas del Prompt 20b.
 1. CREADOR (al crear un espacio y después en tu base): elegir casco, capa, peto, hombreras, guantes, botas
-   sobre tu avatar de Roblox; 3 colores por pieza con selector libre (rueda de color + 12 colores de la guía);
+   sobre el cuerpo propio (P20f: contextura, altura, piel, cara, pelo; NUNCA el avatar de Roblox); 3 colores por pieza con selector libre (rueda de color + 12 colores de la guía);
    material por pieza (tela, cuero, metal, neon); largo de capa; vista girando.
 2. EMBLEMA: 20 formas, color, borde y brillo; se ve en el peto, la capa y la bandera de la base.
 3. NOMBRE DE HÉROE + TÍTULO (lista de títulos ganados).
