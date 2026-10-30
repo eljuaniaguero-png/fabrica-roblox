@@ -169,6 +169,57 @@ Hay **12 combinaciones con técnica propia** al principio, y algunas son secreta
    - Así la comunidad descubre las Variantes de a poco, como en los juegos de la referencia.
 5. **El segundo poder** sigue igual (3 caminos), pero también a ciegas: cada NPC lo ofrece con una frase, sin decir qué te va a dar.
 
+## 0d. Mundo abierto, 3 ciudades y reputación (30 oct, 22:35: MANDA sobre las secciones 1, 8, 8b y 9)
+Juani: "el juego es muy lineal". Cambia así: **mundo abierto compartido**, con varios jugadores en el mismo mapa, **3 ciudades** (y lugares extra después) y la **reputación** como estadística central.
+
+### El mapa: 3 ciudades conectadas
+| Ciudad | Clima | Quién manda al principio | Qué hay |
+|---|---|---|---|
+| **Ciudad Vórtice** | Noche, lluvia, callejones y azoteas (estilo detective) | Vigilantes y pandillas | Comisaría, El Faro, Penal Islaroca en la costa |
+| **Corona** (antes "Distrito Corona", ahora ciudad aparte) | Torres de cristal, luz, drones | Corona Corp y la Liga | Laboratorio de Kessler, torre de Halden, academia de la Liga |
+| **Puerto Óxido** | Grúas, contenedores, óxido y neón | Cofradía Carmesí y contrabandistas | Mercado negro, taller de Tano, barco del Albatros |
+
+- Se unen por **puente, autopista y tren elevado**, con zonas salvajes en el medio (refinería abandonada, bosque de antenas) donde aparecen eventos y jefes errantes.
+- Después se suman: **Ciudad Hundida** (debajo del puerto) y **Hespérides** (isla mítica), y **Umbra** solo en el final.
+- Cada ciudad tiene **barrios de peligro** (bajo, medio, alto): podés ir a cualquier lado desde el principio, pero en los barrios altos te pueden destrozar. No hay paredes invisibles.
+- Viajar: a pie, gancho, vuelo o velocidad si tu poder lo da, **vehículos** (sección 5a) y **viaje rápido** a escondites que desbloqueás con reputación de esa ciudad.
+- Técnico (la opción más simple, anotada): un solo place con `StreamingEnabled`, servidores de **hasta 30 jugadores**, las 3 ciudades a ~1 km entre sí. Si no rinde en celular, cada ciudad pasa a ser su propio place con teletransporte.
+
+### La historia deja de ser una fila
+- El **Prólogo** sigue siendo igual para todos (centro de Vórtice).
+- Después hay **3 arcos de ciudad que hacés en el orden que quieras**: "Ciudad en llamas" (Puerto Óxido), "La torre de cristal" (Corona) y uno nuevo de Vórtice, "Las caras de la ciudad" (Dualidad y Mascarada). Los enemigos del arco se ajustan a tu nivel (dentro de un margen), así el orden no rompe nada.
+- Cada arco se abre por **reputación**, no por nivel: si nadie en Corona sabe quién sos, Halden no te recibe.
+- "Eclipse total" arranca cuando el **servidor** (no solo vos) completó suficientes arcos, o cuando vos terminaste 2 de 3. Ciudad Hundida, Umbra y Ciudad rota quedan como estaban, después.
+- Las decisiones grandes de cada arco cambian **la ciudad** para vos: quién la controla, qué tiendas abren, qué NPCs te hablan.
+
+### Reputación (la estadística que más importa)
+Se ve en tu ficha de personaje como **barras con un título**, sin números exactos (como el resto del juego: se descubre jugando). Los números van en `Config.luau`.
+
+| Reputación | Rango | Sube con | Baja con | Qué cambia |
+|---|---|---|---|---|
+| **Fama** (eje héroe ↔ villano) | −1000 a +1000 | Rescatar, frenar crímenes, ayudar a otros jugadores | Robar, lastimar civiles, ayudar a criminales | Tu **título** visible para todos (Promesa → Héroe de Vórtice / Matón → Azote del Puerto), cómo reaccionan los civiles, qué bandos te aceptan |
+| **Reputación por ciudad** (una por cada ciudad) | 0 a 1000 | Trabajos, misiones y eventos en esa ciudad | Caer derrotado muchas veces ahí, abandonar eventos | Abre NPCs, tiendas, escondites y viaje rápido de **esa** ciudad, y su arco de historia |
+| **Reputación de bando** (la que ya estaba, 8b) | 0 a 1000 | Misiones de bando | Atacar a jugadores de tu propio bando | Rango Novato → S |
+| **Reputación de grupo** (Policía, Prensa El Faro, Corona Corp, Pandillas del puerto, Contrabandistas) | −500 a +500 | Trabajos para ellos | Trabajar para sus rivales | Precios, información, si te persiguen o te ayudan. Subir con uno suele bajar con su rival |
+| **Confianza con NPCs principales** (la que ya estaba) | 0 a 100 | Hablar, ayudarlos, sus cadenas de misiones | Elegir en contra de ellos | Mentores, refuerzos, quién se vuelve aliado o villano |
+
+**Búsqueda (temporal):** si hacés crímenes, en esa ciudad te sube la Búsqueda (1 a 5 estrellas) y baja sola con el tiempo o si te escondés. Con 3 o más estrellas: te persiguen la policía y drones, **y los jugadores de la Liga y los Vigilantes ven tu posición y ganan Fama y recompensa si te atrapan**. Así los otros jugadores importan.
+
+### Varios jugadores en el mismo mapa
+- **Control de barrios por bando**: cada barrio tiene un medidor por bando que se mueve con lo que hacen **todos** los jugadores del servidor (misiones, crímenes, eventos). El bando que lo controla tiene precios más bajos y un bono chico ahí. Cada semana hay un ranking de bandos por ciudad.
+- **Crímenes y eventos al azar** (8 y 0c) ahora pasan en las 3 ciudades y en las zonas del medio, y los ven todos: unos jugadores los frenan y otros los ayudan.
+- **Recompensas entre jugadores**: un jugador con mucha Búsqueda tiene precio; atraparlo da Fama y dinero. PvP solo en estos casos, en eventos de guerra de bandos y en zonas marcadas: nadie te ataca de la nada en una zona segura.
+- **Ayudar a otro jugador** en un evento o pelea te da reputación en esa ciudad (y te sale el Rasgo Protector más rápido, 0c punto 3).
+
+### Estadísticas nuevas que anota el juego
+Fama, las 3 reputaciones de ciudad, las 5 de grupo, Búsqueda máxima alcanzada, jugadores atrapados, veces que te atraparon, barrios que ayudaste a ganar. Sirven para los Rasgos (0c punto 3), para los títulos y para que los NPCs comenten lo que hiciste ("Vos sos el que salvó el tren de Corona...").
+
+### Cambios en el plan (sección 9)
+- La **etapa 4** pasa a ser: Prólogo + elección de bando + **reputación (Fama, ciudad y bando) con sus títulos**.
+- **Etapa 4b (nueva)**: graybox del mapa abierto con las 3 ciudades, los caminos entre ellas, barrios de peligro y viaje rápido, probado con 3 jugadores en Local Server y en celular.
+- La **etapa 7** pasa a ser: el primer **arco de ciudad** (Puerto Óxido) con Búsqueda y control de barrios.
+- Modelos: la "calle de muestra" de cada ciudad va con su propio estilo (Vórtice, Corona y Puerto Óxido) antes de armar más edificios.
+
 ## 1. La idea en dos líneas
 Un eclipse cubre **Ciudad Vórtice** y despierta poderes en parte de la gente: los **Linajes**. Te armás tu propio héroe o villano, elegís tu bando, peleás en tiempo real por los distritos de la ciudad, seguís una historia con personajes, y mejorás a tu personaje con el árbol de habilidades, **tecnología**, **implantes** y **transferencias** de poder.
 
