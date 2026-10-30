@@ -52,9 +52,11 @@ RECETAS = {
     "cofradia-oscura": {"costuras": (0.1, 0.0), "trama": 1.0, "rayones": 0.0, "bordes": 0.3, "suciedad": 0.5, "grano": 0.0},
     "cofradia": {"rayones": 0.2, "bordes": 0.3, "suciedad": 0.3, "grano": 0.0},
     "espejo": {"rayones": 1.0, "bordes": 0.5, "suciedad": 0.35, "grano": 0.0},
+    # Remache
+    "oxido": {"paneles": (0.09, 0.11), "remaches": True, "rayones": 0.8, "bordes": 0.6, "suciedad": 0.9, "grano": 0.4},
     "asfalto": {"trama": 0.5, "rayones": 0.0, "bordes": 0.2, "suciedad": 0.3, "grano": 0.0},
 }
-SIN_HORNEAR = {"neon-cian", "neon-eclipse", "neon-aviso"}  # brillan: se quedan con su material
+SIN_HORNEAR = {"neon-cian", "neon-eclipse", "neon-aviso", "liquido-rojo"}  # brillan: se quedan con su material
 
 
 def _material_base(obj):

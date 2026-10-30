@@ -68,6 +68,8 @@ MATERIALES = {
     "negro": {"hex": "121216", "rugosidad": 0.6},  # Mascarada
     "charol": {"hex": "0a0a0c", "rugosidad": 0.08},
     "cofradia-oscura": {"hex": "7a1424", "rugosidad": 0.8},
+    "oxido": {"hex": "6e4a35", "rugosidad": 0.7, "metal": 0.6},  # Remache: acero oxidado
+    "liquido-rojo": {"hex": "c2213a", "rugosidad": 0.2, "brillo": 2.0},
     "espejo": {"hex": "c8d0dc", "rugosidad": 0.22, "metal": 0.75},
     "neon-cian": {"hex": "3fe0f0", "brillo": 5.0},
     "neon-eclipse": {"hex": "f2652b", "brillo": 5.0},
