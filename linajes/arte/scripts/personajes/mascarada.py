@@ -821,6 +821,17 @@ def detalle():
     return piezas
 
 
+def exportar():
+    """Un FBX por malla en exports/mascarada/ (las 3 máscaras incluidas)."""
+    bpy.ops.wm.open_mainfile(filepath=BLEND)
+    piezas = piezas_detalle()
+    for o in piezas:
+        o.hide_viewport = False  # las máscaras escondidas no se pueden seleccionar
+    rutas = B.exportar_piezas("mascarada", piezas)
+    print("Exportadas:", len(rutas))
+    return rutas
+
+
 if __name__ == "__main__":
     argumentos = sys.argv[sys.argv.index("--") + 1 :] if "--" in sys.argv else []
     if "boceto" in argumentos:
@@ -829,3 +840,5 @@ if __name__ == "__main__":
         prueba()
     if "detalle" in argumentos:
         detalle()
+    if "exportar" in argumentos:
+        exportar()
