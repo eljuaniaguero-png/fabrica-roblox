@@ -9,24 +9,17 @@ Empezá SIEMPRE cada respuesta al usuario con la frase "Hola Juani, ahora " segu
 
 Esto vale para todas las respuestas, también las cortas, las preguntas y los informes finales. El usuario usa esta frase para comprobar que seguís leyendo este archivo: si falta, entiende que perdiste las reglas.
 
-## Varios juegos en esta carpeta
+## Juego activo: linajes/
 
-**Desde el 2026-10-30 todos los juegos de abajo están archivados en `archivo/<juego>/` (ver `archivo/README.md`); las rutas de esta sección hay que leerlas con ese prefijo. El juego activo nuevo (un RPG) todavía no tiene carpeta.**
+**Linajes del Eclipse** (RPG de superhéroes, combate en tiempo real, multijugador). Los juegos viejos están en archivo/ (ver `archivo/README.md`): no se tocan salvo que Juani lo pida.
 
-Hay tres juegos. Cada uno tiene su propio código, su propio archivo de Rojo y su propio place de Studio. Nunca mezcles archivos de uno con el otro.
-
-| Juego | Código | Proyecto de Rojo | Ficha |
-|---|---|---|---|
-| Pisada Sonora | `src/` (en la raíz) | `default.project.json` | `ideas/pisada-sonora.md` |
-| Mutant Lab | `mutant-lab/src/` | `mutant-lab/default.project.json` | `ideas/mutant-lab.md` |
-| Forja Rápida | `forja-rapida/src/` | `forja-rapida/default.project.json` | `ideas/forja-rapida.md` |
-| Plinko Knight | `plinko-knight/src/` | `plinko-knight/default.project.json` | `ideas/plinko-knight.md` |
-
-- El usuario dice al principio de cada pedido en qué juego trabaja. Si no lo dice y no es obvio, preguntá antes de tocar nada.
-- Cuando trabajes en Mutant Lab, todo lo que este archivo dice de `src/` vale para `mutant-lab/src/`: el código va ahí, y los chequeos son `stylua mutant-lab/src` y `selene mutant-lab/src`. No toques el `src/` de la raíz.
-- Para Mutant Lab, Rojo se levanta con `rojo serve mutant-lab`. Solo puede haber un `rojo serve` corriendo a la vez.
-- Forja Rápida funciona igual que Mutant Lab, con su carpeta `forja-rapida/` (`rojo serve forja-rapida`, `stylua forja-rapida/src`, `selene forja-rapida/src`). Sus números van en `forja-rapida/src/shared/GameConfig.luau` y sus pruebas de lógica con `lune run forja-rapida/pruebas/reglas`.
-- Plinko Knight funciona igual, con su carpeta `plinko-knight/` (`rojo serve plinko-knight`, `stylua plinko-knight/src`, `selene plinko-knight/src`). Sus números van en `plinko-knight/src/shared/Config.luau`, y sus reglas propias están en `plinko-knight/PLAN-Y-PROMPTS.md`.
+- Todo lo que este archivo dice de `src/` vale para `linajes/src/`: el código va ahí, y los chequeos son `stylua linajes/src` y `selene linajes/src`.
+- Rojo: `rojo serve linajes/linajes.project.json`. Solo puede haber un `rojo serve` corriendo a la vez.
+- Ficha: `linajes/ideas/ficha.md`. Números de balance en `linajes/src/shared/Config.luau`.
+- Arte en `linajes/arte/` (`referencias/`, `scripts/`, `blender/`, `exports/`, `renders/`, `animaciones/`, `sonidos/`). Las imágenes de `referencias/` son de otros juegos: solo para ideas, nunca se suben a Roblox ni se copian.
+- Antes de cualquier modelo o animación, leé linajes/arte/GUIA-ESTILO.md.
+- Los modelos y animaciones los hace Claude en Blender. Los sonidos y la música, ForgeGUI.
+- Los nombres de DC son nombres de trabajo: nunca van en el juego publicado. Ningún modelo copia logos, emblemas, trajes ni colores exactos de DC.
 - Antes de construir por MCP, listá los Studios conectados y confirmá que el place abierto es el del juego en el que estás trabajando. Si está abierto el del otro juego, frená y avisá.
 - Todo lo que se pague con Robux sigue las reglas de `ideas/monetizacion.md`.
 
