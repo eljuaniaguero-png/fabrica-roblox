@@ -42,6 +42,10 @@ RECETAS = {
     "tela-oscura": {"costuras": (0.11, 0.0), "trama": 1.0, "rayones": 0.0, "bordes": 0.35, "suciedad": 0.5, "grano": 0.0},
     "cuero": {"costuras": (0.06, 0.0), "trama": 0.0, "rayones": 0.25, "bordes": 0.45, "suciedad": 0.55, "grano": 1.0},
     "vigilantes": {"rayones": 0.3, "bordes": 0.5, "suciedad": 0.3, "grano": 0.0},
+    "blanco-armadura": {"paneles": (0.07, 0.09), "remaches": True, "rayones": 0.6, "bordes": 0.3, "suciedad": 0.45, "grano": 0.0},
+    "oro": {"rayones": 0.8, "bordes": 0.6, "suciedad": 0.5, "grano": 0.0},
+    "tela-dorada": {"costuras": (0.09, 0.0), "trama": 1.0, "rayones": 0.0, "bordes": 0.3, "suciedad": 0.4, "grano": 0.0},
+    "liga": {"rayones": 0.3, "bordes": 0.4, "suciedad": 0.3, "grano": 0.0},
 }
 SIN_HORNEAR = {"neon-cian", "neon-eclipse", "neon-aviso"}  # brillan: se quedan con su material
 

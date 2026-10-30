@@ -208,7 +208,18 @@ def sobre_superficie(bvh, desde, hacia_adentro, separacion=0.0):
     return punto + normal * separacion, normal
 
 
-SUFIJOS = {"acero": "Acero", "neon-cian": "Neon", "vigilantes": "Emblema", "cuero": "Cuero", "tela-oscura": "Tela"}
+SUFIJOS = {
+    "acero": "Acero",
+    "neon-cian": "Neon",
+    "neon-eclipse": "Neon",
+    "vigilantes": "Emblema",
+    "cuero": "Cuero",
+    "tela-oscura": "Tela",
+    "tela-dorada": "Tela",
+    "oro": "Oro",
+    "blanco-armadura": "Armadura",
+    "liga": "Liga",
+}
 
 
 def pieza_separada(nombre, hueso, capas, suave=40):
@@ -336,6 +347,9 @@ def capa(
     filas=40,
     cuadros=45,
     grosor=0.012,
+    tiras=1,
+    corte_desde=0.45,
+    choques_extra=(),
 ):
     """Capa colgada de los hombros por la espalda (+Y), simulada como tela y horneada a malla.
 
@@ -343,6 +357,8 @@ def capa(
     - `ancho`: veces el ancho del torso arriba; `vuelo`: cuánto se abre abajo.
     - `pliegues` y `hondo`: tablas de la tela arriba (las arrastra la gravedad y salen pliegues).
     - `cuadros`: cuadros de simulación (más = más asentada).
+    - `tiras`: la capa se corta en tantas tiras desde `corte_desde` (0 = arriba, 1 = abajo) antes de
+      simular, así se separan solas al caer. `choques_extra`: más objetos con los que choca.
     """
     tmin, tmax, tcentro, tmitades = caja_parte("UpperTorso")
     if largo is None:
@@ -363,8 +379,11 @@ def capa(
             ola = hondo * math.sin((s + 1) * math.pi * pliegues) * (1 - 0.6 * t)
             fila.append(bm.verts.new((x, atras + ola + 0.02 * t, arriba - t * largo)))
         filas_v.append(fila)
+    cortes = {k * columnas // tiras for k in range(1, tiras)}
     for j in range(filas):
         for i in range(columnas):
+            if i in cortes and j >= corte_desde * filas:
+                continue
             bm.faces.new((filas_v[j][i], filas_v[j][i + 1], filas_v[j + 1][i + 1], filas_v[j + 1][i]))
     me = bpy.data.meshes.new(f"{personaje}_Capa")
     bm.to_mesh(me)
@@ -395,9 +414,9 @@ def capa(
     tela.point_cache.frame_start = 1
     tela.point_cache.frame_end = cuadros
 
-    # El cuerpo choca con la tela mientras se simula.
+    # El cuerpo (y `choques_extra`, ej. el peto) choca con la tela mientras se simula.
     choques = []
-    for p in B.partes():
+    for p in B.partes() + list(choques_extra):
         if not any(m.type == "COLLISION" for m in p.modifiers):
             p.modifiers.new("Choque", "COLLISION")
             p.collision.thickness_outer = 0.01
