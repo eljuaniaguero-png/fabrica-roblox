@@ -55,8 +55,12 @@ RECETAS = {
     # Remache
     "oxido": {"paneles": (0.09, 0.11), "remaches": True, "rayones": 0.8, "bordes": 0.6, "suciedad": 0.9, "grano": 0.4},
     "asfalto": {"trama": 0.5, "rayones": 0.0, "bordes": 0.2, "suciedad": 0.3, "grano": 0.0},
+    # Estela
+    "violeta": {"costuras": (0.08, 0.0), "trama": 0.4, "rayones": 0.0, "bordes": 0.35, "suciedad": 0.3, "grano": 0.0},
+    "violeta-oscuro": {"paneles": (0.06, 0.08), "rayones": 0.4, "bordes": 0.45, "suciedad": 0.35, "grano": 0.0},
+    "violeta-claro": {"rayones": 0.3, "bordes": 0.5, "suciedad": 0.25, "grano": 0.0},
 }
-SIN_HORNEAR = {"neon-cian", "neon-eclipse", "neon-aviso", "liquido-rojo"}  # brillan: se quedan con su material
+SIN_HORNEAR = {"neon-cian", "neon-eclipse", "neon-aviso", "liquido-rojo", "visor-cian"}  # brillan: se quedan con su material
 
 
 def _material_base(obj):

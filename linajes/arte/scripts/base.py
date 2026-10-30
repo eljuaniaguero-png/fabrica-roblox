@@ -77,6 +77,10 @@ MATERIALES = {
     "liga": {"hex": "2f6fdb", "rugosidad": 0.5},
     "cofradia": {"hex": "c2213a", "rugosidad": 0.5},
     "vigilantes": {"hex": "6b5ba8", "rugosidad": 0.5},
+    "violeta-oscuro": {"hex": "3d2a6b", "rugosidad": 0.35},  # Estela: casco
+    "violeta": {"hex": "5a3fa0", "rugosidad": 0.45},  # Estela: traje
+    "violeta-claro": {"hex": "9a82d8", "rugosidad": 0.4},  # Estela: rombo del emblema
+    "visor-cian": {"hex": "3fe0f0", "rugosidad": 0.05, "brillo": 1.5, "alfa": 0.55},
 }
 
 FONDO = "0e1016"
@@ -116,6 +120,9 @@ def material(nombre):
     if "brillo" in d:
         bsdf.inputs["Emission Color"].default_value = c
         bsdf.inputs["Emission Strength"].default_value = d["brillo"]
+    if "alfa" in d:  # translúcido (visores)
+        bsdf.inputs["Alpha"].default_value = d["alfa"]
+        mat.surface_render_method = "BLENDED"
     if d.get("rugosidad", 0.5) >= 1.0:  # "sin brillo": sin reflejo especular
         bsdf.inputs["Specular IOR Level"].default_value = 0.0
     mat.use_fake_user = True  # que quede guardado aunque nadie lo use

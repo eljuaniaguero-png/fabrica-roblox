@@ -220,6 +220,8 @@ SUFIJOS = {
     "neon-aviso": "Neon",
     "blanco-armadura": "Armadura",
     "liga": "Liga",
+    "visor-cian": "Visor",
+    "violeta-claro": "Rombo",
 }
 
 
