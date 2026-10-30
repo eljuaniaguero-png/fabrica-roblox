@@ -42,6 +42,11 @@ CALLEJÓN PELIGROSO:
 PASO 1: bocetos de todo en grilla, mi OK. PASO 2: detalle con el NIVEL DE DETALLE OBLIGATORIO + render
 de una cuadra de Corona con patrulla, cámaras y kiosco, y un callejón de Vórtice de noche, mi OK.
 PASO 3: exportá a linajes/arte/exports/calle-viva/<grupo>/<pieza>.fbx, commit y push.
+OBSIDIAN (en los pasos 1, 2 y 3): corré linajes/arte/scripts/obsidian.py -- <archivo> (deja el .glb y los
+renders en linajes/boveda/04 Personajes/<Nombre>/) y escribí o actualizá la nota <Nombre>.md con el
+modelo 3D para girar (bloque ```3D, igual que la de Remache), las vistas, los primeros planos, la tabla
+de triángulos y el estado. Sumá o actualizá su fila en 04 Personajes/Personajes.md. Abrí la nota en
+Obsidian con el conector y avisame que la mire ahí.
 ```
 
 ---

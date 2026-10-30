@@ -24,6 +24,11 @@ Todas tienen que verse bien combinadas con cualquiera de las otras.
 PASO 1: bocetos de todas en una grilla, mi OK. PASO 2: detalle y 6 combinaciones de ejemplo armadas,
 mi OK. PASO 3: exportá a linajes/arte/exports/creador/<tipo>/<pieza>.fbx. Además, 20 formas de emblema en
 2D (SVG simple, una sola tinta) en linajes/arte/emblemas/. Commit y push.
+OBSIDIAN (en los pasos 1, 2 y 3): corré linajes/arte/scripts/obsidian.py -- <archivo> (deja el .glb y los
+renders en linajes/boveda/04 Personajes/<Nombre>/) y escribí o actualizá la nota <Nombre>.md con el
+modelo 3D para girar (bloque ```3D, igual que la de Remache), las vistas, los primeros planos, la tabla
+de triángulos y el estado. Sumá o actualizá su fila en 04 Personajes/Personajes.md. Abrí la nota en
+Obsidian con el conector y avisame que la mire ahí.
 ```
 
 ---

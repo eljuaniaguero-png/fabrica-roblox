@@ -13,6 +13,11 @@ Modelá la ropa de este NPC sobre el maniquí R15 (es civil, no superhéroe), 12
 cada malla ≤ 20.000, un material por malla. PASO 1 boceto → mi OK → PASO 2 detalle + 3 vistas → mi OK →
 PASO 3 exportar a linajes/arte/exports/npc-[archivo]/, script en scripts/npcs/[archivo].py, commit y push.
 NPC: [pegá una fila de la tabla]
+OBSIDIAN (en los pasos 1, 2 y 3): corré linajes/arte/scripts/obsidian.py -- <archivo> (deja el .glb y los
+renders en linajes/boveda/04 Personajes/<Nombre>/) y escribí o actualizá la nota <Nombre>.md con el
+modelo 3D para girar (bloque ```3D, igual que la de Remache), las vistas, los primeros planos, la tabla
+de triángulos y el estado. Sumá o actualizá su fila en 04 Personajes/Personajes.md. Abrí la nota en
+Obsidian con el conector y avisame que la mire ahí.
 ```
 | Archivo | NPC (DC de trabajo → final) | Ropa y detalles |
 |---|---|---|

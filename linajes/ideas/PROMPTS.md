@@ -224,6 +224,11 @@ PASO 2: con mi OK, hacé el detalle completo cumpliendo el NIVEL DE DETALLE OBLI
 emblema y gancho. Tabla de triángulos por pieza. Mostramelo y esperá mi OK.
 PASO 3: exportá cada pieza a linajes/arte/exports/cuervo/<pieza>.fbx. Guardá el script en
 linajes/arte/scripts/personajes/cuervo.py. Commit "Linajes: traje de Cuervo" y push.
+OBSIDIAN (en los pasos 1, 2 y 3): corré linajes/arte/scripts/obsidian.py -- <archivo> (deja el .glb y los
+renders en linajes/boveda/04 Personajes/<Nombre>/) y escribí o actualizá la nota <Nombre>.md con el
+modelo 3D para girar (bloque ```3D, igual que la de Remache), las vistas, los primeros planos, la tabla
+de triángulos y el estado. Sumá o actualizá su fila en 04 Personajes/Personajes.md. Abrí la nota en
+Obsidian con el conector y avisame que la mire ahí.
 ```
 
 #### Prompt 4 💻 Centinela Solar (DC de trabajo: Superman) · Liga
@@ -255,6 +260,11 @@ PASO 1: boceto de bloques, 3 vistas, esperá mi OK.
 PASO 2: detalle completo con el NIVEL DE DETALLE OBLIGATORIO, 3 vistas + primeros planos de corona, emblema y capa. Tabla de tris. Esperá mi OK.
 PASO 3: exportá a linajes/arte/exports/centinela/, script en scripts/personajes/centinela.py,
 commit "Linajes: traje de Centinela Solar" y push.
+OBSIDIAN (en los pasos 1, 2 y 3): corré linajes/arte/scripts/obsidian.py -- <archivo> (deja el .glb y los
+renders en linajes/boveda/04 Personajes/<Nombre>/) y escribí o actualizá la nota <Nombre>.md con el
+modelo 3D para girar (bloque ```3D, igual que la de Remache), las vistas, los primeros planos, la tabla
+de triángulos y el estado. Sumá o actualizá su fila en 04 Personajes/Personajes.md. Abrí la nota en
+Obsidian con el conector y avisame que la mire ahí.
 ```
 
 #### Prompt 5 💻 Mascarada (DC de trabajo: Joker) · Cofradía · jefe
@@ -284,6 +294,11 @@ PASO 1: boceto, 3 vistas con la máscara 1, esperá mi OK.
 PASO 2: detalle con el NIVEL DE DETALLE OBLIGATORIO, 3 vistas + un render por máscara. Tabla de tris. Esperá mi OK.
 PASO 3: exportá a linajes/arte/exports/mascarada/, script en scripts/personajes/mascarada.py,
 commit "Linajes: traje de Mascarada" y push.
+OBSIDIAN (en los pasos 1, 2 y 3): corré linajes/arte/scripts/obsidian.py -- <archivo> (deja el .glb y los
+renders en linajes/boveda/04 Personajes/<Nombre>/) y escribí o actualizá la nota <Nombre>.md con el
+modelo 3D para girar (bloque ```3D, igual que la de Remache), las vistas, los primeros planos, la tabla
+de triángulos y el estado. Sumá o actualizá su fila en 04 Personajes/Personajes.md. Abrí la nota en
+Obsidian con el conector y avisame que la mire ahí.
 ```
 
 #### Prompt 6 💻 Remache (DC de trabajo: Bane) · Cofradía · jefe del Acto 1
@@ -312,6 +327,11 @@ PASO 1: boceto, 3 vistas al lado del maniquí normal (para ver el tamaño), espe
 PASO 2: detalle con el NIVEL DE DETALLE OBLIGATORIO, 3 vistas + primeros planos de brazo hidráulico y columna. Tabla de tris. Esperá mi OK.
 PASO 3: exportá a linajes/arte/exports/remache/, script en scripts/personajes/remache.py,
 commit "Linajes: traje de Remache" y push.
+OBSIDIAN (en los pasos 1, 2 y 3): corré linajes/arte/scripts/obsidian.py -- <archivo> (deja el .glb y los
+renders en linajes/boveda/04 Personajes/<Nombre>/) y escribí o actualizá la nota <Nombre>.md con el
+modelo 3D para girar (bloque ```3D, igual que la de Remache), las vistas, los primeros planos, la tabla
+de triángulos y el estado. Sumá o actualizá su fila en 04 Personajes/Personajes.md. Abrí la nota en
+Obsidian con el conector y avisame que la mire ahí.
 ```
 
 #### Prompts 7 a 18 💻 El resto de los personajes (mismo formato, ya completos)
@@ -334,6 +354,11 @@ PIEZAS:
 5. Mochila-condensador chica (UpperTorso, espalda) — 3.000 tris: acero con anillo neon-cian.
 TOTAL ≤ 31.000 tris. Colores: 70 % violetas, 20 % acero, 10 % neon-cian.
 Primeros planos del PASO 2: casco, emblema, botas.
+OBSIDIAN (en los pasos 1, 2 y 3): corré linajes/arte/scripts/obsidian.py -- <archivo> (deja el .glb y los
+renders en linajes/boveda/04 Personajes/<Nombre>/) y escribí o actualizá la nota <Nombre>.md con el
+modelo 3D para girar (bloque ```3D, igual que la de Remache), las vistas, los primeros planos, la tabla
+de triángulos y el estado. Sumá o actualizá su fila en 04 Personajes/Personajes.md. Abrí la nota en
+Obsidian con el conector y avisame que la mire ahí.
 ```
 
 **Prompt 8 · Atalanta** (DC de trabajo: Wonder Woman) · Liga · archivo `atalanta`
@@ -353,6 +378,11 @@ PIEZAS:
 7. Lanza (RightHand) — 2.000 tris: 6 studs de largo, asta de madera oscura, punta de bronce en hoja de laurel.
 TOTAL ≤ 32.000 tris. Colores: 60 % bronce, 20 % cuero, 20 % liga y oro.
 Primeros planos: casco, escudo, punta de lanza.
+OBSIDIAN (en los pasos 1, 2 y 3): corré linajes/arte/scripts/obsidian.py -- <archivo> (deja el .glb y los
+renders en linajes/boveda/04 Personajes/<Nombre>/) y escribí o actualizá la nota <Nombre>.md con el
+modelo 3D para girar (bloque ```3D, igual que la de Remache), las vistas, los primeros planos, la tabla
+de triángulos y el estado. Sumá o actualizá su fila en 04 Personajes/Personajes.md. Abrí la nota en
+Obsidian con el conector y avisame que la mire ahí.
 ```
 
 **Prompt 9 · Arquitecto** (DC de trabajo: Green Lantern) · Liga · archivo `arquitecto`
@@ -372,6 +402,11 @@ PIEZAS:
 7. Botas de obra (Feet) — 2.500 tris el par.
 TOTAL ≤ 32.000 tris. Colores: 50 % gris, 30 % acero, 20 % neon-cian y liga.
 Primeros planos: guantelete abierto y cerrado, casco, mochila.
+OBSIDIAN (en los pasos 1, 2 y 3): corré linajes/arte/scripts/obsidian.py -- <archivo> (deja el .glb y los
+renders en linajes/boveda/04 Personajes/<Nombre>/) y escribí o actualizá la nota <Nombre>.md con el
+modelo 3D para girar (bloque ```3D, igual que la de Remache), las vistas, los primeros planos, la tabla
+de triángulos y el estado. Sumá o actualizá su fila en 04 Personajes/Personajes.md. Abrí la nota en
+Obsidian con el conector y avisame que la mire ahí.
 ```
 
 **Prompt 10 · Bastión** (DC de trabajo: Cyborg) · Liga · archivo `bastion`
@@ -391,6 +426,11 @@ PIEZAS:
 7. EMBLEMA PROPIO en el chaleco — 500 tris: escudo de muralla (una torre) en liga.
 TOTAL ≤ 36.000 tris. Colores: 45 % acero, 35 % tela táctica oscura, 20 % liga y neon-cian.
 Primeros planos: cabeza, cañón abierto, pierna mecánica.
+OBSIDIAN (en los pasos 1, 2 y 3): corré linajes/arte/scripts/obsidian.py -- <archivo> (deja el .glb y los
+renders en linajes/boveda/04 Personajes/<Nombre>/) y escribí o actualizá la nota <Nombre>.md con el
+modelo 3D para girar (bloque ```3D, igual que la de Remache), las vistas, los primeros planos, la tabla
+de triángulos y el estado. Sumá o actualizá su fila en 04 Personajes/Personajes.md. Abrí la nota en
+Obsidian con el conector y avisame que la mire ahí.
 ```
 
 **Prompt 11 · Heredero Abisal** (DC de trabajo: Aquaman) · Liga · archivo `heredero`
@@ -410,6 +450,11 @@ PIEZAS:
 7. EMBLEMA PROPIO en el cinturón — 500 tris: una ola encerrada en un círculo.
 TOTAL ≤ 29.000 tris. Colores: 60 % azul petróleo, 30 % coral oscuro, 10 % neon-cian.
 Primeros planos: corona, aleta, arpón.
+OBSIDIAN (en los pasos 1, 2 y 3): corré linajes/arte/scripts/obsidian.py -- <archivo> (deja el .glb y los
+renders en linajes/boveda/04 Personajes/<Nombre>/) y escribí o actualizá la nota <Nombre>.md con el
+modelo 3D para girar (bloque ```3D, igual que la de Remache), las vistas, los primeros planos, la tabla
+de triángulos y el estado. Sumá o actualizá su fila en 04 Personajes/Personajes.md. Abrí la nota en
+Obsidian con el conector y avisame que la mire ahí.
 ```
 
 **Prompt 12 · Víctor Halden** (DC de trabajo: Lex Luthor) · Cofradía · archivo `halden`
@@ -427,6 +472,11 @@ PIEZAS VERSIÓN EXOARMADURA (escala 1,3x, ≤ 38.000 tris):
 4. Piernas con propulsores en los tobillos (Legs + Feet) — 8.000 tris.
 5. Capa corta de placas (espalda) — 3.000 tris.
 Primeros planos: casco, reactor, lanzamisiles abiertos. Renderizá las dos versiones lado a lado.
+OBSIDIAN (en los pasos 1, 2 y 3): corré linajes/arte/scripts/obsidian.py -- <archivo> (deja el .glb y los
+renders en linajes/boveda/04 Personajes/<Nombre>/) y escribí o actualizá la nota <Nombre>.md con el
+modelo 3D para girar (bloque ```3D, igual que la de Remache), las vistas, los primeros planos, la tabla
+de triángulos y el estado. Sumá o actualizá su fila en 04 Personajes/Personajes.md. Abrí la nota en
+Obsidian con el conector y avisame que la mire ahí.
 ```
 
 **Prompt 13 · El Albatros** (DC de trabajo: Pingüino) · Cofradía · archivo `albatros`
@@ -444,6 +494,11 @@ PIEZAS:
 6. EMBLEMA PROPIO en la gorra y el abrigo — 500 tris: un albatros con alas abiertas en oro.
 Escala del maniquí 0,9x de alto y 1,2x de ancho. TOTAL ≤ 24.000 tris.
 Primeros planos: gorra, bastón-arpón, emblema.
+OBSIDIAN (en los pasos 1, 2 y 3): corré linajes/arte/scripts/obsidian.py -- <archivo> (deja el .glb y los
+renders en linajes/boveda/04 Personajes/<Nombre>/) y escribí o actualizá la nota <Nombre>.md con el
+modelo 3D para girar (bloque ```3D, igual que la de Remache), las vistas, los primeros planos, la tabla
+de triángulos y el estado. Sumá o actualizá su fila en 04 Personajes/Personajes.md. Abrí la nota en
+Obsidian con el conector y avisame que la mire ahí.
 ```
 
 **Prompt 14 · Zarpa** (DC de trabajo: Catwoman) · Neutral · archivo `zarpa`
@@ -460,6 +515,11 @@ PIEZAS:
 5. Botas silenciosas (Feet) — 2.000 tris el par.
 6. EMBLEMA PROPIO en la riñonera — 500 tris: tres arañazos paralelos.
 TOTAL ≤ 26.000 tris. Primeros planos: antiparras, garras afuera, bufanda.
+OBSIDIAN (en los pasos 1, 2 y 3): corré linajes/arte/scripts/obsidian.py -- <archivo> (deja el .glb y los
+renders en linajes/boveda/04 Personajes/<Nombre>/) y escribí o actualizá la nota <Nombre>.md con el
+modelo 3D para girar (bloque ```3D, igual que la de Remache), las vistas, los primeros planos, la tabla
+de triángulos y el estado. Sumá o actualizá su fila en 04 Personajes/Personajes.md. Abrí la nota en
+Obsidian con el conector y avisame que la mire ahí.
 ```
 
 **Prompt 15 · Confeti** (DC de trabajo: Harley Quinn) · Cofradía · archivo `confeti`
@@ -477,6 +537,11 @@ PIEZAS:
 5. Botas de acróbata (Feet) — 2.000 tris.
 6. EMBLEMA PROPIO en la chaqueta — 500 tris: un confeti de 5 papelitos en estrella.
 TOTAL ≤ 25.000 tris. Primeros planos: mazo, rodete, chaqueta.
+OBSIDIAN (en los pasos 1, 2 y 3): corré linajes/arte/scripts/obsidian.py -- <archivo> (deja el .glb y los
+renders en linajes/boveda/04 Personajes/<Nombre>/) y escribí o actualizá la nota <Nombre>.md con el
+modelo 3D para girar (bloque ```3D, igual que la de Remache), las vistas, los primeros planos, la tabla
+de triángulos y el estado. Sumá o actualizá su fila en 04 Personajes/Personajes.md. Abrí la nota en
+Obsidian con el conector y avisame que la mire ahí.
 ```
 
 **Prompt 16 · Dualidad** (DC de trabajo: Dos Caras) · Cofradía · archivo `dualidad`
@@ -492,6 +557,11 @@ PIEZAS:
 3. Dado de dos caras (LeftHand) — 1.500 tris: un octaedro de cristal con un ojo grabado en cada mitad.
 4. Zapatos (Feet) — 2.000 tris: uno de cuero, uno de cristal.
 TOTAL ≤ 24.000 tris. Primeros planos: cara de frente, dado, línea de corte en el pecho.
+OBSIDIAN (en los pasos 1, 2 y 3): corré linajes/arte/scripts/obsidian.py -- <archivo> (deja el .glb y los
+renders en linajes/boveda/04 Personajes/<Nombre>/) y escribí o actualizá la nota <Nombre>.md con el
+modelo 3D para girar (bloque ```3D, igual que la de Remache), las vistas, los primeros planos, la tabla
+de triángulos y el estado. Sumá o actualizá su fila en 04 Personajes/Personajes.md. Abrí la nota en
+Obsidian con el conector y avisame que la mire ahí.
 ```
 
 **Prompt 17 · Gorrión** (DC de trabajo: Robin) · Vigilantes · archivo `gorrion`
@@ -507,6 +577,11 @@ PIEZAS:
 4. Guantes sin dedos y zapatillas (Hands + Feet) — 3.000 tris.
 5. EMBLEMA PROPIO — 500 tris: una pluma chica de gorrión en vigilantes.
 TOTAL ≤ 21.000 tris. Primeros planos: antifaz, boleadoras, capa.
+OBSIDIAN (en los pasos 1, 2 y 3): corré linajes/arte/scripts/obsidian.py -- <archivo> (deja el .glb y los
+renders en linajes/boveda/04 Personajes/<Nombre>/) y escribí o actualizá la nota <Nombre>.md con el
+modelo 3D para girar (bloque ```3D, igual que la de Remache), las vistas, los primeros planos, la tabla
+de triángulos y el estado. Sumá o actualizá su fila en 04 Personajes/Personajes.md. Abrí la nota en
+Obsidian con el conector y avisame que la mire ahí.
 ```
 
 **Prompt 18 · El Eclipsador** (DC de trabajo: Darkseid) · jefe final · archivo `eclipsador`
@@ -529,6 +604,11 @@ mismos nombres que R15). Pesos limpios en codos, rodillas y cuello.
 PASO 1: boceto de bloques al lado del maniquí, esperá mi OK. PASO 2: detalle + 3 vistas + primeros planos
 de cara, eclipse del pecho y manos. Probá el rig doblando brazos y piernas en un render. Esperá mi OK.
 PASO 3: exportá con el rig a linajes/arte/exports/eclipsador/, commit y push.
+OBSIDIAN (en los pasos 1, 2 y 3): corré linajes/arte/scripts/obsidian.py -- <archivo> (deja el .glb y los
+renders en linajes/boveda/04 Personajes/<Nombre>/) y escribí o actualizá la nota <Nombre>.md con el
+modelo 3D para girar (bloque ```3D, igual que la de Remache), las vistas, los primeros planos, la tabla
+de triángulos y el estado. Sumá o actualizá su fila en 04 Personajes/Personajes.md. Abrí la nota en
+Obsidian con el conector y avisame que la mire ahí.
 ```
 
 #### Prompt 19 💻 NPCs (uno por sesión, mismo formato)
@@ -538,6 +618,11 @@ Modelá la ropa de este NPC sobre el maniquí R15 (es civil, no superhéroe), 12
 cada malla ≤ 20.000, un material por malla. PASO 1 boceto → mi OK → PASO 2 detalle + 3 vistas → mi OK →
 PASO 3 exportar a linajes/arte/exports/npc-[archivo]/, script en scripts/npcs/[archivo].py, commit y push.
 NPC: [pegá una fila de la tabla]
+OBSIDIAN (en los pasos 1, 2 y 3): corré linajes/arte/scripts/obsidian.py -- <archivo> (deja el .glb y los
+renders en linajes/boveda/04 Personajes/<Nombre>/) y escribí o actualizá la nota <Nombre>.md con el
+modelo 3D para girar (bloque ```3D, igual que la de Remache), las vistas, los primeros planos, la tabla
+de triángulos y el estado. Sumá o actualizá su fila en 04 Personajes/Personajes.md. Abrí la nota en
+Obsidian con el conector y avisame que la mire ahí.
 ```
 | Archivo | NPC (DC de trabajo → final) | Ropa y detalles |
 |---|---|---|
@@ -558,6 +643,11 @@ Modelá este enemigo sobre el maniquí R15 (o con rig propio si no es humano), [
 3 VARIANTES de color (cambiá solo materiales, no mallas). Boceto → mi OK → detalle + 3 vistas de cada
 variante → mi OK → exportar a linajes/arte/exports/enemigo-[archivo]/, commit y push.
 ENEMIGO: [pegá una fila]
+OBSIDIAN (en los pasos 1, 2 y 3): corré linajes/arte/scripts/obsidian.py -- <archivo> (deja el .glb y los
+renders en linajes/boveda/04 Personajes/<Nombre>/) y escribí o actualizá la nota <Nombre>.md con el
+modelo 3D para girar (bloque ```3D, igual que la de Remache), las vistas, los primeros planos, la tabla
+de triángulos y el estado. Sumá o actualizá su fila en 04 Personajes/Personajes.md. Abrí la nota en
+Obsidian con el conector y avisame que la mire ahí.
 ```
 | Archivo | Enemigo | Tris | Detalles y variantes |
 |---|---|---|---|
@@ -598,6 +688,11 @@ Todas tienen que verse bien combinadas con cualquiera de las otras.
 PASO 1: bocetos de todas en una grilla, mi OK. PASO 2: detalle y 6 combinaciones de ejemplo armadas,
 mi OK. PASO 3: exportá a linajes/arte/exports/creador/<tipo>/<pieza>.fbx. Además, 20 formas de emblema en
 2D (SVG simple, una sola tinta) en linajes/arte/emblemas/. Commit y push.
+OBSIDIAN (en los pasos 1, 2 y 3): corré linajes/arte/scripts/obsidian.py -- <archivo> (deja el .glb y los
+renders en linajes/boveda/04 Personajes/<Nombre>/) y escribí o actualizá la nota <Nombre>.md con el
+modelo 3D para girar (bloque ```3D, igual que la de Remache), las vistas, los primeros planos, la tabla
+de triángulos y el estado. Sumá o actualizá su fila en 04 Personajes/Personajes.md. Abrí la nota en
+Obsidian con el conector y avisame que la mire ahí.
 ```
 
 #### Prompt 20d 💻 Civiles y testigos (la gente de la calle)
@@ -619,6 +714,11 @@ REGLAS: cada pieza con 2 canales de color (Color1, Color2) para variar por códi
 PASO 1: bocetos de todas las piezas en grilla + 6 civiles armados de ejemplo, mi OK.
 PASO 2: detalle con el NIVEL DE DETALLE OBLIGATORIO + render de una vereda con 12 civiles mezclados, mi OK.
 PASO 3: exportá a linajes/arte/exports/civiles/<tipo>/<pieza>.fbx, script scripts/civiles.py, commit y push.
+OBSIDIAN (en los pasos 1, 2 y 3): corré linajes/arte/scripts/obsidian.py -- <archivo> (deja el .glb y los
+renders en linajes/boveda/04 Personajes/<Nombre>/) y escribí o actualizá la nota <Nombre>.md con el
+modelo 3D para girar (bloque ```3D, igual que la de Remache), las vistas, los primeros planos, la tabla
+de triángulos y el estado. Sumá o actualizá su fila en 04 Personajes/Personajes.md. Abrí la nota en
+Obsidian con el conector y avisame que la mire ahí.
 ```
 
 #### Prompt 20e 💻 Vehículos y objetos de la calle viva
@@ -657,6 +757,11 @@ CALLEJÓN PELIGROSO:
 PASO 1: bocetos de todo en grilla, mi OK. PASO 2: detalle con el NIVEL DE DETALLE OBLIGATORIO + render
 de una cuadra de Corona con patrulla, cámaras y kiosco, y un callejón de Vórtice de noche, mi OK.
 PASO 3: exportá a linajes/arte/exports/calle-viva/<grupo>/<pieza>.fbx, commit y push.
+OBSIDIAN (en los pasos 1, 2 y 3): corré linajes/arte/scripts/obsidian.py -- <archivo> (deja el .glb y los
+renders en linajes/boveda/04 Personajes/<Nombre>/) y escribí o actualizá la nota <Nombre>.md con el
+modelo 3D para girar (bloque ```3D, igual que la de Remache), las vistas, los primeros planos, la tabla
+de triángulos y el estado. Sumá o actualizá su fila en 04 Personajes/Personajes.md. Abrí la nota en
+Obsidian con el conector y avisame que la mire ahí.
 ```
 
 ---
@@ -687,6 +792,11 @@ PASO 3: exportá a linajes/arte/exports/cuerpo/. En Studio, por código en linaj
 con este cuerpo (Roblox deja de cargar el avatar), el servidor lo arma con lo que eligió el jugador y
 reemplaza el script Animate por el nuestro. Probalo con Play: que aparezca el cuerpo propio y no el avatar.
 Captura, commit y push.
+OBSIDIAN (en los pasos 1, 2 y 3): corré linajes/arte/scripts/obsidian.py -- <archivo> (deja el .glb y los
+renders en linajes/boveda/04 Personajes/<Nombre>/) y escribí o actualizá la nota <Nombre>.md con el
+modelo 3D para girar (bloque ```3D, igual que la de Remache), las vistas, los primeros planos, la tabla
+de triángulos y el estado. Sumá o actualizá su fila en 04 Personajes/Personajes.md. Abrí la nota en
+Obsidian con el conector y avisame que la mire ahí.
 ```
 
 ### Fase D. Lugares en Blender (kits modulares)

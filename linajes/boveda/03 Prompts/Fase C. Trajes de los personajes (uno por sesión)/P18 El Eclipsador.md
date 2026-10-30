@@ -31,6 +31,11 @@ mismos nombres que R15). Pesos limpios en codos, rodillas y cuello.
 PASO 1: boceto de bloques al lado del maniquí, esperá mi OK. PASO 2: detalle + 3 vistas + primeros planos
 de cara, eclipse del pecho y manos. Probá el rig doblando brazos y piernas en un render. Esperá mi OK.
 PASO 3: exportá con el rig a linajes/arte/exports/eclipsador/, commit y push.
+OBSIDIAN (en los pasos 1, 2 y 3): corré linajes/arte/scripts/obsidian.py -- <archivo> (deja el .glb y los
+renders en linajes/boveda/04 Personajes/<Nombre>/) y escribí o actualizá la nota <Nombre>.md con el
+modelo 3D para girar (bloque ```3D, igual que la de Remache), las vistas, los primeros planos, la tabla
+de triángulos y el estado. Sumá o actualizá su fila en 04 Personajes/Personajes.md. Abrí la nota en
+Obsidian con el conector y avisame que la mire ahí.
 ```
 
 ---
