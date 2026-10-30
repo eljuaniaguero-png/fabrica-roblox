@@ -46,6 +46,8 @@ Decímelo acá ("más oscuro", "cambiá el color de la Liga", "subí los triáng
 
 ## Parte 3. Todos los prompts en orden (versión detallada)
 
+**Cambios de Juani (30 oct, 22:41):** mundo abierto con **3 ciudades** (Vórtice, Corona, Puerto Óxido) y la ciudad viva: lugares con interior, **policía y vigilancia** (civiles que llaman a la policía, cámaras, drones, Búsqueda de 1 a 5 estrellas), **callejones peligrosos**, **ladrones**, **atracos** y **noticias** de El Faro. La ficha (`linajes/ideas/ficha.md`) ahora es un documento único (v3) con secciones numeradas. Prompts nuevos o cambiados: 19, 19b, 20c, 21b, 22 a 25, 25b, 25c, 25d, 29b y 38b a 38e.
+
 **Cambios de Juani (30 oct, 20:00):** el juego no explica lo que conlleva lo que elegís; el Linaje te toca y la rama la elegís a ciegas; los Rasgos salen de tus estadísticas de juego; las Variantes se consiguen con condiciones secretas (prompts 36, 37, 37b, 37c y 39).
 
 **Cambios de Juani (30 oct, 19:56):** los principales son NPCs; el jugador se arma su propio héroe; poderes con Variantes, Rasgos, ramas de evolución, segundo poder y técnicas combinadas; todo muy personalizable y cada partida distinta (prompts 20b, 36, 36b, 37, 37b, 39, 41b y 42).
@@ -540,6 +542,9 @@ NPC: [pegá una fila de la tabla]
 | kessler | (propio) → Dra. Kessler | Delantal quirúrgico verde oscuro manchado, lupa de joyero en un ojo, brazo izquierdo con implante de acero, barbijo bajado |
 | brandt | Amanda Waller → Directora Brandt | Traje sastre negro, auricular, carpeta con sello de agencia (ojo dentro de un triángulo invertido), pelo corto |
 | senal | Oráculo → Señal | Campera de jean con parches, auriculares grandes, micrófono, rodeada de 3 pantallas chicas (props aparte) |
+| gargola | (propio) → Dueña del bar La Gárgola (informante) | Chaleco de cuero sobre camisa bordó, trenza larga gris, trapo al hombro, anillos de acero, tatuaje de gárgola en el antebrazo (textura) |
+| jefe-seguridad | (propio) → Jefe de seguridad del Banco Central | Uniforme azul marino con hombreras grises, gorra con visera, radio y linterna en el cinturón, credencial de Corona Corp |
+| editor | (propio) → Editor de El Faro (se puede sobornar) | Chaleco de lana, camisa arremangada, corbata floja, anteojos en la cabeza, lápiz detrás de la oreja |
 
 #### Prompt 20 💻 Enemigos comunes (uno por sesión)
 ```
@@ -559,11 +564,55 @@ ENEMIGO: [pegá una fila]
 | soldado-umbra | Soldado de Umbra | 10.000 | Armadura de obsidiana con grietas naranjas, casco sin cara, lanza negra |
 | criatura | Criatura abisal | 10.000 | Cuadrúpedo de 4 studs, piel petróleo con escamas, boca de anguila con luces cian. Rig propio de 4 patas |
 
+#### Prompt 19b 💻 Civiles de la calle (kit para mezclar, una sesión)
+```
+Leé linajes/arte/GUIA-ESTILO.md y la sección 7 de linajes/ideas/ficha.md (testigos que llaman a la policía).
+Guardá kit-base.blend como linajes/arte/blender/civiles.blend. Script en linajes/arte/scripts/npcs/civiles.py.
+Los civiles se ARMAN POR PIEZAS en el juego (muchos distintos con pocas mallas), sobre el maniquí R15:
+- 6 torsos (≤ 2.500 tris c/u): campera, saco de oficina, buzo con capucha, camisa a cuadros, chaleco de
+  trabajo naranja, piloto de lluvia.
+- 6 piernas (≤ 1.500): jean, pantalón de vestir, jogging, pollera, mameluco, bermuda.
+- 8 cabezas/pelo/sombreros (≤ 1.500): pelo corto, rodete, gorra, gorro de lana, sombrero, pelo largo,
+  pelado con barba, capucha puesta.
+- 6 accesorios (≤ 800): CELULAR en la mano (lo usan para llamar a la policía: pantalla con neon-cian),
+  paraguas abierto, bolsa de compras, maletín, mochila, café para llevar.
+REGLAS: cada pieza con 2 canales de color (materiales Color1 y Color2) para variar por código; un civil
+armado no pasa 6.000 tris; todos tienen que leerse en el celular como "gente común", sin nada heroico.
+Detalle con el NIVEL DE DETALLE OBLIGATORIO pero liviano (texturas 512 px).
+PASO 1: bocetos de todas las piezas en una grilla + 6 civiles armados de ejemplo. Mi OK.
+PASO 2: detalle + 3 vistas de los 6 civiles + primer plano del celular. Tabla de tris. Mi OK.
+PASO 3: exportá a linajes/arte/exports/civiles/<tipo>/<pieza>.fbx. Commit y push.
+```
+
+#### Prompt 20c 💻 Policía, vigilancia y ladrones (uno por sesión, mismo formato que el 20)
+```
+Leé linajes/arte/GUIA-ESTILO.md y la sección 7 de linajes/ideas/ficha.md. Guardá kit-base.blend como
+linajes/arte/blender/[archivo].blend, script en linajes/arte/scripts/npcs/[archivo].py.
+Modelá [ESTE]: [pegá una fila]. Policía y ladrones van sobre el maniquí R15 (para usar las animaciones
+del Prompt 29b); drones, cámaras y helicóptero con rig propio si se mueven.
+Tienen que LEERSE DE LEJOS en el celular: policía = luces azul y roja + casco o gorra con visera;
+ladrón = pañuelo o máscara + bolso que brilla un poco (neon-eclipse débil) cuando lleva botín.
+PASO 1 boceto → mi OK → PASO 2 detalle con el NIVEL DE DETALLE OBLIGATORIO + 3 vistas (de cada variante)
+→ mi OK → PASO 3 exportar a linajes/arte/exports/[archivo]/, commit y push.
+```
+| Archivo | Qué | Tris | Detalles y variantes |
+|---|---|---|---|
+| policia | Oficial de calle | 9.000 | Uniforme azul noche con chaleco gris, gorra con visera, placa, radio al hombro con luz roja chica, linterna, esposas en el cinturón. Variantes: Vórtice (gabardina en la lluvia), Corona (chaleco blanco reflectivo), Puerto (campera gastada) |
+| policia-escudo | Antidisturbios (3 estrellas) | 12.000 | Casco con visor, armadura de placas, escudo transparente con franja azul y bastón no letal |
+| agente-brandt | Unidad Brandt (5 estrellas) | 12.000 | Traje táctico negro, casco cerrado con visor neon-aviso, brazalete con el sello de la agencia (ojo en triángulo invertido) |
+| guardia | Guardia de seguridad (banco y joyería) | 8.000 | Uniforme marrón claro, gorra, chaleco con "SEGURIDAD" en textura, linterna |
+| dron-policia | Dron de vigilancia | 5.000 | Cuerpo de 1,2 studs con 4 hélices, reflector abajo, luces azul y roja, cámara con lente neon-cian. Rig: hélices y reflector giran |
+| camara | Cámara de seguridad (3 tipos) | 800 c/u | De pared con soporte, domo de techo, de poste con luz roja que parpadea. Versión rota (cables sueltos) |
+| carterista | Carterista | 7.000 | Campera liviana con capucha, guantes sin dedos, riñonera; la mano que roba con brillo leve |
+| motochorro | Motochorro (con la moto del Prompt 21b) | 7.000 | Casco integral oscuro con visor, campera inflable, mochila |
+| asaltante | Asaltante de callejón | 8.000 | Pasamontañas, buzo grande, bate (no letal), cadena. Variantes por color de buzo |
+| ladron-atraco | Banda de atraco (NPC y cosmético para jugadores) | 9.000 | Mono de trabajo, máscara de teatro (3 diseños propios: luna, zorro, grieta), bolso de lona con botín que brilla, taladro en la espalda |
+
 ---
 
 #### Prompt 20b 💻 Piezas del creador de personaje (para los jugadores)
 ```
-Leé linajes/arte/GUIA-ESTILO.md y la sección 0c de linajes/ideas/ficha.md. Los personajes principales son NPCs:
+Leé linajes/arte/GUIA-ESTILO.md y la sección 4 de linajes/ideas/ficha.md. Los personajes principales son NPCs:
 los jugadores se arman SU PROPIO héroe con piezas que se mezclan. Guardá kit-base.blend como
 linajes/arte/blender/creador.blend.
 Modelá, sobre el maniquí R15, piezas genéricas (no copias de ningún personaje) que encajen entre sí:
@@ -615,13 +664,98 @@ PASO 2: detalle de todo, render de la calle de muestra con la luz de noche, tabl
 PASO 3: exportá cada pieza a linajes/arte/exports/puerto-oxido/<pieza>.fbx, commit y push.
 ```
 
+#### Prompt 21b 💻 Vehículos (uno o dos por sesión)
+```
+Leé linajes/arte/GUIA-ESTILO.md y la sección 5d de linajes/ideas/ficha.md. Guardá kit-base.blend como
+linajes/arte/blender/vehiculos.blend, script en linajes/arte/scripts/props/vehiculos.py.
+Cada vehículo: carrocería en 1-2 mallas + RUEDAS SEPARADAS (para girarlas en Roblox) + puertas como piezas
+aparte si se abren. Pivote en el centro del piso. Tamaño pensado para el R15 (el maniquí tiene que entrar
+sentado: hacé un render con el maniquí al volante).
+VEHÍCULOS: [pegá una o dos filas]
+PASO 1 boceto al lado del maniquí → mi OK → PASO 2 detalle con el NIVEL DE DETALLE OBLIGATORIO + 3 vistas
++ render de noche con las luces prendidas → mi OK → PASO 3 exportar a linajes/arte/exports/vehiculos/<vehículo>/,
+commit y push.
+```
+| Vehículo | Tris | Detalles |
+|---|---|---|
+| Patrullero | 12.000 | Sedán azul noche y blanco, barra de luces azul y roja (neon, piezas separadas para parpadear), escudo propio de la policía de cada ciudad (estrella de 6 puntas con una V, una C o un ancla), defensa delantera |
+| 3 autos civiles | 8.000 c/u | Sedán viejo, hatchback, camioneta. 4 colores apagados cada uno. Uno con versión "sin ruedas, sobre ladrillos" (decoración) |
+| Moto | 5.000 | Urbana, faro redondo, asiento de cuero; versión del jugador con pintura de 3 canales de color |
+| Camión de caudales | 14.000 | Blindado gris con remaches, puerta trasera con cerradura grande (se abre en el atraco), luces amarillas |
+| Helicóptero de policía | 16.000 | Reflector abajo (pieza que gira), rotores separados, luces de posición |
+| Tren elevado | 18.000 por vagón | Vagón de pasajeros + vagón blindado (atraco del tren). Puertas corredizas, interior simple con asientos |
+| Moto y auto del jugador | 8.000 / 10.000 | Diseños propios, 3 canales de color y lugar para el emblema |
+
 #### Prompts 22 a 25 💻 Los otros lugares (mismo formato que el 21)
+**Para el mundo abierto (ficha, sección 3):** cada ciudad lleva además un **callejón peligroso** (oscuro, vapor, grafitis propios, cajas para trepar a los techos), **teléfonos públicos**, **cajeros**, **kioscos de diarios** y **cámaras** (props del 25c) y **puertas con interior** marcadas para el Prompt 25b. En el PASO 2 sumá un render de día y uno de noche de la calle de muestra.
 | Prompt | Lugar (DC de trabajo) | Kit modular | Edificios importantes | Clima |
 |---|---|---|---|---|
 | 22 | Ciudad Vórtice (Gotham) | Fachadas de ladrillo de 3 a 6 pisos con escaleras de incendio, callejón con contenedores de basura y vapor, techos con tanques de agua y antenas, gárgolas de cuervo, calle con alcantarillas | Comisaría (≤ 30.000), Torre del reloj (≤ 30.000), azotea con reflector que proyecta una pluma (≤ 8.000) | Noche cerrada, lluvia, luna grande atrás, niebla baja violeta (#2a2440) |
-| 23 | Distrito Corona (Metrópolis) | Rascacielos de vidrio modulares (bloques de 8 pisos apilables), vereda con senda peatonal, semáforos, líneas amarillas, árboles en canteros, paradas de colectivo | Torre Corona Corp (≤ 60.000 en 3 mallas, corona de 5 puntas arriba), edificio de El Faro con un faro de luz en la terraza (≤ 30.000), plaza central con fuente (≤ 10.000) | Día de sol con nubes, agua azul al costado, reflejos en los vidrios |
+| 23 | Corona (Metrópolis, ahora ciudad aparte) | Rascacielos de vidrio modulares (bloques de 8 pisos apilables), vereda con senda peatonal, semáforos, líneas amarillas, árboles en canteros, paradas de colectivo | Torre Corona Corp (≤ 60.000 en 3 mallas, corona de 5 puntas arriba), edificio de El Faro con un faro de luz en la terraza (≤ 30.000), plaza central con fuente (≤ 10.000) | Día de sol con nubes, agua azul al costado, reflejos en los vidrios |
 | 24 | Penal Islaroca (Arkham) | Muros de piedra con alambre, torres de guardia, celdas con rejas, pasillos con luces de emergencia | Bloque central de celdas (≤ 40.000), muelle del ferry (≤ 10.000) | Noche de tormenta, relámpagos, mar picado |
 | 25 | Bases de bando | — | El Nido (Batcueva → cueva bajo la torre del reloj con computadora gigante y perchas de cuervos), Faro Orbital (Atalaya → estación con ventanal a la Tierra), La Fundición (Salón del Mal → fundición abandonada con lava y trono) | Interior, luces del color del bando |
+
+#### Prompt 25b 💻 Interiores (uno o dos por sesión)
+```
+Leé linajes/arte/GUIA-ESTILO.md y la sección 3b de linajes/ideas/ficha.md. Guardá kit-base.blend como
+linajes/arte/blender/interior-[archivo].blend, script en linajes/arte/scripts/lugares/interiores.py.
+Cada interior es un módulo cerrado que se carga al entrar: PUERTA DE ENTRADA en el origen, mirando a -Y,
+y todo el interior detrás. Paredes en piezas de grilla de 4 studs (lisa, con ventana, con puerta, esquina),
+piso y techo aparte. Muebles como piezas sueltas (≤ 1.500 tris c/u). Un interior completo ≤ 60.000 tris en
+mallas de ≤ 20.000. Marcá con un Empty llamado PUNTO_<nombre> cada lugar que usa el código (NPC, cámara de
+seguridad, botón de alarma, caja fuerte, salida trasera).
+INTERIOR: [pegá una fila]
+PASO 1 boceto de bloques visto desde arriba (plano) y desde la puerta → mi OK → PASO 2 detalle + render
+desde la puerta y desde arriba, con la luz del lugar → mi OK → PASO 3 exportar a
+linajes/arte/exports/interiores/[archivo]/, commit y push.
+```
+| Archivo | Interior | Lo que tiene que tener |
+|---|---|---|
+| banco | Banco Central Corona | Hall con columnas de mármol claro y oro, mostradores con vidrio, sala de cámaras, pasillo de cajas de seguridad, **bóveda** con puerta circular gigante que se abre (pieza aparte, ≤ 12.000), lingotes y bolsas, salida por el techo y por las alcantarillas |
+| joyeria | Joyería Aurora | Vitrinas que se rompen (versión sana y rota), caja fuerte chica, trastienda, persiana metálica en la entrada |
+| comisaria | Comisaría de Vórtice | Recepción con rejas, oficina de Rivas (tablero de corcho con pistas), sala de pruebas, **calabozo** con 4 celdas (puertas que se abren), patio con patrulleros |
+| redaccion | El Faro (redacción) | Escritorios con máquinas, pared de tapas de diario (texturas propias), oficina del editor, imprenta con rodillos, escalera a la terraza del faro |
+| bar | Bar La Gárgola | Barra larga de madera, mesas de pool, reservados oscuros, pizarra de contratos, sótano con salida al callejón |
+| empeno | Casa de empeño | Estanterías llenas, mostrador con reja, balanza, cuarto de atrás para lavar dinero |
+| mercado-negro | Mercado Negro | Laberinto de contenedores abiertos con puestos (implantes, gadgets, Catalizadores), luces colgantes, carteles de neón propios |
+| subte | Subte abandonado | Andén con azulejos rotos, vagón viejo, vías, túneles que unen barrios (atajos), grafitis propios |
+| alcantarillas | Alcantarillas del puerto | Túneles con agua, pasarelas, compuerta grande hacia la Ciudad Hundida |
+| estacion | Estación del tren elevado | Andén, molinetes (se pueden saltar), boletería, cartel con el mapa de las 3 ciudades |
+
+#### Prompt 25c 💻 Props de calle: vigilancia, crimen y noticias (una sesión)
+```
+Leé linajes/arte/GUIA-ESTILO.md y las secciones 7 y 8 de linajes/ideas/ficha.md. Guardá kit-base.blend como
+linajes/arte/blender/props-ciudad.blend, script en linajes/arte/scripts/props/ciudad_viva.py.
+Props (≤ 3.000 tris c/u, texturas de 256 a 512 px), con versión de cada ciudad si cambia el estilo:
+1. Teléfono público con cabina (Vórtice: hierro verde; Corona: vidrio; Puerto: oxidado).
+2. Botón de alarma de pared con luz roja y sirena chica.
+3. Cajero automático (pantalla neon-cian; versión rota y abierta con billetes).
+4. Kiosco de diarios con pila de diarios (la tapa es una textura que se cambia por código) y revistas.
+5. Diario suelto (para agarrar y leer), doblado y abierto.
+6. Pantalla gigante de pared para Corona (marco de 16x9 studs; la imagen es una SurfaceGui, no textura).
+7. Radio de mesa y radio de auto (para la voz de Señal).
+8. Cinta de "NO PASAR", conos, valla y barricada de patrulleros.
+9. Herramientas de atraco: taladro de bóveda en trípode, bolso de lona abierto y cerrado, inhibidor de
+   cámaras (caja con antena), cortador de vidrio, explosivo de pintura (no letal, con colores).
+10. Vidriera de negocio sana y rota, persiana metálica cerrada y forzada.
+11. Cartel de "SE BUSCA" con foto (textura cambiable) y recompensa.
+12. Contenedor de basura de callejón, escalera de incendio modular, tubo de vapor (el vapor es partícula).
+PASO 1 bocetos en grilla → mi OK → PASO 2 detalle y una esquina de calle armada con todo, de noche → mi OK →
+PASO 3 exportar a linajes/arte/exports/props-ciudad/<prop>.fbx, commit y push.
+```
+
+#### Prompt 25d 💻 Caminos entre ciudades y zonas del medio
+```
+Leé linajes/arte/GUIA-ESTILO.md y la sección 3a de linajes/ideas/ficha.md. Guardá kit-base.blend como
+linajes/arte/blender/caminos.blend, script en linajes/arte/scripts/lugares/caminos.py.
+Kit modular en grilla de 8 studs: 1) puente colgante (tramo recto, pilar con cables, entrada; ≤ 15.000 por
+tramo), 2) autopista elevada (tramo recto, curva, rampa, columna; ≤ 4.000 c/u), 3) vía del tren elevado
+(tramo, curva, estación chica; ≤ 4.000 c/u), 4) Refinería abandonada (tanques, caños, chimenea; ≤ 25.000 en
+mallas de ≤ 20.000), 5) Bosque de antenas (antenas de radio oxidadas de 3 alturas, casilla; ≤ 3.000 c/u),
+6) Costa de chatarra (pilas de autos aplastados, barco encallado; ≤ 20.000).
+PASO 1 bocetos + un tramo armado de cada camino → mi OK → PASO 2 detalle + render del puente con Vórtice y
+Corona de fondo (en bloques) → mi OK → PASO 3 exportar a linajes/arte/exports/caminos/, commit y push.
+```
 
 ---
 
@@ -725,6 +859,28 @@ Señal teclea y mira pantallas. Cada uno además: "saludar al jugador" (30) y "h
 ENEMIGOS: matón (quieto, perseguir, 2 golpes con Impacto y Aviso, recibir golpe, derrota),
 dron (flotar loop, disparar), robot centinela (caminar pesado, escudo, golpe), criatura abisal (gatear,
 saltar y morder). Cierre igual que el Prompt 26.
+```
+
+#### Prompt 29b 💻 Animaciones de la ciudad viva: civiles, policía, ladrones y atracos
+```
+Abrí animaciones-base.blend y guardalo como linajes/arte/blender/animaciones-ciudad.blend. 30 fps, esqueleto
+R15, script en linajes/arte/scripts/animaciones/ciudad.py. Leé la sección 7 de linajes/ideas/ficha.md.
+CIVILES: caminar tranquilo (loop 36), mirar el celular caminando (loop 48), charlar parados (loop 90),
+ver un crimen (20: se frena, se tapa la boca), salir corriendo asustado (loop 18), LLAMAR A LA POLICÍA
+(loop 60: celular a la oreja, mira para todos lados, señala con la otra mano; marcador Llamada en el 30),
+agacharse y cubrirse (inicio 10 + loop 40), manos arriba (inicio 8 + loop 40), aplaudir a un héroe (40).
+POLICÍA: patrullar (loop 40, linterna), "¡Alto!" con la mano (24), perseguir corriendo (loop 18), ESPOSAR
+(40: agarra el brazo, marcador Esposa en el 28), hablar por la radio del hombro (loop 60), cubrirse con el
+escudo (inicio 6 + loop 30), golpe de bastón (20, Impacto 10, Aviso 4).
+LADRONES: arrebatar (16, marcador Robo en el 8), robar del bolsillo (30, mano lenta y quieta), correr con
+el bolso (loop 18), saltar una valla (24), subirse a la moto (20), forzar una cerradura (loop 40),
+amenazar con el bate (30, sin golpe).
+ATRACOS (también las usa el jugador): taladrar la bóveda (loop 60), hackear con la tablet (loop 60),
+cargar lingotes en el bolso (loop 40), tirar el explosivo de pintura (24, Impacto 14), escaparse por una
+ventana (30), aburrido en el calabozo (loop 120), escaparse de la celda (60).
+PRENSA: sacar foto con la cámara (20, marcador Foto en el 12), leer el diario (loop 90).
+Cierre igual que el Prompt 26 (tiras de cuadros → mi OK → exportar a linajes/arte/animaciones/ciudad/ →
+importar en Studio → decime qué publicar → IDs en Config.luau → commit y push).
 ```
 
 #### Prompt 30 💻 Animaciones de objetos (con código, no Blender)
@@ -856,7 +1012,7 @@ Si pelear no se siente bien, decime qué ajustarías antes de seguir.
 
 #### Prompt 36 💻 Ruleta: Linaje, Variante y Rasgos
 ```
-Leé la sección 0c de linajes/ideas/ficha.md. Conectá la ruleta del Prompt 33 al guardado.
+Leé la sección 4 de linajes/ideas/ficha.md. Conectá la ruleta del Prompt 33 al guardado.
 TODO LO ALEATORIO LO TIRA EL SERVIDOR, nunca el cliente, y las probabilidades se ven siempre en pantalla.
 1. LINAJE: Común 55, Poco común 28, Raro 12, Legendario 4, Mítico 1. Seguro: 40 tiradas sin Raro o mejor ⇒
    la siguiente es Raro o mejor. Fichas de Eclipse: 3 al empezar, 1 por nivel, 1 por misión, 3 por jefe.
@@ -881,7 +1037,7 @@ Todo validado en el servidor igual que el combo. Probá 1.000 tiradas simuladas 
 
 #### Prompt 36b 💻 Creador de personaje y personalización
 ```
-Leé la sección 0c de linajes/ideas/ficha.md. Usá las piezas del Prompt 20b.
+Leé la sección 4 de linajes/ideas/ficha.md. Usá las piezas del Prompt 20b.
 1. CREADOR (al crear un espacio y después en tu base): elegir casco, capa, peto, hombreras, guantes, botas
    sobre tu avatar de Roblox; 3 colores por pieza con selector libre (rueda de color + 12 colores de la guía);
    material por pieza (tela, cuero, metal, neon); largo de capa; vista girando.
@@ -915,7 +1071,7 @@ Aviso "Tenés N puntos de habilidad". Reinicio gratis del árbol (no de la rama)
 
 #### Prompt 37b 💻 Chips de técnica, segundo poder y técnicas combinadas
 ```
-Leé la sección 0c de linajes/ideas/ficha.md.
+Leé la sección 4 de linajes/ideas/ficha.md.
 1. CHIPS DE TÉCNICA: caen de jefes, élites y eventos. Cada chip tiene un efecto y un valor al azar dentro
    de un rango (ej: "+1 proyectil", "rebota 1-3 veces", "deja charco 2-4 s", "-10 a -25 % recarga",
    "+15 a +35 % área"). 2 ranuras por habilidad equipada. 30 efectos en Config.luau. Se pueden desarmar
@@ -935,7 +1091,7 @@ Mostrame la tabla completa de chips y combinaciones antes de programar. Commit y
 
 #### Prompt 37c 💻 Rasgos por estadísticas y Variantes secretas
 ```
-Leé la sección 0c de linajes/ideas/ficha.md, sobre todo "Cambios de Juani (30 oct, 20:00)".
+Leé las secciones 4c y 4d de linajes/ideas/ficha.md.
 1. ESTADÍSTICAS DE PARTIDA (guardadas por espacio, solo en el servidor): dash, esquives, parry, golpes
    recibidos, peleas ganadas con <15 % de vida, minutos de noche, trabajos por tipo, crímenes ayudados
    (de cada lado), uso de cada habilidad, derrotas, NPCs hablados, distancia recorrida, enemigos vencidos
@@ -979,9 +1135,68 @@ Para subir hay que tener la reputación Y hablar con el líder del bando (Liga: 
 Cofradía: Mascarada; Vigilantes: Cuervo), que da una prueba (pelea o misión corta).
 ```
 
+#### Prompt 38b 💻 Reputación completa y mapa abierto (graybox)
+```
+Leé las secciones 3, 6 y 11 de linajes/ideas/ficha.md.
+1. Reputaciones en el perfil: Fama (−1000 a 1000), 3 de ciudad, bando, 5 de grupo y confianza por NPC.
+   Un solo módulo del servidor (Reputacion.luau) que recibe "evento + ciudad" y aplica la tabla de
+   Config.luau (con rivales: subir con Policía baja con Pandillas). Títulos por tramo. Barras con título
+   en la ficha del personaje, sin números.
+2. Graybox del mapa abierto: 3 ciudades a ~1 km, puente, autopista y tren, barrios con atributo Peligro
+   (bajo/medio/alto), escondites con viaje rápido que se abren con reputación de ciudad, puertas con tag
+   Entrada que cargan el interior. StreamingEnabled y servidores de 30.
+3. Control de barrios: medidor por bando que suben las acciones de todos; ranking semanal en un DataStore.
+Probá con 3 jugadores en Local Server y en el emulador de celular. Commit y push.
+```
+
+#### Prompt 38c 💻 Ley y crimen: testigos, policía, Búsqueda y cárcel
+```
+Leé la sección 7 (7a a 7e) de linajes/ideas/ficha.md. Usá los modelos de los Prompts 19b, 20c y 21b y las
+animaciones del 29b.
+1. Civiles armados por piezas que caminan por las veredas con puntos de ruta. El SERVIDOR decide qué ve
+   cada civil (cono de 60° y 40 studs, raycast que no atraviese paredes). Si ve un crimen: susto → corre →
+   llama (4 s con ícono de teléfono arriba). Si lo asustás o un héroe lo protege, no llama. Sin señal en
+   los callejones: corre al teléfono público o al botón de alarma más cercano.
+2. Cámaras (tag Camara): graban crímenes en su cono; se apagan con el inhibidor, se hackean o se rompen.
+3. Búsqueda de 1 a 5 por ciudad con la tabla de 7c: patrulleros, escudos, drones, helicóptero, Unidad
+   Brandt. Baja sola si nadie te ve. Con 3 o más, los jugadores de Liga y Vigilantes ven tu zona y cobran
+   recompensa si te atrapan.
+4. Atrapado = calabozo o Penal, perdés el 25 % del dinero en mano; salís esperando, con fianza o escapando.
+5. Ladrones NPC (carterista, motochorro, asaltante, ladrón de autos) y callejones con emboscadas de noche.
+6. Dinero en mano, en el banco (cajeros) y sucio (se lava en el Mercado Negro o la casa de empeño).
+Todo validado en el servidor. Probá con 2 jugadores (uno roba, el otro atrapa) y en celular. Commit y push.
+```
+
+#### Prompt 38d 💻 Atracos
+```
+Leé la sección 7f de linajes/ideas/ficha.md. Interiores del 25b, props del 25c y animaciones del 29b.
+1. Un atraco chico (cajero), uno mediano (Joyería Aurora) y el grande (Banco Central Corona).
+2. Fases: preparación opcional (planos, reconocimiento con foto, herramientas), entrada sigilosa o ruidosa,
+   bóveda con un rol por jugador según su poder (hackear, taladrar con minijuego de temperatura, forzar,
+   abrir de lejos, vigilar), escape con Búsqueda 4 hasta un escondite, reparto en partes iguales.
+3. Atraco grande: 1 por hora por servidor, aviso a los héroes 2 min antes; los héroes pueden defender,
+   cortar el escape y devolver el botín (Fama, reputación de ciudad y de Policía, noticia).
+4. Recargas por lugar y por jugador en Config.luau. Nada de Robux en ningún paso.
+Probá el banco con 2 ladrones y 1 héroe en Local Server. Commit y push.
+```
+
+#### Prompt 38e 💻 Noticias de El Faro
+```
+Leé la sección 8 de linajes/ideas/ficha.md.
+1. Servidor de noticias: junta eventos (atracos, rescates, buscados, control de barrios, eventos que vienen)
+   y arma titulares con plantillas en linajes/src/shared/Noticias.luau. Los nombres de jugadores pasan por
+   TextService (filtro de Roblox). Máximo 1 titular por jugador por hora.
+2. Dónde se ven: kioscos (agarrás el diario y se abre en pantalla), pantallas gigantes de Corona
+   (SurfaceGui), radio de Señal (texto abajo + sonido) y la app Noticias del celular del jugador.
+3. Efectos: salir en un titular multiplica la Fama x1,5; las fotos del trabajo de Reportero hacen que la
+   noticia salga con su nombre; la Cofradía puede taparla (1 por día, caro); los Vigilantes, filtrarla.
+4. Edición del domingo: resumen semanal (3 héroes, 3 buscados, barrio más peleado).
+Probá con 2 jugadores generando noticias. Commit y push.
+```
+
 #### Prompt 39 💻 Prólogo: tu origen y la Noche del Eclipse
 ```
-Leé la sección 0c de linajes/ideas/ficha.md.
+Leé la sección 4 de linajes/ideas/ficha.md.
 1. Creador de personaje (Prompt 36b) con ropa de civil.
 2. ORIGEN AL AZAR (servidor): uno de 6 inicios (Estibador, Pasante, Repartidor, Fotógrafo, Preso, Acróbata),
    cada uno en su lugar del mapa, con 1 tarea corta de su vida normal (descargar 3 cajas, ordenar el
@@ -1033,7 +1248,7 @@ Recompensas: XP, dinero, chatarra, fichas de Eclipse, el traje "Cuervo del puert
 
 #### Prompt 41b 💻 Que cada partida sea distinta
 ```
-Leé la sección 0c de linajes/ideas/ficha.md.
+Leé la sección 4 de linajes/ideas/ficha.md.
 1. CRÍMENES AL AZAR: cada 3 a 5 min, en un distrito al azar: robo a banco, rehenes, pelea de pandillas,
    villano chico con modificadores. Marcador en el mapa, recompensa para todos los que ayudan, cuenta para
    la reputación (la Cofradía gana por ayudar al robo, la Liga por frenarlo).
@@ -1070,7 +1285,7 @@ Los trajes se ponen sobre el avatar del jugador, cada pieza soldada a su hueso d
    nombre de DC (Batman, Superman, Joker, Gotham, Arkham, Krypton, Liga de la Justicia, etc.) y
    reemplazalo por el nombre final de la ficha. Pasame la lista de lo que cambiaste.
 6. Ícono 512x512 y 3 miniaturas 1920x1080: renders de Blender de nuestros personajes en pose dramática
-   (Cuervo en una azotea con lluvia; Centinela Solar volando sobre Distrito Corona; los 3 líderes de bando
+   (Cuervo en una azotea con lluvia; Centinela Solar volando sobre Corona; los 3 líderes de bando
    juntos frente al eclipse), con el título "Linajes del Eclipse" en Saira Condensed.
 7. Decime paso a paso qué tengo que tocar en Creator Hub para publicar (privado primero, después
    público para 16+ o todas las edades).
@@ -1084,4 +1299,4 @@ Hacé el Acto [N] de linajes/ideas/ficha.md:
    en grupo que dice la ficha, y lo que se desbloquea (Linajes, nodos, trajes, Despertar).
 3. Números en Config.luau. Commit y push por cada parte que funcione.
 ```
-Orden: Acto 2 (Distrito Corona, Halden, Dualidad, raid del Penal Islaroca) → Acto 3 (Ciudad Hundida, Hespérides, Despertar 1 de los héroes, guerra de bandos opcional) → Acto 4 (invasión del Eclipsador cada 2 horas) → Acto 5 (Umbra, Despertar 2, raid final de 8) → Acto 6 (Ciudad rota y temporadas).
+Orden (ficha, sección 10: los 3 arcos de ciudad se juegan en cualquier orden): arco La torre de cristal (Corona, Halden, raid del Penal) y arco Las caras de la ciudad (Vórtice, Mascarada, Dualidad) → Acto 3 (Ciudad Hundida, Hespérides, Despertar 1 de los héroes, guerra de bandos opcional) → Acto 4 (invasión del Eclipsador cada 2 horas) → Acto 5 (Umbra, Despertar 2, raid final de 8) → Acto 6 (Ciudad rota y temporadas).
