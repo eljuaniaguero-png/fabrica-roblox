@@ -6,8 +6,8 @@ Uso:
     <blender.exe> -b --factory-startup -P linajes/arte/scripts/personajes/peinados.py
 
 Deja los 12 peinados en arte/blender/peinados.blend, el render renders/cuerpo_peinados_v2.png
-y el FBX exports/cuerpo/Peinados.fbx (con la cabeza del maniquí como "Ref_Head" para ubicarlos
-en Studio).
+y el FBX exports/cuerpo/Peinados.fbx con la cabeza clásica ("Head_Clasica", con la UV de la cara)
+y los 12 peinados hechos sobre ella.
 """
 
 import math
@@ -33,10 +33,43 @@ MEDIA = Vector((0.172, 0.172, 0.172))  # caja redondeada que envuelve la cabeza 
 POTENCIA = 6.0  # más alto = más cuadrada
 
 
+CABEZA_R, CABEZA_H, CABEZA_E = 0.168, 0.170, 0.45  # radio, media altura, redondez de arriba y abajo
+
+
+def cabeza_clasica(centro):
+    """Cabeza con la forma clásica de Roblox: cilindro con arriba y abajo redondeados. La cara
+    va con proyección de frente (cuerpo.uv_cabeza), así el decal de la cara se ve derecho."""
+    bm = bmesh.new()
+    lados, anillos = 32, 18
+    filas = []
+    for j in range(anillos + 1):
+        fi = -math.pi / 2 + math.pi * j / anillos
+        c, s_ = math.cos(fi), math.sin(fi)
+        h = abs(c) ** CABEZA_E
+        v = math.copysign(abs(s_) ** CABEZA_E, s_)
+        if j in (0, anillos):
+            filas.append([bm.verts.new(centro + Vector((0, 0, v * CABEZA_H)))])
+            continue
+        filas.append([bm.verts.new(centro + Vector((math.sin(2 * math.pi * i / lados) * h * CABEZA_R, -math.cos(2 * math.pi * i / lados) * h * CABEZA_R, v * CABEZA_H))) for i in range(lados)])
+    for a, b in zip(filas, filas[1:]):
+        if len(a) == 1:
+            for i in range(lados):
+                bm.faces.new((a[0], b[(i + 1) % lados], b[i]))
+        elif len(b) == 1:
+            for i in range(lados):
+                bm.faces.new((a[i], a[(i + 1) % lados], b[0]))
+        else:
+            for i in range(lados):
+                bm.faces.new((a[i], a[(i + 1) % lados], b[(i + 1) % lados], b[i]))
+    obj = T.malla("Head_Clasica", bm, "piel", "Head", suave=80)
+    return obj
+
+
 def radio_caja(d):
-    """Distancia del centro a la caja redondeada en la dirección `d` (superelipsoide)."""
-    s = (abs(d.x) / MEDIA.x) ** POTENCIA + (abs(d.y) / MEDIA.y) ** POTENCIA + (abs(d.z) / MEDIA.z) ** POTENCIA
-    return s ** (-1 / POTENCIA)
+    """Distancia del centro a la superficie de la cabeza clásica en la dirección `d` (más un
+    margen para que las caras planas de la malla no corten la curva)."""
+    hit = C.CRANEO.ray_cast(C.CENTRO + d * 0.6, -d)[0]
+    return (hit - C.CENTRO).length + 0.003 if hit else 0.17
 
 
 def _empujar(p):
@@ -120,7 +153,7 @@ def peinado(estilo, n):
     cas = C.casquete
     if estilo == "Corto":
         cas(bm, 1.470, 1.290, 0.006, lados, anillos)
-        corona(bm, r, 30, 0.07, 0.055, 0.15, 1.7, arriba=0.15, atras=0.6, abre=0.7)
+        corona(bm, r, 30, 0.07, 0.055, 0.05, 1.5, arriba=0.3, atras=0.45, abre=0.9, curva=0.2)
         flequillo(bm, r, 8, 0.07, 0.05)
     elif estilo == "Rapado":
         cas(bm, 1.480, 1.270, 0.003, lados + 10, anillos + 6)
@@ -212,12 +245,19 @@ def main():
     bpy.ops.wm.open_mainfile(filepath=B.KIT)
     bpy.ops.wm.save_as_mainfile(filepath=BLEND)
     B.configurar_luz()
-    cabeza = B.parte("Head")
-    minimo, maximo = B.caja_de([cabeza])
+    minimo, maximo = B.caja_de([B.parte("Head")])
     C.CENTRO = (minimo + maximo) / 2
-    C.RADIOS = (maximo - minimo) / 2
-    C.CRANEO = None
-    C._radio_craneo = radio_caja  # el pelo se apoya en la caja redondeada, no en el bisel
+    C.RADIOS = Vector((CABEZA_R, CABEZA_R, CABEZA_H))
+    B.parte("Head").hide_render = True
+    cabeza = cabeza_clasica(C.CENTRO)
+    from mathutils.bvhtree import BVHTree
+
+    bm = bmesh.new()
+    bm.from_mesh(cabeza.data)
+    bm.transform(cabeza.matrix_world)
+    C.CRANEO = BVHTree.FromBMesh(bm)
+    bm.free()
+    C._radio_craneo = radio_caja
     pelos = armar()
     print("Triángulos:", {o.name: B.triangulos(o) for o in pelos})
 
@@ -227,6 +267,7 @@ def main():
         o.hide_render = True
     for o in pelos:
         o.hide_render = True
+    cabeza.hide_render = True  # si no, se superpone con la copia de la primera celda
     celdas = []
     for i, o in enumerate(pelos):
         piel = C.mat_piel(f"_p{i}", C.TONOS[(i * 3) % 10], [C.cara(i % 12 + 1)])
@@ -239,16 +280,12 @@ def main():
     C._render_grilla("cuerpo_peinados_v2_espalda", celdas, 6, giro=180, paso=(0.50, 0.62), ancho_celda=340)
 
     # FBX para Studio: los 12 peinados y la cabeza como referencia de posición.
-    ref = cabeza.copy()
-    ref.data = cabeza.data.copy()
-    ref.name = "Ref_Head"
-    bpy.context.scene.collection.objects.link(ref)
+    ref = cabeza  # la cabeza clásica va en el mismo FBX: es la cabeza del personaje y la referencia
     for o in bpy.context.scene.objects:
         o.select_set(o in pelos or o is ref)
     bpy.context.view_layer.objects.active = ref
     ruta = os.path.join(B.EXPORTS, "cuerpo", "Peinados.fbx")
     bpy.ops.export_scene.fbx(filepath=ruta, use_selection=True, object_types={"MESH"}, global_scale=1 / B.STUD, apply_unit_scale=True, apply_scale_options="FBX_SCALE_UNITS", axis_forward="Z", axis_up="Y", bake_space_transform=True, mesh_smooth_type="FACE", add_leaf_bones=False, bake_anim=False)
-    bpy.data.objects.remove(ref)
     for o in pelos:
         o.hide_render = False
     for m in list(bpy.data.materials):

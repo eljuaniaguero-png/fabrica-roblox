@@ -16,7 +16,11 @@ El cuerpo que usan todos en vez del avatar de Roblox. **Estilo nuevo (pedido del
 
 ![[cuerpo_studio_cara.png]]
 
-### Peinados v2 (sobre la cabeza de Roblox)
+Cabeza clásica propia (forma de Roblox, hecha en Blender junto con el pelo para que calcen): el Rapado ahora se ve.
+
+![[cuerpo_studio_rapado.png]]
+
+### Peinados v2 (sobre la cabeza clásica)
 ![[cuerpo_peinados_v2.png]]
 
 ![[cuerpo_peinados_v2_espalda.png]]
