@@ -20,7 +20,14 @@ Cabeza clásica propia (forma de Roblox, hecha en Blender junto con el pelo para
 
 ![[cuerpo_studio_rapado.png]]
 
-### Peinados v2 (sobre la cabeza clásica)
+### Peinados v3: mechones gruesos y lisos en capas (pedido de Juani)
+Idea tomada de las referencias (mechones gruesos, raya, que enmarcan la cara), diseño propio. Ningún mechón entra en la cabeza ni baja a los hombros: lo largo va por detrás de la espalda.
+
+![[cuerpo_studio_melena.png]]
+
+![[cuerpo_studio_melena_espalda.png]]
+
+Los 12 (de frente y de espalda):
 ![[cuerpo_peinados_v2.png]]
 
 ![[cuerpo_peinados_v2_espalda.png]]
