@@ -71,6 +71,16 @@ function Civiles.recetaEspecial(nombre: string): Receta?
 	return receta
 end
 
+-- Tono de las costuras y bolsillos (canal C1o): el Color1 más oscuro, o más claro si la prenda
+-- ya es muy oscura.
+local function tonoDetalle(c: Color3): Color3
+	local _, _, brillo = c:ToHSV()
+	if brillo < C.TonoOscuroMinimo then
+		return c:Lerp(Color3.new(1, 1, 1), C.Claro)
+	end
+	return c:Lerp(Color3.new(0, 0, 0), C.Oscuro)
+end
+
 -- Pega una copia de cada malla de la pieza a la parte del cuerpo que dice su atributo Hueso.
 local function ponerPieza(personaje: Model, pieza: string, colores: { string }?): { BasePart }
 	local molde = carpetaDe(pieza)
@@ -93,6 +103,8 @@ local function ponerPieza(personaje: Model, pieza: string, colores: { string }?)
 		local canal = copia:GetAttribute("Canal")
 		if colores and canal == "C1" then
 			copia.Color = Color3.fromHex(colores[1])
+		elseif colores and canal == "C1o" then
+			copia.Color = tonoDetalle(Color3.fromHex(colores[1]))
 		elseif colores and canal == "C2" then
 			copia.Color = Color3.fromHex(colores[2])
 		end

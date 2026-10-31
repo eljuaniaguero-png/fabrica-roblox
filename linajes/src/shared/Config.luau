@@ -307,6 +307,11 @@ Config.Civiles = {
 	PaletaAccesorioPelo = { "f2a23a", "3fe0f0", "ff4d6d", "4ed68a", "e9e7e2", "a15cf0" },
 	-- Color2 fijo de algunas piezas (el chaleco de obra siempre es flúor).
 	Color2Fijo = { ChalecoObra = "e8f04a" },
+	-- Costuras, dobladillos y bolsillos (canal C1o) van en un tono del Color1: más oscuro, o más
+	-- claro si la prenda ya es muy oscura (brillo menor a TonoOscuroMinimo), así siempre contrastan.
+	Oscuro = 0.55,
+	Claro = 0.35,
+	TonoOscuroMinimo = 0.22,
 	-- Civiles especiales: piezas del kit + sus props (carpeta Especial.<Nombre>) con colores fijos.
 	Especiales = {
 		Diarero = {

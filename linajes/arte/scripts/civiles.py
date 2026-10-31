@@ -30,7 +30,10 @@ from mathutils import Matrix, Vector  # noqa: E402
 ARCHIVO = "civiles"
 BLEND = os.path.join(B.BLENDER, ARCHIVO + ".blend")
 PREFIJO = "Civ"
-CANALES = {"C1": "civil-color1", "C2": "civil-color2"}
+CANALES = {"C1": "civil-color1", "C2": "civil-color2", "C1o": "civil-color1"}
+# Cuánto se oscurece el Color1 para las costuras, dobladillos y bolsillos (C1o). Igual que
+# Config.Civiles.Oscuro en el juego.
+OSCURO = 0.55
 
 TOPES = {"arriba": 2500, "abajo": 1500, "cabeza": 1500, "accesorio": 800, "telefono": 300, "especial": 8000}
 # Los rulos tapan toda la cabeza con ~40 mechones: Juani los quiere llenos (1 nov). 1.900 es lo
@@ -114,6 +117,11 @@ def caja(parte, d, tam, giro=None):
 # --- Detalles de costura: van en todas las prendas (Juani pidió ropa con detalle, no lisa) ---
 
 
+def _osc(canal):
+    """Las costuras de una tela C1 van en C1o (Color1 oscuro): se leen como líneas pintadas."""
+    return "C1o" if canal == "C1" else canal
+
+
 def ribete(parte, z, extra, alto=0.024, sobra=0.008, adentro=None):
     """Banda finita alrededor de la parte a la altura `z` (en mundo): dobladillo, puño, cintura.
     Sobresale `sobra` de la tela, así se lee como una tira cosida. Es un anillo (abierto arriba y
@@ -156,16 +164,16 @@ def mangas(canal="C1", largo=True, extra=(0.03, 0.03, 0.01), corta=0.55):
     for lado in ("Left", "Right"):
         arriba_ = f"{lado}UpperArm"
         capas.append((arriba_, canal, forro(arriba_, extra, alto=1.0 if largo else corta, arriba=True, adentro=ad)))
-        capas.append((arriba_, canal, ribete(arriba_, lambda c, m: c.z + m.z - 0.03, extra, adentro=ad)))
-        capas.append((arriba_, canal, costura_lado(arriba_, extra)))
+        capas.append((arriba_, _osc(canal), ribete(arriba_, lambda c, m: c.z + m.z - 0.03, extra, adentro=ad)))
+        capas.append((arriba_, _osc(canal), costura_lado(arriba_, extra)))
         if largo:
             abajo_ = f"{lado}LowerArm"
             _, _, ca, ma = P(abajo_)
             capas.append((abajo_, canal, forro(abajo_, extra, adentro=ad, z_abajo=ca.z - ma.z + 0.004)))
-            capas.append((abajo_, canal, costura_lado(abajo_, extra)))
-            capas.append((abajo_, canal, ribete(abajo_, lambda c, m: c.z - m.z + 0.024, extra, alto=0.035, adentro=ad)))
+            capas.append((abajo_, _osc(canal), costura_lado(abajo_, extra)))
+            capas.append((abajo_, _osc(canal), ribete(abajo_, lambda c, m: c.z - m.z + 0.024, extra, alto=0.035, adentro=ad)))
         else:
-            capas.append((arriba_, canal, ribete(arriba_, lambda c, m: c.z + m.z - 2 * m.z * corta + 0.015, extra, adentro=ad)))
+            capas.append((arriba_, _osc(canal), ribete(arriba_, lambda c, m: c.z + m.z - 2 * m.z * corta + 0.015, extra, adentro=ad)))
     return capas
 
 
@@ -175,18 +183,18 @@ def piernas(canal="C1", extra=(0.03, 0.03, 0.01), corta=None):
     for lado in ("Left", "Right"):
         muslo = f"{lado}UpperLeg"
         capas.append((muslo, canal, forro(muslo, extra)))
-        capas.append((muslo, canal, costura_lado(muslo, extra)))
+        capas.append((muslo, _osc(canal), costura_lado(muslo, extra)))
         pierna = f"{lado}LowerLeg"
         if corta is None:
             capas.append((pierna, canal, forro(pierna, extra)))
-            capas.append((pierna, canal, costura_lado(pierna, extra)))
-            capas.append((pierna, canal, ribete(pierna, lambda c, m: c.z - m.z + 0.03, extra, alto=0.03)))
-            capas.append((pierna, canal, ribete(pierna, lambda c, m: c.z + m.z - 0.02, extra, alto=0.014, sobra=0.004)))
+            capas.append((pierna, _osc(canal), costura_lado(pierna, extra)))
+            capas.append((pierna, _osc(canal), ribete(pierna, lambda c, m: c.z - m.z + 0.03, extra, alto=0.03)))
+            capas.append((pierna, _osc(canal), ribete(pierna, lambda c, m: c.z + m.z - 0.02, extra, alto=0.014, sobra=0.004)))
         elif corta > 0:
             capas.append((pierna, canal, forro(pierna, extra, alto=corta, arriba=True)))
-            capas.append((pierna, canal, ribete(pierna, lambda c, m: c.z + m.z - 2 * m.z * corta + 0.015, extra, alto=0.03)))
+            capas.append((pierna, _osc(canal), ribete(pierna, lambda c, m: c.z + m.z - 2 * m.z * corta + 0.015, extra, alto=0.03)))
         else:
-            capas.append((muslo, canal, ribete(muslo, lambda c, m: c.z - m.z + 0.02, extra, alto=0.03)))
+            capas.append((muslo, _osc(canal), ribete(muslo, lambda c, m: c.z - m.z + 0.02, extra, alto=0.03)))
     return capas
 
 
@@ -201,19 +209,19 @@ def torso(canal="C1", extra=(0.035, 0.035, 0.015), cadera=True):
             s = -1 if cara == "frente" else 1
             T.caja(bm, Vector((c.x, c.y + s * (m.y + extra[1] + 0.003), mx.z - 0.09)), Vector((m.x * 2 + extra[0] * 2, 0.012, 0.012)))
 
-        capas.append(("UpperTorso", canal, canesu))
-    capas.append(("UpperTorso", canal, costura_lado("UpperTorso", extra, "espalda")))
+        capas.append(("UpperTorso", _osc(canal), canesu))
+    capas.append(("UpperTorso", _osc(canal), costura_lado("UpperTorso", extra, "espalda")))
     for s in (-1, 1):
 
         def costado(bm, s=s):
             _, _, c, m = P("UpperTorso")
             T.caja(bm, Vector((c.x + s * (m.x + extra[0] - 0.006), c.y + m.y + extra[1] - 0.01, c.z)), Vector((0.012, 0.024, m.z * 2)))
 
-        capas.append(("UpperTorso", canal, costado))
+        capas.append(("UpperTorso", _osc(canal), costado))
     if cadera:
         capas += cadera_arriba(canal, max(extra[1], CAPA_CADERA))
     else:
-        capas.append(("UpperTorso", canal, ribete("UpperTorso", lambda c, m: c.z - m.z + 0.025, extra, alto=0.03)))
+        capas.append(("UpperTorso", _osc(canal), ribete("UpperTorso", lambda c, m: c.z - m.z + 0.025, extra, alto=0.03)))
     return capas
 
 
@@ -311,7 +319,7 @@ def presillas(dy=0.012):
 def puños(canal="C2", alto=0.05):
     """Puño ancho (campera, buzo): anillo abierto en la punta de la manga."""
     return [
-        (f"{lado}LowerArm", canal, ribete(f"{lado}LowerArm", lambda c, m: c.z - m.z + alto + 0.004, (0.045, 0.045), alto=alto * 2, sobra=0.0, adentro=MANGA_ADENTRO))
+        (f"{lado}LowerArm", _osc(canal), ribete(f"{lado}LowerArm", lambda c, m: c.z - m.z + alto + 0.004, (0.045, 0.045), alto=alto * 2, sobra=0.0, adentro=MANGA_ADENTRO))
         for lado in ("Left", "Right")
     ]
 
@@ -324,7 +332,7 @@ def cadera_arriba(canal="C1", y_extra=CAPA_CADERA, x_extra=0.062, baja=0.03):
     ext = (x_extra, y_extra, 0.0)
     return [
         ("LowerTorso", canal, forro("LowerTorso", ext, z_abajo=lc.z - lm.z - baja, abierto_abajo=True, abierto_arriba=True)),
-        ("LowerTorso", canal, ribete("LowerTorso", lambda c, m: c.z - m.z - baja + 0.013, (x_extra, y_extra), alto=0.024, sobra=0.006)),
+        ("LowerTorso", _osc(canal), ribete("LowerTorso", lambda c, m: c.z - m.z - baja + 0.013, (x_extra, y_extra), alto=0.024, sobra=0.006)),
     ]
 
 
@@ -346,11 +354,11 @@ def arriba():
     piezas["CamperaJean"] = torso() + mangas() + [
         ("UpperTorso", "C1", cuello_volcado(0.05)),
         ("UpperTorso", "C2", botones("UpperTorso", 5, 0.0, 0.05, 0.013, 0.7, -0.9)),
-        ("UpperTorso", "C1", bolsillo_pecho(-1, 0.05)),
-        ("UpperTorso", "C1", bolsillo_pecho(1, 0.05)),
-        ("UpperTorso", "C1", tapeta(0.042)),
-        ("LowerTorso", "C1", bolsillos_bajos(0.065, tapa=False)),
-        *puños("C1"),
+        ("UpperTorso", "C1o", bolsillo_pecho(-1, 0.05)),
+        ("UpperTorso", "C1o", bolsillo_pecho(1, 0.05)),
+        ("UpperTorso", "C1o", tapeta(0.042)),
+        ("LowerTorso", "C1o", bolsillos_bajos(0.065, tapa=False)),
+        *puños("C1o"),
     ]
 
     def camisa_corbata(bm):
@@ -363,10 +371,10 @@ def arriba():
         *cadera_arriba("C1", CAPA_CADERA, baja=0.03),
         ("UpperTorso", "C1", solapas),
         ("UpperTorso", "C2", camisa_corbata),
-        ("LowerTorso", "C1", botones("LowerTorso", 2, 0.0, 0.06, 0.012, 0.6, 0.2)),
-        ("LowerTorso", "C1", bolsillos_bajos(0.065)),
-        ("UpperTorso", "C1", bolsillo_pecho(1, 0.045)),
-        ("LowerTorso", "C1", costura_lado("LowerTorso", (0.05, 0.05), "espalda")),  # tajo de atrás
+        ("LowerTorso", "C1o", botones("LowerTorso", 2, 0.0, 0.06, 0.012, 0.6, 0.2)),
+        ("LowerTorso", "C1o", bolsillos_bajos(0.065)),
+        ("UpperTorso", "C1o", bolsillo_pecho(1, 0.045)),
+        ("LowerTorso", "C1o", costura_lado("LowerTorso", (0.05, 0.05), "espalda")),  # tajo de atrás
         *mangas(extra=(0.035, 0.035, 0.01)),
         *botones_manga(),
     ]
@@ -390,8 +398,8 @@ def arriba():
     piezas["BuzoCapucha"] = torso(extra=(0.045, 0.045, 0.02)) + mangas(extra=(0.04, 0.04, 0.01)) + [
         ("UpperTorso", "C1", capucha),
         ("UpperTorso", "C2", canguro),
-        ("LowerTorso", "C1", elastico),
-        *puños("C1"),
+        ("LowerTorso", "C1o", elastico),
+        *puños("C1o"),
     ]
 
     def cuadros_torso(bm):
@@ -415,7 +423,7 @@ def arriba():
         ("UpperTorso", "C2", cuadros_torso),
         ("LeftUpperArm", "C2", cuadros_brazos("Left")),
         ("RightUpperArm", "C2", cuadros_brazos("Right")),
-        ("UpperTorso", "C1", botones("UpperTorso", 5, 0.0, 0.04, 0.009, 0.7, -0.9)),
+        ("UpperTorso", "C1o", botones("UpperTorso", 5, 0.0, 0.04, 0.009, 0.7, -0.9)),
     ]
 
     def falda(bm):
@@ -444,8 +452,8 @@ def arriba():
         ("LowerTorso", "C2", cinto),
         ("UpperTorso", "C2", botones("UpperTorso", 3, -0.09, 0.06, 0.012, 0.5, -0.6)),
         ("UpperTorso", "C2", botones("UpperTorso", 3, 0.09, 0.06, 0.012, 0.5, -0.6)),
-        ("UpperTorso", "C1", charreteras),
-        ("LowerTorso", "C1", bolsillos_bajos(0.075)),
+        ("UpperTorso", "C1o", charreteras),
+        ("LowerTorso", "C1o", bolsillos_bajos(0.075)),
         *mangas(extra=(0.04, 0.04, 0.01)),
         *botones_manga((0.04, 0.04, 0.01), 2),
     ]
@@ -482,7 +490,7 @@ def arriba():
         for s in (-1, 1):
             T.caja(bm, Vector((uc.x + s * 0.12, uc.y - um.y * 0.3, z)), Vector((0.035, um.y * 1.2, 0.022)))
 
-    piezas["RemeraEstampa"] = torso() + mangas(largo=False) + [("UpperTorso", "C2", estampa), ("UpperTorso", "C1", cuello_redondo)]
+    piezas["RemeraEstampa"] = torso() + mangas(largo=False) + [("UpperTorso", "C2", estampa), ("UpperTorso", "C1o", cuello_redondo)]
 
     def cuello_v(bm):
         for s in (-1, 1):
@@ -498,7 +506,7 @@ def arriba():
     piezas["UniformeEnfermeria"] = torso() + mangas(largo=False) + [
         ("UpperTorso", "C2", cuello_v),
         ("UpperTorso", "C2", bolsillo_enf),
-        ("LowerTorso", "C1", bolsillos_bajos(0.065, tapa=False)),
+        ("LowerTorso", "C1o", bolsillos_bajos(0.065, tapa=False)),
     ]
     return {k: ("arriba", v) for k, v in piezas.items()}
 
@@ -544,12 +552,12 @@ def abajo():
     piezas["Jean"] = [
         cadera,
         ("LowerTorso", "C2", cinturon),
-        ("LowerTorso", "C1", presillas()),
-        ("LowerTorso", "C1", bolsillos_jean),
+        ("LowerTorso", "C1o", presillas()),
+        ("LowerTorso", "C1o", bolsillos_jean),
         ("LowerTorso", "acero", remaches_jean),
         *piernas(),
-        ("LeftUpperLeg", "C1", costura("Left")),
-        ("RightUpperLeg", "C1", costura("Right")),
+        ("LeftUpperLeg", "C1o", costura("Left")),
+        ("RightUpperLeg", "C1o", costura("Right")),
     ]
 
     def raya(lado):
@@ -571,11 +579,11 @@ def abajo():
     piezas["PantalonVestir"] = [
         cadera,
         ("LowerTorso", "C2", cinturon),
-        ("LowerTorso", "C1", presillas()),
-        ("LowerTorso", "C1", bolsillos_vestir),
+        ("LowerTorso", "C1o", presillas()),
+        ("LowerTorso", "C1o", bolsillos_vestir),
         *piernas(extra=(0.035, 0.035, 0.01)),
-        ("LeftUpperLeg", "C1", raya("Left")),
-        ("RightUpperLeg", "C1", raya("Right")),
+        ("LeftUpperLeg", "C1o", raya("Left")),
+        ("RightUpperLeg", "C1o", raya("Right")),
     ]
 
     def _anillos_pollera():
@@ -606,7 +614,7 @@ def abajo():
         # Dobladillo abajo.
         caja_tela(bm, Vector((lc.x - x2 - 0.006, lc.y - y2 - 0.006, z2 + 0.004)), Vector((lc.x + x2 + 0.006, lc.y + y2 + 0.006, z2 + 0.028)), True, True)
 
-    piezas["Pollera"] = [("LowerTorso", "C1", pollera), ("LowerTorso", "C1", tablas), *medias]
+    piezas["Pollera"] = [("LowerTorso", "C1", pollera), ("LowerTorso", "C1o", tablas), *medias]
 
     def franja(lado):
         def armar(bm):
@@ -629,7 +637,7 @@ def abajo():
             _, _, c, m = P(f"{lado}LowerLeg")
             T.caja(bm, Vector((c.x, c.y, c.z - m.z + 0.04)), Vector((m.x + 0.05, m.y + 0.05, 0.04)) * 2)
 
-        puños_j.append((f"{lado}LowerLeg", "C1", puño_pierna))
+        puños_j.append((f"{lado}LowerLeg", "C1o", puño_pierna))
     piezas["Jogging"] = [cadera, ("LowerTorso", "C2", cordon), *piernas(extra=(0.04, 0.04, 0.01)), *puños_j, ("LeftUpperLeg", "C2", franja("Left")), ("RightUpperLeg", "C2", franja("Right"))]
     def cargo(lado):
         # Bolsillo cargo al costado del muslo, con tapa y botón.
@@ -646,10 +654,10 @@ def abajo():
     piezas["Bermuda"] = [
         cadera,
         ("LowerTorso", "C2", cinturon),
-        ("LowerTorso", "C1", presillas()),
+        ("LowerTorso", "C1o", presillas()),
         *piernas(extra=(0.045, 0.045, 0.01), corta=0.3),
-        ("LeftUpperLeg", "C1", cargo("Left")),
-        ("RightUpperLeg", "C1", cargo("Right")),
+        ("LeftUpperLeg", "C1o", cargo("Left")),
+        ("RightUpperLeg", "C1o", cargo("Right")),
     ]
 
     _, utx, uc, um = P("UpperTorso")
@@ -678,8 +686,8 @@ def abajo():
         ("UpperTorso", "C1", pechera),
         ("UpperTorso", "C2", tirantes),
         *piernas(extra=(0.045, 0.045, 0.01)),
-        ("LeftLowerLeg", "C1", rodilleras("Left")),
-        ("RightLowerLeg", "C1", rodilleras("Right")),
+        ("LeftLowerLeg", "C1o", rodilleras("Left")),
+        ("RightLowerLeg", "C1o", rodilleras("Right")),
     ]
     return {k: ("abajo", v) for k, v in piezas.items()}
 
@@ -708,7 +716,7 @@ def cabezas():
         T.caja(bm, Vector((hc.x, hc.y - ry - 0.004, hx.z - hm.z * 0.25)), Vector((r * 2, 0.008, 0.02)))  # banda
 
     zg = hx.z - hm.z * 0.25
-    piezas["Gorra"] = [("Head", "C1", copa(zg, hm.z * 0.45)), ("Head", "C1", costuras_gorra), ("Head", "C2", visera)]
+    piezas["Gorra"] = [("Head", "C1", copa(zg, hm.z * 0.45)), ("Head", "C1o", costuras_gorra), ("Head", "C2", visera)]
 
     def borde_lana(bm):
         # Borde doblado (anillo abierto, la copa pasa por adentro) y pompón de cantos rectos.
@@ -721,7 +729,7 @@ def cabezas():
             for sy in (-1, 1):
                 T.caja(bm, Vector((hc.x + k * r * 0.28, hc.y + sy * (ry + 0.002), hx.z - hm.z * 0.05)), Vector((0.01, 0.006, hm.z * 0.75)))
 
-    piezas["GorroLana"] = [("Head", "C1", copa(hx.z - hm.z * 0.15, hm.z * 0.63)), ("Head", "C1", tejido), ("Head", "C2", borde_lana)]
+    piezas["GorroLana"] = [("Head", "C1", copa(hx.z - hm.z * 0.15, hm.z * 0.63)), ("Head", "C1o", tejido), ("Head", "C2", borde_lana)]
 
     def pelo_base(alto=0.45, dy=0.015, extra=0.0):
         # Casco de pelo de cantos rectos (arriba y a los costados; la cara queda libre).
@@ -1307,7 +1315,7 @@ def material_tenido(base, hex_):
 
 
 def _canal(o):
-    for c in CANALES:
+    for c in sorted(CANALES, key=len, reverse=True):
         if o.name.endswith("_" + c):
             return c
     return None
@@ -1332,7 +1340,15 @@ def civil(piezas_kit, nombre_piezas, colores, x=0.0, y=0.0, giro=0.0):
         canal = _canal(o)
         if canal:
             dueño = next(n for n in nombre_piezas if o in piezas_kit[n][1])
-            hex_ = colores.get(dueño, ("c9c6c0", "7a7d84"))[0 if canal == "C1" else 1]
+            par = colores.get(dueño, ("c9c6c0", "7a7d84"))
+            hex_ = par[1] if canal == "C2" else par[0]
+            if canal == "C1o":  # tono de detalle, como lo calcula el juego (Civiles.luau)
+                rgb = [int(hex_[i : i + 2], 16) for i in (0, 2, 4)]
+                if max(rgb) / 255 < 0.22:  # prenda muy oscura: el detalle va más claro
+                    rgb = [v + (255 - v) * 0.35 for v in rgb]
+                else:
+                    rgb = [v * (1 - OSCURO) for v in rgb]
+                hex_ = "".join(f"{int(v):02x}" for v in rgb)
             c.material_slots[0].link = "OBJECT"
             c.material_slots[0].material = material_tenido(o.material_slots[0].material, hex_)
         objs.append(c)
