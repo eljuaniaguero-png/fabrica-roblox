@@ -16,6 +16,7 @@ Una nota por personaje, con su **modelo 3D para girar**, sus renders y sus datos
 | [[Tano]] | Civil (NPC) | 19.579 de 20.000 | Terminado y exportado |
 | [[Matón del puerto]] | Cofradía (enemigo, 3 variantes) | 7.770 de 8.000 | Terminado y exportado |
 | [[Matón con implantes]] | Cofradía (enemigo, 3 variantes) | 9.728 de 10.000 | Terminado y exportado |
+| [[Civiles]] | Civiles (kit + 3 especiales) | Civil: hasta 5.952 de 6.000 | Terminado y exportado |
 | [[Cuerpo propio]] | Todos | Cuerpo de Roblox + pelo 1.006 a 1.896 | En el juego (StarterCharacter, v3) |
 
 Los que faltan están en [[Elenco]] y en [[Todos los prompts]].

@@ -97,6 +97,11 @@ MATERIALES = {
     "lana-roja": {"hex": "a3312a", "rugosidad": 1.0},  # Matón: gorro (variante 1)
     "lana-verde": {"hex": "3d6b3f", "rugosidad": 1.0},  # Matón: gorro (variante 2)
     "lana-gris": {"hex": "7a7d84", "rugosidad": 1.0},  # Matón: gorro (variante 3)
+    "civil-color1": {"hex": "d6d6d6", "rugosidad": 0.85},  # Civiles: canal 1 (el juego lo pinta)
+    "civil-color2": {"hex": "d6d6d6", "rugosidad": 0.7},  # Civiles: canal 2 (el juego lo pinta)
+    "diario": {"hex": "dcd8cc", "rugosidad": 0.95},  # Civiles: diarios del carrito
+    "pan": {"hex": "c8904a", "rugosidad": 0.8},  # Civiles: pan de los panchos
+    "salchicha": {"hex": "9a3b26", "rugosidad": 0.5},  # Civiles: salchichas
     "piel": {"hex": "c68a62", "rugosidad": 0.6},
     "pelo": {"hex": "3a2a20", "rugosidad": 0.55},  # cuerpo propio: color libre en el juego  # cuerpo propio: tono medio (los 10 van en Config.luau)
 }

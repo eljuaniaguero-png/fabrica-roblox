@@ -71,6 +71,9 @@ RECETAS = {
     "mameluco": {"costuras": (0.09, 0.0), "trama": 1.0, "rayones": 0.0, "bordes": 0.35, "suciedad": 0.95, "grano": 0.0},
     "cuero-claro": {"costuras": (0.07, 0.0), "trama": 0.0, "rayones": 0.5, "bordes": 0.55, "suciedad": 0.7, "grano": 1.0},
     "trapo-rojo": {"trama": 1.0, "rayones": 0.0, "bordes": 0.2, "suciedad": 0.9, "grano": 0.0},
+    "civil-color1": {"costuras": (0.09, 0.0), "trama": 1.0, "rayones": 0.0, "bordes": 0.35, "suciedad": 0.35, "grano": 0.0},  # Civiles
+    "civil-color2": {"costuras": (0.09, 0.0), "trama": 0.5, "rayones": 0.2, "bordes": 0.4, "suciedad": 0.35, "grano": 0.0},
+    "diario": {"trama": 0.3, "rayones": 0.0, "bordes": 0.2, "suciedad": 0.4, "grano": 0.0},
     "campera": {"costuras": (0.07, 0.0), "trama": 0.0, "rayones": 0.6, "bordes": 0.6, "suciedad": 0.5, "grano": 1.0},  # Matón
     "jean": {"costuras": (0.1, 0.0), "trama": 1.0, "rayones": 0.0, "bordes": 0.5, "suciedad": 0.7, "grano": 0.0},
     "panuelo": {"trama": 1.0, "rayones": 0.0, "bordes": 0.2, "suciedad": 0.8, "grano": 0.0},
