@@ -43,6 +43,7 @@ NOMBRES = {
     "cuerpo": "Cuerpo propio",
     "npc-tano": "Tano",
     "enemigo-maton": "Matón del puerto",
+    "enemigo-maton-implantes": "Matón con implantes",
 }
 
 

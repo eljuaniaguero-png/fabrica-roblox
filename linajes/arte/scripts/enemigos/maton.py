@@ -291,10 +291,10 @@ def d_panuelo():
     return T.pieza(f"{NOMBRE}_Panuelo", "Head", [("panuelo", tela)])
 
 
-def d_cadena():
-    """Cadena gruesa: dos vueltas en el puño derecho y 10 eslabones colgando hasta la rodilla,
-    alternados a 90 grados, con un candado en la punta."""
-    _, _, mc, mm = T.caja_parte("RightHand")
+def d_cadena(mano="RightHand"):
+    """Cadena gruesa: dos vueltas en el puño (derecho salvo que se pida otro) y 10 eslabones
+    colgando hasta la rodilla, alternados a 90 grados, con un candado en la punta."""
+    _, _, mc, mm = T.caja_parte(mano)
 
     def eslabones(bm):
         for v in (-0.03, 0.02):
@@ -306,7 +306,7 @@ def d_cadena():
         T.caja(bm, c, Vector((0.06, 0.03, 0.06)))
         _aro(bm, c + Vector((0, 0, 0.045)), 0.02, 0.006, (0, 1, 0), 4, 10)
 
-    return T.pieza(f"{NOMBRE}_Cadena", "RightHand", [("acero", eslabones)])
+    return T.pieza(f"{NOMBRE}_Cadena", mano, [("acero", eslabones)])
 
 
 def d_pantalon_botas():
