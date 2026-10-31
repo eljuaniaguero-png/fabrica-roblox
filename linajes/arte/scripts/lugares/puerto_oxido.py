@@ -109,6 +109,48 @@ def pieza(nombre, cajas, material, cilindros=(), mallas=()):
     return obj
 
 
+def cuna(x0, x1, y_pie, y_tope, z_pie, z_tope):
+    """Rampa en cuña (malla suelta) entre x0 y x1: sube de (y_pie, z_pie) a (y_tope, z_tope).
+    Para las mallas de choque de las escaleras."""
+    v = [(x0, y_pie, z_pie), (x1, y_pie, z_pie), (x1, y_tope, z_pie), (x0, y_tope, z_pie), (x1, y_tope, z_tope), (x0, y_tope, z_tope)]
+    a, b = (0, 1, 4, 5), (5, 4, 1, 0)
+    caras = [(0, 3, 2, 1), (3, 5, 4, 2), (0, 5, 3), (1, 2, 4), (0, 1, 4, 5)]
+    if (y_tope - y_pie) * 1 < 0:
+        caras = [tuple(reversed(c)) for c in caras]
+    return v, caras
+
+
+def borrar_caras_ocultas(obj, altura=0.05):
+    """Borra las caras que miran para abajo apoyadas en el piso (z < `altura` studs): la base de
+    edificios y muros y la panza de los autos nunca se ven."""
+    import bmesh as _bm
+
+    bm = _bm.new()
+    bm.from_mesh(obj.data)
+    tope = altura * B.STUD
+    fuera = [f for f in bm.faces if f.normal.z < -0.95 and f.calc_center_median().z < tope]
+    _bm.ops.delete(bm, geom=fuera, context="FACES")
+    bm.to_mesh(obj.data)
+    bm.free()
+    return len(fuera)
+
+
+def exportar_kit(carpeta, objs, sin_base=()):
+    """Un FBX por pieza en exports/<carpeta>/, con el pivote en el origen y sin las caras de
+    abajo en las piezas cuyo nombre empieza con algo de `sin_base`."""
+    rutas = []
+    for o in objs:
+        if o.type != "MESH":
+            continue
+        loc = o.location.copy()
+        o.location = (0, 0, 0)
+        if o.name.startswith(tuple(sin_base)):
+            borrar_caras_ocultas(o)
+        rutas.append(B.exportar_fbx(o, os.path.join(B.EXPORTS, carpeta, o.name + ".fbx")))
+        o.location = loc
+    return rutas
+
+
 # ---------------------------------------------------------------------------
 # Piezas (boceto)
 # ---------------------------------------------------------------------------
@@ -312,7 +354,7 @@ def _poner(obj, x, y, giro=0):
     obj.rotation_euler = (0, 0, math.radians(giro))
 
 
-def grilla(grupos):
+def grilla(grupos, separacion=14):
     """Cada grupo en una fila (eje Y), separadas por su tamaño."""
     y = 0
     for fila in grupos:
@@ -328,7 +370,7 @@ def grilla(grupos):
             dy = o.dimensions.y / B.STUD
             x_ant = x + dx / 2
             _poner(o, x_ant, y + dy / 2)
-            x += dx + 14
+            x += dx + separacion
             ancho_fila = max(ancho_fila, dy)
         for o in fila:
             if o.name in ENCIMA:

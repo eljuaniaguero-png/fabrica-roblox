@@ -95,11 +95,22 @@ RECETAS = {
     "ladrillo": {"paneles": (0.15, 0.3), "rayones": 0.0, "bordes": 0.4, "suciedad": 0.8, "grano": 0.6},
     "hierro": {"rayones": 0.6, "bordes": 0.4, "suciedad": 0.6, "grano": 0.2},
     "soga": {"trama": 1.0, "rayones": 0.0, "bordes": 0.2, "suciedad": 0.6, "grano": 0.0},
+    # Calle viva
+    "patrulla-azul": {"paneles": (0.25, 0.4), "rayones": 0.5, "bordes": 0.4, "suciedad": 0.5, "grano": 0.0},
+    "auto-civil": {"paneles": (0.25, 0.4), "rayones": 0.6, "bordes": 0.4, "suciedad": 0.6, "grano": 0.0},
+    "taxi": {"paneles": (0.25, 0.4), "rayones": 0.6, "bordes": 0.4, "suciedad": 0.6, "grano": 0.0},
+    "goma": {"trama": 0.6, "rayones": 0.0, "bordes": 0.2, "suciedad": 0.5, "grano": 0.3},
+    "lona": {"costuras": (0.1, 0.0), "trama": 1.0, "rayones": 0.0, "bordes": 0.3, "suciedad": 0.7, "grano": 0.0},
+    "corcho": {"trama": 0.4, "rayones": 0.0, "bordes": 0.3, "suciedad": 0.4, "grano": 1.0},
+    "papel": {"trama": 0.2, "rayones": 0.0, "bordes": 0.2, "suciedad": 0.5, "grano": 0.0},
+    "contenedor-verde": {"paneles": (0.4, 0.0), "rayones": 0.9, "bordes": 0.7, "suciedad": 1.0, "grano": 0.4},
+    "colchon": {"costuras": (0.12, 0.0), "trama": 1.0, "rayones": 0.0, "bordes": 0.3, "suciedad": 1.0, "grano": 0.0},
+    "hilo-rojo": {"trama": 0.5, "rayones": 0.0, "bordes": 0.1, "suciedad": 0.2, "grano": 0.0},
     "porton-verde": {"paneles": (0.4, 0.0), "rayones": 0.9, "bordes": 0.7, "suciedad": 0.8, "grano": 0.3},
     "cofradia-oscura-metal": {},
     "cordon-amarillo": {"rayones": 0.5, "bordes": 0.5, "suciedad": 0.8, "grano": 0.4},
 }
-SIN_HORNEAR = {"vidrio-sucio", "charco", "neon-cofradia", "neon-farola", "neon-cian", "neon-eclipse", "neon-aviso", "liquido-rojo", "visor-cian"}  # brillan: se quedan con su material
+SIN_HORNEAR = {"neon-azul", "neon-faro", "neon-sirena", "neon-fuego", "vidrio-sucio", "charco", "neon-cofradia", "neon-farola", "neon-cian", "neon-eclipse", "neon-aviso", "liquido-rojo", "visor-cian"}  # brillan: se quedan con su material
 
 
 def _material_base(obj):

@@ -57,6 +57,18 @@ Roblox acepta como máximo **20.000 triángulos por malla**, así que lo pesado 
 - Los poderes (fuego, hielo, rayo, luz sólida) son **partículas y Neon**, no mallas.
 - Los jugadores usan **el cuerpo propio de Linajes, nunca su avatar de Roblox**; los trajes, la tecnología y los implantes van encima como piezas (las del traje según la tabla, gadgets e implantes ≤ 5.000 cada uno).
 
+## Reglas para jugar en Roblox (escala, choques y luces)
+
+Sumadas el 31 oct a partir de consejos que juntó Juani. Valen para mundo, vehículos y objetos.
+
+- **Escala del jugador:** un avatar mide unos 5 studs de alto y 3 de ancho. Puertas de por lo menos **5 x 7 studs**; pasillos y callejones de **6 studs** o más de ancho libre y 7 de alto (si no, la cámara choca con las paredes); portones por donde entran autos de **10 a 12 de ancho** y 8 a 10 de alto; autos de **6 studs** o más de ancho.
+- **La malla que se ve no es la que choca:** lo que tiene muchas piezas finas (escaleras, rejas, barandas, escaleras de incendio, grúas) va con `CanCollide = false`, y al lado una **malla de choque** simple e invisible, de nombre `<Pieza>_Colision`: cajas y una rampa en cuña en vez de escalones, para que el jugador no se trabe.
+- **Lo que brilla, en su malla:** faros, focos, neón, pantallas y fuego van en una malla aparte con material Neon, con su `PointLight` o `SpotLight` en ese lugar. Las partes que se mueven (persianas, puertas, ruedas, rotores) también van separadas.
+- **Pivote abajo y al centro** (z = 0) en cada pieza.
+- **Sin caras que nunca se ven:** al exportar se borra la base de edificios y muros apoyados en el piso y la panza de los autos.
+- **Que no flote:** los edificios llevan zócalo de hormigón abajo.
+- No se usa el estilo de paleta plana low-poly (un PNG de colores para todo): nuestra guía es cómic oscuro con detalle y texturas con desgaste. El rendimiento se cuida con los topes de triángulos de arriba y probando en celular.
+
 ## Color y material
 
 - La ciudad es oscura: `asfalto`, `ladrillo`, `acero`. La luz viene de `neon-cian` (carteles, tecnología) y del eclipse (`eclipse`, `corona`).

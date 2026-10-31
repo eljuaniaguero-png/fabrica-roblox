@@ -39,6 +39,8 @@ P.PRESUPUESTO.update(
         "Albatros_Portones": 6000,
         "Albatros_Seguridad": 1500,
         "Albatros_Luces": 200,
+        "Albatros_Zocalo": 300,
+        "Albatros_Colision": 50,
         "Albatros_Equipos": 1500,
         "Albatros_Camaras": 1500,
         "Grua_Cabina": 6000,
@@ -500,10 +502,10 @@ def galpon_albatros():
     def tramo_der(ya, yb, za, zb):
         return ((e, yb - ya, zb - za), (x1, (ya + yb) / 2, (za + zb) / 2))
 
-    pu = (35.4, 39.4, 0.4, 8.2)  # puerta de abajo: x0, x1, z0, z1
+    pu = (34.8, 39.8, 0.4, 8.2)  # puerta de abajo (5 x 7,8: entra un jugador): x0, x1, z0, z1
     ve = (42, 46, 3.6, 8.6)  # ventana de abajo
     vt = (33.6, 46.4, piso + 1.6, alto - 2.6)  # ventanal de arriba
-    pa = (y1 - 9.0, y1 - 5.0, piso + 0.4, piso + 7.8)  # puerta de arriba (pared derecha): y0, y1, z0, z1
+    pa = (y1 - 9.5, y1 - 4.5, piso + 0.4, piso + 8.2)  # puerta de arriba (5 x 7,8) (pared derecha): y0, y1, z0, z1
     o = [
         tramo_frente(x0, pu[0], 0, piso), tramo_frente(pu[1], ve[0], 0, piso), tramo_frente(ve[1], x1, 0, piso),
         tramo_frente(pu[0], pu[1], pu[3], piso), tramo_frente(ve[0], ve[1], ve[3], piso), tramo_frente(ve[0], ve[1], 0, ve[2]),
@@ -615,10 +617,22 @@ def galpon_albatros():
     tubos += [((12, 0.4, 0.4), (0, yl + 0.3, zl + y)) for y in (-1.6, 2.6)]  # soporte del letrero
     tubos += leds  # LED rojo de las cámaras
     letrero = pieza("Albatros_Letrero", tubos, "neon-cofradia")
+    # Zócalo de hormigón alrededor del galpón y la oficina (que no parezca flotando).
+    zc = [((NAVE_ANCHO * 2 + 2.4, 1.0, 1.2), (0, y, 0.6)) for y in (-h - 0.5, h + 0.5)]
+    zc += [((1.0, NAVE_FONDO + 2, 1.2), (x, 0, 0.6)) for x in (-NAVE_ANCHO - 0.5,)]
+    zc += [((ancho + 1.2, 1.0, 1.2), (xc, y0 - 0.6, 0.6)), ((1.0, fondo + 1, 1.2), (x1 + 0.6, yc, 0.6)), ((1.0, NAVE_FONDO + 2 - fondo, 1.2), (NAVE_ANCHO + 0.5, (y1 + h) / 2, 0.6))]
+    zocalo = pieza("Albatros_Zocalo", zc, "asfalto")
+    # Choque: la escalera se ve pero no choca; el jugador sube por esta rampa invisible + descanso.
+    colision = pieza(
+        "Albatros_Colision",
+        [((3.2, pa[1] - pa[0] + 2, 0.5), (xe, cy_pa, piso))],
+        "asfalto",
+        mallas=[P.cuna(xe - 1.4, xe + 1.4, y_pie, y_tope, 0, piso)],
+    )
     # Vidrios (sucios, con algo de reflejo)
     vid = [((b - a, 0.1, zb - za), ((a + b) / 2, y0 + 0.15, (za + zb) / 2)) for a, b, za, zb in (ve, vt)]
     vidrios = pieza("Albatros_Vidrios", vid, "vidrio-sucio")
-    return [galpon, ofi, herreria, portones, seguridad, equipos, camaras, luces, vidrios, letrero]
+    return [galpon, ofi, herreria, portones, seguridad, equipos, camaras, luces, vidrios, letrero, zocalo, colision]
 
 
 # Carguero: popa en -Y, proa en +Y. (y, medio ancho, quilla, borda): la borda sube en la popa
@@ -716,7 +730,7 @@ def todas():
     ]
 
 
-P.ENCIMA = P.ENCIMA + ("Albatros_Herreria", "Albatros_Portones", "Albatros_Seguridad", "Albatros_Equipos", "Albatros_Camaras", "Albatros_Luces", "Albatros_Vidrios", "Albatros_Letrero")
+P.ENCIMA = P.ENCIMA + ("Albatros_Herreria", "Albatros_Portones", "Albatros_Seguridad", "Albatros_Equipos", "Albatros_Camaras", "Albatros_Luces", "Albatros_Vidrios", "Albatros_Letrero", "Albatros_Zocalo", "Albatros_Colision")
 
 
 def luces_calle(muestra):
@@ -759,14 +773,16 @@ def detalle(con_horneado=False):
     P.grilla(grupos)
     p = {o.name: o for fila in grupos for o in fila}
     piezas = list(p.values())
+    for o in piezas:
+        o.hide_render = o.hide_render or o.name.endswith("_Colision")  # invisibles en el juego
     bpy.context.view_layer.update()
     carga = cargar_barco(p, p["Barco_Casco"])
     if con_horneado:
         import detalle as D
 
-        presupuesto = {n: (P.PRESUPUESTO.get(n, 20000), [n]) for n in p}
+        presupuesto = {n: (P.PRESUPUESTO.get(n, 20000), [n]) for n in p if not n.endswith("_Colision")}
         lados = {n: (256 if n.startswith(("Prop_", "Calle_", "Contenedor_")) else 1024 if n.startswith(("Albatros", "Barco", "Grua")) else 512) for n in p}
-        D.terminar(piezas, presupuesto, "puerto-oxido", lados=lados)
+        D.terminar([o for o in piezas if not o.name.endswith("_Colision")], presupuesto, "puerto-oxido", lados=lados)
     bpy.context.view_layer.update()
     ancho = max(o.location.x + o.dimensions.x / 2 for o in piezas) / B.STUD
     ox = ancho + 60
@@ -774,7 +790,7 @@ def detalle(con_horneado=False):
     muestra += tirar_charcos(p, muestra, ox)
     muestra.append(P.copia(p["Albatros_Galpon"], ox + 120, 30))
     muestra.append(P.copia(p["Albatros_Oficina"], ox + 120, 30))
-    for n in ("Albatros_Herreria", "Albatros_Portones", "Albatros_Seguridad", "Albatros_Equipos", "Albatros_Camaras", "Albatros_Luces", "Albatros_Vidrios", "Albatros_Letrero"):
+    for n in ("Albatros_Herreria", "Albatros_Portones", "Albatros_Seguridad", "Albatros_Equipos", "Albatros_Camaras", "Albatros_Luces", "Albatros_Vidrios", "Albatros_Letrero", "Albatros_Zocalo", "Albatros_Colision"):
         muestra.append(P.copia(p[n], ox + 120, 30))
     P.luz_puerto()
     luces_calle(muestra)
@@ -786,9 +802,9 @@ def detalle(con_horneado=False):
     r = [
         P.render_orto("puerto-oxido_detalle_kit", chicas, giro=0, altura=50, niebla=False),
         P.render_orto("puerto-oxido_detalle_grandes", grupos[-1] + carga, giro=25, altura=25, niebla=False),
-        P.render_orto("puerto-oxido_detalle_oficina", [p[n] for n in ("Albatros_Galpon", "Albatros_Oficina", "Albatros_Herreria", "Albatros_Portones", "Albatros_Seguridad", "Albatros_Equipos", "Albatros_Camaras", "Albatros_Luces", "Albatros_Vidrios", "Albatros_Letrero")], giro=-10, altura=8, niebla=False, solo=True),
+        P.render_orto("puerto-oxido_detalle_oficina", [p[n] for n in ("Albatros_Galpon", "Albatros_Oficina", "Albatros_Herreria", "Albatros_Portones", "Albatros_Seguridad", "Albatros_Equipos", "Albatros_Camaras", "Albatros_Luces", "Albatros_Vidrios", "Albatros_Letrero", "Albatros_Zocalo", "Albatros_Colision")], giro=-10, altura=8, niebla=False, solo=True),
         P.render_orto("puerto-oxido_detalle_barco", [p["Barco_Casco"], p["Barco_Cubierta"]] + carga, giro=-40, altura=18, niebla=False, solo=True),
-        P.render_orto("puerto-oxido_detalle_escalera", [p[n] for n in ("Albatros_Galpon", "Albatros_Oficina", "Albatros_Herreria", "Albatros_Portones", "Albatros_Seguridad", "Albatros_Equipos", "Albatros_Camaras", "Albatros_Luces", "Albatros_Vidrios", "Albatros_Letrero")], giro=-35, altura=14, niebla=False, solo=True),
+        P.render_orto("puerto-oxido_detalle_escalera", [p[n] for n in ("Albatros_Galpon", "Albatros_Oficina", "Albatros_Herreria", "Albatros_Portones", "Albatros_Seguridad", "Albatros_Equipos", "Albatros_Camaras", "Albatros_Luces", "Albatros_Vidrios", "Albatros_Letrero", "Albatros_Zocalo", "Albatros_Colision")], giro=-35, altura=14, niebla=False, solo=True),
         P.render_orto("puerto-oxido_detalle_calle", muestra, giro=-30, altura=28),
     ]
     return cuenta, r
@@ -798,3 +814,8 @@ if __name__ == "__main__":
     pasos = sys.argv[sys.argv.index("--") + 1 :] if "--" in sys.argv else []
     if "detalle" in pasos:
         print(detalle("hornear" in pasos))
+    if "exportar" in pasos:
+        bpy.ops.wm.open_mainfile(filepath=P.BLEND)
+        kit = [o for o in bpy.data.objects if o.type == "MESH" and o.name in P.PRESUPUESTO and o.name != "Niebla"]
+        sin_base = ("Galpon_", "Albatros_Galpon", "Albatros_Oficina", "Albatros_Zocalo", "Edificio_", "Tunel_", "Arcada", "Prop_Muro", "Contenedor_")
+        print("EXPORTADAS", len(P.exportar_kit("puerto-oxido", kit, sin_base)))

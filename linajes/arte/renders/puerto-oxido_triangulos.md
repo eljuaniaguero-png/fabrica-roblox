@@ -43,6 +43,8 @@
 | Albatros_Luces | 176 | 200 |
 | Albatros_Vidrios | 88 | 100 |
 | Albatros_Letrero | 616 | 1500 |
+| Albatros_Zocalo | 264 | 300 |
+| Albatros_Colision | 20 | 50 |
 | Barco_Casco | 9924 | 18000 |
 | Barco_Cubierta | 7128 | 12000 |
-| **Total del kit** | **81129** | |
+| **Total del kit** | **81413** | |
