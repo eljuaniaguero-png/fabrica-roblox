@@ -4,7 +4,7 @@ bando: "Civiles (calle viva)"
 ---
 # Civiles
 
-**Estado:** Retocado (1 nov): cantos rectos, detalles modelados, 0 choques entre piezas. Exportado; falta reimportar en Studio.
+**Estado:** Retocado (1 nov) y en Studio: cantos rectos, detalles modelados, 0 choques entre piezas. Probado en Play con 9 civiles.
 **Bando:** Civiles de la calle viva (ver la sección 0e de la ficha)
 
 Kit de ropa para mezclar por código: **8 de arriba, 6 de abajo, 8 de cabeza, 7 accesorios** (el paraguas va abierto y cerrado) y el **teléfono** con pantalla `neon-cian`. Además, 3 civiles especiales: **diarero** con carrito de El Faro, **vendedor de panchos** con carrito y sombrilla, y **músico** con guitarra y estuche abierto.
