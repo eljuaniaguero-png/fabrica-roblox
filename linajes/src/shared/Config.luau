@@ -347,4 +347,20 @@ Config.Civiles = {
 	MaximoPorServidor = 40,
 }
 
+-- Mundo abierto (graybox). El día dura MinutosPorDia minutos reales; en Vórtice siempre es de noche.
+Config.Mundo = {
+	MinutosPorDia = 24,
+	HoraNocheEterna = 0,
+	-- Niebla por ciudad (Atmosphere). "Bahia" es fuera de toda ciudad.
+	Niebla = {
+		PuertoOxido = { Densidad = 0.45, Bruma = 0.6, Color = "8a8f99" },
+		CiudadVortice = { Densidad = 0.4, Bruma = 0.3, Color = "3a2f4b" },
+		DistritoCorona = { Densidad = 0.2, Bruma = 0.1, Color = "c9d6e8" },
+		Bahia = { Densidad = 0.3, Bruma = 0.3, Color = "9aa3ad" },
+	},
+	-- Velocidades para medir recorridos (studs por segundo).
+	VelocidadPie = 16,
+	VelocidadVuelo = 80,
+}
+
 return Config
