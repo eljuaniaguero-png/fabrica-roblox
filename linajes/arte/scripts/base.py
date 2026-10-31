@@ -83,6 +83,10 @@ MATERIALES = {
     "visor-cian": {"hex": "3fe0f0", "rugosidad": 0.05, "brillo": 1.5, "alfa": 0.55},
     "madera-oscura": {"hex": "3b2618", "rugosidad": 0.7},  # Atalanta: asta de la lanza
     "traje-base": {"hex": "2b2f38", "rugosidad": 0.7},  # cuerpo propio: traje liso de abajo
+    "azul-marino": {"hex": "1c2433", "rugosidad": 0.75},  # El Albatros: abrigo
+    "azul-marino-oscuro": {"hex": "121826", "rugosidad": 0.7},  # El Albatros: gorra
+    "piel-gris": {"hex": "8c8a86", "rugosidad": 1.0},  # El Albatros: cuello de piel
+    "tela-blanca": {"hex": "e9e7e2", "rugosidad": 0.85},  # El Albatros: bufanda
     "piel": {"hex": "c68a62", "rugosidad": 0.6},
     "pelo": {"hex": "3a2a20", "rugosidad": 0.55},  # cuerpo propio: color libre en el juego  # cuerpo propio: tono medio (los 10 van en Config.luau)
 }
