@@ -13,6 +13,7 @@ Una nota por personaje, con su **modelo 3D para girar**, sus renders y sus datos
 | [[Remache]] | Cofradía (jefe) | 29.222 de 37.000 | Terminado y exportado |
 | [[Atalanta]] | Liga | 31.326 de 32.000 | Terminado y exportado |
 | [[El Albatros]] | Cofradía | 23.002 de 23.500 | Terminado y exportado |
+| [[Tano]] | Civil (NPC) | 19.579 de 20.000 | Terminado y exportado |
 | [[Cuerpo propio]] | Todos | Cuerpo de Roblox + pelo 1.006 a 1.896 | En el juego (StarterCharacter, v3) |
 
 Los que faltan están en [[Elenco]] y en [[Todos los prompts]].

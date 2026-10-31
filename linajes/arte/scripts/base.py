@@ -87,6 +87,10 @@ MATERIALES = {
     "azul-marino-oscuro": {"hex": "121826", "rugosidad": 0.7},  # El Albatros: gorra
     "piel-gris": {"hex": "8c8a86", "rugosidad": 1.0},  # El Albatros: cuello de piel
     "tela-blanca": {"hex": "e9e7e2", "rugosidad": 0.85},  # El Albatros: bufanda
+    "mameluco": {"hex": "2d4a73", "rugosidad": 0.85},  # Tano: mameluco azul engrasado
+    "cuero-claro": {"hex": "6b4426", "rugosidad": 0.65},  # Tano: delantal
+    "trapo-rojo": {"hex": "8e2a22", "rugosidad": 0.95},  # Tano: trapo del bolsillo
+    "canoso": {"hex": "c9c6c0", "rugosidad": 0.8},  # Tano: bigote
     "piel": {"hex": "c68a62", "rugosidad": 0.6},
     "pelo": {"hex": "3a2a20", "rugosidad": 0.55},  # cuerpo propio: color libre en el juego  # cuerpo propio: tono medio (los 10 van en Config.luau)
 }

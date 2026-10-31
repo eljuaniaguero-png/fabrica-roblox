@@ -41,6 +41,7 @@ NOMBRES = {
     "gorrion": "Gorrión",
     "eclipsador": "El Eclipsador",
     "cuerpo": "Cuerpo propio",
+    "npc-tano": "Tano",
 }
 
 
