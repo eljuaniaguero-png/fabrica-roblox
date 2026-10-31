@@ -110,7 +110,7 @@ RECETAS = {
     "cofradia-oscura-metal": {},
     "cordon-amarillo": {"rayones": 0.5, "bordes": 0.5, "suciedad": 0.8, "grano": 0.4},
 }
-SIN_HORNEAR = {"neon-azul", "neon-faro", "neon-sirena", "neon-fuego", "vidrio-sucio", "charco", "neon-cofradia", "neon-farola", "neon-cian", "neon-eclipse", "neon-aviso", "liquido-rojo", "visor-cian"}  # brillan: se quedan con su material
+SIN_HORNEAR = {"ventana-luz", "neon-azul", "neon-faro", "neon-sirena", "neon-fuego", "vidrio-sucio", "charco", "neon-cofradia", "neon-farola", "neon-cian", "neon-eclipse", "neon-aviso", "liquido-rojo", "visor-cian"}  # brillan: se quedan con su material
 
 
 def _material_base(obj):

@@ -27,12 +27,15 @@ azar = random.Random(21)
 # Materiales nuevos del paso 2
 B.MATERIALES.setdefault("neon-cofradia", {"hex": "ff2a4a", "brillo": 6.0})  # letrero del Albatros
 B.MATERIALES.setdefault("porton-verde", {"hex": "2f5d5a", "rugosidad": 0.6, "metal": 0.5})  # cortinas y puertas del Albatros
+B.MATERIALES.setdefault("ventana-luz", {"hex": "ffb866", "brillo": 1.6})  # ventanas con luz adentro
 B.MATERIALES.setdefault("vidrio-sucio", {"hex": "2a3a40", "rugosidad": 0.15, "metal": 0.3})
 
 P.PRESUPUESTO.update(
     {
         "Calle_Charco": 200,
         "Albatros_Letrero": 1500,
+        "Edificio_ViejoVidrios": 200,
+        "Edificio_ViejoLuces": 100,
         "Albatros_Oficina": 8000,
         "Albatros_Herreria": 6000,
         "Albatros_Vidrios": 100,
@@ -325,31 +328,49 @@ def _ventana_arco(x, y, z, ancho=3, alto=5):
     return c
 
 
+# Edificio viejo: pisos de 13 studs (un jugador de 5 llega a la mitad de la planta baja).
+EV_PISO = 13
+EV_VENTANAS = (-8, 0, 8)  # centros de las ventanas del frente; las pilastras van en ±4 y ±12
+EV_ENCENDIDAS = {(-8, 0), (8, 1), (0, 1)}  # (x, piso) con luz adentro
+
+
 def edificio_viejo():
-    """Dos pisos de piedra: ventanas altas en arco con alféizar y parteluz, pilastras, faja entre
-    pisos, cornisa en dos escalones, puerta en arco y techo de tejas en hileras."""
-    cajas = [((24, 16, 18), (0, 0, 9)), ((24.6, 16.6, 1.2), (0, 0, 0.6))]
-    cajas += [((24.8, 16.8, 0.6), (0, 0, 9)), ((25.2, 17.2, 0.6), (0, 0, 18.1)), ((25.6, 17.6, 0.5), (0, 0, 18.6))]
+    """Dos pisos de piedra de 13 studs: ventanas altas en arco (3,6 x 7,6) con alféizar y
+    parteluz, pilastras, faja entre pisos, cornisa en dos escalones, puerta en arco de 4,4 x 9 y
+    techo de tejas en hileras. Mallas aparte: techo, vidrios oscuros y vidrios con luz (Neon suave)."""
+    alto = EV_PISO * 2
+    cajas = [((24, 16, alto), (0, 0, alto / 2)), ((24.6, 16.6, 1.2), (0, 0, 0.6))]
+    cajas += [((24.8, 16.8, 0.6), (0, 0, EV_PISO)), ((25.2, 17.2, 0.6), (0, 0, alto + 0.1)), ((25.6, 17.6, 0.5), (0, 0, alto + 0.6))]
     for x in (-12, -4, 4, 12):  # pilastras del frente
-        cajas.append(((0.9, 0.5, 17), (x, -8.2, 9)))
-    for x in (-8, 8):
-        cajas += _ventana_arco(x, -8.25, 2.2, 3, 5.2)
-        cajas += _ventana_arco(x, -8.25, 11, 3, 5.5)
-    cajas += _ventana_arco(0, -8.25, 11, 3, 5.5)
-    cajas += _ventana_arco(0, -8.3, 1.2, 3.4, 6.2)  # puerta
-    for y in (-4, 4):  # costados
-        cajas += _ventana_arco(-12.25, y, 11, 3, 5.5) if False else []
+        cajas.append(((0.9, 0.5, alto - 1), (x, -8.2, alto / 2)))
+    vidrios, luces = [], []
+    for piso in (0, 1):
+        z = 2.4 + piso * EV_PISO
+        for x in EV_VENTANAS:
+            if piso == 0 and x == 0:
+                cajas += _ventana_arco(0, -8.3, 1.2, 4.4, 9.0)  # puerta
+                vidrios.append(((3.6, 0.1, 8.0), (0, -8.02, 1.2 + 4.0)))
+                continue
+            cajas += _ventana_arco(x, -8.25, z, 3.6, 7.6)
+            panel = ((3.3, 0.1, 7.2), (x, -8.02, z + 3.6))
+            (luces if (x, piso) in EV_ENCENDIDAS else vidrios).append(panel)
     cuerpo = pieza("Edificio_Viejo", cajas, "piedra-clara")
     techo = []
+    base = alto + 0.9
     for lado in (-1, 1):
         g = 28 * -lado
-        techo.append(((25, 9.4, 0.3), (0, 4 * lado, 21.2), (g, 0, 0)))
+        techo.append(((25, 9.4, 0.3), (0, 4 * lado, base + 2.2), (g, 0, 0)))
         for k in range(8):  # hileras de tejas
             d = -4.2 + k * 1.15
-            techo.append(((25, 0.9, 0.35), (0, (4 + d * math.cos(math.radians(28))) * lado - 0, 21.2 + 0.2 - d * math.sin(math.radians(28))), (g, 0, 0)))
-    techo.append(((25.2, 0.9, 0.7), (0, 0, 23.6)))
-    techo += [((1.6, 1.6, 4), (x, 2, 24)) for x in (-7, 6)]  # chimeneas
-    return [cuerpo, pieza("Edificio_ViejoTecho", techo, "teja")]
+            techo.append(((25, 0.9, 0.35), (0, (4 + d * math.cos(math.radians(28))) * lado, base + 2.4 - d * math.sin(math.radians(28))), (g, 0, 0)))
+    techo.append(((25.2, 0.9, 0.7), (0, 0, base + 4.6)))
+    techo += [((1.6, 1.6, 4), (x, 2, base + 5)) for x in (-7, 6)]  # chimeneas
+    return [
+        cuerpo,
+        pieza("Edificio_ViejoTecho", techo, "teja"),
+        pieza("Edificio_ViejoVidrios", vidrios, "vidrio-sucio"),
+        pieza("Edificio_ViejoLuces", luces, "ventana-luz"),
+    ]
 
 
 def arcada():
@@ -732,7 +753,7 @@ def todas():
     ]
 
 
-P.ENCIMA = P.ENCIMA + ("Albatros_Herreria", "Albatros_Portones", "Albatros_Seguridad", "Albatros_Equipos", "Albatros_Camaras", "Albatros_Luces", "Albatros_Vidrios", "Albatros_Letrero", "Albatros_Zocalo", "Albatros_Colision")
+P.ENCIMA = P.ENCIMA + ("Edificio_ViejoVidrios", "Edificio_ViejoLuces", "Albatros_Herreria", "Albatros_Portones", "Albatros_Seguridad", "Albatros_Equipos", "Albatros_Camaras", "Albatros_Luces", "Albatros_Vidrios", "Albatros_Letrero", "Albatros_Zocalo", "Albatros_Colision")
 
 
 def luces_calle(muestra):

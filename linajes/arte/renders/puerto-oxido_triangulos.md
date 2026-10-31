@@ -31,6 +31,8 @@
 | Tunel_Arco | 2700 | 3000 |
 | Edificio_Viejo | 3300 | 6000 |
 | Edificio_ViejoTecho | 924 | 2000 |
+| Edificio_ViejoVidrios | 132 | 200 |
+| Edificio_ViejoLuces | 98 | 100 |
 | Grua_Estructura | 11760 | 12000 |
 | Grua_Cabina | 2008 | 6000 |
 | Albatros_Galpon | 10996 | 15000 |
@@ -47,4 +49,4 @@
 | Albatros_Colision | 20 | 50 |
 | Barco_Casco | 9924 | 18000 |
 | Barco_Cubierta | 7128 | 12000 |
-| **Total del kit** | **81765** | |
+| **Total del kit** | **81995** | |

@@ -123,7 +123,7 @@ def cuna(x0, x1, y_pie, y_tope, z_pie, z_tope):
 def prefijo(obj):
     """Neon_ para lo que brilla y Glass_ para los vidrios: así en Studio se reconocen al toque."""
     mat = obj.data.materials[0].name if obj.data.materials else ""
-    if "neon" in mat:
+    if "neon" in mat or "ventana-luz" in mat:
         return "Neon_"
     if "vidrio" in mat:
         return "Glass_"
