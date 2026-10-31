@@ -16,7 +16,8 @@ Actualizado: 30 oct 2026.
 - [x] [[P05 Mascarada]]: exportado en `exports/mascarada/` (3 máscaras, una por fase)
 - [x] [[P06 Remache]]: exportado en `exports/remache/` (jefe a 1,6x, 29.222 triángulos, pistones aparte para animar)
   - Mirá `remache_vistas.png`, `remache_brazo.png` y `remache_columna.png`
-- [ ] Siguiente: [[P07 Estela]]
+- [x] Decidido (31 oct): **la primera versión es solo Puerto Óxido**. El orden está en [[Plan por etapas]].
+- [ ] Siguiente para esa versión: [[P20f Cuerpo propio del jugador]] (Estela puede seguir en paralelo, pero no entra en la primera versión)
 - [ ] Nuevo (30 oct): [[P20f Cuerpo propio del jugador]] (el juego no usa el avatar de Roblox) y el [[Animaciones (plan completo)|plan de animaciones]]
 - [ ] Ningún traje está importado a Studio todavía.
 

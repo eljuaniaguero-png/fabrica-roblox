@@ -39,6 +39,9 @@ Juani pasó una revisión hecha con Gemini. Claude la comparó con las reglas de
 - Plumas de la capa de Cuervo: revisar al animar que no parpadeen (piezas encimadas) ni se muevan como un bloque. Se resuelve con buenos pesos en los huesos.
 - Pliegues de las telas: siempre horneados en el normal map, nunca con más polígonos. Ya lo dice el [[Nivel de detalle]].
 
+## Ya decidido
+- **Primera versión solo con Puerto Óxido** (31 oct): sí. Está en [[Plan por etapas]], con los 3 Linajes Comunes en lugar de 2, porque sus prompts ya existen.
+
 ## Lo decidís vos
 | Propuesta | Qué opina Claude |
 |---|---|
@@ -46,7 +49,6 @@ Juani pasó una revisión hecha con Gemini. Claude la comparó con las reglas de
 | **Pack de fundador** (150 Robux: título "Fundador", color de traje, espacio extra) | Va bien con [[Plan por etapas]] y con la regla de vender solo lo que no da poder. |
 | **Vender el 2.º y 3.er espacio de personaje** | Hoy la ficha dice que los 3 espacios son gratis. Venderlos da plata y no rompe la pelea, pero es un cambio de diseño. Sugerencia: el 2.º gratis y el 3.º pago. |
 | **Compras que activan un evento para todo el servidor** ("Llamado de emergencia", 20 minutos) | Buena idea: el que paga gana reconocimiento y todos juegan el evento. Con límite de una cada 30 minutos por servidor. |
-| **Primera versión solo con Puerto Óxido** (2 Linajes, Remache, Tano y el Albatros) | Coincide con hacer el juego por etapas. Es la forma más rápida de tener algo para mostrar y probar. |
 
 ## No se hace
 - **Ruleta de cosméticos con Robux** (auras o colores al azar pagando): es una caja de botín paga y CLAUDE.md la prohíbe. Los cosméticos se venden **directo**, viendo qué comprás. Las auras de Linaje especiales se ganan jugando o se compran sin azar.
