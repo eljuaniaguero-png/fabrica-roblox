@@ -9,6 +9,11 @@ c# Cuerpo propio
 
 El cuerpo que usan todos en vez del avatar de Roblox. **Estilo nuevo (pedido del 31 oct):** bloques redondeados como Roblox, cabeza cuadrada grande, cara anime y pelo de mechones en punta. Mismo esqueleto R15 del maniquí: no se movió ningún hueso.
 
+## En el juego (Play en Studio)
+Un jugador con apariencia al azar: contextura Normal, altura Baja, tono 6, cara 12, peinado Rapado y marca 4.
+
+![[cuerpo_studio.png]]
+
 ## Modelo 3D
 Arrastrá con el mouse para girarlo. Contextura Normal, cara 01, peinado Corto.
 
