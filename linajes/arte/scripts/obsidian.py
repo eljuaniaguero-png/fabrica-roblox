@@ -42,6 +42,7 @@ NOMBRES = {
     "eclipsador": "El Eclipsador",
     "cuerpo": "Cuerpo propio",
     "npc-tano": "Tano",
+    "enemigo-maton": "Matón del puerto",
 }
 
 

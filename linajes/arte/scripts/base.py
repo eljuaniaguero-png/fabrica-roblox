@@ -91,6 +91,12 @@ MATERIALES = {
     "cuero-claro": {"hex": "6b4426", "rugosidad": 0.65},  # Tano: delantal
     "trapo-rojo": {"hex": "8e2a22", "rugosidad": 0.95},  # Tano: trapo del bolsillo
     "canoso": {"hex": "c9c6c0", "rugosidad": 0.8},  # Tano: bigote
+    "campera": {"hex": "1e1a17", "rugosidad": 0.55},  # Matón: campera de cuero negro gastado
+    "jean": {"hex": "2c3546", "rugosidad": 0.9},  # Matón: pantalón
+    "panuelo": {"hex": "3a3f4b", "rugosidad": 0.95},  # Matón: pañuelo en la cara
+    "lana-roja": {"hex": "a3312a", "rugosidad": 1.0},  # Matón: gorro (variante 1)
+    "lana-verde": {"hex": "3d6b3f", "rugosidad": 1.0},  # Matón: gorro (variante 2)
+    "lana-gris": {"hex": "7a7d84", "rugosidad": 1.0},  # Matón: gorro (variante 3)
     "piel": {"hex": "c68a62", "rugosidad": 0.6},
     "pelo": {"hex": "3a2a20", "rugosidad": 0.55},  # cuerpo propio: color libre en el juego  # cuerpo propio: tono medio (los 10 van en Config.luau)
 }
