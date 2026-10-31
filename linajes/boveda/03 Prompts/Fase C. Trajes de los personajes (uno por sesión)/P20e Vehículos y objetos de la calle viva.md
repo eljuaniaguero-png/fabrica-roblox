@@ -1,7 +1,7 @@
 ---
 tags: [prompt]
 prompt: "20e"
-estado: pendiente
+estado: hecho (Beta: solo lo del puerto)
 ---
 # Prompt 20e Vehículos y objetos de la calle viva
 

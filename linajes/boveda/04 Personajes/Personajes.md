@@ -18,6 +18,7 @@ Una nota por personaje, con su **modelo 3D para girar**, sus renders y sus datos
 | [[Matón con implantes]] | Cofradía (enemigo, 3 variantes) | 9.728 de 10.000 | Terminado y exportado |
 | [[Civiles]] | Civiles (kit + 3 especiales) | Civil: hasta 3.246 de 6.000 | En el juego (probado en Play) |
 | [[Cuerpo propio]] | Todos | Cuerpo de Roblox + pelo 1.006 a 1.896 | En el juego (StarterCharacter, v3) |
+| [[Calle viva (puerto)]] | Calle viva (vehículos y objetos) | 29.732 (56 piezas) | Terminado y exportado |
 
 Los que faltan están en [[Elenco]] y en [[Todos los prompts]].
 

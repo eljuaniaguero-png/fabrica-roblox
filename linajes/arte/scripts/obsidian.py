@@ -45,6 +45,7 @@ NOMBRES = {
     "enemigo-maton": "Matón del puerto",
     "enemigo-maton-implantes": "Matón con implantes",
     "civiles": "Civiles",
+    "calle-viva": "Calle viva (puerto)",
 }
 
 
