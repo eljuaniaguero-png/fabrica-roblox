@@ -224,6 +224,8 @@ Config.Cuerpo.Ropa = {
 		RightFoot = "Zapatos",
 	},
 }
+-- Diferencia mínima de color (0 a 1,7) entre pelo y piel cuando el pelo sale al azar.
+Config.Cuerpo.ContrastePelo = 0.3
 Config.Cuerpo.ColoresPelo = {
 	"1c1714",
 	"3a2a20",

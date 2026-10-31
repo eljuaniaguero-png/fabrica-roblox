@@ -58,13 +58,31 @@ function Apariencia.porDefecto(userId: number): Datos
 	local r = Random.new(userId)
 	local contexturas = { "Normal", "Ancha", "Delgada" }
 	local alturas = { "Baja", "Media", "Alta" }
+	local contextura = contexturas[r:NextInteger(1, 3)]
+	local altura = alturas[r:NextInteger(1, 3)]
+	local tono = r:NextInteger(1, #C.TonosPiel)
+	local cara = r:NextInteger(1, #C.Caras)
+	local peinado = C.Peinados[r:NextInteger(1, #C.Peinados)]
+	-- Solo colores de pelo que se distingan de la piel (si no, el pelo "desaparece").
+	local piel = C.TonosPiel[tono]
+	local colores = {}
+	for _, hex in C.ColoresPelo do
+		local c = Color3.fromHex(hex)
+		local d = Vector3.new(c.R - piel.R, c.G - piel.G, c.B - piel.B).Magnitude
+		if d >= C.ContrastePelo then
+			table.insert(colores, hex)
+		end
+	end
+	if #colores == 0 then
+		colores = C.ColoresPelo
+	end
 	return {
-		Contextura = contexturas[r:NextInteger(1, 3)],
-		Altura = alturas[r:NextInteger(1, 3)],
-		Tono = r:NextInteger(1, #C.TonosPiel),
-		Cara = r:NextInteger(1, #C.Caras),
-		Peinado = C.Peinados[r:NextInteger(1, #C.Peinados)],
-		ColorPelo = C.ColoresPelo[r:NextInteger(1, #C.ColoresPelo)],
+		Contextura = contextura,
+		Altura = altura,
+		Tono = tono,
+		Cara = cara,
+		Peinado = peinado,
+		ColorPelo = colores[r:NextInteger(1, #colores)],
 		Marca = if r:NextNumber() < 0.3 then r:NextInteger(1, #C.Marcas) else 0,
 	}
 end
