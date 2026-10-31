@@ -5,6 +5,16 @@ tags: [inicio]
 
 RPG de superhéroes para Roblox: combate en tiempo real, multijugador, historia larga que avanza hablando con NPCs, poderes que te tocan al azar y evolucionan.
 
+## Novedades (31 oct)
+- [[Plan por etapas]]: la **primera versión (Beta) es solo Puerto Óxido**.
+- [[Todos los prompts]]: separados en **Ya hecho**, **BETA** y **POST BETA**, en orden.
+- [[Cinemáticas (plan completo)]] y su prompt [[P30c Cinemáticas]].
+- [[Animaciones (plan completo)]] y los prompts [[P26b Animaciones de tecnología, gadgets y vehículos]] y [[P30b Efectos especiales e interfaz]].
+- [[Cuerpo propio (sin avatar de Roblox)]] y su prompt [[P20f Cuerpo propio del jugador]].
+- Pantallas: [[P33a Logo, ícono y miniaturas (Gemini)]], [[P33b Íconos de Linajes y habilidades (Gemini)]] y [[P33c HUD y menús en Figma]].
+- [[Riesgos y mejoras (revisión 31 oct)]]: lo que se tomó de la revisión de Gemini y lo que falta decidir.
+- [[Personajes]]: cada personaje con su modelo 3D para girar.
+
 ## Cómo usar esta bóveda
 1. **El juego**: [[Ficha del juego]] tiene todo lo que es el juego, en notas cortas.
 2. **El estilo**: [[Guía de estilo]], [[Nivel de detalle]] y [[Colores]]. Claude los lee antes de cada modelo.
