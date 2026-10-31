@@ -28,4 +28,4 @@ Commit y push.
 ```
 
 ---
-[[P30b Efectos especiales e interfaz|← P30b Efectos especiales e interfaz]]   ·   [[Todos los prompts]]   ·   [[P32 Ambientes y música|P32 Ambientes y música →]]
+[[P30c Cinemáticas|← P30c Cinemáticas]]   ·   [[Todos los prompts]]   ·   [[P32 Ambientes y música|P32 Ambientes y música →]]

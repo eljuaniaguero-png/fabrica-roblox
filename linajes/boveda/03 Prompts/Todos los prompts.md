@@ -19,11 +19,11 @@ Hay dos listas: **Beta** (la primera versión, solo Puerto Óxido, ver [[Plan po
 # BETA: Puerto Óxido
 
 ## 1. Personajes y cuerpo (Blender)
-- [ ] [[P20f Cuerpo propio del jugador]]
-- [ ] [[P20b Piezas del creador de personaje]] (solo 4 cascos, 4 capas y 4 petos)
-- [ ] [[P13 El Albatros]]
-- [ ] [[P19 NPCs]] (solo Tano)
-- [ ] [[P20 Enemigos comunes]] (solo los 3 matones del puerto y el matón con implantes)
+- [x] [[P20f Cuerpo propio del jugador]]
+- [x] [[P20b Piezas del creador de personaje]] (solo 4 cascos, 4 capas y 4 petos)
+- [x] [[P13 El Albatros]]
+- [x] [[P19 NPCs]] (solo Tano)
+- [x] [[P20 Enemigos comunes]] (solo los 3 matones del puerto y el matón con implantes)
 - [ ] [[P20d Civiles y testigos]] (solo los del puerto y la policía)
 
 ## 2. Lugar (Blender)
@@ -47,6 +47,9 @@ Hay dos listas: **Beta** (la primera versión, solo Puerto Óxido, ver [[Plan po
 ## 5. Sonidos y música (ForgeGUI)
 - [ ] [[P31 Sonidos de combate y menús]]
 - [ ] [[P32 Ambientes y música]] (solo el puerto)
+
+## 5b. Cinemáticas (Blender + Studio)
+- [ ] [[P30c Cinemáticas]] (el reproductor y las 22 escenas de la Beta: logo, llegar al puerto, Remache, Tano, el Albatros, atraco, ruleta, prólogo y fin de "Los muelles rojos")
 
 ## 6. Pantallas (Gemini, Figma y Studio)
 - [ ] [[P33a Logo, ícono y miniaturas (Gemini)]]
@@ -116,6 +119,7 @@ El plan completo está en [[Animaciones (plan completo)]].
 - [ ] [[P32 Ambientes y música]] (las otras ciudades)
 - [ ] [[P33b Íconos de Linajes y habilidades (Gemini)]] (todos)
 - [ ] [[P33 HUD y menús]] (las pantallas nuevas)
+- [ ] [[P30c Cinemáticas]] (las demás de [[Cinemáticas (plan completo)]], cada vez que se termina un jefe, un Linaje o un acto)
 
 ## 5. Código
 - [ ] [[P36 Ruleta Linaje, Variante y Rasgos]] (los 12 Linajes)

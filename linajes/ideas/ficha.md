@@ -573,6 +573,8 @@ Remache, El Albatros, Mascarada, Víctor Halden, Dualidad, Zarpa, Confeti, Cuerv
 Los 16 personajes del Elenco aparecen como NPCs en la ciudad y en la historia: quieto con su pose propia, hablar, aparecer en escena (Cuervo baja de un techo, Centinela aterriza, Estela frena derrapando, etc.) e irse.
 
 ### 12. Escenas de historia (Blender + cámara en Studio, 15)
+Todas las cinemáticas están ahora en la sección 0j, que manda sobre esta.
+
 Prólogo "La Noche del Eclipse" (6 inicios distintos, 1 escena cada uno), el eclipse que despierta los poderes, entrada a cada ciudad (3), final de cada acto (6), Renacer y los 3 finales por bando (se arman con animaciones que ya existen más cámaras por código). La cámara de cada escena se mueve por código (`src/client/escenas/`).
 
 ### 13. Mundo y objetos (Studio, unos 25)
@@ -590,8 +592,276 @@ Golpe que conecta (chispa y aplastamiento chico), crítico, bloqueo y parry (chi
 | Efectos de Studio | **unos 230** (uno por poder + generales) |
 | Objetos e interfaz de Studio | **unos 70** |
 
+### En qué orden (sigue los prompts)
+1. P20f Cuerpo propio del jugador (el cuerpo y las caras, antes que cualquier animación).
+2. P26 Animaciones base del jugador: secciones 1, 2 y 3 de esta nota.
+3. P27 Animaciones de los 3 primeros Linajes: sección 4, de a 3 Linajes por sesión. Después las técnicas combinadas.
+4. P26b Animaciones de tecnología, gadgets y vehículos: secciones 5 y 6.
+5. P29 Animaciones de NPCs y enemigos: secciones 7, 9 y 11.
+6. P29b Animaciones de la calle viva: sección 8.
+7. P28 Animaciones de un jefe: sección 10, un jefe por sesión.
+8. P30 Animaciones de objetos y P30b Efectos especiales e interfaz: secciones 2, 3 (interfaz), 13 y 14.
+9. Las cinemáticas van en P30c Cinemáticas, después de las animaciones y los sonidos (sección 0j).
+
+## 0i. Riesgos y mejoras (revisión del 31 oct)
+
+Juani pasó una revisión hecha con Gemini. Claude la comparó con las reglas del proyecto. Lo que está en **Se hace** pasa a ser parte del juego. Lo de **Lo decidís vos** espera el OK de Juani. Lo de **No se hace** choca con una regla.
+
+### Se hace
+
+#### Mundo abierto y reputación
+| Riesgo | Qué se hace |
+|---|---|
+| **Salir del juego para escapar de la policía** (cambiarse de servidor con búsqueda 5) | Si cerrás el juego en pelea o con búsqueda activa, tu personaje se queda **10 s** en el servidor. Si te derrotan en ese tiempo, o si volvés con la búsqueda sin cumplir, aparecés en las celdas de **Islaroca**. |
+| **Un bando se queda con todos los barrios** (efecto bola de nieve) | El bando que tiene menos barrios gana **más reputación y botín** al disputar uno dominado (hasta +50 %). Si un bando tiene más del 60 % de los jugadores, los bonos de su barrio bajan. Cambiarse de bando cuesta reputación y tiene espera de 7 días. |
+| **Escapar de Islaroca solo** | Siempre se puede escapar solo (más lento o más riesgoso). Que otro jugador te ayude acelera, pero nunca es obligatorio. |
+| **Guardar tanta cosa** (5 reputaciones, confianza con NPCs, refugio, barrios entre servidores) | Un solo perfil por jugador con ProfileStore (guardado cada 5 min y al salir). Los barrios se cuentan entre servidores con **MemoryStore** y se pasan al DataStore cada pocos minutos. Nunca se guarda en cada golpe ni en cada paso. |
+
+#### Combate y sensación de golpe
+- **Golpes sin demora:** el cliente muestra el efecto (chispa, sacudida, hit-stop) al instante, y el servidor revisa la distancia, el estado y la recarga antes de aplicar el daño real. Ya estaba en Combate; ahora se suma el efecto inmediato.
+- **Cola de teclas de 0,15 s:** si apretás dash o golpe sobre el final de una animación, se ejecuta apenas termina. Así no se siente rígido.
+- **Golpe que rompe la guardia:** sacudida corta y seca más hit-stop de 0,05 s en los dos personajes.
+
+#### Celular (más del 70 % de los jugadores)
+- **Un solo botón de acción** que cambia según dónde estés (Hablar, Abrir, Frenar el crimen, Subir). Así no se llena la pantalla de botones.
+- Sombras apagadas en objetos chicos (farolas, tachos, barandas). Los carteles de neón usan material Neon sin luz aparte.
+- Interiores con `ModelStreamingMode` que solo se cargan al entrar.
+- **Meta: 45 FPS o más** en un celular de gama media con 24 jugadores. Si los efectos de un Linaje bajan de eso, se simplifican.
+
+#### Los primeros 10 minutos
+- Antes del **minuto 5**, el jugador nuevo tiene que haber peleado en la calle y visto su poder. El prólogo de Poderes, inicio y personalización se mide con `AnalyticsService` (embudo de 10 pasos) antes de publicar.
+
+#### Motivos para volver cada día
+- **Edición del día de El Faro:** cada mañana sale un diario con 1 contrato diario, el estado de los barrios y 2 o 3 avisos con hora ("asalto al banco del puerto en 15 minutos"). Premia entrar 2 o 3 veces al día en partidas cortas.
+- **Taller con tiempo:** en el refugio, el banco fabrica gadgets o refina chatarra en **2 a 4 horas**, aunque no estés conectado. Volvés a buscarlo y a cargar otro.
+
+#### Modelos (sobre los 4 trajes que ya están)
+- Capas y piezas que cuelgan: `CanCollide`, `CanTouch` y `CanQuery` apagados.
+- Cuervo y Mascarada: `Attachment` limpios en cadera y manos para enganchar gadgets y naipes por código.
+- Plumas de la capa de Cuervo: revisar al animar que no parpadeen (piezas encimadas) ni se muevan como un bloque. Se resuelve con buenos pesos en los huesos.
+- Pliegues de las telas: siempre horneados en el normal map, nunca con más polígonos. Ya lo dice el Nivel de detalle.
+
+### Ya decidido
+- **Primera versión solo con Puerto Óxido** (31 oct): sí. Está en Plan por etapas, con los 3 Linajes Comunes en lugar de 2, porque sus prompts ya existen.
+
+### Lo decidís vos
+| Propuesta | Qué opina Claude |
+|---|---|
+| **Beta de pago** (Paid Access de 350 a 400 Robux) y después gratis | Puede servir para juntar plata con poca gente y filtrar tramposos. El riesgo es que, con pocos jugadores, los servidores de 24 se ven vacíos y el mundo abierto no luce. Antes de decidir hay que revisar las reglas actuales de Roblox para el acceso pago (requisitos de la cuenta y cuánto se lleva Roblox). |
+| **Pack de fundador** (150 Robux: título "Fundador", color de traje, espacio extra) | Va bien con Plan por etapas y con la regla de vender solo lo que no da poder. |
+| **Vender el 2.º y 3.er espacio de personaje** | Hoy la ficha dice que los 3 espacios son gratis. Venderlos da plata y no rompe la pelea, pero es un cambio de diseño. Sugerencia: el 2.º gratis y el 3.º pago. |
+| **Compras que activan un evento para todo el servidor** ("Llamado de emergencia", 20 minutos) | Buena idea: el que paga gana reconocimiento y todos juegan el evento. Con límite de una cada 30 minutos por servidor. |
+
+### No se hace
+- **Ruleta de cosméticos con Robux** (auras o colores al azar pagando): es una caja de botín paga y CLAUDE.md la prohíbe. Los cosméticos se venden **directo**, viendo qué comprás. Las auras de Linaje especiales se ganan jugando o se compran sin azar.
+- **Los números de jugadores y de plata de la revisión** (de 12.000 a 30.000 jugadores a la vez el primer mes): son el caso de los juegos más exitosos de Roblox, no lo esperable. La cuenta realista está en el mensaje de Claude del 31 oct y en Plan por etapas.
+
+## 0j. Cinemáticas: plan completo (31 oct, MANDA sobre la sección 12 de 0h)
+
+Todas las escenas cortas donde el juego toma la cámara: al entrar, al salir, con los jefes, con los NPCs, al despertar un poder y en la historia. Manda sobre la sección 12 de Animaciones (plan completo).
+
+### Reglas para todas
+- **Cortas:** de 3 a 12 segundos. Solo el prólogo y los finales llegan a 30 o 40.
+- **Se pueden saltear:** la primera vez, después de 2 segundos; las siguientes, enseguida. Las que se repiten (entrar a una ciudad, reaparecer) se acortan solas la segunda vez.
+- **Multijugador:** casi todas son **solo para vos** (tu cámara, tu pantalla) y el resto del servidor sigue jugando. Mientras dura, nadie te puede pegar ni vos podés pegar. Las de jefe se ven **todos los que están en la arena**, y el jefe espera quieto hasta que terminan.
+- **Formato:** franjas negras arriba y abajo, subtítulos abajo (el texto también sirve de doblaje leído), el HUD se esconde, y la música y el sonido bajan o cambian. En celular se ven igual, con el botón "Saltear" grande.
+- **Cómo se hacen:**
+  - Los cuerpos se mueven con animaciones de Blender (las de Animaciones (plan completo) o una propia de la escena).
+  - **La cámara también se anima en Blender**: un script exporta su recorrido a un archivo de datos (`linajes/arte/cinematicas/<escena>.json`) y Studio lo reproduce tal cual.
+  - En Studio, un solo módulo (`linajes/src/client/cinematicas/`) toca cualquier escena desde sus datos: cámara, animaciones, subtítulos, sonidos, efectos y marcadores (`Golpe`, `Destello`, `Sacudida`).
+  - Los textos van en `Config.luau`, para poder cambiarlos sin tocar el código.
+- **El juego no explica:** en las escenas de poderes y Variantes se ve qué pasa, pero nunca se dice qué hace (regla de Poderes, inicio y personalización).
+
+### 1. Entrar al juego (6)
+| Escena | Duración | Qué se ve |
+|---|---|---|
+| Logo | 4 s | El eclipse se cierra sobre la bahía y aparece el logo. Solo la primera vez del día. |
+| Menú | loop | La cámara gira lento alrededor de tu personaje, con el eclipse atrás. |
+| Elegir espacio | 2 s | La cámara pasa de un personaje al otro. |
+| Llegar a la ciudad | 6 s | Bajás de un ferry en Puerto Óxido (o de un tren en Corona, o del subte en Vórtice) y la cámara se pone detrás tuyo. |
+| Volver al juego | 2 s | Tu personaje se estira y mira la ciudad. |
+| Volver después de días | 5 s | Lucía Vega te cuenta en 2 frases qué pasó en la ciudad mientras no estabas (sale de la Crónica). |
+
+### 2. Salir, perder y volver a aparecer (8)
+| Escena | Duración | Qué se ve |
+|---|---|---|
+| Salir del juego | 3 s | Tu personaje saluda o se sube la capucha, y "Progreso guardado". |
+| Derrota | 3 s | Cámara lenta, cae, y la pantalla se oscurece. |
+| Reaparecer | 3 s | Despertás en la clínica de Kessler o en tu refugio. |
+| Te arrestan | 5 s | Esposas, patrullero y la puerta de la celda que se cierra. |
+| Islaroca | 6 s | Llegás en lancha al penal bajo la lluvia. |
+| Escapar de Islaroca | 6 s | Saltás el muro y caés al agua. |
+| Viaje rápido | 2 s | Fundido con una toma aérea del destino. |
+| Entrar a tu refugio | 3 s | Se abre la puerta y se encienden las luces de a una. |
+
+### 3. Jefes (por jefe: 5)
+| Escena | Duración | Qué se ve |
+|---|---|---|
+| Entrada | 8 s | Presentación con el nombre en pantalla grande, su tema musical y algo que muestra cómo pelea. Remache rompe la pared del galpón y sus pistones echan vapor. |
+| Cambio de fase | 4 s | El jefe cambia: a Remache se le rompen los tubos rojos; Mascarada gira el sombrero y cambia de máscara. |
+| Golpe final | 3 s | Cámara lenta en el último golpe, con un destello en el color de tu Linaje. |
+| Derrota | 6 s | El jefe cae de rodillas. Después, la decisión de la historia: entregarlo o dejarlo ir. |
+| Botín | 3 s | Suelta su Fragmento de Linaje, que flota hacia vos. |
+
+Para la primera versión: Remache. Después, los otros 9 jefes de Animaciones (plan completo) (sección 10).
+
+### 4. NPCs e interacciones (unas 25)
+- **Conocer a cada NPC con nombre** (7, de 6 s): Tano sale de abajo de un auto con la llave inglesa, Vega te saca una foto, Rivas te mira por encima de los papeles, etc. Solo la primera vez.
+- **Elenco** (16, de 5 s): la primera vez que ves a Cuervo, Centinela, Estela y los demás aparecer en la ciudad.
+- **Entrar a un bando** (4, de 6 s): ceremonia corta en la base del bando (el Faro Orbital, el Nido, la Fundición o un callejón para los neutrales).
+- **Tecnología:** primer traje fabricado (5 s), instalar un implante en la camilla de Kessler (6 s), transferencia de Linaje con Brandt (8 s).
+- **Calle:** empieza un atraco (4 s, la alarma y la cámara de seguridad que te mira), termina el atraco (4 s), llegás a búsqueda 5 (4 s, el helicóptero te ilumina), tu cara sale en la tapa de El Faro (3 s).
+
+### 5. Poderes (unas 60)
+| Escena | Cuántas | Duración | Qué se ve |
+|---|---|---|---|
+| Te toca un Linaje en la ruleta | 5 (una por rareza) | 4 a 8 s | Común: el poder te sale de las manos. Poco común: una onda alrededor. Raro: te elevás. Legendario y Mítico: el eclipse se abre en el cielo y **todo el servidor ve un aviso**. |
+| Despertar 1 | 12 (una por Linaje) | 10 s | Pelea contra tu sombra, el poder te envuelve, tu aspecto cambia y aparece el nombre de la rama que elegiste (sin explicar). |
+| Despertar 2 | 12 | 12 s | Igual, más grande, con el eclipse detrás. |
+| Mutación de Variante | 12 | 6 s | El poder se quiebra y vuelve distinto (otro color u otra forma). Solo aparecen el nombre y "???". |
+| Segundo poder | 1 | 8 s | Los dos poderes chocan en tus manos y se mezclan. |
+| Técnica combinada descubierta | 12 | 5 s | La primera vez en el servidor: aviso a todos con el nombre de quien la descubrió. |
+| Definitiva | 12 | 2 s | Toma corta de cámara antes de la definitiva (se puede apagar en Ajustes). |
+
+### 6. Historia (unas 35)
+- **Prólogo "La Noche del Eclipse"** (6 inicios, de 30 s): cada uno muestra de dónde venís y el eclipse que despierta tu poder.
+- **Fin de un hilo** (1 por hilo, de 6 s), como "Los muelles rojos", que termina con Remache.
+- **Revelaciones del misterio** (8, de 10 s): cada vez que juntás los Fragmentos de una Revelación.
+- **La agenda de los villanos** (1 por semana, de 6 s): el lunes, el villano de la semana anuncia su plan en las pantallas de la ciudad.
+- **Final de acto** (6) y **finales por bando** (3 por bando, de 30 a 40 s).
+- **Renacer** (8 s): tu personaje deja su traje en el refugio y empieza de nuevo.
+
+### 7. Mundo y eventos del servidor (8, para todos)
+Apagón (las luces de la ciudad se apagan barrio por barrio), Lluvia de esquirlas, Fuga del penal (sirenas, reflectores), Invasión de Umbra (se abre el portal), un bando conquista un barrio (cambian las banderas), el eclipse de cada noche (la cámara mira al cielo 2 s, solo la primera vez).
+
+---
+
+### Total aproximado
+**Unas 170 escenas.** La mayoría reusa animaciones que ya existen: lo nuevo de cada una es la cámara, los subtítulos y el sonido.
+
+### Cuáles van en la Beta (Puerto Óxido)
+Logo, menú, elegir espacio, llegar en ferry al puerto, volver al juego, salir, derrota y reaparecer, te arrestan (celda de la comisaría del puerto), las 5 de **Remache**, conocer a **Tano** y al **Albatros**, primer traje, empieza y termina el atraco, la ruleta (Común), el prólogo (1 inicio) y el fin del hilo "Los muelles rojos". **Son unas 22.**
+
 ### En qué orden
-El orden de los prompts está en linajes/ideas/PROMPTS.md (Parte 3), en la lista **BETA** (con lo que se hace de cada uno entre paréntesis).
+1. P30c Cinemáticas arma el módulo que toca escenas y hace las de la Beta, después de que existen las animaciones (Fase E) y los sonidos (Fase F).
+2. Las de la Post beta se hacen con el mismo prompt, al terminar cada parte que las necesita (un jefe nuevo, un Linaje nuevo, un acto).
+
+## 1. La idea en dos líneas
+Un eclipse cubre **Ciudad Vórtice** y despierta poderes en parte de la gente: los **Linajes**. Te armás tu propio héroe o villano, elegís tu bando, peleás en tiempo real por los distritos de la ciudad, seguís una historia con personajes, y mejorás a tu personaje con el árbol de habilidades, **tecnología**, **implantes** y **transferencias** de poder.
+
+## 2. Lo que tomamos de las capturas de referencia (la idea, no el contenido)
+| Pantalla de la referencia | En nuestro juego |
+|---|---|
+| Menú con personaje en el centro, "Espacio 1" con flechas, datos (nombre, línea, pueblo, rango, stats, edad) | Menú con **3 espacios de personaje**. Datos: nombre, Linaje, bando, rango, Sincronía, Vitalidad, implantes puestos. |
+| Lista de linajes con rareza y % a la derecha | Igual, con nuestros Linajes y las probabilidades siempre a la vista. |
+| Árbol de habilidades con nodos conectados (íconos encendidos = desbloqueado) | Igual, en 3 ramas, con nodos que cambian cómo funcionan las habilidades. |
+| Barras de vida y energía con escudo | Barra de **Vida**, **Energía** y **Escudo** (escudo viene de la tecnología). |
+| Lista de jugadores agrupada por pueblo con rangos (Genin, Chunin, Clase S) | Lista agrupada por **bando**: Liga de Guardianes, Sindicato Carmesí, Vigilantes, Neutral. Rangos: Novato → Clase C → B → A → S. |
+
+## 3. Bandos (como los pueblos de la referencia)
+- **Liga de Guardianes** (héroes): misiones de proteger y rescatar.
+- **Sindicato Carmesí** (villanos): robos, sabotajes, peleas contra la Liga.
+- **Vigilantes** (la "noche" de la ciudad, estilo detective oscuro): investigación, gadgets, más daño de noche.
+- **Neutral**: todos empiezan así; eligen bando al terminar el prólogo.
+La historia cambia un poco según el bando (misiones y diálogos propios), el mundo es el mismo.
+
+## 4. Linajes (aleatoriedad, como la ruleta de la referencia)
+| Rareza | % | Linajes (originales) |
+|---|---|---|
+| Común | 55 % | Fuerza Bruta, Reflejos, Piroquinesis |
+| Poco común | 28 % | Electro, Criogenia, Telequinesis |
+| Raro | 12 % | Velocista Cinético, Sombra Viva, Sangre Abisal (del mar) |
+| Legendario | 4 % | Origen Estelar (alienígena: vuelo, fuerza, rayos de energía), Herencia Olímpica (mitológica) |
+| Mítico | 1 % | Eclipse (manipula luz y oscuridad) |
+
+- Probabilidades siempre visibles, suman 100 %. Seguro de mala suerte: cada 40 tiradas sin Raro o mejor, la siguiente es Raro o mejor.
+- Las tiradas (**Fichas de Eclipse**) se ganan jugando. Si más adelante se venden por Robux: probabilidades a la vista con un botón con texto antes de comprar y `PolicyService` (misma regla que Mutant Lab). Nada de casino.
+- **Sin poder también se puede**: si te toca un Común, la tecnología e implantes te hacen fuerte igual (el "camino del vigilante").
+
+## 5. Mejoras: tecnología, implantes y transferencias (lo nuevo que pediste)
+### 5a. Tecnología (equipo que se fabrica)
+- **Traje** (vida y escudo), **Gadget** (1 tecla extra: gancho para subir edificios, granada de humo, dron que ataca, batarang... con nombre propio), **Vehículo** más adelante.
+- Se fabrican en tu **Taller** con chatarra, chips y materiales que sueltan enemigos y jefes. Cada pieza sube de nivel (Mk I → Mk V).
+
+### 5b. Implantes (cibernética)
+- 3 ranuras en el cuerpo: **Brazo** (cañón, puño hidráulico), **Ojos** (ver puntos débiles, visión nocturna), **Columna** (doble salto, menos recarga).
+- Cada implante usa **Carga Cibernética**. Tu límite depende del nivel y del árbol, y si te pasás perdés Sincronía con tu Linaje (los poderes recargan más lento). Hay que elegir entre más máquina o más poder.
+- Se instalan con un NPC cirujano (Dra. Kessler, nombre provisorio) en el laboratorio.
+
+### 5c. Transferencias (de poder)
+- Cuando vencés a un jefe con Linaje, suelta un **Fragmento de Linaje**. En el laboratorio podés **transferirlo** a vos como **Linaje secundario** (1 habilidad extra de ese poder). Tenés 1 ranura al principio y 2 más adelante.
+- **Transferencia entre espacios**: podés pasar parte del progreso del árbol de un personaje a otro de tus espacios (para no empezar de cero al cambiar de Linaje).
+- Los fragmentos se ganan jugando y no se venden.
+
+## 6. Combate en tiempo real (igual que la v1)
+Combo de 4 golpes (clic), bloqueo y parry (F), dash (Q), 3 habilidades del Linaje (Z, X, C), gadget (G), definitiva con el Despertar (V). Botones para celular. Los jefes avisan el ataque antes de pegar. **El servidor decide los golpes** (hitbox en el servidor, distancia, recargas, energía, límite de pedidos).
+
+## 7. Árbol de habilidades y evolución
+- 1 punto por nivel, 3 ramas por Linaje: **Poder**, **Cuerpo** y **Técnica** (cambia cómo funciona la habilidad).
+- **Despertar 1** (nivel 25) y **Despertar 2** (nivel 60), cada uno con misión de historia y jefe. Cambia el aspecto del poder y abre la definitiva.
+
+## 8. Historia larga y multijugador (reemplaza la primera versión)
+La historia se cuenta **hablando con NPCs**: no hay flechas mágicas, cada paso empieza y termina en una conversación. Cada bando ve la misma historia desde su lado (misiones y diálogos propios).
+
+| Acto | Niveles | Dónde | Qué pasa | Jefe | Para jugar en grupo |
+|---|---|---|---|---|---|
+| Prólogo: Noche del Eclipse | 1-5 | Centro de Ciudad Vórtice | Cae el eclipse, despierta tu Linaje, Señal te guía por radio, elegís a quién seguir | Matón con implantes | — |
+| 1: Ciudad en llamas | 5-20 | Puerto Óxido y Vórtice | Una pandilla con implantes robados toma el puerto. Aparece Mascarada. Descubrís que los implantes salen de Corona Corp | Remache (Bane), El Albatros (Pingüino) | Evento: asalto al barco del Albatros (hasta 8) |
+| 2: La torre de cristal | 20-35 | Distrito Corona | Víctor Halden (Lex Luthor) presenta implantes "para todos". Centinela Solar desaparece. Trabajás infiltrado en Corona Corp | Robot centinela gigante, Dualidad (Dos Caras) | Raid: Penal Islaroca, fuga masiva (4-8) |
+| 3: Lo que hay abajo | 35-50 | Ciudad Hundida y Hespérides | El eclipse despierta una ciudad bajo el puerto. Atalanta y Heredero Abisal buscan aliados. Despertar 1 | Rey Abisal corrompido | Guerra de bandos por el puerto (opcional, PvP) |
+| 4: Eclipse total | 50-70 | Toda la ciudad | El Eclipsador (Darkseid) invade. Eventos de invasión en el servidor cada 2 horas. Se revela qué causó tu Linaje | Heraldos del Eclipsador | Invasión de servidor (todos juntos) |
+| 5: Umbra | 70-90 | Umbra (otro mundo) | La Liga, la Cofradía y los Vigilantes tienen que aliarse para entrar a Umbra. Despertar 2 | El Eclipsador | Raid final (8) |
+| 6: Ciudad rota (después del final) | 90+ | Vórtice alterada | Versiones malvadas de los héroes por el eclipse. Contenido repetible, temporadas | Centinela Solar corrompido | Raids semanales, ranking de bandos |
+
+- **Misiones de bando** en cada acto (3 a 5 por bando): la Liga rescata, la Cofradía roba y sabotea, los Vigilantes investigan.
+- **Misiones de personaje**: cada héroe o villano principal tiene una cadena de 3 misiones que se abre cuando tenés buena reputación con él.
+- **El Faro** publica cada día rumores nuevos: son misiones cortas repetibles.
+- **Eventos de servidor**: invasiones, fugas del penal y apagones en la ciudad, con recompensas para todos los que ayudan.
+
+## 8b. Hablar con NPCs: pedir ayuda y conseguir trabajo (pedido de Juani)
+Para avanzar en la historia **y** en tu rol (bando y rango) tenés que hablar con NPCs.
+
+**Conseguir trabajo (tu identidad de día):**
+| Trabajo | NPC (DC de trabajo → final) | Qué hacés | Qué te da |
+|---|---|---|---|
+| Reportero | Lois Lane → Lucía Vega, El Faro | Sacar fotos de crímenes y peleas | Dinero, pistas de la historia, rumores |
+| Mecánico | Alfred → Tano, taller del puerto | Arreglar autos y gadgets (minijuego corto) | Chatarra y chips para tecnología |
+| Patrullero | Gordon → Comisaria Rivas | Patrullas, detener matones | Reputación con la Liga, información |
+| Ayudante de laboratorio | Lucius Fox → Ingeniera Okafor | Probar prototipos en Corona Corp | Planos de trajes y gadgets |
+| Contrabandista | Pingüino → El Albatros | Llevar paquetes sin que te vean | Reputación con la Cofradía, implantes baratos |
+
+Cada trabajo sube de nivel (Aprendiz → Experto) y da acceso a misiones nuevas.
+
+**Pedir ayuda:**
+- **Mentores**: un NPC te enseña nodos del árbol de habilidades si le pedís ayuda y cumplís su prueba (Tano te enseña gadgets, Atalanta técnicas de combate).
+- **Pistas**: si estás trabado en la historia, preguntás a Señal por radio o en la comisaría y te dicen a quién buscar.
+- **Refuerzos**: con buena reputación podés pedir que un NPC héroe te acompañe en una misión difícil.
+- **Implantes y transferencias**: la Dra. Kessler y la Directora Brandt (Amanda Waller) te los dan solo si hiciste trabajos para ellas.
+
+**Rango y reputación:** cada bando tiene reputación (0 a 1000). Para subir de rango (Novato → Clase C → B → A → S) hay que juntar reputación con trabajos y misiones **y** hablar con el líder del bando, que te da la prueba de ascenso.
+
+## 9. Plan por etapas (una por sesión en tu PC)
+
+### Primera versión: solo Puerto Óxido (decisión de Juani, 31 oct). MANDA sobre la tabla de abajo
+
+Antes de hacer las 3 ciudades, se arma **un recorte chico y completo**: un barrio que se juega de punta a punta en 15 minutos y que se ve terminado. Sirve para probar si es divertido, grabar clips y mostrarlo. Recién con eso andando se suman las otras ciudades.
+
+#### Qué tiene
+| Parte | En la primera versión | Queda para después |
+|---|---|---|
+| Mapa | **Puerto Óxido** entero: muelles, galpones, grúas, callejones, el taller de Tano y el galpón de Remache. Los puentes a Distrito Corona y Ciudad Vórtice, cortados por la policía. | Distrito Corona, Ciudad Vórtice, Islaroca y el resto |
+| Personaje | Cuerpo propio y creador con pocas piezas (4 cascos, 4 capas, 4 petos) | El creador completo |
+| Poderes | **Fuerza Bruta, Reflejos y Piroquinesis** (los 3 Comunes, ya tienen prompt), con su Variante Normal y la ruleta con % | Los otros 9 Linajes, Variantes secretas, Despertar |
+| Combate | Combo, bloqueo, parry con hit-stop, dash, Z X C, cola de teclas | Definitiva V, segundo poder |
+| Tecnología | Taller de Tano: 1 traje y 1 gadget (el gancho) | Implantes, transferencias |
+| Calle | Crímenes al azar del puerto, 1 atraco chico (almacén del muelle), policía y testigos básicos | Atracos grandes, noticias completas, territorios |
+| Jefe | **Remache** en su galpón (ya está modelado) | El resto de los jefes |
+| NPCs | **Tano** (taller) y **El Albatros** (contrabando y trabajos) | Los otros NPCs |
+| Historia | Prólogo corto (1 inicio) y el hilo "Los muelles rojos" | El Narrador completo, los 6 inicios |
+| Bandos | Elegir bando y lista de jugadores por bando | Barrios entre servidores |
+
+#### En qué orden
+El orden de los prompts está en linajes/ideas/PROMPTS.md (Parte 3) y en la nota Todos los prompts de la bóveda, en la lista **BETA** (con lo que se hace de cada uno entre paréntesis).
 
 **Antes de mostrarlo:** los riesgos de Riesgos y mejoras (revisión 31 oct) que tocan a esta versión (celular a 45 FPS, primer pelea antes del minuto 5, castigo por desconectarse, un solo botón de acción), analítica de los primeros 10 pasos, y prueba con 2 o 3 jugadores en Local Server.
 

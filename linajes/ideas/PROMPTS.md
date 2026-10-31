@@ -82,6 +82,9 @@ Decímelo acá ("más oscuro", "cambiá el color de la Liga", "subí los triáng
 - [ ] P31 Sonidos de combate y menús
 - [ ] P32 Ambientes y música (solo el puerto)
 
+#### 5b. Cinemáticas (Blender + Studio)
+- [ ] P30c Cinemáticas (el reproductor y las 22 escenas de la Beta)
+
 #### 6. Pantallas (Gemini, Figma y Studio)
 - [ ] P33a Logo, ícono y miniaturas (Gemini)
 - [ ] P33b Íconos de Linajes y habilidades (Gemini) (los 3 Linajes, sus 9 habilidades, el gancho y las monedas)
@@ -149,6 +152,7 @@ El plan completo está en Animaciones (plan completo).
 - [ ] P32 Ambientes y música (las otras ciudades)
 - [ ] P33b Íconos de Linajes y habilidades (Gemini) (todos)
 - [ ] P33 HUD y menús (las pantallas nuevas)
+- [ ] P30c Cinemáticas (las demás, cada vez que se termina un jefe, un Linaje o un acto)
 
 #### 5. Código
 - [ ] P36 Ruleta Linaje, Variante y Rasgos (los 12 Linajes)
@@ -1209,6 +1213,29 @@ Probá cada efecto con Play en compu y en el emulador de celular. Leé la consol
 Captura de cada grupo, mostramelas y esperá mi OK. Commit y push.
 ```
 Para cada Linaje nuevo se repite el punto 2 con sus 3 habilidades, sus Variantes y su definitiva.
+
+#### Prompt 30c 💻 Cinemáticas
+
+Antes de pegarlo: Blender abierto con el conector de Claude, Studio con el place de Linajes y `rojo serve linajes/linajes.project.json` corriendo, en Claude Code en `C:\Users\eljua\fabrica-roblox`. Hacé antes las animaciones y los sonidos que usa cada escena. Reglas: Cinemáticas (plan completo) · Colores
+
+```
+Leé la nota "Cinemáticas (plan completo)" de la bóveda (reglas, lista y cuáles van en la Beta).
+
+1. MÓDULO (una sola vez): en linajes/src/client/cinematicas/ un reproductor que toca una escena desde
+   sus datos: recorrido de cámara, animaciones de cada personaje, subtítulos, sonidos, efectos y
+   marcadores (Golpe, Destello, Sacudida). Franjas negras, HUD escondido, botón "Saltear" (la primera vez
+   aparece a los 2 s), invulnerable mientras dura. El servidor avisa cuándo empieza una escena de jefe a
+   todos los de la arena y congela al jefe hasta que termina. Textos y duraciones en Config.luau.
+2. CÁMARA EN BLENDER: en linajes/arte/blender/cinematicas.blend, una escena de Blender por cinemática
+   con los personajes, la cámara animada a 30 fps y los marcadores. Script en
+   linajes/arte/scripts/cinematicas.py que exporta el recorrido de la cámara (posición, giro y lente por
+   cuadro, en studs) y los marcadores a linajes/arte/cinematicas/<escena>.json.
+3. ESCENAS: [pegá la lista: para la Beta, la de "Cuáles van en la Beta"; después, la parte que toque].
+Para cada escena: 3 cuadros clave en una tira (linajes/arte/renders/cine-<escena>.png) y mandalas a la
+nota de Obsidian "Cinemáticas (plan completo)" en una sección "Hechas". Esperá mi OK.
+Con mi OK: probalas con Play en compu y en el emulador de celular (que se puedan saltear, que no se rompa
+si otro jugador entra en el medio), consola sin rojo, captura. Commit y push.
+```
 
 ### Fase F. Sonidos y música (ForgeGUI)
 

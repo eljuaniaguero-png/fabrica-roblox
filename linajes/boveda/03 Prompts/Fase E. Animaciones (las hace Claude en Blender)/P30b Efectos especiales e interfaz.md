@@ -26,4 +26,4 @@ Captura de cada grupo, mostramelas y esperá mi OK. Commit y push.
 Para cada Linaje nuevo se repite el punto 2 con sus 3 habilidades, sus Variantes y su definitiva.
 
 ---
-[[P30 Animaciones de objetos|← P30 Animaciones de objetos]]   ·   [[Todos los prompts]]   ·   [[P31 Sonidos de combate y menús|P31 Sonidos de combate y menús →]]
+[[P30 Animaciones de objetos|← P30 Animaciones de objetos]]   ·   [[Todos los prompts]]   ·   [[P30c Cinemáticas|P30c Cinemáticas →]]

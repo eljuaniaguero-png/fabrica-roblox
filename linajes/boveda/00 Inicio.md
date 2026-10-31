@@ -23,6 +23,7 @@ RPG de superhéroes para Roblox: combate en tiempo real, multijugador, historia 
 - **Documento completo del juego** (para leer de corrido): https://claude.ai/artifact/MQo9fGEHaN2EATVw2us2P1
 - [[Personajes]]: cada personaje con su **modelo 3D para girar**, renders y estado.
 - [[Cuerpo propio (sin avatar de Roblox)]]: el juego no usa tu avatar de Roblox; todos usan el cuerpo del juego.
+- [[Cinemáticas (plan completo)]]: todas las escenas (entrar, salir, jefes, NPCs, Despertar, historia).
 - [[Animaciones (plan completo)]]: todo lo que se mueve (jugador, menús, poderes, NPCs, jefes, efectos).
 - [[Historia viva]]: cómo se arma tu historia (Narrador, ganchos, hilos, misterio, agenda de los villanos). Manda sobre la historia.
 - [[Calle viva]]: lugares donde se entra, policía y vigilancia, testigos, ladrones, callejones, atracos y noticias.

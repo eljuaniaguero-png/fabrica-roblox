@@ -15,6 +15,7 @@ RPG de superhéroes multijugador, combate en tiempo real, en una ciudad propia m
 - [[Poderes, inicio y personalización]]
 - [[Cuerpo propio (sin avatar de Roblox)]]
 - [[Animaciones (plan completo)]]
+- [[Cinemáticas (plan completo)]]
 - [[Riesgos y mejoras (revisión 31 oct)]]
 - [[Mundo abierto y reputación]]
 - [[Calle viva]]

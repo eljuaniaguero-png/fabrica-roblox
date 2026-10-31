@@ -106,6 +106,8 @@ Remache, El Albatros, Mascarada, Víctor Halden, Dualidad, Zarpa, Confeti, Cuerv
 Los 16 personajes del [[Elenco]] aparecen como NPCs en la ciudad y en la historia: quieto con su pose propia, hablar, aparecer en escena (Cuervo baja de un techo, Centinela aterriza, Estela frena derrapando, etc.) e irse.
 
 ## 12. Escenas de historia (Blender + cámara en Studio, 15)
+> [!note] Todas las cinemáticas (entrar, salir, jefes, NPCs, poderes, historia y eventos) están ahora en [[Cinemáticas (plan completo)]], que manda sobre esta sección.
+
 Prólogo "La Noche del Eclipse" (6 inicios distintos, 1 escena cada uno), el eclipse que despierta los poderes, entrada a cada ciudad (3), final de cada acto (6), Renacer y los 3 finales por bando (se arman con animaciones que ya existen más cámaras por código). La cámara de cada escena se mueve por código (`src/client/escenas/`).
 
 ## 13. Mundo y objetos (Studio, unos 25)
@@ -132,6 +134,6 @@ Golpe que conecta (chispa y aplastamiento chico), crítico, bloqueo y parry (chi
 6. [[P29b Animaciones de la calle viva]]: sección 8.
 7. [[P28 Animaciones de un jefe]]: sección 10, un jefe por sesión.
 8. [[P30 Animaciones de objetos]] y [[P30b Efectos especiales e interfaz]]: secciones 2, 3 (interfaz), 13 y 14.
-9. Las escenas de historia (sección 12) van con el código de la historia, en [[P39 Prólogo tu origen y la Noche del Eclipse]] y [[P41 El Narrador ganchos e hilos]].
+9. Las cinemáticas van en [[P30c Cinemáticas]], después de las animaciones y los sonidos (ver [[Cinemáticas (plan completo)]]).
 
 Volver a [[Ficha del juego]]
