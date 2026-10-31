@@ -253,4 +253,93 @@ Config.Animaciones = {
 	VelocidadCorrer = 12, -- studs/s: desde acá pasa de caminar a correr
 }
 
+-- Civiles de la calle viva (ficha 0e). Ropa en ServerStorage.Civiles.<Tipo>.<Pieza> (kit de
+-- arte/scripts/civiles.py): cada malla tiene los atributos Hueso, Canal (C1, C2 o fijo) y Desfase.
+-- Un civil = 1 de arriba + 1 de abajo + 1 de cabeza + a veces 1 accesorio (≤ 6.000 triángulos).
+Config.Civiles = {
+	Arriba = {
+		"CamperaJean",
+		"SacoOficina",
+		"BuzoCapucha",
+		"CamisaCuadros",
+		"PilotoLargo",
+		"ChalecoObra",
+		"RemeraEstampa",
+		"UniformeEnfermeria",
+	},
+	Abajo = { "Jean", "PantalonVestir", "Pollera", "Jogging", "Bermuda", "Mameluco" },
+	Cabeza = {
+		"Gorra",
+		"GorroLana",
+		"PeloCorto",
+		"PeloLargoAtado",
+		"Rulos",
+		"PeladoBarba",
+		"Sombrero",
+		"Auriculares",
+	},
+	Accesorio = { "Maletin", "BolsaCompras", "Mochila", "ParaguasCerrado", "Cafe", "CorreaPerro" },
+	-- El paraguas abierto sale solo cuando llueve (evento de clima) en vez del cerrado.
+	ParaguasLluvia = "ParaguasAbierto",
+	ChanceAccesorio = 0.6,
+	-- Pelos: Color1 de PaletaPelo y Color2 (hebilla, gomita, anteojos) de PaletaAccesorioPelo,
+	-- colores vivos que nunca se confunden con el pelo.
+	Pelos = { PeloCorto = true, PeloLargoAtado = true, Rulos = true, PeladoBarba = true },
+	PaletaRopa = {
+		"2c3546",
+		"3a3f4b",
+		"6e3b2e",
+		"8a5a2e",
+		"2f5d8c",
+		"4a6a90",
+		"c2213a",
+		"3d6b3f",
+		"6b5ba8",
+		"c9c6c0",
+		"e9e7e2",
+		"1b1f2a",
+		"a3312a",
+		"d9a441",
+		"4ed68a",
+		"7a7d84",
+	},
+	PaletaPelo = { "1a1410", "3a2a20", "6e4a35", "b08a5a", "c9c6c0" },
+	PaletaAccesorioPelo = { "f2a23a", "3fe0f0", "ff4d6d", "4ed68a", "e9e7e2", "a15cf0" },
+	-- Color2 fijo de algunas piezas (el chaleco de obra siempre es flúor).
+	Color2Fijo = { ChalecoObra = "e8f04a" },
+	-- Civiles especiales: piezas del kit + sus props (carpeta Especial.<Nombre>) con colores fijos.
+	Especiales = {
+		Diarero = {
+			Piezas = { "CamisaCuadros", "Jean", "Gorra" },
+			Colores = {
+				CamisaCuadros = { "2f5d8c", "c9c6c0" },
+				Jean = { "2c3546", "3a2a20" },
+				Gorra = { "1b1f2a", "f2652b" },
+				Diarero = { "2f6fdb", "e9e7e2" },
+			},
+		},
+		Vendedor = {
+			Piezas = { "RemeraEstampa", "PantalonVestir", "Gorra" },
+			Colores = {
+				RemeraEstampa = { "e9e7e2", "c2213a" },
+				PantalonVestir = { "3a3f4b", "121216" },
+				Gorra = { "c2213a", "e9e7e2" },
+				Vendedor = { "c0c4cc", "f2a23a" },
+			},
+		},
+		Musico = {
+			Piezas = { "CamperaJean", "Jogging", "GorroLana" },
+			Colores = {
+				CamperaJean = { "4a6a90", "b8bcc6" },
+				Jogging = { "1b1f2a", "e9e7e2" },
+				GorroLana = { "6b5ba8", "e9e7e2" },
+				Musico = { "8a5a2e", "2a2018" },
+			},
+		},
+	},
+	-- Partes con tag "PuntoCivil" en el mapa: ahí aparece un civil (atributo Especial = nombre para
+	-- uno especial). Tope de civiles por servidor, para el celular.
+	MaximoPorServidor = 40,
+}
+
 return Config

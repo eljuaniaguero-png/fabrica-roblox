@@ -1211,6 +1211,45 @@ def exportar():
     print("Exportadas:", total)
 
 
+def paquete():
+    """Un solo FBX para que Juani importe en Studio (exports/civiles/_PaqueteCiviles.fbx): todas
+    las mallas del kit y de los especiales, más copias del maniquí llamadas Ref_<Parte>. En Studio,
+    cada malla se ubica respecto de su Ref_ (así el código sabe dónde pegarla en cada civil)."""
+    bpy.ops.wm.open_mainfile(filepath=BLEND)
+    objs = [o for o in bpy.data.objects if o.type == "MESH" and o.name.startswith(PREFIJO + "_") and not o.name.endswith("_Alto")]
+    refs = []
+    for p in B.partes():
+        c = p.copy()
+        c.data = p.data.copy()
+        bpy.context.scene.collection.objects.link(c)
+        c.matrix_world = p.matrix_world.copy()
+        c.name = "Ref_" + p.name.replace(B.ESQUELETO + "_", "")
+        refs.append(c)
+    for o in bpy.context.scene.objects:
+        o.hide_viewport = o.hide_render = False
+        o.hide_set(False)
+        o.select_set(o in objs or o in refs)
+    bpy.context.view_layer.objects.active = objs[0]
+    ruta = os.path.join(B.EXPORTS, ARCHIVO, "_PaqueteCiviles.fbx")
+    bpy.ops.export_scene.fbx(
+        filepath=ruta,
+        use_selection=True,
+        object_types={"MESH"},
+        global_scale=1 / B.STUD,
+        apply_unit_scale=True,
+        apply_scale_options="FBX_SCALE_UNITS",
+        axis_forward="Z",
+        axis_up="Y",
+        bake_space_transform=True,
+        use_mesh_modifiers=True,
+        mesh_smooth_type="FACE",
+        add_leaf_bones=False,
+        bake_anim=False,
+    )
+    print("Paquete:", ruta, len(objs), "mallas +", len(refs), "referencias")
+    return ruta
+
+
 def catalogo_tipos():
     """Nombre -> (tipo, None), sin construir nada (para exportar desde el .blend guardado)."""
     tipos = {}
@@ -1233,6 +1272,6 @@ PROPS = {"Diarero": ["CarritoDiarios"], "Vendedor": ["CarritoPanchos"], "Musico"
 
 if __name__ == "__main__":
     argumentos = sys.argv[sys.argv.index("--") + 1 :] if "--" in sys.argv else []
-    for paso in ("boceto", "detalle", "exportar"):
+    for paso in ("boceto", "detalle", "exportar", "paquete"):
         if paso in argumentos:
             globals()[paso]()
