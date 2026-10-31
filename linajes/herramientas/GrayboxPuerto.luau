@@ -108,16 +108,26 @@ for _, b in barrios do
 	CollectionService:AddTag(area, "Barrio")
 end
 
--- Galpones bajos
-for x = -550, -150, 100 do
+-- Galpones bajos: dos por manzana, con un callejón de 16 studs en el medio
+local callejones = carpeta(puerto, "Callejones")
+for x = -450, -250, 100 do
 	for z = 1200, 1800, 100 do
-		local alto = azar:NextInteger(18, 30)
+		for _, lado in { -23, 23 } do
+			local alto = azar:NextInteger(18, 30)
+			bloque(
+				carpetasBarrio.Galpones,
+				"Galpon",
+				Vector3.new(76, alto, 30),
+				Vector3.new(x, alto / 2, z + lado),
+				GRIS_CLARO
+			)
+		end
 		bloque(
-			carpetasBarrio.Galpones,
-			"Galpon",
-			Vector3.new(64, alto, 56),
-			Vector3.new(x + 50, alto / 2, z),
-			GRIS_CLARO
+			callejones,
+			"Callejon",
+			Vector3.new(76, 0.3, 16),
+			Vector3.new(x, 0.15, z),
+			Color3.fromHex("1b1f2a")
 		)
 	end
 end
@@ -277,6 +287,32 @@ aro.Shape = Enum.PartType.Cylinder
 aro.CFrame = CFrame.new(0, -35, 600) * CFrame.Angles(0, math.rad(90), 0)
 portal:SetAttribute("Cerrado", true)
 portal.Parent = puerto
+
+-- Lugares de la Beta (tag "Lugar", atributo Lugar): taller de Tano, galpón de Remache y almacén del atraco
+local lugares = carpeta(puerto, "Lugares")
+local function lugar(nombre: string, tam: Vector3, pos: Vector3, color: Color3)
+	local p = bloque(lugares, nombre, tam, pos, color)
+	p:SetAttribute("Lugar", nombre)
+	CollectionService:AddTag(p, "Lugar")
+end
+lugar("TallerTano", Vector3.new(50, 22, 40), Vector3.new(-150, 11, 1400), Color3.fromHex("4ed68a"))
+lugar(
+	"GalponRemache",
+	Vector3.new(70, 34, 70),
+	Vector3.new(-150, 17, 1800),
+	Color3.fromHex("ff4d6d")
+)
+lugar(
+	"AlmacenMuelle",
+	Vector3.new(60, 20, 40),
+	Vector3.new(-120, 10, 1060),
+	Color3.fromHex("f2a23a")
+)
+-- Cortes de la policía en el puente y el túnel
+for _, pos in { Vector3.new(600, 6, 1040), Vector3.new(-560, 6, 1300) } do
+	local valla = bloque(con, "CortePolicia", Vector3.new(6, 6, 40), pos, Color3.fromHex("2f6fdb"))
+	valla:SetAttribute("Cortado", true)
+end
 
 puerto.Parent = mundo
 

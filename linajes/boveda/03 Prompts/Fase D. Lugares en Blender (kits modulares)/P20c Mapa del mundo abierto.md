@@ -1,7 +1,7 @@
 ---
 tags: [prompt]
 prompt: "20c"
-estado: pendiente
+estado: hecho
 ---
 # Prompt 20c Mapa del mundo abierto (graybox, antes de los kits)
 
