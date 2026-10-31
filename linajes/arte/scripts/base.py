@@ -102,6 +102,21 @@ MATERIALES = {
     "diario": {"hex": "dcd8cc", "rugosidad": 0.95},  # Civiles: diarios del carrito
     "pan": {"hex": "c8904a", "rugosidad": 0.8},  # Civiles: pan de los panchos
     "salchicha": {"hex": "9a3b26", "rugosidad": 0.5},  # Civiles: salchichas
+    "grua-amarillo": {"hex": "a08a3a", "rugosidad": 0.6, "metal": 0.4},  # Puerto: grúas
+    "madera-muelle": {"hex": "4a3a2a", "rugosidad": 0.9},  # Puerto: tablones
+    "chapa-oxido": {"hex": "5e4636", "rugosidad": 0.75, "metal": 0.5},  # Puerto: galpones
+    "adoquin": {"hex": "33363d", "rugosidad": 0.8},  # Puerto: calle
+    "charco": {"hex": "20252e", "rugosidad": 0.05, "metal": 0.2},  # Puerto: espejo suave
+    "cont-rojo": {"hex": "7a3a2a", "rugosidad": 0.7, "metal": 0.4},
+    "cont-azul": {"hex": "1f4a5a", "rugosidad": 0.7, "metal": 0.4},
+    "cont-verde": {"hex": "4a5a3a", "rugosidad": 0.7, "metal": 0.4},
+    "cont-gris": {"hex": "6a6e74", "rugosidad": 0.7, "metal": 0.4},
+    "neon-farola": {"hex": "ff9a3a", "brillo": 6.0},  # Puerto: farolas naranjas
+    "soga": {"hex": "8a7a5a", "rugosidad": 1.0},
+    "piedra-clara": {"hex": "a9a49a", "rugosidad": 0.9},  # Puerto: remates, edificio viejo
+    "teja": {"hex": "6e2e22", "rugosidad": 0.8},  # Puerto: techos de tejas
+    "cordon-amarillo": {"hex": "b8922e", "rugosidad": 0.8},  # Puerto: cordón de la vereda
+    "hierro": {"hex": "1a1a1e", "rugosidad": 0.5, "metal": 0.7},  # Puerto: rejas, farolas, postes
     "piel": {"hex": "c68a62", "rugosidad": 0.6},
     "pelo": {"hex": "3a2a20", "rugosidad": 0.55},  # cuerpo propio: color libre en el juego  # cuerpo propio: tono medio (los 10 van en Config.luau)
 }

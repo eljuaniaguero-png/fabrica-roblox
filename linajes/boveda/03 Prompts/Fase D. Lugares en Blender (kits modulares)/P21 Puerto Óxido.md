@@ -1,7 +1,7 @@
 ---
 tags: [prompt]
 prompt: "21"
-estado: pendiente
+estado: hecho
 ---
 # Prompt 21 Puerto Óxido (primera ciudad modelada)
 
@@ -35,6 +35,15 @@ PASO 1: bocetos de bloques de todas las piezas en una grilla + una calle armada 
 PASO 2: detalle de todo, render de la calle de muestra con la luz de noche, tabla de tris. Mi OK.
 PASO 3: exportá cada pieza a linajes/arte/exports/puerto-oxido/<pieza>.fbx, commit y push.
 ```
+
+
+## Cómo quedó (31 oct, cambios de Juani)
+- Scripts: `linajes/arte/scripts/lugares/puerto_oxido.py` (boceto) y `puerto_detalle.py` (detalle + horneado). Exports en `linajes/arte/exports/puerto-oxido/` (45 piezas), tabla en `renders/puerto-oxido_triangulos.md` (81.129 tris el kit).
+- Ideas de las referencias nuevas: túnel en arco, edificio viejo con tejas, arcada, muro con remate, reja, poste con cables, vereda con cordón amarillo, alambrado.
+- Grúa: torre de celosía con pluma, contrapeso y cabina roja (en vez de pórtico).
+- Barco del Albatros: **100 studs** (no 60), contenedores del kit apilados sobre 3 tapas de bodega.
+- Galpón del Albatros: dos naves cerradas de 32 x 40, cortinas metálicas verde petróleo, oficina de ladrillo de dos pisos con escalera carmesí a la puerta de arriba, postes amarillos, lámparas y 3 cámaras de seguridad. Son 10 mallas (galpón, oficina, herrería, portones, seguridad, equipos, cámaras, luces, vidrios, letrero).
+- En Roblox: luces de farolas y lámparas como PointLight, cables como Beams, lluvia como partículas.
 
 ---
 [[P20c Mapa del mundo abierto|← P20c Mapa del mundo abierto]]   ·   [[Todos los prompts]]   ·   [[P22-25 Los otros lugares|P22-25 Los otros lugares →]]

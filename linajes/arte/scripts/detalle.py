@@ -81,8 +81,25 @@ RECETAS = {
     "lana-verde": {"trama": 1.0, "rayones": 0.0, "bordes": 0.15, "suciedad": 0.5, "grano": 0.0},
     "lana-gris": {"trama": 1.0, "rayones": 0.0, "bordes": 0.15, "suciedad": 0.5, "grano": 0.0},
     "canoso": {"trama": 0.6, "rayones": 0.0, "bordes": 0.15, "suciedad": 0.1, "grano": 0.5},
+    # Puerto Óxido
+    "madera-muelle": {"rayones": 0.4, "bordes": 0.5, "suciedad": 0.8, "grano": 1.0},
+    "chapa-oxido": {"paneles": (0.6, 0.0), "remaches": True, "rayones": 0.6, "bordes": 0.6, "suciedad": 1.0, "grano": 0.5},
+    "adoquin": {"trama": 0.4, "rayones": 0.0, "bordes": 0.5, "suciedad": 0.9, "grano": 0.6},
+    "grua-amarillo": {"paneles": (0.5, 0.5), "remaches": True, "rayones": 0.8, "bordes": 0.7, "suciedad": 0.7, "grano": 0.3},
+    "cont-rojo": {"remaches": False, "rayones": 0.9, "bordes": 0.7, "suciedad": 0.8, "grano": 0.4},
+    "cont-azul": {"remaches": False, "rayones": 0.9, "bordes": 0.7, "suciedad": 0.8, "grano": 0.4},
+    "cont-verde": {"remaches": False, "rayones": 0.9, "bordes": 0.7, "suciedad": 0.8, "grano": 0.4},
+    "cont-gris": {"remaches": False, "rayones": 0.9, "bordes": 0.7, "suciedad": 0.8, "grano": 0.4},
+    "piedra-clara": {"paneles": (0.3, 0.6), "rayones": 0.2, "bordes": 0.5, "suciedad": 0.9, "grano": 0.6},
+    "teja": {"rayones": 0.0, "bordes": 0.4, "suciedad": 0.7, "grano": 0.5},
+    "ladrillo": {"paneles": (0.15, 0.3), "rayones": 0.0, "bordes": 0.4, "suciedad": 0.8, "grano": 0.6},
+    "hierro": {"rayones": 0.6, "bordes": 0.4, "suciedad": 0.6, "grano": 0.2},
+    "soga": {"trama": 1.0, "rayones": 0.0, "bordes": 0.2, "suciedad": 0.6, "grano": 0.0},
+    "porton-verde": {"paneles": (0.4, 0.0), "rayones": 0.9, "bordes": 0.7, "suciedad": 0.8, "grano": 0.3},
+    "cofradia-oscura-metal": {},
+    "cordon-amarillo": {"rayones": 0.5, "bordes": 0.5, "suciedad": 0.8, "grano": 0.4},
 }
-SIN_HORNEAR = {"neon-cian", "neon-eclipse", "neon-aviso", "liquido-rojo", "visor-cian"}  # brillan: se quedan con su material
+SIN_HORNEAR = {"vidrio-sucio", "charco", "neon-cofradia", "neon-farola", "neon-cian", "neon-eclipse", "neon-aviso", "liquido-rojo", "visor-cian"}  # brillan: se quedan con su material
 
 
 def _material_base(obj):
