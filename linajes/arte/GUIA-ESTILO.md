@@ -37,7 +37,7 @@ El boceto de bloques es a propósito simple: sirve para aprobar la forma. Un mod
 
 ## Triángulos: complejo, pero que corra
 
-**El cuerpo es el cuerpo propio de Linajes** (esqueleto R15, proporcionado y simple; el juego no usa el avatar de Roblox, cambio de Juani del 30 oct) **y el detalle va en el traje**: casco o capucha, capa con pliegues, peto, hombreras, guantes, botas y accesorios, cada uno una pieza 3D con textura (líneas que brillan, costuras, placas). Así los jugadores se arman su héroe y se ponen los trajes sobre ese cuerpo.
+**El cuerpo es el cuerpo propio de Linajes** (esqueleto R15, de bloques redondeados como Roblox, cabeza cuadrada grande con cara estilo anime y pelo de mechones en punta, cambio de Juani del 31 oct; el juego no usa el avatar de Roblox, cambio de Juani del 30 oct) **y el detalle va en el traje**: casco o capucha, capa con pliegues, peto, hombreras, guantes, botas y accesorios, cada uno una pieza 3D con textura (líneas que brillan, costuras, placas). Así los jugadores se arman su héroe y se ponen los trajes sobre ese cuerpo.
 
 Roblox acepta como máximo **20.000 triángulos por malla**, así que lo pesado se reparte en varias piezas.
 

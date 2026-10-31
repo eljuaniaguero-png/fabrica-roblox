@@ -8,7 +8,7 @@ tags: [ficha]
 
 ## Cómo es
 - **Mismo esqueleto R15** que el maniquí del kit. Por eso los trajes que ya hicimos (Cuervo, Centinela, Mascarada, Remache) y todas las animaciones sirven sin rehacerlos.
-- El cuerpo lo hace Claude en Blender, con el estilo de la [[Guía de estilo]]. Es más proporcionado que el de bloques de Roblox, pero simple: el detalle sigue estando en el traje.
+- El cuerpo lo hace Claude en Blender, con el estilo de la [[Guía de estilo]]. **Estilo (Juani, 31 oct):** bloques redondeados como los de Roblox (no tubos), cabeza cuadrada grande, cara anime (delineado grueso en punta, iris grande, cejas finas, nariz con sombra y brillo) y pelo de mechones en punta. Referencias en `arte/referencias/anime/` (de otro juego: solo ideas). El detalle sigue estando en el traje.
 - Presupuesto: **cuerpo 4.000 a 6.000 triángulos** (cabeza, torso, brazos, piernas), más pelo de 1.000 a 2.000.
 
 ## Qué elegís en el creador

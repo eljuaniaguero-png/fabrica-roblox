@@ -82,6 +82,9 @@ MATERIALES = {
     "violeta-claro": {"hex": "9a82d8", "rugosidad": 0.4},  # Estela: rombo del emblema
     "visor-cian": {"hex": "3fe0f0", "rugosidad": 0.05, "brillo": 1.5, "alfa": 0.55},
     "madera-oscura": {"hex": "3b2618", "rugosidad": 0.7},  # Atalanta: asta de la lanza
+    "traje-base": {"hex": "2b2f38", "rugosidad": 0.7},  # cuerpo propio: traje liso de abajo
+    "piel": {"hex": "c68a62", "rugosidad": 0.6},
+    "pelo": {"hex": "3a2a20", "rugosidad": 0.55},  # cuerpo propio: color libre en el juego  # cuerpo propio: tono medio (los 10 van en Config.luau)
 }
 
 FONDO = "0e1016"
