@@ -48,15 +48,55 @@ def P(nombre):
     return T.caja_parte(nombre)
 
 
-def forro(parte, extra=(0.03, 0.03, 0.01), redondez=0.35, seg=(16, 8), dz=0.0, alto=1.0, arriba=False):
+# Capas (cuánto sobresale cada cosa del cuerpo, en metros), para que nada atraviese nada:
+# cuerpo < pantalón (≤ CAPA_ABAJO) < prenda de arriba en la cadera (CAPA_CADERA) < accesorios.
+CAPA_ABAJO = 0.04  # todo lo del pantalón en la cadera queda adentro de esto
+CAPA_CADERA = 0.055  # la prenda de arriba tapa la cadera con esto (abierta abajo)
+
+
+def caja_tela(bm, mn, mx, abierto_abajo=False, abierto_arriba=False):
+    """Caja de `mn` a `mx` (esquinas), con la tapa de abajo o de arriba sacada si se pide: así
+    otra tela puede entrar por ahí sin atravesar ninguna cara."""
+    v = [bm.verts.new(Vector((x, y, z))) for z in (mn.z, mx.z) for y in (mn.y, mx.y) for x in (mn.x, mx.x)]
+    caras = [(0, 1, 5, 4), (1, 3, 7, 5), (3, 2, 6, 7), (2, 0, 4, 6)]
+    if not abierto_abajo:
+        caras.append((0, 2, 3, 1))
+    if not abierto_arriba:
+        caras.append((4, 5, 7, 6))
+    for f in caras:
+        bm.faces.new([v[i] for i in f])
+
+
+def limites(parte, extra, adentro=None):
+    """(mín, máx) en x e y de una tela sobre la parte. `adentro` = cuánto se mete la cara que
+    mira al cuerpo (mangas: en el R15 el brazo pisa la cadera, así que la manga no se agranda
+    hacia ese lado; se mete en el brazo, donde no se ve)."""
+    _, _, c, m = P(parte)
+    _, _, tc, _ = P("UpperTorso")
+    x0, x1 = c.x - m.x - extra[0], c.x + m.x + extra[0]
+    if adentro is not None:
+        if c.x > tc.x:
+            x0 = c.x - m.x + adentro
+        else:
+            x1 = c.x + m.x - adentro
+    return x0, x1, c.y - m.y - extra[1], c.y + m.y + extra[1]
+
+
+def forro(parte, extra=(0.03, 0.03, 0.01), redondez=0.35, seg=(16, 8), dz=0.0, alto=1.0, arriba=False, abierto_abajo=False, abierto_arriba=False, adentro=None, z_abajo=None):
     """Tela que envuelve una parte del cuerpo. `alto` < 1 la acorta (desde arriba si `arriba`,
-    si no desde abajo: manga corta, bermuda)."""
+    si no desde abajo: manga corta, bermuda). Es una caja de cantos rectos, como las piezas de
+    Roblox (Juani no quiere ropa inflada, 1 nov): el bisel lo pone el paso de detalle y `redondez`
+    y `seg` quedan solo por compatibilidad. `abierto_abajo`/`abierto_arriba` sacan esa tapa;
+    `adentro` mete el lado que mira al cuerpo; `z_abajo` fija el borde de abajo (en mundo)."""
+    del redondez, seg
 
     def armar(bm):
         _, _, c, m = P(parte)
         mz = m.z * alto
-        cz = c.z + (m.z - mz if arriba else mz - m.z)
-        T.bloque_redondo(bm, Vector((c.x, c.y, cz + dz)), Vector((m.x + extra[0], m.y + extra[1], mz + extra[2])), redondez, *seg)
+        cz = c.z + (m.z - mz if arriba else mz - m.z) + dz
+        x0, x1, y0, y1 = limites(parte, extra, adentro)
+        z0 = cz - mz - extra[2] if z_abajo is None else z_abajo
+        caja_tela(bm, Vector((x0, y0, z0)), Vector((x1, y1, cz + mz + extra[2])), abierto_abajo, abierto_arriba)
 
     return armar
 
@@ -71,30 +111,109 @@ def caja(parte, d, tam, giro=None):
     return armar
 
 
+# --- Detalles de costura: van en todas las prendas (Juani pidió ropa con detalle, no lisa) ---
+
+
+def ribete(parte, z, extra, alto=0.024, sobra=0.008, adentro=None):
+    """Banda finita alrededor de la parte a la altura `z` (en mundo): dobladillo, puño, cintura.
+    Sobresale `sobra` de la tela, así se lee como una tira cosida. Es un anillo (abierto arriba y
+    abajo): lo que pasa por adentro no lo atraviesa."""
+
+    def armar(bm):
+        _, _, c, m = P(parte)
+        x0, x1, y0, y1 = limites(parte, (extra[0] + sobra, extra[1] + sobra), adentro)
+        zz = z(c, m)
+        caja_tela(bm, Vector((x0, y0, zz - alto / 2)), Vector((x1, y1, zz + alto / 2)), True, True)
+
+    return armar
+
+
+def costura_lado(parte, extra, cara="afuera", ancho=0.012):
+    """Línea de costura vertical sobre una cara de la tela (afuera = el costado que mira lejos
+    del cuerpo, frente o espalda)."""
+
+    def armar(bm):
+        _, _, c, m = P(parte)
+        _, _, tc, _ = P("UpperTorso")
+        if cara == "afuera":
+            s = 1 if c.x > tc.x else -1
+            T.caja(bm, Vector((c.x + s * (m.x + extra[0] + 0.003), c.y, c.z)), Vector((ancho, ancho, m.z * 2)))
+        else:
+            s = -1 if cara == "frente" else 1
+            T.caja(bm, Vector((c.x, c.y + s * (m.y + extra[1] + 0.003), c.z)), Vector((ancho, ancho, m.z * 2)))
+
+    return armar
+
+
+MANGA_ADENTRO = 0.016  # la manga se mete esto en el brazo del lado del cuerpo
+
+
 def mangas(canal="C1", largo=True, extra=(0.03, 0.03, 0.01), corta=0.55):
+    """Mangas con costura del hombro, costura por afuera del brazo y dobladillo en la punta. Del
+    lado del cuerpo no se agrandan (ver `limites`) y no bajan de la muñeca."""
     capas = []
+    ad = MANGA_ADENTRO
     for lado in ("Left", "Right"):
-        capas.append((f"{lado}UpperArm", canal, forro(f"{lado}UpperArm", extra, alto=1.0 if largo else corta, arriba=True)))
+        arriba_ = f"{lado}UpperArm"
+        capas.append((arriba_, canal, forro(arriba_, extra, alto=1.0 if largo else corta, arriba=True, adentro=ad)))
+        capas.append((arriba_, canal, ribete(arriba_, lambda c, m: c.z + m.z - 0.03, extra, adentro=ad)))
+        capas.append((arriba_, canal, costura_lado(arriba_, extra)))
         if largo:
-            capas.append((f"{lado}LowerArm", canal, forro(f"{lado}LowerArm", extra)))
+            abajo_ = f"{lado}LowerArm"
+            _, _, ca, ma = P(abajo_)
+            capas.append((abajo_, canal, forro(abajo_, extra, adentro=ad, z_abajo=ca.z - ma.z + 0.004)))
+            capas.append((abajo_, canal, costura_lado(abajo_, extra)))
+            capas.append((abajo_, canal, ribete(abajo_, lambda c, m: c.z - m.z + 0.024, extra, alto=0.035, adentro=ad)))
+        else:
+            capas.append((arriba_, canal, ribete(arriba_, lambda c, m: c.z + m.z - 2 * m.z * corta + 0.015, extra, adentro=ad)))
     return capas
 
 
 def piernas(canal="C1", extra=(0.03, 0.03, 0.01), corta=None):
+    """Perneras con costura por afuera, costura de la rodilla y dobladillo abajo."""
     capas = []
     for lado in ("Left", "Right"):
-        capas.append((f"{lado}UpperLeg", canal, forro(f"{lado}UpperLeg", extra)))
+        muslo = f"{lado}UpperLeg"
+        capas.append((muslo, canal, forro(muslo, extra)))
+        capas.append((muslo, canal, costura_lado(muslo, extra)))
+        pierna = f"{lado}LowerLeg"
         if corta is None:
-            capas.append((f"{lado}LowerLeg", canal, forro(f"{lado}LowerLeg", extra)))
+            capas.append((pierna, canal, forro(pierna, extra)))
+            capas.append((pierna, canal, costura_lado(pierna, extra)))
+            capas.append((pierna, canal, ribete(pierna, lambda c, m: c.z - m.z + 0.03, extra, alto=0.03)))
+            capas.append((pierna, canal, ribete(pierna, lambda c, m: c.z + m.z - 0.02, extra, alto=0.014, sobra=0.004)))
         elif corta > 0:
-            capas.append((f"{lado}LowerLeg", canal, forro(f"{lado}LowerLeg", extra, alto=corta, arriba=True)))
+            capas.append((pierna, canal, forro(pierna, extra, alto=corta, arriba=True)))
+            capas.append((pierna, canal, ribete(pierna, lambda c, m: c.z + m.z - 2 * m.z * corta + 0.015, extra, alto=0.03)))
+        else:
+            capas.append((muslo, canal, ribete(muslo, lambda c, m: c.z - m.z + 0.02, extra, alto=0.03)))
     return capas
 
 
 def torso(canal="C1", extra=(0.035, 0.035, 0.015), cadera=True):
-    capas = [("UpperTorso", canal, forro("UpperTorso", extra, 0.3))]
+    """Torso con costuras de los costados, canesú adelante y atrás, costura de la espalda y
+    dobladillo abajo."""
+    capas = [("UpperTorso", canal, forro("UpperTorso", extra, abierto_abajo=True))]
+    for cara in ("frente", "espalda"):
+
+        def canesu(bm, cara=cara):
+            _, mx, c, m = P("UpperTorso")
+            s = -1 if cara == "frente" else 1
+            T.caja(bm, Vector((c.x, c.y + s * (m.y + extra[1] + 0.003), mx.z - 0.09)), Vector((m.x * 2 + extra[0] * 2, 0.012, 0.012)))
+
+        capas.append(("UpperTorso", canal, canesu))
+    capas.append(("UpperTorso", canal, costura_lado("UpperTorso", extra, "espalda")))
+    for s in (-1, 1):
+
+        def costado(bm, s=s):
+            _, _, c, m = P("UpperTorso")
+            T.caja(bm, Vector((c.x + s * (m.x + extra[0] - 0.006), c.y + m.y + extra[1] - 0.01, c.z)), Vector((0.012, 0.024, m.z * 2)))
+
+        capas.append(("UpperTorso", canal, costado))
     if cadera:
-        capas.append(("LowerTorso", canal, forro("LowerTorso", (extra[0] + 0.005, extra[1] + 0.005, 0.0), 0.3, (16, 6), dz=0.02, alto=0.7, arriba=False)))
+        capas += cadera_arriba(canal, max(extra[1], CAPA_CADERA))
+    else:
+        capas.append(("UpperTorso", canal, ribete("UpperTorso", lambda c, m: c.z - m.z + 0.025, extra, alto=0.03)))
     return capas
 
 
@@ -132,16 +251,81 @@ def bolsillo_pecho(s=-1, dy=0.045):
     return armar
 
 
-def puños(canal="C2", alto=0.05):
+def tapeta(dy=0.045, ancho=0.05):
+    """Tira vertical al frente donde van los botones o el cierre, con dos costuras."""
+
+    def armar(bm):
+        _, _, c, m = P("UpperTorso")
+        y = c.y - m.y - dy
+        T.caja(bm, Vector((c.x, y, c.z)), Vector((ancho, 0.012, m.z * 2)))
+        for s in (-1, 1):
+            T.caja(bm, Vector((c.x + s * ancho / 2, y - 0.007, c.z)), Vector((0.006, 0.006, m.z * 2)))
+
+    return armar
+
+
+def bolsillos_bajos(dy=0.05, tapa=True):
+    """Dos bolsillos en la cadera (LowerTorso) con tapa y botón."""
+
+    def armar(bm):
+        _, _, c, m = P("LowerTorso")
+        for s in (-1, 1):
+            b = Vector((c.x + s * m.x * 0.55, c.y - m.y - dy, c.z - m.z * 0.1))
+            T.caja(bm, b, Vector((0.16, 0.012, 0.12)))
+            if tapa:
+                T.caja(bm, b + Vector((0, -0.01, 0.06)), Vector((0.17, 0.014, 0.04)))
+                T.remache(bm, b + Vector((0, -0.02, 0.055)), 0.01)
+
+    return armar
+
+
+def botones_manga(extra=(0.035, 0.035, 0.01), n=3):
+    """Botoncitos en la punta de cada manga, del lado de afuera."""
     capas = []
     for lado in ("Left", "Right"):
 
         def armar(bm, lado=lado):
             _, _, c, m = P(f"{lado}LowerArm")
-            T.bloque_redondo(bm, Vector((c.x, c.y, c.z - m.z + alto)), Vector((m.x + 0.045, m.y + 0.045, alto)), 0.6, 14, 4)
+            _, _, tc, _ = P("UpperTorso")
+            s = 1 if c.x > tc.x else -1
+            for k in range(n):
+                T.remache(bm, Vector((c.x + s * (m.x + extra[0] + 0.004), c.y + 0.03 - k * 0.03, c.z - m.z + 0.09)), 0.009, (s, 0, 0))
 
-        capas.append((f"{lado}LowerArm", canal, armar))
+        capas.append((f"{lado}LowerArm", "C1", armar))
     return capas
+
+
+def presillas(dy=0.012):
+    """Presillas del cinturón alrededor de la cadera."""
+
+    def armar(bm):
+        _, ltx, c, m = P("LowerTorso")
+        z = ltx.z - 0.04
+        for x in (-0.8, -0.35, 0.35, 0.8):
+            T.caja(bm, Vector((c.x + m.x * x, c.y - m.y - dy - 0.01, z)), Vector((0.02, 0.012, 0.07)))
+            T.caja(bm, Vector((c.x + m.x * x, c.y + m.y + dy + 0.01, z)), Vector((0.02, 0.012, 0.07)))
+
+    return armar
+
+
+def puños(canal="C2", alto=0.05):
+    """Puño ancho (campera, buzo): anillo abierto en la punta de la manga."""
+    return [
+        (f"{lado}LowerArm", canal, ribete(f"{lado}LowerArm", lambda c, m: c.z - m.z + alto + 0.004, (0.045, 0.045), alto=alto * 2, sobra=0.0, adentro=MANGA_ADENTRO))
+        for lado in ("Left", "Right")
+    ]
+
+
+def cadera_arriba(canal="C1", y_extra=CAPA_CADERA, x_extra=0.062, baja=0.03):
+    """La prenda de arriba sobre la cadera: tubo abierto arriba y abajo que pasa por fuera del
+    pantalón y baja `baja` sobre las perneras. Hacia los costados tapa justo las perneras (la
+    parte que queda debajo de la manga es de la misma prenda)."""
+    _, _, lc, lm = P("LowerTorso")
+    ext = (x_extra, y_extra, 0.0)
+    return [
+        ("LowerTorso", canal, forro("LowerTorso", ext, z_abajo=lc.z - lm.z - baja, abierto_abajo=True, abierto_arriba=True)),
+        ("LowerTorso", canal, ribete("LowerTorso", lambda c, m: c.z - m.z - baja + 0.013, (x_extra, y_extra), alto=0.024, sobra=0.006)),
+    ]
 
 
 # ---------------------------------------------------------------------------
@@ -164,40 +348,56 @@ def arriba():
         ("UpperTorso", "C2", botones("UpperTorso", 5, 0.0, 0.05, 0.013, 0.7, -0.9)),
         ("UpperTorso", "C1", bolsillo_pecho(-1, 0.05)),
         ("UpperTorso", "C1", bolsillo_pecho(1, 0.05)),
+        ("UpperTorso", "C1", tapeta(0.042)),
+        ("LowerTorso", "C1", bolsillos_bajos(0.065, tapa=False)),
         *puños("C1"),
     ]
 
     def camisa_corbata(bm):
         T.caja(bm, Vector((uc.x, f - 0.035, uc.z + um.z * 0.45)), Vector((0.14, 0.012, um.z * 0.9)))
-        T.cilindro(bm, Vector((uc.x, f - 0.045, utx.z - 0.03)), Vector((uc.x, f - 0.06, uc.z - um.z * 0.4)), 0.03, 4, 0.045)
+        T.caja(bm, Vector((uc.x, f - 0.044, utx.z - 0.045)), Vector((0.05, 0.012, 0.04)))  # nudo
+        T.caja(bm, Vector((uc.x, f - 0.044, (utx.z - 0.065 + uc.z - um.z * 0.4) / 2)), Vector((0.07, 0.008, utx.z - 0.065 - uc.z + um.z * 0.4)))
 
     piezas["SacoOficina"] = [
-        ("UpperTorso", "C1", forro("UpperTorso", (0.04, 0.04, 0.02), 0.25)),
-        ("LowerTorso", "C1", forro("LowerTorso", (0.05, 0.05, 0.0), 0.25, (16, 6), dz=-0.06, alto=1.0)),
+        ("UpperTorso", "C1", forro("UpperTorso", (0.04, 0.04, 0.02), abierto_abajo=True)),
+        *cadera_arriba("C1", CAPA_CADERA, baja=0.03),
         ("UpperTorso", "C1", solapas),
         ("UpperTorso", "C2", camisa_corbata),
         ("LowerTorso", "C1", botones("LowerTorso", 2, 0.0, 0.06, 0.012, 0.6, 0.2)),
+        ("LowerTorso", "C1", bolsillos_bajos(0.065)),
+        ("UpperTorso", "C1", bolsillo_pecho(1, 0.045)),
+        ("LowerTorso", "C1", costura_lado("LowerTorso", (0.05, 0.05), "espalda")),  # tajo de atrás
         *mangas(extra=(0.035, 0.035, 0.01)),
+        *botones_manga(),
     ]
 
     def capucha(bm):
-        T.bloque_redondo(bm, Vector((uc.x, uc.y + um.y * 0.6, utx.z + 0.03)), Vector((um.x * 0.75, um.y * 0.7, 0.09)), 0.6, 16, 6)
+        # Capucha bajada: un rollo de tela detrás del cuello (no sube a la cabeza).
+        T.caja(bm, Vector((uc.x, uc.y + um.y * 0.75, utx.z + 0.02)), Vector((um.x * 0.7, um.y * 0.55, 0.025)) * 2)
 
     def canguro(bm):
         T.caja(bm, Vector((uc.x, f - 0.045, uc.z - um.z * 0.45)), Vector((um.x * 1.2, 0.02, um.z * 0.6)))
         for s in (-1, 1):
             T.cilindro(bm, Vector((uc.x + s * 0.05, f - 0.04, utx.z - 0.02)), Vector((uc.x + s * 0.05, f - 0.045, utx.z - 0.2)), 0.008, 5)
 
+    def elastico(bm):
+        # Cintura elástica del buzo: anillos finitos (el tejido acanalado) sobre el borde de abajo.
+        z0 = lc.z - lm.z - 0.03
+        for k in range(4):
+            z = z0 + 0.03 + k * 0.014
+            caja_tela(bm, Vector((lc.x - lm.x - 0.068, lc.y - lm.y - 0.061, z)), Vector((lc.x + lm.x + 0.068, lc.y + lm.y + 0.061, z + 0.005)), True, True)
+
     piezas["BuzoCapucha"] = torso(extra=(0.045, 0.045, 0.02)) + mangas(extra=(0.04, 0.04, 0.01)) + [
         ("UpperTorso", "C1", capucha),
         ("UpperTorso", "C2", canguro),
+        ("LowerTorso", "C1", elastico),
         *puños("C1"),
     ]
 
     def cuadros_torso(bm):
         for k in range(4):
             z = uc.z + um.z * (-0.75 + k * 0.5)
-            T.bloque_redondo(bm, Vector((uc.x, uc.y, z)), Vector((um.x + 0.042, um.y + 0.042, 0.012)), 0.3, 16, 2)
+            T.caja(bm, Vector((uc.x, uc.y, z)), Vector((um.x + 0.042, um.y + 0.042, 0.012)) * 2)
         for k in range(5):
             x = uc.x + um.x * (-0.8 + k * 0.4)
             T.caja(bm, Vector((x, f - 0.037, uc.z)), Vector((0.022, 0.006, um.z * 2.0)))
@@ -206,7 +406,7 @@ def arriba():
         def armar(bm):
             _, _, c, m = P(f"{lado}UpperArm")
             for k in range(2):
-                T.bloque_redondo(bm, Vector((c.x, c.y, c.z + m.z * (-0.4 + k * 0.8))), Vector((m.x + 0.037, m.y + 0.037, 0.012)), 0.4, 12, 2)
+                T.caja(bm, Vector((c.x, c.y, c.z + m.z * (-0.4 + k * 0.8))), Vector((m.x + 0.037, m.y + 0.037, 0.012)) * 2)
 
         return armar
 
@@ -218,37 +418,54 @@ def arriba():
         ("UpperTorso", "C1", botones("UpperTorso", 5, 0.0, 0.04, 0.009, 0.7, -0.9)),
     ]
 
-    def falda_piloto(lado):
-        def armar(bm):
-            _, _, c, m = P(f"{lado}UpperLeg")
-            T.bloque_redondo(bm, Vector((c.x, c.y, c.z + 0.02)), Vector((m.x + 0.06, m.y + 0.06, m.z + 0.03)), 0.3, 12, 6)
-
-        return armar
+    def falda(bm):
+        # Faldón del piloto: un solo tubo que cae sobre las dos piernas hasta la rodilla (abierto
+        # arriba y abajo), apenas más ancho que la cadera para no pisar los brazos.
+        _, _, pc, pm = P("LeftUpperLeg")
+        caja_tela(bm, Vector((lc.x - lm.x - 0.073, lc.y - lm.y - 0.13, pc.z - pm.z)), Vector((lc.x + lm.x + 0.073, lc.y + lm.y + 0.13, lc.z - lm.z - 0.012)), True, True)
 
     def cinto(bm):
-        T.bloque_redondo(bm, Vector((lc.x, lc.y, lc.z + lm.z * 0.5)), Vector((lm.x + 0.07, lm.y + 0.07, 0.03)), 0.5, 16, 2)
-        T.caja(bm, Vector((lc.x, lc.y - lm.y - 0.08, lc.z + lm.z * 0.5)), Vector((0.07, 0.015, 0.05)))
+        caja_tela(bm, Vector((lc.x - lm.x - 0.075, lc.y - lm.y - 0.075, lc.z - 0.015)), Vector((lc.x + lm.x + 0.075, lc.y + lm.y + 0.075, lc.z + 0.015)), True, True)
+        T.caja(bm, Vector((lc.x, lc.y - lm.y - 0.082, lc.z)), Vector((0.07, 0.012, 0.05)))  # hebilla
+
+    def charreteras(bm):
+        # Tiritas en los hombros con un botón, como los pilotos de lluvia.
+        for s in (-1, 1):
+            p = Vector((uc.x + s * um.x * 0.7, uc.y, utx.z + 0.022))
+            T.caja(bm, p, Vector((0.16, 0.06, 0.012)))
+            T.remache(bm, p + Vector((-s * 0.06, 0, 0.007)), 0.01, (0, 0, 1))
 
     piezas["PilotoLargo"] = [
-        ("UpperTorso", "C1", forro("UpperTorso", (0.045, 0.045, 0.02), 0.25)),
-        ("LowerTorso", "C1", forro("LowerTorso", (0.06, 0.06, 0.02), 0.25, (16, 6))),
+        ("UpperTorso", "C1", forro("UpperTorso", (0.045, 0.045, 0.02), abierto_abajo=True)),
+        *cadera_arriba("C1", 0.065, baja=0.025),
         ("UpperTorso", "C1", solapas),
         ("UpperTorso", "C1", cuello_volcado(0.06)),
-        ("LeftUpperLeg", "C1", falda_piloto("Left")),
-        ("RightUpperLeg", "C1", falda_piloto("Right")),
+        ("LowerTorso", "C1", falda),
         ("LowerTorso", "C2", cinto),
         ("UpperTorso", "C2", botones("UpperTorso", 3, -0.09, 0.06, 0.012, 0.5, -0.6)),
+        ("UpperTorso", "C2", botones("UpperTorso", 3, 0.09, 0.06, 0.012, 0.5, -0.6)),
+        ("UpperTorso", "C1", charreteras),
+        ("LowerTorso", "C1", bolsillos_bajos(0.075)),
         *mangas(extra=(0.04, 0.04, 0.01)),
+        *botones_manga((0.04, 0.04, 0.01), 2),
     ]
 
     def chaleco(bm):
+        # Dos paneles adelante (abiertos al medio) y uno atrás, con ribete en el borde.
         for s in (-1, 1):
-            T.caja(bm, Vector((uc.x + s * um.x * 0.55, f - 0.05, uc.z - 0.02)), Vector((um.x * 0.8, 0.02, um.z * 2.0)))
-            T.caja(bm, Vector((uc.x + s * um.x * 0.55, uc.y + um.y + 0.05, uc.z - 0.02)), Vector((um.x * 0.8, 0.02, um.z * 2.0)))
-        for z in (-0.4, 0.2):  # bandas reflectivas
-            T.bloque_redondo(bm, Vector((uc.x, uc.y, uc.z + um.z * z)), Vector((um.x + 0.06, um.y + 0.065, 0.025)), 0.3, 16, 2)
+            T.caja(bm, Vector((uc.x + s * um.x * 0.55, f - 0.05, uc.z - 0.02)), Vector((um.x * 0.85, 0.02, um.z * 2.0)))
+        T.caja(bm, Vector((uc.x, uc.y + um.y + 0.05, uc.z - 0.02)), Vector((um.x * 2.0, 0.02, um.z * 2.0)))
+        for s in (-1, 1):
+            T.caja(bm, Vector((uc.x + s * um.x * 0.14, f - 0.062, uc.z - 0.02)), Vector((0.014, 0.008, um.z * 2.0)))
 
-    piezas["ChalecoObra"] = torso() + mangas(largo=False) + [("UpperTorso", "C2", chaleco)]
+    def reflectivas(bm):
+        # Bandas reflectivas solo sobre los paneles (no dan la vuelta al cuerpo).
+        for z in (-0.45, 0.15):
+            for s in (-1, 1):
+                T.caja(bm, Vector((uc.x + s * um.x * 0.55, f - 0.063, uc.z + um.z * z)), Vector((um.x * 0.85, 0.008, 0.05)))
+            T.caja(bm, Vector((uc.x, uc.y + um.y + 0.063, uc.z + um.z * z)), Vector((um.x * 2.0, 0.008, 0.05)))
+
+    piezas["ChalecoObra"] = torso() + mangas(largo=False) + [("UpperTorso", "C2", chaleco), ("UpperTorso", "acero", reflectivas)]
 
     def estampa(bm):
         # Estampa propia: un eclipse (aro grueso con un disco corrido) y una barra abajo.
@@ -258,7 +475,14 @@ def arriba():
         T.cilindro(bm, c + Vector((0.025, 0.004, 0.02)), c + Vector((0.025, -0.006, 0.02)), 0.06, 14)
         T.caja(bm, c + Vector((0, 0, -0.17)), Vector((0.22, 0.008, 0.035)))
 
-    piezas["RemeraEstampa"] = torso() + mangas(largo=False) + [("UpperTorso", "C2", estampa)]
+    def cuello_redondo(bm):
+        # Ribete del cuello: 3 tiras que rodean el cuello por arriba del torso.
+        z = utx.z + 0.012
+        T.caja(bm, Vector((uc.x, f - 0.01, z)), Vector((0.24, 0.035, 0.022)))
+        for s in (-1, 1):
+            T.caja(bm, Vector((uc.x + s * 0.12, uc.y - um.y * 0.3, z)), Vector((0.035, um.y * 1.2, 0.022)))
+
+    piezas["RemeraEstampa"] = torso() + mangas(largo=False) + [("UpperTorso", "C2", estampa), ("UpperTorso", "C1", cuello_redondo)]
 
     def cuello_v(bm):
         for s in (-1, 1):
@@ -271,7 +495,11 @@ def arriba():
             T.cilindro(bm, b + Vector((-0.03 + k * 0.03, 0, 0.03)), b + Vector((-0.03 + k * 0.03, 0, 0.1)), 0.008, 6)
         T.caja(bm, Vector((uc.x - um.x * 0.5, f - 0.045, uc.z + um.z * 0.35)), Vector((0.09, 0.008, 0.04)))  # credencial
 
-    piezas["UniformeEnfermeria"] = torso() + mangas(largo=False) + [("UpperTorso", "C2", cuello_v), ("UpperTorso", "C2", bolsillo_enf)]
+    piezas["UniformeEnfermeria"] = torso() + mangas(largo=False) + [
+        ("UpperTorso", "C2", cuello_v),
+        ("UpperTorso", "C2", bolsillo_enf),
+        ("LowerTorso", "C1", bolsillos_bajos(0.065, tapa=False)),
+    ]
     return {k: ("arriba", v) for k, v in piezas.items()}
 
 
@@ -280,10 +508,11 @@ def abajo():
     piezas = {}
 
     def cinturon(bm):
-        T.bloque_redondo(bm, Vector((lc.x, lc.y, ltx.z - 0.04)), Vector((lm.x + 0.05, lm.y + 0.05, 0.028)), 0.5, 16, 2)
-        T.caja(bm, Vector((lc.x, lc.y - lm.y - 0.06, ltx.z - 0.04)), Vector((0.06, 0.015, 0.045)))
+        # Cinturón: hacia los costados no sale del cuerpo (ahí se apoyan los brazos).
+        caja_tela(bm, Vector((lc.x - lm.x - 0.003, lc.y - lm.y - 0.025, ltx.z - 0.068)), Vector((lc.x + lm.x + 0.003, lc.y + lm.y + 0.025, ltx.z - 0.012)), True, True)
+        T.caja(bm, Vector((lc.x, lc.y - lm.y - 0.03, ltx.z - 0.04)), Vector((0.06, 0.012, 0.045)))  # hebilla
 
-    cadera = ("LowerTorso", "C1", forro("LowerTorso", (0.04, 0.04, 0.01), 0.3, (16, 6)))
+    cadera = ("LowerTorso", "C1", forro("LowerTorso", (0.0, 0.02, 0.0)))
 
     def costura(lado):
         def armar(bm):
@@ -294,7 +523,34 @@ def abajo():
 
         return armar
 
-    piezas["Jean"] = [cadera, ("LowerTorso", "C2", cinturon), *piernas(), ("LeftUpperLeg", "C1", costura("Left")), ("RightUpperLeg", "C1", costura("Right"))]
+    _, lpx, lpc, lpm = P("LeftUpperLeg")
+    frente_p = lpc.y - lpm.y - 0.03 - 0.006  # cara de adelante de la pernera
+    atras_p = lpc.y + lpm.y + 0.03 + 0.006
+    zb = lpx.z - 0.07  # justo debajo del borde de la prenda de arriba
+
+    def bolsillos_jean(bm):
+        # Adelante: boca del bolsillo en diagonal y monedero; atrás: bolsillos con pespunte.
+        for sx in (-1, 1):
+            x = lc.x + sx * lm.x * 0.55
+            T.caja(bm, Vector((x, frente_p, zb - 0.02)), Vector((0.14, 0.012, 0.016)), _g(sx * 35, "Y"))
+            T.caja(bm, Vector((x, atras_p, zb - 0.07)), Vector((0.15, 0.012, 0.15)))
+            T.caja(bm, Vector((x, atras_p + 0.008, zb - 0.01)), Vector((0.15, 0.006, 0.008)))
+        T.caja(bm, Vector((lc.x + lm.x * 0.35, frente_p, zb - 0.06)), Vector((0.06, 0.012, 0.05)))
+
+    def remaches_jean(bm):
+        for sx in (-1, 1):
+            T.remache(bm, Vector((lc.x + sx * lm.x * 0.85, frente_p - 0.006, zb - 0.01)), 0.009)
+
+    piezas["Jean"] = [
+        cadera,
+        ("LowerTorso", "C2", cinturon),
+        ("LowerTorso", "C1", presillas()),
+        ("LowerTorso", "C1", bolsillos_jean),
+        ("LowerTorso", "acero", remaches_jean),
+        *piernas(),
+        ("LeftUpperLeg", "C1", costura("Left")),
+        ("RightUpperLeg", "C1", costura("Right")),
+    ]
 
     def raya(lado):
         def armar(bm):
@@ -304,15 +560,53 @@ def abajo():
 
         return armar
 
-    piezas["PantalonVestir"] = [cadera, ("LowerTorso", "C2", cinturon), *piernas(extra=(0.035, 0.035, 0.01)), ("LeftUpperLeg", "C1", raya("Left")), ("RightUpperLeg", "C1", raya("Right"))]
+    def bolsillos_vestir(bm):
+        # Bolsillos de ojal (tajos finitos con botón) atrás y al costado adelante.
+        for sx in (-1, 1):
+            b = Vector((lc.x + sx * lm.x * 0.5, atras_p, zb - 0.03))
+            T.caja(bm, b, Vector((0.13, 0.012, 0.014)))
+            T.remache(bm, b + Vector((0, 0.01, -0.025)), 0.008, (0, 1, 0))
+            T.caja(bm, Vector((lc.x + sx * lm.x * 0.8, frente_p, zb - 0.06)), Vector((0.012, 0.012, 0.14)), _g(sx * 15, "Y"))
+
+    piezas["PantalonVestir"] = [
+        cadera,
+        ("LowerTorso", "C2", cinturon),
+        ("LowerTorso", "C1", presillas()),
+        ("LowerTorso", "C1", bolsillos_vestir),
+        *piernas(extra=(0.035, 0.035, 0.01)),
+        ("LeftUpperLeg", "C1", raya("Left")),
+        ("RightUpperLeg", "C1", raya("Right")),
+    ]
+
+    def _anillos_pollera():
+        # Tubo de 3 anillos: arriba recto (metido adentro de la prenda de arriba) y abajo se abre
+        # hasta la rodilla. (z, mitad x, mitad y)
+        _, _, pc, pm = P("LeftUpperLeg")
+        return [(lc.z - lm.z * 0.3, lm.x + 0.002, lm.y + 0.04), (lc.z - lm.z - 0.04, lm.x + 0.002, lm.y + 0.04), (pc.z - pm.z * 0.6, lm.x + 0.05, lm.y + 0.1)]
 
     def pollera(bm):
-        _, _, pc, pm = P("LeftUpperLeg")
-        arriba_z, abajo_z = ltx.z, pc.z - pm.z * 0.6
-        T.cilindro(bm, Vector((lc.x, lc.y, arriba_z)), Vector((lc.x, lc.y, abajo_z)), lm.x + 0.05, 16, lm.x + 0.13)
+        aros = []
+        for z, hx_, hy_ in _anillos_pollera():
+            aros.append([bm.verts.new(Vector((lc.x + sx * hx_, lc.y + sy * hy_, z))) for sx, sy in ((-1, -1), (1, -1), (1, 1), (-1, 1))])
+        for a, b in zip(aros, aros[1:]):
+            for k in range(4):
+                q = (k + 1) % 4
+                bm.faces.new((a[k], a[q], b[q], b[k]))
 
     medias = [(f"{lado}LowerLeg", "C2", forro(f"{lado}LowerLeg", (0.012, 0.012, 0.0), 0.35, (12, 6))) for lado in ("Left", "Right")]
-    piezas["Pollera"] = [("LowerTorso", "C1", pollera), ("LowerTorso", "C1", forro("LowerTorso", (0.04, 0.04, 0.0), 0.3, (12, 4))), *medias]
+    def tablas(bm):
+        # Pliegues (tablas): tiras sobre la parte que se abre, adelante, atrás y a los costados.
+        (_, _, _), (z1, x1, y1), (z2, x2, y2) = _anillos_pollera()
+        for k in range(5):
+            t = -0.8 + k * 0.4
+            for sy in (-1, 1):
+                T.tubo(bm, [Vector((lc.x + t * x1, lc.y + sy * (y1 + 0.006), z1)), Vector((lc.x + t * x2, lc.y + sy * (y2 + 0.006), z2))], 0.01, 4)
+        for sx in (-1, 1):
+            T.tubo(bm, [Vector((lc.x + sx * (x1 + 0.006), lc.y, z1)), Vector((lc.x + sx * (x2 + 0.006), lc.y, z2))], 0.01, 4)
+        # Dobladillo abajo.
+        caja_tela(bm, Vector((lc.x - x2 - 0.006, lc.y - y2 - 0.006, z2 + 0.004)), Vector((lc.x + x2 + 0.006, lc.y + y2 + 0.006, z2 + 0.028)), True, True)
+
+    piezas["Pollera"] = [("LowerTorso", "C1", pollera), ("LowerTorso", "C1", tablas), *medias]
 
     def franja(lado):
         def armar(bm):
@@ -324,34 +618,69 @@ def abajo():
         return armar
 
     def cordon(bm):
-        T.bloque_redondo(bm, Vector((lc.x, lc.y, ltx.z - 0.04)), Vector((lm.x + 0.055, lm.y + 0.055, 0.04)), 0.5, 16, 2)
+        caja_tela(bm, Vector((lc.x - lm.x - 0.003, lc.y - lm.y - 0.025, ltx.z - 0.08)), Vector((lc.x + lm.x + 0.003, lc.y + lm.y + 0.025, ltx.z)), True, True)
         for s in (-1, 1):
-            T.cilindro(bm, Vector((lc.x + s * 0.025, lc.y - lm.y - 0.07, ltx.z - 0.05)), Vector((lc.x + s * 0.03, lc.y - lm.y - 0.07, ltx.z - 0.18)), 0.007, 5)
+            T.cilindro(bm, Vector((lc.x + s * 0.025, lc.y - lm.y - 0.034, ltx.z - 0.03)), Vector((lc.x + s * 0.03, lc.y - lm.y - 0.034, ltx.z - 0.07)), 0.006, 5)
 
     puños_j = []
     for lado in ("Left", "Right"):
 
         def puño_pierna(bm, lado=lado):
             _, _, c, m = P(f"{lado}LowerLeg")
-            T.bloque_redondo(bm, Vector((c.x, c.y, c.z - m.z + 0.04)), Vector((m.x + 0.05, m.y + 0.05, 0.04)), 0.6, 12, 2)
+            T.caja(bm, Vector((c.x, c.y, c.z - m.z + 0.04)), Vector((m.x + 0.05, m.y + 0.05, 0.04)) * 2)
 
         puños_j.append((f"{lado}LowerLeg", "C1", puño_pierna))
     piezas["Jogging"] = [cadera, ("LowerTorso", "C2", cordon), *piernas(extra=(0.04, 0.04, 0.01)), *puños_j, ("LeftUpperLeg", "C2", franja("Left")), ("RightUpperLeg", "C2", franja("Right"))]
-    piezas["Bermuda"] = [cadera, ("LowerTorso", "C2", cinturon), *piernas(extra=(0.045, 0.045, 0.01), corta=0.3)]
+    def cargo(lado):
+        # Bolsillo cargo al costado del muslo, con tapa y botón.
+        def armar(bm):
+            _, _, c, m = P(f"{lado}UpperLeg")
+            s_ = 1 if c.x > lc.x else -1
+            b = Vector((c.x + s_ * (m.x + 0.045), c.y, c.z - m.z * 0.4))
+            T.caja(bm, b, Vector((0.025, 0.17, 0.18)))
+            T.caja(bm, b + Vector((s_ * 0.005, 0, 0.085)), Vector((0.03, 0.18, 0.05)))
+            T.remache(bm, b + Vector((s_ * 0.022, 0, 0.075)), 0.01, (s_, 0, 0))
+
+        return armar
+
+    piezas["Bermuda"] = [
+        cadera,
+        ("LowerTorso", "C2", cinturon),
+        ("LowerTorso", "C1", presillas()),
+        *piernas(extra=(0.045, 0.045, 0.01), corta=0.3),
+        ("LeftUpperLeg", "C1", cargo("Left")),
+        ("RightUpperLeg", "C1", cargo("Right")),
+    ]
 
     _, utx, uc, um = P("UpperTorso")
 
     def pechera(bm):
-        T.caja(bm, Vector((uc.x, uc.y - um.y - 0.045, uc.z - um.z * 0.3)), Vector((um.x * 1.2, 0.02, um.z * 1.3)))
-        T.caja(bm, Vector((uc.x, uc.y - um.y - 0.06, uc.z - um.z * 0.1)), Vector((um.x * 0.6, 0.012, um.z * 0.5)))
+        # Va por fuera de cualquier prenda de arriba (botones y bolsillos llegan a 7 cm).
+        T.caja(bm, Vector((uc.x, uc.y - um.y - 0.085, uc.z - um.z * 0.25)), Vector((um.x * 1.2, 0.02, um.z * 1.1)))
+        T.caja(bm, Vector((uc.x, uc.y - um.y - 0.1, uc.z - um.z * 0.15)), Vector((um.x * 0.6, 0.012, um.z * 0.5)))
 
     def tirantes(bm):
         for s in (-1, 1):
             x = uc.x + s * um.x * 0.45
-            T.tubo(bm, [Vector((x, uc.y - um.y - 0.06, uc.z + um.z * 0.3)), Vector((x, uc.y - um.y * 0.5, utx.z + 0.03)), Vector((x, uc.y + um.y * 0.6, utx.z + 0.03)), Vector((uc.x + s * 0.03, uc.y + um.y + 0.05, uc.z - um.z * 0.3))], 0.02, 4)
-            T.remache(bm, Vector((x, uc.y - um.y - 0.065, uc.z + um.z * 0.25)), 0.015)
+            T.tubo(bm, [Vector((x, uc.y - um.y - 0.09, uc.z + um.z * 0.25)), Vector((x, uc.y - um.y - 0.09, utx.z + 0.03)), Vector((x, uc.y - um.y * 0.4, utx.z + 0.09)), Vector((x, uc.y + um.y * 0.4, utx.z + 0.09)), Vector((x, uc.y + um.y + 0.088, utx.z + 0.09)), Vector((x, uc.y + um.y + 0.088, utx.z + 0.02)), Vector((uc.x + s * 0.04, uc.y + um.y + 0.088, uc.z - um.z * 0.6))], 0.012, 4)
+            T.remache(bm, Vector((x, uc.y - um.y - 0.11, uc.z + um.z * 0.25)), 0.015)
 
-    piezas["Mameluco"] = [cadera, ("UpperTorso", "C1", pechera), ("UpperTorso", "C2", tirantes), *piernas(extra=(0.045, 0.045, 0.01))]
+    def rodilleras(lado):
+        # Parche cosido en la rodilla (el mameluco de trabajo se gasta ahí).
+        def armar(bm):
+            _, _, c, m = P(f"{lado}LowerLeg")
+            T.caja(bm, Vector((c.x, c.y - m.y - 0.058, c.z + m.z * 0.6)), Vector((m.x * 1.5, 0.014, 0.16)))
+
+        return armar
+
+    piezas["Mameluco"] = [
+        cadera,
+        ("UpperTorso", "C1", pechera),
+        ("UpperTorso", "C2", tirantes),
+        *piernas(extra=(0.045, 0.045, 0.01)),
+        ("LeftLowerLeg", "C1", rodilleras("Left")),
+        ("RightLowerLeg", "C1", rodilleras("Right")),
+    ]
     return {k: ("abajo", v) for k, v in piezas.items()}
 
 
@@ -361,33 +690,50 @@ def cabezas():
     r, ry = hm.x + 0.03, hm.y + 0.03
     piezas = {}
 
-    def copa(z0, alto, redondez=0.6, seg=(18, 8), dy=0.0):
+    def copa(z0, alto, dy=0.0, ancho=0.0):
+        # Copa de cantos rectos (mitad de alto `alto`), apenas más grande que la cabeza.
         def armar(bm):
-            T.bloque_redondo(bm, Vector((hc.x, hc.y + dy, z0)), Vector((r, ry, alto)), redondez, *seg)
+            caja_tela(bm, Vector((hc.x - r - ancho, hc.y + dy - ry - ancho, z0 - alto)), Vector((hc.x + r + ancho, hc.y + dy + ry + ancho, z0 + alto)))
 
         return armar
 
     def visera(bm):
-        T.caja(bm, Vector((hc.x, f - 0.11, hx.z - hm.z * 0.45)), Vector((hm.x * 1.4, 0.2, 0.02)), _g(6, "X"))
+        T.caja(bm, Vector((hc.x, f - 0.12, hx.z - hm.z * 0.48)), Vector((hm.x * 1.6, 0.2, 0.02)), _g(6, "X"))
+        T.caja(bm, Vector((hc.x, hc.y, hx.z + hm.z * 0.2 + 0.006)), Vector((0.04, 0.04, 0.012)))  # botón
+
+    def costuras_gorra(bm):
+        # Gajos de la gorra: 3 costuras que cruzan la copa de adelante para atrás.
+        for k in (-1, 0, 1):
+            T.caja(bm, Vector((hc.x + k * r * 0.5, hc.y, hx.z + hm.z * 0.2)), Vector((0.01, ry * 2 + 0.01, 0.008)))
+        T.caja(bm, Vector((hc.x, hc.y - ry - 0.004, hx.z - hm.z * 0.25)), Vector((r * 2, 0.008, 0.02)))  # banda
 
     zg = hx.z - hm.z * 0.25
-    piezas["Gorra"] = [("Head", "C1", copa(zg, hm.z * 0.45, 0.7)), ("Head", "C2", visera)]
+    piezas["Gorra"] = [("Head", "C1", copa(zg, hm.z * 0.45)), ("Head", "C1", costuras_gorra), ("Head", "C2", visera)]
 
     def borde_lana(bm):
-        T.bloque_redondo(bm, Vector((hc.x, hc.y, hx.z - hm.z * 0.55)), Vector((r + 0.02, ry + 0.02, 0.07)), 0.6, 18, 4)
-        T.bloque_redondo(bm, Vector((hc.x, hc.y, hx.z + hm.z * 0.25)), Vector((0.06, 0.06, 0.06)), 0.9, 10, 6)  # pompón
+        # Borde doblado (anillo abierto, la copa pasa por adentro) y pompón de cantos rectos.
+        caja_tela(bm, Vector((hc.x - r - 0.02, hc.y - ry - 0.02, hx.z - hm.z * 0.55 - 0.07)), Vector((hc.x + r + 0.02, hc.y + ry + 0.02, hx.z - hm.z * 0.55 + 0.07)), True, True)
+        T.caja(bm, Vector((hc.x, hc.y, hx.z + hm.z * 0.48 + 0.05)), Vector((0.12, 0.12, 0.1)))  # pompón
 
-    piezas["GorroLana"] = [("Head", "C1", copa(hx.z - hm.z * 0.15, hm.z * 0.6, 0.85)), ("Head", "C2", borde_lana)]
+    def tejido(bm):
+        # Costillas del tejido: líneas verticales finitas en la copa, por encima del borde.
+        for k in range(-3, 4):
+            for sy in (-1, 1):
+                T.caja(bm, Vector((hc.x + k * r * 0.28, hc.y + sy * (ry + 0.002), hx.z - hm.z * 0.05)), Vector((0.01, 0.006, hm.z * 0.75)))
+
+    piezas["GorroLana"] = [("Head", "C1", copa(hx.z - hm.z * 0.15, hm.z * 0.63)), ("Head", "C1", tejido), ("Head", "C2", borde_lana)]
 
     def pelo_base(alto=0.45, dy=0.015, extra=0.0):
+        # Casco de pelo de cantos rectos (arriba y a los costados; la cara queda libre).
         def armar(bm):
-            T.bloque_redondo(bm, Vector((hc.x, hc.y + dy, hx.z - hm.z * alto + 0.02)), Vector((r + extra, ry + extra, hm.z * alto + 0.02)), 0.6, 18, 8)
+            caja_tela(bm, Vector((hc.x - r - extra, hc.y + dy - ry - extra, hx.z - 2 * hm.z * alto)), Vector((hc.x + r + extra, hc.y + dy + ry + extra, hx.z + 0.04)))
 
         return armar
 
     def flequillo(bm):
-        for k in range(3):
-            T.bloque_redondo(bm, Vector((hc.x - 0.08 + k * 0.08, f - 0.015, hx.z - 0.01)), Vector((0.055, 0.035, 0.045)), 0.6, 8, 4)
+        # Mechones del flequillo en escalón (segundo color: reflejos).
+        for k in range(4):
+            T.caja(bm, Vector((hc.x - 0.12 + k * 0.08, f - 0.024, hx.z - 0.02 - (k % 2) * 0.025)), Vector((0.075, 0.02, 0.06 + (k % 2) * 0.03)))
 
     piezas["PeloCorto"] = [("Head", "C1", pelo_base()), ("Head", "C2", flequillo)]
 
@@ -407,7 +753,7 @@ def cabezas():
         # nuca. Es del color del pelo y queda debajo de los rulos, así entre rulo y rulo no se ve piel.
         z0 = hc.z - hm.z * 0.1
         T.caja(bm, Vector((hc.x, hc.y + 0.01, (z0 + hx.z + 0.02) / 2)), Vector(((hm.x + 0.01) * 2, (hm.y + 0.005) * 2, hx.z + 0.02 - z0)))
-        z1 = hc.z - hm.z * 0.75
+        z1 = hc.z - hm.z * 0.6
         T.caja(bm, Vector((hc.x, hc.y + hm.y * 0.5 + 0.005, (z1 + z0) / 2 + 0.01)), Vector(((hm.x + 0.01) * 2, hm.y + 0.01, z0 - z1 + 0.02)))  # nuca
         rng = random.Random(4)
 
@@ -419,6 +765,7 @@ def cabezas():
             for p, g in zip(camino, grosor):
                 m = g + 0.006
                 dx, dy, dz = hm.x + m - abs(p.x - hc.x), hm.y + m - abs(p.y - hc.y), hx.z + m - p.z
+                p = Vector((p.x, p.y, max(p.z, hc.z - hm.z * 0.4)))
                 if dx > 0 and dy > 0 and dz > 0:
                     p = p.copy()
                     menor = min(dx, dy, dz)
@@ -468,8 +815,18 @@ def cabezas():
     piezas["Rulos"] = [("Head", "C1", rulos), ("Head", "C2", hebilla)]
 
     def barba(bm):
-        T.bloque_redondo(bm, Vector((hc.x, f + 0.03, hc.z - hm.z * 0.6)), Vector((hm.x + 0.015, 0.08, hm.z * 0.4)), 0.6, 14, 6)
-        T.bloque_redondo(bm, Vector((hc.x, f - 0.025, hc.z - hm.z * 0.2)), Vector((0.1, 0.025, 0.03)), 0.6, 10, 4)  # bigote
+        """Barba en U de cantos rectos (mentón + patillas hasta la oreja), bigote recto con las
+        puntas caídas y la boca libre entre los dos (Juani: el bigote redondo se veía raro)."""
+        boca = hc.z - hm.z * 0.42
+        abajo_ = hc.z - hm.z + 0.045  # no baja de la cabeza: no pisa cuellos ni capuchas
+        prof = hm.y * 1.2  # cubre la mandíbula hasta la mitad de la cabeza
+        T.caja(bm, Vector((hc.x, f + prof / 2 - 0.022, (boca - 0.03 + abajo_) / 2)), Vector((hm.x * 2 + 0.03, prof, boca - 0.03 - abajo_)))
+        for s in (-1, 1):  # patillas
+            T.caja(bm, Vector((hc.x + s * (hm.x + 0.008), f + 0.09, (boca + hc.z + hm.z * 0.15) / 2)), Vector((0.02, 0.16, hc.z + hm.z * 0.15 - boca)))
+            T.caja(bm, Vector((hc.x + s * (hm.x * 0.78), f - 0.012, boca - 0.02)), Vector((hm.x * 0.42, 0.024, 0.09)))  # mejillas
+        T.caja(bm, Vector((hc.x, f - 0.02, hc.z - hm.z * 0.22)), Vector((0.2, 0.03, 0.045)))  # bigote
+        for s in (-1, 1):
+            T.caja(bm, Vector((hc.x + s * 0.11, f - 0.02, hc.z - hm.z * 0.3)), Vector((0.045, 0.03, 0.07)), _g(s * 20, "Y"))
         for s in (-1, 1):  # cejas
             T.caja(bm, Vector((hc.x + s * 0.08, f - 0.008, hc.z + hm.z * 0.35)), Vector((0.08, 0.015, 0.02)))
 
@@ -508,78 +865,121 @@ def mano(lado="Right"):
     return f"{lado}Hand", Vector((c.x, c.y, c.z - m.z * 0.3)), m
 
 
+def _mano(lado):
+    """Datos de la mano para colgar o sostener cosas sin que se metan en la mano ni en la manga:
+    (hueso, centro, mitades, abajo, adelante, afuera)."""
+    _, _, c, m = P(f"{lado}Hand")
+    _, _, tc, _ = P("UpperTorso")
+    return f"{lado}Hand", c, m, c.z - m.z, c.y - m.y, 1 if c.x > tc.x else -1
+
+
 def accesorios():
+    """Accesorios que cuelgan debajo de la mano o se sostienen adelante, por fuera de la manga, de
+    las perneras y de la pollera (los revisa `choques`)."""
     piezas = {}
-    hueso, g, _ = mano("Right")
+    hd, cd, md, abajo_d, adelante_d, sd = _mano("Right")
+    hi, ci, mi, abajo_i, adelante_i, si = _mano("Left")
+
+    # Maletín: cuelga de la manija, que toca la mano por abajo.
+    mx_ = Vector((cd.x + sd * 0.025, cd.y, abajo_d - 0.06))
 
     def maletin(bm):
-        T.bloque_redondo(bm, g + Vector((0, 0, -0.2)), Vector((0.06, 0.2, 0.15)), 0.2, 12, 6)
+        caja_tela(bm, mx_ + Vector((-0.06, -0.2, -0.3)), mx_ + Vector((0.06, 0.2, 0.0)))
+        T.caja(bm, mx_ + Vector((0, 0, -0.15)), Vector((0.13, 0.41, 0.012)))  # costura del medio
 
-    def manija(bm):
-        T.tubo(bm, [g + Vector((0, -0.06, -0.05)), g + Vector((0, -0.05, 0.0)), g + Vector((0, 0.05, 0.0)), g + Vector((0, 0.06, -0.05))], 0.012, 5)
-        for s in (-1, 1):
-            T.caja(bm, g + Vector((-0.062, s * 0.12, -0.08)), Vector((0.01, 0.04, 0.03)))
+    def herrajes(bm):
+        T.tubo(bm, [mx_ + Vector((0, -0.07, 0.0)), mx_ + Vector((0, -0.06, 0.035)), Vector((cd.x + sd * 0.025, cd.y, abajo_d - 0.015)), mx_ + Vector((0, 0.07, 0.0))], 0.012, 5)
+        for sy in (-1, 1):
+            T.caja(bm, mx_ + Vector((0, sy * 0.13, -0.02)), Vector((0.135, 0.04, 0.03)))  # cierres
+            T.caja(bm, mx_ + Vector((0, sy * 0.2, -0.15)), Vector((0.13, 0.012, 0.31)))  # cantoneras
 
-    piezas["Maletin"] = [(hueso, "C1", maletin), (hueso, "C2", manija)]
+    piezas["Maletin"] = [(hd, "C1", maletin), (hd, "C2", herrajes)]
 
-    hi, gi, _ = mano("Left")
+    # Bolsa de compras: cuelga hacia afuera de la mano izquierda.
+    bi = Vector((ci.x + si * 0.13, ci.y, abajo_i))
 
     def bolsa(bm):
-        T.cilindro(bm, gi + Vector((0, 0, -0.42)), gi + Vector((0, 0, -0.12)), 0.13, 8, 0.15)
+        caja_tela(bm, bi + Vector((-0.11, -0.15, -0.42)), bi + Vector((0.11, 0.15, -0.12)), abierto_arriba=True)
+        T.caja(bm, bi + Vector((0, 0, -0.41)), Vector((0.2, 0.28, 0.01)))  # fondo
 
     def manijas_bolsa(bm):
-        for s in (-1, 1):
-            T.tubo(bm, [gi + Vector((0, s * 0.1, -0.13)), gi + Vector((0, s * 0.04, 0.0)), gi + Vector((0, -s * 0.02, 0.0))], 0.008, 4)
-        T.cilindro(bm, gi + Vector((0.03, 0.03, -0.2)), gi + Vector((0.06, 0.08, 0.05)), 0.03, 6)  # pan
-        T.bloque_redondo(bm, gi + Vector((-0.04, -0.04, -0.1)), Vector((0.05, 0.05, 0.05)), 0.9, 8, 4)  # manzana
+        for sy in (-1, 1):
+            T.tubo(bm, [bi + Vector((sy * 0.06, -0.15, -0.12)), Vector((ci.x + si * 0.02, ci.y - 0.03, abajo_i - 0.01)), bi + Vector((sy * 0.06, 0.15, -0.12))], 0.008, 4)
+        T.cilindro(bm, bi + Vector((0.03, 0.05, -0.3)), bi + Vector((0.05, 0.09, -0.02)), 0.03, 6)  # pan
+        T.bloque_redondo(bm, bi + Vector((-0.04, -0.06, -0.14)), Vector((0.05, 0.05, 0.05)), 0.9, 8, 4)  # manzana
 
     piezas["BolsaCompras"] = [(hi, "C1", bolsa), (hi, "C2", manijas_bolsa)]
 
     _, utx, uc, um = P("UpperTorso")
     at = uc.y + um.y
 
+    # Mochila: separada de la espalda lo justo para no pisar capucha, chaleco ni tiradores.
     def mochila(bm):
-        T.bloque_redondo(bm, Vector((uc.x, at + 0.13, uc.z - 0.02)), Vector((um.x * 0.75, 0.1, um.z * 0.9)), 0.4, 14, 8)
-        T.bloque_redondo(bm, Vector((uc.x, at + 0.24, uc.z - um.z * 0.4)), Vector((um.x * 0.55, 0.04, um.z * 0.35)), 0.4, 10, 4)
+        caja_tela(bm, Vector((uc.x - um.x * 0.72, at + 0.105, uc.z - um.z * 0.85)), Vector((uc.x + um.x * 0.72, at + 0.28, uc.z + um.z * 0.85)))
+        caja_tela(bm, Vector((uc.x - um.x * 0.5, at + 0.28, uc.z - um.z * 0.75)), Vector((uc.x + um.x * 0.5, at + 0.34, uc.z - um.z * 0.05)))  # bolsillo
+        T.caja(bm, Vector((uc.x, at + 0.345, uc.z - um.z * 0.1)), Vector((um.x * 0.9, 0.012, 0.03)))  # tapa del bolsillo
 
     def tiras(bm):
-        for s in (-1, 1):
-            x = uc.x + s * um.x * 0.45
-            T.tubo(bm, [Vector((x, at + 0.05, utx.z - 0.02)), Vector((x, uc.y - um.y * 0.4, utx.z + 0.02)), Vector((x, uc.y - um.y - 0.05, uc.z)), Vector((x, uc.y + um.y * 0.2, uc.z - um.z * 0.9))], 0.02, 4)
+        for sx in (-1, 1):
+            x = uc.x + sx * um.x * 0.8
+            T.tubo(
+                bm,
+                [
+                    Vector((x, uc.y - um.y - 0.095, uc.z - um.z * 0.3)),
+                    Vector((x, uc.y - um.y - 0.095, utx.z + 0.05)),
+                    Vector((x, uc.y - um.y * 0.3, utx.z + 0.05)),
+                    Vector((x, at + 0.07, utx.z + 0.05)),
+                    Vector((x, at + 0.15, utx.z - 0.03)),
+                ],
+                0.018,
+                4,
+            )
+            T.caja(bm, Vector((x, uc.y - um.y - 0.105, uc.z + um.z * 0.1)), Vector((0.045, 0.012, 0.03)))  # hebilla
+        # Tira del pecho.
+        T.tubo(bm, [Vector((uc.x - um.x * 0.7, uc.y - um.y - 0.11, uc.z + um.z * 0.35)), Vector((uc.x + um.x * 0.7, uc.y - um.y - 0.11, uc.z + um.z * 0.35))], 0.01, 4)
 
     piezas["Mochila"] = [("UpperTorso", "C1", mochila), ("UpperTorso", "C2", tiras)]
 
-    def caño(bm, largo):
-        T.cilindro(bm, g + Vector((0, 0, -0.05)), g + Vector((0, 0, largo)), 0.012, 6)
-        T.tubo(bm, [g + Vector((0, 0, -0.05)), g + Vector((0, 0, -0.12)), g + Vector((0, -0.05, -0.15)), g + Vector((0, -0.08, -0.12))], 0.015, 5, False)
+    # Paraguas abierto: el palo va adelante de la mano y de la manga; la tela queda sobre la cabeza.
+    pd = Vector((cd.x, adelante_d - 0.075, abajo_d))
 
     def tela_abierta(bm):
-        tope = g + Vector((0, 0, 1.3))
+        tope = pd + Vector((0, 0, 1.36))
         n = 8
-        borde = [tope + Vector((math.cos(2 * math.pi * k / n) * 0.55, math.sin(2 * math.pi * k / n) * 0.55, -0.22)) for k in range(n)]
+        borde = [tope + Vector((math.cos(2 * math.pi * k / n) * 0.58, math.sin(2 * math.pi * k / n) * 0.58, -0.24)) for k in range(n)]
         centro = bm.verts.new(tope)
         aro = [bm.verts.new(p) for p in borde]
-        aro_dentro = [bm.verts.new(p + Vector((0, 0, -0.01))) for p in borde]
-        centro_dentro = bm.verts.new(tope + Vector((0, 0, -0.01)))
+        aro_dentro = [bm.verts.new(p + Vector((0, 0, -0.012))) for p in borde]
+        centro_dentro = bm.verts.new(tope + Vector((0, 0, -0.012)))
         for k in range(n):
             q = (k + 1) % n
             bm.faces.new((centro, aro[k], aro[q]))
             bm.faces.new((centro_dentro, aro_dentro[q], aro_dentro[k]))
             bm.faces.new((aro[k], aro_dentro[k], aro_dentro[q], aro[q]))
 
-    piezas["ParaguasAbierto"] = [(hueso, "C1", tela_abierta), (hueso, "C2", lambda bm: caño(bm, 1.33))]
+    def caño(bm):
+        T.cilindro(bm, pd + Vector((0, 0, -0.04)), pd + Vector((0, 0, 1.4)), 0.012, 6)
+        T.tubo(bm, [pd + Vector((0, 0, -0.04)), pd + Vector((0, 0, -0.1)), pd + Vector((0, -0.05, -0.13)), pd + Vector((0, -0.08, -0.1))], 0.015, 5, False)
+        for k in range(8):  # varillas
+            a = 2 * math.pi * k / 8
+            T.tubo(bm, [pd + Vector((0, 0, 1.34)), pd + Vector((math.cos(a) * 0.56, math.sin(a) * 0.56, 1.11))], 0.005, 3)
+
+    piezas["ParaguasAbierto"] = [(hd, "C1", tela_abierta), (hd, "C2", caño)]
+
+    # Paraguas cerrado: cuelga de la mano hasta casi el piso, por fuera de la pierna.
+    pc_ = Vector((cd.x + sd * 0.02, cd.y, abajo_d))
 
     def tela_cerrada(bm):
-        T.cilindro(bm, g + Vector((0, 0, -0.75)), g + Vector((0, 0, -0.15)), 0.004, 8, 0.045)
+        T.cilindro(bm, pc_ + Vector((0, 0, 0.1 - pc_.z)), pc_ + Vector((0, 0, -0.12)), 0.004, 8, 0.042)
+        T.caja(bm, pc_ + Vector((0, 0, -0.3)), Vector((0.07, 0.025, 0.03)))  # cinta que la cierra
 
     def caño_cerrado(bm):
-        T.cilindro(bm, g + Vector((0, 0, -0.85)), g + Vector((0, 0, 0.05)), 0.01, 6)
-        T.tubo(bm, [g + Vector((0, 0, 0.05)), g + Vector((0, 0, 0.12)), g + Vector((0, -0.05, 0.15)), g + Vector((0, -0.08, 0.12))], 0.015, 5, False)
+        T.cilindro(bm, pc_ + Vector((0, 0, 0.05 - pc_.z)), pc_ + Vector((0, 0, -0.005)), 0.009, 6)
 
-    piezas["ParaguasCerrado"] = [(hueso, "C1", tela_cerrada), (hueso, "C2", caño_cerrado)]
+    piezas["ParaguasCerrado"] = [(hd, "C1", tela_cerrada), (hd, "C2", caño_cerrado)]
 
-    _, _, mc, mm = P("RightHand")
-    va = Vector((mc.x, mc.y - mm.y - 0.05, mc.z))
+    # Café: adelante de la mano y más abajo que la manga.
+    va = Vector((cd.x, adelante_d - 0.062, abajo_d - 0.04))
 
     def vaso(bm):
         T.cilindro(bm, va + Vector((0, 0, -0.1)), va + Vector((0, 0, 0.08)), 0.04, 12, 0.05)
@@ -588,34 +988,37 @@ def accesorios():
         T.cilindro(bm, va + Vector((0, 0, 0.08)), va + Vector((0, 0, 0.11)), 0.054, 12, 0.045)
         T.cilindro(bm, va + Vector((0, 0, -0.03)), va + Vector((0, 0, 0.03)), 0.048, 12, 0.05)  # faja
 
-    piezas["Cafe"] = [(hueso, "C1", vaso), (hueso, "C2", tapa)]
+    piezas["Cafe"] = [(hd, "C1", vaso), (hd, "C2", tapa)]
+
+    # Correa del perro: sale de adelante de la mano izquierda y baja hacia adelante.
+    ci0 = Vector((ci.x, adelante_i - 0.035, abajo_i - 0.025))
 
     def correa(bm):
-        piso = Vector((gi.x + 0.1, gi.y - 0.9, 0.25))
-        pts = [gi + (piso - gi) * t + Vector((0, 0, -math.sin(t * math.pi) * 0.15)) for t in [k / 8 for k in range(9)]]
+        piso = Vector((ci.x + si * 0.1, ci.y - 0.9, 0.25))
+        pts = [ci0 + (piso - ci0) * t + Vector((0, 0, -math.sin(t * math.pi) * 0.15)) for t in [k / 8 for k in range(9)]]
         T.tubo(bm, pts, 0.008, 4)
         T.cilindro(bm, piso + Vector((0, 0, -0.02)), piso + Vector((0, 0, 0.02)), 0.025, 8)  # mosquetón del collar
 
     def manija_correa(bm):
-        T.bloque_redondo(bm, gi + Vector((0, 0, 0.02)), Vector((0.04, 0.06, 0.06)), 0.6, 10, 4)
+        T.caja(bm, ci0, Vector((0.07, 0.03, 0.08)))
 
     piezas["CorreaPerro"] = [(hi, "C1", correa), (hi, "C2", manija_correa)]
     out = {k: ("accesorio", v) for k, v in piezas.items()}
 
-    # El teléfono y el café se sostienen adelante de la mano (la mano del R15 es un bloque grueso).
-    _, _, mc, mm = P("RightHand")
-    adelante = Vector((mc.x, mc.y - mm.y - 0.03, mc.z))
+    # Teléfono: adelante de la mano, más abajo que la manga (en el juego, mientras llama, se
+    # oculta lo que tenga en la mano derecha).
+    adelante = Vector((cd.x, adelante_d - 0.022, abajo_d - 0.01))
 
     def carcasa(bm):
-        T.bloque_redondo(bm, adelante + Vector((0, 0, 0.03)), Vector((0.04, 0.008, 0.08)), 0.3, 8, 4)
+        T.bloque_redondo(bm, adelante, Vector((0.04, 0.008, 0.08)), 0.3, 8, 4)
 
     def camara(bm):
-        T.cilindro(bm, adelante + Vector((0.02, 0.008, 0.09)), adelante + Vector((0.02, 0.012, 0.09)), 0.008, 6)
+        T.cilindro(bm, adelante + Vector((0.02, 0.008, 0.06)), adelante + Vector((0.02, 0.012, 0.06)), 0.008, 6)
 
     def pantalla(bm):
-        T.caja(bm, adelante + Vector((0, -0.009, 0.03)), Vector((0.066, 0.002, 0.14)))
+        T.caja(bm, adelante + Vector((0, -0.009, 0.0)), Vector((0.066, 0.002, 0.14)))
 
-    out["Telefono"] = ("telefono", [(hueso, "C1", carcasa), (hueso, "C2", camara), (hueso, "Pantalla", pantalla)])
+    out["Telefono"] = ("telefono", [(hd, "C1", carcasa), (hd, "C2", camara), (hd, "Pantalla", pantalla)])
     return out
 
 
@@ -631,7 +1034,7 @@ def construir(nombre, capas):
         grupos.setdefault((hueso, canal), []).append(armar)
     objs = []
     for (hueso, canal), lista in grupos.items():
-        mat = CANALES.get(canal, "neon-cian")
+        mat = CANALES.get(canal, "neon-cian" if canal == "Pantalla" else canal)
         nombre_obj = f"{PREFIJO}_{nombre}_{hueso}_{canal}"
         objs.append(T.pieza(nombre_obj, hueso, [(mat, a) for a in lista]))
     return objs
@@ -677,7 +1080,7 @@ def _rueda(bm, c, r=0.12, ancho=0.04):
 def carrito_diarios():
     """Carrito de diarios de El Faro, a la derecha del diarero: caja con 3 pilas de diarios, dos
     ruedas, manija y un cartel con el faro (silueta propia) arriba."""
-    o = Vector((-0.75, -0.1, 0))
+    o = Vector((-1.0, -0.1, 0))
 
     def cuerpo(bm):
         T.bloque_redondo(bm, o + Vector((0, 0, 0.55)), Vector((0.25, 0.375, 0.225)), 0.15, 16, 8)
@@ -712,10 +1115,13 @@ def carrito_diarios():
 def carrito_panchos():
     """Carrito de panchos: caja térmica con tapa, plancha, 3 panchos arriba, sombrilla a rayas
     (2 canales), ruedas y manija."""
-    o = Vector((-0.85, -0.05, 0))
+    o = Vector((-1.15, -0.05, 0))
 
     def caja_(bm):
-        T.bloque_redondo(bm, o + Vector((0, 0, 0.6)), Vector((0.32, 0.55, 0.3)), 0.25, 16, 8)
+        T.caja(bm, o + Vector((0, 0, 0.6)), Vector((0.64, 1.1, 0.6)))
+        for y in (-0.28, 0.28):  # puertas de la caja térmica
+            T.caja(bm, o + Vector((0.325, y, 0.6)), Vector((0.012, 0.46, 0.46)))
+            T.caja(bm, o + Vector((0.335, y + (0.18 if y < 0 else -0.18), 0.6)), Vector((0.012, 0.03, 0.12)))  # manija
         T.caja(bm, o + Vector((0, 0, 0.93)), Vector((0.62, 1.05, 0.04)))
         T.tubo(bm, [o + Vector((-0.2, 0.55, 0.75)), o + Vector((-0.2, 0.75, 0.95)), o + Vector((0.2, 0.75, 0.95)), o + Vector((0.2, 0.55, 0.75))], 0.02, 6)
         T.cilindro(bm, o + Vector((0, 0, 0.95)), o + Vector((0, 0, 1.85)), 0.018, 6)
@@ -761,7 +1167,7 @@ def guitarra():
     """Guitarra criolla colgada adelante (sigue al torso): caja de dos lóbulos, boca, puente,
     mástil con clavijero y correa."""
     _, utx, uc, um = P("UpperTorso")
-    c = Vector((uc.x + 0.05, uc.y - um.y - 0.12, uc.z - um.z * 0.6))
+    c = Vector((uc.x + 0.05, uc.y - um.y - 0.155, uc.z - um.z * 0.6))  # adelante de cualquier detalle
     giro = _g(-50, "Y")
 
     def caja_(bm):
@@ -774,7 +1180,9 @@ def guitarra():
         a, b = c + giro @ Vector((0, -0.02, 0.25)), c + giro @ Vector((0, -0.02, 0.72))
         T.caja(bm, (a + b) / 2, Vector((0.05, 0.03, 0.5)), giro)  # mástil
         T.caja(bm, c + giro @ Vector((0, -0.02, 0.8)), Vector((0.07, 0.025, 0.16)), giro)  # clavijero
-        T.tubo(bm, [c + giro @ Vector((0, 0.04, -0.28)), Vector((uc.x - um.x * 0.9, uc.y, uc.z - um.z)), Vector((uc.x - um.x * 0.6, uc.y + um.y + 0.04, uc.z)), Vector((uc.x + um.x * 0.5, uc.y, utx.z + 0.03)), a + Vector((0, 0.04, 0))], 0.015, 4)
+        # Correa: del mástil sube por el hombro izquierdo y baja en diagonal por la espalda.
+        x = uc.x + um.x * 0.75
+        T.tubo(bm, [a + Vector((0, 0.04, 0)), Vector((x, uc.y - um.y - 0.1, utx.z + 0.02)), Vector((x, uc.y - um.y * 0.3, utx.z + 0.05)), Vector((x, uc.y + um.y + 0.08, utx.z + 0.03)), Vector((uc.x - um.x * 0.5, uc.y + um.y + 0.08, uc.z - um.z * 0.7))], 0.015, 4)
 
     return [
         *construir("Guitarra", [("UpperTorso", "C1", caja_), ("UpperTorso", "C2", detalles)]),
@@ -791,16 +1199,19 @@ def estuche():
     o = Vector((-0.2, -0.75, 0))
 
     def cuerpo(bm):
-        T.bloque_redondo(bm, o + Vector((0, 0, 0.05)), Vector((0.5, 0.2, 0.05)), 0.4, 16, 4)
-        T.bloque_redondo(bm, o + Vector((0, 0.27, 0.22)), Vector((0.5, 0.03, 0.18)), 0.4, 16, 4)  # tapa abierta
+        caja_tela(bm, o + Vector((-0.5, -0.2, 0.0)), o + Vector((0.5, 0.2, 0.1)), abierto_arriba=True)
+        T.caja(bm, o + Vector((0, 0.235, 0.24)), Vector((1.0, 0.03, 0.36)), _g(-10, "X"))  # tapa abierta
+        for x in (-0.3, 0.0, 0.3):
+            T.caja(bm, o + Vector((x, 0.2, 0.09)), Vector((0.06, 0.03, 0.04)))  # bisagras
+            T.caja(bm, o + Vector((x, -0.205, 0.07)), Vector((0.05, 0.012, 0.04)))  # cierres
 
     def forro_(bm):
-        T.bloque_redondo(bm, o + Vector((0, 0, 0.09)), Vector((0.45, 0.16, 0.012)), 0.4, 12, 2)
+        T.caja(bm, o + Vector((0, 0, 0.02)), Vector((0.96, 0.36, 0.02)))  # forro del fondo
 
     def monedas(bm):
         random.seed(5)
         for _ in range(7):
-            p = o + Vector((random.uniform(-0.3, 0.3), random.uniform(-0.1, 0.1), 0.105))
+            p = o + Vector((random.uniform(-0.3, 0.3), random.uniform(-0.1, 0.1), 0.031))
             T.cilindro(bm, p, p + Vector((0, 0, 0.006)), 0.018, 8)
 
     return _objeto("EstucheGuitarra", [("C1", cuerpo), ("C2", forro_), ("acero", monedas)])
@@ -1130,6 +1541,62 @@ def armar():
     return piezas
 
 
+def _arbol(objs):
+    """BVH en coordenadas de mundo de varias mallas juntas (para buscar choques)."""
+    from mathutils.bvhtree import BVHTree
+
+    verts, caras = [], []
+    for o in objs:
+        base = len(verts)
+        m = o.matrix_world
+        verts += [m @ v.co for v in o.data.vertices]
+        caras += [[base + i for i in p.vertices] for p in o.data.polygons]
+    return BVHTree.FromPolygons(verts, caras) if caras else None
+
+
+# Pares de tipos que se usan juntos en un mismo civil (los de un mismo tipo nunca van juntos).
+JUNTOS = [("arriba", "abajo"), ("arriba", "cabeza"), ("arriba", "accesorio"), ("abajo", "accesorio"), ("cabeza", "accesorio"), ("arriba", "telefono"), ("abajo", "telefono")]
+
+
+def choques(piezas_kit):
+    """Lista de (pieza A, pieza B, triángulos que se cruzan) para todas las piezas que pueden ir
+    juntas en un civil, más accesorios y props contra el cuerpo. Vacía = nada atraviesa nada."""
+    bpy.context.view_layer.update()
+    arboles = {n: _arbol(objs) for n, (_, objs) in piezas_kit.items()}
+    cuerpo = _arbol(B.partes())
+    tipo = {n: t for n, (t, _) in piezas_kit.items()}
+    out = []
+    nombres = list(piezas_kit)
+    for i, a in enumerate(nombres):
+        for b in nombres[i + 1 :]:
+            par = (tipo[a], tipo[b])
+            if par not in JUNTOS and par[::-1] not in JUNTOS:
+                continue
+            n = len(arboles[a].overlap(arboles[b])) if arboles[a] and arboles[b] else 0
+            if n:
+                out.append((a, b, n))
+    for nombre, (nombres_esp, _) in ESPECIALES.items():
+        for p in nombres_esp[:-1]:
+            n = len(arboles[nombre].overlap(arboles[p]))
+            if n:
+                out.append((nombre, p, n))
+    for n_, t in tipo.items():
+        if t in ("accesorio", "telefono", "especial") and arboles[n_]:
+            n = len(arboles[n_].overlap(cuerpo))
+            if n:
+                out.append((n_, "Cuerpo", n))
+    return out
+
+
+def chequear():
+    piezas = armar()
+    lista = choques(piezas)
+    for a, b, n in sorted(lista, key=lambda x: -x[2]):
+        print(f"CHOQUE {a} x {b}: {n}")
+    print("Choques:", len(lista))
+    return lista
+
+
 def boceto():
     piezas = armar()
     bpy.ops.wm.save_as_mainfile(filepath=BLEND)
@@ -1181,10 +1648,15 @@ def detalle():
 
     piezas = armar()
     bpy.ops.wm.save_as_mainfile(filepath=BLEND)
-    objs = [o for _, lista in piezas.values() for o in lista]
-    chicas = {"cabeza", "accesorio", "telefono"}
-    lados = {o.name: (256 if t in chicas else 512) for t, lista in piezas.values() for o in lista}
-    D.terminar(objs, _presupuesto(piezas), ARCHIVO, lados=lados)
+    # Sin horneado ni bisel (1 nov): en el juego los civiles van con color liso (MeshPart.Color,
+    # 2 canales) y cantos rectos como el cuerpo de Roblox. El horneado ensuciaba las telas
+    # abiertas y el bisel les sacaba aletas en los bordes. Solo se reduce la pieza que se pase.
+    for tope, nombres in _presupuesto(piezas).values():
+        grupo = [bpy.data.objects[n] for n in nombres]
+        total = sum(B.triangulos(o) for o in grupo)
+        if total > tope:
+            for o in grupo:
+                D.reducir(o, int(B.triangulos(o) * tope / total))
     bpy.ops.wm.save_as_mainfile(filepath=BLEND)
     print(tabla_triangulos(piezas))
     print("Grilla:", render_grilla(ARCHIVO, piezas))
@@ -1272,6 +1744,6 @@ PROPS = {"Diarero": ["CarritoDiarios"], "Vendedor": ["CarritoPanchos"], "Musico"
 
 if __name__ == "__main__":
     argumentos = sys.argv[sys.argv.index("--") + 1 :] if "--" in sys.argv else []
-    for paso in ("boceto", "detalle", "exportar", "paquete"):
+    for paso in ("chequear", "boceto", "detalle", "exportar", "paquete"):
         if paso in argumentos:
             globals()[paso]()

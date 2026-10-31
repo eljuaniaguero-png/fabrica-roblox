@@ -126,10 +126,18 @@ function Civiles.vestir(personaje: Model, receta: Receta)
 end
 
 -- Muestra u oculta el teléfono en la mano (cuando llama a la policía). La pantalla brilla cian.
+-- Mientras llama se esconde lo que tenga en la mano derecha (café, maletín, paraguas): las dos
+-- cosas ocupan el mismo lugar.
 function Civiles.telefono(personaje: Model, mostrar: boolean)
 	for _, d in personaje:GetChildren() do
 		if d:GetAttribute("PiezaCivil") == "Telefono" then
 			d:Destroy()
+		elseif
+			d:IsA("BasePart")
+			and d:GetAttribute("PiezaCivil") ~= nil
+			and d:GetAttribute("Hueso") == "RightHand"
+		then
+			d.Transparency = if mostrar then 1 else 0
 		end
 	end
 	if mostrar then
