@@ -22,22 +22,8 @@ Antes de hacer las 3 ciudades, se arma **un recorte chico y completo**: un barri
 | Historia | Prólogo corto (1 inicio) y el hilo "Los muelles rojos" | El Narrador completo, los 6 inicios |
 | Bandos | Elegir bando y lista de jugadores por bando | Barrios entre servidores |
 
-### En qué orden (los prompts que se usan)
-**Arte:**
-1. [[P20f Cuerpo propio del jugador]]
-2. [[P13 El Albatros]] (traje de NPC)
-3. [[P19 NPCs]]: solo Tano
-4. [[P20 Enemigos comunes]]: los 3 matones del puerto y el matón con implantes
-5. [[P20b Piezas del creador de personaje]]: solo 4 cascos, 4 capas y 4 petos
-6. [[P21 Puerto Óxido]] y, de [[P20e Vehículos y objetos de la calle viva]], solo lo del puerto
-7. [[P26 Animaciones base del jugador]] (estilo Puños), [[P27 Animaciones de los 3 primeros Linajes]], [[P28 Animaciones de un jefe]] (Remache), [[P29 Animaciones de NPCs y enemigos]] (Tano, el Albatros y los matones) y [[P29b Animaciones de la calle viva]] (civiles y policía)
-8. [[P30 Animaciones de objetos]] y [[P30b Efectos especiales e interfaz]]
-9. [[P31 Sonidos de combate y menús]] y [[P32 Ambientes y música]] (solo el puerto)
-10. [[P33a Logo, ícono y miniaturas (Gemini)]], [[P33b Íconos de Linajes y habilidades (Gemini)]], [[P33c HUD y menús en Figma]] y [[P33 HUD y menús]]
-
-**Código:**
-11. [[P34 Base y guardado]] → [[P35 Combate]] → [[P36 Ruleta Linaje, Variante y Rasgos]] (3 Comunes) → [[P36b Creador de personaje y personalización]] (piezas de arriba) → [[P37 Niveles, árbol y Despertar 1 con ramas]] (sin Despertar)
-12. [[P38 Diálogos con NPCs, trabajos y reputación]] (Tano y el Albatros) → [[P38c Calle viva civiles, testigos, policía y vigilancia]] → [[P38d Atracos]] (1 atraco) → [[P39 Prólogo tu origen y la Noche del Eclipse]] (1 inicio) → [[P40 Tecnología e implantes]] (sin implantes) → [[P41a Primer hilo hecho a mano Los muelles rojos]]
+### En qué orden
+El orden de los prompts está en [[Todos los prompts]], en la lista **BETA** (con lo que se hace de cada uno entre paréntesis).
 
 **Antes de mostrarlo:** los riesgos de [[Riesgos y mejoras (revisión 31 oct)]] que tocan a esta versión (celular a 45 FPS, primer pelea antes del minuto 5, castigo por desconectarse, un solo botón de acción), analítica de los primeros 10 pasos, y prueba con 2 o 3 jugadores en Local Server.
 

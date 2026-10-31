@@ -48,6 +48,124 @@ Decímelo acá ("más oscuro", "cambiá el color de la Liga", "subí los triáng
 
 ## Parte 3. Todos los prompts en orden (versión detallada)
 
+**Orden (31 oct): dos listas, Beta (solo Puerto Óxido) y Post beta.** Los prompts de abajo siguen agrupados por fase; el orden en que se usan es este. Lo que está entre paréntesis es la parte que se hace en la Beta.
+
+### Orden BETA: Puerto Óxido
+
+#### 1. Personajes y cuerpo (Blender)
+- [ ] P20f Cuerpo propio del jugador
+- [ ] P20b Piezas del creador de personaje (solo 4 cascos, 4 capas y 4 petos)
+- [ ] P13 El Albatros
+- [ ] P19 NPCs (solo Tano)
+- [ ] P20 Enemigos comunes (solo los 3 matones del puerto y el matón con implantes)
+- [ ] P20d Civiles y testigos (solo los del puerto y la policía)
+
+#### 2. Lugar (Blender)
+- [ ] P20c Mapa del mundo abierto (solo Puerto Óxido, con los puentes cortados)
+- [ ] P21 Puerto Óxido
+- [ ] P20e Vehículos y objetos de la calle viva (solo lo del puerto)
+- [ ] P25d Interiores donde se puede entrar (solo el taller de Tano, el galpón de Remache y el almacén del atraco)
+
+#### 3. Animaciones (Blender)
+- [ ] P26 Animaciones base del jugador (estilo Puños)
+- [ ] P27 Animaciones de los 3 primeros Linajes (sin definitiva)
+- [ ] P28 Animaciones de un jefe (Remache)
+- [ ] P29 Animaciones de NPCs y enemigos (Tano, el Albatros y los matones)
+- [ ] P29b Animaciones de la calle viva (civiles, policía y jugador en crímenes)
+- [ ] P26b Animaciones de tecnología, gadgets y vehículos (solo el gancho y el banco del taller)
+
+#### 4. Efectos y objetos (Studio, por código)
+- [ ] P30 Animaciones de objetos (pistones de Remache, objetos para juntar y ruleta)
+- [ ] P30b Efectos especiales e interfaz (generales y los 3 Linajes)
+
+#### 5. Sonidos y música (ForgeGUI)
+- [ ] P31 Sonidos de combate y menús
+- [ ] P32 Ambientes y música (solo el puerto)
+
+#### 6. Pantallas (Gemini, Figma y Studio)
+- [ ] P33a Logo, ícono y miniaturas (Gemini)
+- [ ] P33b Íconos de Linajes y habilidades (Gemini) (los 3 Linajes, sus 9 habilidades, el gancho y las monedas)
+- [ ] P33c HUD y menús en Figma
+- [ ] P33 HUD y menús (pasar de Figma a Roblox)
+
+#### 7. Código (Studio)
+- [ ] P34 Base y guardado
+- [ ] P35 Combate (con la cola de teclas y el hit-stop de Riesgos y mejoras (revisión 31 oct))
+- [ ] P36 Ruleta Linaje, Variante y Rasgos (los 3 Comunes, Variante Normal)
+- [ ] P36b Creador de personaje y personalización (con las piezas de la sección 1)
+- [ ] P37 Niveles, árbol y Despertar 1 con ramas (sin Despertar)
+- [ ] P38 Diálogos con NPCs, trabajos y reputación (Tano y el Albatros)
+- [ ] P38c Calle viva civiles, testigos, policía y vigilancia (en el puerto)
+- [ ] P38b Reputación de ciudad, fama, búsqueda y territorios (solo búsqueda y castigo por desconectarse; sin territorios)
+- [ ] P38d Atracos (1 atraco chico: el almacén del muelle)
+- [ ] P40 Tecnología e implantes (taller: 1 traje y el gancho; sin implantes)
+- [ ] P39 Prólogo tu origen y la Noche del Eclipse (1 inicio, primera pelea antes del minuto 5)
+- [ ] P41a Primer hilo hecho a mano Los muelles rojos (termina con Remache)
+
+#### 8. Probar y abrir la Beta
+- [ ] P43 Probar, medir y publicar la beta (celular a 45 FPS, analítica de los primeros 10 pasos, prueba con 2 o 3 jugadores. Publicar lo hacés vos)
+
+
+### Orden POST BETA: el juego completo
+
+#### 1. Personajes del elenco (Blender, uno por sesión)
+Cada prompt sigue el mismo orden: **1) boceto de bloques → aprobar silueta, 2) detalle → aprobar, 3) exportar**, y en los 3 pasos lo manda a Obsidian (Personajes).
+- [ ] P03 Cuervo (detalle v2 listo, falta tu OK para exportar)
+- [ ] P07 Estela (en curso en otra sesión)
+- [ ] P08 Atalanta
+- [ ] P09 Arquitecto
+- [ ] P10 Bastión
+- [ ] P11 Heredero Abisal
+- [ ] P12 Víctor Halden
+- [ ] P14 Zarpa
+- [ ] P15 Confeti
+- [ ] P16 Dualidad
+- [ ] P17 Gorrión
+- [ ] P18 El Eclipsador
+- [ ] P19 NPCs (los otros 6)
+- [ ] P20 Enemigos comunes (los demás)
+- [ ] P20b Piezas del creador de personaje (todas)
+- [ ] P20d Civiles y testigos (todas las ciudades)
+
+#### 2. Lugares (Blender)
+- [ ] P20c Mapa del mundo abierto (las 3 ciudades)
+- [ ] P22-25 Los otros lugares
+- [ ] P25d Interiores donde se puede entrar (todos)
+- [ ] P20e Vehículos y objetos de la calle viva (todos)
+
+#### 3. Animaciones (Blender)
+El plan completo está en Animaciones (plan completo).
+- [ ] P26 Animaciones base del jugador (los otros 4 estilos de pelea)
+- [ ] P26b Animaciones de tecnología, gadgets y vehículos (todo)
+- [ ] P27 Animaciones de los 3 primeros Linajes (el mismo prompt para los otros 9 Linajes, las definitivas y las técnicas combinadas)
+- [ ] P28 Animaciones de un jefe (un jefe por sesión)
+- [ ] P29 Animaciones de NPCs y enemigos (todos)
+- [ ] P29b Animaciones de la calle viva (todas)
+
+#### 4. Efectos, sonidos y pantallas
+- [ ] P30 Animaciones de objetos (todos)
+- [ ] P30b Efectos especiales e interfaz (el punto 2 para cada Linaje nuevo)
+- [ ] P31 Sonidos de combate y menús (los nuevos)
+- [ ] P32 Ambientes y música (las otras ciudades)
+- [ ] P33b Íconos de Linajes y habilidades (Gemini) (todos)
+- [ ] P33 HUD y menús (las pantallas nuevas)
+
+#### 5. Código
+- [ ] P36 Ruleta Linaje, Variante y Rasgos (los 12 Linajes)
+- [ ] P37 Niveles, árbol y Despertar 1 con ramas (con Despertar)
+- [ ] P37b Chips de técnica, segundo poder y técnicas combinadas
+- [ ] P37c Rasgos por estadísticas y Variantes secretas
+- [ ] P38b Reputación de ciudad, fama, búsqueda y territorios (completo, con territorios)
+- [ ] P38d Atracos (todos)
+- [ ] P38e Noticias de El Faro y teléfono (con la edición del día)
+- [ ] P39 Prólogo tu origen y la Noche del Eclipse (los 6 inicios)
+- [ ] P40 Tecnología e implantes (implantes y transferencias)
+- [ ] P41 El Narrador ganchos e hilos
+- [ ] P41b Que cada partida sea distinta
+- [ ] P41c La agenda de los villanos y la Crónica de la ciudad
+- [ ] P42 Piezas de traje de los NPCs y pantalla de trajes
+- [ ] P44 Actos después de la beta
+
 **Cambios de Juani (30 oct, 23:12): historia viva.** No hay historia lineal: un Narrador del servidor reparte ganchos (charlas, llamados, eventos inesperados, rivales, noticias) que llevan a hilos de misiones según tu partida; un gran misterio de 40 Fragmentos con 8 Revelaciones en cualquier orden; villanos con agenda semanal que la comunidad frena o no; otros jugadores como rivales, socios o deudores. Ver sección 0f de la ficha (prompts 37, 39, 41, 41a, 41c y el de después de la beta).
 
 **Cambios de Juani (30 oct, 22:41): calle viva.** Lugares donde se puede entrar, policía y vigilancia (testigos que llaman a la policía, cámaras, 5 niveles de búsqueda), ladrones, callejones peligrosos, atracos de 3 tamaños y noticias de El Faro. Todo está en el documento del juego, sección "Calle viva". Modelos nuevos en los prompts 19, 20, 20d, 20e, 25d y 29b; código en 38c, 38d y 38e.
