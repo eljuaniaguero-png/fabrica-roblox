@@ -194,6 +194,36 @@ Config.Cuerpo.Inicial = {
 	ColorPelo = "1c1714",
 	Marca = 0, -- 0 = sin marca
 }
+-- Ropa base (el cuerpo es el de Roblox): remera de manga corta y pantalón como ropa clásica
+-- (plantillas blancas de arte/scripts/ropa.py, el color lo pone Color3). Las piezas toman el
+-- color de su grupo: los brazos son piel (la manga los tapa arriba) y las piernas, zapatillas
+-- (el pantalón las tapa hasta el tobillo).
+Config.Cuerpo.Ropa = {
+	Remera = "rbxassetid://93586573652795",
+	Pantalon = "rbxassetid://77536036337624",
+	Colores = {
+		Remera = Color3.fromHex("6f7f9e"),
+		Pantalon = Color3.fromHex("3c4250"),
+		Zapatos = Color3.fromHex("22252c"),
+	},
+	Partes = {
+		Head = "Piel",
+		UpperTorso = "Remera",
+		LowerTorso = "Pantalon",
+		LeftUpperArm = "Piel",
+		RightUpperArm = "Piel",
+		LeftLowerArm = "Piel",
+		RightLowerArm = "Piel",
+		LeftHand = "Piel",
+		RightHand = "Piel",
+		LeftUpperLeg = "Zapatos",
+		RightUpperLeg = "Zapatos",
+		LeftLowerLeg = "Zapatos",
+		RightLowerLeg = "Zapatos",
+		LeftFoot = "Zapatos",
+		RightFoot = "Zapatos",
+	},
+}
 Config.Cuerpo.ColoresPelo = {
 	"1c1714",
 	"3a2a20",

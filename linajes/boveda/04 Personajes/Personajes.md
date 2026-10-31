@@ -12,7 +12,7 @@ Una nota por personaje, con su **modelo 3D para girar**, sus renders y sus datos
 | [[Mascarada]] | Cofradía | 30.552 de 32.000 (24.682 puesto, con una máscara a la vez) | Terminado y exportado (en 3D se ve con la máscara Tragedia) |
 | [[Remache]] | Cofradía (jefe) | 29.222 de 37.000 | Terminado y exportado |
 | [[Atalanta]] | Liga | 31.326 de 32.000 | Terminado y exportado |
-| [[Cuerpo propio]] | Todos | 4.664 de 6.000 + pelo 1.000 a 1.600 | En el juego (StarterCharacter) |
+| [[Cuerpo propio]] | Todos | Cuerpo de Roblox + pelo 1.006 a 1.896 | En el juego (StarterCharacter, v3) |
 
 Los que faltan están en [[Elenco]] y en [[Todos los prompts]].
 

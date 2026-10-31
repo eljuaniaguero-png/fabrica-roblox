@@ -20,7 +20,6 @@ export type Datos = {
 }
 
 local C = Config.Cuerpo
-local PIEL = { "Head", "LeftHand", "RightHand" }
 
 local function entero(v: any, minimo: number, maximo: number, defecto: number): number
 	if typeof(v) == "number" and v == v and v % 1 == 0 and v >= minimo and v <= maximo then
@@ -126,12 +125,20 @@ function Apariencia.aplicar(personaje: Model, datos: Datos)
 		personaje:SetAttribute("Cuerpo" .. clave, valor)
 	end
 	local tono = C.TonosPiel[datos.Tono]
-	for _, nombre in PIEL do
+	for nombre, grupo in C.Ropa.Partes do
 		local p = personaje:FindFirstChild(nombre)
 		if p and p:IsA("BasePart") then
-			p.Color = tono
+			p.Color = if grupo == "Piel" then tono else C.Ropa.Colores[grupo]
 		end
 	end
+	local remera = personaje:FindFirstChildOfClass("Shirt") or Instance.new("Shirt")
+	remera.ShirtTemplate = C.Ropa.Remera
+	remera.Color3 = C.Ropa.Colores.Remera
+	remera.Parent = personaje
+	local pantalon = personaje:FindFirstChildOfClass("Pants") or Instance.new("Pants")
+	pantalon.PantsTemplate = C.Ropa.Pantalon
+	pantalon.Color3 = C.Ropa.Colores.Pantalon
+	pantalon.Parent = personaje
 	Apariencia.expresion(personaje, "neutral")
 	local cabeza = personaje:FindFirstChild("Head")
 	if cabeza and cabeza:IsA("BasePart") and datos.Marca > 0 then

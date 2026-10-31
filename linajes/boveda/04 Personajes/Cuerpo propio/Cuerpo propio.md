@@ -10,9 +10,18 @@ c# Cuerpo propio
 El cuerpo que usan todos en vez del avatar de Roblox. **Estilo nuevo (pedido del 31 oct):** bloques redondeados como Roblox, cabeza cuadrada grande, cara anime y pelo de mechones en punta. Mismo esqueleto R15 del maniquí: no se movió ningún hueso.
 
 ## En el juego (Play en Studio)
-Un jugador con apariencia al azar: contextura Normal, altura Baja, tono 6, cara 12, peinado Rapado y marca 4.
+**Cambio de Juani (31 oct, v3):** el cuerpo es literalmente el de Roblox (las piezas del maniquí R15, sin separaciones), con la **cabeza clásica** de Roblox (la cara se pega bien como imagen), remera de manga corta y pantalón como ropa clásica (`arte/scripts/ropa.py`, el color lo pone el juego) y pelo de mechones en capas (`arte/scripts/personajes/peinados.py`). Lo de abajo (modelo 3D, vistas) es la versión anterior, de bloques propios.
 
 ![[cuerpo_studio.png]]
+
+![[cuerpo_studio_cara.png]]
+
+### Peinados v2 (sobre la cabeza de Roblox)
+![[cuerpo_peinados_v2.png]]
+
+![[cuerpo_peinados_v2_espalda.png]]
+
+## Versión anterior (cuerpo de bloques propio)
 
 ## Modelo 3D
 Arrastrá con el mouse para girarlo. Contextura Normal, cara 01, peinado Corto.
