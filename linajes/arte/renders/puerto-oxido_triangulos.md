@@ -35,7 +35,7 @@
 | Grua_Cabina | 2008 | 6000 |
 | Albatros_Galpon | 10996 | 15000 |
 | Albatros_Oficina | 3132 | 8000 |
-| Albatros_Herreria | 2596 | 6000 |
+| Albatros_Herreria | 2948 | 6000 |
 | Albatros_Portones | 2948 | 6000 |
 | Albatros_Seguridad | 1148 | 1500 |
 | Albatros_Equipos | 928 | 1500 |
@@ -47,4 +47,4 @@
 | Albatros_Colision | 20 | 50 |
 | Barco_Casco | 9924 | 18000 |
 | Barco_Cubierta | 7128 | 12000 |
-| **Total del kit** | **81413** | |
+| **Total del kit** | **81765** | |

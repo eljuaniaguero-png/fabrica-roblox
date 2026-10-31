@@ -120,7 +120,17 @@ def cuna(x0, x1, y_pie, y_tope, z_pie, z_tope):
     return v, caras
 
 
-def borrar_caras_ocultas(obj, altura=0.05):
+def prefijo(obj):
+    """Neon_ para lo que brilla y Glass_ para los vidrios: así en Studio se reconocen al toque."""
+    mat = obj.data.materials[0].name if obj.data.materials else ""
+    if "neon" in mat:
+        return "Neon_"
+    if "vidrio" in mat:
+        return "Glass_"
+    return ""
+
+
+def borrar_caras_ocultas(obj, altura=0.05, todas=False):
     """Borra las caras que miran para abajo apoyadas en el piso (z < `altura` studs): la base de
     edificios y muros y la panza de los autos nunca se ven."""
     import bmesh as _bm
@@ -128,7 +138,7 @@ def borrar_caras_ocultas(obj, altura=0.05):
     bm = _bm.new()
     bm.from_mesh(obj.data)
     tope = altura * B.STUD
-    fuera = [f for f in bm.faces if f.normal.z < -0.95 and f.calc_center_median().z < tope]
+    fuera = [f for f in bm.faces if f.normal.z < -0.95 and (todas or f.calc_center_median().z < tope)]
     _bm.ops.delete(bm, geom=fuera, context="FACES")
     bm.to_mesh(obj.data)
     bm.free()
@@ -145,8 +155,8 @@ def exportar_kit(carpeta, objs, sin_base=()):
         loc = o.location.copy()
         o.location = (0, 0, 0)
         if o.name.startswith(tuple(sin_base)):
-            borrar_caras_ocultas(o)
-        rutas.append(B.exportar_fbx(o, os.path.join(B.EXPORTS, carpeta, o.name + ".fbx")))
+            borrar_caras_ocultas(o, todas=o.name.startswith("Calle_"))  # en la calle no se ve nada de abajo
+        rutas.append(B.exportar_fbx(o, os.path.join(B.EXPORTS, carpeta, prefijo(o) + o.name + ".fbx")))
         o.location = loc
     return rutas
 

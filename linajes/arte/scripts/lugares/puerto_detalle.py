@@ -184,7 +184,7 @@ def calle(vias):
                 x = 4 - ancho / 2
             if ancho < 0.2:
                 continue
-            cajas.append(((ancho, 1.05, 0.3), (x, y, 0.25 + azar.uniform(-0.04, 0.03))))
+            cajas.append(((ancho, 1.05, 0.09), (x, y, 0.165 + azar.uniform(-0.01, 0.01))))
     cajas.append(((8, 8, 0.12), (0, 0, 0.06)))
     if vias:
         cajas += [((0.9, 5.2, 0.3), (x, 0, 0.3)) for x in (-3.2, -1.6, 0, 1.6, 3.2)]  # durmientes
@@ -502,10 +502,10 @@ def galpon_albatros():
     def tramo_der(ya, yb, za, zb):
         return ((e, yb - ya, zb - za), (x1, (ya + yb) / 2, (za + zb) / 2))
 
-    pu = (34.8, 39.8, 0.4, 8.2)  # puerta de abajo (5 x 7,8: entra un jugador): x0, x1, z0, z1
+    pu = (34.2, 40.45, 0.4, 8.2)  # puerta de abajo (6,25 x 7,8): x0, x1, z0, z1
     ve = (42, 46, 3.6, 8.6)  # ventana de abajo
     vt = (33.6, 46.4, piso + 1.6, alto - 2.6)  # ventanal de arriba
-    pa = (y1 - 9.5, y1 - 4.5, piso + 0.4, piso + 8.2)  # puerta de arriba (5 x 7,8) (pared derecha): y0, y1, z0, z1
+    pa = (y1 - 10.1, y1 - 3.85, piso + 0.4, piso + 8.2)  # puerta de arriba (6,25 x 7,8) (pared derecha): y0, y1, z0, z1
     o = [
         tramo_frente(x0, pu[0], 0, piso), tramo_frente(pu[1], ve[0], 0, piso), tramo_frente(ve[1], x1, 0, piso),
         tramo_frente(pu[0], pu[1], pu[3], piso), tramo_frente(ve[0], ve[1], ve[3], piso), tramo_frente(ve[0], ve[1], 0, ve[2]),
@@ -551,6 +551,8 @@ def galpon_albatros():
     hz.append(_barra((xe + 1.5, y_pie, 3.4), (xe + 1.5, y_tope, piso + 3.4), 0.2))
     hz += [((0.18, 0.18, 3.4), (xe + 1.5, y_pie - k * 3.4, k * 3.4 * piso / (y_pie - y_tope) + 1.7)) for k in range(5)]
     hz += [((3.2, pa[1] - pa[0] + 2, 0.5), (xe, cy_pa, piso))]  # descanso
+    hz += [((0.4, 0.4, piso), (xe + sx * 1.4, y, piso / 2)) for sx in (-1, 1) for y in (pa[0] - 0.8, pa[1] + 0.8)]  # patas al piso
+    hz += [((1.0, 1.0, 0.3), (xe + sx * 1.4, y, 0.15)) for sx in (-1, 1) for y in (pa[0] - 0.8, pa[1] + 0.8)]  # bases
     hz += [((0.18, pa[1] - pa[0] + 2, 0.18), (xe + 1.6, cy_pa, piso + 3.4)), ((3.2, 0.18, 0.18), (xe, pa[0] - 1, piso + 3.4))]
     hz += [((0.18, 0.18, 3.4), (xe + 1.6, y, piso + 1.7)) for y in (pa[0] - 1, pa[1] + 1)] + [((0.18, 0.18, 3.4), (x1 + 0.6, pa[0] - 1, piso + 1.7))]
     hz += [_barra((xe, cy_pa - 1, piso - 0.3), (x1 + 0.5, cy_pa - 1, piso - 2.6), 0.25), _barra((xe, cy_pa + 1, piso - 0.3), (x1 + 0.5, cy_pa + 1, piso - 2.6), 0.25)]  # ménsulas
@@ -817,5 +819,5 @@ if __name__ == "__main__":
     if "exportar" in pasos:
         bpy.ops.wm.open_mainfile(filepath=P.BLEND)
         kit = [o for o in bpy.data.objects if o.type == "MESH" and o.name in P.PRESUPUESTO and o.name != "Niebla"]
-        sin_base = ("Galpon_", "Albatros_Galpon", "Albatros_Oficina", "Albatros_Zocalo", "Edificio_", "Tunel_", "Arcada", "Prop_Muro", "Contenedor_")
+        sin_base = ("Calle_", "Galpon_", "Albatros_Galpon", "Albatros_Oficina", "Albatros_Zocalo", "Edificio_", "Tunel_", "Arcada", "Prop_Muro", "Contenedor_")
         print("EXPORTADAS", len(P.exportar_kit("puerto-oxido", kit, sin_base)))
