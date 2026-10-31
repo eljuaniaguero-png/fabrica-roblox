@@ -11,6 +11,7 @@ Una nota por personaje, con su **modelo 3D para girar**, sus renders y sus datos
 | [[Centinela Solar]] | Liga | 35.266 de 38.000 | Terminado y exportado |
 | [[Mascarada]] | Cofradía | 30.552 de 32.000 (24.682 puesto, con una máscara a la vez) | Terminado y exportado (en 3D se ve con la máscara Tragedia) |
 | [[Remache]] | Cofradía (jefe) | 29.222 de 37.000 | Terminado y exportado |
+| [[Atalanta]] | Liga | 31.326 de 32.000 | Terminado y exportado |
 
 Los que faltan están en [[Elenco]] y en [[Todos los prompts]].
 

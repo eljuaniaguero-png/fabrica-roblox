@@ -81,6 +81,7 @@ MATERIALES = {
     "violeta": {"hex": "5a3fa0", "rugosidad": 0.45},  # Estela: traje
     "violeta-claro": {"hex": "9a82d8", "rugosidad": 0.4},  # Estela: rombo del emblema
     "visor-cian": {"hex": "3fe0f0", "rugosidad": 0.05, "brillo": 1.5, "alfa": 0.55},
+    "madera-oscura": {"hex": "3b2618", "rugosidad": 0.7},  # Atalanta: asta de la lanza
 }
 
 FONDO = "0e1016"

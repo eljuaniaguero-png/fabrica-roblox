@@ -59,6 +59,9 @@ RECETAS = {
     "violeta": {"costuras": (0.08, 0.0), "trama": 0.4, "rayones": 0.0, "bordes": 0.35, "suciedad": 0.3, "grano": 0.0},
     "violeta-oscuro": {"paneles": (0.06, 0.08), "rayones": 0.4, "bordes": 0.45, "suciedad": 0.35, "grano": 0.0},
     "violeta-claro": {"rayones": 0.3, "bordes": 0.5, "suciedad": 0.25, "grano": 0.0},
+    # Atalanta
+    "bronce": {"paneles": (0.12, 0.14), "remaches": False, "rayones": 0.9, "bordes": 0.6, "suciedad": 0.7, "grano": 0.0},
+    "madera-oscura": {"rayones": 0.3, "bordes": 0.3, "suciedad": 0.5, "grano": 1.0},
 }
 SIN_HORNEAR = {"neon-cian", "neon-eclipse", "neon-aviso", "liquido-rojo", "visor-cian"}  # brillan: se quedan con su material
 
