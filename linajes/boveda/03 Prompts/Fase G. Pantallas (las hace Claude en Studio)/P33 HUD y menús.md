@@ -3,14 +3,19 @@ tags: [prompt]
 prompt: "33"
 estado: pendiente
 ---
-# Prompt 33 HUD y menús
+# Prompt 33 HUD y menús: pasar la interfaz de Figma a Roblox
 
-Antes de pegarlo: Blender abierto con el conector de Claude, en Claude Code en `C:\Users\eljua\fabrica-roblox`. Reglas: [[Reglas de los prompts]] · [[Nivel de detalle]] · [[Colores]]
+Antes de pegarlo: Studio abierto con el place de Linajes y `rojo serve linajes/linajes.project.json` corriendo, en Claude Code en `C:\Users\eljua\fabrica-roblox`. Hacé antes [[P33c HUD y menús en Figma]]: este prompt pasa a Roblox lo que ya aprobaste en Figma. Reglas: [[Reglas de los prompts]] · [[Colores]]
 
 ```
-Leé linajes/arte/GUIA-ESTILO.md (colores y letras: títulos Saira Condensed, texto Barlow; en Roblox usá
-las fuentes más parecidas disponibles en Font.new). Armá en Studio, para compu y celular (probá 1920x1080
-y 844x390):
+Leé linajes/arte/GUIA-ESTILO.md y linajes/arte/2d/figma/medidas.md. El diseño aprobado está en el archivo
+de Figma "Linajes del Eclipse - Interfaz" (miralo con el conector de Figma): Roblox tiene que quedar igual.
+Subí a Roblox las imágenes de linajes/arte/2d/ (íconos de Gemini ya limpios y piezas exportadas de Figma)
+con el MCP de Studio, y anotá cada ID en Config.luau. Armá las pantallas por código en linajes/src/client/ui/
+(un módulo por pantalla; Frames, UICorner, UIStroke y UIGradient donde se pueda, imágenes solo donde no),
+con anclas y escalas para que se vean igual en compu y celular. Fuentes: las más parecidas a Saira
+Condensed y Barlow en Font.new. Probá 1920x1080 y 844x390. Lo que dice abajo es el contenido mínimo de cada
+pantalla (si Figma y esto no coinciden, manda Figma):
 1. MENÚ PRINCIPAL: fondo #0e1016 con un eclipse grande atrás (disco negro con aro #f2652b y brillo #ffb347
    que late cada 4 s). Personaje al centro girando lento. "Espacio 1/2/3" con flechas. Datos: Nombre,
    Linaje (en el color de su rareza), Bando (en su color), Rango, Nivel. Botones a la izquierda: Jugar,
@@ -31,8 +36,8 @@ y 844x390):
    nombre del traje arriba en título grande, botón "Ponerse" o "Bloqueado: cómo conseguirlo".
 7. LISTA DE JUGADORES: arriba a la derecha, agrupada por bando con cabecera en su color (Liga, Cofradía,
    Vigilantes, Neutral), cada jugador con su rango debajo en chico.
-Captura de cada pantalla en compu y celular. Mostramelas y esperá mi OK. Commit y push.
+Captura de cada pantalla en compu y celular, al lado de su marco de Figma. Mostramelas y esperá mi OK. Commit y push.
 ```
 
 ---
-[[P32 Ambientes y música|← P32 Ambientes y música]]   ·   [[Todos los prompts]]   ·   [[P34 Base y guardado|P34 Base y guardado →]]
+[[P33c HUD y menús en Figma|← P33c HUD y menús en Figma]]   ·   [[Todos los prompts]]   ·   [[P34 Base y guardado|P34 Base y guardado →]]

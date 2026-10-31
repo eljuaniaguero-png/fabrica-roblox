@@ -22,4 +22,4 @@ Guardá en linajes/arte/sonidos/, agregá a LISTA.md, subilos y anotá los IDs. 
 ```
 
 ---
-[[P31 Sonidos de combate y menús|← P31 Sonidos de combate y menús]]   ·   [[Todos los prompts]]   ·   [[P33 HUD y menús|P33 HUD y menús →]]
+[[P31 Sonidos de combate y menús|← P31 Sonidos de combate y menús]]   ·   [[Todos los prompts]]   ·   [[P33a Logo, ícono y miniaturas (Gemini)|P33a Logo, ícono y miniaturas (Gemini) →]]

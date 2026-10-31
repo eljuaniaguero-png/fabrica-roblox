@@ -1134,11 +1134,129 @@ Guardá en linajes/arte/sonidos/, agregá a LISTA.md, subilos y anotá los IDs. 
 
 ### Fase G. Pantallas (las hace Claude en Studio)
 
+#### Prompt 33a 🎨 Logo, ícono del juego y miniaturas (en Gemini)
+
+**Dónde va:** en **Gemini** (gemini.google.com), no en Claude. Pegá cada bloque por separado, uno por chat. Están en inglés porque Gemini dibuja mejor así.
+**Cómo guardar:** descargá la imagen que más te guste y guardala en `C:\Users\eljua\fabrica-roblox\linajes\arte\2d\gemini\` con el nombre que dice cada bloque. Después le decís a Claude Code: "Limpiá las imágenes de Gemini de arte/2d/gemini" y él les saca el fondo, las achica al tamaño justo y las sube a Roblox.
+**Reglas:** fondo verde liso (#00FF00) para poder sacarlo; nada de DC ni de otros juegos; si sale texto mal escrito, pedile a Gemini "same image, fix the text to read exactly: ...". Colores en Colores.
+
+##### 1. Logo (guardalo como `logo.png`)
+```
+Game logo for a Roblox superhero RPG called "LINAJES DEL ECLIPSE". Dark comic-book style.
+The words "LINAJES DEL ECLIPSE" in bold condensed uppercase letters, metallic steel (#8a94a6) with a
+hot orange edge glow (#f2652b). Behind the text, a solar eclipse: a black disc with a thin burning ring
+of orange (#f2652b) and gold (#ffb347) light. Small cracks of light coming out of the letters.
+Clean vector look, strong silhouette that reads at small size on a phone. Flat solid #00FF00 green
+background, no other background elements. No existing superhero logos, no capes, no bats, no "S" shields.
+Wide format 16:9, high resolution.
+```
+
+##### 2. Ícono del juego (512 x 512, guardalo como `icono.png`)
+```
+Square game icon for a Roblox superhero game, 1:1. Close-up of a mysterious masked hero in dark armor
+with glowing cyan (#3fe0f0) eye lights, looking at the viewer, a huge solar eclipse behind the head
+(black disc with orange #f2652b and gold #ffb347 ring). Night city with neon in the background,
+rain. Dramatic rim light in orange. Comic-book shading, bold shapes, very readable at small size.
+Original character design, not resembling any DC or Marvel hero. No text.
+```
+
+##### 3. Miniaturas (1920 x 1080, guardalas como `miniatura-1.png` a `miniatura-3.png`)
+```
+Roblox game thumbnail, 16:9, dark comic-book style. [ESCENA]. Wet night streets, neon signs in cyan
+(#3fe0f0), a giant solar eclipse in the sky with an orange and gold burning ring. Blocky stylized
+characters like Roblox but with detailed armor and capes. Strong contrast, action pose, motion lines,
+sparks. Original designs only, nothing from DC or Marvel. No text.
+```
+Cambiá `[ESCENA]` por una de estas:
+- Miniatura 1: `Three heroes jumping toward a huge mechanical brute with hydraulic piston arms and a welding helmet with a red visor, at a rusty harbor with cranes`
+- Miniatura 2: `A hero spinning a wheel of glowing powers (fire, ice, lightning, shadow) that float around their hands`
+- Miniatura 3: `A villain in a theatre suit with a top hat and a cracked white mask laughing on a rooftop while police lights flash below`
+
+##### 4. Emblemas de los 4 bandos (guardalos como `bando-liga.png`, `bando-cofradia.png`, `bando-vigilantes.png`, `bando-neutral.png`)
+```
+Flat emblem icon for a faction in a superhero game, 1:1, on flat solid #00FF00 green background.
+[BANDO]. Simple bold vector shape, one main color plus dark outline (#0e1016), readable at 64 pixels.
+Original design, no existing logos. No text.
+```
+- Liga: `Faction "Liga": a rising sun inside a shield, main color blue #2f6fdb`
+- Cofradía: `Faction "Cofradia": a crimson diamond cut by a dagger, main color #c2213a`
+- Vigilantes: `Faction "Vigilantes": an open eye inside a crescent, main color violet #6b5ba8`
+- Neutral: `Faction "Neutral": two crossed keys inside a circle, main color grey #b8bcc6`
+
+#### Prompt 33b 🎨 Íconos de Linajes, habilidades, gadgets e implantes (en Gemini)
+
+**Dónde va:** en **Gemini**. Mismas reglas que P33a Logo, ícono y miniaturas (Gemini): fondo verde #00FF00, guardar en `linajes/arte/2d/gemini/` con el nombre que se indica, y después pedirle a Claude que los limpie y los suba.
+**Truco para que todos salgan iguales:** hacé los íconos en **un solo chat** de Gemini. El primer mensaje es el bloque "Estilo"; después pedís cada ícono con una línea.
+
+##### Estilo (primer mensaje del chat)
+```
+You will draw a set of game icons for a dark comic-book superhero game on Roblox. Rules for EVERY icon:
+1:1 square, 512x512, flat solid #00FF00 green background, one centered symbol, thick dark outline
+(#0e1016), bold simple shapes readable at 48 pixels on a phone, soft inner glow, no text, no letters,
+no existing logos or brands, nothing from DC or Marvel. Reply "ok" and wait for my icon requests.
+```
+
+##### Linajes (12): guardalos como `linaje-<nombre>.png`
+Pedí cada uno así: `Icon: <símbolo>, glow color <color>.` El color del brillo es el de su rareza (ver Colores).
+| Archivo | Símbolo | Color |
+|---|---|---|
+| linaje-fuerza-bruta | a cracked fist hitting the ground | #9aa3ad |
+| linaje-reflejos | an eye with three motion lines | #9aa3ad |
+| linaje-piroquinesis | a flame shaped like a hand | #9aa3ad |
+| linaje-electro | a lightning bolt splitting in two | #4ed68a |
+| linaje-criogenia | a snowflake made of ice shards | #4ed68a |
+| linaje-telequinesis | a floating rock with violet waves | #4ed68a |
+| linaje-velocista | a running shoe with a light trail | #4fb3f2 |
+| linaje-sombra | a dark smoky silhouette with two eyes | #4fb3f2 |
+| linaje-sangre-abisal | a water drop with a trident inside | #4fb3f2 |
+| linaje-origen-estelar | a star with a glowing core | #f2a23a |
+| linaje-herencia-olimpica | a laurel crown with a lightning bolt | #f2a23a |
+| linaje-eclipse | a solar eclipse ring, half light half dark | #ff4d6d |
+
+##### Habilidades de los 3 primeros Linajes (9): `hab-<nombre>.png`
+Pisotón, Embestida, Levantar y tirar (Fuerza Bruta) · Ráfaga, Contraataque, Paso sombra (Reflejos) · Bola de fuego, Muro de fuego, Explosión (Piroquinesis). Pedí: `Icon for the ability "<nombre en inglés>": <qué pasa>, glow color <color del Linaje>.`
+
+##### Gadgets (8) e implantes (6): `gadget-<nombre>.png` / `implante-<nombre>.png`
+Gancho, granada de humo, dron, boomerang, red, linterna, escudo plegable, botiquín · cañón de brazo, puño hidráulico, ojos de puntos débiles, visión nocturna, doble salto, columna de recarga. Brillo `#3fe0f0` (tecnología).
+
+##### Monedas y objetos (5): `item-<nombre>.png`
+Ficha de Eclipse (moneda negra con anillo naranja), Esquirla (cristal naranja), chatarra, chip, Fragmento de Linaje (piedra con luz adentro).
+
+#### Prompt 33c 💻 HUD y menús en Figma (los diseña Claude)
+
+Antes de pegarlo: Claude Code en `C:\Users\eljua\fabrica-roblox`, con el conector de **Figma** prendido. Hacé antes P33a Logo, ícono y miniaturas (Gemini) y P33b Íconos de Linajes y habilidades (Gemini) (los íconos se usan acá). Reglas: Colores · Sistema de diseño
+
+```
+Leé linajes/arte/GUIA-ESTILO.md (colores y letras: títulos Saira Condensed, texto Barlow) y las pantallas
+del Prompt 33 de linajes/ideas/PROMPTS.md. Creá un archivo nuevo de Figma "Linajes del Eclipse - Interfaz".
+
+1. SISTEMA: variables de color con los tokens de la guía (fondo, superficie, tinta, eclipse, corona,
+   vida, energía, escudo, colores de bando y de rareza), estilos de texto (título, subtítulo, cuerpo,
+   etiqueta) y componentes con variantes: botón (normal, encima, apretado, bloqueado), barra (vida,
+   energía, escudo), ícono de habilidad con recarga, nodo del árbol (apagado, disponible, encendido),
+   pestaña, ventana, fila de jugador, aviso.
+2. PANTALLAS, cada una en 2 marcos: compu 1920x1080 y celular 844x390 (con los bordes seguros del
+   celular marcados): menú principal, creador de personaje, ruleta de Linaje, HUD de pelea, árbol de
+   habilidades, diálogo con NPC, taller e implantes, trajes, lista de jugadores, teléfono y noticias,
+   mapa y reputación, ajustes, y aviso de "Buscado".
+3. Usá los íconos de linajes/arte/2d/ (ya limpios) y el logo. Nada de textos ni íconos de otros juegos.
+4. Botones del celular de 48 px como mínimo; el de ataque, el más grande, abajo a la derecha.
+Mostrame capturas de cada pantalla (compu y celular) y el link del archivo. Esperá mi OK o mis cambios.
+Con mi OK: exportá cada pieza que no se pueda hacer con un Frame (marcos con bordes raros, adornos,
+eclipse) como PNG a linajes/arte/2d/figma/ (@2x, con nombre de la pieza) y anotá en
+linajes/arte/2d/figma/medidas.md las posiciones, tamaños y anclas de cada pantalla. Commit y push.
+```
+
 #### Prompt 33 💻 HUD y menús
 ```
-Leé linajes/arte/GUIA-ESTILO.md (colores y letras: títulos Saira Condensed, texto Barlow; en Roblox usá
-las fuentes más parecidas disponibles en Font.new). Armá en Studio, para compu y celular (probá 1920x1080
-y 844x390):
+Leé linajes/arte/GUIA-ESTILO.md y linajes/arte/2d/figma/medidas.md. El diseño aprobado está en el archivo
+de Figma "Linajes del Eclipse - Interfaz" (miralo con el conector de Figma): Roblox tiene que quedar igual.
+Subí a Roblox las imágenes de linajes/arte/2d/ (íconos de Gemini ya limpios y piezas exportadas de Figma)
+con el MCP de Studio, y anotá cada ID en Config.luau. Armá las pantallas por código en linajes/src/client/ui/
+(un módulo por pantalla; Frames, UICorner, UIStroke y UIGradient donde se pueda, imágenes solo donde no),
+con anclas y escalas para que se vean igual en compu y celular. Fuentes: las más parecidas a Saira
+Condensed y Barlow en Font.new. Probá 1920x1080 y 844x390. Lo que dice abajo es el contenido mínimo de cada
+pantalla (si Figma y esto no coinciden, manda Figma):
 1. MENÚ PRINCIPAL: fondo #0e1016 con un eclipse grande atrás (disco negro con aro #f2652b y brillo #ffb347
    que late cada 4 s). Personaje al centro girando lento. "Espacio 1/2/3" con flechas. Datos: Nombre,
    Linaje (en el color de su rareza), Bando (en su color), Rango, Nivel. Botones a la izquierda: Jugar,

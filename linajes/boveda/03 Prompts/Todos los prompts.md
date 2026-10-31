@@ -76,7 +76,12 @@ Cada prompt sigue el mismo orden: **1) boceto de bloques → aprobar silueta, 2)
 
 ## Fase G. Pantallas (las hace Claude en Studio)
 
-- [ ] [[P33 HUD y menús]]
+**Cómo se hacen:** el arte suelto (logo, ícono del juego, miniaturas, emblemas de bando e íconos) lo dibujás vos con **Gemini** usando los prompts de P33a y P33b, y Claude lo limpia. Las pantallas las diseña Claude en **Figma** (P33c), las aprobás ahí y después Claude las pasa a Roblox (P33).
+
+- [ ] [[P33a Logo, ícono y miniaturas (Gemini)]]
+- [ ] [[P33b Íconos de Linajes y habilidades (Gemini)]]
+- [ ] [[P33c HUD y menús en Figma]]
+- [ ] [[P33 HUD y menús]] (pasar de Figma a Roblox)
 
 ## Fase H. Código (después de los modelos y animaciones)
 
