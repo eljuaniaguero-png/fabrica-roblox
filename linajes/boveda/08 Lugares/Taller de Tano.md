@@ -33,7 +33,16 @@ Fabricar, trabajo de mecánico, escenas de Nico y Tano.
 Graybox con tag `Lugar`. Modelo nuevo pendiente (P25d rehecho).
 
 ## Modelo (P25d-01, rehecho desde cero)
-**Estado: paso 1, boceto de bloques. Espera tu OK.** Planta de **40 x 32 studs** (32 en vez de 30 para que entre en la grilla de 4), paredes de chapa de 16 y techo a dos aguas con la cumbrera a 22 (entra en el lote de 50 x 22 x 40 del graybox). Chequeo de cruces: **0**. Cosas flotando: **0**. Triángulos del boceto: 1.868.
+**Estado: paso 2, detalle con texturas horneadas. Espera tu OK.** (El boceto se aprobó el 1 nov.) Planta de **40 x 32 studs** (32 en vez de 30 para que entre en la grilla de 4), paredes de chapa de 16 y techo a dos aguas con la cumbrera a 22 (entra en el lote de 50 x 22 x 40 del graybox). Chequeo de cruces: **0**. Cosas flotando: **0**. Triángulos del boceto: 1.868.
+
+**Detalle (paso 2)**: 11.532 triángulos en total (tope 60.000). Chequeo de cruces: **0**. Cosas flotando: **0**. Se hornearon 34 piezas sin que se colgara: piso en 4 losas a 1024, paredes en tramos de 8 a 512 y objetos a 256. Las piezas largas (techo, cerchas, correas) y las de muchas partes chicas (herramientas, cajones, escalera) llevan solo material.
+Se sumó: columnas de hierro y correas, tablero con llaves, martillos, pinzas, serrucho y manguera, cajones con manijas en el banco y en el carro, motor y faros del auto, pila de neumáticos, rejillas del locker, motor del compresor, aros de los tambores, mouse, taza y papeles en el escritorio, frazada doblada, manchas de aceite, grietas y un cartel en blanco.
+![[interior-taller_detalle_corte.png]]
+![[interior-taller_detalle_puerta.png]]
+![[interior-taller_detalle_entrepiso.png]]
+![[interior-taller_detalle_banco.png]]
+![[interior-taller_detalle_planta.png]]
+![[interior-taller_detalle_fondo.png]]
 
 **Referencias de Gemini** (vista desde el portón, planta y materiales):
 ![[taller-gemini-ref-1.jpg]]
