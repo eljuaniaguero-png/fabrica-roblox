@@ -167,3 +167,11 @@ Referencias: ![[taller-gemini-ref-7.jpg]] ![[taller-gemini-ref-8.jpg]]
 ![[interior-taller_silla_costado.png]]
 ![[interior-taller_silla_arriba.png]] (sin asiento, para ver las 5 patas)
 ![[interior-taller_monitor_costado.png]]
+
+## Últimos detalles y APROBADO (1 nov)
+
+- Lámpara: base a la izquierda del monitor, el brazo va hacia adelante por fuera y la pantalla (cono inclinado) apunta al teclado. Nada tapa la pantalla de la compu.
+- Borrada la barra negra en diagonal de atrás del monitor: eran los 2 cables `Compu_Cable0` y `Compu_Cable1`.
+- Carcasa del monitor toda del mismo beige `#c9b98f` (frente, costados, techo y atrás), con un brillo propio muy suave para que la sombra no la vuelva verdosa.
+
+**Estado: APROBADO.** Sigue el paso 3 (exportar a Studio).

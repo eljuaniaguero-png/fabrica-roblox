@@ -28,9 +28,25 @@ T.telas_simuladas()
 T.retoque_general()
 luz = bpy.data.objects.get("LuzFabricar")
 if luz:
-    a, b = T.P.S(16.35, 9.5, 4.95), T.P.S(16.65, 8.4, 3.3)
+    a, b = T.P.S(16.05, 10.7, 4.95), T.P.S(16.65, 8.4, 3.3)
     luz.matrix_world = Matrix.Translation(a) @ (b - a).to_track_quat("-Z", "Y").to_matrix().to_4x4()
     luz.data.energy = 220
+# luz de relleno cálida y suave del lado del pasillo: la carcasa del monitor se ve beige también en los costados
+if "LuzRelleno" not in bpy.data.objects:
+    d = bpy.data.lights.new("LuzRelleno", "POINT")
+    d.energy, d.color, d.shadow_soft_size = 90, (1.0, 0.9, 0.75), 1.0
+    luz2 = bpy.data.objects.new("LuzRelleno", d)
+    bpy.context.scene.collection.objects.link(luz2)
+    luz2.location = T.P.S(16.0, 5.8, 5.6)
+# carcasa del monitor: un brillo propio muy suave del mismo beige #c9b98f, así los costados y atrás no se ven verdosos en la sombra
+for n in ("Compu_Monitor", "Compu_Carcasa", "Compu_Pie"):
+    mat = bpy.data.objects[n].active_material.copy()
+    mat.name = "MAT_beige-carcasa"
+    bsdf = next(x for x in mat.node_tree.nodes if x.type == "BSDF_PRINCIPLED")
+    bsdf.inputs["Base Color"].default_value = (0.584, 0.485, 0.275, 1)
+    bsdf.inputs["Emission Color"].default_value = (0.584, 0.485, 0.275, 1)
+    bsdf.inputs["Emission Strength"].default_value = 0.35
+    bpy.data.objects[n].data.materials[0] = mat
 mallas = [o for o in bpy.data.objects if o.type == "MESH" and not o.hide_render and not o.name.startswith(("Lluvia", "Niebla", "Maniqui"))]
 cruces, flotan = T.revisar(mallas)
 print("CHEQUEO", cruces, flotan)

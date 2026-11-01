@@ -833,6 +833,11 @@ def pantalla_crt(nombre, x, y, z, ancho, alto):
 def suavizar(ob, bisel=0.0, segmentos=2, sub=0, curvar=None, angulo=35):
     """Bevel (bordes redondeados) y Subdivision Surface aplicados como modificadores de Blender, después una función opcional
     que deforma la malla (en studs) y sombreado suave con bordes duros solo donde el ángulo pasa `angulo` grados."""
+    bm = bmesh.new()  # normales hacia afuera (las caras armadas a mano pueden quedar al revés y se ven oscuras)
+    bm.from_mesh(ob.data)
+    bmesh.ops.recalc_face_normals(bm, faces=bm.faces)
+    bm.to_mesh(ob.data)
+    bm.free()
     if bisel:
         m = ob.modifiers.new("Bisel", "BEVEL")
         m.width, m.segments, m.limit_method = bisel * B.STUD, segmentos, "ANGLE"
@@ -894,8 +899,6 @@ def escritorio_tano():
     rej = [((0.45, 0.05, 0.03), (mx + 0.75 + (k % 2) * 0.05, my - 0.55 + k * 0.16, mz + 1.56)) for k in range(8)]  # rejilla de arriba
     rej += [((0.03, 0.7, 0.04), (f1 + 0.01, my, mz + 0.4 + k * 0.11)) for k in range(6)]  # rejilla de atrás
     o.append(pieza("Compu_Rejillas", rej, "negro"))
-    for k, s in enumerate((-1, 1)):  # dos cables gruesos que salen de atrás y bajan por el borde del escritorio
-        o.append(tubo(f"Compu_Cable{k}", [(f1 - 0.05, my + s * 0.18, mz + 0.3), (f1 + 0.2, my + s * 0.2, tapa + 0.15), (dx + 1.45, my + s * 0.3, tapa + 0.04), (dx + 1.56, my + s * 0.35, tapa - 0.6)], 0.05, "negro"))
     o.append(pantalla_crt("Compu_Pantalla", mx - 0.02, my, mz + 0.92, 1.55, 1.25))
     # torre beige debajo del escritorio, con disquetera y botón
     tx, ty = dx + 0.3, dy - 1.9
@@ -910,14 +913,22 @@ def escritorio_tano():
     # lámpara articulada (ref-7): base redonda, 2 tramos rectos de metal oscuro con codo, pantalla cónica que alumbra el teclado;
     # apoyada a la izquierda del monitor (mirando desde el taller)
     lx, ly = dx + 0.55, dy + 1.65
-    codo, cabeza = (lx + 0.15, ly - 0.15, tapa + 1.55), (dx - 1.25, dy + 0.5, tapa + 2.2)
+    codo, cabeza = (lx + 0.3, ly + 0.1, tapa + 1.5), (dx - 1.55, dy + 1.7, tapa + 1.75)  # el brazo va hacia adelante por fuera del monitor
     o.append(suavizar(pieza("Compu_LamparaBase", [], "hierro", cilindros=[(0.36, 0.1, (lx, ly, tapa), "Z", 20, 0.3), (0.08, 0.12, (lx, ly, tapa + 0.1), "Z", 10)]), bisel=0.03))
     medio = lambda a, b: tuple((a[i] + b[i]) / 2 for i in range(3))  # noqa: E731
     o.append(tubo("Compu_LamparaBrazo", [(lx, ly, tapa + 0.15), medio((lx, ly, tapa + 0.15), codo), codo], 0.05, "hierro"))
     o.append(tubo("Compu_LamparaBrazo2", [codo, medio(codo, cabeza), cabeza], 0.05, "hierro"))
     o.append(pieza("Compu_LamparaCodo", [], "hierro", cilindros=[(0.09, 0.16, (codo[0], codo[1] - 0.08, codo[2]), "Y", 12)]))
-    o.append(suavizar(pieza("Compu_LamparaPantalla", [], "hierro", cilindros=[(0.32, 0.42, (cabeza[0], cabeza[1], tapa + 1.75), "Z", 20, 0.1)]), sub=0))
-    o.append(pieza("Neon_Compu_LamparaFoco", [], "neon-calido", cilindros=[(0.13, 0.08, (cabeza[0], cabeza[1], tapa + 1.78), "Z", 10)]))
+    # pantalla cónica inclinada: la boca mira al centro del teclado
+    hacia = (P.S(dx - 0.95, dy - 0.6, tapa) - P.S(*cabeza)).normalized()
+    giro = Matrix.Translation(P.S(*cabeza) + hacia * 0.22 * B.STUD) @ hacia.to_track_quat("-Z", "Y").to_matrix().to_4x4()
+    pan, foco = pieza("Compu_LamparaPantalla", [], "hierro"), pieza("Neon_Compu_LamparaFoco", [], "neon-calido")
+    for ob, r1, r2, alto in ((pan, 0.32, 0.1, 0.42), (foco, 0.13, 0.13, 0.08)):
+        bm = bmesh.new()
+        bmesh.ops.create_cone(bm, cap_ends=True, segments=20, radius1=r1 * B.STUD, radius2=r2 * B.STUD, depth=alto * B.STUD, matrix=giro @ Matrix.Translation((0, 0, (0.0 if ob is pan else 0.17) * B.STUD)))
+        bm.to_mesh(ob.data)
+        bm.free()
+        o.append(suavizar(ob, angulo=60))
     # cosas de Tano: taza con asa, papeles con manchas de grasa y un destornillador
     o.append(pieza("Compu_Taza", [], "almohada", cilindros=[(0.18, 0.35, (dx - 1.1, dy + 1.9, tapa), "Z", 12)]))
     o.append(toro("Compu_TazaAsa", (dx - 1.1, dy + 2.12, tapa + 0.18), "X", 0.1, 0.03, "almohada", 10, 4))
@@ -1341,7 +1352,7 @@ def detalle():
     bpy.context.scene.collection.objects.link(luz)
     luz.location = P.S(15, 12, ENTREPISO + 4.5)
     for nombre, desde, hacia, energia, color in (("LuzBanco", (2, 11.5, 12.5), (2, 14, 3.5), 900, "ffc27a"), ("LuzGancho", (-9.5, 9, 12.5), (-9.5, 15, 8), 700, "fff0d8"),
-                                                 ("LuzFabricar", (16.35, 9.5, 4.95), (16.65, 8.4, 3.3), 220, "ffd9a0")):
+                                                 ("LuzFabricar", (16.05, 10.7, 4.95), (16.65, 8.4, 3.3), 220, "ffd9a0")):
         d = bpy.data.lights.new(nombre, "SPOT")
         d.color = B.color(color)[:3]
         d.energy = energia
