@@ -188,3 +188,12 @@ Referencias: ![[taller-gemini-ref-7.jpg]] ![[taller-gemini-ref-8.jpg]]
 ![[interior-taller_pp_destornillador.png]]
 
 **Estado: APROBADO.**
+
+## Retoques finales (1 nov)
+
+- Destornillador: ranuras de agarre más hondas (mango de 30 lados).
+- Gabinete: rayones rectos y claros bien visibles (textura de 512), rejilla del lado que se ve desde el taller.
+- Silla más alta: asiento a 2,2 studs, así un personaje de Roblox sentado queda con los ojos a la altura del centro de la pantalla (~4,5).
+
+![[interior-taller_pp_gabinete.png]]
+![[interior-taller_silla_costado.png]]

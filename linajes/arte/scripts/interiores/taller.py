@@ -924,14 +924,23 @@ def _beige_gastado(ob, cx, cy):
     import detalle as D
     import pintura as T
 
-    T.textura_lisa(ob, 256, "c9b98f", os.path.join(D.TEXTURAS, ARCHIVO), rugosidad=0.6)
+    T.textura_lisa(ob, 512, "c9b98f", os.path.join(D.TEXTURAS, ARCHIVO), rugosidad=0.6)
+    rng = np.random.default_rng(4)
 
     def color(q, n, base):
         u, v = q[:, 0] + q[:, 1], q[:, 2]
         grasa = np.clip((T.fbm(u, v, 1.6, 7) - 0.62) / 0.12, 0, 1) * 0.6
-        rayas = (np.abs(np.sin((u * 0.8 + v * 0.3) * 23.0)) > 0.997) * (T.ruido(u, v, 2.0, 5) > 0.6) * 0.4
+        de_frente = np.abs(n[:, 0]) > 0.5  # en el frente y atrás se usa (y, z); en los costados (x, z)
+        h = np.where(de_frente, q[:, 1], q[:, 0])
+        rayas = np.zeros(len(q))
+        for k in range(14):  # rayones rectos y finos, cada uno con su largo y ángulo
+            a0 = rng.uniform(-0.6, 0.6)
+            p0 = (rng.uniform(-0.9, 0.9) + (cy if k % 2 else cx), rng.uniform(0.2, 1.8))
+            largo = rng.uniform(0.15, 0.45)
+            p1 = (p0[0] + largo * math.cos(a0), p0[1] + largo * math.sin(a0))
+            rayas = np.maximum(rayas, np.clip(1 - T.dist_polilinea(h, v, [p0, p1]) / 0.012, 0, 1) * 0.8)
         c = T.mezclar(base, T.hexa("5b4a32"), grasa)
-        return T.mezclar(c, T.hexa("e4d9bb"), rayas)
+        return T.mezclar(c, T.hexa("f6efdc"), rayas)
 
     T.pintar(ob, color)
     nt = ob.active_material.node_tree
@@ -990,11 +999,11 @@ def destornillador(x, y, z, giro):
     perfil = [(0.0, 0.0), (0.035, 0.004), (0.055, 0.025), (0.065, 0.07), (0.072, 0.2), (0.068, 0.32), (0.055, 0.38), (0.04, 0.4)]
 
     def ranuras(r, h, a):
-        return r * (1 - 0.18 * max(0.0, math.cos(5 * a)) ** 4) if 0.06 < h < 0.33 else r
+        return r * (1 - 0.32 * max(0.0, math.cos(5 * a)) ** 2) if 0.06 < h < 0.33 else r
 
     acostado = Matrix.Translation(P.S(x, y, z)) @ Matrix.Rotation(rad, 4, "Z") @ Matrix.Translation(P.S(-0.4, 0, 0.072)) @ Matrix.Rotation(math.radians(90), 4, "Y")
-    mango = _girado("Compu_Destornillador", perfil, 20, "mango-amarillo", acostado, ranuras)
-    suavizar(mango, sub=1, angulo=70)
+    mango = _girado("Compu_Destornillador", perfil, 30, "mango-amarillo", acostado, ranuras)
+    suavizar(mango, sub=1, angulo=50)
     T.textura_lisa(mango, 128, "d9a62e", os.path.join(D.TEXTURAS, ARCHIVO), rugosidad=0.45)
     T.pintar(mango, lambda q, n, base: T.mezclar(base, T.hexa("6b5320"), np.clip(T.fbm(q[:, 0] * 3, q[:, 1] * 3 + q[:, 2], 6.0, 4) - 0.45, 0, 0.6)))
     # vástago: de la punta del mango (altura 0,11) baja en línea recta hasta tocar la mesa a 0,9 del final
@@ -1048,7 +1057,7 @@ def escritorio_tano():
     o.append(pieza("Compu_TorreBahias", frente, "beige-oscuro"))
     ranuras = [((0.02, 0.42, 0.03), (fx - 0.025, ty - 0.05, z)) for z in (1.6, 1.3)] + [((0.02, 0.36, 0.025), (fx - 0.025, ty - 0.05, 0.99))]
     ranuras += [((0.03, 0.06, 0.045), (fx - 0.03, ty + 0.24, z)) for z in (1.6, 1.3, 0.99)]  # botoncitos
-    ranuras += [((0.4, 0.02, 0.035), (tx - 0.1, ty + 0.405, 0.18 + k * 0.08)) for k in range(5)]  # rejilla del costado, abajo
+    ranuras += [((0.4, 0.02, 0.035), (tx - 0.1, ty - 0.405, 0.18 + k * 0.08)) for k in range(5)]  # rejilla del costado, abajo
     o.append(pieza("Compu_TorreRanuras", ranuras, "negro"))
     o.append(pieza("Compu_TorreBoton", [], "beige-oscuro", cilindros=[(0.08, 0.04, (fx - 0.04, ty - 0.05, 0.5), "X", 16)]))
     o.append(pieza("Neon_Compu_TorreLuz", [], "neon-verde-tenue", cilindros=[(0.025, 0.03, (fx - 0.03, ty + 0.22, 0.5), "X", 8)]))
@@ -1100,17 +1109,17 @@ def escritorio_tano():
         base.append(((0.08, 0.08, 0.12), (px, py, 0.3)))  # vástago de la rueda
         giro = Matrix.Translation(P.S(px, py, 0.13)) @ Matrix.Rotation(r + math.pi / 2, 4, "Z") @ Matrix.Rotation(math.radians(90), 4, "Y")
         bmesh.ops.create_cone(ruedas, cap_ends=True, segments=10, radius1=0.13 * B.STUD, radius2=0.13 * B.STUD, depth=0.12 * B.STUD, matrix=giro @ Matrix.Translation((0, 0, 0)))
-    silla = pieza("Silla_Base", base, "negro", cilindros=[(0.2, 0.2, (sx, sy, 0.36), "Z", 12), (0.12, 0.6, (sx, sy, 0.56), "Z", 12), (0.16, 0.12, (sx, sy, 1.04), "Z", 12)])
+    silla = pieza("Silla_Base", base, "negro", cilindros=[(0.2, 0.2, (sx, sy, 0.36), "Z", 12), (0.12, 1.3, (sx, sy, 0.56), "Z", 12), (0.16, 0.12, (sx, sy, 1.74), "Z", 12)])
     ruedas.from_mesh(silla.data)
     ruedas.to_mesh(silla.data)
     ruedas.free()
     o.append(suavizar(silla, bisel=0.03, segmentos=1))
-    asiento = suavizar(pieza("Silla_Asiento", [((1.55, 1.55, 0.34), (sx, sy, 1.33))], "tela-silla"), bisel=0.12, segmentos=1, sub=1,
-                       curvar=lambda q: (q[0], q[1], q[2] - 0.05 * (1 - (2 * (q[0] - sx) / 1.55) ** 2) * (1 - (2 * (q[1] - sy) / 1.55) ** 2) * (q[2] > 1.4)))
-    respaldo = suavizar(pieza("Silla_Respaldo", [((0.24, 1.3, 0.85), (sx - 0.92, sy, 2.42))], "tela-silla"), bisel=0.1, segmentos=1, sub=1,
+    asiento = suavizar(pieza("Silla_Asiento", [((1.55, 1.55, 0.34), (sx, sy, 2.03))], "tela-silla"), bisel=0.12, segmentos=1, sub=1,
+                       curvar=lambda q: (q[0], q[1], q[2] - 0.05 * (1 - (2 * (q[0] - sx) / 1.55) ** 2) * (1 - (2 * (q[1] - sy) / 1.55) ** 2) * (q[2] > 2.1)))
+    respaldo = suavizar(pieza("Silla_Respaldo", [((0.24, 1.3, 0.85), (sx - 0.92, sy, 3.12))], "tela-silla"), bisel=0.1, segmentos=1, sub=1,
                         curvar=lambda q: (q[0] + 0.14 * ((q[1] - sy) / 0.65) ** 2, q[1], q[2]))
     o += [asiento, respaldo]
-    o.append(tubo("Silla_Barra", [(sx - 0.2, sy, 1.17), (sx - 0.7, sy, 1.16), (sx - 1.08, sy, 1.35), (sx - 1.12, sy, 1.9), (sx - 1.05, sy, 2.4)], 0.07, "acero", res=3, anillo=1))
+    o.append(tubo("Silla_Barra", [(sx - 0.2, sy, 1.87), (sx - 0.7, sy, 1.86), (sx - 1.08, sy, 2.05), (sx - 1.12, sy, 2.6), (sx - 1.05, sy, 3.1)], 0.07, "acero", res=3, anillo=1))
     sillas = [x for x in o if x.name.startswith("Silla")]
     total = sum(len(f.vertices) - 2 for x in sillas for f in x.data.polygons)
     if total > 1200:  # tope de la silla: Decimate en proporción, después sombreado suave otra vez
