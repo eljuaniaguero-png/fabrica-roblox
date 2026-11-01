@@ -65,7 +65,10 @@ MATS = {
     "manguera-amarilla": {"hex": "e0b13a", "rugosidad": 0.55},
     "almohada": {"hex": "e3ddcf", "rugosidad": 0.95},
     "beige-viejo": {"hex": "c9b98f", "rugosidad": 0.6},
-    "beige-oscuro": {"hex": "a8996f", "rugosidad": 0.6},
+    "beige-oscuro": {"hex": "8a7c58", "rugosidad": 0.6},
+    "cafe": {"hex": "3b2416", "rugosidad": 0.08},
+    "cafe-seco": {"hex": "4a2e1a", "rugosidad": 0.6},
+    "neon-verde-tenue": {"hex": "5fe07a", "brillo": 1.5},
     "pantalla-crt": {"hex": "0f3a2a", "rugosidad": 0.2, "brillo": 0.8},
     "texto-crt": {"hex": "6fe08a", "brillo": 1.4},
     "tela-silla": {"hex": "3a3f4a", "rugosidad": 0.9},
@@ -701,8 +704,11 @@ def telas_simuladas():
         if n in bpy.data.objects:
             bpy.data.objects.remove(bpy.data.objects[n])
     alm = bpy.data.objects.get("Cama_Almohada")
-    if alm:
+    if alm and len(alm.data.vertices) < 600:  # una sola vez (el retoque puede correr varias veces sobre el mismo .blend)
         suavizar(alm, sub=1, angulo=80)
+    elif alm and len(alm.data.vertices) > 3000:  # arreglo: quedó subdividida de más en retoques anteriores
+        alm.modifiers.new("Bajar", "DECIMATE").ratio = 1200 / len(alm.data.vertices)
+        suavizar(alm, angulo=80)
     choques = [bpy.data.objects[n] for n in ("Cama", "Entrepiso", "Cama_Almohada", "Cajon", "Cajas", "Radio") if n in bpy.data.objects]
     fr = grilla("Cama_Frazada", kx - 1.0, ky - 0.45, arriba + 0.5, 4.6, 4.3, 40, 38)
     simular_tela(fr, choques, cuadros=45, grosor=0.06, material="frazada")
@@ -879,6 +885,136 @@ def _tela_gastada(ob):
     T.pintar(ob, color)
 
 
+def _girado(nombre, perfil, lados, material, matriz=None, radio_fn=None):
+    """Malla de revolución: `perfil` = [(r, h)] en studs, girado alrededor del eje Z local; `radio_fn(r, h, ang)` cambia el radio
+    (para ranuras). `matriz` la ubica en el mundo (metros)."""
+    bm = bmesh.new()
+    anillos = []
+    for r, h in perfil:
+        fila = []
+        for k in range(lados):
+            a = 2 * math.pi * k / lados
+            rr = radio_fn(r, h, a) if radio_fn else r
+            fila.append(bm.verts.new((rr * math.cos(a) * B.STUD, rr * math.sin(a) * B.STUD, h * B.STUD)))
+        anillos.append(fila)
+    for i in range(len(anillos) - 1):
+        for k in range(lados):
+            a, b = anillos[i], anillos[i + 1]
+            bm.faces.new((a[k], a[(k + 1) % lados], b[(k + 1) % lados], b[k]))
+    if perfil[0][0] > 0:
+        bm.faces.new(anillos[0][::-1])
+    if perfil[-1][0] > 0:
+        bm.faces.new(anillos[-1])
+    bmesh.ops.remove_doubles(bm, verts=bm.verts, dist=0.0005)
+    if matriz is not None:
+        bm.transform(matriz)
+    me = bpy.data.meshes.new(nombre)
+    bm.to_mesh(me)
+    bm.free()
+    ob = bpy.data.objects.new(nombre, me)
+    bpy.context.scene.collection.objects.link(ob)
+    B.aplicar_material(ob, material)
+    return ob
+
+
+def _beige_gastado(ob, cx, cy):
+    """Textura del gabinete: beige #c9b98f con manchas de grasa y rayones finos; brillo propio suave como la carcasa del monitor."""
+    import numpy as np
+
+    import detalle as D
+    import pintura as T
+
+    T.textura_lisa(ob, 256, "c9b98f", os.path.join(D.TEXTURAS, ARCHIVO), rugosidad=0.6)
+
+    def color(q, n, base):
+        u, v = q[:, 0] + q[:, 1], q[:, 2]
+        grasa = np.clip((T.fbm(u, v, 1.6, 7) - 0.62) / 0.12, 0, 1) * 0.6
+        rayas = (np.abs(np.sin((u * 0.8 + v * 0.3) * 23.0)) > 0.997) * (T.ruido(u, v, 2.0, 5) > 0.6) * 0.4
+        c = T.mezclar(base, T.hexa("5b4a32"), grasa)
+        return T.mezclar(c, T.hexa("e4d9bb"), rayas)
+
+    T.pintar(ob, color)
+    nt = ob.active_material.node_tree
+    bsdf = next(x for x in nt.nodes if x.type == "BSDF_PRINCIPLED")
+    tex = next(x for x in nt.nodes if x.type == "TEX_IMAGE")
+    nt.links.new(tex.outputs["Color"], bsdf.inputs["Emission Color"])
+    bsdf.inputs["Emission Strength"].default_value = 0.35
+
+
+def taza_cafe(x, y, z):
+    """Taza hueca (pared de 0,03, borde redondeado, abierta arriba) con café adentro, asa en C hecha con una curva del lado
+    del taller (-x, mirando a la cámara), mancha de café corrida por el costado (textura) y un aro de café en la mesa."""
+    import numpy as np
+
+    import detalle as D
+    import pintura as T
+
+    perfil = [(0.0, 0.0), (0.165, 0.0), (0.18, 0.02), (0.18, 0.33), (0.178, 0.348), (0.165, 0.358), (0.152, 0.348), (0.15, 0.33), (0.15, 0.04), (0.0, 0.035)]
+    taza = _girado("Compu_Taza", perfil, 24, "almohada", Matrix.Translation(P.S(x, y, z)))
+    suavizar(taza, sub=1, angulo=70)
+    T.textura_lisa(taza, 256, "eeeae2", os.path.join(D.TEXTURAS, ARCHIVO), rugosidad=0.35)
+
+    def mancha(q, n, base):
+        d = np.hypot(q[:, 1] - y, 0) / 0.05  # chorrito angosto del lado de la cámara, bajando desde el borde
+        afuera = (q[:, 0] < x - 0.1) & (np.hypot(q[:, 0] - x, q[:, 1] - y) > 0.16)
+        largo = z + 0.36 - (0.12 + 0.1 * T.ruido(q[:, 1], q[:, 1], 30.0, 2))
+        alfa = afuera * np.clip(1.3 - d, 0, 1) * (q[:, 2] > largo) * 0.85
+        borde = (q[:, 2] > z + 0.33) * 0.35  # aro de café seco en el borde
+        return T.mezclar(base, T.hexa("5a3a22"), np.maximum(alfa, borde * afuera))
+
+    T.pintar(taza, mancha)
+    cafe = pieza("Compu_TazaCafe", [], "cafe", cilindros=[(0.152, 0.01, (x, y, z + 0.28), "Z", 24)])
+    asa = tubo("Compu_TazaAsa", [(x - 0.17, y, z + 0.29), (x - 0.29, y, z + 0.29), (x - 0.34, y, z + 0.19), (x - 0.29, y, z + 0.08), (x - 0.17, y, z + 0.08)], 0.028, "almohada")
+    asa.active_material = taza.active_material
+    suavizar(asa, angulo=70)
+    # aro de café sobre el escritorio, al lado (anillo plano apenas arriba de la tapa)
+    vs, cs = [], []
+    for k in range(28):
+        a = 2 * math.pi * k / 28
+        vs += [(x + 0.5 + 0.15 * math.cos(a), y - 0.1 + 0.15 * math.sin(a), z + 0.004), (x + 0.5 + 0.185 * math.cos(a), y - 0.1 + 0.185 * math.sin(a), z + 0.004)]
+        cs.append((2 * k, 2 * ((k + 1) % 28), 2 * ((k + 1) % 28) + 1, 2 * k + 1))
+    aro = pieza("Compu_TazaAro", [], "cafe-seco", mallas=[(vs, cs)])
+    return [taza, cafe, asa, aro]
+
+
+def destornillador(x, y, z, giro):
+    """Destornillador de 0,9 studs apoyado sobre la mesa: mango redondeado (más ancho en el medio, 5 ranuras de agarre,
+    Subdivision Surface) amarillo gastado y vástago fino de acero con la punta plana que baja hasta tocar la tapa."""
+    import numpy as np
+
+    import detalle as D
+    import pintura as T
+
+    rad = math.radians(giro)
+    # perfil a lo largo del eje (h de 0 = atrás a 0,45 = adelante); el mango toca la mesa en su parte más ancha (r 0,11)
+    perfil = [(0.0, 0.0), (0.035, 0.004), (0.055, 0.025), (0.065, 0.07), (0.072, 0.2), (0.068, 0.32), (0.055, 0.38), (0.04, 0.4)]
+
+    def ranuras(r, h, a):
+        return r * (1 - 0.18 * max(0.0, math.cos(5 * a)) ** 4) if 0.06 < h < 0.33 else r
+
+    acostado = Matrix.Translation(P.S(x, y, z)) @ Matrix.Rotation(rad, 4, "Z") @ Matrix.Translation(P.S(-0.4, 0, 0.072)) @ Matrix.Rotation(math.radians(90), 4, "Y")
+    mango = _girado("Compu_Destornillador", perfil, 20, "mango-amarillo", acostado, ranuras)
+    suavizar(mango, sub=1, angulo=70)
+    T.textura_lisa(mango, 128, "d9a62e", os.path.join(D.TEXTURAS, ARCHIVO), rugosidad=0.45)
+    T.pintar(mango, lambda q, n, base: T.mezclar(base, T.hexa("6b5320"), np.clip(T.fbm(q[:, 0] * 3, q[:, 1] * 3 + q[:, 2], 6.0, 4) - 0.45, 0, 0.6)))
+    # vástago: de la punta del mango (altura 0,11) baja en línea recta hasta tocar la mesa a 0,9 del final
+    a = Matrix.Translation(P.S(x, y, z)) @ Matrix.Rotation(rad, 4, "Z")
+    ini, fin = a @ P.S(0.0, 0, 0.072), a @ P.S(0.5, 0, 0.022)
+    d = fin - ini
+    rot = d.to_track_quat("Z", "Y").to_matrix().to_4x4()
+    bm = bmesh.new()
+    bmesh.ops.create_cone(bm, cap_ends=True, segments=10, radius1=0.022 * B.STUD, radius2=0.022 * B.STUD, depth=d.length, matrix=Matrix.Translation((ini + fin) / 2) @ rot)
+    bmesh.ops.create_cube(bm, size=1.0, matrix=Matrix.Translation(fin) @ rot @ Matrix.Diagonal((0.06 * B.STUD, 0.015 * B.STUD, 0.06 * B.STUD, 1)))  # punta plana
+    me = bpy.data.meshes.new("Compu_DestornilladorPunta")
+    bm.to_mesh(me)
+    bm.free()
+    vas = bpy.data.objects.new("Compu_DestornilladorPunta", me)
+    bpy.context.scene.collection.objects.link(vas)
+    B.aplicar_material(vas, "acero")
+    suavizar(vas, angulo=40)
+    return [mango, vas]
+
+
 def escritorio_tano():
     """Escritorio de Tano: compu vieja de tubo con su torre, teclado beige con teclas, mouse con cable, lámpara
     articulada al costado del monitor, taza, papeles con grasa, destornillador y una silla de oficina gastada."""
@@ -900,10 +1036,25 @@ def escritorio_tano():
     rej += [((0.03, 0.7, 0.04), (f1 + 0.01, my, mz + 0.4 + k * 0.11)) for k in range(6)]  # rejilla de atrás
     o.append(pieza("Compu_Rejillas", rej, "negro"))
     o.append(pantalla_crt("Compu_Pantalla", mx - 0.02, my, mz + 0.92, 1.55, 1.25))
-    # torre beige debajo del escritorio, con disquetera y botón
+    # gabinete beige de compu vieja (mismo beige que el monitor) con bordes biselados: 2 bahías de lectora, disquetera,
+    # botón de encendido y luz verde chica al frente (mira al taller, -x), rejilla abajo al costado y cables atrás
     tx, ty = dx + 0.3, dy - 1.9
-    o.append(pieza("Compu_Torre", [((1.8, 0.8, 1.9), (tx, ty, 0.95))], "beige-viejo"))
-    o.append(pieza("Compu_TorreFrente", [((0.04, 0.5, 0.08), (tx - 0.92, ty, 1.55)), ((0.04, 0.5, 0.08), (tx - 0.92, ty, 1.35)), ((0.05, 0.12, 0.12), (tx - 0.92, ty, 0.6))], "negro"))
+    torre = suavizar(pieza("Compu_Torre", [((1.8, 0.8, 1.9), (tx, ty, 0.95))], "beige-viejo"), bisel=0.07, segmentos=2, angulo=40)
+    _beige_gastado(torre, tx, ty)
+    o.append(torre)
+    fx = tx - 0.9  # cara de adelante
+    frente = [((0.03, 0.62, 0.24), (fx - 0.005, ty, z)) for z in (1.6, 1.3)]  # bahías  # bahías (más oscuras, apenas hundidas en el borde)
+    frente += [((0.03, 0.5, 0.2), (fx - 0.005, ty - 0.02, 0.98))]  # frente de la disquetera
+    o.append(pieza("Compu_TorreBahias", frente, "beige-oscuro"))
+    ranuras = [((0.02, 0.42, 0.03), (fx - 0.025, ty - 0.05, z)) for z in (1.6, 1.3)] + [((0.02, 0.36, 0.025), (fx - 0.025, ty - 0.05, 0.99))]
+    ranuras += [((0.03, 0.06, 0.045), (fx - 0.03, ty + 0.24, z)) for z in (1.6, 1.3, 0.99)]  # botoncitos
+    ranuras += [((0.4, 0.02, 0.035), (tx - 0.1, ty + 0.405, 0.18 + k * 0.08)) for k in range(5)]  # rejilla del costado, abajo
+    o.append(pieza("Compu_TorreRanuras", ranuras, "negro"))
+    o.append(pieza("Compu_TorreBoton", [], "beige-oscuro", cilindros=[(0.08, 0.04, (fx - 0.04, ty - 0.05, 0.5), "X", 16)]))
+    o.append(pieza("Neon_Compu_TorreLuz", [], "neon-verde-tenue", cilindros=[(0.025, 0.03, (fx - 0.03, ty + 0.22, 0.5), "X", 8)]))
+    bx = tx + 0.9  # cara de atrás (la pared está en dx + 1,6)
+    o.append(tubo("Compu_TorreCablePiso", [(bx - 0.02, ty - 0.15, 1.2), (bx + 0.2, ty - 0.2, 0.6), (bx + 0.25, ty - 0.3, 0.05), (bx + 0.1, ty - 0.9, 0.04), (bx - 0.4, ty - 1.2, 0.04)], 0.04, "negro"))
+    o.append(tubo("Compu_TorreCableMesa", [(bx - 0.02, ty + 0.15, 1.5), (bx + 0.25, ty + 0.3, 1.6), (bx + 0.3, ty + 0.9, 2.6), (bx + 0.3, ty + 1.2, tapa + 0.05), (bx - 0.05, ty + 1.3, tapa + 0.04)], 0.04, "negro"))
     # teclado beige con teclas marcadas, mouse con cable
     kx, ky = dx - 0.95, dy - 0.6
     o.append(pieza("Compu_Teclado", [((0.75, 2.0, 0.12), (kx, ky, tapa + 0.06))], "beige-viejo"))
@@ -930,12 +1081,10 @@ def escritorio_tano():
         bm.free()
         o.append(suavizar(ob, angulo=60))
     # cosas de Tano: taza con asa, papeles con manchas de grasa y un destornillador
-    o.append(pieza("Compu_Taza", [], "almohada", cilindros=[(0.18, 0.35, (dx - 1.1, dy + 1.9, tapa), "Z", 12)]))
-    o.append(toro("Compu_TazaAsa", (dx - 1.1, dy + 2.12, tapa + 0.18), "X", 0.1, 0.03, "almohada", 10, 4))
+    o += taza_cafe(dx - 1.25, dy + 1.55, tapa)
     o.append(pieza("Compu_Papeles", [((1.0, 0.75, 0.02), (dx - 0.6, dy + 2.2, tapa + 0.01), (0, 0, 8)), ((0.9, 0.7, 0.02), (dx - 0.4, dy + 2.4, tapa + 0.03), (0, 0, -12))], "papel"))
     o.append(pieza("Compu_PapelesGrasa", [((0.3, 0.25, 0.01), (dx - 0.55, dy + 2.3, tapa + 0.045)), ((0.2, 0.18, 0.01), (dx - 0.2, dy + 2.55, tapa + 0.045))], "aceite"))
-    o.append(pieza("Compu_Destornillador", [((0.5, 0.12, 0.12), (dx - 1.5, dy + 1.1, tapa + 0.06), (0, 0, 30))], "mango-amarillo"))
-    o.append(pieza("Compu_DestornilladorPunta", [((0.55, 0.04, 0.04), (dx - 1.95, dy + 0.84, tapa + 0.06), (0, 0, 30))], "acero"))
+    o += destornillador(dx - 1.0, dy + 1.1, tapa, -10)
     # manijas de la cajonera (antes iban en MesaFabricacion_Detalle)
     o.append(pieza("MesaFabricacion_Manijas", [((0.2, 0.8, 0.15), (dx - 1.32, dy + 1.8, 2.4 - k * 0.7)) for k in range(3)], "hierro"))
     # silla de oficina vieja (ref-8, vistas de frente, costado y atrás): base de 5 brazos a 72° desde un centro, bajando un poco

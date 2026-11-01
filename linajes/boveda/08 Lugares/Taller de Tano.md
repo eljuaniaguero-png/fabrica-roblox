@@ -175,3 +175,16 @@ Referencias: ![[taller-gemini-ref-7.jpg]] ![[taller-gemini-ref-8.jpg]]
 - Carcasa del monitor toda del mismo beige `#c9b98f` (frente, costados, techo y atrás), con un brillo propio muy suave para que la sombra no la vuelva verdosa.
 
 **Estado: APROBADO.** Sigue el paso 3 (exportar a Studio).
+
+## Taza, gabinete y destornillador (1 nov)
+
+- **Taza:** malla de revolución hueca (pared 0,03, borde redondeado, abierta), subdivisión, café `#3b2416` con brillo, asa en C hecha con una curva del lado de la cámara, mancha corrida en la textura y aro de café en la mesa.
+- **Gabinete:** beige `#c9b98f` biselado, 2 bahías de lectora y disquetera (ranura + botón), botón redondo, luz verde tenue (`Neon_Compu_TorreLuz`), rejilla abajo al costado, cables atrás al piso y al escritorio, grasa y rayones en la textura.
+- **Destornillador:** 0,9 studs; mango de revolución más ancho al medio, redondeado atrás, 5 ranuras, subdivisión, amarillo gastado; vástago fino con punta plana tocando la mesa. Entero sobre el escritorio.
+- Chequeo: 0 cruces, 0 flotando.
+
+![[interior-taller_pp_taza.png]]
+![[interior-taller_pp_gabinete.png]]
+![[interior-taller_pp_destornillador.png]]
+
+**Estado: APROBADO.**
