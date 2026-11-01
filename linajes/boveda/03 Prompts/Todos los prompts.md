@@ -19,7 +19,7 @@ Hay dos listas: **Beta** (la primera versión, solo Puerto Óxido, ver [[Plan po
 # BETA: Puerto Óxido
 
 > [!tip] Un prompt por cosa (1 nov)
-> Los prompts que antes juntaban varias cosas ahora tienen **uno por cosa**, cada uno con sus 2 o 3 referencias de Gemini y su bloque para Claude: 20 interiores (P25d-01 a 20), 9 NPCs (P19-01 a 09), 16 enemigos (P20-01 a 16), 8 lugares y bases (P22-01 a 08) y 5 jefes (P28-01 a 05). El prompt de grupo queda con las reglas comunes y la lista. En la Beta: [[P25d-01 Taller de Tano]], [[P25d-02 Galpón de Remache]], [[P25d-03 Almacén del muelle]] y [[P28-01 Animaciones de Remache]].
+> Los prompts que antes juntaban varias cosas ahora tienen **uno por cosa**, cada uno con sus 2 o 3 referencias de Gemini y su bloque para Claude: 22 interiores (P25d-01 a 22), 9 NPCs (P19-01 a 09), 16 enemigos (P20-01 a 16), 8 lugares y bases (P22-01 a 08) y 5 jefes (P28-01 a 05). El prompt de grupo queda con las reglas comunes y la lista. En la Beta: [[P25d-01 Taller de Tano]], [[P25d-02 Galpón de Remache]], [[P25d-03 Almacén del muelle]] y [[P28-01 Animaciones de Remache]].
 
 > [!success] Reescritos al detalle (1 nov)
 > Los 29 prompts que faltan de la Beta siguen la [[Plantilla de prompt]]: cada uno trae su alcance en la Beta, qué leer, **2 o más prompts para Gemini** (en inglés, con lo que tiene que salir arriba en castellano), el bloque para Claude, las reglas de Roblox, los puntos de control con casillas para dar el OK y cómo lo probás vos. Los de código guardan además el alcance completo para la Post beta.
