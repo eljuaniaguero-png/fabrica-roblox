@@ -251,6 +251,23 @@ Config.Animaciones = {
 	Caer = "rbxassetid://507767968",
 	Trepar = "rbxassetid://507765644",
 	VelocidadCorrer = 12, -- studs/s: desde acá pasa de caminar a correr
+	-- Locomoción propia (P26-01), hecha con arte/scripts/animaciones/base.py. Loop en todas menos
+	-- SaltarInicio y SaltarCaer; prioridad Core en Quieto y Movement en el resto. Caminar, Correr y
+	-- CorrerRapido tienen marcadores "Paso" (polvo y sonido de pisada).
+	base = {
+		Quieto = "rbxassetid://99949285202495",
+		Caminar = "rbxassetid://76578209242080",
+		Correr = "rbxassetid://124891162063727",
+		CorrerRapido = "rbxassetid://86379296914238", -- Velocista y Reflejos
+		SaltarInicio = "rbxassetid://120016621591002",
+		SaltarAire = "rbxassetid://133941918605722",
+		SaltarCaer = "rbxassetid://74377813132853",
+		Trepar = "rbxassetid://118357290428607",
+		VolarQuieto = "rbxassetid://82495017672119",
+		VolarAvanzando = "rbxassetid://103610213581729",
+		Nadar = "rbxassetid://138733509877221",
+		Flotar = "rbxassetid://119656681494266",
+	},
 }
 
 -- Civiles de la calle viva (ficha 0e). Ropa en ServerStorage.Civiles.<Tipo>.<Pieza> (kit de

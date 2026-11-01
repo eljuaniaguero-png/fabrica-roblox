@@ -137,3 +137,39 @@ Golpe que conecta (chispa y aplastamiento chico), crítico, bloqueo y parry (chi
 9. Las cinemáticas van en [[P30c Cinemáticas]], después de las animaciones y los sonidos (ver [[Cinemáticas (plan completo)]]).
 
 Volver a [[Ficha del juego]]
+
+---
+
+## Hechas
+
+### P26-01 Locomoción del jugador (1 nov, APROBADA y publicada)
+12 animaciones de cuerpo a 30 fps sobre el R15 del [[Cuerpo propio (sin avatar de Roblox)]], hechas con `linajes/arte/scripts/animaciones/base.py` (una Action cada una en `linajes/arte/blender/animaciones-base.blend`).
+
+| Animación | Cuadros | Loop | Prioridad | Qué hace |
+|---|---|---|---|---|
+| quieto | 60 | sí | Core | respira lento, hombros +0,03 studs, peso en la pierna izquierda, mira a un costado y al otro |
+| caminar | 32 | sí | Movement | paso firme, brazos opuestos, torso ±3° (marcador `Paso`) |
+| correr | 20 | sí | Movement | torso 15°, codos a 90°, rodillas altas (`Paso`) |
+| correr-rapido | 14 | sí | Movement | torso 30°, brazos rectos atrás: Velocista y Reflejos (`Paso`) |
+| saltar-inicio | 8 | no | Movement | se agacha y empuja con los brazos |
+| saltar-aire | 20 | sí | Movement | rodillas arriba, brazos abiertos |
+| saltar-caer | 10 | no | Movement | amortigua y se para (`Paso` en el cuadro 3) |
+| trepar | 24 | sí | Movement | de frente a la pared, torso 8° hacia ella; manos contra la pared al ancho de los hombros: la de arriba se agarra, la de abajo tira con el codo pegado hasta el pecho; sube la rodilla contraria. Chequeado por script: ninguna mano entra en la cabeza |
+| volar-quieto | 60 | sí | Movement | flota casi parado, sube y baja; brazos y piernas siguen con atraso (manos abiertas) |
+| volar-avanzando | 30 | sí | Movement | cuerpo horizontal, los dos brazos atrás pegados al cuerpo, balanceo de costado de 7° y piernas que ondulan (pose propia, sin puño adelante) |
+| nadar | 40 | sí | Movement | crol con patada |
+| flotar | 60 | sí | Movement | brazos y piernas en ochos lentos |
+
+Cada fila de la hoja son 2 animaciones, 3 cuadros cada una (inicio, pose máxima, recuperación), en el orden de la tabla:
+
+![[anim-base-hoja.png]]
+
+**En movimiento** (GIFs en loop, 15 cuadros por segundo; el personaje anima en el lugar, el avance lo pone el juego):
+
+![[anim-base-quieto.gif]] ![[anim-base-caminar.gif]] ![[anim-base-correr.gif]] ![[anim-base-correr-rapido.gif]]
+![[anim-base-saltar-inicio.gif]] ![[anim-base-saltar-aire.gif]] ![[anim-base-saltar-caer.gif]] ![[anim-base-trepar-atras.gif]] ![[anim-base-trepar-costado.gif]]
+![[anim-base-volar-quieto.gif]] ![[anim-base-volar-avanzando.gif]] ![[anim-base-nadar.gif]] ![[anim-base-flotar.gif]]
+
+Publicadas en Roblox (IDs en `Config.Animaciones.base`). FBX en `linajes/arte/animaciones/base/`; en Studio se armaron como KeyframeSequence con `arte/scripts/animaciones/roblox.py` (mismas poses). Probado sobre el Dummy de `workspace.PruebasAnim`: cargan las 12 y el marcador `Paso` llega al código.
+
+Pendiente: conectarlas al Animate del cuerpo propio (hoy usa las de Roblox) y probar que los pies no patinen al caminar y correr (se ajusta la velocidad de la animación a la WalkSpeed).
