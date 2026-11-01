@@ -63,6 +63,11 @@ MATS = {
     "vidrio-sucio": {"hex": "6f8fa3", "rugosidad": 0.2, "metal": 0.1, "brillo": 0.5},
     "manguera-amarilla": {"hex": "e0b13a", "rugosidad": 0.55},
     "almohada": {"hex": "e3ddcf", "rugosidad": 0.95},
+    "beige-viejo": {"hex": "c9b98f", "rugosidad": 0.6},
+    "beige-oscuro": {"hex": "a8996f", "rugosidad": 0.6},
+    "pantalla-crt": {"hex": "0f3a2a", "rugosidad": 0.2, "brillo": 0.8},
+    "texto-crt": {"hex": "6fe08a", "brillo": 1.4},
+    "tela-silla": {"hex": "3a3f4a", "rugosidad": 0.9},
     "frazada": {"hex": "3d5a6e", "rugosidad": 0.95},
     "aceite": {"hex": "2b1d12", "rugosidad": 0.12},
     "aceite-borde": {"hex": "3d2c1e", "rugosidad": 0.45},
@@ -472,7 +477,7 @@ def revisar(objs):
     bpy.context.view_layer.update()
     estructura = ("Pared", "Piso", "Techo", "Cerchas", "Hastial", "Porton")
     juntos = {("Elevador", "Auto"), ("Elevador", "Auto_Ruedas"), ("Auto", "Auto_Ruedas"), ("Banco", "Banco_Morsa"), ("Banco", "Banco_Gancho"),
-              ("Columnas", "Correas"), ("Compresor", "Compresor_Manguera"), ("Compresor_Manguera", "Compresor_MangueraRollo"), ("Tablero", "Tablero_MangueraGancho"), ("Tablero", "Tablero_Manguera0"), ("Tablero_Manguera0", "Tablero_Manguera1"), ("Tablero_Manguera1", "Tablero_Manguera2"), ("Tablero_Manguera2", "Tablero_Manguera3"), ("Tablero_MangueraGancho", "Tablero_Manguera0"), ("GanchoPanel", "Gancho"), ("Gancho", "Gancho_Empunadura"), ("Gancho", "Gancho_Rollo"), ("Gancho_Rollo", "Gancho_Cable"), ("Gancho", "Gancho_Cable"), ("GanchoPanel", "GanchoPanel_Silueta"), ("GanchoPanel_Silueta", "Gancho"), ("GanchoPanel_Silueta", "GanchoPanel_Soportes"), ("GanchoPanel_Silueta", "Gancho_Empunadura"),
+              ("Columnas", "Correas"), ("MesaFabricacion", "Compu"), ("Compresor", "Compresor_Manguera"), ("Compresor_Manguera", "Compresor_MangueraRollo"), ("Tablero", "Tablero_MangueraGancho"), ("Tablero", "Tablero_Manguera0"), ("Tablero_Manguera0", "Tablero_Manguera1"), ("Tablero_Manguera1", "Tablero_Manguera2"), ("Tablero_Manguera2", "Tablero_Manguera3"), ("Tablero_MangueraGancho", "Tablero_Manguera0"), ("GanchoPanel", "Gancho"), ("Gancho", "Gancho_Empunadura"), ("Gancho", "Gancho_Rollo"), ("Gancho_Rollo", "Gancho_Cable"), ("Gancho", "Gancho_Cable"), ("GanchoPanel", "GanchoPanel_Silueta"), ("GanchoPanel_Silueta", "Gancho"), ("GanchoPanel_Silueta", "GanchoPanel_Soportes"), ("GanchoPanel_Silueta", "Gancho_Empunadura"),
               ("Tablero", "Tablero_Siluetas"), ("Tablero_Siluetas", "Tablero_Herramientas"), ("Tablero_Siluetas", "Tablero_Mangos"), ("Tablero_Siluetas", "Tablero_MangosAzules"), ("Tablero_Herramientas", "Tablero_MangosAzules"),
               ("Banco", "Banco_Engranaje"), ("Banco", "Banco_Carburador"), ("Banco", "Banco_Trapo"), ("Banco_Latas", "Banco_Latas_EtiquetaAzul"), ("Banco_Latas", "Banco_Latas_EtiquetaVerde"), ("Banco_Cajones", "Banco_Trapo"),
               ("Auto", "Auto_CableBateria"), ("Auto_Bateria", "Auto_CableBateria"), ("Auto_Borne_Rojo", "Auto_CableBateria"), ("Auto_CableBateria", "Auto_CableBateria_Pinza"), ("Elevador", "Auto_CableBateria"),
@@ -487,7 +492,7 @@ def revisar(objs):
     cruces, flotan = [], []
     for i, a in enumerate(nombres):
         mna, mxa = cajas[a]
-        if not a.startswith(estructura) and not a.startswith(("Neon_", "Lampara", "Tablero", "Ventana", "Entrepiso", "Cama", "Cajon", "Radio", "Escalera", "Banco_", "CarroHerramientas", "Cajas", "Glass_", "Cables", "Compresor_Manguera", "Ventanas", "Gancho", "TableroTrabajos", "Puerta", "Calendario", "Reloj", "CartelRepuestos", "Baranda_", "Cama_", "Auto_CableBateria")) and 0.03 < mna[2] < 0.6:
+        if not a.startswith(estructura) and not a.startswith(("Neon_", "Lampara", "Tablero", "Ventana", "Entrepiso", "Cama", "Cajon", "Radio", "Escalera", "Banco_", "CarroHerramientas", "Compu", "Silla", "Cajas", "Glass_", "Cables", "Compresor_Manguera", "Ventanas", "Gancho", "TableroTrabajos", "Puerta", "Calendario", "Reloj", "CartelRepuestos", "Baranda_", "Cama_", "Auto_CableBateria")) and 0.03 < mna[2] < 0.6:
             flotan.append((a, round(mna[2], 2)))
         for b in nombres[i + 1 :]:
             if a.startswith(estructura) and b.startswith(estructura):
@@ -720,6 +725,69 @@ def cama_blanda():
     bpy.ops.object.modifier_apply(modifier="Grosor")
     B.aplicar_material(fr, "frazada")
     return [alm, fr]
+
+
+ESCRITORIO_VIEJO = ("MesaFabricacion_Monitor", "MesaFabricacion_Pantalla", "MesaFabricacion_Teclado", "Silla", "MesaFabricacion_Lampara",
+                    "Neon_MesaFabricacion_Foco", "MesaFabricacion_Detalle")
+
+
+def escritorio_tano():
+    """Escritorio de Tano: compu vieja de tubo con su torre, teclado beige con teclas, mouse con cable, lámpara
+    articulada al costado del monitor, taza, papeles con grasa, destornillador y una silla de oficina gastada."""
+    dx, dy, tapa = HX - G - 1.6, 9, 3.3  # el escritorio mira al taller (hacia -x)
+    o = []
+    # monitor de tubo: frente con borde grueso, caja que se achica hacia atrás, pie
+    mx, my = dx + 0.35, dy - 0.6
+    crt = [((0.5, 2.1, 1.75), (mx - 0.45, my, tapa + 0.25 + 0.875)), ((0.9, 1.7, 1.45), (mx + 0.25, my, tapa + 0.25 + 0.8)), ((0.6, 1.1, 0.95), (mx + 0.95, my, tapa + 0.25 + 0.7)),
+           ((0.9, 1.2, 0.25), (mx + 0.1, my, tapa + 0.125))]
+    o.append(pieza("Compu_Monitor", crt, "beige-viejo"))
+    o.append(pieza("Compu_MarcoPantalla", [((0.06, 1.75, 1.35), (mx - 0.72, my, tapa + 1.13))], "negro"))
+    o.append(pieza("Neon_Compu_Pantalla", [((0.05, 1.55, 1.15), (mx - 0.75, my, tapa + 1.13))], "pantalla-crt"))
+    o.append(pieza("Neon_Compu_Texto", [((0.02, 0.9 - k * 0.12, 0.06), (mx - 0.78, my - 0.25 + k * 0.06, tapa + 1.55 - k * 0.2)) for k in range(5)], "texto-crt"))
+    # torre beige debajo del escritorio, con disquetera y botón
+    tx, ty = dx + 0.3, dy - 1.9
+    o.append(pieza("Compu_Torre", [((1.8, 0.8, 1.9), (tx, ty, 0.95))], "beige-viejo"))
+    o.append(pieza("Compu_TorreFrente", [((0.04, 0.5, 0.08), (tx - 0.92, ty, 1.55)), ((0.04, 0.5, 0.08), (tx - 0.92, ty, 1.35)), ((0.05, 0.12, 0.12), (tx - 0.92, ty, 0.6))], "negro"))
+    # teclado beige con teclas marcadas, mouse con cable
+    kx, ky = dx - 0.95, dy - 0.6
+    o.append(pieza("Compu_Teclado", [((0.75, 2.0, 0.12), (kx, ky, tapa + 0.06))], "beige-viejo"))
+    o.append(pieza("Compu_Teclas", [((0.12, 0.13, 0.06), (kx - 0.25 + f * 0.17, ky - 0.85 + c * 0.155, tapa + 0.15)) for f in range(4) for c in range(12)], "beige-oscuro"))
+    o.append(pieza("Compu_Mouse", [((0.35, 0.25, 0.12), (kx + 0.1, ky + 1.45, tapa + 0.06))], "beige-viejo"))
+    o.append(tubo("Compu_CableMouse", [(kx + 0.28, ky + 1.45, tapa + 0.04), (kx + 0.7, ky + 1.5, tapa + 0.03), (mx + 0.5, my + 0.9, tapa + 0.03), (mx + 0.9, my + 0.5, tapa + 0.3)], 0.025, "negro"))
+    # lámpara articulada de metal oscuro, apoyada al costado derecho del monitor; la pantalla alumbra el teclado
+    lx, ly = dx + 0.6, dy + 1.4
+    o.append(pieza("Compu_LamparaBase", [], "hierro", cilindros=[(0.35, 0.12, (lx, ly, tapa), "Z", 14)]))
+    o.append(tubo("Compu_LamparaBrazo", [(lx, ly, tapa + 0.1), (lx + 0.1, ly - 0.1, tapa + 1.4), (lx - 0.5, ly - 0.35, tapa + 2.2), (lx - 1.3, ly - 0.55, tapa + 1.9)], 0.06, "hierro"))
+    o.append(pieza("Compu_LamparaPantalla", [], "hierro", cilindros=[(0.32, 0.4, (lx - 1.35, ly - 0.55, tapa + 1.45), "Z", 12, 0.12)]))
+    o.append(pieza("Neon_Compu_LamparaFoco", [], "neon-calido", cilindros=[(0.12, 0.08, (lx - 1.35, ly - 0.55, tapa + 1.42), "Z", 8)]))
+    # cosas de Tano: taza con asa, papeles con manchas de grasa y un destornillador
+    o.append(pieza("Compu_Taza", [], "almohada", cilindros=[(0.18, 0.35, (dx - 1.1, dy + 1.9, tapa), "Z", 12)]))
+    o.append(toro("Compu_TazaAsa", (dx - 1.1, dy + 2.12, tapa + 0.18), "X", 0.1, 0.03, "almohada", 10, 4))
+    o.append(pieza("Compu_Papeles", [((1.0, 0.75, 0.02), (dx - 0.6, dy + 2.2, tapa + 0.01), (0, 0, 8)), ((0.9, 0.7, 0.02), (dx - 0.4, dy + 2.4, tapa + 0.03), (0, 0, -12))], "papel"))
+    o.append(pieza("Compu_PapelesGrasa", [((0.3, 0.25, 0.01), (dx - 0.55, dy + 2.3, tapa + 0.045)), ((0.2, 0.18, 0.01), (dx - 0.2, dy + 2.55, tapa + 0.045))], "aceite"))
+    o.append(pieza("Compu_Destornillador", [((0.5, 0.12, 0.12), (dx - 1.5, dy + 1.1, tapa + 0.06), (0, 0, 30))], "mango-amarillo"))
+    o.append(pieza("Compu_DestornilladorPunta", [((0.55, 0.04, 0.04), (dx - 1.95, dy + 0.84, tapa + 0.06), (0, 0, 30))], "acero"))
+    # manijas de la cajonera (antes iban en MesaFabricacion_Detalle)
+    o.append(pieza("MesaFabricacion_Manijas", [((0.2, 0.8, 0.15), (dx - 1.32, dy + 1.8, 2.4 - k * 0.7)) for k in range(3)], "hierro"))
+    # silla de oficina vieja: 5 patas con ruedas, columna, asiento acolchado a la altura de la rodilla (1,5) y respaldo bajo y curvo
+    sx, sy = dx - 3.1, dy - 0.3
+    patas = [_barra((sx, sy, 0.35), (sx + math.cos(math.radians(a)) * 0.95, sy + math.sin(math.radians(a)) * 0.95, 0.3), 0.12) for a in range(18, 378, 72)]
+    o.append(pieza("Silla", patas, "negro", cilindros=[(0.12, 0.9, (sx, sy, 0.35), "Z", 10), (0.75, 0.12, (sx, sy, 1.18), "Z", 16)]))
+    o.append(pieza("Silla_Ruedas", [], "negro", cilindros=[(0.12, 0.12, (sx + math.cos(math.radians(a)) * 0.95 - 0.06, sy + math.sin(math.radians(a)) * 0.95, 0.12), "X", 8) for a in range(18, 378, 72)]))
+    o.append(pieza("Silla_Asiento", [], "tela-silla", cilindros=[(0.85, 0.22, (sx, sy, 1.28), "Z", 18, 0.8)]))
+    o.append(pieza("Silla_Respaldo", [((0.18, 0.55, 1.0), (sx - 0.82 + abs(d) * 0.18, sy + d, 2.35), (0, 0, -d * 30)) for d in (-0.5, 0.0, 0.5)], "tela-silla"))
+    o.append(pieza("Silla_Soporte", [((0.14, 0.2, 0.75), (sx - 0.75, sy, 1.7))], "negro"))
+    return o
+
+
+def escritorio_tano_reemplazar(listas):
+    """Saca el escritorio viejo de las listas y de la escena."""
+    for lista in listas:
+        for ob in [x for x in lista if x.name in ESCRITORIO_VIEJO]:
+            lista.remove(ob)
+    for n in ESCRITORIO_VIEJO:
+        if n in bpy.data.objects:
+            bpy.data.objects.remove(bpy.data.objects[n])
 
 
 def cama_barrotes():
@@ -1038,6 +1106,8 @@ def detalle():
     B.MATERIALES.setdefault("hierro", {"hex": "3a3d42", "rugosidad": 0.6, "metal": 0.7})
     est, mue, det = estructura(), muebles() + auto(), detalles()
     det += trapos() + cama_barrotes() + cama_blanda()
+    escritorio_tano_reemplazar((mue, det))
+    det += escritorio_tano()
     todo = est + mue + det
     cruces, flotan = revisar(todo)
     print("CHEQUEO", cruces, flotan, flush=True)
@@ -1088,7 +1158,7 @@ def detalle():
     bpy.context.scene.collection.objects.link(luz)
     luz.location = P.S(15, 12, ENTREPISO + 4.5)
     for nombre, desde, hacia, energia, color in (("LuzBanco", (2, 11.5, 12.5), (2, 14, 3.5), 900, "ffc27a"), ("LuzGancho", (-9.5, 9, 12.5), (-9.5, 15, 8), 700, "fff0d8"),
-                                                 ("LuzFabricar", (16.6, 9.5, 6.4), (15.6, 9, 3.2), 500, "ffd9a0")):
+                                                 ("LuzFabricar", (16.85, 9.85, 4.6), (16.65, 9.4, 3.3), 220, "ffd9a0")):
         d = bpy.data.lights.new(nombre, "SPOT")
         d.color = B.color(color)[:3]
         d.energy = energia

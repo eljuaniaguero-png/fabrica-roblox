@@ -113,6 +113,10 @@ Graybox con tag `Lugar`. Modelo nuevo pendiente (P25d rehecho).
 ![[interior-taller_detalle_planta.png]]
 ![[interior-taller_detalle_fondo.png]]
 
+**Escritorio de Tano (1 nov, noche)**: compu vieja de tubo con carcasa beige `#c9b98f` y caja profunda, pantalla verde oscura con brillo tenue y líneas claras (no encandila), y torre beige debajo. Teclado beige con 48 teclas marcadas y mouse con cable. Lámpara articulada de metal oscuro apoyada al costado del monitor, con luz cálida chica sobre el teclado. Taza, papeles con manchas de grasa y un destornillador. Silla de oficina gastada: 5 patas con ruedas, asiento acolchado a la altura de la rodilla y respaldo bajo y curvo. 0 cruces, 0 flotando.
+![[interior-taller_escritorio_camara_juego.png]]
+![[interior-taller_escritorio_cerca.png]]
+
 **Versión 7 (1 nov, noche)**: 40.094 triángulos, 0 cruces, 0 flotando. Cambios de Juani:
 - **Garras del gancho y cable fino.** Ahora son tubos curvos lisos, sin pedacitos con huecos.
 - **Cama.** Almohada blanda y frazada arrugada que cae por el costado, con una lamparita arriba.
