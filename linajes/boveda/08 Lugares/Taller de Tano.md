@@ -56,6 +56,18 @@ Graybox con tag `Lugar`. Modelo nuevo pendiente (P25d rehecho).
 - Los 3 lugares que se usan (Tano junto al auto, el banco de fabricar y el tablero de trabajos) llevan luz propia para distinguirse de un vistazo.
 - Sonido: la radio vieja de fondo y un goteo cerca del portón (`-- SONIDO:` con su ID en `Config.luau`).
 
+**Más vistas (10):**
+![[interior-taller_mas01_desde_la_calle.png]]
+![[interior-taller_mas02_como_referencia.png]]
+![[interior-taller_mas03_auto_costado.png]]
+![[interior-taller_mas04_banco_y_tablero.png]]
+![[interior-taller_mas05_escritorio.png]]
+![[interior-taller_mas06_tablero_trabajos.png]]
+![[interior-taller_mas07_cama.png]]
+![[interior-taller_mas08_esquina_tambores.png]]
+![[interior-taller_mas09_carro_compresor.png]]
+![[interior-taller_mas10_portón_desde_adentro.png]]
+
 **Primeros planos:**
 ![[interior-taller_cerca_banco.png]]
 ![[interior-taller_cerca_motor.png]]
