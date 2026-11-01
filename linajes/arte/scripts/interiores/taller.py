@@ -86,6 +86,8 @@ MATS = {
     "calendario": {"hex": "f1ede2", "rugosidad": 0.9},
     "cartel-repuestos": {"hex": "c94a2a", "rugosidad": 0.8},
     "marca-neumatico": {"hex": "3a332c", "rugosidad": 0.9},
+    "trapo": {"hex": "8e2a22", "rugosidad": 0.95},
+    "radiador": {"hex": "2b2e33", "rugosidad": 0.6, "metal": 0.6},
     "grieta": {"hex": "2e2b28", "rugosidad": 0.95},
     "carton": {"hex": "9a7448", "rugosidad": 0.9},
     "lluvia": {"hex": "9fb4c4", "rugosidad": 0.2},
@@ -162,7 +164,10 @@ def muebles():
     o.append(pieza("Banco_Engranaje", dientes, "acero", cilindros=[(0.55, 0.2, (ex_, ey_, 3.55), "Z", 16), (0.15, 0.3, (ex_, ey_, 3.55), "Z", 8)]))
     o.append(pieza("Banco_Carburador", [((0.8, 0.7, 0.6), (bx + 3.2, by + 0.3, 3.85)), ((0.25, 0.9, 0.25), (bx + 3.2, by - 0.4, 3.85))], "filtro",
                    cilindros=[(0.35, 0.4, (bx + 3.2, by + 0.3, 4.15), "Z", 12), (0.08, 0.1, (bx + 2.3, by - 0.8, 3.55), "Z", 6), (0.08, 0.1, (bx + 2.6, by - 0.95, 3.55), "Z", 6)]))
-    o.append(pieza("Banco_Latas", [], "lata", cilindros=[(0.38, 0.9, (bx + 4.6, by + 0.6, 3.55), "Z", 14), (0.32, 0.7, (bx + 5.4, by + 0.7, 3.55), "Z", 14)]))
+    o.append(pieza("Banco_Latas", [], "lata", cilindros=[(0.38, 0.9, (bx + 4.6, by + 0.6, 3.55), "Z", 14), (0.32, 0.7, (bx + 5.4, by + 0.7, 3.55), "Z", 14),
+                                                      (0.36, 0.06, (bx + 4.6, by + 0.6, 4.45), "Z", 14), (0.3, 0.06, (bx + 5.4, by + 0.7, 4.25), "Z", 14)]))
+    o.append(toro("Banco_LatasAro1", (bx + 4.6, by + 0.6, 4.45), "Z", 0.37, 0.035, "lata", 14, 4))
+    o.append(toro("Banco_LatasAro2", (bx + 5.4, by + 0.7, 4.25), "Z", 0.31, 0.035, "lata", 14, 4))
     o.append(pieza("Banco_Latas_EtiquetaAzul", [], "etiqueta-azul", cilindros=[(0.4, 0.35, (bx + 4.6, by + 0.6, 3.8), "Z", 14)]))
     o.append(pieza("Banco_Latas_EtiquetaVerde", [], "etiqueta-verde", cilindros=[(0.34, 0.28, (bx + 5.4, by + 0.7, 3.75), "Z", 14)]))
     o.append(pieza("Tablero", [((14, 0.3, 5), (bx, HY - G - 0.15, 8.5))], "hierro"))
@@ -261,25 +266,106 @@ def lluvia_afuera(objeto):
 
 
 def motor(ex, ey, z):
-    """Vano del motor que se ve con el capó abierto: fondo oscuro, block con tapa de válvulas con nervios,
-    filtro de aire redondo, batería, radiador adelante y el disco de freno de la rueda sacada."""
+    """Vano del motor con el capó abierto: block, tapa de válvulas con nervios, filtro de aire con tuercas,
+    radiador con panal, 2 mangueras curvas negras, correa con poleas, batería con bornes y el cable rojo colgando."""
     piezas = [pieza("Auto_MotorFondo", [((5.8, 3.2, 0.2), (ex, ey - 5.0, z + 1.2))], "goma")]
-    blk = [((3.0, 1.8, 1.1), (ex - 0.4, ey - 4.8, z + 1.85)), ((2.6, 1.2, 0.3), (ex - 0.4, ey - 4.8, z + 2.55))]
-    blk += [((2.4, 0.12, 0.12), (ex - 0.4, ey - 4.8 + d, z + 2.75)) for d in (-0.4, -0.13, 0.13, 0.4)]  # nervios de la tapa
-    blk += [((5.4, 0.25, 1.4), (ex, ey - 6.45, z + 1.9))]  # radiador
-    piezas.append(pieza("Auto_Motor", blk[:1] + blk[-1:], "hierro", cilindros=[(0.7, 0.4, (ex - 3.4 + 0.5, ey - 4.2, z + 1.25), "X", 12)]))
-    piezas.append(pieza("Auto_TapaValvulas", blk[1:-1], "rojo-herramienta"))
-    piezas.append(pieza("Auto_Filtro", [], "filtro", cilindros=[(0.85, 0.35, (ex + 1.6, ey - 4.4, z + 2.4), "Z", 18), (0.25, 0.25, (ex + 1.6, ey - 4.4, z + 2.75), "Z", 10)]))
-    piezas.append(pieza("Auto_FiltroBase", [], "negro", cilindros=[(0.7, 0.3, (ex + 1.6, ey - 4.4, z + 2.1), "Z", 14)]))
+    piezas.append(pieza("Auto_Motor", [((2.8, 1.8, 1.0), (ex - 0.4, ey - 4.8, z + 1.8))], "hierro"))
+    tapa = [((2.6, 1.2, 0.3), (ex - 0.4, ey - 4.8, z + 2.45))] + [((2.4, 0.12, 0.12), (ex - 0.4, ey - 4.8 + d, z + 2.65)) for d in (-0.4, -0.13, 0.13, 0.4)]
+    piezas.append(pieza("Auto_TapaValvulas", tapa, "rojo-herramienta"))
+    fx, fy, fz = ex + 1.6, ey - 4.4, z + 2.2
+    piezas.append(pieza("Auto_FiltroBase", [], "negro", cilindros=[(0.7, 0.25, (fx, fy, fz - 0.25), "Z", 14)]))
+    piezas.append(pieza("Auto_Filtro", [], "filtro", cilindros=[(0.85, 0.35, (fx, fy, fz), "Z", 18), (0.2, 0.2, (fx, fy, fz + 0.35), "Z", 8)]
+                        + [(0.07, 0.08, (fx + math.cos(a) * 0.6, fy + math.sin(a) * 0.6, fz + 0.35), "Z", 6) for a in (0.4, 2.0, 3.6, 5.2)]))
+    # radiador al frente: marco y panal (barras finas cruzadas)
+    ry_ = ey - 6.45
+    rad = [((5.4, 0.25, 0.2), (ex, ry_, z + 2.5)), ((5.4, 0.25, 0.2), (ex, ry_, z + 1.3)), ((0.2, 0.25, 1.4), (ex - 2.6, ry_, z + 1.9)), ((0.2, 0.25, 1.4), (ex + 2.6, ry_, z + 1.9))]
+    rad += [((0.05, 0.12, 1.0), (ex - 2.3 + k * 0.32, ry_ - 0.08, z + 1.9)) for k in range(15)] + [((5.0, 0.12, 0.05), (ex, ry_ - 0.08, z + 1.5 + k * 0.2)) for k in range(5)]
+    piezas.append(pieza("Auto_Radiador", rad, "radiador"))
+    # 2 mangueras curvas negras del radiador al motor
+    for x0, x1, z0, z1 in ((ex + 1.0, ex - 0.6, z + 2.3, z + 2.2), (ex - 1.8, ex - 1.4, z + 1.5, z + 1.5)):
+        pts = [(x0, ry_ + 0.15, z0), ((x0 + x1) / 2 + 0.3, ry_ + 0.5, z0 + 0.35), (x1, ey - 5.75, z1 + 0.1)]
+        piezas.append(pieza(f"Auto_Manguera{int(x0 > ex)}", [_barra(pts[0], pts[1], 0.2), _barra(pts[1], pts[2], 0.2)], "negro"))
+    # correa con poleas en la cara de adelante del block
+    py_ = ey - 5.78
+    poleas = [(ex - 1.2, z + 1.5, 0.38), (ex - 0.2, z + 2.0, 0.26), (ex - 0.1, z + 1.3, 0.22)]
+    piezas.append(pieza("Auto_Poleas", [], "acero", cilindros=[(r, 0.12, (x, py_, zz), "Y", 12) for x, zz, r in poleas]))
+    piezas.append(pieza("Auto_Correa", [_barra((poleas[0][0], py_ - 0.06, poleas[0][1] + poleas[0][2]), (poleas[1][0], py_ - 0.06, poleas[1][1] + poleas[1][2]), 0.06),
+                                         _barra((poleas[1][0] + poleas[1][2], py_ - 0.06, poleas[1][1]), (poleas[2][0] + poleas[2][2], py_ - 0.06, poleas[2][1]), 0.06),
+                                         _barra((poleas[2][0], py_ - 0.06, poleas[2][1] - poleas[2][2]), (poleas[0][0], py_ - 0.06, poleas[0][1] - poleas[0][2]), 0.06)], "negro"))
+    # batería con bornes y el cable rojo que cuelga hasta abajo con su pinza
     piezas.append(pieza("Auto_Bateria", [((1.2, 0.9, 0.9), (ex + 2.0, ey - 5.75, z + 1.75))], "bateria"))
     piezas.append(pieza("Auto_Borne_Rojo", [], "borne-rojo", cilindros=[(0.14, 0.22, (ex + 1.65, ey - 5.75, z + 2.2), "Z", 8)]))
     piezas.append(pieza("Auto_Borne_Negro", [], "negro", cilindros=[(0.14, 0.22, (ex + 2.35, ey - 5.75, z + 2.2), "Z", 8)]))
-    piezas.append(pieza("Auto_Mangueras", [_barra((ex + 0.6, ey - 4.8, z + 2.2), (ex + 1.4, ey - 6.25, z + 2.3), 0.2), _barra((ex - 1.9, ey - 4.8, z + 1.7), (ex - 2.2, ey - 6.25, z + 2.2), 0.2)], "manguera-naranja"))
     cab = [_barra((ex + 1.65, ey - 5.75, z + 2.3), (ex + 3.2, ey - 6.3, z + 2.6), 0.08), _barra((ex + 3.2, ey - 6.3, z + 2.6), (ex + 3.9, ey - 6.6, z + 0.6), 0.08),
            _barra((ex + 3.9, ey - 6.6, z + 0.6), (ex + 4.1, ey - 6.9, z - 1.4), 0.08)]
     piezas.append(pieza("Auto_CableBateria", cab, "borne-rojo"))
     piezas.append(pieza("Auto_CableBateria_Pinza", [((0.25, 0.4, 0.5), (ex + 4.1, ey - 6.9, z - 1.65))], "borne-rojo"))
     return piezas
+
+
+def trapos():
+    """El trapo rojo de Tano con simulación de tela de Blender: uno colgando del borde del banco y otro hecho un
+    bollo arriba (esfera con ruido fuerte). Después se aplica todo y quedan mallas fijas."""
+    bx, by = 2, HY - G - 1.6
+    banco = bpy.data.objects["Banco"]
+    banco.modifiers.new("Choque", "COLLISION")
+    bpy.ops.mesh.primitive_grid_add(x_subdivisions=12, y_subdivisions=16, size=1)
+    tela = bpy.context.active_object
+    tela.name = "Banco_Trapo"
+    tela.scale = (1.0 * B.STUD, 1.6 * B.STUD, 1)
+    tela.location = P.S(bx - 1.6, by - 1.6 - 0.2, 3.62)
+    bpy.ops.object.transform_apply(scale=True)
+    grupo = tela.vertex_groups.new(name="Fijo")
+    fijos = [v.index for v in tela.data.vertices if v.co.y > 0.55 * B.STUD]  # el borde que queda arriba del banco
+    grupo.add(fijos, 1.0, "REPLACE")
+    tela.location.y += 0.0
+    sim = tela.modifiers.new("Tela", "CLOTH")
+    sim.settings.vertex_group_mass = "Fijo"
+    sim.settings.quality = 6
+    sim.collision_settings.distance_min = 0.004
+    escena = bpy.context.scene
+    escena.frame_start, escena.frame_end = 1, 45
+    sim.point_cache.frame_start, sim.point_cache.frame_end = 1, 45
+    for f in range(1, 46):
+        escena.frame_set(f)
+        bpy.context.view_layer.update()
+    dg = bpy.context.evaluated_depsgraph_get()
+    simulada = bpy.data.meshes.new_from_object(tela.evaluated_get(dg))
+    tela.modifiers.clear()
+    vieja, tela.data = tela.data, simulada
+    bpy.data.meshes.remove(vieja)
+    zs = [v.co.z for v in tela.data.vertices]
+    if max(zs) - min(zs) < 0.3 * B.STUD:  # la simulación no corrió (pasa en modo sin ventana): pliegue a mano
+        borde = (by - 1.6) * B.STUD
+        for v in tela.data.vertices:
+            mundo = tela.matrix_world @ v.co
+            fuera = borde - mundo.y
+            if fuera > 0:
+                mundo.z -= fuera
+                mundo.y = borde - 0.03 * B.STUD + 0.05 * B.STUD * math.sin(mundo.x / B.STUD * 9)
+                mundo.x += 0.04 * B.STUD * math.sin(fuera / B.STUD * 7)
+                v.co = tela.matrix_world.inverted() @ mundo
+        print("TRAPO: plegado a mano", flush=True)
+    else:
+        print("TRAPO: simulado", flush=True)
+    banco.modifiers.remove(banco.modifiers["Choque"])
+    escena.frame_set(1)
+    B.aplicar_material(tela, "trapo")
+    bpy.ops.mesh.primitive_ico_sphere_add(subdivisions=2, radius=0.5 * B.STUD)
+    bollo = bpy.context.active_object
+    bollo.name = "Banco_TrapoBollo"
+    bollo.scale = (1.0, 0.8, 0.5)
+    bollo.location = P.S(bx + 0.2, by + 0.4, 3.55 + 0.24)
+    tex = bpy.data.textures.new("Arrugas", "CLOUDS")
+    tex.noise_scale = 0.06
+    d = bollo.modifiers.new("Arrugas", "DISPLACE")
+    d.texture = tex
+    d.strength = 0.07
+    bpy.context.view_layer.objects.active = bollo
+    bpy.ops.object.modifier_apply(modifier="Arrugas")
+    bpy.ops.object.transform_apply(scale=True)
+    B.aplicar_material(bollo, "trapo")
+    return [tela, bollo]
 
 
 def pintar_auto(*objs):
@@ -295,7 +381,7 @@ def pintar_auto(*objs):
         mezcla.data_type = "RGBA"
         mezcla.blend_type = "MULTIPLY"
         mezcla.inputs["Factor"].default_value = 1.0
-        mezcla.inputs[7].default_value = B.color("5b6b3e")
+        mezcla.inputs[7].default_value = B.color("6c9a5e")
         if entrada.links:
             nt.links.new(entrada.links[0].from_socket, mezcla.inputs[6])
         else:
@@ -384,7 +470,7 @@ def revisar(objs):
     bpy.context.view_layer.update()
     estructura = ("Pared", "Piso", "Techo", "Cerchas", "Hastial", "Porton")
     juntos = {("Elevador", "Auto"), ("Elevador", "Auto_Ruedas"), ("Auto", "Auto_Ruedas"), ("Banco", "Banco_Morsa"), ("Banco", "Banco_Gancho"),
-              ("Columnas", "Correas"), ("Gancho", "Gancho_Empunadura"), ("Gancho", "Gancho_Rollo"), ("Gancho_Rollo", "Gancho_Cable"), ("Gancho", "Gancho_Cable"), ("GanchoPanel", "GanchoPanel_Silueta"), ("GanchoPanel_Silueta", "Gancho"), ("GanchoPanel_Silueta", "GanchoPanel_Soportes"), ("GanchoPanel_Silueta", "Gancho_Empunadura"),
+              ("Columnas", "Correas"), ("GanchoPanel", "Gancho"), ("Gancho", "Gancho_Empunadura"), ("Gancho", "Gancho_Rollo"), ("Gancho_Rollo", "Gancho_Cable"), ("Gancho", "Gancho_Cable"), ("GanchoPanel", "GanchoPanel_Silueta"), ("GanchoPanel_Silueta", "Gancho"), ("GanchoPanel_Silueta", "GanchoPanel_Soportes"), ("GanchoPanel_Silueta", "Gancho_Empunadura"),
               ("Tablero", "Tablero_Siluetas"), ("Tablero_Siluetas", "Tablero_Herramientas"), ("Tablero_Siluetas", "Tablero_Mangos"), ("Tablero_Siluetas", "Tablero_MangosAzules"), ("Tablero_Herramientas", "Tablero_MangosAzules"),
               ("Banco", "Banco_Engranaje"), ("Banco", "Banco_Carburador"), ("Banco", "Banco_Trapo"), ("Banco_Latas", "Banco_Latas_EtiquetaAzul"), ("Banco_Latas", "Banco_Latas_EtiquetaVerde"), ("Banco_Cajones", "Banco_Trapo"),
               ("Auto", "Auto_CableBateria"), ("Auto_Bateria", "Auto_CableBateria"), ("Auto_Borne_Rojo", "Auto_CableBateria"), ("Auto_CableBateria", "Auto_CableBateria_Pinza"), ("Elevador", "Auto_CableBateria"),
@@ -496,6 +582,45 @@ RECETAS_TALLER = {
 }
 
 
+def toro(nombre, centro, eje, radio, grosor, material, lados=16, anillo=6):
+    """Toro (aro) como malla: para el rollo de cable y el anillo de la punta del gancho."""
+    cx, cy, cz = centro
+    vs, fs = [], []
+    for i in range(lados):
+        a = 2 * math.pi * i / lados
+        for j in range(anillo):
+            b = 2 * math.pi * j / anillo
+            r = radio + grosor * math.cos(b)
+            u, v, w = r * math.cos(a), r * math.sin(a), grosor * math.sin(b)
+            if eje == "X":
+                vs.append((cx + w, cy + u, cz + v))
+            elif eje == "Y":
+                vs.append((cx + u, cy + w, cz + v))
+            else:
+                vs.append((cx + u, cy + v, cz + w))
+    for i in range(lados):
+        for j in range(anillo):
+            a, b = i * anillo + j, ((i + 1) % lados) * anillo + j
+            c, d = ((i + 1) % lados) * anillo + (j + 1) % anillo, i * anillo + (j + 1) % anillo
+            fs.append((a, b, c, d))
+    return pieza(nombre, [], material, mallas=[(vs, fs)])
+
+
+SILUETAS_TABLERO = []
+
+
+def garras_gancho(ax_, gc, gz):
+    """3 garras curvas iguales a 120°, unidas al anillo, abiertas hacia afuera y con la uña apenas doblada."""
+    garras = []
+    for ang in (90, 210, 330):
+        a = math.radians(ang)
+        cy_, sz_ = math.cos(a), math.sin(a)
+        pts = [(ax_, 0.45), (ax_ + 0.4, 0.75), (ax_ + 0.85, 1.0), (ax_ + 1.3, 1.05), (ax_ + 1.6, 0.85)]
+        pts = [(x, gc + cy_ * r, gz + sz_ * r) for x, r in pts]
+        garras += [_barra(pts[i], pts[i + 1], 0.17 if i < 3 else 0.13) for i in range(4)]
+    return pieza("Gancho_Garras", garras, "acero")
+
+
 def detalles():
     """Piezas que suman detalle modelado: columnas y correas, herramientas, cajones, motor del auto,
     manchas, etc. Las de muchas partes chicas no se biselan ni se hornean (solo material)."""
@@ -510,7 +635,7 @@ def detalles():
                 if a <= k <= b:
                     tramos = [(z, w) for z, w in ((1, z0), (z1, ALTO)) if w - z > 0.5]
             for z0, z1 in tramos:
-                for lista, w0, w1 in ((oxido, z0, min(z1, 3)), (cajas, max(z0, 3), z1)):
+                for lista, w0, w1 in ((cajas, z0, z1),):
                     if w1 - w0 > 0.3:
                         tam = (0.35, 0.15, w1 - w0) if eje == "x" else (0.15, 0.35, w1 - w0)
                         pos = (k, fijo, (w0 + w1) / 2) if eje == "x" else (fijo, k, (w0 + w1) / 2)
@@ -525,7 +650,6 @@ def detalles():
                         juntas.append(((0.14, 0.08, 0.14), (k, f3, zj)) if eje == "x" else ((0.08, 0.14, 0.14), (f3, k, zj)))
             k += 1
         o.append(pieza(nombre, cajas, "chapa"))
-        o.append(pieza(nombre.replace("Ondas_", "Ondas_Oxido_"), oxido, "oxido"))
         o.append(pieza(nombre.replace("Ondas_", "Ondas_Juntas_"), juntas, "hierro"))
 
     nervios("Ondas_Frente", "x", -HY + G + 0.075, -HX + G, HX - G, [(PORTON_X[0], PORTON_X[1], 0, 10)])
@@ -585,24 +709,29 @@ def detalles():
     mangos.append(((0.8, 0.14, 0.7), (bx + 6.1, ty, 9.9)))
     silu.append(((4.0, 0.04, 1.2), (bx + 4.7, ty + 0.12, 9.9)))
     o.append(pieza("Tablero_Herramientas", her, "acero"))
-    o.append(pieza("Tablero_Siluetas", silu, "pintura-silueta"))
+    SILUETAS_TABLERO[:] = [(c[0], c[2], s[0], s[2]) for s, c in silu]  # (x, z, ancho, alto) pintados en la textura del tablero
     o.append(pieza("Tablero_MangosAzules", mangos_az, "mango-azul"))
     # el gancho de Tano: la estrella de la Beta, solo en su propio panel a la izquierda del tablero, el doble de grande
     gx, gz, gy = -9.5, 8.0, HY - G - 0.45
     o.append(pieza("GanchoPanel", [((5.2, 0.25, 5.0), (gx, HY - G - 0.15, gz))], "tablero-oscuro"))
-    o.append(pieza("GanchoPanel_Silueta", [((3.9, 0.04, 1.9), (gx - 0.2, HY - G - 0.3, gz)), ((0.9, 0.04, 1.6), (gx - 0.9, HY - G - 0.3, gz - 1.2)), ((1.2, 0.04, 1.9), (gx + 2.0, HY - G - 0.3, gz))], "pintura-silueta"))
-    o.append(pieza("GanchoPanel_Soportes", [((0.15, 0.6, 0.15), (gx + d, gy - 0.05, gz - 0.9)) for d in (-1.0, 0.8)], "hierro"))
-    cuerpo = [((2.6, 0.7, 1.3), (gx - 0.3, gy - 0.65, gz)), ((0.7, 0.6, 1.5), (gx - 0.9, gy - 0.65, gz - 1.2), (0, 12, 0)), ((0.15, 0.3, 0.45), (gx - 0.45, gy - 0.65, gz - 0.85))]  # cuerpo, empuñadura y gatillo
-    garras = []
-    for a in (-40, 0, 40):  # 3 garras abiertas en la punta, cada una con su uña doblada
-        r = math.radians(a)
-        garras.append(((0.95, 0.25, 0.22), (gx + 2.0 + math.cos(r) * 0.4, gy - 0.65, gz + math.sin(r) * 0.4), (0, -a, 0)))
-        garras.append(((0.22, 0.25, 0.45), (gx + 2.4 + math.cos(r) * 0.75, gy - 0.65, gz + math.sin(r) * 0.75), (0, -a - 60, 0)))
-    o.append(pieza("Gancho", cuerpo + garras, "acero", cilindros=[(0.38, 1.2, (gx + 1.0, gy - 0.65, gz), "X", 14), (0.32, 0.25, (gx + 1.9, gy - 0.65, gz), "X", 12)]))
-    o.append(pieza("Gancho_Empunadura", [((0.75, 0.66, 1.0), (gx - 0.95, gy - 0.65, gz - 1.35), (0, 12, 0))], "goma"))
-    o.append(pieza("Gancho_Rollo", [], "goma", cilindros=[(0.7, 0.45, (gx - 0.3, gy - 1.0, gz + 0.85), "Y", 16), (0.35, 0.5, (gx - 0.3, gy - 1.02, gz + 0.85), "Y", 10)]))
-    o.append(pieza("Gancho_Cable", [((0.05, 0.05, 1.0), (gx + 0.3, gy - 1.25, gz + 0.3), (0, -30, 0))], "neon-gancho"))
-    o.append(pieza("Neon_Gancho", [((2.2, 0.06, 0.18), (gx - 0.3, gy - 1.02, gz - 0.3))], "neon-gancho"))
+    # gancho: caño con empuñadura y gatillo, rollo de cable con el cable enrollado, anillo en la punta con 3 garras
+    # curvas iguales a 120° unidas al anillo, cable fino del rollo a la punta y la luz de carga celeste al costado
+    gc = HY - G - 1.4  # eje del gancho, a 1,4 studs del panel
+    pared = HY - G - 0.275
+    o.append(pieza("GanchoPanel_Soportes", [((0.18, pared - (gc + 0.33), 0.18), (gx + d, (pared + gc + 0.33) / 2, gz - 0.45)) for d in (-0.9, 0.7)], "hierro"))
+    o.append(pieza("Gancho", [((0.5, 0.45, 1.1), (gx - 1.15, gc, gz - 0.75), (0, 14, 0)), ((0.18, 0.2, 0.4), (gx - 0.65, gc, gz - 0.55))]
+                   + [_barra((gx - 0.85, gc, gz - 0.35), (gx - 0.4, gc, gz - 0.85), 0.07), _barra((gx - 0.4, gc, gz - 0.85), (gx - 0.4, gc, gz - 0.35), 0.07)],
+                   "acero", cilindros=[(0.35, 3.0, (gx - 1.6, gc, gz), "X", 16), (0.42, 0.25, (gx - 1.7, gc, gz), "X", 16), (0.28, 0.3, (gx + 1.35, gc, gz), "X", 12)]))
+    o.append(pieza("Gancho_Empunadura", [((0.55, 0.5, 0.8), (gx - 1.2, gc, gz - 0.95), (0, 14, 0))], "goma"))
+    rx, ry, rz = gx - 0.5, gc - 0.62, gz + 0.1
+    o.append(pieza("Gancho_Rollo", [], "hierro", cilindros=[(0.6, 0.06, (rx, ry - 0.2, rz), "Y", 16), (0.6, 0.06, (rx, ry + 0.2, rz), "Y", 16), (0.18, 0.46, (rx, ry - 0.23, rz), "Y", 10)]))
+    for k, dy in enumerate((-0.12, 0.0, 0.12)):
+        o.append(toro(f"Gancho_Cable{k}", (rx, ry + dy, rz), "Y", 0.42, 0.06, "goma"))
+    ax_ = gx + 1.7
+    o.append(toro("Gancho_Anillo", (ax_, gc, gz), "X", 0.45, 0.1, "acero"))
+    o.append(garras_gancho(ax_, gc, gz))
+    o.append(pieza("Gancho_CableFino", [_barra((rx + 0.3, ry, rz + 0.45), (gx + 0.6, gc - 0.36, gz + 0.2), 0.04), _barra((gx + 0.6, gc - 0.36, gz + 0.2), (ax_, gc - 0.3, gz + 0.12), 0.04)], "goma"))
+    o.append(pieza("Neon_Gancho", [((1.6, 0.05, 0.16), (gx - 0.2, gc - 0.36, gz - 0.1))], "neon-gancho"))
     o.append(pieza("Tablero_Mangos", mangos, "mango-amarillo"))
     o.append(pieza("Tablero_Manguera", [], "goma", cilindros=[(0.9, 0.25, (bx - 5.6, ty, 7.0), "Y", 14, 0.9)]))
     # banco: frentes de cajones con manijas, mango de la morsa y trapo rojo
@@ -610,7 +739,7 @@ def detalles():
     caj = [((3.4, 0.15, 1.1), (bx - 5.4 + k * 3.6, by - 1.62, 2.2 - j * 1.3)) for k in range(4) for j in range(2)]
     caj += [((1.0, 0.25, 0.18), (bx - 5.4 + k * 3.6, by - 1.75, 2.3 - j * 1.3)) for k in range(4) for j in range(2)]
     o.append(pieza("Banco_Cajones", caj, "roble"))
-    o.append(pieza("Banco_Trapo", [((1.1, 0.8, 0.08), (bx - 1.6, by - 0.6, 3.6), (0, 0, 18)), ((0.5, 0.08, 0.6), (bx - 1.6, by - 1.62, 3.3))], "cofradia"))  # el trapo rojo de Tano, colgando del borde
+    pass  # el trapo rojo se hace con simulación de tela (ver trapos()) 
     # pila de neumáticos al lado del portón (como en la ref-1)
     o.append(pieza("Neumaticos", [], "goma", cilindros=[(1.3, 0.9, (-17.7, -12.3, z * 0.9), "Z", 14) for z in range(4)]))
     # carro rojo: frentes de cajones con manijas
@@ -634,7 +763,6 @@ def detalles():
     o.append(pieza("MesaFabricacion_Detalle", det, "hierro", cilindros=[(0.25, 0.5, (dx - 0.4, dy - 2.4, 3.3), "Z", 10)]))
     # cama: frazada doblada al pie
     kx, ky = (11 + HX - G) / 2 + 0.4, HY - G - 2.1
-    o.append(pieza("Ondas_Parches", [((0.05, 3.0, 4.0), (-HX + G + 0.2, -12, 3.0)), ((3.6, 0.05, 3.2), (-16, HY - G - 0.2, 2.6)), ((0.05, 2.6, 3.4), (HX - G - 0.2, -11.5, 2.7))], "oxido"))
     o.append(pieza("Calendario", [((0.06, 1.6, 2.2), (-HX + G + 0.25, 11, 7.5))], "calendario"))
     o.append(pieza("Calendario_Cabecera", [((0.07, 1.6, 0.5), (-HX + G + 0.27, 11, 8.85))], "cartel-repuestos"))
     o.append(pieza("Reloj", [], "reloj", cilindros=[(0.75, 0.12, (-14, HY - G - 0.3, 12), "Y", 18)]))
@@ -652,44 +780,151 @@ def detalles():
         pts = [(x0 + (x1 - x0) * s / 6, y + 0.35, ALTO - 0.35 - caida * 4 * (s / 6) * (1 - s / 6)) for s in range(7)]
         cab += [_barra(pts[s], pts[s + 1], 0.1) for s in range(6)]
     o.append(pieza("Cables", cab, "goma"))
-    # piso: manchas de aceite irregulares, un charco cerca del portón y grietas finas (todo apoyado, como calcomanías)
-    import random
-
-    random.seed(7)
-
-    def mancha(cx, cy, r, lados=14):
-        vs = []
-        for k in range(lados):
-            a = 2 * math.pi * k / lados
-            rr = r * random.uniform(0.6, 1.15)
-            vs.append((cx + math.cos(a) * rr, cy + math.sin(a) * rr * 0.8, 0.012))
-        return (vs, [tuple(range(lados))])
-
-    manchas = ((-9, -6, 1.8), (-12, 2, 1.3), (5, -2, 0.9), (-4, 8, 1.1), (12, -8, 0.8))
-    bordes = []
-    for x, y, r in manchas:
-        vs, f = mancha(x, y, r * 1.35, 16)
-        bordes.append(([(a, b, 0.008) for a, b, _ in vs], f))
-    o.append(pieza("Piso_Manchas_Borde", [], "aceite-borde", mallas=bordes))
-    o.append(pieza("Piso_Manchas", [], "aceite", mallas=[mancha(x, y, r) for x, y, r in manchas]))
-    o.append(pieza("Piso_Charco", [], "charco", mallas=[mancha(-8, -12.5, 1.6, 18)]))
-    marcas = []
-    for x0 in (-13.4, -6.6):  # dos huellas que salen del elevador hacia el portón, cortadas y con curva suave
-        for s in range(6):
-            y = -6.5 - s * 1.5
-            marcas.append(((0.8, 1.2, 0.01), (x0 + s * 0.12, y, 0.004 + s * 0.0001), (0, 0, 4)))
-    o.append(pieza("Piso_MarcasNeumatico", marcas, "marca-neumatico"))
-    gri = []
-    for x, y, a0 in ((-14, -2, 20), (2, 4, 110), (8, -12, 60), (-2, 12, 150)):
-        px, py, a = x, y, math.radians(a0)
-        for s in range(5):
-            a += random.uniform(-0.6, 0.6)
-            nx, ny = px + math.cos(a) * 0.9, py + math.sin(a) * 0.9
-            gri.append(((0.12, 0.95, 0.01), ((px + nx) / 2, (py + ny) / 2, 0.006), (0, 0, math.degrees(a) - 90)))
-            px, py = nx, ny
-    o.append(pieza("Piso_Grietas", gri, "grieta"))
+    # piso: manchas, charco, grietas y huellas van pintados en la textura (ver pintar_taller)
     o.append(pieza("Piso_RejillaBarras", [((0.15, 1.3, 0.1), (-3.2 + k * 0.4, -9, 0.11)) for k in range(7)], "hierro"))
     return o
+
+
+def pintar_taller():
+    """Todo lo plano va en la textura: piso, chapa, banco, tablero de herramientas y panel del gancho."""
+    import numpy as np
+    import random
+
+    import detalle as D
+    import pintura as T
+
+    carpeta = os.path.join(D.TEXTURAS, ARCHIVO)
+    random.seed(11)
+
+    # piso: manchas marrón oscuro con borde suave y brillo, grietas ramificadas, 2 huellas de neumático, suciedad
+    # en las esquinas y junto a las paredes, y un charco con reflejo cerca del portón
+    manchas = ((-9, -6, 1.8), (-12, 2, 1.3), (5, -2, 0.9), (-4, 8, 1.1), (12, -8, 0.8), (-2, -11, 0.7))
+    grietas = []
+    for x, y, a0 in ((-14, -2, 20), (2, 4, 110), (8, -12, 60), (-2, 12, 150), (14, 4, 200)):
+        pts, a = [(x, y)], math.radians(a0)
+        for s in range(9):
+            a += random.uniform(-0.5, 0.5)
+            pts.append((pts[-1][0] + math.cos(a) * 0.7, pts[-1][1] + math.sin(a) * 0.7))
+            if s in (3, 6):  # rama
+                b, rama = a + random.choice((-1, 1)) * 0.9, [pts[-1]]
+                for _ in range(3):
+                    rama.append((rama[-1][0] + math.cos(b) * 0.5, rama[-1][1] + math.sin(b) * 0.5))
+                grietas.append(rama)
+        grietas.append(pts)
+    huellas = []
+    for x0 in (-12.6, -7.4):
+        huellas.append([(x0, -6.2), (x0 + 0.4, -9), (x0 + 1.2, -12), (x0 + 2.2, -16)])
+
+    def piso(p, n, base):
+        x, y = p[:, 0], p[:, 1]
+        arriba = (n[:, 2] > 0.5).astype(float)
+        c = base.copy()
+        borde = np.clip(1 - np.minimum(HX - np.abs(x), HY - np.abs(y)) / 3.5, 0, 1) ** 1.5
+        c = T.mezclar(c, T.hexa("1f1a16"), arriba * borde * (0.35 + 0.35 * T.fbm(x, y, 1.5)))
+        c = T.mezclar(c, T.hexa("4a453f"), arriba * 0.18 * (T.fbm(x, y, 3.0, 9) > 0.62))
+        for cx, cy, r in manchas:
+            d = np.hypot(x - cx, (y - cy) / 0.8) / (r * (0.75 + 0.5 * T.fbm(x, y, 0.7, cx)))
+            c = T.mezclar(c, T.hexa("2a1f17"), arriba * np.clip((1.15 - d) / 0.4, 0, 1) * 0.9)
+        for g in grietas:
+            d = T.dist_polilinea(x, y, g)
+            c = T.mezclar(c, T.hexa("1c1814"), arriba * (np.clip((0.06 - d) / 0.04, 0, 1) * 0.9 + np.clip((0.16 - d) / 0.1, 0, 1) * 0.2))
+        for h in huellas:
+            d = T.dist_polilinea(x, y, h)
+            banda = np.clip((0.4 - d) / 0.12, 0, 1) * (0.55 + 0.45 * (np.sin(y * 14) > 0)) * np.clip((y + 16.5) / 2, 0, 1)
+            c = T.mezclar(c, T.hexa("2b2622"), arriba * banda * 0.55)
+        dc = np.hypot((x + 8) / 1.9, (y + 12.6) / 1.2) / (0.8 + 0.35 * T.fbm(x, y, 0.8, 4))
+        c = T.mezclar(c, T.hexa("1b2026"), arriba * np.clip((1.05 - dc) / 0.25, 0, 1) * 0.85)
+        return c
+
+    def piso_rug(p, n, base):
+        x, y = p[:, 0], p[:, 1]
+        r = base.copy()
+        for cx, cy, rad in manchas:
+            d = np.hypot(x - cx, (y - cy) / 0.8) / (rad * (0.75 + 0.5 * T.fbm(x, y, 0.7, cx)))
+            r = np.where(d < 1.0, np.minimum(r, 0.3), r)
+        dc = np.hypot((x + 8) / 1.9, (y + 12.6) / 1.2) / (0.8 + 0.35 * T.fbm(x, y, 0.8, 4))
+        return np.where(dc < 1.0, 0.05, r)
+
+    # chapa: óxido corrido hacia abajo (fuerte en la franja de abajo), manchas de agua y chorreadas bajo las juntas,
+    # y 2 o 3 paneles con otro tono
+    def chapa(p, n, base):
+        x, y, z = p[:, 0], p[:, 1], p[:, 2]
+        u = np.where(np.abs(n[:, 1]) > np.abs(n[:, 0]), x, y)
+        c = base.copy()
+        panel = np.floor(u / 4)
+        tono = T._hash(panel, np.sign(n[:, 0] + n[:, 1] * 2), 3.0)
+        c = T.mezclar(c, T.hexa("5d6670"), (tono > 0.82) * 0.45)
+        c = T.mezclar(c, T.hexa("454a44"), ((tono > 0.65) & (tono < 0.78)) * 0.4)
+        oxido = np.clip((3.4 - z) / 2.6, 0, 1) ** 1.3 * (0.55 + 0.45 * T.fbm(u, z, 0.8, 2))
+        c = T.mezclar(c, T.hexa("7a4a2c"), oxido * 0.85)
+        for j in (6.5, 11.5):
+            debajo = (z < j) * np.exp(-(j - z) / 0.9)
+            c = T.mezclar(c, T.hexa("2f3236"), debajo * 0.3)
+            chorro = (T._hash(np.floor(u * 1.3), j) > 0.72) * (z < j) * np.exp(-(j - z) / 2.6)
+            c = T.mezclar(c, T.hexa("8a4f2a"), chorro * 0.55)
+        return c
+
+    # banco: quemaduras, rayones y aceite en la madera (arriba)
+    quemaduras = [(-3.0, 13.4, 0.35), (4.5, 13.0, 0.25), (6.8, 13.6, 0.3)]
+    rayones = [((-5 + k * 1.4, 12.6 + (k % 3) * 0.4), (-4.2 + k * 1.4, 13.2 + (k % 2) * 0.5)) for k in range(9)]
+
+    def banco(p, n, base):
+        x, y = p[:, 0], p[:, 1]
+        arriba = (n[:, 2] > 0.5).astype(float)
+        c = base.copy()
+        for cx, cy, r in quemaduras:
+            d = np.hypot(x - cx, y - cy) / r
+            c = T.mezclar(c, T.hexa("1a1410"), arriba * np.clip((1.0 - d) / 0.3, 0, 1) * 0.85)
+            c = T.mezclar(c, T.hexa("3a2416"), arriba * np.clip((1.4 - d) / 0.3, 0, 1) * 0.35)
+        for a, b in rayones:
+            d = T.dist_polilinea(x, y, [a, b])
+            c = T.mezclar(c, T.hexa("c9a27a"), arriba * np.clip((0.03 - d) / 0.02, 0, 1) * 0.6)
+        d = np.hypot(x - 0.5, (y - 13.0) / 0.7) / (0.9 * (0.75 + 0.5 * T.fbm(x, y, 0.5, 6)))
+        return T.mezclar(c, T.hexa("2a1f17"), arriba * np.clip((1.1 - d) / 0.3, 0, 1) * 0.7)
+
+    # tablero de herramientas: agujeritos y contorno fino pintado de cada herramienta
+    def tablero(p, n, base):
+        x, z = p[:, 0], p[:, 2]
+        c = base.copy()
+        agujero = (np.hypot((x * 2) % 1 - 0.5, (z * 2) % 1 - 0.5) < 0.12).astype(float)
+        c = T.mezclar(c, T.hexa("15161a"), agujero * 0.8)
+        for sx, sz, w, h in SILUETAS_TABLERO:
+            dx, dz = np.abs(x - sx) - w / 2, np.abs(z - sz) - h / 2
+            borde = np.abs(np.maximum(dx, dz))
+            c = T.mezclar(c, T.hexa("e8d38a"), (borde < 0.05).astype(float))
+        return c
+
+    # panel del gancho: silueta del gancho como contorno pintado
+    gx, gz = -9.5, 8.0
+
+    def panel(p, n, base):
+        x, z = p[:, 0], p[:, 2]
+        c = base.copy()
+        cuerpo = T.dist_polilinea(x, z, [(gx - 1.7, gz), (gx + 3.1, gz)]) - 0.75
+        mango = T.dist_polilinea(x, z, [(gx - 1.1, gz - 0.5), (gx - 1.35, gz - 1.4)]) - 0.45
+        sdf = np.minimum(cuerpo, mango)
+        return T.mezclar(c, T.hexa("e8d38a"), (np.abs(sdf) < 0.07).astype(float))
+
+    hechos = 0
+    for o in list(bpy.data.objects):
+        if o.type != "MESH":
+            continue
+        if o.name.startswith("Piso_") and o.name[5:].isdigit():
+            hechos += T.pintar(o, piso, piso_rug) > 0
+        elif o.name.startswith("Pared_"):
+            hechos += T.pintar(o, chapa) > 0
+        elif o.name.startswith("Ondas_"):
+            T.textura_lisa(o, 256, "4a5560", carpeta, rugosidad=0.55, metal=0.5)
+            hechos += T.pintar(o, chapa) > 0
+        elif o.name == "Banco":
+            hechos += T.pintar(o, banco) > 0
+        elif o.name == "Tablero":
+            T.textura_lisa(o, 512, "3a3d42", carpeta, rugosidad=0.7, metal=0.3)
+            hechos += T.pintar(o, tablero) > 0
+        elif o.name == "GanchoPanel":
+            T.textura_lisa(o, 512, "2e2a26", carpeta, rugosidad=0.85)
+            hechos += T.pintar(o, panel) > 0
+    return hechos
 
 
 def detalle():
@@ -707,6 +942,7 @@ def detalle():
     B.MATERIALES.setdefault("porton-verde", {"hex": "2f5d5a", "rugosidad": 0.6, "metal": 0.5})
     B.MATERIALES.setdefault("hierro", {"hex": "3a3d42", "rugosidad": 0.6, "metal": 0.7})
     est, mue, det = estructura(), muebles() + auto(), detalles()
+    det += trapos()
     todo = est + mue + det
     cruces, flotan = revisar(todo)
     print("CHEQUEO", cruces, flotan, flush=True)
@@ -715,20 +951,23 @@ def detalle():
     # sin bisel ni horneado: piezas de más de 30 studs, de muchas partes chicas o finitas, y lo que brilla
     largas = ("Techo", "Cerchas", "Hastial", "Ondas", "Zocalo", "Porton_Rollo", "Porton_Dintel", "Porton_Cortina", "Auto_", "Cables")
     chicas = ("Tablero_Herramientas", "Banco_", "CarroHerramientas_Cajones", "Locker_Detalle", "Piso_Manchas", "Piso_Grietas", "Piso_Rejilla", "Piso_Chapa",
-              "Escalera", "Entrepiso_Baranda", "Elevador_Tacos", "Tambores_Aros", "MesaFabricacion_", "CarroHerramientas_",
+              "Escalera", "Entrepiso_Baranda", "Elevador_Tacos", "Tambores_Aros", "MesaFabricacion_", "CarroHerramientas_", "Banco_Cajones", "Banco_Carburador", "Banco_LatasAro", "Banco_Latas_Etiqueta", "Banco_Trapo",
               "Compresor_Detalle", "Neumaticos", "Lampara", "Radio", "Silla", "Cama", "Porton_Guias", "Tablero", "Piso_Charco", "Ventana_Marco", "Cajas",
               "Ventanas_Marcos", "Puerta_Lateral_Manija", "TableroTrabajos_", "GanchoPanel_Soportes", "Gancho", "GanchoPanel_Silueta", "Calendario", "Reloj",
-              "CartelRepuestos_Dibujo", "GanchoPanel", "Neumaticos_Fondo", "Bidones", "Baranda_Mameluco", "Piso_MarcasNeumatico", "Auto_", "Banco_")
+              "CartelRepuestos_Dibujo", "GanchoPanel", "Neumaticos_Fondo", "Bidones", "Baranda_Mameluco", "Piso_MarcasNeumatico", "Auto_")
     hornear = [o for o in todo if not o.name.startswith(("Neon_", "Auto_", "Glass_")) and o.name != "MesaFabricacion_Pantalla"]
     sin = tuple(o.name for o in hornear if o.name.startswith(largas + chicas))
     def lado(n):
         if n.startswith("Piso_") and n[5:].isdigit():
             return 1024
+        if n.startswith("Banco_"):
+            return 256
         return 512 if n.startswith(("Pared", "Elevador", "Auto", "Banco", "Entrepiso", "MesaFabricacion")) else 256
     lados = {o.name: lado(o.name) for o in hornear}
     presupuesto = {o.name: (500 if o.name.startswith(("Pared", "Piso_")) else 4000, [o.name]) for o in hornear}
     print("HORNEAR", len(hornear) - len(sin), "piezas; sin hornear", len(sin), flush=True)
     D.terminar(hornear, presupuesto, ARCHIVO, lados=lados, sin_bisel=sin, sin_hornear=sin)
+    print("PINTADAS", pintar_taller(), flush=True)
     man = maniqui()
     P.luz_puerto()
     # 1) dos lámparas cálidas con cono marcado (spots + niebla adentro), luz fría azul entrando por el portón y lluvia afuera

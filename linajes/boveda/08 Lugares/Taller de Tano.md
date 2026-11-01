@@ -35,17 +35,20 @@ Graybox con tag `Lugar`. Modelo nuevo pendiente (P25d rehecho).
 ## Modelo (P25d-01, rehecho desde cero)
 **Estado: paso 2, detalle con texturas horneadas. Espera tu OK.** (El boceto se aprobó el 1 nov.) Planta de **40 x 32 studs** (32 en vez de 30 para que entre en la grilla de 4), paredes de chapa de 16 y techo a dos aguas con la cumbrera a 22 (entra en el lote de 50 x 22 x 40 del graybox). Chequeo de cruces: **0**. Cosas flotando: **0**. Triángulos del boceto: 1.868.
 
-**Detalle (paso 2, versión 5)**: 36.916 triángulos (tope 60.000). Chequeo de cruces: **0**. Cosas flotando: **0**.
-Cambios de Juani (1 nov, tercera lista):
-- **Gancho.** Tiene 3 garras abiertas con uña, el rollo de cable al costado y una empuñadura con gatillo. Está sobre un panel oscuro con su silueta pintada en amarillo y un spot propio.
-- **Auto.** Pintado de verde oliva gastado (conserva la suciedad del horneado). Los faros están apagados, se ve el cable de la batería colgando con su pinza y la rueda está desmontada contra la columna. El charco ahora es oscuro y chato (antes parecía vidrio celeste).
-- **Banco.** La morsa tiene forma de morsa. Hay 2 latas con etiqueta azul y verde (sin marcas), un engranaje y un carburador a medio desarmar, y el trapo rojo cuelga del borde.
-- **Tablero.** Herramientas distintas: llaves de varios tamaños (una torcida), llave inglesa, destornilladores amarillos y azules, un martillo grande y uno chico, una pinza y el serrucho. Cada una tiene su silueta pintada y hay un hueco vacío para la llave que Tano tiene en la mano.
-- **Paredes.** Parches con más óxido, un calendario viejo, un reloj de pared y un cartel de repuestos inventado, sin letras.
-- **Esquina de los tambores.** Neumáticos apilados y 2 bidones rojos.
-- **Entrepiso.** El mameluco de Tano cuelga de la baranda y la punta de la frazada asoma por el borde.
-- **Piso.** Grietas más marcadas y huellas de neumático que van del elevador al portón.
-- **Luz.** Conos de luz con el borde suave y una lámpara articulada propia sobre el banco de fabricar.
+**Detalle (paso 2, versión 6: pasada de texturas)**: 35.414 triángulos (tope 60.000). Chequeo de cruces: **0**. Cosas flotando: **0**.
+**Regla nueva:** todo lo plano va pintado en la textura horneada, no como malla. Lo que tiene volumen y se mira de cerca se modela con detalle. El pintado lo hace `linajes/arte/scripts/interiores/pintura.py`: calcula en qué punto del mundo cae cada píxel de la textura y le aplica el efecto. Se pintaron 43 piezas.
+- **Piso (4 losas a 1024).** Manchas de aceite `#2a1f17` con borde suave y más brillo, grietas finas con ramas, 2 huellas de neumático curvas del elevador al portón, suciedad en las esquinas y junto a las paredes, y un charco con reflejo cerca del portón. Se borraron todas las mallas de manchas, grietas, huellas y parches.
+- **Chapa (paredes y nervios).** Óxido que chorrea hacia abajo, más fuerte en la franja de abajo, manchas de agua y chorreadas debajo de las juntas, y algunos paneles con otro tono.
+- **Tablero de herramientas.** Agujeritos y la silueta de cada herramienta como contorno fino pintado (ya no son placas).
+- **Panel del gancho.** El contorno del gancho pintado.
+- **Banco.** Quemaduras, rayones y una mancha de aceite en la madera.
+- **Gancho (modelado).** Caño con empuñadura, gatillo y guardamonte. Rollo de cable con 3 vueltas de cable visibles. Anillo en la punta con 3 garras curvas iguales a 120°, unidas al anillo. Cable fino del rollo a la punta y la luz de carga celeste al costado. Se reconoce a 20 studs (ver el render).
+- **Motor (modelado).** Block, tapa de válvulas con nervios, filtro de aire con 4 tuercas, radiador con panal al frente, 2 mangueras curvas negras, correa con 3 poleas, batería con bornes rojo y negro, y el cable rojo colgando con su pinza.
+- **Trapo rojo `#8e2a22`.** Uno hecho un bollo arrugado arriba del banco y otro colgando del borde. *La simulación de tela de Blender no corre en el modo sin ventana que uso, así que el que cuelga se plegó a mano sobre el borde.* Para una tela simulada de verdad, hay que correrla con Blender abierto.
+- **Morsa, latas y engranaje.** Bordes biselados. Las latas tienen tapa y aro.
+- **Auto.** Verde más claro y saturado.
+
+![[interior-taller_gancho_a_20_studs.png]]
 
 **Para cuando se lleve a Studio (anotado):**
 - Las luces se rearman en Studio con iluminación Future: SpotLight en el portón, en las 2 lámparas, en el banco, en el gancho y en el banco de fabricar. Solo 2 o 3 con sombra, porque en celular cada una cuesta.
