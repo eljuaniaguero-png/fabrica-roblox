@@ -67,6 +67,8 @@ Sumadas el 31 oct a partir de consejos que juntó Juani. Valen para mundo, vehí
 - **Pivote abajo y al centro** (z = 0) en cada pieza.
 - **Sin caras que nunca se ven:** al exportar se borra la base de edificios y muros apoyados en el piso y la panza de los autos.
 - **Que no flote:** los edificios llevan zócalo de hormigón abajo.
+- **Horneado**: las piezas de muchas partes chicas (placas con remaches, chapa estriada, grietas, tableros perforados) van sin bisel y sin hornear; las piezas de más de 30 studs (vigas, cañerías, techos) tampoco se hornean, porque cuelgan el proceso. Pisos de interior a 1024 px como máximo. Las juntitas de pisos y paredes van en la textura, no modeladas.
+- **Chequeo automático** antes de cada render: ninguna malla se cruza con otra (salvo uniones a propósito) y nada que va en el piso flota.
 - No se usa el estilo de paleta plana low-poly (un PNG de colores para todo): nuestra guía es cómic oscuro con detalle y texturas con desgaste. El rendimiento se cuida con los topes de triángulos de arriba y probando en celular.
 
 ## Color y material

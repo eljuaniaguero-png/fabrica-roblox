@@ -3,43 +3,44 @@ tags: [inicio]
 ---
 # Linajes del Eclipse
 
-RPG de superhéroes para Roblox: combate en tiempo real, multijugador, historia larga que avanza hablando con NPCs, poderes que te tocan al azar y evolucionan.
+RPG de superhéroes para Roblox: combate en tiempo real, multijugador, mundo abierto con 3 ciudades, poderes que te tocan al azar y evolucionan, y una historia que se arma distinta para cada jugador.
 
-## Novedades (31 oct)
-- [[Plan por etapas]]: la **primera versión (Beta) es solo Puerto Óxido**.
-- [[Todos los prompts]]: separados en **Ya hecho**, **BETA** y **POST BETA**, en orden.
-- [[Cinemáticas (plan completo)]] y su prompt [[P30c Cinemáticas]].
-- [[Animaciones (plan completo)]] y los prompts [[P26b Animaciones de tecnología, gadgets y vehículos]] y [[P30b Efectos especiales e interfaz]].
-- [[Cuerpo propio (sin avatar de Roblox)]] y su prompt [[P20f Cuerpo propio del jugador]].
-- Pantallas: [[P33a Logo, ícono y miniaturas (Gemini)]], [[P33b Íconos de Linajes y habilidades (Gemini)]] y [[P33c HUD y menús en Figma]].
-- [[Riesgos y mejoras (revisión 31 oct)]]: lo que se tomó de la revisión de Gemini y lo que falta decidir.
-- [[Personajes]]: cada personaje con su modelo 3D para girar.
+> [!important] Dónde estamos (1 nov 2026)
+> Estamos haciendo la **Beta de Puerto Óxido** y **reescribiendo esta bóveda** para que todo esté explicado al detalle. Ver [[Progreso]] y [[Plan de reescritura]].
 
 ## Cómo usar esta bóveda
-1. **El juego**: [[Ficha del juego]] tiene todo lo que es el juego, en notas cortas.
-2. **El estilo**: [[Guía de estilo]], [[Nivel de detalle]] y [[Colores]]. Claude los lee antes de cada modelo.
-3. **Los prompts**: [[Todos los prompts]] tiene la lista en orden con casillas. Abrís el siguiente sin marcar, copiás el bloque de código y lo pegás en Claude Code en tu PC.
+1. **Qué es el juego**: [[Ficha del juego]]. Desde ahí se llega a todo.
+2. **Cómo se ve**: [[Guía de estilo]], [[Nivel de detalle]] y [[Colores]]. Claude los lee antes de cada modelo.
+3. **Cómo se pide cada cosa**: [[Todos los prompts]], en orden y con casillas. Cada prompt sigue la [[Plantilla de prompt]] y trae sus prompts para Gemini.
 4. **Dónde vamos**: [[Progreso]].
+5. **Los modelos hechos**: [[Personajes]], cada uno con su modelo 3D para girar.
+
+## Paso a paso para un prompt
+1. Abrí el siguiente prompt sin tildar en [[Todos los prompts]].
+2. Pegá sus **prompts de Gemini** en Gemini y guardá las imágenes donde dice el prompt.
+3. Copiá el **bloque para Claude** y pegalo en Claude Code en tu PC.
+4. En cada punto de control, revisá la lista **Para dar el OK** y contestá "OK" o qué cambiar.
 
 ## Quién hace qué
-- Modelos y animaciones: Claude en **Blender** (en tu PC).
-- Sonidos y música: **ForgeGUI**.
-- Pantallas y código: Claude en **Roblox Studio** con Rojo.
-- Vos: aprobás los renders, apretás **Publish** en las animaciones y probás.
+- **Claude en Blender** (en tu PC): modelos y animaciones.
+- **Gemini**: imágenes de referencia de cada prompt, el logo, los íconos y las miniaturas.
+- **ForgeGUI**: sonidos y música.
+- **Claude en Roblox Studio** (con Rojo): mundo, pantallas y código.
+- **Vos**: aprobás, probás y publicás.
+
+## Reglas que no se rompen
+> [!warning] Los nombres de DC son de trabajo
+> Ningún modelo lleva logos, trajes, colores exactos ni frases de DC, y los nombres de DC no van en el juego publicado. Ver [[Sobre DC]].
+
+- Nada se publica ni cambia de audiencia sin vos.
+- Todo lo que se paga con Robux sigue las reglas de monetización (probabilidades a la vista, nada de cajas de botín pagas).
+- De las referencias se toman ideas, nunca diseños.
 
 ## Atajos
-- [[Elenco]]: todos los personajes con su nombre de DC y el nombre final.
-- [[Poderes, inicio y personalización]]: cómo conseguís tus poderes (manda sobre lo demás).
-- **Documento completo del juego** (para leer de corrido): https://claude.ai/artifact/MQo9fGEHaN2EATVw2us2P1
-- [[Personajes]]: cada personaje con su **modelo 3D para girar**, renders y estado.
-- [[Cuerpo propio (sin avatar de Roblox)]]: el juego no usa tu avatar de Roblox; todos usan el cuerpo del juego.
-- [[Cinemáticas (plan completo)]]: todas las escenas (entrar, salir, jefes, NPCs, Despertar, historia).
-- [[Animaciones (plan completo)]]: todo lo que se mueve (jugador, menús, poderes, NPCs, jefes, efectos).
-- [[Historia viva]]: cómo se arma tu historia (Narrador, ganchos, hilos, misterio, agenda de los villanos). Manda sobre la historia.
-- [[Calle viva]]: lugares donde se entra, policía y vigilancia, testigos, ladrones, callejones, atracos y noticias.
-- [[Mundo abierto y reputación]]: las 3 ciudades, los arcos en cualquier orden y la reputación (manda sobre la historia).
-- [[Historia en 6 actos]] · [[NPCs, trabajos y reputación]] · [[Plan por etapas]]
+- [[Elenco]]: todos los personajes, con su nombre de DC de trabajo y el nombre final.
+- [[Poderes, inicio y personalización]]: cómo conseguís tus poderes.
+- [[Historia viva]] y [[Mundo abierto y reputación]]: cómo se arma tu historia y cómo te trata el mundo.
+- [[Calle viva]]: crimen, policía, atracos y noticias.
+- [[Cinemáticas (plan completo)]] y [[Animaciones (plan completo)]].
+- [[Plan por etapas]]: qué entra en la Beta y qué queda para después.
 - Sistema de diseño online: https://claude.ai/artifact/WJxLkCEZEGJWzWzuyeU49y
-
-> [!warning] Antes de publicar
-> Los nombres de DC son de trabajo. Ningún modelo lleva logos, trajes ni frases de DC. Ver [[Sobre DC]].
