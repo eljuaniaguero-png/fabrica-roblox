@@ -51,14 +51,16 @@ def exportar(carpeta):
     os.makedirs(carpeta, exist_ok=True)
     for nombre, (funcion, cuadros, loop, prioridad, _) in A.ANIMACIONES.items():
         claves = []
-        for f in sorted(set(list(range(0, cuadros, 2)) + [cuadros])):
+        marcas = [f for f, _ in A.MARCADORES.get(nombre, ())]
+        # Cada 2 cuadros, más el último y los de los marcadores (un marcador va en una clave).
+        for f in sorted(set(list(range(0, cuadros, 2)) + [cuadros] + marcas)):
             t = 0.0 if (loop and f == cuadros) else f / cuadros
             claves.append({"t": round(f / A.FPS, 4), "j": articulaciones(funcion(t))})
         datos = {
             "nombre": nombre,
             "loop": loop,
             "prioridad": prioridad,
-            "marcadores": [[round(f / A.FPS, 4), "Paso"] for f in A.PASOS.get(nombre, ())],
+            "marcadores": [[round(f / A.FPS, 4), m] for f, m in A.MARCADORES.get(nombre, ())],
             "claves": claves,
         }
         with open(os.path.join(carpeta, f"{nombre}.json"), "w", encoding="utf-8") as fh:

@@ -173,3 +173,41 @@ Cada fila de la hoja son 2 animaciones, 3 cuadros cada una (inicio, pose máxima
 Publicadas en Roblox (IDs en `Config.Animaciones.base`). FBX en `linajes/arte/animaciones/base/`; en Studio se armaron como KeyframeSequence con `arte/scripts/animaciones/roblox.py` (mismas poses). Probado sobre el Dummy de `workspace.PruebasAnim`: cargan las 12 y el marcador `Paso` llega al código.
 
 Pendiente: conectarlas al Animate del cuerpo propio (hoy usa las de Roblox) y probar que los pies no patinen al caminar y correr (se ajusta la velocidad de la animación a la WalkSpeed).
+
+### P26-02 Combate del jugador (Puños) (1 nov, APROBADA y publicada)
+17 animaciones a 30 fps, mismo script y mismo `.blend` que la locomoción. Todas salen de la **guardia** y vuelven a ella: pierna izquierda adelante, rodillas bien flexionadas, codos pegados al cuerpo (cuidan las costillas), puños a la altura del mentón y la cabeza apenas agachada detrás. Se muestran **de espaldas** (un poco corridas a la derecha), como las ve el jugador con la cámara del juego. El script revisó cuadro por cuadro: ninguna mano entra en la cabeza.
+
+| Animación | Cuadros | Loop | Marcador | Qué hace |
+|---|---|---|---|---|
+| golpe-1 | 14 | no | Impacto 6 | jab derecho: carga 0-4, estira, vuelve 7-14; los pies no se mueven (gira solo el torso) y el peso pasa al pie de adelante |
+| golpe-2 | 14 | no | Impacto 6 | cross izquierdo con giro de cadera |
+| golpe-3 | 18 | no | Impacto 8 | se agacha y sube con un gancho derecho |
+| golpe-4 | 24 | no | Impacto 12 | carga 0-8, vuelta completa con patada derecha, cae en guardia |
+| golpe-aire | 22 | no | Impacto 12 | ataque desde arriba: se estira en puntas de pie con los puños arriba y cae con todo, rodillas bien dobladas, torso adelante y puños cerca del piso |
+| bloqueo-inicio | 4 | no | — | sube los antebrazos |
+| bloqueo | 30 | sí | — | antebrazos cruzados delante de la cara, respira |
+| parry | 12 | no | Impacto 3 | corto y seco: en 3 cuadros los dos antebrazos empujan afuera y adelante con medio paso adelante, aguanta hasta el 5 y vuelve a la guardia |
+| dash-adelante / atras / izquierda / derecha | 8 c/u | no | — | se inclina hacia donde va, sin pasos |
+| golpe-liviano | 10 | no | — | la cabeza y el torso se van para atrás |
+| golpe-fuerte | 18 | no | — | lo empujan, abre los brazos, retoma agachado |
+| aturdido | 40 | sí | — | encorvado, se bambolea, cabeza floja |
+| derrota | 40 | no | — | tambalea, cae de rodillas y queda en cuatro patas |
+| levantarse | 30 | no | — | de cuatro patas a una rodilla y a la guardia |
+
+Prioridad en Roblox: Action en todas. La guardia en 3 vistas (frente, costado y espalda):
+
+![[anim-base-guardia.png]]
+
+Una animación por fila, con su nombre a la izquierda (3 cuadros: anticipación, impacto o pose máxima, recuperación):
+
+![[anim-base-hoja-combate.png]]
+
+**En movimiento, de espaldas a 30 fps** (como la cámara del juego):
+
+![[anim-base-golpe-1-atras.gif]] ![[anim-base-golpe-2-atras.gif]] ![[anim-base-golpe-3-atras.gif]] ![[anim-base-golpe-4-atras.gif]]
+![[anim-base-golpe-aire-atras.gif]] ![[anim-base-bloqueo-inicio-atras.gif]] ![[anim-base-bloqueo-atras.gif]] ![[anim-base-parry-atras.gif]]
+![[anim-base-dash-adelante-atras.gif]] ![[anim-base-dash-atras-atras.gif]] ![[anim-base-dash-izquierda-atras.gif]] ![[anim-base-dash-derecha-atras.gif]]
+![[anim-base-golpe-liviano-atras.gif]] ![[anim-base-golpe-fuerte-atras.gif]] ![[anim-base-aturdido-atras.gif]] ![[anim-base-derrota-atras.gif]]
+![[anim-base-levantarse-atras.gif]]
+
+Publicadas en Roblox (IDs en `Config.Animaciones.base`, de `Golpe1` a `Levantarse`). FBX en `linajes/arte/animaciones/base/`. Probado sobre el Dummy: cargan las 29 animaciones base y el marcador `Impacto` llega al código (Golpe 4 a los 0,40 s, Parry a los 0,12 s).

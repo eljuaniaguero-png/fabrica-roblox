@@ -2,7 +2,8 @@
 
 Uso:
     <blender.exe> -b --factory-startup -P linajes/arte/scripts/animaciones/base.py -- todo
-    (pasos sueltos: acciones, renders, gifs, fbx; después de gifs: python gifs.py)
+    (pasos sueltos: acciones, renders, gifs, fbx; con grupo, ej.: -- todo combate;
+    después de gifs: python gifs.py)
 
 - acciones: abre blender/cuerpo.blend, crea una Action por animación (30 fps) y guarda
   blender/animaciones-base.blend (cuerpo.blend no se toca).
@@ -356,6 +357,396 @@ def flotar(t):
     }
 
 
+# ---------------------------------------------------------------------------
+# Combate del jugador, estilo Puños (P26-02). Cada animación es una lista de poses clave
+# (cuadro, pose) que se mezclan suave; GUARDIA es la pose de pelea de la que salen y a la que
+# vuelven. Torso Z negativo = gira a su derecha (adelanta el hombro izquierdo).
+# ---------------------------------------------------------------------------
+
+
+def secuencia(t, cuadros, claves):
+    """Pose en la fase t (0 a 1) mezclando las poses clave [(cuadro, pose), ...]."""
+    f = t * cuadros
+    for (f0, p0), (f1, p1) in zip(claves, claves[1:]):
+        if f <= f1:
+            return _mezcla(p0, p1, 0.0 if f1 == f0 else (f - f0) / (f1 - f0))
+    return _mezcla(claves[-1][1], claves[-1][1], 0)
+
+
+def con(base, **cambios):
+    """Copia de una pose con algunos huesos cambiados."""
+    p = dict(base)
+    p.update(cambios)
+    return p
+
+
+GUARDIA = {
+    "raiz": (0, 0, -0.14),
+    "LowerTorso": (8, 0, -20),
+    "UpperTorso": (4, 0, 0),
+    # Cabeza apenas agachada, detrás de los puños.
+    "Head": (12, 0, 12),
+    # Codos pegados al cuerpo (cuidan las costillas) y puños a la altura del mentón. En reposo el
+    # brazo del maniquí ya sale abierto: +Y cierra el izquierdo hacia el cuerpo, -Y el derecho.
+    "LeftUpperArm": (-44, 34, -16),
+    "RightUpperArm": (-36, -34, 18),
+    "LeftLowerArm": (-138, 0, 0),
+    "RightLowerArm": (-145, 0, 0),
+    # Pierna izquierda adelante, derecha atrás, rodillas bien flexionadas (lista para moverse).
+    # El giro Z de las piernas compensa el de la cadera: los pies siguen mirando adelante.
+    "LeftUpperLeg": (-36, -6, 20),
+    "RightUpperLeg": (4, 6, 20),
+    "LeftLowerLeg": (58, 0, 0),
+    "RightLowerLeg": (55, 0, 0),
+    "LeftFoot": (-18, 0, 0),
+    "RightFoot": (-22, 0, 0),
+}
+
+
+def _giro_arriba(z, base=GUARDIA):
+    """Giro de los hombros (UpperTorso) sin mover la cadera: los pies quedan como en la guardia."""
+    x, y, _ = base["UpperTorso"]
+    return (x, y, z)
+
+
+def golpe_1(t):
+    # Jab derecho: carga (0-4), estira (6, Impacto) y vuelve (7-14).
+    # Los pies no se mueven: gira solo el torso y el peso pasa al pie de adelante (la cadera
+    # se corre adelante y la rodilla de adelante se dobla un poco más).
+    carga = con(
+        GUARDIA,
+        UpperTorso=_giro_arriba(-10),
+        RightUpperArm=(-22, -22, 18),
+        RightLowerArm=(-145, 0, 0),
+    )
+    pega = con(
+        GUARDIA,
+        raiz=(0, -0.06, -0.16),
+        LowerTorso=(14, 0, -20),
+        UpperTorso=_giro_arriba(32),
+        RightUpperArm=(-88, 4, -8),
+        RightLowerArm=(-4, 0, 0),
+        LeftLowerLeg=(66, 0, 0),
+        RightLowerLeg=(40, 0, 0),
+    )
+    return secuencia(t, 14, [(0, GUARDIA), (4, carga), (6, pega), (8, pega), (14, GUARDIA)])
+
+
+def golpe_2(t):
+    # Cross izquierdo: gira la cadera y estira el brazo izquierdo (Impacto 6).
+    carga = con(GUARDIA, UpperTorso=_giro_arriba(12), LeftUpperArm=(-32, 20, -15), LeftLowerArm=(-145, 0, 0))
+    pega = con(
+        GUARDIA,
+        raiz=(0, -0.05, -0.06),
+        LowerTorso=(12, 0, -20),
+        UpperTorso=_giro_arriba(-30),
+        LeftUpperArm=(-88, -4, 10),
+        LeftLowerArm=(-4, 0, 0),
+        RightUpperArm=(-35, 14, 20),
+        RightUpperLeg=(16, 6, 30),
+        RightFoot=(-25, 0, 0),
+    )
+    return secuencia(t, 14, [(0, GUARDIA), (4, carga), (6, pega), (8, pega), (14, GUARDIA)])
+
+
+def golpe_3(t):
+    # Gancho ascendente derecho: se agacha y sube con todo el cuerpo (Impacto 8).
+    abajo = con(
+        GUARDIA,
+        raiz=(0, 0, -0.15),
+        LowerTorso=(18, 0, -20),
+        UpperTorso=_giro_arriba(-12),
+        RightUpperArm=(-5, 18, 10),
+        RightLowerArm=(-95, 0, 0),
+        LeftUpperLeg=(-40, -6, 20),
+        RightUpperLeg=(-5, 6, 20),
+        LeftLowerLeg=(60, 0, 0),
+        RightLowerLeg=(55, 0, 0),
+    )
+    arriba = con(
+        GUARDIA,
+        raiz=(0, -0.04, 0.04),
+        LowerTorso=(-8, 0, -20),
+        UpperTorso=_giro_arriba(30),
+        Head=(-15, 0, 5),
+        RightUpperArm=(-150, 18, -5),
+        RightLowerArm=(-60, 0, 0),
+        LeftUpperLeg=(-15, -6, 15),
+        RightUpperLeg=(5, 6, 15),
+        LeftLowerLeg=(8, 0, 0),
+        RightLowerLeg=(8, 0, 0),
+        RightFoot=(-30, 0, 0),
+    )
+    return secuencia(t, 18, [(0, GUARDIA), (5, abajo), (8, arriba), (10, arriba), (18, GUARDIA)])
+
+
+def golpe_4(t):
+    # Patada giratoria que empuja: carga (0-8), da la vuelta y patea con la derecha (12,
+    # Impacto), termina la vuelta y cae en guardia (24).
+    carga = con(
+        GUARDIA,
+        raiz=(0, 0, -0.1),
+        LowerTorso=(10, 0, 30),
+        LeftUpperArm=(-30, -30, 0),
+        RightUpperArm=(-30, 30, 0),
+        LeftLowerLeg=(45, 0, 0),
+        RightLowerLeg=(40, 0, 0),
+    )
+    patada = {
+        "raiz": (0, 0, 0.02),
+        "LowerTorso": (0, -28, 180),
+        "UpperTorso": (0, 8, 0),
+        "Head": (0, 15, 0),
+        "LeftUpperArm": (-20, -55, 0),
+        "RightUpperArm": (-20, 60, 0),
+        "LeftLowerArm": (-60, 0, 0),
+        "RightLowerArm": (-60, 0, 0),
+        "LeftUpperLeg": (0, 6, 0),
+        "LeftLowerLeg": (12, 0, 0),
+        "RightUpperLeg": (-25, 95, 0),
+        "RightLowerLeg": (5, 0, 0),
+        "RightFoot": (30, 0, 0),
+    }
+    sigue = con(patada, LowerTorso=(5, -10, 270), RightUpperLeg=(-10, 40, 0), RightLowerLeg=(40, 0, 0))
+    fin = con(GUARDIA, LowerTorso=(6, 0, 340))
+    return secuencia(t, 24, [(0, GUARDIA), (8, carga), (12, patada), (14, patada), (18, sigue), (24, fin)])
+
+
+def golpe_aire(t):
+    """Ataque desde arriba (golpe en el aire): sube las rodillas, junta los puños sobre la
+    cabeza y los baja de un martillazo (Impacto 12); cae en guardia."""
+    # Preparación: se estira para arriba (puntas de pie, torso largo), puños arriba y abiertos
+    # hacia afuera (con el brazo arriba, +Y abre el izquierdo): no cruzan la cabeza.
+    arriba = {
+        "raiz": (0, 0.02, 0.07),
+        "LowerTorso": (-6, 0, 0),
+        "UpperTorso": (-6, 0, 0),
+        "Head": (-14, 0, 0),
+        "LeftUpperArm": (-168, 22, 0),
+        "RightUpperArm": (-168, -22, 0),
+        "LeftLowerArm": (-35, 0, 0),
+        "RightLowerArm": (-35, 0, 0),
+        "LeftUpperLeg": (-4, -3, 0),
+        "RightUpperLeg": (4, 3, 0),
+        "LeftFoot": (45, 0, 0),
+        "RightFoot": (45, 0, 0),
+    }
+    # Golpe: cae con todo, rodillas bien dobladas, torso adelante y los puños terminan abajo,
+    # cerca del piso.
+    abajo = {
+        "raiz": (0, -0.08, -0.36),
+        "LowerTorso": (50, 0, 0),
+        "UpperTorso": (15, 0, 0),
+        "Head": (-30, 0, 0),
+        "LeftUpperArm": (-35, 10, 0),
+        "RightUpperArm": (-35, -10, 0),
+        "LeftLowerArm": (-5, 0, 0),
+        "RightLowerArm": (-5, 0, 0),
+        "LeftUpperLeg": (-95, -8, 0),
+        "RightUpperLeg": (-60, 8, 0),
+        "LeftLowerLeg": (110, 0, 0),
+        "RightLowerLeg": (120, 0, 0),
+        "LeftFoot": (-15, 0, 0),
+        "RightFoot": (25, 0, 0),
+    }
+    return secuencia(t, 22, [(0, GUARDIA), (8, arriba), (12, abajo), (15, abajo), (22, GUARDIA)])
+
+
+BLOQUEO = con(
+    GUARDIA,
+    raiz=(0, 0, -0.1),
+    LowerTorso=(10, 0, -10),
+    Head=(10, 0, 5),
+    # Antebrazos cruzados delante de la cara.
+    LeftUpperArm=(-55, -8, -40),
+    RightUpperArm=(-55, 8, 40),
+    LeftLowerArm=(-95, 0, -35),
+    RightLowerArm=(-95, 0, 35),
+    LeftLowerLeg=(40, 0, 0),
+    RightLowerLeg=(35, 0, 0),
+)
+
+
+def bloqueo_inicio(t):
+    return secuencia(t, 4, [(0, GUARDIA), (4, BLOQUEO)])
+
+
+def bloqueo(t):
+    s = onda(t)
+    return con(BLOQUEO, raiz=(0, 0, -0.1 + s * 0.008), UpperTorso=(4 + s * 1.5, 0, 0))
+
+
+def parry(t):
+    # Corto y seco (distinto del bloqueo, que se queda quieto): en 3 cuadros los dos antebrazos
+    # empujan hacia afuera y adelante y el cuerpo da medio paso adelante (Impacto 3); aguanta
+    # hasta el 5 y vuelve a la guardia.
+    empuja = con(
+        GUARDIA,
+        raiz=(0, -0.12, -0.15),
+        LowerTorso=(14, 0, -20),
+        Head=(4, 0, 12),
+        LeftUpperArm=(-75, -18, -20),
+        RightUpperArm=(-75, 18, 20),
+        LeftLowerArm=(-45, 0, 0),
+        RightLowerArm=(-45, 0, 0),
+        LeftHand=(0, -15, 0),
+        RightHand=(0, 15, 0),
+        LeftUpperLeg=(-48, -6, 20),
+        LeftLowerLeg=(62, 0, 0),
+        RightUpperLeg=(14, 6, 20),
+    )
+    return secuencia(t, 12, [(0, GUARDIA), (3, empuja), (5, empuja), (12, GUARDIA)])
+
+
+def _dash(lean, brazos, piernas):
+    """Pose máxima de un dash: el cuerpo se inclina hacia donde va, brazos y piernas quedan
+    atrás (sin pasos: los pies juntos se deslizan)."""
+    return con(
+        GUARDIA,
+        raiz=(0, 0, -0.08),
+        LowerTorso=lean,
+        LeftUpperArm=brazos[0],
+        RightUpperArm=brazos[1],
+        LeftLowerArm=(-60, 0, 0),
+        RightLowerArm=(-60, 0, 0),
+        LeftUpperLeg=piernas,
+        RightUpperLeg=piernas,
+        LeftLowerLeg=(30, 0, 0),
+        RightLowerLeg=(30, 0, 0),
+    )
+
+
+DASH = {
+    "adelante": _dash((30, 0, 0), ((40, -10, 0), (40, 10, 0)), (15, 0, 0)),
+    "atras": _dash((-18, 0, 0), ((-55, -20, 0), (-55, 20, 0)), (-25, 0, 0)),
+    "izquierda": _dash((5, 22, 0), ((-30, -45, 0), (-10, 10, 0)), (5, 18, 0)),
+    "derecha": _dash((5, -22, 0), ((-10, -10, 0), (-30, 45, 0)), (5, -18, 0)),
+}
+
+
+def _hacer_dash(lado):
+    def dash(t):
+        return secuencia(t, 8, [(0, GUARDIA), (2, DASH[lado]), (5, DASH[lado]), (8, GUARDIA)])
+
+    return dash
+
+
+def golpe_liviano(t):
+    tira = con(
+        GUARDIA,
+        raiz=(0, 0.04, -0.05),
+        LowerTorso=(-6, 0, -25),
+        UpperTorso=(-8, 0, 0),
+        Head=(-25, 0, 20),
+    )
+    return secuencia(t, 10, [(0, GUARDIA), (2, tira), (4, tira), (10, GUARDIA)])
+
+
+def golpe_fuerte(t):
+    vuela = con(
+        GUARDIA,
+        raiz=(0, 0.15, -0.08),
+        LowerTorso=(-25, 0, -10),
+        UpperTorso=(-12, 0, 0),
+        Head=(-30, 0, 0),
+        LeftUpperArm=(-70, -60, 0),
+        RightUpperArm=(-70, 60, 0),
+        LeftLowerArm=(-20, 0, 0),
+        RightLowerArm=(-20, 0, 0),
+        LeftUpperLeg=(-35, -8, 0),
+        RightUpperLeg=(-10, 8, 0),
+        LeftLowerLeg=(30, 0, 0),
+    )
+    retoma = con(
+        GUARDIA,
+        raiz=(0, 0.25, -0.14),
+        LowerTorso=(25, 0, -15),
+        LeftLowerLeg=(55, 0, 0),
+        RightLowerLeg=(50, 0, 0),
+    )
+    return secuencia(t, 18, [(0, GUARDIA), (3, vuela), (7, vuela), (12, retoma), (18, GUARDIA)])
+
+
+def aturdido(t):
+    s, c = onda(t), cos(2 * pi * t)
+    return {
+        "raiz": (0, 0, -0.05 + abs(s) * 0.01),
+        "LowerTorso": (12 + c * 4, s * 6, 0),
+        "UpperTorso": (8, 0, 0),
+        "Head": (20 + c * 6, -s * 10, s * 8),
+        "LeftUpperArm": (5 + c * 6, -4, 0),
+        "RightUpperArm": (5 - c * 6, 4, 0),
+        "LeftLowerArm": (-15, 0, 0),
+        "RightLowerArm": (-15, 0, 0),
+        "LeftUpperLeg": (-8, -s * 4, 0),
+        "RightUpperLeg": (4, -s * 4, 0),
+        "LeftLowerLeg": (20 + c * 6, 0, 0),
+        "RightLowerLeg": (14 - c * 6, 0, 0),
+    }
+
+
+RODILLAS = {
+    "raiz": (0, 0, -0.33),
+    "LowerTorso": (35, 0, 0),
+    "UpperTorso": (15, 0, 0),
+    "Head": (5, 0, 0),
+    "LeftUpperArm": (-40, -8, 0),
+    "RightUpperArm": (-40, 8, 0),
+    "LeftLowerArm": (-10, 0, 0),
+    "RightLowerArm": (-10, 0, 0),
+    "LeftUpperLeg": (-35, -6, 0),
+    "RightUpperLeg": (-35, 6, 0),
+    "LeftLowerLeg": (125, 0, 0),
+    "RightLowerLeg": (125, 0, 0),
+    "LeftFoot": (35, 0, 0),
+    "RightFoot": (35, 0, 0),
+}
+# En el piso en cuatro patas (manos apoyadas, cabeza gacha).
+CUATRO = con(
+    RODILLAS,
+    raiz=(0, 0, -0.38),
+    LowerTorso=(70, 0, 0),
+    UpperTorso=(10, 0, 0),
+    Head=(-15, 0, 0),
+    LeftUpperArm=(-70, -8, 0),
+    RightUpperArm=(-70, 8, 0),
+    LeftLowerArm=(0, 0, 0),
+    RightLowerArm=(0, 0, 0),
+    LeftUpperLeg=(-60, -6, 0),
+    RightUpperLeg=(-60, 6, 0),
+    LeftLowerLeg=(120, 0, 0),
+    RightLowerLeg=(120, 0, 0),
+)
+EN_EL_PISO = con(CUATRO, Head=(-5, 0, 0))
+
+
+def derrota(t):
+    tambalea = con(
+        GUARDIA,
+        LowerTorso=(-12, 10, 0),
+        Head=(-25, 0, 10),
+        LeftUpperArm=(5, -20, 0),
+        RightUpperArm=(5, 20, 0),
+        LeftLowerArm=(-10, 0, 0),
+        RightLowerArm=(-10, 0, 0),
+    )
+    return secuencia(t, 40, [(0, GUARDIA), (8, tambalea), (20, RODILLAS), (30, CUATRO), (40, EN_EL_PISO)])
+
+
+def levantarse(t):
+    una = con(
+        RODILLAS,
+        raiz=(0, 0, -0.2),
+        LowerTorso=(30, 0, 0),
+        LeftUpperLeg=(-85, -6, 0),
+        LeftLowerLeg=(90, 0, 0),
+        LeftFoot=(-5, 0, 0),
+        LeftUpperArm=(-30, -10, 0),
+        RightUpperArm=(-10, 10, 0),
+    )
+    return secuencia(t, 30, [(0, EN_EL_PISO), (10, RODILLAS), (18, una), (26, GUARDIA), (30, GUARDIA)])
+
+
 # nombre: (función, cuadros, loop, prioridad en Roblox, cuadros clave para la tira)
 ANIMACIONES = {
     "quieto": (quieto, 60, True, "Core", (0, 27, 45)),
@@ -370,15 +761,77 @@ ANIMACIONES = {
     "volar-avanzando": (volar_avanzando, 30, True, "Movement", (0, 8, 15)),
     "nadar": (nadar, 40, True, "Movement", (0, 10, 20)),
     "flotar": (flotar, 60, True, "Movement", (0, 15, 30)),
+    # Combate (Puños).
+    "golpe-1": (golpe_1, 14, False, "Action", (4, 6, 11)),
+    "golpe-2": (golpe_2, 14, False, "Action", (4, 6, 11)),
+    "golpe-3": (golpe_3, 18, False, "Action", (5, 8, 14)),
+    "golpe-4": (golpe_4, 24, False, "Action", (8, 12, 20)),
+    "golpe-aire": (golpe_aire, 22, False, "Action", (8, 12, 18)),
+    "bloqueo-inicio": (bloqueo_inicio, 4, False, "Action", (0, 2, 4)),
+    "bloqueo": (bloqueo, 30, True, "Action", (0, 8, 15)),
+    "parry": (parry, 12, False, "Action", (1, 3, 8)),
+    "dash-adelante": (_hacer_dash("adelante"), 8, False, "Action", (1, 3, 7)),
+    "dash-atras": (_hacer_dash("atras"), 8, False, "Action", (1, 3, 7)),
+    "dash-izquierda": (_hacer_dash("izquierda"), 8, False, "Action", (1, 3, 7)),
+    "dash-derecha": (_hacer_dash("derecha"), 8, False, "Action", (1, 3, 7)),
+    "golpe-liviano": (golpe_liviano, 10, False, "Action", (0, 3, 7)),
+    "golpe-fuerte": (golpe_fuerte, 18, False, "Action", (2, 5, 13)),
+    "aturdido": (aturdido, 40, True, "Action", (0, 10, 20)),
+    "derrota": (derrota, 40, False, "Action", (8, 20, 40)),
+    "levantarse": (levantarse, 30, False, "Action", (0, 18, 30)),
+}
+
+# Nombre que se lee en la columna de la hoja (hoja.py); "/" corta la línea.
+ETIQUETAS = {
+    "golpe-1": "Golpe 1/jab derecho",
+    "golpe-2": "Golpe 2/cross izquierdo",
+    "golpe-3": "Golpe 3/gancho ascendente",
+    "golpe-4": "Golpe 4/patada giratoria",
+    "golpe-aire": "Ataque desde/arriba",
+    "bloqueo-inicio": "Bloqueo/(inicio)",
+    "bloqueo": "Bloqueo/(loop)",
+    "parry": "Parry",
+    "dash-adelante": "Dash/adelante",
+    "dash-atras": "Dash/atrás",
+    "dash-izquierda": "Dash/izquierda",
+    "dash-derecha": "Dash/derecha",
+    "golpe-liviano": "Recibe golpe/liviano",
+    "golpe-fuerte": "Recibe golpe/fuerte",
+    "aturdido": "Aturdido",
+    "derrota": "Derrota",
+    "levantarse": "Levantarse",
+}
+
+# Grupos para renders, GIFs y FBX (`-- renders combate`); sin grupo, todas.
+_COMBATE = ("golpe", "bloqueo", "parry", "dash", "aturdido", "derrota", "levantarse")
+GRUPOS = {
+    "locomocion": [n for n in ANIMACIONES if not n.startswith(_COMBATE)],
+    "combate": [n for n in ANIMACIONES if n.startswith(_COMBATE)],
 }
 
 # Trepar se ve desde atrás, como lo ve el jugador con la cámara del juego.
 GIRO_CAMARA = {"trepar": 150}
+# En el juego la cámara va detrás del personaje: el combate se mira de espaldas, un poco
+# corrido a su derecha para que se vea hasta dónde llega el golpe.
+GIRO_CAMARA.update({n: 135 for n in GRUPOS["combate"]})
 # GIFs a 30 fps (un cuadro por cuadro) y desde varias vistas: nombre -> {vista: giro de cámara}.
 GIF_VISTAS = {"trepar": {"atras": 150, "costado": 90}}
+GIF_VISTAS.update({n: {"atras": 135} for n in GRUPOS["combate"]})
 
-# Marcadores de paso (el código del cliente los usa para el polvo y el sonido de pisada).
-PASOS = {"caminar": (0, 16), "correr": (0, 10), "correr-rapido": (0, 7), "saltar-caer": (4,)}
+# Marcadores: "Paso" (polvo y sonido de pisada) e "Impacto" (cuando pega: daño, efecto, sonido
+# y sacudida de cámara salen de acá, no de un tiempo fijo).
+MARCADORES = {
+    "caminar": [(0, "Paso"), (16, "Paso")],
+    "correr": [(0, "Paso"), (10, "Paso")],
+    "correr-rapido": [(0, "Paso"), (7, "Paso")],
+    "saltar-caer": [(4, "Paso")],
+    "golpe-1": [(6, "Impacto")],
+    "golpe-2": [(6, "Impacto")],
+    "golpe-3": [(8, "Impacto")],
+    "golpe-4": [(12, "Impacto")],
+    "golpe-aire": [(12, "Impacto")],
+    "parry": [(3, "Impacto")],
+}
 
 
 def _a_local(pb, giro_mundo):
@@ -424,8 +877,8 @@ def crear_accion(arm, nombre):
         for pb in arm.pose.bones:
             pb.keyframe_insert("rotation_quaternion", frame=f)
             pb.keyframe_insert("location", frame=f)
-    for f in PASOS.get(nombre, ()):
-        accion.pose_markers.new("Paso").frame = f
+    for f, marca in MARCADORES.get(nombre, ()):
+        accion.pose_markers.new(marca).frame = f
     return accion
 
 
@@ -496,7 +949,7 @@ def _mirar_desde(escena, nombre):
             o.matrix_world = Matrix.Rotation(math.radians(60 - giro), 4, "Z") @ m
 
 
-def renders():
+def renders(grupo=None):
     bpy.ops.wm.open_mainfile(filepath=BLEND)
     escena = bpy.context.scene
     B.configurar_luz()
@@ -505,7 +958,8 @@ def renders():
     escena.view_settings.exposure = 1.2  # el cuerpo es azul oscuro: se pierde con la luz de los trajes
     arm = B.esqueleto()
     tiras = []
-    for nombre, (_, _, _, _, clave) in ANIMACIONES.items():
+    for nombre in GRUPOS.get(grupo, ANIMACIONES):
+        clave = ANIMACIONES[nombre][4]
         arm.animation_data.action = bpy.data.actions[nombre]
         _mirar_desde(escena, nombre)
         cuadros = []
@@ -521,10 +975,36 @@ def renders():
         tiras.append(tira)
     # Hoja: 2 animaciones por fila (6 cuadros), a la mitad de tamaño.
     filas = [tiras[i : i + 2] for i in range(0, len(tiras), 2)]
-    B.hoja(filas, os.path.join(B.RENDERS, "anim-base-hoja.png"), reducir=2)
+    sufijo = "" if grupo in (None, "locomocion") else f"-{grupo}"
+    # Lista para hoja.py, que arma la hoja con una columna de nombres a la izquierda.
+    with open(os.path.join(B.RENDERS, f"_hoja{sufijo}.txt"), "w", encoding="utf-8") as fh:
+        for nombre in GRUPOS.get(grupo, ANIMACIONES):
+            fh.write(f"{nombre}|{ETIQUETAS.get(nombre, nombre)}\n")
+    B.hoja(filas, os.path.join(B.RENDERS, f"anim-base-hoja{sufijo}.png"), reducir=2)
+    if grupo == "combate":
+        render_guardia()
 
 
-def cuadros_gif():
+def render_guardia():
+    """La guardia quieta en 3 vistas (frente, costado y espalda): renders/anim-base-guardia.png."""
+    escena = bpy.context.scene
+    arm = B.esqueleto()
+    arm.animation_data.action = None
+    poner_pose(arm, GUARDIA)
+    cuadros = []
+    for i, giro in enumerate((0, 90, 180)):
+        GIRO_CAMARA["_vista"] = giro
+        _mirar_desde(escena, "_vista")
+        ruta = os.path.join(B.RENDERS, f"_anim-base-guardia-{i}.png")
+        escena.render.filepath = ruta
+        bpy.ops.render.render(write_still=True)
+        cuadros.append(ruta)
+    B.hoja([cuadros], os.path.join(B.RENDERS, "anim-base-guardia.png"))
+    for r in cuadros:
+        os.remove(r)
+
+
+def cuadros_gif(grupo=None):
     """Cuadros chicos de cada animación (uno cada 2: 15 por segundo; las de GIF_VISTAS, todos
     los cuadros y una carpeta por vista) en renders/_gif/<nombre>/.
     Después gifs.py (Python común, con Pillow) los junta en renders/anim-base-<nombre>.gif."""
@@ -535,7 +1015,8 @@ def cuadros_gif():
     escena.render.resolution_x, escena.render.resolution_y = 300, 370
     escena.view_settings.exposure = 1.2
     arm = B.esqueleto()
-    for nombre, (_, cuadros, loop, _, _) in ANIMACIONES.items():
+    for nombre in GRUPOS.get(grupo, ANIMACIONES):
+        _, cuadros, loop, _, _ = ANIMACIONES[nombre]
         arm.animation_data.action = bpy.data.actions[nombre]
         fin = cuadros if loop else cuadros + 1  # el loop no repite el último (es igual al primero)
         vistas = GIF_VISTAS.get(nombre)
@@ -558,7 +1039,7 @@ def cuadros_gif():
 # ---------------------------------------------------------------------------
 
 
-def fbx():
+def fbx(grupo=None):
     bpy.ops.wm.open_mainfile(filepath=BLEND)
     escena = bpy.context.scene
     arm = B.esqueleto()
@@ -566,7 +1047,8 @@ def fbx():
     for o in escena.objects:
         o.select_set(o == arm)
     bpy.context.view_layer.objects.active = arm
-    for nombre, (_, cuadros, _, _, _) in ANIMACIONES.items():
+    for nombre in GRUPOS.get(grupo, ANIMACIONES):
+        cuadros = ANIMACIONES[nombre][1]
         arm.animation_data.action = bpy.data.actions[nombre]
         escena.frame_start, escena.frame_end = 0, cuadros
         bpy.ops.export_scene.fbx(
@@ -590,11 +1072,12 @@ def fbx():
 if __name__ == "__main__":
     pasos = sys.argv[sys.argv.index("--") + 1 :] if "--" in sys.argv else ["todo"]
     paso = pasos[0] if pasos else "todo"
+    grupo = pasos[1] if len(pasos) > 1 else None
     if paso in ("acciones", "todo"):
         acciones()
     if paso in ("renders", "todo"):
-        renders()
+        renders(grupo)
     if paso in ("gifs", "todo"):
-        cuadros_gif()
+        cuadros_gif(grupo)
     if paso == "fbx":
-        fbx()
+        fbx(grupo)

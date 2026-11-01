@@ -266,6 +266,26 @@ Config.Animaciones = {
 		VolarAvanzando = "rbxassetid://103610213581729",
 		Nadar = "rbxassetid://138733509877221",
 		Flotar = "rbxassetid://119656681494266",
+		-- Combate con Puños (P26-02). Prioridad Action, sin loop salvo Bloqueo y Aturdido.
+		-- Marcador "Impacto" (el daño, el efecto y el sonido salen de ahí): Golpe1 y Golpe2 en el
+		-- cuadro 6, Golpe3 en el 8, Golpe4 y GolpeAire en el 12, Parry en el 3.
+		Golpe1 = "rbxassetid://133686566945344", -- jab derecho
+		Golpe2 = "rbxassetid://101966461371052", -- cross izquierdo
+		Golpe3 = "rbxassetid://112917791311017", -- gancho ascendente
+		Golpe4 = "rbxassetid://118472703592935", -- patada giratoria
+		GolpeAire = "rbxassetid://74369993682946", -- ataque desde arriba
+		BloqueoInicio = "rbxassetid://123033100371951",
+		Bloqueo = "rbxassetid://109403848824174",
+		Parry = "rbxassetid://81961752475488",
+		DashAdelante = "rbxassetid://134725239036426",
+		DashAtras = "rbxassetid://102925445348654",
+		DashIzquierda = "rbxassetid://109830554880761",
+		DashDerecha = "rbxassetid://113261426359179",
+		GolpeLiviano = "rbxassetid://112287255919817",
+		GolpeFuerte = "rbxassetid://130947098767449",
+		Aturdido = "rbxassetid://92597864344330",
+		Derrota = "rbxassetid://119935981736480",
+		Levantarse = "rbxassetid://113046535730775",
 	},
 }
 
