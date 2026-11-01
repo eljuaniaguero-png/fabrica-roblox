@@ -433,60 +433,78 @@ def golpe_1(t):
 
 
 def golpe_2(t):
-    # Cross izquierdo: gira la cadera y estira el brazo izquierdo (Impacto 6).
-    carga = con(GUARDIA, UpperTorso=_giro_arriba(12), LeftUpperArm=(-32, 20, -15), LeftLowerArm=(-145, 0, 0))
+    # Cross izquierdo, más fuerte que el jab: cadera y torso giran 45° o más, el brazo se estira
+    # entero y el peso pasa al pie de adelante (Impacto 6). Los pies quedan en guardia: el giro
+    # de la cadera se compensa en las piernas (cadera + pierna = 0).
+    carga = con(
+        GUARDIA,
+        LowerTorso=(8, 0, -8),
+        LeftUpperLeg=(-36, -6, 8),
+        RightUpperLeg=(4, 6, 8),
+        UpperTorso=_giro_arriba(15),
+        LeftUpperArm=(-32, 26, -15),
+        LeftLowerArm=(-148, 0, 0),
+    )
     pega = con(
         GUARDIA,
-        raiz=(0, -0.05, -0.06),
-        LowerTorso=(12, 0, -20),
-        UpperTorso=_giro_arriba(-30),
-        LeftUpperArm=(-88, -4, 10),
-        LeftLowerArm=(-4, 0, 0),
-        RightUpperArm=(-35, 14, 20),
-        RightUpperLeg=(16, 6, 30),
-        RightFoot=(-25, 0, 0),
+        raiz=(0, -0.09, -0.17),
+        LowerTorso=(16, 0, -48),
+        LeftUpperLeg=(-40, -6, 48),
+        RightUpperLeg=(10, 6, 48),
+        LeftLowerLeg=(70, 0, 0),
+        RightLowerLeg=(35, 0, 0),
+        RightFoot=(-40, 0, 0),
+        UpperTorso=_giro_arriba(-25),
+        LeftUpperArm=(-90, 0, 12),
+        LeftLowerArm=(0, 0, 0),
+        RightUpperArm=(-30, -26, 14),
     )
     return secuencia(t, 14, [(0, GUARDIA), (4, carga), (6, pega), (8, pega), (14, GUARDIA)])
 
 
 def golpe_3(t):
-    # Gancho ascendente derecho: se agacha y sube con todo el cuerpo (Impacto 8).
+    # Gancho ascendente derecho: se agacha bien (rodillas dobladas, puño bajo) y explota hacia
+    # arriba (Impacto 8). Los pies no se juntan: las piernas mantienen la guardia (Z 20).
     abajo = con(
         GUARDIA,
-        raiz=(0, 0, -0.15),
-        LowerTorso=(18, 0, -20),
-        UpperTorso=_giro_arriba(-12),
-        RightUpperArm=(-5, 18, 10),
-        RightLowerArm=(-95, 0, 0),
-        LeftUpperLeg=(-40, -6, 20),
-        RightUpperLeg=(-5, 6, 20),
-        LeftLowerLeg=(60, 0, 0),
-        RightLowerLeg=(55, 0, 0),
+        raiz=(0, 0, -0.26),
+        LowerTorso=(26, 0, -20),
+        UpperTorso=_giro_arriba(-18),
+        RightUpperArm=(5, -10, 10),
+        RightLowerArm=(-90, 0, 0),
+        LeftUpperLeg=(-55, -6, 20),
+        RightUpperLeg=(-20, 6, 20),
+        LeftLowerLeg=(85, 0, 0),
+        RightLowerLeg=(80, 0, 0),
+        LeftFoot=(-30, 0, 0),
+        RightFoot=(-35, 0, 0),
     )
     arriba = con(
         GUARDIA,
-        raiz=(0, -0.04, 0.04),
+        raiz=(0, -0.04, -0.02),
         LowerTorso=(-8, 0, -20),
         UpperTorso=_giro_arriba(30),
         Head=(-15, 0, 5),
         RightUpperArm=(-150, 18, -5),
         RightLowerArm=(-60, 0, 0),
-        LeftUpperLeg=(-15, -6, 15),
-        RightUpperLeg=(5, 6, 15),
-        LeftLowerLeg=(8, 0, 0),
-        RightLowerLeg=(8, 0, 0),
-        RightFoot=(-30, 0, 0),
+        LeftUpperLeg=(-24, -6, 20),
+        RightUpperLeg=(10, 6, 20),
+        LeftLowerLeg=(22, 0, 0),
+        RightLowerLeg=(18, 0, 0),
+        RightFoot=(-35, 0, 0),
     )
     return secuencia(t, 18, [(0, GUARDIA), (5, abajo), (8, arriba), (10, arriba), (18, GUARDIA)])
 
 
 def golpe_4(t):
-    # Patada giratoria que empuja: carga (0-8), da la vuelta y patea con la derecha (12,
-    # Impacto), termina la vuelta y cae en guardia (24).
+    # Patada giratoria que empuja: carga (0-8), gira hacia su derecha y patea con la derecha
+    # (12, Impacto), termina la vuelta y cae en guardia (24). En el impacto la cadera está a
+    # -270° (= 90°): el costado derecho mira al rival y la pierna, que se abre a ese costado,
+    # apunta hacia adelante. La cabeza mira al rival (-90° respecto de la cadera).
     carga = con(
         GUARDIA,
         raiz=(0, 0, -0.1),
-        LowerTorso=(10, 0, 30),
+        LowerTorso=(10, 0, 15),
         LeftUpperArm=(-30, -30, 0),
         RightUpperArm=(-30, 30, 0),
         LeftLowerLeg=(45, 0, 0),
@@ -494,9 +512,10 @@ def golpe_4(t):
     )
     patada = {
         "raiz": (0, 0, 0.02),
-        "LowerTorso": (0, -28, 180),
+        # La inclinación va en X (ejes del mundo): el cuerpo se tira para atrás, lejos del rival.
+        "LowerTorso": (-28, 0, -270),
         "UpperTorso": (0, 8, 0),
-        "Head": (0, 15, 0),
+        "Head": (0, 15, -80),
         "LeftUpperArm": (-20, -55, 0),
         "RightUpperArm": (-20, 60, 0),
         "LeftLowerArm": (-60, 0, 0),
@@ -507,8 +526,14 @@ def golpe_4(t):
         "RightLowerLeg": (5, 0, 0),
         "RightFoot": (30, 0, 0),
     }
-    sigue = con(patada, LowerTorso=(5, -10, 270), RightUpperLeg=(-10, 40, 0), RightLowerLeg=(40, 0, 0))
-    fin = con(GUARDIA, LowerTorso=(6, 0, 340))
+    sigue = con(
+        patada,
+        LowerTorso=(-10, 0, -320),
+        Head=(0, 5, -30),
+        RightUpperLeg=(-10, 40, 0),
+        RightLowerLeg=(40, 0, 0),
+    )
+    fin = con(GUARDIA, LowerTorso=(8, 0, -380))
     return secuencia(t, 24, [(0, GUARDIA), (8, carga), (12, patada), (14, patada), (18, sigue), (24, fin)])
 
 
@@ -554,16 +579,22 @@ def golpe_aire(t):
 
 BLOQUEO = con(
     GUARDIA,
-    raiz=(0, 0, -0.1),
-    LowerTorso=(10, 0, -10),
-    Head=(10, 0, 5),
-    # Antebrazos cruzados delante de la cara.
-    LeftUpperArm=(-55, -8, -40),
-    RightUpperArm=(-55, 8, 40),
-    LeftLowerArm=(-95, 0, -35),
-    RightLowerArm=(-95, 0, 35),
-    LeftLowerLeg=(40, 0, 0),
-    RightLowerLeg=(35, 0, 0),
+    # Más agachado que la guardia (se distingue desde atrás) y la cabeza escondida.
+    raiz=(0, 0, -0.24),
+    LowerTorso=(16, 0, -10),
+    Head=(30, 0, 0),
+    # Codos juntos y antebrazos verticales cruzados delante de la cara: el brazo apunta adelante
+    # y un poco abajo, y el antebrazo sube derecho (-70 - 110 = vertical), inclinado para cruzar.
+    LeftUpperArm=(-70, 18, -38),
+    RightUpperArm=(-70, -18, 38),
+    LeftLowerArm=(-110, 0, -30),
+    RightLowerArm=(-110, 0, 30),
+    LeftUpperLeg=(-50, -6, 10),
+    RightUpperLeg=(-12, 6, 10),
+    LeftLowerLeg=(80, 0, 0),
+    RightLowerLeg=(76, 0, 0),
+    LeftFoot=(-28, 0, 0),
+    RightFoot=(-30, 0, 0),
 )
 
 
@@ -605,6 +636,7 @@ def _dash(lean, brazos, piernas):
         GUARDIA,
         raiz=(0, 0, -0.08),
         LowerTorso=lean,
+        Head=(10, 0, 0),
         LeftUpperArm=brazos[0],
         RightUpperArm=brazos[1],
         LeftLowerArm=(-60, 0, 0),
@@ -668,20 +700,27 @@ def golpe_fuerte(t):
 
 
 def aturdido(t):
+    """Se lee al instante: la cabeza da círculos lentos, el cuerpo se mece de un lado al otro,
+    las rodillas se aflojan y los brazos cuelgan y se balancean con atraso."""
     s, c = onda(t), cos(2 * pi * t)
+    tarde = onda(t, -0.15)
+    flojo = (1 - c) / 2  # 0 a 1: en la mitad del loop las rodillas ceden un poco más
     return {
-        "raiz": (0, 0, -0.05 + abs(s) * 0.01),
-        "LowerTorso": (12 + c * 4, s * 6, 0),
-        "UpperTorso": (8, 0, 0),
-        "Head": (20 + c * 6, -s * 10, s * 8),
-        "LeftUpperArm": (5 + c * 6, -4, 0),
-        "RightUpperArm": (5 - c * 6, 4, 0),
-        "LeftLowerArm": (-15, 0, 0),
-        "RightLowerArm": (-15, 0, 0),
-        "LeftUpperLeg": (-8, -s * 4, 0),
-        "RightUpperLeg": (4, -s * 4, 0),
-        "LeftLowerLeg": (20 + c * 6, 0, 0),
-        "RightLowerLeg": (14 - c * 6, 0, 0),
+        "raiz": (s * 0.04, 0, -0.08 - abs(s) * 0.05),
+        "LowerTorso": (14, s * 12, s * 6),
+        "UpperTorso": (10, -tarde * 6, 0),
+        # Círculo: adelante/atrás (X) y costado (Y) desfasados un cuarto de vuelta.
+        "Head": (22 + c * 14, s * 14, s * 6),
+        "LeftUpperArm": (6 + tarde * 8, 6 + tarde * 10, 0),
+        "RightUpperArm": (6 - tarde * 8, -6 + tarde * 10, 0),
+        "LeftLowerArm": (-8, 0, 0),
+        "RightLowerArm": (-8, 0, 0),
+        "LeftUpperLeg": (-18 - abs(s) * 14, -s * 8, 0),
+        "RightUpperLeg": (-12 - abs(s) * 14, -s * 8, 0),
+        "LeftLowerLeg": (30 + abs(s) * 30 + flojo * 6, 0, 0),
+        "RightLowerLeg": (26 + abs(s) * 30 + flojo * 6, 0, 0),
+        "LeftFoot": (-10 - abs(s) * 10, 0, 0),
+        "RightFoot": (-10 - abs(s) * 10, 0, 0),
     }
 
 
@@ -814,9 +853,11 @@ GIRO_CAMARA = {"trepar": 150}
 # En el juego la cámara va detrás del personaje: el combate se mira de espaldas, un poco
 # corrido a su derecha para que se vea hasta dónde llega el golpe.
 GIRO_CAMARA.update({n: 135 for n in GRUPOS["combate"]})
+# Los dash de costado, justo de espaldas: así se comparan en espejo.
+GIRO_CAMARA.update({"dash-izquierda": 180, "dash-derecha": 180})
 # GIFs a 30 fps (un cuadro por cuadro) y desde varias vistas: nombre -> {vista: giro de cámara}.
 GIF_VISTAS = {"trepar": {"atras": 150, "costado": 90}}
-GIF_VISTAS.update({n: {"atras": 135} for n in GRUPOS["combate"]})
+GIF_VISTAS.update({n: {"atras": GIRO_CAMARA[n]} for n in GRUPOS["combate"]})
 
 # Marcadores: "Paso" (polvo y sonido de pisada) e "Impacto" (cuando pega: daño, efecto, sonido
 # y sacudida de cámara salen de acá, no de un tiempo fijo).

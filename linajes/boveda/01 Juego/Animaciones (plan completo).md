@@ -174,25 +174,25 @@ Publicadas en Roblox (IDs en `Config.Animaciones.base`). FBX en `linajes/arte/an
 
 Pendiente: conectarlas al Animate del cuerpo propio (hoy usa las de Roblox) y probar que los pies no patinen al caminar y correr (se ajusta la velocidad de la animación a la WalkSpeed).
 
-### P26-02 Combate del jugador (Puños) (1 nov, APROBADA y publicada)
+### P26-02 Combate del jugador (Puños) (1 nov, APROBADA y publicada con las correcciones de la cuarta vuelta)
 17 animaciones a 30 fps, mismo script y mismo `.blend` que la locomoción. Todas salen de la **guardia** y vuelven a ella: pierna izquierda adelante, rodillas bien flexionadas, codos pegados al cuerpo (cuidan las costillas), puños a la altura del mentón y la cabeza apenas agachada detrás. Se muestran **de espaldas** (un poco corridas a la derecha), como las ve el jugador con la cámara del juego. El script revisó cuadro por cuadro: ninguna mano entra en la cabeza.
 
 | Animación | Cuadros | Loop | Marcador | Qué hace |
 |---|---|---|---|---|
 | golpe-1 | 14 | no | Impacto 6 | jab derecho: carga 0-4, estira, vuelve 7-14; los pies no se mueven (gira solo el torso) y el peso pasa al pie de adelante |
-| golpe-2 | 14 | no | Impacto 6 | cross izquierdo con giro de cadera |
-| golpe-3 | 18 | no | Impacto 8 | se agacha y sube con un gancho derecho |
-| golpe-4 | 24 | no | Impacto 12 | carga 0-8, vuelta completa con patada derecha, cae en guardia |
+| golpe-2 | 14 | no | Impacto 6 | cross izquierdo, más fuerte que el jab: cadera girada 48° y hombros 25° más, brazo entero estirado, peso al pie de adelante, pies en guardia |
+| golpe-3 | 18 | no | Impacto 8 | se agacha bien (rodillas dobladas, puño bajo) y explota hacia arriba con el gancho derecho; pies en guardia |
+| golpe-4 | 24 | no | Impacto 12 | carga 0-8, gira hacia su derecha y patea con la derecha; en el impacto la pierna apunta al rival (medido: 86 % hacia adelante y 50 % hacia arriba); cae en guardia |
 | golpe-aire | 22 | no | Impacto 12 | ataque desde arriba: se estira en puntas de pie con los puños arriba y cae con todo, rodillas bien dobladas, torso adelante y puños cerca del piso |
 | bloqueo-inicio | 4 | no | — | sube los antebrazos |
-| bloqueo | 30 | sí | — | antebrazos cruzados delante de la cara, respira |
+| bloqueo | 30 | sí | — | más agachado que la guardia, cabeza escondida, codos juntos y antebrazos verticales cruzados delante de la cara; respira |
 | parry | 12 | no | Impacto 3 | corto y seco: en 3 cuadros los dos antebrazos empujan afuera y adelante con medio paso adelante, aguanta hasta el 5 y vuelve a la guardia |
 | dash-adelante / atras / izquierda / derecha | 8 c/u | no | — | se inclina hacia donde va, sin pasos |
 | golpe-liviano | 10 | no | — | la cabeza y el torso se van para atrás |
 | golpe-fuerte | 18 | no | — | lo empujan, abre los brazos, retoma agachado |
-| aturdido | 40 | sí | — | encorvado, se bambolea, cabeza floja |
+| aturdido | 40 | sí | — | cabeza en círculos lentos, el cuerpo se mece de lado a lado, rodillas que se aflojan, brazos colgando |
 | derrota | 40 | no | — | tambalea, cae de rodillas y queda en cuatro patas |
-| levantarse | 30 | no | — | de cuatro patas a una rodilla y a la guardia |
+| levantarse | 30 | no | — | de cuatro patas a una rodilla y a la guardia: dura 1 s (30 cuadros); el GIF también dura 0,94 s, si se ve más lento es el visor |
 
 Prioridad en Roblox: Action en todas. La guardia en 3 vistas (frente, costado y espalda):
 
