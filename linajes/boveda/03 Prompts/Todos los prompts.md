@@ -18,19 +18,22 @@ Hay dos listas: **Beta** (la primera versión, solo Puerto Óxido, ver [[Plan po
 
 # BETA: Puerto Óxido
 
+> [!success] Reescritos al detalle (1 nov)
+> Los 29 prompts que faltan de la Beta siguen la [[Plantilla de prompt]]: cada uno trae su alcance en la Beta, qué leer, **2 o más prompts para Gemini** (en inglés, con lo que tiene que salir arriba en castellano), el bloque para Claude, las reglas de Roblox, los puntos de control con casillas para dar el OK y cómo lo probás vos. Los de código guardan además el alcance completo para la Post beta.
+
 ## 1. Personajes y cuerpo (Blender)
 - [x] [[P20f Cuerpo propio del jugador]]
 - [x] [[P20b Piezas del creador de personaje]] (solo 4 cascos, 4 capas y 4 petos)
 - [x] [[P13 El Albatros]]
 - [x] [[P19 NPCs]] (solo Tano)
 - [x] [[P20 Enemigos comunes]] (solo los 3 matones del puerto y el matón con implantes)
-- [ ] [[P20d Civiles y testigos]] (solo los del puerto y la policía)
+- [x] [[P20d Civiles y testigos]] (solo los del puerto y la policía)
 
 ## 2. Lugar (Blender)
-- [ ] [[P20c Mapa del mundo abierto]] (solo Puerto Óxido, con los puentes cortados)
-- [ ] [[P21 Puerto Óxido]]
-- [ ] [[P20e Vehículos y objetos de la calle viva]] (solo lo del puerto)
-- [ ] [[P25d Interiores donde se puede entrar]] (solo el taller de Tano, el galpón de Remache y el almacén del atraco)
+- [x] [[P20c Mapa del mundo abierto]] (solo Puerto Óxido, con los puentes cortados)
+- [x] [[P21 Puerto Óxido]]
+- [x] [[P20e Vehículos y objetos de la calle viva]] (solo lo del puerto)
+- [ ] [[P25d Interiores donde se puede entrar]] (solo el taller de Tano, que se rehace de cero, el galpón de Remache y el almacén del atraco)
 
 ## 3. Animaciones (Blender)
 - [ ] [[P26 Animaciones base del jugador]] (estilo Puños)
