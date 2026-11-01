@@ -8,8 +8,8 @@ Planta de 40 x 32 studs (el prompt dice 40 x 30; 32 para que entre en la grilla 
 16 y techo a dos aguas con cumbrera a 22 (entra en el lote de 50 x 22 x 40 del graybox). Frente a la calle
 en -Y: portón de 12 x 10 a la izquierda (delante del elevador) y abierto. Oeste: elevador amarillo con
 el auto. Fondo: banco de roble con morsa y el gancho a medio armar, tablero de herramientas arriba.
-Centro: mesa de fabricación con pantalla cian. Este: entrepiso de madera con escalera, catre y radio;
-debajo, tambores. Esquina del frente al este: carro rojo, compresor y locker verde; puerta lateral en el
+Este: entrepiso de madera con escalera, catre y radio; debajo, la mesa de fabricación con la compu.
+Tambores en la esquina del fondo al oeste. Esquina del frente al este: carro rojo, compresor y locker verde; puerta lateral en el
 este. Piso de losas con rejilla y chapa semilla de melón. Dos lámparas colgantes cálidas.
 """
 
@@ -39,7 +39,7 @@ ENTREPISO = 8  # altura del piso del entrepiso
 MARCADORES = {
     "PuntoNPC_Tano": (-8, -4, 0),  # junto al auto
     "PuntoNPC_Nico": (2, 10, 0),  # junto al banco
-    "Banco": (2, -4, 0),  # mesa de fabricación
+    "Banco": (15.5, 3.4, 0),  # mesa de fabricación, abajo del entrepiso
     "Cama": (16, 12, ENTREPISO),  # catre del entrepiso
     "Salida": (-10, -17, 0),  # portón
     "Salida_Lateral": (21, PUERTA_Y, 0),
@@ -119,8 +119,8 @@ def muebles():
     o.append(pieza("Banco_Gancho", [((1.6, 0.8, 0.6), (bx + 2, by - 0.3, 3.85))], "acero", cilindros=[(0.35, 1.4, (bx + 0.4, by - 0.2, 3.9), "X", 10)]))
     o.append(pieza("Tablero", [((14, 0.3, 5), (bx, HY - G - 0.15, 8.5))], "hierro"))
     o.append(pieza("Ventana_Fondo", [((5, 0.3, 3.4), (bx, HY - G - 0.3, 13.2))], "neon-cian"))  # pantalla/ventana chica de la ref-1
-    # mesa de fabricación (centro) con pantalla
-    mx, my = 2, -4
+    # mesa de fabricación con la compu, abajo del entrepiso (la cama queda arriba)
+    mx, my = 15.5, 6.6
     o.append(pieza("MesaFabricacion", [((6, 4, 0.4), (mx, my, 3.4)), ((5.6, 3.6, 3.2), (mx, my, 1.6))], "roble"))
     o.append(pieza("MesaFabricacion_Pantalla", [((2.6, 0.2, 1.8), (mx, my + 1, 4.6), (-15, 0, 0))], "neon-cian"))
     # entrepiso este: piso de madera sobre 2 postes, baranda, escalera, catre y radio
@@ -137,7 +137,7 @@ def muebles():
     o.append(pieza("Escalera", esc, "madera-entrepiso"))
     o.append(pieza("Catre", [((6, 3, 0.8), (cx + 0.5, ey1 - 2, ENTREPISO + 1.2)), ((6, 3, 0.4), (cx + 0.5, ey1 - 2, ENTREPISO + 1.8))], "tela-oscura"))
     o.append(pieza("Radio", [((1.6, 0.8, 1.0), (ex0 + 1.5, ey0 + 2, ENTREPISO + 0.5))], "acero"))
-    o.append(pieza("Tambores", [], "oxido", cilindros=[(1.2, 3.6, (x, y, 0), "Z", 14) for x, y in ((15, 8), (17.6, 7.4))]))
+    o.append(pieza("Tambores", [], "oxido", cilindros=[(1.2, 3.6, (x, y, 0), "Z", 14) for x, y in ((-17.6, 12.4), (-15, 13))]))
     # esquina del frente al este: carro rojo, compresor y locker verde
     o.append(pieza("CarroHerramientas", [((3, 2, 3.4), (9, -11, 1.9)), ((3.2, 2.2, 0.2), (9, -11, 3.7))], "rojo-herramienta", cilindros=[(0.3, 0.3, (9 + sx * 1.2, -11 + sy * 0.8, 0), "Z", 8) for sx in (-1, 1) for sy in (-1, 1)]))
     o.append(pieza("Compresor", [((3, 1.6, 0.4), (14.5, -13.5, 0.2))], "rojo-herramienta", cilindros=[(1.1, 3.2, (13, -13.5, 1.5), "X", 12)]))
