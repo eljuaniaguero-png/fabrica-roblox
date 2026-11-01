@@ -58,6 +58,13 @@ MATS = {
     "goma": {"hex": "16171a", "rugosidad": 0.9},
     "madera-entrepiso": {"hex": "5a4632", "rugosidad": 0.8},
     "neon-calido": {"hex": "f2a23a", "brillo": 4.0},
+    "neon-gancho": {"hex": "3fe0f0", "brillo": 3.0},
+    "vidrio-sucio": {"hex": "55625e", "rugosidad": 0.25, "metal": 0.1},
+    "aceite": {"hex": "15130f", "rugosidad": 0.15},
+    "charco": {"hex": "1f2a33", "rugosidad": 0.02, "metal": 0.3},
+    "grieta": {"hex": "2e2b28", "rugosidad": 0.95},
+    "carton": {"hex": "9a7448", "rugosidad": 0.9},
+    "lluvia": {"hex": "9fb4c4", "rugosidad": 0.2},
 }
 
 
@@ -70,6 +77,7 @@ def estructura():
             continue
         o.append(pieza(f"Pared_Frente_{x}", [((MOD, G, ALTO), (x, -HY + G / 2, ALTO / 2))], "chapa"))
     o.append(pieza("Porton_Dintel", [((12, G, ALTO - 10), ((PORTON_X[0] + PORTON_X[1]) / 2, -HY + G / 2, 10 + (ALTO - 10) / 2))], "chapa"))
+    o.append(pieza("Porton_Cortina", [((12, 0.2, 0.55), ((PORTON_X[0] + PORTON_X[1]) / 2, -HY + 0.4, 5.3 + k * 0.6)) for k in range(8)], "chapa"))  # abierto a medias
     o.append(pieza("Porton_Rollo", [], "chapa", cilindros=[(0.9, 12.4, (PORTON_X[0] - 0.2, -HY - 0.6, 10.9), "X", 12)]))
     # fondo (+Y)
     for x in range(-16, 17, 8):  # en tramos de 8 (se hornean a 512)
@@ -120,9 +128,13 @@ def muebles():
     bx, by = 2, HY - G - 1.6
     o.append(pieza("Banco", [((16, 3.2, 0.5), (bx, by, 3.3)), ((15.6, 3, 3), (bx, by + 0.1, 1.5))], "roble"))
     o.append(pieza("Banco_Morsa", [((1.2, 1.4, 1.0), (bx - 6, by - 0.6, 4.05))], "acero"))
-    o.append(pieza("Banco_Gancho", [((1.6, 0.8, 0.6), (bx + 2, by - 0.3, 3.85))], "acero", cilindros=[(0.35, 1.4, (bx + 0.4, by - 0.2, 3.9), "X", 10)]))
+    # pieza a medio desarmar (un alternador abierto con sus partes alrededor) y latas de pintura y aceite
+    o.append(pieza("Banco_Pieza", [((1.2, 1.0, 0.7), (bx + 1.4, by - 0.2, 3.9)), ((0.5, 0.3, 0.12), (bx + 0.2, by - 0.6, 3.61)), ((0.3, 0.3, 0.3), (bx + 2.6, by - 0.7, 3.7))], "acero",
+                   cilindros=[(0.45, 0.8, (bx + 2.0, by + 0.4, 3.55), "Z", 12), (0.2, 0.15, (bx + 0.8, by - 0.9, 3.55), "Z", 8), (0.15, 0.1, (bx + 3.0, by + 0.2, 3.55), "Z", 8)]))
+    o.append(pieza("Banco_Latas", [], "rojo-herramienta", cilindros=[(0.35, 0.8, (bx + x, by + 0.6, 3.55), "Z", 12) for x in (4.0, 4.8)] + [(0.3, 0.6, (bx + 4.4, by - 0.2, 3.55), "Z", 12)]))
     o.append(pieza("Tablero", [((14, 0.3, 5), (bx, HY - G - 0.15, 8.5))], "hierro"))
-    o.append(pieza("Ventana_Fondo", [((5, 0.3, 3.4), (bx, HY - G - 0.3, 13.2))], "neon-cian"))  # pantalla/ventana chica de la ref-1
+    o.append(pieza("Ventana_Marco", [((5, 0.3, 0.3), (bx, HY - G - 0.25, z)) for z in (11.65, 14.75)] + [((0.3, 0.3, 3.4), (bx + sx * 2.35, HY - G - 0.25, 13.2)) for sx in (-1, 1)] + [((0.15, 0.3, 2.8), (bx, HY - G - 0.25, 13.2))], "hierro"))
+    o.append(pieza("Glass_Ventana_Fondo", [((4.4, 0.1, 2.8), (bx, HY - G - 0.2, 13.2))], "vidrio-sucio"))  # ventanita sucia
     # escritorio de la compu contra la pared este, abajo del entrepiso, con silla (la compu mira al taller)
     dx, dy = HX - G - 1.6, 9  # escritorio de 3,2 de fondo x 6 de largo, pegado a la pared
     esc = [((3.2, 6, 0.3), (dx, dy, 3.15))]  # tapa
@@ -157,6 +169,8 @@ def muebles():
     o.append(pieza("Cama_Frazada", [((4.2, 3.3, 0.2), (kx - 1.1, ky, ENTREPISO + 1.9))], "porton-verde"))
     o.append(pieza("Cajon", [((1.6, 1.6, 1.6), (ex0 + 1.4, ky - 3.2, ENTREPISO + 0.8))], "madera-entrepiso"))
     o.append(pieza("Radio", [((1.4, 0.7, 0.9), (ex0 + 1.4, ky - 3.2, ENTREPISO + 2.05))], "acero"))
+    # 5) cajas de cartón en el entrepiso
+    o.append(pieza("Cajas", [((2.2, 2.0, 1.6), (16.4, 6.6, ENTREPISO + 0.8)), ((1.6, 1.6, 1.2), (16.6, 6.8, ENTREPISO + 2.2)), ((1.8, 1.8, 1.4), (18.2, 7.0, ENTREPISO + 0.7))], "carton"))
     o.append(pieza("Tambores", [], "oxido", cilindros=[(1.2, 3.6, (x, y, 0), "Z", 14) for x, y in ((-17.6, 12.4), (-15, 13))]))
     # esquina del frente al este: carro rojo, compresor y locker verde
     # carro de herramientas rojo con ruedas de verdad (los cajones miran al taller)
@@ -171,13 +185,59 @@ def muebles():
     o.append(pieza("Locker", [((3, 2.2, 7), (HX - G - 1.5, -HY + G + 1.2, 3.5))], "verde-locker"))
     # piso: rejilla y chapa semilla de melón (finitas, apoyadas)
     o.append(pieza("Piso_Rejilla", [((3, 1.4, 0.08), (-2, -9, 0.04))], "hierro"))
-    o.append(pieza("Piso_Chapa", [((6, 3.6, 0.06), (9, -5, 0.03))], "hierro"))
     # lámparas colgantes cálidas (cadena + pantalla + foco Neon_)
     for i, x in enumerate((-8, 10)):
         # cuelgan del tirante de la cercha (y = -4, z = 16 - 0,3)
         o.append(pieza(f"Lampara{i}", [((0.15, 0.15, 1.0), (x, -4, ALTO - 0.8))], "hierro", cilindros=[(1.3, 0.8, (x, -4, 14.5), "Z", 12, 0.4)]))
         o.append(pieza(f"Neon_Lampara{i}", [((0.6, 0.6, 0.4), (x, -4, 14.3))], "neon-calido"))
     return o
+
+
+def abrir_capo(car, ey, z):
+    """Saca las caras de arriba del capó (de y < -3,5 respecto del centro del auto) para que se vea el motor."""
+    import bmesh
+
+    bpy.context.view_layer.update()  # sin esto matrix_world todavía no tiene la posición nueva
+    car.data = car.data.copy()
+    bm = bmesh.new()
+    bm.from_mesh(car.data)
+    bm.normal_update()
+    mw = car.matrix_world
+    borrar = []
+    for f in bm.faces:
+        c = mw @ f.calc_center_median()
+        n = (mw.to_3x3() @ f.normal).normalized()
+        if c.y / B.STUD - ey < -3.4 and abs(n.z) > 0.4 and c.z / B.STUD - z > 2.2:  # la malla puede tener normales dadas vuelta
+            borrar.append(f)
+    bmesh.ops.delete(bm, geom=borrar, context="FACES")
+    bm.to_mesh(car.data)
+    bm.free()
+    return len(borrar)
+
+
+def lluvia_afuera(objeto):
+    """Deja solo las gotas que caen afuera del galpón (a los costados y adelante del frente)."""
+    import bmesh
+
+    bm = bmesh.new()
+    bm.from_mesh(objeto.data)
+    adentro = [v for v in bm.verts if abs(v.co.x / B.STUD) < HX + 1.5 and v.co.y / B.STUD > -HY - 1.0]
+    bmesh.ops.delete(bm, geom=adentro, context="VERTS")
+    bm.to_mesh(objeto.data)
+    bm.free()
+
+
+def motor(ex, ey, z):
+    """Vano del motor que se ve con el capó abierto: fondo oscuro, block con tapa de válvulas con nervios,
+    filtro de aire redondo, batería, radiador adelante y el disco de freno de la rueda sacada."""
+    piezas = [pieza("Auto_MotorFondo", [((5.8, 3.2, 0.2), (ex, ey - 5.0, z + 1.2))], "goma")]
+    blk = [((3.0, 1.8, 1.1), (ex - 0.4, ey - 4.8, z + 1.85)), ((2.6, 1.2, 0.3), (ex - 0.4, ey - 4.8, z + 2.55))]
+    blk += [((2.4, 0.12, 0.12), (ex - 0.4, ey - 4.8 + d, z + 2.75)) for d in (-0.4, -0.13, 0.13, 0.4)]  # nervios de la tapa
+    blk += [((5.4, 0.25, 1.4), (ex, ey - 6.45, z + 1.9))]  # radiador
+    piezas.append(pieza("Auto_Motor", blk, "acero", cilindros=[(0.75, 0.5, (ex + 1.6, ey - 4.4, z + 2.1), "Z", 14), (0.7, 0.4, (ex - 3.4 + 0.5, ey - 4.2, z + 1.25), "X", 12)]))
+    piezas.append(pieza("Auto_Bateria", [((1.2, 0.9, 0.9), (ex + 2.0, ey - 5.7, z + 1.75))], "negro"))
+    piezas.append(pieza("Auto_Mangueras", [_barra((ex + 1.1, ey - 4.8, z + 2.2), (ex + 1.8, ey - 6.3, z + 2.3), 0.18), _barra((ex - 1.9, ey - 4.8, z + 1.7), (ex - 2.2, ey - 6.3, z + 2.2), 0.18)], "goma"))
+    return piezas
 
 
 def auto():
@@ -191,13 +251,26 @@ def auto():
     ex, ey, z = -10, -2, 4.6
     h = [P.copia(fuente["Compacto_Carroceria"], ex, ey, 0, z)]
     h[0].name = "Auto_Carroceria"
-    for n, nuevo in (("Auto_Vidrios", "Glass_Auto_Vidrios"), ("Auto_Faros", "Neon_Auto_Faros"), ("Auto_Stop", "Neon_Auto_Stop")):
+    for n, nuevo in (("Auto_Vidrios", "Glass_Auto_Vidrios"),):
         if n in fuente:
             c = P.copia(fuente[n], ex, ey, 0, z)
             c.name = nuevo
             h.append(c)
+    # capó abierto: se sacan las caras de arriba del capó y se agrega la tapa levantada con el mismo material
+    car = h[0]
+    abrir_capo(car, ey, z)
+    capo = pieza("Auto_Capo", [((6.2, 3.3, 0.15), (ex, ey - 3.5 - 0.56, z + 3.8 + 1.55), (-70, 0, 0))], "hierro")
+    capo.data.materials.clear()
+    capo.data.materials.append(car.active_material)
+    h.append(capo)
+    h += motor(ex, ey, z)
+    h.append(pieza("Neon_Auto_Faros", [((1.2, 0.1, 0.5), (ex + sx * 2.4, ey - 6.95, z + 2.0)) for sx in (-1, 1)], "neon-calido"))
     for i, (sx, sy) in enumerate(((-1, -1), (-1, 1), (1, -1), (1, 1))):
-        r = P.copia(fuente["Civil_Rueda"], ex + sx * 3.4, ey + sy * 4.2, 0 if sx > 0 else 180, z)
+        if i == 0:  # la de adelante a la izquierda está desmontada, apoyada en la columna del elevador
+            r = P.copia(fuente["Civil_Rueda"], ex - 5.6, ey - 4.3, 0, 0.2)
+            r.rotation_euler.x -= 0.16
+        else:
+            r = P.copia(fuente["Civil_Rueda"], ex + sx * 3.4, ey + sy * 4.2, 0 if sx > 0 else 180, z)
         r.name = f"Auto_Rueda{i}"
         h.append(r)
     for o in fuente.values():
@@ -245,7 +318,7 @@ def revisar(objs):
     bpy.context.view_layer.update()
     estructura = ("Pared", "Piso", "Techo", "Cerchas", "Hastial", "Porton")
     juntos = {("Elevador", "Auto"), ("Elevador", "Auto_Ruedas"), ("Auto", "Auto_Ruedas"), ("Banco", "Banco_Morsa"), ("Banco", "Banco_Gancho"),
-              ("Columnas", "Correas"), ("Entrepiso", "Entrepiso_Baranda"), ("Entrepiso", "Cama"), ("Entrepiso", "Cajon"), ("Cajon", "Radio"),
+              ("Columnas", "Correas"), ("Cables", "Cerchas"), ("Auto", "Glass"), ("Tablero", "Tablero_Gancho"), ("Banco", "Banco_Pieza"), ("Banco", "Banco_Latas"), ("Entrepiso", "Cajas"), ("Ventana", "Glass"), ("Entrepiso", "Entrepiso_Baranda"), ("Entrepiso", "Cama"), ("Entrepiso", "Cajon"), ("Cajon", "Radio"),
               ("Entrepiso", "Escalera"), ("CarroHerramientas", "CarroHerramientas"), ("Compresor", "Compresor")}
     cajas = {}
     for o in objs:
@@ -256,12 +329,12 @@ def revisar(objs):
     cruces, flotan = [], []
     for i, a in enumerate(nombres):
         mna, mxa = cajas[a]
-        if not a.startswith(estructura) and not a.startswith(("Neon_", "Lampara", "Tablero", "Ventana", "Entrepiso", "Cama", "Cajon", "Radio", "Escalera", "Banco_", "CarroHerramientas")) and 0.03 < mna[2] < 0.6:
+        if not a.startswith(estructura) and not a.startswith(("Neon_", "Lampara", "Tablero", "Ventana", "Entrepiso", "Cama", "Cajon", "Radio", "Escalera", "Banco_", "CarroHerramientas", "Cajas", "Glass_", "Cables")) and 0.03 < mna[2] < 0.6:
             flotan.append((a, round(mna[2], 2)))
         for b in nombres[i + 1 :]:
             if a.startswith(estructura) and b.startswith(estructura):
                 continue
-            if a.startswith(("Ondas", "Zocalo")) or b.startswith(("Ondas", "Zocalo")):
+            if a.startswith(("Ondas", "Zocalo", "Piso_Manchas", "Piso_Charco", "Piso_Grietas")) or b.startswith(("Ondas", "Zocalo", "Piso_Manchas", "Piso_Charco", "Piso_Grietas")):
                 continue
             base_a, base_b = a.split("_")[0], b.split("_")[0]
             if (base_a, base_b) in juntos or (base_b, base_a) in juntos or base_a == base_b or a.startswith(("Neon_", "Glass_")) or b.startswith(("Neon_", "Glass_")):
@@ -272,7 +345,7 @@ def revisar(objs):
     return cruces, flotan
 
 
-def camara(nombre, desde, hacia, lente=22):
+def camara(nombre, desde, hacia, lente=22, niebla=False, ocultar=()):
     escena = bpy.context.scene
     datos = bpy.data.cameras.new("Adentro")
     datos.lens = lente
@@ -286,8 +359,13 @@ def camara(nombre, desde, hacia, lente=22):
     escena.render.filepath = ruta
     nb = bpy.data.objects.get("Niebla")
     if nb:
-        nb.hide_render = True
+        nb.hide_render = not niebla
+    escondidos = [o for o in escena.objects if ocultar and o.name.startswith(ocultar) and not o.hide_render]
+    for o in escondidos:
+        o.hide_render = True
     bpy.ops.render.render(write_still=True)
+    for o in escondidos:
+        o.hide_render = False
     bpy.data.objects.remove(cam)
     return ruta
 
@@ -336,7 +414,7 @@ def boceto():
 
 RECETAS_TALLER = {
     "chapa": {"paneles": (0.6, 0.0), "remaches": True, "rayones": 0.6, "bordes": 0.6, "suciedad": 0.9, "grano": 0.4},
-    "concreto": {"paneles": (0.5, 0.5), "rayones": 0.1, "bordes": 0.3, "suciedad": 1.0, "grano": 0.7},
+    "concreto": {"rayones": 0.3, "bordes": 0.3, "suciedad": 1.0, "grano": 0.8},
     "roble": {"rayones": 0.5, "bordes": 0.5, "suciedad": 0.6, "grano": 1.0},
     "amarillo": {"paneles": (0.5, 0.5), "remaches": True, "rayones": 0.8, "bordes": 0.7, "suciedad": 0.7, "grano": 0.3},
     "rojo-herramienta": {"rayones": 0.8, "bordes": 0.6, "suciedad": 0.5, "grano": 0.2},
@@ -353,7 +431,7 @@ def detalles():
     o = []
     # chapa ondulada: nervios verticales cada 1 stud en la cara de adentro (cortados en portón, puerta y ventanas) y zócalo de cemento
     def nervios(nombre, eje, fijo, desde, hasta, huecos):
-        cajas = []
+        cajas, oxido, juntas = [], [], []
         k = desde + 0.5
         while k < hasta:
             tramos = [(1, ALTO)]
@@ -361,11 +439,23 @@ def detalles():
                 if a <= k <= b:
                     tramos = [(z, w) for z, w in ((1, z0), (z1, ALTO)) if w - z > 0.5]
             for z0, z1 in tramos:
-                tam = (0.35, 0.15, z1 - z0) if eje == "x" else (0.15, 0.35, z1 - z0)
-                pos = (k, fijo, (z0 + z1) / 2) if eje == "x" else (fijo, k, (z0 + z1) / 2)
-                cajas.append((tam, pos))
+                for lista, w0, w1 in ((oxido, z0, min(z1, 3)), (cajas, max(z0, 3), z1)):
+                    if w1 - w0 > 0.3:
+                        tam = (0.35, 0.15, w1 - w0) if eje == "x" else (0.15, 0.35, w1 - w0)
+                        pos = (k, fijo, (w0 + w1) / 2) if eje == "x" else (fijo, k, (w0 + w1) / 2)
+                        lista.append((tam, pos))
+                for zj in (6.5, 11.5):  # juntas de paneles con un remache por nervio
+                    if z0 < zj < z1:
+                        f2 = fijo + (0.1 if fijo < 0 else -0.1)
+                        tam = (1.0, 0.08, 0.3) if eje == "x" else (0.08, 1.0, 0.3)
+                        pos = (k, f2, zj) if eje == "x" else (f2, k, zj)
+                        juntas.append((tam, pos))
+                        f3 = fijo + (0.16 if fijo < 0 else -0.16)
+                        juntas.append(((0.14, 0.08, 0.14), (k, f3, zj)) if eje == "x" else ((0.08, 0.14, 0.14), (f3, k, zj)))
             k += 1
         o.append(pieza(nombre, cajas, "chapa"))
+        o.append(pieza(nombre.replace("Ondas_", "Ondas_Oxido_"), oxido, "oxido"))
+        o.append(pieza(nombre.replace("Ondas_", "Ondas_Juntas_"), juntas, "hierro"))
 
     nervios("Ondas_Frente", "x", -HY + G + 0.075, -HX + G, HX - G, [(PORTON_X[0], PORTON_X[1], 0, 10)])
     nervios("Ondas_Fondo", "x", HY - G - 0.075, -HX + G, HX - G, [])
@@ -393,6 +483,12 @@ def detalles():
     her.append(((3.0, 0.06, 0.8), (bx + 4.4, ty, 9.9)))
     mangos.append(((0.8, 0.14, 0.7), (bx + 6.1, ty, 9.9)))
     o.append(pieza("Tablero_Herramientas", her, "acero"))
+    # el gancho de Tano, colgado y destacado: lanzador, cañón, garra de 3 dedos y franja cian
+    gx, gz = bx + 5.9, 7.4
+    gan = [((1.4, 0.35, 0.9), (gx, ty - 0.05, gz)), ((0.25, 0.25, 0.25), (gx - 0.9, ty - 0.05, gz + 0.55))]
+    gan += [((0.15, 0.2, 0.7), (gx + 1.25, ty - 0.05, gz + d), (0, a, 0)) for d, a in ((0.35, -35), (0, 0), (-0.35, 35))]
+    o.append(pieza("Tablero_Gancho", gan, "acero", cilindros=[(0.22, 0.9, (gx + 0.6, ty - 0.05, gz), "X", 10)]))
+    o.append(pieza("Neon_Tablero_Gancho", [((1.2, 0.05, 0.12), (gx, ty - 0.24, gz - 0.2))], "neon-gancho"))
     o.append(pieza("Tablero_Mangos", mangos, "roble"))
     o.append(pieza("Tablero_Manguera", [], "goma", cilindros=[(0.9, 0.25, (bx - 5.6, ty, 7.0), "Y", 14, 0.9)]))
     # banco: frentes de cajones con manijas, mango de la morsa y trapo rojo
@@ -422,17 +518,42 @@ def detalles():
     # cama: frazada doblada al pie
     kx, ky = (11 + HX - G) / 2 + 0.4, HY - G - 2.1
     o.append(pieza("Cama_Pie", [((0.8, 3.3, 0.35), (kx - 2.8, ky, ENTREPISO + 2.0))], "porton-verde"))
-    # piso: manchas de aceite, grietas y barras de la rejilla (finitas, apoyadas)
-    man = [((r, r * 0.8, 0.02), (x, y, 0.01)) for x, y, r in ((-9, -6, 3.2), (-12, 2, 2.4), (5, -2, 1.6), (-4, 8, 2.0), (12, -9, 1.4))]
-    o.append(pieza("Piso_Manchas", man, "goma"))
-    gri = [((0.12, 3 + k % 3, 0.02), (-15 + k * 4.3, -12 + (k * 7) % 22, 0.012), (0, 0, 20 + k * 37)) for k in range(8)]
-    o.append(pieza("Piso_Grietas", gri, "goma"))
+    cab = []
+    for y, x0, x1, caida in ((4, -16, -6, 1.2), (12, 2, 10, 0.9), (-12, 4, 14, 1.0)):
+        pts = [(x0 + (x1 - x0) * s / 6, y + 0.35, ALTO - 0.35 - caida * 4 * (s / 6) * (1 - s / 6)) for s in range(7)]
+        cab += [_barra(pts[s], pts[s + 1], 0.1) for s in range(6)]
+    o.append(pieza("Cables", cab, "goma"))
+    # piso: manchas de aceite irregulares, un charco cerca del portón y grietas finas (todo apoyado, como calcomanías)
+    import random
+
+    random.seed(7)
+
+    def mancha(cx, cy, r, lados=14):
+        vs = []
+        for k in range(lados):
+            a = 2 * math.pi * k / lados
+            rr = r * random.uniform(0.6, 1.15)
+            vs.append((cx + math.cos(a) * rr, cy + math.sin(a) * rr * 0.8, 0.012))
+        return (vs, [tuple(range(lados))])
+
+    o.append(pieza("Piso_Manchas", [], "aceite", mallas=[mancha(x, y, r) for x, y, r in ((-9, -6, 1.8), (-12, 2, 1.3), (5, -2, 0.9), (-4, 8, 1.1), (12, -8, 0.8))]))
+    o.append(pieza("Piso_Charco", [], "charco", mallas=[mancha(-8, -12.5, 2.2, 18)]))
+    gri = []
+    for x, y, a0 in ((-14, -2, 20), (2, 4, 110), (8, -12, 60), (-2, 12, 150)):
+        px, py, a = x, y, math.radians(a0)
+        for s in range(5):
+            a += random.uniform(-0.6, 0.6)
+            nx, ny = px + math.cos(a) * 0.9, py + math.sin(a) * 0.9
+            gri.append(((0.06, 0.95, 0.01), ((px + nx) / 2, (py + ny) / 2, 0.006), (0, 0, math.degrees(a) - 90)))
+            px, py = nx, ny
+    o.append(pieza("Piso_Grietas", gri, "grieta"))
     o.append(pieza("Piso_RejillaBarras", [((0.15, 1.3, 0.1), (-3.2 + k * 0.4, -9, 0.11)) for k in range(7)], "hierro"))
     return o
 
 
 def detalle():
     import detalle as D
+    import random
 
     for k, v in RECETAS_TALLER.items():
         D.RECETAS[k] = v
@@ -451,11 +572,11 @@ def detalle():
     if "solo-chequeo" in sys.argv:
         return {"cruces": cruces, "flotan": flotan}
     # sin bisel ni horneado: piezas de más de 30 studs, de muchas partes chicas o finitas, y lo que brilla
-    largas = ("Techo", "Cerchas", "Hastial", "Ondas", "Zocalo", "Porton_Rollo", "Porton_Dintel", "Auto_")
+    largas = ("Techo", "Cerchas", "Hastial", "Ondas", "Zocalo", "Porton_Rollo", "Porton_Dintel", "Porton_Cortina", "Auto_", "Cables")
     chicas = ("Tablero_Herramientas", "Banco_", "CarroHerramientas_Cajones", "Locker_Detalle", "Piso_Manchas", "Piso_Grietas", "Piso_Rejilla", "Piso_Chapa",
               "Escalera", "Entrepiso_Baranda", "Elevador_Tacos", "Tambores_Aros", "MesaFabricacion_", "CarroHerramientas_",
-              "Compresor_Detalle", "Neumaticos", "Lampara", "Radio", "Silla", "Cama", "Porton_Guias", "Tablero")
-    hornear = [o for o in todo if not o.name.startswith(("Neon_", "Auto_", "Glass_")) and o.name not in ("MesaFabricacion_Pantalla", "Ventana_Fondo")]
+              "Compresor_Detalle", "Neumaticos", "Lampara", "Radio", "Silla", "Cama", "Porton_Guias", "Tablero", "Piso_Charco", "Ventana_Marco", "Cajas")
+    hornear = [o for o in todo if not o.name.startswith(("Neon_", "Auto_", "Glass_")) and o.name != "MesaFabricacion_Pantalla"]
     sin = tuple(o.name for o in hornear if o.name.startswith(largas + chicas))
     def lado(n):
         if n.startswith("Piso_") and n[5:].isdigit():
@@ -467,13 +588,37 @@ def detalle():
     D.terminar(hornear, presupuesto, ARCHIVO, lados=lados, sin_bisel=sin, sin_hornear=sin)
     man = maniqui()
     P.luz_puerto()
-    for nombre, (x, y, z), energia in (("Luz0", (-8, -4, 13.6), 700), ("Luz1", (10, -4, 13.6), 700), ("LuzEscritorio", (16, 9, ENTREPISO - 1.2), 150)):
-        d = bpy.data.lights.new(nombre, "POINT")
-        d.color = B.color("ffc27a")[:3]
+    # 1) dos lámparas cálidas con cono marcado (spots + niebla adentro), luz fría azul entrando por el portón y lluvia afuera
+    for nombre, (x, y, z), energia in (("Luz0", (-8, -4, 13.9), 1600), ("Luz1", (10, -4, 13.9), 1600)):
+        d = bpy.data.lights.new(nombre, "SPOT")
+        d.color = B.color("f2a23a")[:3]
         d.energy = energia
+        d.spot_size = math.radians(75)
+        d.spot_blend = 0.35
         luz = bpy.data.objects.new(nombre, d)
         bpy.context.scene.collection.objects.link(luz)
         luz.location = P.S(x, y, z)
+    d = bpy.data.lights.new("LuzEscritorio", "POINT")
+    d.color = B.color("ffc27a")[:3]
+    d.energy = 150
+    luz = bpy.data.objects.new("LuzEscritorio", d)
+    bpy.context.scene.collection.objects.link(luz)
+    luz.location = P.S(16, 9, ENTREPISO - 1.2)
+    d = bpy.data.lights.new("LuzCalle", "AREA")
+    d.color = B.color("4fb3f2")[:3]
+    d.energy = 9000
+    d.size = 12 * B.STUD
+    fria = bpy.data.objects.new("LuzCalle", d)
+    bpy.context.scene.collection.objects.link(fria)
+    a, b = P.S(-10, -26, 12), P.S(-6, -6, 0)
+    fria.matrix_world = Matrix.Translation(a) @ (b - a).to_track_quat("-Z", "Y").to_matrix().to_4x4()
+    random.seed(3)
+    gotas = [(random.uniform(-30, 30), random.uniform(-26, 14)) for _ in range(500)]
+    gotas = [(x, y) for x, y in gotas if abs(x) > HX + 1.5 or y < -HY - 1.0][:220]
+    pieza("Lluvia", [((0.025, 0.025, 1.4), (x, y, random.uniform(0, 22)), (8, 0, 0)) for x, y in gotas], "lluvia")
+    nb = bpy.data.objects.get("Niebla")
+    if nb:
+        nb.data.materials[0].node_tree.nodes["Principled Volume"].inputs["Density"].default_value = 0.02
     marcadores()
     bpy.ops.wm.save_as_mainfile(filepath=BLEND)
     sin_techo = [o for o in est if not o.name.startswith(("Techo", "Hastial", "Cerchas"))] + mue + det + [man]
@@ -484,6 +629,8 @@ def detalle():
         P.render_orto(ARCHIVO + "_detalle_corte", [o for o in sin_techo if not o.name.startswith(("Pared_Frente", "Ondas_Frente", "Porton", "Lampara", "Neon_"))], giro=-25, altura=35, niebla=False, solo=True),
         camara(ARCHIVO + "_detalle_banco", (2, 6, 6), (2, 15, 6), lente=24),
         camara(ARCHIVO + "_detalle_entrepiso", (3, -6, 7), (17, 9, 4), lente=20),
+        camara(ARCHIVO + "_detalle_como_ref", (-2, -36, 8), (-2, 0, 6.5), lente=15, niebla=True,
+               ocultar=("Pared_Frente", "Porton_Dintel", "Hastial_Frente", "Ondas_Frente", "Ondas_Oxido_Frente", "Ondas_Juntas_Frente")),
     ]
     return {"cruces": cruces, "flotan": flotan, "triangulos": B.contar_triangulos(todo), "renders": rs}
 

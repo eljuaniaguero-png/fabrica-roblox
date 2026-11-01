@@ -35,8 +35,19 @@ Graybox con tag `Lugar`. Modelo nuevo pendiente (P25d rehecho).
 ## Modelo (P25d-01, rehecho desde cero)
 **Estado: paso 2, detalle con texturas horneadas. Espera tu OK.** (El boceto se aprobó el 1 nov.) Planta de **40 x 32 studs** (32 en vez de 30 para que entre en la grilla de 4), paredes de chapa de 16 y techo a dos aguas con la cumbrera a 22 (entra en el lote de 50 x 22 x 40 del graybox). Chequeo de cruces: **0**. Cosas flotando: **0**. Triángulos del boceto: 1.868.
 
-**Detalle (paso 2, versión 2)**: 16.676 triángulos en total (tope 60.000). Chequeo de cruces: **0**. Cosas flotando: **0**. Horneado sin colgarse: piso en 4 losas a 1024, paredes en tramos de 8 a 512, objetos a 256. Las piezas largas y las de muchas partes chicas llevan solo material.
-Cambios de Juani (1 nov): el **auto** ahora es el compacto de la calle viva (con vidrios, faros y luces de freno) sobre un **elevador de dos columnas** con brazos y tacos. Las **paredes** son de chapa ondulada (nervios cada 1 stud) con zócalo de cemento, y se sacaron las columnas, las correas y el cartel. El **carro de herramientas** tiene cajones rojos con manijas y ruedas, y el **compresor** es un tanque horizontal sobre patas con el motor arriba. En el tablero, las llaves tienen boca y los martillos tienen mango de madera.
+**Detalle (paso 2, versión 3)**: 24.728 triángulos (tope 60.000). Chequeo de cruces: **0**. Cosas flotando: **0**. El horneado no se colgó.
+Cambios de Juani (1 nov, lista de 7):
+1. Portón abierto a medias. Luz fría `#4fb3f2` que entra en diagonal. Lluvia afuera. Dos lámparas cálidas `#f2a23a` con el cono de luz marcado.
+2. Piso de cemento continuo `#5d5a55`: grietas finas, 5 manchas de aceite irregulares, un charco cerca del portón y la rejilla. Se sacaron las rayas y los cuadrados sueltos.
+3. Auto con el capó abierto y el motor a la vista (block, tapa de válvulas, filtro, batería, radiador y mangueras). La rueda de adelante a la izquierda está desmontada y apoyada en la columna del elevador; se ve el disco de freno.
+4. El gancho colgado y destacado en el tablero. En el banco, una pieza a medio desarmar, el trapo rojo y latas.
+5. Entrepiso con cajas, la radio, y cables que cuelgan de las cerchas.
+6. Chapa con juntas remachadas y óxido abajo, en las 4 paredes.
+7. Sin el rectángulo blanco flotante. En el fondo, una ventanita sucia en vez de la pantalla celeste.
+
+**Vista desde el mismo ángulo que la referencia de Gemini:**
+![[interior-taller_detalle_como_ref.png]]
+![[interior-taller_detalle_auto.png]]
 ![[interior-taller_detalle_corte.png]]
 ![[interior-taller_detalle_puerta.png]]
 ![[interior-taller_detalle_entrepiso.png]]
