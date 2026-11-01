@@ -91,6 +91,14 @@ Graybox con tag `Lugar`. Modelo nuevo pendiente (P25d rehecho).
 ![[interior-taller_detalle_planta.png]]
 ![[interior-taller_detalle_fondo.png]]
 
+**Versión 7 (1 nov, noche)**: 40.094 triángulos, 0 cruces, 0 flotando. Cambios de Juani:
+- **Garras del gancho y cable fino.** Ahora son tubos curvos lisos, sin pedacitos con huecos.
+- **Cama.** Almohada blanda y frazada arrugada que cae por el costado, con una lamparita arriba.
+- **Grietas del piso.** Más finas y suaves (antes parecían líneas negras). Se sumó la manguera de aire del compresor: amarilla, gruesa y redonda, con su rollo en el piso.
+- **Ventanita del fondo y ventanas.** Vidrio con un poco de luz fría de afuera (antes era un panel negro).
+- **El círculo negro del tablero.** Ahora es una manguera amarilla enrollada colgada de un gancho.
+- **Cámaras rotas.** La del escritorio estaba adentro de un poste y la de los tambores pegada al auto (lo verde era la cola del auto). Las dos se movieron.
+
 **Referencias nuevas de Gemini (1 nov, tarde)**: vista de frente y hoja de objetos.
 ![[taller-gemini-ref-4.jpg]]
 ![[taller-gemini-ref-6.jpg]]
