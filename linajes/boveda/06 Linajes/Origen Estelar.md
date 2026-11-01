@@ -12,20 +12,20 @@ rareza: Legendario
 | Legendario | 2 % | Dorado `#f2a23a` y blanco `#e8e6e0` | **Centinela Solar** | Todo terreno: vuelo, fuerza y distancia |
 
 ## Cómo se siente
-Volás desde el nivel 1 (velocidad de vuelo 80 studs/s). Pegás fuerte de cerca y de lejos. **Debilidad**: en Ciudad Vórtice (noche eterna) y durante los Apagones, −25 % de daño y no podés volar más de 5 s seguidos. Se recarga con la luz del día.
+**Volás siempre**, desde el nivel 1 y sin límite de tiempo (60 studs/s). Pegás fuerte de cerca y de lejos. **Debilidad**: en Ciudad Vórtice (noche eterna) y durante los Apagones hacés −25 % de daño, pero **volás igual**.
 
 ## Habilidades base (Variante Normal: **Luz**)
 | Tecla | Nombre | Qué hace | Daño | Recarga | Energía | Alcance |
 |---|---|---|---|---|---|---|
 | Z | **Rayo estelar** | Rayo de los ojos de 1 s que atraviesa | 30 | 7 s | 25 | 50 studs |
 | X | **Caída solar** | Desde el aire, caés en picada: explosión de luz | 35 | 11 s | 25 | Radio 10 |
-| C | **Vuelo** | Despegás y volás 10 s (gasta energía en el aire) | — | 4 s | 2 por segundo | — |
+| C | **Escudo solar** | Escudo de luz 3 s que absorbe 100 de daño (el vuelo ya no ocupa tecla: está siempre) | — | 12 s | 20 | — |
 | (pasiva) | **Hijo del sol** | +20 % de daño de día, −25 % en la oscuridad | — | — | — | — |
 
 ## Las 4 Variantes
 | Variante | Rareza | Qué cambia | Habilidades propias | Condición secreta |
 |---|---|---|---|---|
-| **Luz** | Normal | Rayos dorados | Escudo solar, Destello | Al empezar |
+| **Luz** | Normal | Rayos dorados | Destello, Rayo doble | Al empezar |
 | **Gravedad estelar** | Rara | Atraés y aplastás | Órbita, Colapso | Volar **sobre las 3 ciudades** en un solo vuelo |
 | **Enana roja** | Rara | Calor: tus rayos queman | Llamarada, Corona | Vencer a **100 enemigos de día en Corona** |
 | **Estrella muerta** | Única | Luz negra con borde de fuego | Esquirla, Agujero blanco | Encontrar **las 6 antenas** del Proyecto Umbral (Revelación 4) |
@@ -35,6 +35,9 @@ Volás desde el nivel 1 (velocidad de vuelo 80 studs/s). Pegás fuerte de cerca 
 |---|---|---|---|---|
 | **Guardián** | Sol con escudo | *"Nadie cae mientras yo esté."* | Defensa y rescate: cargás aliados volando | **Sol naciente**: un escudo de luz para todos en 25 studs por 6 s |
 | **Supernova** | Sol que explota | *"Que todo arda en luz."* | Daño máximo, más energía | **Estallido**: explosión de luz enorme (150 de daño) y quedás 3 s sin poder |
+
+## Movimiento (sin límite)
+**Volar sin límite** a 60 studs/s desde el nivel 1 (mejoras: 80 studs/s, despegue instantáneo, llevar a un aliado). No gasta energía ni tiene tiempo límite. Las mejoras van en la fila **Movimiento** del árbol. Además, este Linaje usa el árbol de estadísticas común (vida, energía, fuerza, velocidad, defensa y recarga). Ver [[Estadísticas y movimiento]].
 
 ## Segundo poder
 - **Compatibles**: Eclipse, Herencia Olímpica, Fuerza Bruta.

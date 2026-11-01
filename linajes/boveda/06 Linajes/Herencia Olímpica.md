@@ -36,6 +36,9 @@ Invocás un **arma de luz** (lanza, espada o escudo según la Variante) que se s
 | **Campeón** | Casco con penacho | *"Uno contra todos."* | Duelos: más daño a un solo enemigo | **Duelo**: encerrás a un enemigo con vos en un círculo 8 s, ×1,5 de daño |
 | **Estratega** | Escudo con estrella | *"Juntos somos muro."* | Formación: aliados cerca reciben menos daño | **Falange**: escudos de luz para todo el grupo 6 s |
 
+## Movimiento (sin límite)
+**Salto del héroe** de 40 studs (mejoras: 60 studs, planear con la capa de luz, caída con relámpago). No gasta energía ni tiene tiempo límite. Las mejoras van en la fila **Movimiento** del árbol. Además, este Linaje usa el árbol de estadísticas común (vida, energía, fuerza, velocidad, defensa y recarga). Ver [[Estadísticas y movimiento]].
+
 ## Segundo poder
 - **Compatibles**: Fuerza Bruta, Origen Estelar, Velocista Cinético, Sangre Abisal.
 - **Técnicas**: Martillo del trueno (Fuerza Bruta, propuesta).

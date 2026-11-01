@@ -36,6 +36,9 @@ Juntás **Inercia** corriendo (barra de 0 a 100). Las habilidades gastan Inercia
 | **Rayo humano** | Flecha partida | *"Ya llegué."* | Más velocidad, recorrer paredes | **Mach**: 4 s a velocidad máxima golpeando todo lo que tocás |
 | **Reloj** | Reloj sin agujas | *"Todavía no pasó."* | Ralentiza a los demás al frenar | **Pausa**: el mundo se frena 2 s para todos menos para vos |
 
+## Movimiento (sin límite)
+**Correr** a 50 studs/s sin límite (mejoras: 70 studs/s, correr por paredes, correr sobre el agua). No gasta energía ni tiene tiempo límite. Las mejoras van en la fila **Movimiento** del árbol. Además, este Linaje usa el árbol de estadísticas común (vida, energía, fuerza, velocidad, defensa y recarga). Ver [[Estadísticas y movimiento]].
+
 ## Segundo poder
 - **Compatibles**: Electro, Reflejos, Herencia Olímpica.
 - **Técnicas**: Tormenta en movimiento (Electro), Mil cortes (Reflejos, propuesta).

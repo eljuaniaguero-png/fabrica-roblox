@@ -38,6 +38,9 @@ Pista (Gorrión): *"Dicen que en la cárcel aprendés a ver venir los golpes."*
 | **Sombra** | Ojo cerrado | *"No me vas a ver venir."* | Invisibilidad corta tras un dash; +50 % daño por la espalda | **Desvanecer**: 4 s invisible, el primer golpe hace ×3 |
 | **Maestro** | Dos espadas cruzadas | *"Cada golpe tuyo es mío."* | Contraataques en cadena: cada parry baja 1 s la recarga de todo | **Danza**: 3 s donde parás todo automáticamente y respondés cada golpe |
 
+## Movimiento (sin límite)
+**Parkour**: trepar paredes de 1 piso y rebotar (mejoras: 2 pisos, rodar al caer, rebote doble). No gasta energía ni tiene tiempo límite. Las mejoras van en la fila **Movimiento** del árbol. Además, este Linaje usa el árbol de estadísticas común (vida, energía, fuerza, velocidad, defensa y recarga). Ver [[Estadísticas y movimiento]].
+
 ## Segundo poder
 - **Compatibles**: Sombra Viva, Velocista Cinético, Electro.
 - **Técnicas combinadas**: Asesino fantasma (con Sombra Viva), Mil cortes (con Velocista Cinético, propuesta).

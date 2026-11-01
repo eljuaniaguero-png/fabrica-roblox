@@ -32,6 +32,9 @@ tags: [linajes, indice]
 | **Segundo poder** | Otro Linaje completo | **Despertar 2** (nivel 60), por 1 de 3 caminos: Transferencia (Brandt), Resonancia (Señal y Atalanta) o Núcleo artificial (Kessler y Okafor) |
 | **Técnica combinada** | Habilidad única de 2 Linajes compatibles (tecla B) | Automática al tener la combinación |
 
+## Estadísticas y movimiento
+Cada Linaje tiene su **forma de moverse sin límite** (volar, correr, nadar, saltar entre sombras…) y todos tienen un **árbol de estadísticas** (vida, energía, fuerza, velocidad, defensa, recarga). Ver [[Estadísticas y movimiento]].
+
 ## Teclas
 | Tecla | Qué es |
 |---|---|

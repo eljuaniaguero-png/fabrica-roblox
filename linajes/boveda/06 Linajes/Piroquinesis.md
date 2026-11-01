@@ -38,6 +38,9 @@ Pista (Señal): *"Dicen que el fuego del laboratorio no es como el del puerto…
 | **Fénix** | Pluma en llamas | *"Lo que arde, vuelve."* | Tu fuego cura aliados; revivís una vez por pelea con 30 % de vida | **Renacer**: explosión que cura a los aliados 40 % y quema a los enemigos |
 | **Infierno** | Llama con colmillos | *"Que no quede nada."* | Zonas de fuego enormes y duraderas | **Mar de fuego**: el piso arde en 25 studs por 6 s (150 de daño total) |
 
+## Movimiento (sin límite)
+**Impulso de fuego**: saltos con propulsión y planeo corto (mejoras: planeo largo, doble impulso, estela que daña). No gasta energía ni tiene tiempo límite. Las mejoras van en la fila **Movimiento** del árbol. Además, este Linaje usa el árbol de estadísticas común (vida, energía, fuerza, velocidad, defensa y recarga). Ver [[Estadísticas y movimiento]].
+
 ## Segundo poder
 - **Compatibles**: Criogenia, Electro, Eclipse.
 - **Técnicas combinadas**: Vapor (con Criogenia), Plasma (con Electro).

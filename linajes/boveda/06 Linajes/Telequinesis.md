@@ -36,6 +36,9 @@ Todo lo suelto es munición: cajas, barriles, autos chicos. Agarrás un enemigo,
 | **Titiritero** | Mano con hilos | *"Bailá."* | Control de enemigos más largo | **Marioneta**: controlás a un enemigo 4 s y pelea por vos |
 | **Singularidad** | Círculo que se traga todo | *"Todo cae hacia mí."* | Atracción y daño en área | **Agujero**: un pozo que atrae todo en 20 studs 4 s y explota |
 
+## Movimiento (sin límite)
+**Levitar** sobre un objeto (mejoras: más alto, más rápido, llevar aliados). No gasta energía ni tiene tiempo límite. Las mejoras van en la fila **Movimiento** del árbol. Además, este Linaje usa el árbol de estadísticas común (vida, energía, fuerza, velocidad, defensa y recarga). Ver [[Estadísticas y movimiento]].
+
 ## Segundo poder
 - **Compatibles**: Fuerza Bruta, Sombra Viva, Eclipse.
 - **Técnicas**: Meteoro (Fuerza Bruta), Marionetas (Sombra Viva, propuesta).

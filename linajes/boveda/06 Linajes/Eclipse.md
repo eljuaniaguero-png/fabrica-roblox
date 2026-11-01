@@ -36,6 +36,9 @@ Tenés **dos modos** y cambiás con la tecla C: **Luz** (daño a distancia y cur
 | **Aurora** | Sol saliendo | *"Después de la noche."* | Te inclinás a la Luz: curación y escudos | **Amanecer**: la zona se ilumina 8 s, aliados curados y enemigos de sombra débiles |
 | **Umbra** | Sol tapado | *"Antes del fin."* | Te inclinás a la Sombra: robo de vida y miedo | **Noche total**: oscuridad en 30 studs 6 s, los enemigos no ven y vos robás vida |
 
+## Movimiento (sin límite)
+**Planear** en Luz y **paso de portal** en Sombra (mejoras: planeo más largo, portal de 30 studs, volar 10 s seguidos). No gasta energía ni tiene tiempo límite. Las mejoras van en la fila **Movimiento** del árbol. Además, este Linaje usa el árbol de estadísticas común (vida, energía, fuerza, velocidad, defensa y recarga). Ver [[Estadísticas y movimiento]].
+
 ## Segundo poder
 - **Compatibles**: Origen Estelar, Piroquinesis, Sombra Viva, Telequinesis.
 - **Técnicas**: Supernova (con Origen Estelar).

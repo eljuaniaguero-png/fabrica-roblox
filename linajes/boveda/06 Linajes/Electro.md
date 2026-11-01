@@ -36,6 +36,9 @@ Rápido y nervioso. Los rayos saltan solos al enemigo más cercano, así que cua
 | **Relámpago** | Rayo partido | *"Más rápido que el trueno."* | Movilidad: el Salto de cable no tiene recarga en 3 s | **Tormenta viva**: 5 s convertido en rayo, recorrés y golpeás todo |
 | **Generador** | Engranaje con chispas | *"Todo funciona por mí."* | Cargás aliados (+15 % velocidad de recarga) y torretas | **Central**: una torre eléctrica que dispara 8 s |
 
+## Movimiento (sin límite)
+**Viajar por cables** y postes (mejoras: más rápido, de cable a cable, saltar a enemigos). No gasta energía ni tiene tiempo límite. Las mejoras van en la fila **Movimiento** del árbol. Además, este Linaje usa el árbol de estadísticas común (vida, energía, fuerza, velocidad, defensa y recarga). Ver [[Estadísticas y movimiento]].
+
 ## Segundo poder
 - **Compatibles**: Piroquinesis, Velocista Cinético, Sangre Abisal, Reflejos.
 - **Técnicas**: Plasma (Piroquinesis), Tormenta en movimiento (Velocista), Tormenta marina (Sangre Abisal, propuesta).

@@ -36,6 +36,9 @@ Lento pero seguro. Cada golpe de hielo suma **Escarcha**: a las 5 cargas el enem
 | **Fortaleza** | Copo con muralla | *"Nada pasa."* | Escudos de hielo para vos y aliados | **Domo**: cúpula de hielo de 15 studs por 6 s |
 | **Invierno** | Copo con colmillos | *"Todo se detiene."* | Ralentiza todo alrededor tuyo | **Era de hielo**: congela a todos en 20 studs por 2 s |
 
+## Movimiento (sin límite)
+**Patinar** sobre hielo que se arma bajo tus pies (mejoras: más rápido, rampas, patinar sobre el agua). No gasta energía ni tiene tiempo límite. Las mejoras van en la fila **Movimiento** del árbol. Además, este Linaje usa el árbol de estadísticas común (vida, energía, fuerza, velocidad, defensa y recarga). Ver [[Estadísticas y movimiento]].
+
 ## Segundo poder
 - **Compatibles**: Piroquinesis, Sangre Abisal, Fuerza Bruta.
 - **Técnicas**: Vapor (Piroquinesis), Glaciar (Sangre Abisal).

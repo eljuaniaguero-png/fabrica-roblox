@@ -36,6 +36,9 @@ Te movés entre sombras: si estás en una zona oscura, te volvés casi invisible
 | **Fantasma** | Capa vacía | *"Nunca estuve acá."* | Más invisibilidad, golpes por la espalda | **Desaparición**: invisible 6 s, todos los enemigos te pierden |
 | **Legión** | Tres sombras | *"No estoy solo."* | Invocás sombras que pelean | **Ejército**: 5 sombras pelean 8 s |
 
+## Movimiento (sin límite)
+**Saltar entre sombras** de 25 studs, sin límite (mejoras: 40 studs, sin pausa, llevar a un aliado). No gasta energía ni tiene tiempo límite. Las mejoras van en la fila **Movimiento** del árbol. Además, este Linaje usa el árbol de estadísticas común (vida, energía, fuerza, velocidad, defensa y recarga). Ver [[Estadísticas y movimiento]].
+
 ## Segundo poder
 - **Compatibles**: Reflejos, Telequinesis, Eclipse.
 - **Técnicas**: Asesino fantasma (Reflejos), Marionetas (Telequinesis, propuesta).

@@ -38,6 +38,9 @@ Pista que da un NPC si le preguntás (Atalanta): *"La piedra de Islaroca es más
 | **Coloso** | Escudo partido | *"Que vengan todos."* | Tanque: provoca a los enemigos cercanos, −20 % daño recibido | **Muralla**: 6 s invencible, los golpes que recibís se devuelven al 50 % |
 | **Demoledor** | Puño con grietas | *"Nada queda en pie."* | Rompe escudos y estructuras; +30 % daño a escudos y jefes con armadura | **Terremoto**: 3 golpes al piso que levantan todo en 20 studs (120 de daño total) |
 
+## Movimiento (sin límite)
+**Supersalto** de hasta 20 studs (mejoras: 30 studs, aterrizaje que daña, agarrarse de bordes). No gasta energía ni tiene tiempo límite. Las mejoras van en la fila **Movimiento** del árbol. Además, este Linaje usa el árbol de estadísticas común (vida, energía, fuerza, velocidad, defensa y recarga). Ver [[Estadísticas y movimiento]].
+
 ## Segundo poder
 - **Compatibles (Resonancia)**: Telequinesis, Herencia Olímpica, Criogenia.
 - **Técnicas combinadas**: Meteoro (con Telequinesis), Martillo del trueno (con Herencia Olímpica, propuesta).

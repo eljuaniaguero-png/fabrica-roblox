@@ -36,6 +36,9 @@ Cerca del agua (bahía, charcos, lluvia) tus habilidades recargan 30 % más ráp
 | **Leviatán** | Ojo en una ola | *"El mar tiene hambre."* | Daño y criaturas de agua | **Leviatán**: una serpiente de agua ataca 6 s |
 | **Marea alta** | Ola con escudo | *"El mar protege."* | Curación y defensa del grupo | **Marea**: una ola cura a los aliados 40 % y empuja a los enemigos |
 
+## Movimiento (sin límite)
+**Nadar ×2, respirar bajo el agua y surfear** las olas de la bahía (mejoras: nado ×3, salto desde el agua, surfear en charcos y lluvia). No gasta energía ni tiene tiempo límite. Las mejoras van en la fila **Movimiento** del árbol. Además, este Linaje usa el árbol de estadísticas común (vida, energía, fuerza, velocidad, defensa y recarga). Ver [[Estadísticas y movimiento]].
+
 ## Segundo poder
 - **Compatibles**: Criogenia, Electro, Herencia Olímpica.
 - **Técnicas**: Glaciar (Criogenia), Tormenta marina (Electro, propuesta).
