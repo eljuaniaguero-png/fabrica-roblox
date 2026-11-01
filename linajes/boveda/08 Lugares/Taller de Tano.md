@@ -56,6 +56,28 @@ Graybox con tag `Lugar`. Modelo nuevo pendiente (P25d rehecho).
 - Los 3 lugares que se usan (Tano junto al auto, el banco de fabricar y el tablero de trabajos) llevan luz propia para distinguirse de un vistazo.
 - Sonido: la radio vieja de fondo y un goteo cerca del portón (`-- SONIDO:` con su ID en `Config.luau`).
 
+**Primeros planos de objetos, piso y paredes (20):**
+![[interior-taller_pp01_computadora.png]]
+![[interior-taller_pp02_silla.png]]
+![[interior-taller_pp03_lampara_escritorio.png]]
+![[interior-taller_pp04_piso_manchas.png]]
+![[interior-taller_pp05_piso_charco_huellas.png]]
+![[interior-taller_pp06_piso_grietas.png]]
+![[interior-taller_pp07_pared_oxido.png]]
+![[interior-taller_pp08_pared_juntas.png]]
+![[interior-taller_pp09_motor.png]]
+![[interior-taller_pp10_morsa_y_latas.png]]
+![[interior-taller_pp11_engranaje_carburador.png]]
+![[interior-taller_pp12_trapo.png]]
+![[interior-taller_pp13_tablero_trabajos.png]]
+![[interior-taller_pp14_mameluco.png]]
+![[interior-taller_pp15_cama_almohada.png]]
+![[interior-taller_pp16_radio_cajas.png]]
+![[interior-taller_pp17_tambores_bidones.png]]
+![[interior-taller_pp18_compresor.png]]
+![[interior-taller_pp19_rueda_y_columna.png]]
+![[interior-taller_pp20_calendario_reloj.png]]
+
 **Más vistas (10):**
 ![[interior-taller_mas01_desde_la_calle.png]]
 ![[interior-taller_mas02_como_referencia.png]]
