@@ -35,15 +35,20 @@ Graybox con tag `Lugar`. Modelo nuevo pendiente (P25d rehecho).
 ## Modelo (P25d-01, rehecho desde cero)
 **Estado: paso 2, detalle con texturas horneadas. Espera tu OK.** (El boceto se aprobó el 1 nov.) Planta de **40 x 32 studs** (32 en vez de 30 para que entre en la grilla de 4), paredes de chapa de 16 y techo a dos aguas con la cumbrera a 22 (entra en el lote de 50 x 22 x 40 del graybox). Chequeo de cruces: **0**. Cosas flotando: **0**. Triángulos del boceto: 1.868.
 
-**Detalle (paso 2, versión 3)**: 24.728 triángulos (tope 60.000). Chequeo de cruces: **0**. Cosas flotando: **0**. El horneado no se colgó.
-Cambios de Juani (1 nov, lista de 7):
-1. Portón abierto a medias. Luz fría `#4fb3f2` que entra en diagonal. Lluvia afuera. Dos lámparas cálidas `#f2a23a` con el cono de luz marcado.
-2. Piso de cemento continuo `#5d5a55`: grietas finas, 5 manchas de aceite irregulares, un charco cerca del portón y la rejilla. Se sacaron las rayas y los cuadrados sueltos.
-3. Auto con el capó abierto y el motor a la vista (block, tapa de válvulas, filtro, batería, radiador y mangueras). La rueda de adelante a la izquierda está desmontada y apoyada en la columna del elevador; se ve el disco de freno.
-4. El gancho colgado y destacado en el tablero. En el banco, una pieza a medio desarmar, el trapo rojo y latas.
-5. Entrepiso con cajas, la radio, y cables que cuelgan de las cerchas.
-6. Chapa con juntas remachadas y óxido abajo, en las 4 paredes.
-7. Sin el rectángulo blanco flotante. En el fondo, una ventanita sucia en vez de la pantalla celeste.
+**Detalle (paso 2, versión 4)**: 35.300 triángulos (tope 60.000). Chequeo de cruces: **0**. Cosas flotando: **0**.
+Cambios de Juani (1 nov, segunda lista):
+- **Luz.** Más luz ambiente, una lámpara chica sobre el banco y renders con 128 muestras para que no tengan grano.
+- **Motor.** Ahora se lee: tapa de válvulas roja, filtro de aire cromado y redondo, batería con bornes rojo y negro, y mangueras naranjas.
+- **Gancho.** Es la estrella: el doble de grande, solo en su propio panel y con un spot que lo ilumina.
+- **Manchas.** Marrón muy oscuro, algo brillantes y con un borde más claro, así ya no parecen agujeros.
+- **Ventanas y puerta.** Las ventanas tienen marco y vidrio sucio (antes eran huecos blancos) y la puerta lateral está cerrada.
+- **Tablero de trabajos.** Corcho con papeles, notas, un mapa del puerto y chinches, en la pared este (marcador `Tablero_Trabajos`).
+- **Chapa por fuera.** Las 4 paredes son de chapa ondulada también por fuera (antes parecían ladrillo).
+
+**Primeros planos:**
+![[interior-taller_cerca_banco.png]]
+![[interior-taller_cerca_motor.png]]
+![[interior-taller_cerca_gancho.png]]
 
 **Recorrido de la sala (6 vistas):**
 ![[interior-taller_sala1_portón.png]]
