@@ -31,5 +31,21 @@ Obsidian con el conector y avisame que la mire ahí.
 | gargola | (propio) → Dueño de La Gárgola | Chaleco de cuero sobre camisa arremangada, delantal de bar, tatuaje de gárgola en el antebrazo (textura), parche en un ojo, trapo al hombro |
 | reducidor | (propio) → El Reducidor del mercado negro | Piloto largo verde musgo lleno de bolsillos, gorro de pescador, lupa colgada, guantes sin dedos, valija con candado |
 
+
+
+
+## Un prompt por cosa
+Cada uno está separado, con sus referencias de Gemini y su bloque para Claude. Este prompt queda con las **reglas comunes**.
+
+- [[P19-01 Comisaria Rivas]] (No)
+- [[P19-02 Lucía Vega]] (No)
+- [[P19-03 Tano]] (**Hecho** (registro))
+- [[P19-04 Ingeniera Okafor]] (No)
+- [[P19-05 Dra. Kessler]] (No)
+- [[P19-06 Directora Brandt]] (No)
+- [[P19-07 Señal]] (No)
+- [[P19-08 Dueño de La Gárgola]] (No)
+- [[P19-09 El Reducidor]] (No)
+
 ---
 [[P18 El Eclipsador|← P18 El Eclipsador]]   ·   [[Todos los prompts]]   ·   [[P20 Enemigos comunes|P20 Enemigos comunes →]]

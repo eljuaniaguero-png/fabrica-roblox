@@ -162,5 +162,34 @@ Exportar, nota de Obsidian, commit y push.
 - En Obsidian, girá el modelo 3D y mirá los renders.
 - Cuando se importe (P21), caminá adentro en Studio: que la puerta coincida con la fachada.
 
+
+
+
+## Un prompt por cosa
+Cada uno está separado, con sus referencias de Gemini y su bloque para Claude. Este prompt queda con las **reglas comunes**.
+
+- [[P25d-01 Taller de Tano]] (**Sí** (se rehace de cero))
+- [[P25d-02 Galpón de Remache]] (**Sí**)
+- [[P25d-03 Almacén del muelle]] (**Sí** (el atraco))
+- [[P25d-04 Banco Central Corona]] (No)
+- [[P25d-05 Joyería Aurora]] (No)
+- [[P25d-06 Museo de la Ciudad]] (No)
+- [[P25d-07 Redacción de El Faro]] (No)
+- [[P25d-08 Torre Corona Corp, lobby y laboratorio]] (No)
+- [[P25d-09 Hospital Santa Lumen]] (No)
+- [[P25d-10 Comisaría central]] (No)
+- [[P25d-11 Bar La Gárgola]] (No)
+- [[P25d-12 Casa de empeño]] (No)
+- [[P25d-13 Teatro Ópalo (abandonado)]] (No)
+- [[P25d-14 Subte abandonado]] (No)
+- [[P25d-15 Mercado negro]] (No)
+- [[P25d-16 Clínica de la Dra. Kessler]] (No)
+- [[P25d-17 Galpón del Albatros (interior)]] (No (el exterior está en el kit P21))
+- [[P25d-18 Bodegas de aduana]] (No)
+- [[P25d-19 Refugio del jugador (3 tipos)]] (No)
+- [[P25d-20 Estación de subte]] (No)
+- [[P25d-21 Tiendas chicas (kiosco, farmacia, ropa)]] (No)
+- [[P25d-22 Penal Islaroca (interior)]] (No)
+
 ---
 [[Todos los prompts]]   ·   [[P26 Animaciones base del jugador|P26 Animaciones base del jugador →]]

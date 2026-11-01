@@ -38,5 +38,28 @@ Obsidian con el conector y avisame que la mire ahí.
 | halcon | Escuadra Halcón (anti Linajes, de Brandt) | 10.000 | Armadura gris grafito con franjas neon-aviso, casco cerrado con 3 ojos ópticos, lanza de energía, emblema propio de un halcón de 3 trazos. Variantes: soldado, tirador, capitán con capa corta |
 | guardia | Guardia de banco | 7.000 | Uniforme gris claro, gorra, chaleco liviano, porra, credencial de Banco Central Corona |
 
+
+
+
+## Un prompt por cosa
+Cada uno está separado, con sus referencias de Gemini y su bloque para Claude. Este prompt queda con las **reglas comunes**.
+
+- [[P20-01 Matón del puerto]] (**Hecho** (registro))
+- [[P20-02 Matón con implantes]] (**Hecho** (registro))
+- [[P20-03 Dron de seguridad Corona]] (No)
+- [[P20-04 Robot centinela Corona]] (No)
+- [[P20-05 Preso fugado]] (No)
+- [[P20-06 Soldado de Umbra]] (No)
+- [[P20-07 Criatura abisal]] (No)
+- [[P20-08 Carterista]] (No)
+- [[P20-09 Asaltante de callejón]] (No)
+- [[P20-10 Pandillero Los Óxido]] (No (Post beta; el callejón de la Beta usa matones))
+- [[P20-11 Pandillero Máscaras Rotas]] (No)
+- [[P20-12 Teniente de pandilla]] (No)
+- [[P20-13 Policía de patrulla]] (**Sí** (P20d ya hizo los del puerto))
+- [[P20-14 Unidad Táctica]] (No)
+- [[P20-15 Escuadra Halcón]] (No)
+- [[P20-16 Guardia de banco]] (No)
+
 ---
 [[P19 NPCs|← P19 NPCs]]   ·   [[Todos los prompts]]   ·   [[P20b Piezas del creador de personaje|P20b Piezas del creador de personaje →]]

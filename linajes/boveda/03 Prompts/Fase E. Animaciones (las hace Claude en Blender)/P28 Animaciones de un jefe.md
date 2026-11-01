@@ -107,5 +107,17 @@ FBX, importar con el modelo, publicar, IDs.
 - Hoja de tiras en Obsidian.
 - En Studio, Remache hace la entrada y los 3 ataques.
 
+
+
+
+## Un prompt por cosa
+Cada uno está separado, con sus referencias de Gemini y su bloque para Claude. Este prompt queda con las **reglas comunes**.
+
+- [[P28-01 Animaciones de Remache]] (**Sí**)
+- [[P28-02 Animaciones de El Albatros]] (No)
+- [[P28-03 Animaciones de Mascarada]] (No)
+- [[P28-04 Animaciones de Víctor Halden (exoarmadura)]] (No)
+- [[P28-05 Animaciones de El Eclipsador]] (No)
+
 ---
 [[P27 Animaciones de los 3 primeros Linajes|← P27 Animaciones de los 3 primeros Linajes]]   ·   [[Todos los prompts]]   ·   [[P29 Animaciones de NPCs y enemigos|P29 Animaciones de NPCs y enemigos →]]

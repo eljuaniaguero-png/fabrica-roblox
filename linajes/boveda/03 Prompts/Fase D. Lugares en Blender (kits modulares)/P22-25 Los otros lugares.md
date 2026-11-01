@@ -16,5 +16,20 @@ Antes de pegarlo: Blender abierto con el conector de Claude, en Claude Code en `
 | 25c | Ciudad Hundida (Atlantis) | Columnas de coral y piedra, cúpulas de vidrio, algas, burbujas | Palacio del Rey Abisal (≤ 50.000 en 3 mallas), portal de entrada (≤ 8.000) | Luz azul que baja del agua, partículas flotando |
 | 25 | Bases de bando | — | El Nido (Batcueva → cueva bajo la torre del reloj con computadora gigante y perchas de cuervos), Faro Orbital (Atalaya → estación con ventanal a la Tierra), La Fundición (Salón del Mal → fundición abandonada con lava y trono) | Interior, luces del color del bando |
 
+
+
+
+## Un prompt por cosa
+Cada uno está separado, con sus referencias de Gemini y su bloque para Claude. Este prompt queda con las **reglas comunes**.
+
+- [[P22-01 Ciudad Vórtice]] (No (Post beta))
+- [[P22-02 Distrito Corona]] (No (Post beta))
+- [[P22-03 Penal Islaroca]] (No (Post beta))
+- [[P22-04 Cráter del Eclipse]] (No (Post beta))
+- [[P22-05 Ciudad Hundida]] (No (Post beta))
+- [[P22-06 El Nido (base de los Vigilantes)]] (No (Post beta))
+- [[P22-07 Faro Orbital (base de la Liga)]] (No (Post beta))
+- [[P22-08 La Fundición (base de la Cofradía)]] (No (Post beta))
+
 ---
 [[P21 Puerto Óxido|← P21 Puerto Óxido]]   ·   [[Todos los prompts]]   ·   [[P25d Interiores donde se puede entrar|P25d Interiores donde se puede entrar →]]
