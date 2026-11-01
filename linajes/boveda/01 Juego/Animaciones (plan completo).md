@@ -103,7 +103,7 @@ Matón del puerto, matón con implantes, dron Corona, robot centinela, preso fug
 Remache, El Albatros, Mascarada, Víctor Halden, Dualidad, Zarpa, Confeti, Cuervo y Centinela Solar (cuando pelean contra el jugador) y El Eclipsador. Cada jefe tiene: entrada (presentación con nombre en pantalla), quieto amenazante, caminar, 3 ataques (con Aviso), cambio de fase, ataque nuevo de la fase 2, recibir golpe fuerte, aturdido, derrota y "rendirse o huir" (según la decisión de la historia). Los ataques están en [[P28 Animaciones de un jefe]]. Mascarada tiene además un cambio de máscara por fase.
 
 ## 11. Héroes y villanos del elenco como NPC (Blender, 16 × 4 = 64)
-Los 16 personajes del [[Elenco]] aparecen como NPCs en la ciudad y en la historia: quieto con su pose propia, hablar, aparecer en escena (Cuervo baja de un techo, Centinela aterriza, Estela frena derrapando, etc.) e irse.
+Los 16 personajes del [[Sobre DC]] aparecen como NPCs en la ciudad y en la historia: quieto con su pose propia, hablar, aparecer en escena (Cuervo baja de un techo, Centinela aterriza, Estela frena derrapando, etc.) e irse.
 
 ## 12. Escenas de historia (Blender + cámara en Studio, 15)
 > [!note] Todas las cinemáticas (entrar, salir, jefes, NPCs, poderes, historia y eventos) están ahora en [[Cinemáticas (plan completo)]], que manda sobre esta sección.

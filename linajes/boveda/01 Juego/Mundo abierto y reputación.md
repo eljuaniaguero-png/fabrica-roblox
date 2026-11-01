@@ -11,15 +11,7 @@ Pedido de Juani: el juego se sentía lineal. Ahora es **mundo abierto con 3 ciud
 - **Hasta 24 jugadores por servidor** (con trajes de 20.000 a 40.000 triángulos, 30 es demasiado para celular; se sube después si las pruebas dan bien), todos en el mismo mapa. Mapa de unos **4.000 x 4.000 studs** con `StreamingEnabled`: cada ciudad mide unos 1.200 x 1.200 studs.
 - **Ciclo de día y noche de 24 minutos.** De noche salen más crímenes y los Vigilantes pegan más. De día hay más trabajos y más policía.
 
-| Zona | DC de trabajo | Cómo es | Quién manda al empezar | Para qué vas |
-|---|---|---|---|---|
-| **Ciudad Vórtice** | Gotham | Noche eterna bajo el eclipse, ladrillo, callejones, azoteas | Vigilantes | Investigación, Mascarada, crímenes de noche |
-| **Distrito Corona** | Metrópolis | Rascacielos de vidrio junto al agua, de día | Liga de Guardianes | Corona Corp, implantes, trabajos de laboratorio, El Faro |
-| **Puerto Óxido** | (puerto de Gotham) | Ciudad portuaria con niebla, galpones y grúas | Cofradía Carmesí | Contrabando, chatarra, el Albatros, Remache |
-| **Penal Islaroca** | Arkham | Isla cárcel en el medio de la bahía | Nadie (raid) | Fugas, raid de 4 a 8 |
-| **Cráter del Eclipse** | — | Zona baldía donde cayó el primer rayo, cristales que brillan | Nadie (zona libre) | Catalizadores raros, jefes que aparecen solos, PvP libre |
-| **Ciudad Hundida** | Atlantis | Bajo la bahía, se abre con reputación | El Heredero Abisal | Arco secreto, Variantes de agua |
-| **Umbra** | Apokolips | Otro mundo, instancia aparte | El Eclipsador | Final, raid de 8 |
+Las zonas, con cómo se ve cada una, sus barrios y lugares clave, están en [[Lugares]].
 
 **Cómo te movés:** a pie, con tu poder (vuelo, velocidad, gancho, saltos de azotea), en **vehículo** (moto o auto del taller, 5a), y en **subte y ferry** entre ciudades. Cada estación que descubrís queda como viaje rápido.
 
@@ -60,7 +52,7 @@ Tenés **5 reputaciones** en tu ficha de personaje. Se ven como **barras con su 
 
 **3. Reputación con grupos (de −500 a +500)**: Policía, Prensa (El Faro), Corona Corp, Pandillas y Contrabandistas. Cada grupo abre sus tiendas, contactos y trabajos: con la Policía alta te pasan datos de crímenes, con la Prensa alta salen notas tuyas que suben la fama, con Corona Corp alta comprás implantes legales, con Pandillas y Contrabandistas altas tenés guaridas y mercado negro. Muchas acciones suben un grupo y bajan otro (frenar un contrabando sube Policía y baja Contrabandistas).
 
-**4. Confianza con cada NPC importante (0 a 500)**: Cuervo, Centinela, Atalanta, Tano, Rivas, Kessler, Brandt, el Albatros y los demás. Con 100 te da trabajo, con 250 te enseña un nodo o pelea a tu lado, con 400 te abre su cadena de misiones secreta. Algunos se odian entre sí: subir con el Albatros baja con Rivas.
+**4. Confianza con cada NPC importante (0 a 500)** (ver [[NPCs]]): Cuervo, Centinela, Atalanta, Tano, Rivas, Kessler, Brandt, el Albatros y los demás. Con 100 te da trabajo, con 250 te enseña un nodo o pelea a tu lado, con 400 te abre su cadena de misiones secreta. Algunos se odian entre sí: subir con el Albatros baja con Rivas.
 
 **5. Fama (de 0 a 10.000)**: lo conocido que sos en el servidor, para bien o para mal. Con más fama aparecés en la portada de El Faro, te sale un título sobre la cabeza que todos ven (por ejemplo "El Fantasma de Vórtice") y hay más NPCs que te buscan para pedirte cosas o para vengarse.
 
@@ -92,10 +84,5 @@ Tenés **5 reputaciones** en tu ficha de personaje. Se ven como **barras con su 
 
 ## Tu base
 - Podés alquilar un **refugio** en cualquier ciudad donde tengas reputación +250 o −250 (de héroe o de villano). Ahí cambiás de traje, guardás objetos y fabricás tecnología. Más adelante, mejorás tu refugio con trofeos de jefes.
-
-## Lo que esto cambia en el resto de la ficha
-- **Sección 3 (bandos)**: los bandos siguen siendo 3 más Neutral, pero ahora cada uno empieza mandando en una ciudad.
-- **Sección 8 (historia)**: los actos 1 a 3 pasan a ser los **arcos de ciudad** de arriba, en cualquier orden. Los actos 4 a 6 quedan como el final común.
-- **Sección 8b (NPCs)**: la reputación de 0 a 1000 con los bandos sigue igual, y se suman la reputación con cada ciudad, la confianza con los NPCs y la fama.
 
 Volver a [[Ficha del juego]]

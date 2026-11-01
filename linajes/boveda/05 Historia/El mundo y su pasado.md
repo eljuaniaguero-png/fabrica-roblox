@@ -7,7 +7,7 @@ tags: [historia, mundo]
 > Todo pasa alrededor de **la Bahía**, un mar interior con tres ciudades que se miran y se desconfían: **Ciudad Vórtice** (vieja, de ladrillo), **Distrito Corona** (nueva, de vidrio) y **Puerto Óxido** (de chapa y niebla). En el medio, la isla cárcel **Penal Islaroca**. Abajo del agua, una ciudad que nadie recuerda.
 
 ## El mapa (un solo mundo por servidor)
-Unos 4.000 x 4.000 studs. La bahía en el centro, las ciudades alrededor. Ver [[Mundo abierto y reputación]] para cómo se juega.
+Unos 4.000 x 4.000 studs. La bahía en el centro, las ciudades alrededor. Cada zona tiene su nota en [[Lugares]]; cómo se juega, en [[Mundo abierto y reputación]].
 
 | Zona | Dónde | Cómo se ve | Quién manda al empezar | Para qué vas |
 |---|---|---|---|---|
@@ -33,7 +33,7 @@ La ciudad nueva, levantada en 30 años por **Corona Corp**, la empresa de Vícto
 ### Puerto Óxido
 El puerto de la bahía y la puerta de todo lo que entra y sale, legal o no. Galpones de chapa, grúas, contenedores, muelles de madera, un mercado de pescado que de noche es otra cosa. Niebla casi siempre. Lo maneja la **Cofradía Carmesí** desde las sombras, con el **Albatros** como cara visible. La policía entra poco y algunos policías cobran.
 - **Lugares clave:** el Galpón del Albatros, el taller de Tano, el galpón de Remache, el almacén del muelle, el mercado negro (abajo del mercado de pescado), la clínica de la Dra. Kessler, las bodegas de aduana, la feria del puerto.
-- **Barrios (5):** Muelles, Aduana, Galpones, Mercado de Pescado y La Feria. Ver [[Puerto Óxido]] cuando esté la nota de lugares.
+- **Barrios (5):** Muelles, Aduana, Galpones, Mercado de Pescado y La Feria. Ver [[Puerto Óxido]].
 - **En la Beta**, los puentes a Corona y el túnel a Vórtice están **cortados por la policía** (barreras con balizas). Es la excusa para que el mapa termine en el puerto.
 
 ## Línea de tiempo (propuesta)
@@ -52,6 +52,6 @@ El puerto de la bahía y la puerta de todo lo que entra y sale, legal o no. Galp
 | Después | Vórtice queda en noche eterna. Las ciudades se cierran entre sí. La Cofradía aprovecha el caos. |
 
 ## Quién es quién (resumen)
-Los personajes principales son **NPCs**: dan misiones, entrenan, pelean con vos o contra vos. Nadie juega "de Cuervo"; cada jugador se arma su propio héroe o villano. Ver [[Elenco]] y [[NPCs]] (cuando esté la tanda de NPCs).
+Los personajes principales son **NPCs**: dan misiones, entrenan, pelean con vos o contra vos. Nadie juega "de Cuervo"; cada jugador se arma su propio héroe o villano. Ver [[Sobre DC]] y [[NPCs]].
 
 Volver a [[Historia]]

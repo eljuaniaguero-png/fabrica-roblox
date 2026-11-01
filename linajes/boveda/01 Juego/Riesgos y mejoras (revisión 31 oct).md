@@ -16,7 +16,7 @@ Juani pasó una revisión hecha con Gemini. Claude la comparó con las reglas de
 | **Guardar tanta cosa** (5 reputaciones, confianza con NPCs, refugio, barrios entre servidores) | Un solo perfil por jugador con ProfileStore (guardado cada 5 min y al salir). Los barrios se cuentan entre servidores con **MemoryStore** y se pasan al DataStore cada pocos minutos. Nunca se guarda en cada golpe ni en cada paso. |
 
 ### Combate y sensación de golpe
-- **Golpes sin demora:** el cliente muestra el efecto (chispa, sacudida, hit-stop) al instante, y el servidor revisa la distancia, el estado y la recarga antes de aplicar el daño real. Ya estaba en [[Combate]]; ahora se suma el efecto inmediato.
+- **Golpes sin demora:** el cliente muestra el efecto (chispa, sacudida, hit-stop) al instante, y el servidor revisa la distancia, el estado y la recarga antes de aplicar el daño real. Ya estaba en [[Combate y progresión]]; ahora se suma el efecto inmediato.
 - **Cola de teclas de 0,15 s:** si apretás dash o golpe sobre el final de una animación, se ejecuta apenas termina. Así no se siente rígido.
 - **Golpe que rompe la guardia:** sacudida corta y seca más hit-stop de 0,05 s en los dos personajes.
 

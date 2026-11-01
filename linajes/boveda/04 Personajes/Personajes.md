@@ -20,7 +20,7 @@ Una nota por personaje, con su **modelo 3D para girar**, sus renders y sus datos
 | [[Cuerpo propio]] | Todos | Cuerpo de Roblox + pelo 1.006 a 1.896 | En el juego (StarterCharacter, v3) |
 | [[Calle viva (puerto)]] | Calle viva (vehículos y objetos) | 29.732 (56 piezas) | Terminado y exportado |
 
-Los que faltan están en [[Elenco]] y en [[Todos los prompts]].
+Los que faltan están en [[Sobre DC]] y en [[Todos los prompts]].
 
 > [!tip] Para ver los modelos
 > Necesitás el complemento **Embed 3D** activado (Ajustes → Complementos de la comunidad). Si en vez del modelo aparece un bloque de texto, activalo ahí.
