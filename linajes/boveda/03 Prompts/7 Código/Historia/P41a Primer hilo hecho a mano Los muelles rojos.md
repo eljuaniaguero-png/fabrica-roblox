@@ -85,10 +85,10 @@ De punta a punta con 1 jugador y después con 2.
 - Jugá el hilo completo y contame dónde te trabaste.
 
 ## 8. Alcance completo (Post beta)
-Para cuando se haga la versión completa. Es el pedido anterior: actualizá los números con la bóveda antes de usarlo (la bóveda manda) y cambiá `linajes/ideas/ficha.md` por las notas de la bóveda.
+Para cuando se haga la versión completa. Es el pedido anterior: actualizá los números con la bóveda antes de usarlo (la bóveda manda). Las referencias a la ficha vieja ya están cambiadas por las notas de la bóveda.
 
 ```
-Leé las secciones 0d y 0f de linajes/ideas/ficha.md. Este es un HILO HECHO A MANO del Narrador (Prompt 41):
+Leé linajes/boveda/01 Juego/Mundo abierto y reputación.md y las notas de linajes/boveda/05 Historia/. Este es un HILO HECHO A MANO del Narrador (Prompt 41):
 no es obligatorio ni va primero; se abre con 3 ganchos distintos (Tano te pide ayuda con un mecánico
 desaparecido; el Albatros te ofrece un trabajo si tenés −100 en el puerto; ves desde un techo un cargamento
 de implantes). Los enemigos se ajustan al nivel del jugador (±2, mínimo 5).

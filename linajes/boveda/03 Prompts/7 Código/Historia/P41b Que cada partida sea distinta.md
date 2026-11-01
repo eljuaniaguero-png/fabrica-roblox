@@ -8,7 +8,7 @@ estado: pendiente
 Antes de pegarlo: Blender abierto con el conector de Claude, en Claude Code en `C:\Users\eljua\fabrica-roblox`. Reglas: [[Reglas de los prompts]] · [[Nivel de detalle]] · [[Colores]]
 
 ```
-Leé la sección 0c de linajes/ideas/ficha.md.
+Leé linajes/boveda/01 Juego/Poderes, inicio y personalización.md y las notas de linajes/boveda/06 Linajes/.
 1. CRÍMENES AL AZAR: cada 3 a 5 min, en un distrito al azar: robo a banco, rehenes, pelea de pandillas,
    villano chico con modificadores. Marcador en el mapa, recompensa para todos los que ayudan, cuenta para
    la reputación (la Cofradía gana por ayudar al robo, la Liga por frenarlo).

@@ -87,10 +87,10 @@ Commit en español y push. Decime qué tengo que probar yo y cómo.
 - En Play, tirá la ruleta y probá las 3 habilidades contra un matón.
 
 ## 8. Alcance completo (Post beta)
-Para cuando se haga la versión completa. Es el pedido anterior: actualizá los números con la bóveda antes de usarlo (la bóveda manda) y cambiá `linajes/ideas/ficha.md` por las notas de la bóveda.
+Para cuando se haga la versión completa. Es el pedido anterior: actualizá los números con la bóveda antes de usarlo (la bóveda manda). Las referencias a la ficha vieja ya están cambiadas por las notas de la bóveda.
 
 ```
-Leé la sección 0c de linajes/ideas/ficha.md. Conectá la ruleta del Prompt 33 al guardado.
+Leé linajes/boveda/01 Juego/Poderes, inicio y personalización.md y las notas de linajes/boveda/06 Linajes/. Conectá la ruleta del Prompt 33 al guardado.
 TODO LO ALEATORIO LO TIRA EL SERVIDOR, nunca el cliente, y las probabilidades se ven siempre en pantalla.
 1. LINAJE: Común 55, Poco común 28, Raro 12, Legendario 4, Mítico 1. Seguro: 40 tiradas sin Raro o mejor ⇒
    la siguiente es Raro o mejor. Fichas de Eclipse: 3 al empezar, 1 por nivel, 1 por misión, 3 por jefe.

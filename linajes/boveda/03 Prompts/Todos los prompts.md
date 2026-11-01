@@ -372,4 +372,4 @@ tags: [prompts, indice]
 
 **Pantallas:** el logo, el ícono, las miniaturas, los emblemas y los íconos los dibujás vos con **Gemini** (P33a y P33b) y Claude los limpia. Las pantallas las diseña Claude en **Figma** (P33c), las aprobás ahí y después Claude las pasa a Roblox (P33).
 
-**Código:** todos empiezan con `Leé linajes/ideas/ficha.md, linajes/arte/GUIA-ESTILO.md y GUIA-PARA-CLAUDE.md.` y terminan con `Play por MCP, consola sin rojo, captura. Commit en español y push. Decime qué tengo que probar yo y cómo.`
+**Código:** todos empiezan con `Leé las notas de la bóveda que dice el prompt, linajes/arte/GUIA-ESTILO.md y GUIA-PARA-CLAUDE.md.` y terminan con `Play por MCP, consola sin rojo, captura. Commit en español y push. Decime qué tengo que probar yo y cómo.`

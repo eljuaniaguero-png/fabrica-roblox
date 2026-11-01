@@ -8,7 +8,7 @@ estado: pendiente
 Antes de pegarlo: Blender abierto con el conector de Claude, en Claude Code en `C:\Users\eljua\fabrica-roblox`. Reglas: [[Reglas de los prompts]] · [[Nivel de detalle]] · [[Colores]]
 
 ```
-Leé "Noticias de El Faro" en la sección "Calle viva" de linajes/ideas/ficha.md.
+Leé "Noticias de El Faro" en linajes/boveda/01 Juego/Calle viva.md.
 1. GENERADOR DE NOTICIAS: cada evento importante (atraco empezado o frenado, jefe vencido, jugador con
    5 estrellas, Variante descubierta, barrio que cambia de dueño, foto vendida) crea una noticia con
    plantillas de titular por tipo (al menos 6 plantillas por tipo, con nombres del juego). El tono cambia

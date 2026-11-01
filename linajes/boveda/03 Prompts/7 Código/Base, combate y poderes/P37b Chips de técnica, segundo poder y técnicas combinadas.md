@@ -8,7 +8,7 @@ estado: pendiente
 Antes de pegarlo: Blender abierto con el conector de Claude, en Claude Code en `C:\Users\eljua\fabrica-roblox`. Reglas: [[Reglas de los prompts]] · [[Nivel de detalle]] · [[Colores]]
 
 ```
-Leé la sección 0c de linajes/ideas/ficha.md.
+Leé linajes/boveda/01 Juego/Poderes, inicio y personalización.md y las notas de linajes/boveda/06 Linajes/.
 1. CHIPS DE TÉCNICA: caen de jefes, élites y eventos. Cada chip tiene un efecto y un valor al azar dentro
    de un rango (ej: "+1 proyectil", "rebota 1-3 veces", "deja charco 2-4 s", "-10 a -25 % recarga",
    "+15 a +35 % área"). 2 ranuras por habilidad equipada. 30 efectos en Config.luau. Se pueden desarmar

@@ -82,7 +82,7 @@ Fabricar los 2 y subir a un techo.
 - En Play, fabricá el gancho y subí a una grúa.
 
 ## 8. Alcance completo (Post beta)
-Para cuando se haga la versión completa. Es el pedido anterior: actualizá los números con la bóveda antes de usarlo (la bóveda manda) y cambiá `linajes/ideas/ficha.md` por las notas de la bóveda.
+Para cuando se haga la versión completa. Es el pedido anterior: actualizá los números con la bóveda antes de usarlo (la bóveda manda). Las referencias a la ficha vieja ya están cambiadas por las notas de la bóveda.
 
 ```
 TALLER DE TANO: traje (Mk I a Mk V: +10 escudo por nivel, cuesta 50/120/250/500/900 chatarra) y gadget

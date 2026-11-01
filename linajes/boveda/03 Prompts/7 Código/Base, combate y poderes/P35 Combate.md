@@ -89,15 +89,15 @@ Play contra el maniquí y los 2 matones.
 - En Play, pelea contra 3 matones a la vez.
 
 ## 8. Alcance completo (Post beta)
-Para cuando se haga la versión completa. Es el pedido anterior: actualizá los números con la bóveda antes de usarlo (la bóveda manda) y cambiá `linajes/ideas/ficha.md` por las notas de la bóveda.
+Para cuando se haga la versión completa. Es el pedido anterior: actualizá los números con la bóveda antes de usarlo (la bóveda manda). Las referencias a la ficha vieja ya están cambiadas por las notas de la bóveda.
 
 ```
 Usá el traje de Cuervo y las animaciones base (IDs en Config.luau).
 NÚMEROS (en Config.luau): combo 4 golpes de 8, 8, 10 y 14 de daño; 0,35 s entre golpes; el combo se
 corta si pasan 1,0 s; el golpe 4 empuja 6 studs. Bloqueo: reduce 80 % del daño, no podés atacar
 mientras bloqueás. Parry: si bloqueás en los 0,2 s antes de un golpe, el atacante queda aturdido 1,2 s.
-Dash: 14 studs en 0,25 s, recarga 2,5 s, invulnerable los primeros 0,15 s. Vida 100, energía 100,
-energía vuelve 8 por segundo.
+Dash: 14 studs en 0,25 s, recarga 2,5 s, invulnerable los primeros 0,15 s. Vida 400 y energía 100 en nivel 1,
+energía vuelve 8 por segundo (ver Combate y progresión).
 REGLAS: el cliente reproduce la animación y el sonido al instante; el SERVIDOR decide el golpe en el
 marcador Impacto: hitbox con GetPartBoundsInBox de 5x5x6 studs delante del atacante, chequea distancia
 (máx. 8 studs), recargas, energía, y un límite de 10 pedidos por segundo por jugador.

@@ -84,10 +84,10 @@ Hacer cosas buenas y malas en el puerto.
 - En Play, frená un crimen y después robá: mirá la barra.
 
 ## 8. Alcance completo (Post beta)
-Para cuando se haga la versión completa. Es el pedido anterior: actualizá los números con la bóveda antes de usarlo (la bóveda manda) y cambiá `linajes/ideas/ficha.md` por las notas de la bóveda.
+Para cuando se haga la versión completa. Es el pedido anterior: actualizá los números con la bóveda antes de usarlo (la bóveda manda). Las referencias a la ficha vieja ya están cambiadas por las notas de la bóveda.
 
 ```
-Leé la sección 0d de linajes/ideas/ficha.md. Todos los números van en Config.luau. Todo lo decide el servidor.
+Leé linajes/boveda/01 Juego/Mundo abierto y reputación.md. Todos los números van en Config.luau. Todo lo decide el servidor.
 1. DATOS (en el guardado de ProfileStore, por espacio): reputación con cada ciudad (−1000 a +1000),
    con cada bando (0 a 1000), con cada grupo (Policía, Prensa, Corona Corp, Pandillas, Contrabandistas:
    −500 a +500), confianza con cada NPC importante (0 a 500), fama (0 a 10.000),

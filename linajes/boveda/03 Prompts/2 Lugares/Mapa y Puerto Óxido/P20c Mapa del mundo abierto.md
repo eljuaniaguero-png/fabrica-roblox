@@ -8,7 +8,7 @@ estado: hecho
 Antes de pegarlo: Blender abierto con el conector de Claude, en Claude Code en `C:\Users\eljua\fabrica-roblox`. Reglas: [[Reglas de los prompts]] · [[Nivel de detalle]] · [[Colores]]
 
 ```
-Leé la sección 0d de linajes/ideas/ficha.md y linajes/arte/GUIA-ESTILO.md.
+Leé linajes/boveda/01 Juego/Mundo abierto y reputación.md y linajes/arte/GUIA-ESTILO.md.
 En Roblox Studio (no en Blender), armá el MAPA COMPLETO en bloques grises, sin detalle, para probar
 tamaños y recorridos antes de modelar:
 1. Mapa de 4.000 x 4.000 studs con una bahía en el centro. Alrededor de la bahía:

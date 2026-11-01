@@ -84,7 +84,7 @@ Llegar a nivel 5 y repartir puntos.
 - En Play, subí a nivel 3 y repartí los puntos.
 
 ## 8. Alcance completo (Post beta)
-Para cuando se haga la versión completa. Es el pedido anterior: actualizá los números con la bóveda antes de usarlo (la bóveda manda) y cambiá `linajes/ideas/ficha.md` por las notas de la bóveda.
+Para cuando se haga la versión completa. Es el pedido anterior: actualizá los números con la bóveda antes de usarlo (la bóveda manda). Las referencias a la ficha vieja ya están cambiadas por las notas de la bóveda.
 
 ```
 XP: matón 15, matón con implantes 25, élite 60, jefe 300, misión 50 a 200, crimen al azar 40.

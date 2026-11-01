@@ -8,7 +8,7 @@ estado: hecho (Beta: solo lo del puerto)
 Antes de pegarlo: Blender abierto con el conector de Claude, en Claude Code en `C:\Users\eljua\fabrica-roblox`. Reglas: [[Reglas de los prompts]] · [[Nivel de detalle]] · [[Colores]]
 
 ```
-Leé linajes/arte/GUIA-ESTILO.md y la sección "Calle viva" de linajes/ideas/ficha.md. Guardá kit-base.blend
+Leé linajes/arte/GUIA-ESTILO.md y linajes/boveda/01 Juego/Calle viva.md. Guardá kit-base.blend
 como linajes/arte/blender/calle-viva.blend. Diseños propios: ninguna marca real de autos.
 VEHÍCULOS (cada uno en 2 a 3 mallas, ruedas aparte para girar, puertas aparte si se abren):
 0. Helicóptero policial (≤ 14.000, rotor aparte que gira, reflector Neon abajo).

@@ -22,6 +22,11 @@ Todos los prompts siguen la [[Plantilla de prompt]]. Estas reglas valen para **t
 - Cada malla ≤ **20.000 triángulos**, un material por malla, UV dentro de 0-1, normales hacia afuera, normal map OpenGL.
 - Texturas: 1024 px trajes, jefes y edificios importantes; 512 px casi todo; 256 px props chicos. **El piso de un interior puede ir a 1024; nunca 2048** (se cuelga el horneado por memoria).
 - **Lo que brilla** (faros, focos, neón, pantallas, fuego) va en su malla y se exporta como `Neon_<Pieza>`. **Los vidrios** como `Glass_<Pieza>`. **Lo que se mueve** (puertas, ruedas, persianas, rotores) va aparte.
+
+> [!note] Modelos hechos antes del 1 nov (revisado)
+> - **Personajes con luces** (Centinela 3 piezas, Mascarada 3, Remache 2, Estela 17): las piezas que brillan se exportaron con el sufijo `_Neon` (por ejemplo `Centinela_Casco_Neon`) en vez del prefijo `Neon_`. El importador de Studio tiene que aceptar **los dos**; los personajes nuevos usan el prefijo.
+> - **Personajes sin `_Colision`**: está bien. Van pegados al esqueleto con `CanCollide = false`; choca la cápsula del Humanoid.
+> - **Puerto Óxido y calle viva** ya siguen las reglas (`Neon_`, `Glass_` y `_Colision`).
 - **Choque**: lo que tiene piezas finas (escaleras, rejas, barandas) se ve pero no choca; al lado va `<Pieza>_Colision`, invisible y simple (cajas y rampas en cuña). Escaleras de mano: TrussPart en Studio.
 - Al exportar se borran las **caras que nunca se ven** (base de edificios y muros, panza de autos, abajo de las calles).
 - Edificios con **zócalo** abajo para que no floten.

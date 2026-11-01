@@ -84,10 +84,10 @@ Armar 3 personajes distintos.
 - Creá un personaje, salí y volvé.
 
 ## 8. Alcance completo (Post beta)
-Para cuando se haga la versión completa. Es el pedido anterior: actualizá los números con la bóveda antes de usarlo (la bóveda manda) y cambiá `linajes/ideas/ficha.md` por las notas de la bóveda.
+Para cuando se haga la versión completa. Es el pedido anterior: actualizá los números con la bóveda antes de usarlo (la bóveda manda). Las referencias a la ficha vieja ya están cambiadas por las notas de la bóveda.
 
 ```
-Leé la sección 0c de linajes/ideas/ficha.md. Usá las piezas del Prompt 20b.
+Leé linajes/boveda/01 Juego/Poderes, inicio y personalización.md y las notas de linajes/boveda/06 Linajes/. Usá las piezas del Prompt 20b.
 1. CREADOR (al crear un espacio y después en tu base): elegir casco, capa, peto, hombreras, guantes, botas
    sobre el cuerpo propio (P20f: contextura, altura, piel, cara, pelo; NUNCA el avatar de Roblox); 3 colores por pieza con selector libre (rueda de color + 12 colores de la guía);
    material por pieza (tela, cuero, metal, neon); largo de capa; vista girando.

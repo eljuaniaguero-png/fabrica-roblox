@@ -83,10 +83,10 @@ Entrar, robar, escapar.
 - En Play, hacé el atraco sin que suene la alarma.
 
 ## 8. Alcance completo (Post beta)
-Para cuando se haga la versión completa. Es el pedido anterior: actualizá los números con la bóveda antes de usarlo (la bóveda manda) y cambiá `linajes/ideas/ficha.md` por las notas de la bóveda.
+Para cuando se haga la versión completa. Es el pedido anterior: actualizá los números con la bóveda antes de usarlo (la bóveda manda). Las referencias a la ficha vieja ya están cambiadas por las notas de la bóveda.
 
 ```
-Leé "Atracos" en la sección "Calle viva" de linajes/ideas/ficha.md. Todo en el servidor, números en Config.
+Leé la parte "Atracos" de linajes/boveda/01 Juego/Calle viva.md. Todo en el servidor, números en Config.
 1. ATRACOS CHICOS (1 jugador): carterista (minijuego de 3 s), kiosco y tiendas (forzar la caja 5 s),
    cajero (hackeo 8 s), robar un auto. Botín chico en dinero, delito para la búsqueda.
 2. ATRACOS MEDIANOS (1 a 4): Joyería Aurora (romper vitrinas, caja fuerte 30 s), Casa de empeño,

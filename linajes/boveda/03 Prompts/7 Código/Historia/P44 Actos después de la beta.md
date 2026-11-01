@@ -8,7 +8,7 @@ estado: pendiente
 Antes de pegarlo: Blender abierto con el conector de Claude, en Claude Code en `C:\Users\eljua\fabrica-roblox`. Reglas: [[Reglas de los prompts]] · [[Nivel de detalle]] · [[Colores]]
 
 ```
-Hacé el hilo hecho a mano [NOMBRE] de las secciones 0d y 0f de linajes/ideas/ficha.md, como datos del
+Hacé el hilo hecho a mano [NOMBRE] de linajes/boveda/01 Juego/Mundo abierto y reputación.md y las notas de linajes/boveda/05 Historia/, como datos del
 Narrador (Prompt 41), con 2 o 3 ganchos de entrada:
 1. Modelos que falten (prompts 3 a 25c con el mismo detalle), animaciones (26 a 30) y sonidos (31 y 32).
 2. Misiones del arco (todas por NPC), con 2 puertas de entrada, enemigos ajustados al nivel del jugador,

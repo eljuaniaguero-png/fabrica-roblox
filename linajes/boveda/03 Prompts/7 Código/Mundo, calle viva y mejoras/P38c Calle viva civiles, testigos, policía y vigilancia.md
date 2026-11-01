@@ -91,10 +91,10 @@ Prueba con 2 jugadores.
 - En Play, robá algo frente a un civil y escapate.
 
 ## 8. Alcance completo (Post beta)
-Para cuando se haga la versión completa. Es el pedido anterior: actualizá los números con la bóveda antes de usarlo (la bóveda manda) y cambiá `linajes/ideas/ficha.md` por las notas de la bóveda.
+Para cuando se haga la versión completa. Es el pedido anterior: actualizá los números con la bóveda antes de usarlo (la bóveda manda). Las referencias a la ficha vieja ya están cambiadas por las notas de la bóveda.
 
 ```
-Leé la sección "Calle viva" de linajes/ideas/ficha.md. Todo lo decide el servidor, números en Config.luau.
+Leé linajes/boveda/01 Juego/Calle viva.md. Todo lo decide el servidor, números en Config.luau.
 1. CIVILES: spawner por barrio con densidad según ciudad y hora (Corona de día 40 civiles cerca del
    jugador, Vórtice 15, Puerto 20), ropa armada al azar con el kit del Prompt 20d. Caminan por puntos de
    vereda (Parts con tag "Vereda"), se van a casa y vuelven (no aparecen de la nada delante de un jugador).

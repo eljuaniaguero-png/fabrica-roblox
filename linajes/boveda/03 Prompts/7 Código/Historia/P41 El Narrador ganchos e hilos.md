@@ -8,7 +8,7 @@ estado: pendiente
 Antes de pegarlo: Blender abierto con el conector de Claude, en Claude Code en `C:\Users\eljua\fabrica-roblox`. Reglas: [[Reglas de los prompts]] · [[Nivel de detalle]] · [[Colores]]
 
 ```
-Leé la sección 0f de linajes/ideas/ficha.md. Todo en el servidor, números en Config.luau.
+Leé las notas de linajes/boveda/05 Historia/ (sobre todo El Narrador y los ganchos). Todo en el servidor, números en Config.luau.
 1. DATOS DEL JUGADOR (ProfileStore, por espacio): hilos activos (máx. 2 impuestos + los que pidió), ganchos
    vistos, rivales (máx. 5, cada uno con nombre, qué pasó la última vez, mejora nueva), deudas y favores con
    otros jugadores, pactos, Fragmentos de verdad (de 40), Revelaciones vistas (de 8), capítulos de Tu crónica.

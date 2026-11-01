@@ -8,7 +8,7 @@ estado: pendiente
 Antes de pegarlo: Blender abierto con el conector de Claude, en Claude Code en `C:\Users\eljua\fabrica-roblox`. Reglas: [[Reglas de los prompts]] · [[Nivel de detalle]] · [[Colores]]
 
 ```
-Leé la sección 0c de linajes/ideas/ficha.md, sobre todo "Cambios de Juani (30 oct, 20:00)".
+Leé linajes/boveda/01 Juego/Poderes, inicio y personalización.md y las notas de linajes/boveda/06 Linajes/, sobre todo "Cambios de Juani (30 oct, 20:00)".
 1. ESTADÍSTICAS DE PARTIDA (guardadas por espacio, solo en el servidor): dash, esquives, parry, golpes
    recibidos, peleas ganadas con <15 % de vida, minutos de noche, trabajos por tipo, crímenes ayudados
    (de cada lado), uso de cada habilidad, derrotas, NPCs hablados, distancia recorrida, enemigos vencidos

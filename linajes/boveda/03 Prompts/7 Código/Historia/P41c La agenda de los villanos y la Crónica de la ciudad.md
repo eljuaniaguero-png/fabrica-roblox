@@ -8,7 +8,7 @@ estado: pendiente
 Antes de pegarlo: Blender abierto con el conector de Claude, en Claude Code en `C:\Users\eljua\fabrica-roblox`. Reglas: [[Reglas de los prompts]] · [[Nivel de detalle]] · [[Colores]]
 
 ```
-Leé "Los villanos tienen su propia agenda" en la sección 0f de linajes/ideas/ficha.md.
+Leé "Los villanos tienen su propia agenda" en las notas de linajes/boveda/05 Historia/ (sobre todo El Narrador y los ganchos).
 1. PLAN SEMANAL: cada lunes, cada villano principal activo (Mascarada, Halden, el Albatros al empezar) elige
    un plan de una lista en Config (por ejemplo: noche de caos en Vórtice, implante nuevo en Corona,
    cargamento grande en el puerto), con una barra de avance global.

@@ -86,10 +86,10 @@ Entrar con un espacio nuevo y cronometrar.
 - Creá un espacio nuevo y cronometrá hasta la primera pelea.
 
 ## 8. Alcance completo (Post beta)
-Para cuando se haga la versión completa. Es el pedido anterior: actualizá los números con la bóveda antes de usarlo (la bóveda manda) y cambiá `linajes/ideas/ficha.md` por las notas de la bóveda.
+Para cuando se haga la versión completa. Es el pedido anterior: actualizá los números con la bóveda antes de usarlo (la bóveda manda). Las referencias a la ficha vieja ya están cambiadas por las notas de la bóveda.
 
 ```
-Leé la sección 0c de linajes/ideas/ficha.md.
+Leé linajes/boveda/01 Juego/Poderes, inicio y personalización.md y las notas de linajes/boveda/06 Linajes/.
 1. Creador de personaje (Prompt 36b) con ropa de civil.
 2. ORIGEN AL AZAR (servidor): uno de 6 inicios (Estibador, Pasante, Repartidor, Fotógrafo, Preso, Acróbata),
    cada uno en su lugar del mapa (tags "Origen" del Prompt 20c: 2 por ciudad, así cada jugador arranca

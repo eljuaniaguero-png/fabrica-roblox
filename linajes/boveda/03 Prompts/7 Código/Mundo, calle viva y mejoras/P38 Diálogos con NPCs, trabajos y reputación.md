@@ -88,7 +88,7 @@ Hablar con los 2 y hacer un trabajo de cada uno.
 - En Play, hacé un trabajo con Tano y uno con el Albatros.
 
 ## 8. Alcance completo (Post beta)
-Para cuando se haga la versión completa. Es el pedido anterior: actualizá los números con la bóveda antes de usarlo (la bóveda manda) y cambiá `linajes/ideas/ficha.md` por las notas de la bóveda.
+Para cuando se haga la versión completa. Es el pedido anterior: actualizá los números con la bóveda antes de usarlo (la bóveda manda). Las referencias a la ficha vieja ya están cambiadas por las notas de la bóveda.
 
 ```
 SISTEMA DE DIÁLOGO (pantalla del Prompt 33): los diálogos viven en linajes/src/shared/Dialogos/<npc>.luau

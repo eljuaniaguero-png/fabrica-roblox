@@ -93,7 +93,7 @@ Entrar, cambiar, salir, volver; simular fallas.
 - Entrá, cambiá de espacio, salí y volvé: todo tiene que seguir.
 
 ## 8. Alcance completo (Post beta)
-Para cuando se haga la versión completa. Es el pedido anterior: actualizá los números con la bóveda antes de usarlo (la bóveda manda) y cambiá `linajes/ideas/ficha.md` por las notas de la bóveda.
+Para cuando se haga la versión completa. Es el pedido anterior: actualizá los números con la bóveda antes de usarlo (la bóveda manda). Las referencias a la ficha vieja ya están cambiadas por las notas de la bóveda.
 
 ```
 Copiá el guardado con ProfileStore del juego archivado más completo (ver archivo/README.md) y adaptalo.
