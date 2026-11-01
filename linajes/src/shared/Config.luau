@@ -241,16 +241,15 @@ Config.Cuerpo.ColoresPelo = {
 	"f2652b",
 }
 
--- Animaciones de nuestro Animate. Por ahora son las de base de Roblox para R15 (el mismo
--- esqueleto); se cambian por las nuestras cuando estén hechas en Blender (arte/animaciones/).
+-- Animaciones de nuestro Animate (src/character/Animate.client.luau).
 Config.Animaciones = {
-	Quieto = "rbxassetid://507766388",
-	Caminar = "rbxassetid://507777826",
-	Correr = "rbxassetid://507767714",
-	Saltar = "rbxassetid://507765000",
-	Caer = "rbxassetid://507767968",
-	Trepar = "rbxassetid://507765644",
 	VelocidadCorrer = 12, -- studs/s: desde acá pasa de caminar a correr
+	VelocidadCorrerRapido = 24, -- studs/s: desde acá usa CorrerRapido (Velocista, Reflejos)
+	VelocidadVolar = 2, -- studs/s: volando, desde acá pasa de VolarQuieto a VolarAvanzando
+	-- Velocidad del personaje a la que cada animación va a velocidad normal: más rápido la
+	-- acelera y más lento la frena (así los pies patinan menos). Tope de 0,7 a 1,8 veces.
+	Referencia = { Caminar = 8, Correr = 16, CorrerRapido = 28 },
+	TopeVelocidad = { 0.7, 1.8 },
 	-- Locomoción propia (P26-01), hecha con arte/scripts/animaciones/base.py. Loop en todas menos
 	-- SaltarInicio y SaltarCaer; prioridad Core en Quieto y Movement en el resto. Caminar, Correr y
 	-- CorrerRapido tienen marcadores "Paso" (polvo y sonido de pisada).
