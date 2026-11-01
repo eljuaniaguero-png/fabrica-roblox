@@ -108,14 +108,14 @@ def estructura():
 
 def muebles():
     o = []
-    # elevador amarillo de dos columnas con el auto (bloque), oeste
+    # elevador amarillo de dos columnas a los costados del auto, brazos con tacos bajo los zócalos del auto
     ex, ey = -10, -2
-    elev = [((1.4, 1.4, 12), (ex + sx * 6.5, ey, 6)) for sx in (-1, 1)] + [((2.6, 2.6, 0.4), (ex + sx * 6.5, ey, 0.2)) for sx in (-1, 1)]
-    elev += [_barra((ex + sx * 6.5, ey, 4.4), (ex + sx * 2.4, ey + sy * 4.5, 4.4), 0.4) for sx in (-1, 1) for sy in (-1, 1)]
-    elev += [((14.4, 0.8, 0.8), (ex, ey, 12.2))]
+    elev = [((1.4, 1.4, 12), (ex + sx * 5.6, ey, 6)) for sx in (-1, 1)] + [((2.6, 2.6, 0.3), (ex + sx * 5.6, ey, 0.15)) for sx in (-1, 1)]
+    elev += [((1.8, 1.8, 1.0), (ex + sx * 5.6, ey, 3.9)) for sx in (-1, 1)]  # carros que suben por las columnas
+    elev += [_barra((ex + sx * 5.6, ey, 4.0), (ex + sx * 2.6, ey + sy * 4.0, 4.0), 0.4) for sx in (-1, 1) for sy in (-1, 1)]
+    elev += [((12.6, 0.8, 0.8), (ex, ey, 12.4))]  # travesaño de arriba
     o.append(pieza("Elevador", elev, "amarillo"))
-    o.append(pieza("Auto", [((7, 13, 2.6), (ex, ey, 6.2)), ((6, 7, 2.2), (ex, ey + 1, 8.6)), ((6.6, 4, 0.3), (ex, ey - 6.5, 8.8), (-55, 0, 0))], "porton-verde"))  # capó abierto
-    o.append(pieza("Auto_Ruedas", [], "goma", cilindros=[(1.2, 1.0, (ex + sx * 3.7, ey + sy * 4.3, 4.9), "X", 12) for sx in (-1, 1) for sy in (-1, 1)]))
+    o.append(pieza("Elevador_Tacos", [((1.0, 1.0, 0.4), (ex + sx * 2.6, ey + sy * 4.0, 4.4)) for sx in (-1, 1) for sy in (-1, 1)], "goma"))
     # banco de roble contra el fondo, con morsa y el gancho; tablero de herramientas arriba
     bx, by = 2, HY - G - 1.6
     o.append(pieza("Banco", [((16, 3.2, 0.5), (bx, by, 3.3)), ((15.6, 3, 3), (bx, by + 0.1, 1.5))], "roble"))
@@ -159,18 +159,50 @@ def muebles():
     o.append(pieza("Radio", [((1.4, 0.7, 0.9), (ex0 + 1.4, ky - 3.2, ENTREPISO + 2.05))], "acero"))
     o.append(pieza("Tambores", [], "oxido", cilindros=[(1.2, 3.6, (x, y, 0), "Z", 14) for x, y in ((-17.6, 12.4), (-15, 13))]))
     # esquina del frente al este: carro rojo, compresor y locker verde
-    o.append(pieza("CarroHerramientas", [((3, 2, 3.4), (9, -11, 1.9)), ((3.2, 2.2, 0.2), (9, -11, 3.7))], "rojo-herramienta", cilindros=[(0.3, 0.3, (9 + sx * 1.2, -11 + sy * 0.8, 0), "Z", 8) for sx in (-1, 1) for sy in (-1, 1)]))
-    o.append(pieza("Compresor", [((3, 1.6, 0.4), (14.5, -13.5, 0.2))], "rojo-herramienta", cilindros=[(1.1, 3.2, (13, -13.5, 1.5), "X", 12)]))
+    # carro de herramientas rojo con ruedas de verdad (los cajones miran al taller)
+    car = [((3, 2, 3.0), (9, -11, 2.1)), ((3.3, 2.3, 0.2), (9, -11, 3.7)), ((3.3, 0.15, 0.5), (9, -12.1, 3.95))]  # cuerpo, tapa y borde
+    car += [((0.25, 0.25, 0.3), (9 + sx * 1.2, -11 + sy * 0.7, 0.45)) for sx in (-1, 1) for sy in (-1, 1)]  # horquillas
+    o.append(pieza("CarroHerramientas", car, "rojo-herramienta"))
+    o.append(pieza("CarroHerramientas_Ruedas", [], "goma", cilindros=[(0.3, 0.2, (9 + sx * 1.2 - 0.1, -11 + sy * 0.7, 0.3), "X", 10) for sx in (-1, 1) for sy in (-1, 1)]))
+    # compresor: tanque horizontal sobre patas, motor y cubrecorrea arriba
+    cmp = [((0.5, 1.8, 0.5), (x, -13.5, 0.25)) for x in (12.8, 15.0)]
+    cmp += [((1.3, 1.2, 1.1), (13.4, -13.5, 3.0)), ((0.35, 1.3, 1.1), (14.5, -13.5, 3.0))]
+    o.append(pieza("Compresor", cmp, "rojo-herramienta", cilindros=[(1.0, 3.4, (12.2, -13.5, 1.4), "X", 14)]))
     o.append(pieza("Locker", [((3, 2.2, 7), (HX - G - 1.5, -HY + G + 1.2, 3.5))], "verde-locker"))
     # piso: rejilla y chapa semilla de melón (finitas, apoyadas)
     o.append(pieza("Piso_Rejilla", [((3, 1.4, 0.08), (-2, -9, 0.04))], "hierro"))
-    o.append(pieza("Piso_Chapa", [((6, 3.6, 0.08), (9, -5, 0.04))], "acero"))
+    o.append(pieza("Piso_Chapa", [((6, 3.6, 0.06), (9, -5, 0.03))], "hierro"))
     # lámparas colgantes cálidas (cadena + pantalla + foco Neon_)
     for i, x in enumerate((-8, 10)):
         # cuelgan del tirante de la cercha (y = -4, z = 16 - 0,3)
         o.append(pieza(f"Lampara{i}", [((0.15, 0.15, 1.0), (x, -4, ALTO - 0.8))], "hierro", cilindros=[(1.3, 0.8, (x, -4, 14.5), "Z", 12, 0.4)]))
         o.append(pieza(f"Neon_Lampara{i}", [((0.6, 0.6, 0.4), (x, -4, 14.3))], "neon-calido"))
     return o
+
+
+def auto():
+    """El compacto de la calle viva (ya horneado) arriba del elevador, con sus 4 ruedas."""
+    with bpy.data.libraries.load(os.path.join(B.BLENDER, "calle-viva.blend"), link=False) as (desde, hacia):
+        hacia.objects = [n for n in desde.objects if n in ("Compacto_Carroceria", "Civil_Rueda", "Auto_Vidrios", "Auto_Faros", "Auto_Stop")]
+    fuente = {o.name: o for o in hacia.objects if o}
+    for o in fuente.values():
+        bpy.context.scene.collection.objects.link(o)
+        o.location = (0, 0, -400)
+    ex, ey, z = -10, -2, 4.6
+    h = [P.copia(fuente["Compacto_Carroceria"], ex, ey, 0, z)]
+    h[0].name = "Auto_Carroceria"
+    for n, nuevo in (("Auto_Vidrios", "Glass_Auto_Vidrios"), ("Auto_Faros", "Neon_Auto_Faros"), ("Auto_Stop", "Neon_Auto_Stop")):
+        if n in fuente:
+            c = P.copia(fuente[n], ex, ey, 0, z)
+            c.name = nuevo
+            h.append(c)
+    for i, (sx, sy) in enumerate(((-1, -1), (-1, 1), (1, -1), (1, 1))):
+        r = P.copia(fuente["Civil_Rueda"], ex + sx * 3.4, ey + sy * 4.2, 0 if sx > 0 else 180, z)
+        r.name = f"Auto_Rueda{i}"
+        h.append(r)
+    for o in fuente.values():
+        bpy.data.objects.remove(o)
+    return h
 
 
 def marcadores():
@@ -224,13 +256,15 @@ def revisar(objs):
     cruces, flotan = [], []
     for i, a in enumerate(nombres):
         mna, mxa = cajas[a]
-        if not a.startswith(estructura) and not a.startswith(("Neon_", "Lampara", "Tablero", "Ventana", "Entrepiso", "Cama", "Cajon", "Radio", "Escalera", "Banco_", "Cartel")) and 0.03 < mna[2] < 0.6:
+        if not a.startswith(estructura) and not a.startswith(("Neon_", "Lampara", "Tablero", "Ventana", "Entrepiso", "Cama", "Cajon", "Radio", "Escalera", "Banco_", "CarroHerramientas")) and 0.03 < mna[2] < 0.6:
             flotan.append((a, round(mna[2], 2)))
         for b in nombres[i + 1 :]:
             if a.startswith(estructura) and b.startswith(estructura):
                 continue
+            if a.startswith(("Ondas", "Zocalo")) or b.startswith(("Ondas", "Zocalo")):
+                continue
             base_a, base_b = a.split("_")[0], b.split("_")[0]
-            if (base_a, base_b) in juntos or (base_b, base_a) in juntos or base_a == base_b or a.startswith("Neon_") or b.startswith("Neon_"):
+            if (base_a, base_b) in juntos or (base_b, base_a) in juntos or base_a == base_b or a.startswith(("Neon_", "Glass_")) or b.startswith(("Neon_", "Glass_")):
                 continue
             mnb, mxb = cajas[b]
             if min(min(mxa[k], mxb[k]) - max(mna[k], mnb[k]) for k in range(3)) > 0.05 and _arbol(bpy.data.objects[a]).overlap(_arbol(bpy.data.objects[b])):
@@ -288,10 +322,10 @@ def boceto():
     bpy.ops.wm.save_as_mainfile(filepath=BLEND)
     cruces, flotan = revisar(est + mue)
     sin_techo = [o for o in est if not o.name.startswith(("Techo", "Hastial", "Cerchas"))] + mue + [man]
-    r1 = P.render_orto(ARCHIVO + "_boceto_planta", [o for o in sin_techo if not o.name.startswith(("Lampara", "Neon_"))], giro=0, altura=89, niebla=False, solo=True)
+    r1 = P.render_orto(ARCHIVO + "_boceto_planta", [o for o in sin_techo if not o.name.startswith(("Lampara", "Neon_", "Glass_"))], giro=0, altura=89, niebla=False, solo=True)
     r2 = camara(ARCHIVO + "_boceto_puerta", (-9, -15, 6.5), (6, 10, 4.5), lente=16)
     r3 = camara(ARCHIVO + "_boceto_fondo", (-17, 14, 10), (8, -10, 3), lente=16)
-    r4 = P.render_orto(ARCHIVO + "_boceto_corte", [o for o in sin_techo if not o.name.startswith(("Pared_Frente", "Porton", "Lampara", "Neon_"))], giro=-25, altura=35, niebla=False, solo=True)
+    r4 = P.render_orto(ARCHIVO + "_boceto_corte", [o for o in sin_techo if not o.name.startswith(("Pared_Frente", "Ondas_Frente", "Porton", "Lampara", "Neon_"))], giro=-25, altura=35, niebla=False, solo=True)
     r5 = camara(ARCHIVO + "_boceto_entrepiso", (3, -6, 7), (17, 9, 4), lente=20)
     return {"cruces": cruces, "flotan": flotan, "triangulos": B.contar_triangulos(est + mue), "renders": [r1, r2, r3, r4, r5]}
 
@@ -317,22 +351,50 @@ def detalles():
     """Piezas que suman detalle modelado: columnas y correas, herramientas, cajones, motor del auto,
     manchas, etc. Las de muchas partes chicas no se biselan ni se hornean (solo material)."""
     o = []
-    # columnas I en esquinas y a mitad de pared; correas horizontales en el fondo y el oeste
-    col = []
-    for x, y in ((-HX + G + 0.75, 0), (-12, HY - G - 0.7), (HX - G - 0.75, -10)):  # solo donde no hay muebles
-        col += [((1.4, 0.3, ALTO), (x, y - 0.5, ALTO / 2)), ((1.4, 0.3, ALTO), (x, y + 0.5, ALTO / 2)), ((0.3, 1.0, ALTO), (x, y, ALTO / 2))]
-    o.append(pieza("Columnas", col, "viga"))
-    cor = [((28, 0.3, 0.6), (-4, HY - G - 0.2, 5))]
-    cor += [((0.3, FONDO - 4, 0.6), (-HX + G + 0.15, 0, 11.6))]
-    o.append(pieza("Correas", cor, "viga"))
+    # chapa ondulada: nervios verticales cada 1 stud en la cara de adentro (cortados en portón, puerta y ventanas) y zócalo de cemento
+    def nervios(nombre, eje, fijo, desde, hasta, huecos):
+        cajas = []
+        k = desde + 0.5
+        while k < hasta:
+            tramos = [(1, ALTO)]
+            for a, b, z0, z1 in huecos:
+                if a <= k <= b:
+                    tramos = [(z, w) for z, w in ((1, z0), (z1, ALTO)) if w - z > 0.5]
+            for z0, z1 in tramos:
+                tam = (0.35, 0.15, z1 - z0) if eje == "x" else (0.15, 0.35, z1 - z0)
+                pos = (k, fijo, (z0 + z1) / 2) if eje == "x" else (fijo, k, (z0 + z1) / 2)
+                cajas.append((tam, pos))
+            k += 1
+        o.append(pieza(nombre, cajas, "chapa"))
+
+    nervios("Ondas_Frente", "x", -HY + G + 0.075, -HX + G, HX - G, [(PORTON_X[0], PORTON_X[1], 0, 10)])
+    nervios("Ondas_Fondo", "x", HY - G - 0.075, -HX + G, HX - G, [])
+    nervios("Ondas_Oeste", "y", -HX + G + 0.075, -HY + G, HY - G, [(-8, -4, 6, 10), (4, 8, 6, 10)])
+    nervios("Ondas_Este", "y", HX - G - 0.075, -HY + G, HY - G, [(PUERTA_Y - 2, PUERTA_Y + 2, 0, 7), (8, 12, 6, 10)])
+    zoc = [((PORTON_X[0] + HX - G, 0.3, 1), ((PORTON_X[0] - HX + G) / 2, -HY + G + 0.15, 0.5)), ((HX - G - PORTON_X[1], 0.3, 1), ((PORTON_X[1] + HX - G) / 2, -HY + G + 0.15, 0.5))]
+    zoc += [((ANCHO - 2 * G, 0.3, 1), (0, HY - G - 0.15, 0.5)), ((0.3, FONDO - 2 * G, 1), (-HX + G + 0.15, 0, 0.5))]
+    zoc += [((0.3, PUERTA_Y - 2 + HY - G, 1), (HX - G - 0.15, (PUERTA_Y - 2 - HY + G) / 2, 0.5)), ((0.3, HY - G - PUERTA_Y - 2, 1), (HX - G - 0.15, (PUERTA_Y + 2 + HY - G) / 2, 0.5))]
+    o.append(pieza("Zocalo", zoc, "concreto"))
     o.append(pieza("Porton_Guias", [((0.5, 0.6, 10), (x, -HY + G + 0.3, 5)) for x in (PORTON_X[0] + 0.25, PORTON_X[1] - 0.25)], "hierro"))
-    # tablero: llaves de mayor a menor, martillos, pinzas, serrucho y manguera enrollada
-    bx, ty = 2, HY - G - 0.45
-    her = [((0.25, 0.15, 1.2 + (k % 4) * 0.25), (bx - 6 + k * 0.45, ty, 9.6)) for k in range(10)]
-    her += [((0.25, 0.2, 1.6), (bx - 0.8 + k * 0.9, ty, 7.3)) for k in range(3)] + [((0.8, 0.3, 0.45), (bx - 0.8 + k * 0.9, ty - 0.05, 8.1)) for k in range(3)]
-    her += [((0.18, 0.15, 1.1), (bx + 2.4 + k * 0.5 + d, ty, 7.4)) for k in range(4) for d in (0, 0.16)]
-    her += [((3, 0.12, 0.9), (bx + 4.6, ty, 9.8))]
-    o.append(pieza("Tablero_Herramientas", her, "acero", cilindros=[(0.9, 0.3, (bx - 5.5, ty, 7.4), "Y", 12, 0.9)]))
+    # tablero: llaves con boca abierta (de mayor a menor), martillos con mango de madera, pinzas, serrucho y manguera
+    bx, ty = 2, HY - G - 0.4
+    her, mangos = [], []
+    for k in range(9):
+        largo = 1.0 + k * 0.12
+        x = bx - 6.2 + k * 0.5
+        her += [((0.18, 0.12, largo), (x, ty, 9.2 + largo / 2)), ((0.12, 0.12, 0.35), (x - 0.14, ty, 9.35 + largo)), ((0.12, 0.12, 0.35), (x + 0.14, ty, 9.35 + largo))]
+    for k in range(3):
+        x = bx - 0.8 + k * 1.0
+        mangos.append(((0.22, 0.14, 1.5), (x, ty, 7.25)))
+        her.append(((0.8, 0.22, 0.38), (x, ty - 0.02, 8.15)))
+    for k in range(3):
+        x = bx + 2.4 + k * 0.6
+        her += [((0.12, 0.12, 0.9), (x - 0.09, ty, 7.2), (0, 6, 0)), ((0.12, 0.12, 0.9), (x + 0.09, ty, 7.2), (0, -6, 0)), ((0.3, 0.12, 0.35), (x, ty, 7.8))]
+    her.append(((3.0, 0.06, 0.8), (bx + 4.4, ty, 9.9)))
+    mangos.append(((0.8, 0.14, 0.7), (bx + 6.1, ty, 9.9)))
+    o.append(pieza("Tablero_Herramientas", her, "acero"))
+    o.append(pieza("Tablero_Mangos", mangos, "roble"))
+    o.append(pieza("Tablero_Manguera", [], "goma", cilindros=[(0.9, 0.25, (bx - 5.6, ty, 7.0), "Y", 14, 0.9)]))
     # banco: frentes de cajones con manijas, mango de la morsa y trapo rojo
     by = HY - G - 1.6
     caj = [((3.4, 0.15, 1.1), (bx - 5.4 + k * 3.6, by - 1.62, 2.2 - j * 1.3)) for k in range(4) for j in range(2)]
@@ -340,25 +402,17 @@ def detalles():
     o.append(pieza("Banco_Cajones", caj, "roble"))
     o.append(pieza("Banco_MorsaMango", [((0.15, 1.6, 0.15), (bx - 6, by - 1.6, 4.0))], "hierro"))
     o.append(pieza("Banco_Trapo", [((1.0, 0.7, 0.08), (bx + 5.5, by, 3.6))], "cofradia"))
-    # elevador: tacos de goma en los brazos
-    ex, ey = -10, -2
-    o.append(pieza("Elevador_Tacos", [((0.9, 0.9, 0.4), (ex + sx * 2.4, ey + sy * 4.5, 4.8)) for sx in (-1, 1) for sy in (-1, 1)], "goma"))
-    # auto: motor bajo el capó, paragolpes, llantas y faros
-    o.append(pieza("Auto_Motor", [((4.4, 3, 1.6), (ex, ey - 4.6, 8.3))], "acero", cilindros=[(0.5, 1.2, (ex + sx * 1.2, ey - 4.6, 9.0), "Z", 10) for sx in (-1, 1)]))
-    o.append(pieza("Auto_Paragolpes", [((7.4, 0.6, 0.7), (ex, ey + sy * 6.7, 5.3)) for sy in (-1, 1)], "acero"))
-    o.append(pieza("Auto_Llantas", [], "acero", cilindros=[(0.6, 1.08, (ex + sx * 3.7, ey + sy * 4.3, 4.9), "X", 10) for sx in (-1, 1) for sy in (-1, 1)]))
-    o.append(pieza("Neon_Auto_Faros", [((1.0, 0.1, 0.6), (ex + sx * 2.6, ey - 6.52, 6.6)) for sx in (-1, 1)], "neon-calido"))
     # pila de neumáticos al lado del portón (como en la ref-1)
     o.append(pieza("Neumaticos", [], "goma", cilindros=[(1.3, 0.9, (-17.7, -12.3, z * 0.9), "Z", 14) for z in range(4)]))
     # carro rojo: frentes de cajones con manijas
-    car = [((3.1, 0.12, 0.7), (9, -12.05, 1.0 + k * 0.8)) for k in range(3)] + [((1.2, 0.2, 0.12), (9, -12.15, 1.15 + k * 0.8)) for k in range(3)]
-    o.append(pieza("CarroHerramientas_Cajones", car, "acero"))
+    o.append(pieza("CarroHerramientas_Cajones", [((2.8, 0.08, 0.75), (9, -9.96, 1.05 + k * 0.85)) for k in range(4)], "rojo-herramienta"))
+    o.append(pieza("CarroHerramientas_Manijas", [((1.4, 0.15, 0.12), (9, -9.84, 1.3 + k * 0.85)) for k in range(4)], "acero"))
     # locker: rejillas y manija
     lx, ly = HX - G - 1.5, -HY + G + 1.2
     lok = [((2.0, 0.1, 0.12), (lx, ly + 1.15, 6.0 - k * 0.3)) for k in range(4)] + [((0.15, 0.2, 0.9), (lx - 1.0, ly + 1.2, 3.8))]
     o.append(pieza("Locker_Detalle", lok, "hierro"))
     # compresor: motor arriba y manómetro
-    o.append(pieza("Compresor_Motor", [((1.4, 1.2, 1.2), (14.6, -13.5, 3.2))], "hierro", cilindros=[(0.35, 0.2, (12.2, -14.6, 1.8), "Y", 10)]))
+    o.append(pieza("Compresor_Detalle", [((0.15, 1.4, 0.15), (15.9, -13.5, 2.6))], "hierro", cilindros=[(0.3, 0.15, (14.8, -12.4, 1.7), "Y", 10)]))  # manija y manómetro
     # tambores: aros
     o.append(pieza("Tambores_Aros", [], "hierro", cilindros=[(1.25, 0.15, (x, y, z), "Z", 14) for x, y in ((-17.6, 12.4), (-15, 13)) for z in (1.1, 2.4, 3.45)]))
     # escritorio: manijas de la cajonera, mouse, taza y papeles
@@ -374,8 +428,6 @@ def detalles():
     gri = [((0.12, 3 + k % 3, 0.02), (-15 + k * 4.3, -12 + (k * 7) % 22, 0.012), (0, 0, 20 + k * 37)) for k in range(8)]
     o.append(pieza("Piso_Grietas", gri, "goma"))
     o.append(pieza("Piso_RejillaBarras", [((0.15, 1.3, 0.1), (-3.2 + k * 0.4, -9, 0.11)) for k in range(7)], "hierro"))
-    # cartel en blanco (sin texto)
-    o.append(pieza("Cartel", [((0.1, 2.6, 3.6), (-HX + G + 0.05, 12, 7))], "maniqui"))
     return o
 
 
@@ -392,18 +444,18 @@ def detalle():
         B.MATERIALES[k] = v
     B.MATERIALES.setdefault("porton-verde", {"hex": "2f5d5a", "rugosidad": 0.6, "metal": 0.5})
     B.MATERIALES.setdefault("hierro", {"hex": "3a3d42", "rugosidad": 0.6, "metal": 0.7})
-    est, mue, det = estructura(), muebles(), detalles()
+    est, mue, det = estructura(), muebles() + auto(), detalles()
     todo = est + mue + det
     cruces, flotan = revisar(todo)
     print("CHEQUEO", cruces, flotan, flush=True)
     if "solo-chequeo" in sys.argv:
         return {"cruces": cruces, "flotan": flotan}
     # sin bisel ni horneado: piezas de más de 30 studs, de muchas partes chicas o finitas, y lo que brilla
-    largas = ("Techo", "Cerchas", "Hastial", "Correas", "Columnas", "Porton_Rollo", "Porton_Dintel")
+    largas = ("Techo", "Cerchas", "Hastial", "Ondas", "Zocalo", "Porton_Rollo", "Porton_Dintel", "Auto_")
     chicas = ("Tablero_Herramientas", "Banco_", "CarroHerramientas_Cajones", "Locker_Detalle", "Piso_Manchas", "Piso_Grietas", "Piso_Rejilla", "Piso_Chapa",
-              "Escalera", "Entrepiso_Baranda", "Elevador_Tacos", "Tambores_Aros", "MesaFabricacion_", "Auto_Llantas", "Auto_Ruedas", "Auto_Motor",
-              "Auto_Paragolpes", "Neumaticos", "Cartel", "Lampara", "Radio", "Silla", "Cama", "Compresor_Motor", "Porton_Guias", "Tablero")
-    hornear = [o for o in todo if not o.name.startswith("Neon_") and o.name not in ("MesaFabricacion_Pantalla", "Ventana_Fondo")]
+              "Escalera", "Entrepiso_Baranda", "Elevador_Tacos", "Tambores_Aros", "MesaFabricacion_", "CarroHerramientas_",
+              "Compresor_Detalle", "Neumaticos", "Lampara", "Radio", "Silla", "Cama", "Porton_Guias", "Tablero")
+    hornear = [o for o in todo if not o.name.startswith(("Neon_", "Auto_", "Glass_")) and o.name not in ("MesaFabricacion_Pantalla", "Ventana_Fondo")]
     sin = tuple(o.name for o in hornear if o.name.startswith(largas + chicas))
     def lado(n):
         if n.startswith("Piso_") and n[5:].isdigit():
@@ -426,10 +478,10 @@ def detalle():
     bpy.ops.wm.save_as_mainfile(filepath=BLEND)
     sin_techo = [o for o in est if not o.name.startswith(("Techo", "Hastial", "Cerchas"))] + mue + det + [man]
     rs = [
-        P.render_orto(ARCHIVO + "_detalle_planta", [o for o in sin_techo if not o.name.startswith(("Lampara", "Neon_"))], giro=0, altura=89, niebla=False, solo=True),
+        P.render_orto(ARCHIVO + "_detalle_planta", [o for o in sin_techo if not o.name.startswith(("Lampara", "Neon_", "Glass_"))], giro=0, altura=89, niebla=False, solo=True),
         camara(ARCHIVO + "_detalle_puerta", (-9, -15, 6.5), (6, 10, 4.5), lente=16),
         camara(ARCHIVO + "_detalle_fondo", (-17, 14, 10), (8, -10, 3), lente=16),
-        P.render_orto(ARCHIVO + "_detalle_corte", [o for o in sin_techo if not o.name.startswith(("Pared_Frente", "Porton", "Lampara", "Neon_"))], giro=-25, altura=35, niebla=False, solo=True),
+        P.render_orto(ARCHIVO + "_detalle_corte", [o for o in sin_techo if not o.name.startswith(("Pared_Frente", "Ondas_Frente", "Porton", "Lampara", "Neon_"))], giro=-25, altura=35, niebla=False, solo=True),
         camara(ARCHIVO + "_detalle_banco", (2, 6, 6), (2, 15, 6), lente=24),
         camara(ARCHIVO + "_detalle_entrepiso", (3, -6, 7), (17, 9, 4), lente=20),
     ]
