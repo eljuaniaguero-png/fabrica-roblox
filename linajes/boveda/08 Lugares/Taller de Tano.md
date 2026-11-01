@@ -150,3 +150,20 @@ Graybox con tag `Lugar`. Modelo nuevo pendiente (P25d rehecho).
 Radio vieja de fondo, amoladora, goteo.
 
 Volver a [[Lugares]]
+
+## Rincón de la compu v9 (refs 7 y 8, 1 nov)
+
+Referencias: ![[taller-gemini-ref-7.jpg]] ![[taller-gemini-ref-8.jpg]]
+(De la ref-8 NO se copia la vista de arriba de la silla: tiene 4 patas. La silla tiene 5.)
+
+- **Silla:** asiento cuadrado acolchado (Bevel + Subdivision Surface) azul `#2b3550` con bordes gastados en la textura, respaldo chico curvo separado, UNA barra gris curva (curva → malla) que lo sostiene, pistón negro, 5 brazos a 72° con una rueda bajo cada punta tocando el piso. 1.146 triángulos.
+- **Monitor:** carcasa que se angosta hacia atrás (casi tan profunda como ancha), borde beige `#c9b98f`, pantalla abombada con texto inventado alineado a la izquierda y cursor, rejillas arriba y atrás, 2 cables, pie chico. Entra entero en el escritorio.
+- **Lámpara:** 2 tramos rectos con codo, base redonda, a la izquierda del monitor; la luz cálida cae sobre el teclado.
+- **Piso:** manchas con borde suave, sin cuadrados.
+- **Pasada general en Blender:** sombreado suave con bordes duros por ángulo en todo el taller; trapo, frazada y mameluco con simulación de tela de verdad (ahora corre sin ventana); almohada con Subdivision Surface.
+- Chequeo: 0 cruces, 0 cosas flotando.
+
+![[interior-taller_rincon_ref7.png]]
+![[interior-taller_silla_costado.png]]
+![[interior-taller_silla_arriba.png]] (sin asiento, para ver las 5 patas)
+![[interior-taller_monitor_costado.png]]

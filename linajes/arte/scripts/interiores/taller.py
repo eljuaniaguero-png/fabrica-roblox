@@ -24,6 +24,7 @@ sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 import base as B  # noqa: E402
+import bmesh  # noqa: E402
 import bpy  # noqa: E402
 from mathutils import Matrix  # noqa: E402
 import puerto_oxido as P  # noqa: E402
@@ -314,50 +315,9 @@ def trapos():
     """El trapo rojo de Tano con simulación de tela de Blender: uno colgando del borde del banco y otro hecho un
     bollo arriba (esfera con ruido fuerte). Después se aplica todo y quedan mallas fijas."""
     bx, by = 2, HY - G - 1.6
-    banco = bpy.data.objects["Banco"]
-    banco.modifiers.new("Choque", "COLLISION")
-    bpy.ops.mesh.primitive_grid_add(x_subdivisions=12, y_subdivisions=16, size=1)
-    tela = bpy.context.active_object
-    tela.name = "Banco_Trapo"
-    tela.scale = (1.0 * B.STUD, 1.6 * B.STUD, 1)
-    tela.location = P.S(bx - 1.6, by - 1.6 - 0.2, 3.62)
-    bpy.ops.object.transform_apply(scale=True)
-    grupo = tela.vertex_groups.new(name="Fijo")
-    fijos = [v.index for v in tela.data.vertices if v.co.y > 0.55 * B.STUD]  # el borde que queda arriba del banco
-    grupo.add(fijos, 1.0, "REPLACE")
-    tela.location.y += 0.0
-    sim = tela.modifiers.new("Tela", "CLOTH")
-    sim.settings.vertex_group_mass = "Fijo"
-    sim.settings.quality = 6
-    sim.collision_settings.distance_min = 0.004
-    escena = bpy.context.scene
-    escena.frame_start, escena.frame_end = 1, 45
-    sim.point_cache.frame_start, sim.point_cache.frame_end = 1, 45
-    for f in range(1, 46):
-        escena.frame_set(f)
-        bpy.context.view_layer.update()
-    dg = bpy.context.evaluated_depsgraph_get()
-    simulada = bpy.data.meshes.new_from_object(tela.evaluated_get(dg))
-    tela.modifiers.clear()
-    vieja, tela.data = tela.data, simulada
-    bpy.data.meshes.remove(vieja)
-    zs = [v.co.z for v in tela.data.vertices]
-    if max(zs) - min(zs) < 0.3 * B.STUD:  # la simulación no corrió (pasa en modo sin ventana): pliegue a mano
-        borde = (by - 1.6) * B.STUD
-        for v in tela.data.vertices:
-            mundo = tela.matrix_world @ v.co
-            fuera = borde - mundo.y
-            if fuera > 0:
-                mundo.z -= fuera
-                mundo.y = borde - 0.03 * B.STUD + 0.05 * B.STUD * math.sin(mundo.x / B.STUD * 9)
-                mundo.x += 0.04 * B.STUD * math.sin(fuera / B.STUD * 7)
-                v.co = tela.matrix_world.inverted() @ mundo
-        print("TRAPO: plegado a mano", flush=True)
-    else:
-        print("TRAPO: simulado", flush=True)
-    banco.modifiers.remove(banco.modifiers["Choque"])
-    escena.frame_set(1)
-    B.aplicar_material(tela, "trapo")
+    # trapo: la mitad de atrás queda apoyada (clavada) sobre el banco y la otra mitad cae por el borde, simulada
+    tela = grilla("Banco_Trapo", bx - 1.6, by - 1.8, 3.72, 1.0, 1.6, 14, 22)
+    simular_tela(tela, [bpy.data.objects["Banco"]], cuadros=45, fijos=lambda q: q[1] > by - 1.35, grosor=0.04, material="trapo")
     bpy.ops.mesh.primitive_ico_sphere_add(subdivisions=2, radius=0.5 * B.STUD)
     bollo = bpy.context.active_object
     bollo.name = "Banco_TrapoBollo"
@@ -589,13 +549,13 @@ RECETAS_TALLER = {
 }
 
 
-def tubo(nombre, puntos, radio, material, radio_punta=None):
+def tubo(nombre, puntos, radio, material, radio_punta=None, res=6, anillo=2):
     """Tubo liso que sigue una curva suave por los puntos (en studs). Si hay radio_punta, se afina hacia el final."""
     datos = bpy.data.curves.new(nombre, "CURVE")
     datos.dimensions = "3D"
-    datos.resolution_u = 6
+    datos.resolution_u = res
     datos.bevel_depth = radio * B.STUD
-    datos.bevel_resolution = 2
+    datos.bevel_resolution = anillo
     datos.use_fill_caps = True
     sp = datos.splines.new("NURBS")
     sp.points.add(len(puntos) - 1)
@@ -683,6 +643,84 @@ def gancho_tano(gx, gz):
     return o
 
 
+def simular_tela(tela, choques, cuadros=50, fijos=None, grosor=0.05, material=None):
+    """Simulación de tela de Blender: `choques` son los objetos contra los que cae, `fijos` una función (studs) -> bool para
+    los vértices que quedan clavados. Se aplica la simulación, se le da grosor (Solidify) y sombreado suave."""
+    for ob in choques:
+        bpy.context.view_layer.objects.active = ob
+        bpy.ops.object.modifier_add(type="COLLISION")
+        ob.modifiers[-1].name = "Choque"
+        ob.collision.thickness_outer = 0.03
+    bpy.context.view_layer.objects.active = tela
+    sim = tela.modifiers.new("Tela", "CLOTH")
+    if fijos:
+        grupo = tela.vertex_groups.new(name="Fijo")
+        grupo.add([v.index for v in tela.data.vertices if fijos(tuple(tela.matrix_world @ v.co / B.STUD))], 1.0, "REPLACE")
+        sim.settings.vertex_group_mass = "Fijo"
+    sim.settings.quality = 8
+    sim.settings.mass = 0.4
+    sim.collision_settings.distance_min = 0.01
+    sim.collision_settings.use_self_collision = True
+    escena = bpy.context.scene
+    escena.frame_start, escena.frame_end = 1, cuadros
+    sim.point_cache.frame_start, sim.point_cache.frame_end = 1, cuadros
+    for f in range(1, cuadros + 1):
+        escena.frame_set(f)
+    nueva = bpy.data.meshes.new_from_object(tela.evaluated_get(bpy.context.evaluated_depsgraph_get()))
+    tela.modifiers.clear()
+    vieja, tela.data = tela.data, nueva
+    bpy.data.meshes.remove(vieja)
+    for ob in choques:
+        ob.modifiers.remove(ob.modifiers["Choque"])
+    escena.frame_set(1)
+    sol = tela.modifiers.new("Grosor", "SOLIDIFY")
+    sol.thickness = grosor * B.STUD
+    suavizar(tela, angulo=80)
+    if material:
+        B.aplicar_material(tela, material)
+    return tela
+
+
+def grilla(nombre, cx, cy, z, largo_x, largo_y, nx, ny):
+    """Grilla plana horizontal (en studs) para simular tela."""
+    bpy.ops.mesh.primitive_grid_add(x_subdivisions=nx, y_subdivisions=ny, size=1)
+    g = bpy.context.active_object
+    g.name = nombre
+    g.scale = (largo_x * B.STUD, largo_y * B.STUD, 1)
+    g.location = P.S(cx, cy, z)
+    bpy.ops.object.transform_apply(scale=True, location=True)
+    return g
+
+
+def telas_simuladas():
+    """Frazada que cae sobre la cama y el mameluco de Tano colgado de la baranda, con simulación de tela.
+    La almohada se redondea con Subdivision Surface."""
+    kx, ky = (11 + HX - G) / 2 + 0.4, HY - G - 2.1
+    arriba = ENTREPISO + 1.8
+    for n in ("Cama_Frazada", "Baranda_Mameluco"):
+        if n in bpy.data.objects:
+            bpy.data.objects.remove(bpy.data.objects[n])
+    alm = bpy.data.objects.get("Cama_Almohada")
+    if alm:
+        suavizar(alm, sub=1, angulo=80)
+    choques = [bpy.data.objects[n] for n in ("Cama", "Entrepiso", "Cama_Almohada", "Cajon", "Cajas", "Radio") if n in bpy.data.objects]
+    fr = grilla("Cama_Frazada", kx - 1.0, ky - 0.45, arriba + 0.5, 4.6, 4.3, 40, 38)
+    simular_tela(fr, choques, cuadros=45, grosor=0.06, material="frazada")
+    bar = bpy.data.objects["Entrepiso_Baranda"]
+    me = grilla("Baranda_Mameluco", 14.5, 3.85, ENTREPISO + 3.3, 1.6, 4.4, 14, 36)
+    simular_tela(me, [bar, bpy.data.objects["Entrepiso"]], cuadros=40, fijos=lambda q: abs(q[1] - 3.85) < 0.18, grosor=0.06, material="mameluco-tano")
+    return [fr, me]
+
+
+def retoque_general():
+    """Pasada final sobre todo el taller: sombreado suave con bordes duros solo en los ángulos marcados (así no se ven
+    las caras planas de lo curvo y las cajas mantienen su canto)."""
+    for ob in bpy.data.objects:
+        if ob.type == "MESH" and not ob.name.startswith(("Lluvia", "Niebla", "Maniqui")):
+            ob.data.shade_smooth()
+            ob.data.set_sharp_from_angle(angle=math.radians(35))
+
+
 def cama_blanda():
     """Almohada blanda (esfera aplastada con arrugas) y frazada arrugada que cubre la cama y cae por el costado."""
     import random
@@ -731,19 +769,134 @@ ESCRITORIO_VIEJO = ("MesaFabricacion_Monitor", "MesaFabricacion_Pantalla", "Mesa
                     "Neon_MesaFabricacion_Foco", "MesaFabricacion_Detalle")
 
 
+def pantalla_crt(nombre, x, y, z, ancho, alto):
+    """Pantalla de tubo abombada hacia afuera con textura de terminal vieja: líneas de texto inventado alineadas a la
+    izquierda (una más larga arriba, de título), cursor al final y franjas horizontales suaves. Verde sobre verde."""
+    import numpy as np
+    import random
+
+    random.seed(21)
+    vs, fs, uv = [], [], []
+    nu, nv = 10, 8
+    for j in range(nv + 1):
+        for i in range(nu + 1):
+            u, v = i / nu, j / nv
+            bulto = 0.09 * (1 - (2 * u - 1) ** 2) * (1 - (2 * v - 1) ** 2)
+            vs.append(P.S(x - bulto, y + (0.5 - u) * ancho, z + (v - 0.5) * alto))  # mirando hacia +x, la izquierda es +y
+            uv.append((u, v))
+    for j in range(nv):
+        for i in range(nu):
+            a = j * (nu + 1) + i
+            fs.append((a, a + 1, a + nu + 2, a + nu + 1))
+    me = bpy.data.meshes.new(nombre)
+    me.from_pydata(vs, [], fs)
+    capa = me.uv_layers.new(name="UV")
+    for poly in me.polygons:
+        for li in poly.loop_indices:
+            capa.data[li].uv = uv[me.loops[li].vertex_index]
+    ob = bpy.data.objects.new(nombre, me)
+    bpy.context.scene.collection.objects.link(ob)
+    # textura 256 x 200: fondo verde oscuro, líneas verde claro, cursor y franjas de pantalla vieja
+    w, h = 256, 200
+    img = np.zeros((h, w, 4), dtype=np.float32)
+    img[..., :3] = (0.03, 0.14, 0.09)
+    img[..., 3] = 1
+    img[::4, :, :3] *= 0.8  # franjas horizontales suaves
+    largos = [0.78] + [random.uniform(0.25, 0.7) for _ in range(6)]
+    for k, largo in enumerate(largos):
+        fila = h - 28 - k * 22
+        gruesa = 6 if k == 0 else 4
+        x0 = 18
+        while x0 < 18 + int(largo * (w - 36)):  # "palabras" inventadas: bloques con espacios
+            pal = random.randint(10, 34)
+            x1 = min(x0 + pal, 18 + int(largo * (w - 36)))
+            img[fila : fila + gruesa, x0:x1, :3] = (0.45, 0.88, 0.55)
+            x0 = x1 + random.randint(5, 9)
+    fila = h - 28 - (len(largos) - 1) * 22
+    img[fila - 2 : fila + 8, x0 + 2 : x0 + 12, :3] = (0.6, 1.0, 0.7)  # cursor
+    imagen = bpy.data.images.new(nombre + "_color", w, h)
+    imagen.pixels.foreach_set(img.ravel())
+    mat = bpy.data.materials.new("MAT_" + nombre)
+    mat.use_nodes = True
+    nt = mat.node_tree
+    bsdf = next(n for n in nt.nodes if n.type == "BSDF_PRINCIPLED")
+    tex = nt.nodes.new("ShaderNodeTexImage")
+    tex.image = imagen
+    nt.links.new(tex.outputs["Color"], bsdf.inputs["Base Color"])
+    nt.links.new(tex.outputs["Color"], bsdf.inputs["Emission Color"])
+    bsdf.inputs["Emission Strength"].default_value = 0.9
+    bsdf.inputs["Roughness"].default_value = 0.15
+    ob.data.materials.append(mat)
+    return ob
+
+
+def suavizar(ob, bisel=0.0, segmentos=2, sub=0, curvar=None, angulo=35):
+    """Bevel (bordes redondeados) y Subdivision Surface aplicados como modificadores de Blender, después una función opcional
+    que deforma la malla (en studs) y sombreado suave con bordes duros solo donde el ángulo pasa `angulo` grados."""
+    if bisel:
+        m = ob.modifiers.new("Bisel", "BEVEL")
+        m.width, m.segments, m.limit_method = bisel * B.STUD, segmentos, "ANGLE"
+    if sub:
+        m = ob.modifiers.new("Subdividir", "SUBSURF")
+        m.levels = m.render_levels = sub
+    if ob.modifiers:
+        nueva = bpy.data.meshes.new_from_object(ob.evaluated_get(bpy.context.evaluated_depsgraph_get()))
+        ob.modifiers.clear()
+        vieja, ob.data = ob.data, nueva
+        bpy.data.meshes.remove(vieja)
+    if curvar:
+        for v in ob.data.vertices:
+            v.co = P.S(*curvar(tuple(v.co / B.STUD)))
+    ob.data.shade_smooth()
+    ob.data.set_sharp_from_angle(angle=math.radians(angulo))
+    return ob
+
+
+def _tela_gastada(ob):
+    """Tela de la silla en la textura: azul oscuro #2b3550, bordes y esquinas más claros y gastados, algo de ruido."""
+    import numpy as np
+
+    import detalle as D
+    import pintura as T
+
+    T.textura_lisa(ob, 256, "2b3550", os.path.join(D.TEXTURAS, ARCHIVO), rugosidad=0.92)
+    mn = np.array([min(v.co[k] for v in ob.data.vertices) for k in range(3)]) / B.STUD
+    mx = np.array([max(v.co[k] for v in ob.data.vertices) for k in range(3)]) / B.STUD
+    centro, medio = (mn + mx) / 2, (mx - mn) / 2
+
+    def color(q, n, base):
+        rel = np.abs(q - centro) / medio
+        borde = np.clip((np.sort(rel, axis=1)[:, 1] - 0.72) / 0.25, 0, 1)  # cerca de una arista (dos ejes al límite)
+        ruido = T.fbm(q[:, 0] + q[:, 2], q[:, 1], 4.0, 3)
+        alfa = np.clip(borde * (0.5 + ruido) - 0.15, 0, 0.85)
+        return T.mezclar(base * (0.9 + 0.2 * ruido[:, None]), T.hexa("56607e"), alfa)
+
+    T.pintar(ob, color)
+
+
 def escritorio_tano():
     """Escritorio de Tano: compu vieja de tubo con su torre, teclado beige con teclas, mouse con cable, lámpara
     articulada al costado del monitor, taza, papeles con grasa, destornillador y una silla de oficina gastada."""
     dx, dy, tapa = HX - G - 1.6, 9, 3.3  # el escritorio mira al taller (hacia -x)
     o = []
-    # monitor de tubo: frente con borde grueso, caja que se achica hacia atrás, pie
-    mx, my = dx + 0.35, dy - 0.6
-    crt = [((0.5, 2.1, 1.75), (mx - 0.45, my, tapa + 0.25 + 0.875)), ((0.9, 1.7, 1.45), (mx + 0.25, my, tapa + 0.25 + 0.8)), ((0.6, 1.1, 0.95), (mx + 0.95, my, tapa + 0.25 + 0.7)),
-           ((0.9, 1.2, 0.25), (mx + 0.1, my, tapa + 0.125))]
-    o.append(pieza("Compu_Monitor", crt, "beige-viejo"))
-    o.append(pieza("Compu_MarcoPantalla", [((0.06, 1.75, 1.35), (mx - 0.72, my, tapa + 1.13))], "negro"))
-    o.append(pieza("Neon_Compu_Pantalla", [((0.05, 1.55, 1.15), (mx - 0.75, my, tapa + 1.13))], "pantalla-crt"))
-    o.append(pieza("Neon_Compu_Texto", [((0.02, 0.9 - k * 0.12, 0.06), (mx - 0.78, my - 0.25 + k * 0.06, tapa + 1.55 - k * 0.2)) for k in range(5)], "texto-crt"))
+    # monitor de tubo (ref-8): carcasa casi tan profunda como ancha que se angosta hacia atrás, redondeada con bevel y
+    # subdivisión; borde beige grueso; pantalla abombada con textura de terminal; rejillas y cables atrás; pie chico.
+    # Entra entero en la tapa del escritorio (de dx - 1,6 a dx + 1,6).
+    mx, my, mz = dx - 0.7, dy - 0.6, tapa + 0.3  # mx = cara de adelante del monitor
+    marco = pieza("Compu_Monitor", [((0.4, 2.1, 1.8), (mx + 0.2, my, mz + 0.9))], "beige-viejo")
+    o.append(suavizar(marco, bisel=0.14, segmentos=2, sub=1))
+    f0, f1 = mx + 0.38, mx + 1.85  # caja que se angosta: de 1,85 x 1,55 en el frente a 1,0 x 0,9 atrás (más baja arriba)
+    v = [(f0, my - 0.925, mz + 0.05), (f0, my + 0.925, mz + 0.05), (f0, my + 0.925, mz + 1.6), (f0, my - 0.925, mz + 1.6),
+         (f1, my - 0.5, mz + 0.2), (f1, my + 0.5, mz + 0.2), (f1, my + 0.5, mz + 1.1), (f1, my - 0.5, mz + 1.1)]
+    caras = [(0, 1, 2, 3), (7, 6, 5, 4), (0, 4, 5, 1), (1, 5, 6, 2), (2, 6, 7, 3), (3, 7, 4, 0)]
+    o.append(suavizar(pieza("Compu_Carcasa", [], "beige-viejo", mallas=[(v, caras)]), bisel=0.12, segmentos=2, sub=1))
+    o.append(suavizar(pieza("Compu_Pie", [((0.9, 1.0, 0.1), (mx + 0.75, my, tapa + 0.05)), ((0.5, 0.6, 0.22), (mx + 0.75, my, tapa + 0.2))], "beige-viejo"), bisel=0.04))
+    rej = [((0.45, 0.05, 0.03), (mx + 0.75 + (k % 2) * 0.05, my - 0.55 + k * 0.16, mz + 1.56)) for k in range(8)]  # rejilla de arriba
+    rej += [((0.03, 0.7, 0.04), (f1 + 0.01, my, mz + 0.4 + k * 0.11)) for k in range(6)]  # rejilla de atrás
+    o.append(pieza("Compu_Rejillas", rej, "negro"))
+    for k, s in enumerate((-1, 1)):  # dos cables gruesos que salen de atrás y bajan por el borde del escritorio
+        o.append(tubo(f"Compu_Cable{k}", [(f1 - 0.05, my + s * 0.18, mz + 0.3), (f1 + 0.2, my + s * 0.2, tapa + 0.15), (dx + 1.45, my + s * 0.3, tapa + 0.04), (dx + 1.56, my + s * 0.35, tapa - 0.6)], 0.05, "negro"))
+    o.append(pantalla_crt("Compu_Pantalla", mx - 0.02, my, mz + 0.92, 1.55, 1.25))
     # torre beige debajo del escritorio, con disquetera y botón
     tx, ty = dx + 0.3, dy - 1.9
     o.append(pieza("Compu_Torre", [((1.8, 0.8, 1.9), (tx, ty, 0.95))], "beige-viejo"))
@@ -754,12 +907,17 @@ def escritorio_tano():
     o.append(pieza("Compu_Teclas", [((0.12, 0.13, 0.06), (kx - 0.25 + f * 0.17, ky - 0.85 + c * 0.155, tapa + 0.15)) for f in range(4) for c in range(12)], "beige-oscuro"))
     o.append(pieza("Compu_Mouse", [((0.35, 0.25, 0.12), (kx + 0.1, ky + 1.45, tapa + 0.06))], "beige-viejo"))
     o.append(tubo("Compu_CableMouse", [(kx + 0.28, ky + 1.45, tapa + 0.04), (kx + 0.7, ky + 1.5, tapa + 0.03), (mx + 0.5, my + 0.9, tapa + 0.03), (mx + 0.9, my + 0.5, tapa + 0.3)], 0.025, "negro"))
-    # lámpara articulada de metal oscuro, apoyada al costado derecho del monitor; la pantalla alumbra el teclado
-    lx, ly = dx + 0.6, dy + 1.4
-    o.append(pieza("Compu_LamparaBase", [], "hierro", cilindros=[(0.35, 0.12, (lx, ly, tapa), "Z", 14)]))
-    o.append(tubo("Compu_LamparaBrazo", [(lx, ly, tapa + 0.1), (lx + 0.1, ly - 0.1, tapa + 1.4), (lx - 0.5, ly - 0.35, tapa + 2.2), (lx - 1.3, ly - 0.55, tapa + 1.9)], 0.06, "hierro"))
-    o.append(pieza("Compu_LamparaPantalla", [], "hierro", cilindros=[(0.32, 0.4, (lx - 1.35, ly - 0.55, tapa + 1.45), "Z", 12, 0.12)]))
-    o.append(pieza("Neon_Compu_LamparaFoco", [], "neon-calido", cilindros=[(0.12, 0.08, (lx - 1.35, ly - 0.55, tapa + 1.42), "Z", 8)]))
+    # lámpara articulada (ref-7): base redonda, 2 tramos rectos de metal oscuro con codo, pantalla cónica que alumbra el teclado;
+    # apoyada a la izquierda del monitor (mirando desde el taller)
+    lx, ly = dx + 0.55, dy + 1.65
+    codo, cabeza = (lx + 0.15, ly - 0.15, tapa + 1.55), (dx - 1.25, dy + 0.5, tapa + 2.2)
+    o.append(suavizar(pieza("Compu_LamparaBase", [], "hierro", cilindros=[(0.36, 0.1, (lx, ly, tapa), "Z", 20, 0.3), (0.08, 0.12, (lx, ly, tapa + 0.1), "Z", 10)]), bisel=0.03))
+    medio = lambda a, b: tuple((a[i] + b[i]) / 2 for i in range(3))  # noqa: E731
+    o.append(tubo("Compu_LamparaBrazo", [(lx, ly, tapa + 0.15), medio((lx, ly, tapa + 0.15), codo), codo], 0.05, "hierro"))
+    o.append(tubo("Compu_LamparaBrazo2", [codo, medio(codo, cabeza), cabeza], 0.05, "hierro"))
+    o.append(pieza("Compu_LamparaCodo", [], "hierro", cilindros=[(0.09, 0.16, (codo[0], codo[1] - 0.08, codo[2]), "Y", 12)]))
+    o.append(suavizar(pieza("Compu_LamparaPantalla", [], "hierro", cilindros=[(0.32, 0.42, (cabeza[0], cabeza[1], tapa + 1.75), "Z", 20, 0.1)]), sub=0))
+    o.append(pieza("Neon_Compu_LamparaFoco", [], "neon-calido", cilindros=[(0.13, 0.08, (cabeza[0], cabeza[1], tapa + 1.78), "Z", 10)]))
     # cosas de Tano: taza con asa, papeles con manchas de grasa y un destornillador
     o.append(pieza("Compu_Taza", [], "almohada", cilindros=[(0.18, 0.35, (dx - 1.1, dy + 1.9, tapa), "Z", 12)]))
     o.append(toro("Compu_TazaAsa", (dx - 1.1, dy + 2.12, tapa + 0.18), "X", 0.1, 0.03, "almohada", 10, 4))
@@ -769,14 +927,39 @@ def escritorio_tano():
     o.append(pieza("Compu_DestornilladorPunta", [((0.55, 0.04, 0.04), (dx - 1.95, dy + 0.84, tapa + 0.06), (0, 0, 30))], "acero"))
     # manijas de la cajonera (antes iban en MesaFabricacion_Detalle)
     o.append(pieza("MesaFabricacion_Manijas", [((0.2, 0.8, 0.15), (dx - 1.32, dy + 1.8, 2.4 - k * 0.7)) for k in range(3)], "hierro"))
-    # silla de oficina vieja: 5 patas con ruedas, columna, asiento acolchado a la altura de la rodilla (1,5) y respaldo bajo y curvo
-    sx, sy = dx - 3.1, dy - 0.3
-    patas = [_barra((sx, sy, 0.35), (sx + math.cos(math.radians(a)) * 0.95, sy + math.sin(math.radians(a)) * 0.95, 0.3), 0.12) for a in range(18, 378, 72)]
-    o.append(pieza("Silla", patas, "negro", cilindros=[(0.12, 0.9, (sx, sy, 0.35), "Z", 10), (0.75, 0.12, (sx, sy, 1.18), "Z", 16)]))
-    o.append(pieza("Silla_Ruedas", [], "negro", cilindros=[(0.12, 0.12, (sx + math.cos(math.radians(a)) * 0.95 - 0.06, sy + math.sin(math.radians(a)) * 0.95, 0.12), "X", 8) for a in range(18, 378, 72)]))
-    o.append(pieza("Silla_Asiento", [], "tela-silla", cilindros=[(0.85, 0.22, (sx, sy, 1.28), "Z", 18, 0.8)]))
-    o.append(pieza("Silla_Respaldo", [((0.18, 0.55, 1.0), (sx - 0.82 + abs(d) * 0.18, sy + d, 2.35), (0, 0, -d * 30)) for d in (-0.5, 0.0, 0.5)], "tela-silla"))
-    o.append(pieza("Silla_Soporte", [((0.14, 0.2, 0.75), (sx - 0.75, sy, 1.7))], "negro"))
+    # silla de oficina vieja (ref-8, vistas de frente, costado y atrás): base de 5 brazos a 72° desde un centro, bajando un poco
+    # hacia las puntas, con una rueda debajo de cada punta tocando el piso; pistón negro grueso; asiento cuadrado acolchado
+    # (bevel + subdivisión) azul oscuro gastado en los bordes; UNA barra gris que sale de atrás del asiento, sube curva y
+    # sostiene el respaldo, que es más chico, acolchado, un poco curvo y separado del asiento. Mira al escritorio (+x).
+    sx, sy = dx - 3.0, dy - 0.3
+    base, ruedas = [], bmesh.new()
+    for a in range(18, 378, 72):
+        r = math.radians(a)
+        px, py = sx + math.cos(r) * 1.0, sy + math.sin(r) * 1.0
+        base.append(((1.0, 0.22, 0.16), (sx + math.cos(r) * 0.5, sy + math.sin(r) * 0.5, 0.42), (0, math.degrees(math.atan2(0.12, 1.0)), a)))
+        base.append(((0.08, 0.08, 0.12), (px, py, 0.3)))  # vástago de la rueda
+        giro = Matrix.Translation(P.S(px, py, 0.13)) @ Matrix.Rotation(r + math.pi / 2, 4, "Z") @ Matrix.Rotation(math.radians(90), 4, "Y")
+        bmesh.ops.create_cone(ruedas, cap_ends=True, segments=10, radius1=0.13 * B.STUD, radius2=0.13 * B.STUD, depth=0.12 * B.STUD, matrix=giro @ Matrix.Translation((0, 0, 0)))
+    silla = pieza("Silla_Base", base, "negro", cilindros=[(0.2, 0.2, (sx, sy, 0.36), "Z", 12), (0.12, 0.6, (sx, sy, 0.56), "Z", 12), (0.16, 0.12, (sx, sy, 1.04), "Z", 12)])
+    ruedas.from_mesh(silla.data)
+    ruedas.to_mesh(silla.data)
+    ruedas.free()
+    o.append(suavizar(silla, bisel=0.03, segmentos=1))
+    asiento = suavizar(pieza("Silla_Asiento", [((1.55, 1.55, 0.34), (sx, sy, 1.33))], "tela-silla"), bisel=0.12, segmentos=1, sub=1,
+                       curvar=lambda q: (q[0], q[1], q[2] - 0.05 * (1 - (2 * (q[0] - sx) / 1.55) ** 2) * (1 - (2 * (q[1] - sy) / 1.55) ** 2) * (q[2] > 1.4)))
+    respaldo = suavizar(pieza("Silla_Respaldo", [((0.24, 1.3, 0.85), (sx - 0.92, sy, 2.42))], "tela-silla"), bisel=0.1, segmentos=1, sub=1,
+                        curvar=lambda q: (q[0] + 0.14 * ((q[1] - sy) / 0.65) ** 2, q[1], q[2]))
+    o += [asiento, respaldo]
+    o.append(tubo("Silla_Barra", [(sx - 0.2, sy, 1.17), (sx - 0.7, sy, 1.16), (sx - 1.08, sy, 1.35), (sx - 1.12, sy, 1.9), (sx - 1.05, sy, 2.4)], 0.07, "acero", res=3, anillo=1))
+    sillas = [x for x in o if x.name.startswith("Silla")]
+    total = sum(len(f.vertices) - 2 for x in sillas for f in x.data.polygons)
+    if total > 1200:  # tope de la silla: Decimate en proporción, después sombreado suave otra vez
+        for x in sillas:
+            d = x.modifiers.new("Bajar", "DECIMATE")
+            d.ratio = 1150 / total
+            suavizar(x, angulo=40)
+    for ob in (asiento, respaldo):  # tela azul oscuro con desgaste más claro en los bordes, en la textura
+        _tela_gastada(ob)
     return o
 
 
@@ -984,7 +1167,7 @@ def pintar_taller(solo=None):
         c = base.copy()
         borde = np.clip(1 - np.minimum(HX - np.abs(x), HY - np.abs(y)) / 3.5, 0, 1) ** 1.5
         c = T.mezclar(c, T.hexa("1f1a16"), arriba * borde * (0.35 + 0.35 * T.fbm(x, y, 1.5)))
-        c = T.mezclar(c, T.hexa("4a453f"), arriba * 0.18 * (T.fbm(x, y, 3.0, 9) > 0.62))
+        c = T.mezclar(c, T.hexa("4a453f"), arriba * 0.18 * np.clip((T.fbm(x, y, 3.0, 9) - 0.55) / 0.15, 0, 1))  # manchones suaves (antes salían cuadrados)
         for cx, cy, r in manchas:
             d = np.hypot(x - cx, (y - cy) / 0.8) / (r * (0.75 + 0.5 * T.fbm(x, y, 0.7, cx)))
             c = T.mezclar(c, T.hexa("2a1f17"), arriba * np.clip((1.15 - d) / 0.4, 0, 1) * 0.9)
@@ -1120,7 +1303,7 @@ def detalle():
               "Compresor_Detalle", "Neumaticos", "Lampara", "Radio", "Silla", "Cama", "Porton_Guias", "Tablero", "Piso_Charco", "Ventana_Marco", "Cajas",
               "Ventanas_Marcos", "Puerta_Lateral_Manija", "TableroTrabajos_", "GanchoPanel_Soportes", "Gancho", "Compresor_Manguera", "Tablero_Manguera", "GanchoPanel_Silueta", "Calendario", "Reloj",
               "CartelRepuestos_Dibujo", "GanchoPanel", "Neumaticos_Fondo", "Bidones", "Baranda_Mameluco", "Piso_MarcasNeumatico", "Auto_")
-    hornear = [o for o in todo if not o.name.startswith(("Neon_", "Auto_", "Glass_")) and o.name != "MesaFabricacion_Pantalla"]
+    hornear = [o for o in todo if not o.name.startswith(("Neon_", "Auto_", "Glass_", "Compu_", "Silla")) and o.name != "MesaFabricacion_Pantalla"]
     sin = tuple(o.name for o in hornear if o.name.startswith(largas + chicas))
     def lado(n):
         if n.startswith("Piso_") and n[5:].isdigit():
@@ -1158,7 +1341,7 @@ def detalle():
     bpy.context.scene.collection.objects.link(luz)
     luz.location = P.S(15, 12, ENTREPISO + 4.5)
     for nombre, desde, hacia, energia, color in (("LuzBanco", (2, 11.5, 12.5), (2, 14, 3.5), 900, "ffc27a"), ("LuzGancho", (-9.5, 9, 12.5), (-9.5, 15, 8), 700, "fff0d8"),
-                                                 ("LuzFabricar", (16.85, 9.85, 4.6), (16.65, 9.4, 3.3), 220, "ffd9a0")):
+                                                 ("LuzFabricar", (16.35, 9.5, 4.95), (16.65, 8.4, 3.3), 220, "ffd9a0")):
         d = bpy.data.lights.new(nombre, "SPOT")
         d.color = B.color(color)[:3]
         d.energy = energia

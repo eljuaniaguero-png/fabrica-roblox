@@ -106,11 +106,12 @@ RECETAS = {
     "contenedor-verde": {"paneles": (0.4, 0.0), "rayones": 0.9, "bordes": 0.7, "suciedad": 1.0, "grano": 0.4},
     "colchon": {"costuras": (0.12, 0.0), "trama": 1.0, "rayones": 0.0, "bordes": 0.3, "suciedad": 1.0, "grano": 0.0},
     "hilo-rojo": {"trama": 0.5, "rayones": 0.0, "bordes": 0.1, "suciedad": 0.2, "grano": 0.0},
+    "concreto": {"paneles": (0.0, 0.0), "trama": 0.5, "rayones": 0.2, "bordes": 0.4, "suciedad": 1.0, "grano": 0.5},
     "porton-verde": {"paneles": (0.4, 0.0), "rayones": 0.9, "bordes": 0.7, "suciedad": 0.8, "grano": 0.3},
     "cofradia-oscura-metal": {},
     "cordon-amarillo": {"rayones": 0.5, "bordes": 0.5, "suciedad": 0.8, "grano": 0.4},
 }
-SIN_HORNEAR = {"ventana-luz", "neon-azul", "neon-faro", "neon-sirena", "neon-fuego", "vidrio-sucio", "charco", "neon-cofradia", "neon-farola", "neon-cian", "neon-eclipse", "neon-aviso", "liquido-rojo", "visor-cian"}  # brillan: se quedan con su material
+SIN_HORNEAR = {"aceite", "ventana-luz", "neon-azul", "neon-faro", "neon-sirena", "neon-fuego", "vidrio-sucio", "charco", "neon-cofradia", "neon-farola", "neon-cian", "neon-eclipse", "neon-aviso", "liquido-rojo", "visor-cian"}  # brillan: se quedan con su material
 
 
 def _material_base(obj):
@@ -562,7 +563,7 @@ def hornear(low, alto, carpeta, lado=1024, semilla=0, receta=None):
 # ---------------------------------------------------------------------------
 
 
-def terminar(objs, presupuesto, carpeta, ancho=0.03 * B.STUD, lados=None, recetas=None):
+def terminar(objs, presupuesto, carpeta, ancho=0.03 * B.STUD, lados=None, recetas=None, sin_bisel=(), sin_hornear=()):
     """Aplica todo el nivel de detalle a `objs`. `presupuesto` = {pieza: (tope, [mallas])}: si una
     pieza se pasa con bisel de 2 segmentos, prueba con 1 y después reduce cada malla en proporción.
     `lados` = {malla: px} para cambiar el tamaño de textura (por defecto 1024).
@@ -575,7 +576,8 @@ def terminar(objs, presupuesto, carpeta, ancho=0.03 * B.STUD, lados=None, receta
         for segmentos in (2, 1):
             for o in grupo:
                 o.data = originales[o.name].copy()
-                biselar(o, ancho, segmentos)
+                if o.name not in sin_bisel:  # piezas de muchas partes chicas: el bisel va solo en la textura
+                    biselar(o, ancho, segmentos)
             total = sum(B.triangulos(o) for o in grupo)
             if total <= tope:
                 break
@@ -589,7 +591,7 @@ def terminar(objs, presupuesto, carpeta, ancho=0.03 * B.STUD, lados=None, receta
     altos = []
     for i, o in enumerate(objs):
         desplegar_uv(o)
-        if _material_base(o) in SIN_HORNEAR:
+        if _material_base(o) in SIN_HORNEAR or o.name in sin_bisel or o.name in sin_hornear:  # sin bisel la copia suavizada sale redonda; las muy largas cuelgan el horneado
             continue
         receta = recetas.get(o.name, RECETAS.get(_material_base(o), {}))
         alto = copia_alta(o, receta)
