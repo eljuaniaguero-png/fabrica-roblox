@@ -11,7 +11,7 @@ RPG de superhéroes para Roblox: combate en tiempo real, multijugador, mundo abi
 ## Cómo usar esta bóveda
 1. **Qué es el juego**: [[Ficha del juego]]. Desde ahí se llega a todo.
 2. **Cómo se ve**: [[Guía de estilo]], [[Nivel de detalle]] y [[Colores]]. Claude los lee antes de cada modelo.
-3. **Cómo se pide cada cosa**: [[Todos los prompts]], en orden y con casillas. Cada prompt sigue la [[Plantilla de prompt]] y trae sus prompts para Gemini.
+3. **Cómo se pide cada cosa**: [[Todos los prompts]], en orden y con casillas. Hay **un prompt por cosa**, en carpetas por tema: 0 Preparar, 1 Personajes, 2 Lugares, 3 Animaciones, 4 Efectos y cinemáticas, 5 Sonidos y música, 6 Pantallas y 7 Código. Cada prompt sigue la [[Plantilla de prompt]] y trae sus prompts para Gemini.
 4. **Dónde vamos**: [[Progreso]].
 5. **Los modelos hechos**: [[Personajes]], cada uno con su modelo 3D para girar.
 
