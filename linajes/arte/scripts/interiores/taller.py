@@ -8,7 +8,8 @@ Planta de 40 x 32 studs (el prompt dice 40 x 30; 32 para que entre en la grilla 
 16 y techo a dos aguas con cumbrera a 22 (entra en el lote de 50 x 22 x 40 del graybox). Frente a la calle
 en -Y: portón de 12 x 10 a la izquierda (delante del elevador) y abierto. Oeste: elevador amarillo con
 el auto. Fondo: banco de roble con morsa y el gancho a medio armar, tablero de herramientas arriba.
-Este: entrepiso de madera con escalera, catre y radio; debajo, la mesa de fabricación con la compu.
+Este: entrepiso de madera con escalera; arriba, la cama y un cajón con la radio; abajo, el escritorio
+de la compu pegado a la pared, con su silla.
 Tambores en la esquina del fondo al oeste. Esquina del frente al este: carro rojo, compresor y locker verde; puerta lateral en el
 este. Piso de losas con rejilla y chapa semilla de melón. Dos lámparas colgantes cálidas.
 """
@@ -39,8 +40,8 @@ ENTREPISO = 8  # altura del piso del entrepiso
 MARCADORES = {
     "PuntoNPC_Tano": (-8, -4, 0),  # junto al auto
     "PuntoNPC_Nico": (2, 10, 0),  # junto al banco
-    "Banco": (15.5, 3.4, 0),  # mesa de fabricación, abajo del entrepiso
-    "Cama": (16, 12, ENTREPISO),  # catre del entrepiso
+    "Banco": (14.2, 9, 0),  # silla del escritorio de la compu, abajo del entrepiso
+    "Cama": (15.5, 13.1, ENTREPISO),  # cama del entrepiso
     "Salida": (-10, -17, 0),  # portón
     "Salida_Lateral": (21, PUERTA_Y, 0),
     "Spawn_Civil": (-10, -12, 0),  # cliente en la puerta
@@ -119,10 +120,18 @@ def muebles():
     o.append(pieza("Banco_Gancho", [((1.6, 0.8, 0.6), (bx + 2, by - 0.3, 3.85))], "acero", cilindros=[(0.35, 1.4, (bx + 0.4, by - 0.2, 3.9), "X", 10)]))
     o.append(pieza("Tablero", [((14, 0.3, 5), (bx, HY - G - 0.15, 8.5))], "hierro"))
     o.append(pieza("Ventana_Fondo", [((5, 0.3, 3.4), (bx, HY - G - 0.3, 13.2))], "neon-cian"))  # pantalla/ventana chica de la ref-1
-    # mesa de fabricación con la compu, abajo del entrepiso (la cama queda arriba)
-    mx, my = 15.5, 6.6
-    o.append(pieza("MesaFabricacion", [((6, 4, 0.4), (mx, my, 3.4)), ((5.6, 3.6, 3.2), (mx, my, 1.6))], "roble"))
-    o.append(pieza("MesaFabricacion_Pantalla", [((2.6, 0.2, 1.8), (mx, my + 1, 4.6), (-15, 0, 0))], "neon-cian"))
+    # escritorio de la compu contra la pared este, abajo del entrepiso, con silla (la compu mira al taller)
+    dx, dy = HX - G - 1.6, 9  # escritorio de 3,2 de fondo x 6 de largo, pegado a la pared
+    esc = [((3.2, 6, 0.3), (dx, dy, 3.15))]  # tapa
+    esc += [((0.3, 0.3, 3.0), (dx + sx * 1.4, dy + sy * 2.8, 1.5)) for sx in (-1, 1) for sy in (-1, 1)]  # patas
+    esc += [((2.8, 2, 2.2), (dx + 0.1, dy + 1.8, 1.9))]  # cajonera
+    o.append(pieza("MesaFabricacion", esc, "roble"))
+    o.append(pieza("MesaFabricacion_Monitor", [((0.4, 2.8, 1.8), (dx + 0.6, dy, 4.6)), ((0.3, 0.3, 0.8), (dx + 0.8, dy, 3.7)), ((1, 1.2, 0.1), (dx + 0.8, dy, 3.35))], "hierro"))
+    o.append(pieza("MesaFabricacion_Pantalla", [((0.1, 2.5, 1.5), (dx + 0.35, dy, 4.6))], "neon-cian"))
+    o.append(pieza("MesaFabricacion_Teclado", [((0.8, 2, 0.12), (dx - 0.6, dy, 3.36))], "hierro"))
+    silla = [((2, 2, 0.3), (dx - 3.2, dy, 2.0)), ((0.3, 2, 2.4), (dx - 4.1, dy, 3.35))]  # asiento y respaldo
+    silla += [((0.3, 0.3, 1.85), (dx - 3.2 + sx * 0.8, dy + sy * 0.8, 0.925)) for sx in (-1, 1) for sy in (-1, 1)]
+    o.append(pieza("Silla", silla, "hierro"))
     # entrepiso este: piso de madera sobre 2 postes, baranda, escalera, catre y radio
     ex0, ex1, ey0, ey1 = 11, HX - G, 4, HY - G
     cx, cy = (ex0 + ex1) / 2, (ey0 + ey1) / 2
@@ -135,8 +144,16 @@ def muebles():
     esc = [((0.3, 0.3, ENTREPISO + 3), (ex0 - 0.4, y, (ENTREPISO + 3) / 2)) for y in (ey0 + 0.8, ey0 + 2.6)]
     esc += [((0.3, 1.8, 0.25), (ex0 - 0.4, ey0 + 1.7, z)) for z in range(1, ENTREPISO + 2)]
     o.append(pieza("Escalera", esc, "madera-entrepiso"))
-    o.append(pieza("Catre", [((6, 3, 0.8), (cx + 0.5, ey1 - 2, ENTREPISO + 1.2)), ((6, 3, 0.4), (cx + 0.5, ey1 - 2, ENTREPISO + 1.8))], "tela-oscura"))
-    o.append(pieza("Radio", [((1.6, 0.8, 1.0), (ex0 + 1.5, ey0 + 2, ENTREPISO + 0.5))], "acero"))
+    # cama de verdad arriba del entrepiso: marco con patas, colchón, almohada y frazada; cajón con la radio al lado
+    kx, ky = cx + 0.4, ey1 - 2.1
+    marco = [((7, 3.4, 0.4), (kx, ky, ENTREPISO + 1.0))] + [((0.4, 0.4, 0.8), (kx + sx * 3.3, ky + sy * 1.5, ENTREPISO + 0.4)) for sx in (-1, 1) for sy in (-1, 1)]
+    marco += [((0.4, 3.4, 1.8), (kx + 3.3, ky, ENTREPISO + 1.7))]  # cabecera
+    o.append(pieza("Cama", marco, "hierro"))
+    o.append(pieza("Cama_Colchon", [((6.4, 3.2, 0.6), (kx - 0.1, ky, ENTREPISO + 1.5))], "maniqui"))
+    o.append(pieza("Cama_Almohada", [((1.2, 2.2, 0.4), (kx + 2.4, ky, ENTREPISO + 2.0))], "maniqui"))
+    o.append(pieza("Cama_Frazada", [((4.2, 3.3, 0.2), (kx - 1.1, ky, ENTREPISO + 1.9))], "porton-verde"))
+    o.append(pieza("Cajon", [((1.6, 1.6, 1.6), (ex0 + 1.4, ky - 3.2, ENTREPISO + 0.8))], "madera-entrepiso"))
+    o.append(pieza("Radio", [((1.4, 0.7, 0.9), (ex0 + 1.4, ky - 3.2, ENTREPISO + 2.05))], "acero"))
     o.append(pieza("Tambores", [], "oxido", cilindros=[(1.2, 3.6, (x, y, 0), "Z", 14) for x, y in ((-17.6, 12.4), (-15, 13))]))
     # esquina del frente al este: carro rojo, compresor y locker verde
     o.append(pieza("CarroHerramientas", [((3, 2, 3.4), (9, -11, 1.9)), ((3.2, 2.2, 0.2), (9, -11, 3.7))], "rojo-herramienta", cilindros=[(0.3, 0.3, (9 + sx * 1.2, -11 + sy * 0.8, 0), "Z", 8) for sx in (-1, 1) for sy in (-1, 1)]))
@@ -193,7 +210,7 @@ def revisar(objs):
     bpy.context.view_layer.update()
     estructura = ("Pared", "Piso", "Techo", "Cerchas", "Hastial", "Porton")
     juntos = {("Elevador", "Auto"), ("Elevador", "Auto_Ruedas"), ("Auto", "Auto_Ruedas"), ("Banco", "Banco_Morsa"), ("Banco", "Banco_Gancho"),
-              ("MesaFabricacion", "MesaFabricacion_Pantalla"), ("Entrepiso", "Entrepiso_Baranda"), ("Entrepiso", "Catre"), ("Entrepiso", "Radio"),
+              ("Entrepiso", "Entrepiso_Baranda"), ("Entrepiso", "Cama"), ("Entrepiso", "Cajon"), ("Cajon", "Radio"),
               ("Entrepiso", "Escalera"), ("CarroHerramientas", "CarroHerramientas"), ("Compresor", "Compresor")}
     cajas = {}
     for o in objs:
@@ -204,7 +221,7 @@ def revisar(objs):
     cruces, flotan = [], []
     for i, a in enumerate(nombres):
         mna, mxa = cajas[a]
-        if not a.startswith(estructura) and not a.startswith(("Neon_", "Lampara", "Tablero", "Ventana", "Entrepiso", "Catre", "Radio", "Escalera")) and 0.03 < mna[2] < 0.6:
+        if not a.startswith(estructura) and not a.startswith(("Neon_", "Lampara", "Tablero", "Ventana", "Entrepiso", "Cama", "Cajon", "Radio", "Escalera")) and 0.03 < mna[2] < 0.6:
             flotan.append((a, round(mna[2], 2)))
         for b in nombres[i + 1 :]:
             if a.startswith(estructura) and b.startswith(estructura):
@@ -259,6 +276,12 @@ def boceto():
         luz = bpy.data.objects.new(f"Luz{i}", d)
         bpy.context.scene.collection.objects.link(luz)
         luz.location = P.S(x, -4, 13.6)
+    d = bpy.data.lights.new("LuzEscritorio", "POINT")  # foquito bajo el entrepiso
+    d.color = B.color("ffc27a")[:3]
+    d.energy = 150
+    luz = bpy.data.objects.new("LuzEscritorio", d)
+    bpy.context.scene.collection.objects.link(luz)
+    luz.location = P.S(16, 9, ENTREPISO - 1.2)
     bpy.ops.wm.save_as_mainfile(filepath=BLEND)
     cruces, flotan = revisar(est + mue)
     sin_techo = [o for o in est if not o.name.startswith(("Techo", "Hastial", "Cerchas"))] + mue + [man]
@@ -266,7 +289,8 @@ def boceto():
     r2 = camara(ARCHIVO + "_boceto_puerta", (-9, -15, 6.5), (6, 10, 4.5), lente=16)
     r3 = camara(ARCHIVO + "_boceto_fondo", (-17, 14, 10), (8, -10, 3), lente=16)
     r4 = P.render_orto(ARCHIVO + "_boceto_corte", [o for o in sin_techo if not o.name.startswith(("Pared_Frente", "Porton", "Lampara", "Neon_"))], giro=-25, altura=35, niebla=False, solo=True)
-    return {"cruces": cruces, "flotan": flotan, "triangulos": B.contar_triangulos(est + mue), "renders": [r1, r2, r3, r4]}
+    r5 = camara(ARCHIVO + "_boceto_entrepiso", (3, -6, 7), (17, 9, 4), lente=20)
+    return {"cruces": cruces, "flotan": flotan, "triangulos": B.contar_triangulos(est + mue), "renders": [r1, r2, r3, r4, r5]}
 
 
 if __name__ == "__main__":

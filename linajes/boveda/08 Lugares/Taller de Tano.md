@@ -45,9 +45,10 @@ Graybox con tag `Lugar`. Modelo nuevo pendiente (P25d rehecho).
 ![[interior-taller_boceto_puerta.png]]
 ![[interior-taller_boceto_fondo.png]]
 ![[interior-taller_boceto_corte.png]]
+![[interior-taller_boceto_entrepiso.png]]
 
-**Dónde está cada cosa**: elevador con el auto al oeste, detrás del portón. Banco de roble con morsa y el gancho, con el tablero de herramientas arriba, en el fondo. Entrepiso al este: **arriba**, el catre y la radio; **abajo**, la mesa de fabricación con la compu (cambio de Juani, 1 nov). Tambores en la esquina del fondo, al oeste. El centro queda libre para pelear. Carro rojo, compresor y locker verde en la esquina del frente, al este, al lado de la puerta lateral. Dos lámparas cálidas cuelgan de las cerchas.
-**Puntos para el código**: PuntoNPC_Tano (junto al auto), PuntoNPC_Nico (banco), Banco (mesa de fabricación, abajo del entrepiso), Cama (catre), Salida (portón), Salida_Lateral y Spawn_Civil.
+**Dónde está cada cosa**: elevador con el auto al oeste, detrás del portón. Banco de roble con morsa y el gancho, con el tablero de herramientas arriba, en el fondo. Entrepiso al este: **arriba**, una cama de verdad (marco de hierro con patas y cabecera, colchón, almohada y frazada) y un cajón con la radio; **abajo**, el escritorio de la compu pegado a la pared, con monitor, teclado, cajonera, silla y un foquito (cambios de Juani, 1 nov). Tambores en la esquina del fondo, al oeste. El centro queda libre para pelear. Carro rojo, compresor y locker verde en la esquina del frente, al este, al lado de la puerta lateral. Dos lámparas cálidas cuelgan de las cerchas.
+**Puntos para el código**: PuntoNPC_Tano (junto al auto), PuntoNPC_Nico (banco), Banco (silla del escritorio de la compu), Cama (catre), Salida (portón), Salida_Lateral y Spawn_Civil.
 
 ## Cómo suena
 Radio vieja de fondo, amoladora, goteo.
