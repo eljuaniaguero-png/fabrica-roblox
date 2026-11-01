@@ -35,15 +35,23 @@ Graybox con tag `Lugar`. Modelo nuevo pendiente (P25d rehecho).
 ## Modelo (P25d-01, rehecho desde cero)
 **Estado: paso 2, detalle con texturas horneadas. Espera tu OK.** (El boceto se aprobó el 1 nov.) Planta de **40 x 32 studs** (32 en vez de 30 para que entre en la grilla de 4), paredes de chapa de 16 y techo a dos aguas con la cumbrera a 22 (entra en el lote de 50 x 22 x 40 del graybox). Chequeo de cruces: **0**. Cosas flotando: **0**. Triángulos del boceto: 1.868.
 
-**Detalle (paso 2, versión 4)**: 35.300 triángulos (tope 60.000). Chequeo de cruces: **0**. Cosas flotando: **0**.
-Cambios de Juani (1 nov, segunda lista):
-- **Luz.** Más luz ambiente, una lámpara chica sobre el banco y renders con 128 muestras para que no tengan grano.
-- **Motor.** Ahora se lee: tapa de válvulas roja, filtro de aire cromado y redondo, batería con bornes rojo y negro, y mangueras naranjas.
-- **Gancho.** Es la estrella: el doble de grande, solo en su propio panel y con un spot que lo ilumina.
-- **Manchas.** Marrón muy oscuro, algo brillantes y con un borde más claro, así ya no parecen agujeros.
-- **Ventanas y puerta.** Las ventanas tienen marco y vidrio sucio (antes eran huecos blancos) y la puerta lateral está cerrada.
-- **Tablero de trabajos.** Corcho con papeles, notas, un mapa del puerto y chinches, en la pared este (marcador `Tablero_Trabajos`).
-- **Chapa por fuera.** Las 4 paredes son de chapa ondulada también por fuera (antes parecían ladrillo).
+**Detalle (paso 2, versión 5)**: 36.916 triángulos (tope 60.000). Chequeo de cruces: **0**. Cosas flotando: **0**.
+Cambios de Juani (1 nov, tercera lista):
+- **Gancho.** Tiene 3 garras abiertas con uña, el rollo de cable al costado y una empuñadura con gatillo. Está sobre un panel oscuro con su silueta pintada en amarillo y un spot propio.
+- **Auto.** Pintado de verde oliva gastado (conserva la suciedad del horneado). Los faros están apagados, se ve el cable de la batería colgando con su pinza y la rueda está desmontada contra la columna. El charco ahora es oscuro y chato (antes parecía vidrio celeste).
+- **Banco.** La morsa tiene forma de morsa. Hay 2 latas con etiqueta azul y verde (sin marcas), un engranaje y un carburador a medio desarmar, y el trapo rojo cuelga del borde.
+- **Tablero.** Herramientas distintas: llaves de varios tamaños (una torcida), llave inglesa, destornilladores amarillos y azules, un martillo grande y uno chico, una pinza y el serrucho. Cada una tiene su silueta pintada y hay un hueco vacío para la llave que Tano tiene en la mano.
+- **Paredes.** Parches con más óxido, un calendario viejo, un reloj de pared y un cartel de repuestos inventado, sin letras.
+- **Esquina de los tambores.** Neumáticos apilados y 2 bidones rojos.
+- **Entrepiso.** El mameluco de Tano cuelga de la baranda y la punta de la frazada asoma por el borde.
+- **Piso.** Grietas más marcadas y huellas de neumático que van del elevador al portón.
+- **Luz.** Conos de luz con el borde suave y una lámpara articulada propia sobre el banco de fabricar.
+
+**Para cuando se lleve a Studio (anotado):**
+- Las luces se rearman en Studio con iluminación Future: SpotLight en el portón, en las 2 lámparas, en el banco, en el gancho y en el banco de fabricar. Solo 2 o 3 con sombra, porque en celular cada una cuesta.
+- Colisiones simples, con cajas `_Colision` para el auto, el elevador y el banco, nunca con la malla entera.
+- Los 3 lugares que se usan (Tano junto al auto, el banco de fabricar y el tablero de trabajos) llevan luz propia para distinguirse de un vistazo.
+- Sonido: la radio vieja de fondo y un goteo cerca del portón (`-- SONIDO:` con su ID en `Config.luau`).
 
 **Primeros planos:**
 ![[interior-taller_cerca_banco.png]]
