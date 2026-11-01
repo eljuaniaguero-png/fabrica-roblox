@@ -40,6 +40,8 @@ RPG de superhéroes para Roblox: combate en tiempo real, multijugador, mundo abi
 - [[Elenco]]: todos los personajes, con su nombre de DC de trabajo y el nombre final.
 - [[Poderes, inicio y personalización]]: cómo conseguís tus poderes.
 - [[Historia]]: el mundo, la Noche del Eclipse, el misterio, los arcos y cómo se arma tu historia.
+- [[Linajes]]: los 12 poderes, cada uno con habilidades, Variantes, Despertar y movimiento.
+- [[NPCs]]: los 23 personajes (16 del elenco y 7 de historia), cada uno con su nota completa.
 - [[Mundo abierto y reputación]]: cómo te trata el mundo.
 - [[Calle viva]]: crimen, policía, atracos y noticias.
 - [[Cinemáticas (plan completo)]] y [[Animaciones (plan completo)]].

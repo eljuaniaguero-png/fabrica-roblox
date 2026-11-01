@@ -15,7 +15,7 @@ tags: [ficha, indice]
 - [[Mundo abierto y reputación]]: el mapa, cómo te movés, las 5 reputaciones, la búsqueda, los territorios y tu base.
 - [[Calle viva]]: lugares donde se entra, civiles y testigos, policía, ladrones, atracos y noticias.
 - [[Poderes, inicio y personalización]]: cómo conseguís tus poderes, Variantes, Rasgos, segundo poder y personalización.
-- [[Combate]] · [[Árbol de habilidades]] · [[Linajes]] · [[Mejoras (tecnología, implantes, transferencias)]] · [[NPCs, trabajos y reputación]]
+- [[Combate]] · [[Árbol de habilidades]] · [[Linajes]] · [[NPCs]] (los 23 personajes) · [[Mejoras (tecnología, implantes, transferencias)]] · [[NPCs, trabajos y reputación]]
 - [[Cuerpo propio (sin avatar de Roblox)]]: el juego no usa tu avatar de Roblox.
 
 ## Cómo se hace

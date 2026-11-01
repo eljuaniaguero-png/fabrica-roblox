@@ -3,7 +3,7 @@ tags: [personaje]
 bando: "Liga"
 nombre_de_trabajo: "Wonder Woman"
 ---
-# Atalanta
+	# Atalanta
 
 **Estado:** Terminado y exportado.
 **Bando:** Liga · **Nombre de trabajo (DC):** Wonder Woman (no va en el juego publicado, ver [[Sobre DC]])

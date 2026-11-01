@@ -7,7 +7,7 @@ bando: "Cofradía (enemigo común)"
 **Estado:** Terminado y exportado (FBX en `linajes/arte/exports/enemigo-maton-implantes/`, texturas de 512 px; el brazo va 3 veces, una por metal).
 **Bando:** Cofradía (enemigo común de Puerto Óxido y Ciudad Vórtice)
 
-Es el [[Matón del puerto]] (misma campera, pañuelo, jean y borcegos) con el **brazo derecho de metal** (pistón hidráulico del hombro al codo, dedos gruesos) y un **ojo implantado que brilla en rojo** (`neon-aviso`). La cadena pasa a la mano izquierda y el gorro va siempre gris, para distinguirlo del matón común de un vistazo. Tres variantes que solo cambian el metal del brazo: **acero**, **óxido** y **bronce** (las mallas son las mismas).
+Es el [[Matón del puerto (modelo)|Matón del puerto]] (misma campera, pañuelo, jean y borcegos) con el **brazo derecho de metal** (pistón hidráulico del hombro al codo, dedos gruesos) y un **ojo implantado que brilla en rojo** (`neon-aviso`). La cadena pasa a la mano izquierda y el gorro va siempre gris, para distinguirlo del matón común de un vistazo. Tres variantes que solo cambian el metal del brazo: **acero**, **óxido** y **bronce** (las mallas son las mismas).
 
 ## Modelo 3D
 Arrastrá con el mouse para girarlo y usá la rueda para acercarte. Se ve sobre el maniquí (brazo de acero).
