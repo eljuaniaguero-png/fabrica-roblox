@@ -45,6 +45,14 @@ Cambios de Juani (1 nov, lista de 7):
 6. Chapa con juntas remachadas y óxido abajo, en las 4 paredes.
 7. Sin el rectángulo blanco flotante. En el fondo, una ventanita sucia en vez de la pantalla celeste.
 
+**Recorrido de la sala (6 vistas):**
+![[interior-taller_sala1_portón.png]]
+![[interior-taller_sala2_esquina_sureste.png]]
+![[interior-taller_sala3_fondo.png]]
+![[interior-taller_sala4_esquina_noroeste.png]]
+![[interior-taller_sala5_entrepiso.png]]
+![[interior-taller_sala6_aerea.png]]
+
 **Vista desde el mismo ángulo que la referencia de Gemini:**
 ![[interior-taller_detalle_como_ref.png]]
 ![[interior-taller_detalle_auto.png]]
