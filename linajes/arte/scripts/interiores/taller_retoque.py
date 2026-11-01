@@ -1,4 +1,5 @@
-"""Rehace en el .blend ya horneado las garras del gancho y el trapo colgado (sin volver a hornear todo)."""
+"""Retoques sobre el .blend ya horneado (sin volver a hornear): gancho de la hoja de objetos, barrotes de la
+cama y silueta repintada en el panel del gancho."""
 
 import os
 import sys
@@ -12,11 +13,13 @@ import bpy  # noqa: E402
 import taller as T  # noqa: E402
 
 B.MATERIALES.update(T.MATS)
-for n in ("Gancho_Garras", "Banco_Trapo", "Banco_TrapoBollo"):
-    if n in bpy.data.objects:
-        bpy.data.objects.remove(bpy.data.objects[n])
-T.garras_gancho(-9.5 + 1.7, T.HY - T.G - 1.4, 8.0)
-T.trapos()
+for o in list(bpy.data.objects):
+    if o.name.startswith(("Gancho", "Neon_Gancho", "Cama_Barrotes")) and o.name != "GanchoPanel":
+        bpy.data.objects.remove(o)
+T.gancho_tano(-9.5, 8.0)
+T.cama_barrotes()
+print("PINTADAS", T.pintar_taller(solo=("GanchoPanel",)))
 cruces, flotan = T.revisar([o for o in bpy.data.objects if o.type == "MESH" and not o.name.startswith(("Lluvia", "Niebla", "Maniqui"))])
 print("CHEQUEO", cruces, flotan)
+print("TRIS", sum(len(o.data.polygons) for o in bpy.data.objects if o.type == "MESH" and not o.name.startswith(("Lluvia", "Niebla", "Maniqui"))))
 bpy.ops.wm.save_mainfile()

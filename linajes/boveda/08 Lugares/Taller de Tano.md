@@ -79,6 +79,12 @@ Graybox con tag `Lugar`. Modelo nuevo pendiente (P25d rehecho).
 ![[interior-taller_detalle_planta.png]]
 ![[interior-taller_detalle_fondo.png]]
 
+**Referencias nuevas de Gemini (1 nov, tarde)**: vista de frente y hoja de objetos.
+![[taller-gemini-ref-4.jpg]]
+![[taller-gemini-ref-6.jpg]]
+- **Se tomó:** el gancho de la hoja (carrete con el cable enrollado atrás, caño con la luz celeste, empuñadura de madera con gatillo, anillo con 3 garras curvas y el cable que cuelga hasta la punta), la cama con barrotes y el clima general.
+- **No se copió** (aviso de Juani): el auto apoyado en el piso (sigue en el elevador de dos columnas), el gancho chiquito tipo perchero de la pared (va el lanzador), la planta de la imagen 2 (sigue la aprobada), y la morsa y el engranaje repetidos y la sierra dibujada adentro del tablero (errores de Gemini).
+
 **Referencias de Gemini** (vista desde el portón, planta y materiales):
 ![[taller-gemini-ref-1.jpg]]
 ![[taller-gemini-ref-2.jpg]]

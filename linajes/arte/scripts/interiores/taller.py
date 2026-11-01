@@ -621,6 +621,45 @@ def garras_gancho(ax_, gc, gz):
     return pieza("Gancho_Garras", garras, "acero")
 
 
+def gancho_tano(gx, gz):
+    """El gancho como en la hoja de objetos (ref-6): carrete con el cable enrollado atrás, caño con la luz
+    celeste, empuñadura de madera con gatillo, anillo en la punta con 3 garras curvas iguales a 120°
+    (unidas al anillo) y el cable que cuelga de la empuñadura a la punta."""
+    gc = HY - G - 1.4  # eje del gancho, a 1,4 studs del panel
+    pared = HY - G - 0.275
+    o = []
+    o.append(pieza("GanchoPanel_Soportes", [((0.18, pared - (gc + 0.6), 0.18), (gx - 1.3, (pared + gc + 0.6) / 2, gz - 0.74)),
+                                            ((0.18, pared - (gc + 0.3), 0.18), (gx + 0.6, (pared + gc + 0.3) / 2, gz - 0.41))], "hierro"))
+    o.append(pieza("Gancho", [], "acero", cilindros=[(0.75, 0.12, (gx - 1.95, gc, gz), "X", 18), (0.75, 0.12, (gx - 0.83, gc, gz), "X", 18), (0.4, 1.0, (gx - 1.85, gc, gz), "X", 12),
+                                                     (0.32, 2.2, (gx - 0.71, gc, gz), "X", 16), (0.4, 0.28, (gx + 1.49, gc, gz), "X", 16), (0.18, 0.2, (gx + 1.77, gc, gz), "X", 10)]))
+    for k in range(6):  # el cable enrollado en el carrete, vuelta por vuelta
+        o.append(toro(f"Gancho_Vuelta{k}", (gx - 1.75 + k * 0.17, gc, gz), "X", 0.56, 0.08, "goma", 16, 6))
+    o.append(pieza("Gancho_Empunadura", [((0.5, 0.45, 1.2), (gx - 1.4, gc, gz - 1.25), (0, -14, 0))], "roble"))
+    o.append(pieza("Gancho_Gatillo", [((0.16, 0.2, 0.42), (gx - 0.95, gc, gz - 0.55)), _barra((gx - 1.15, gc, gz - 0.85), (gx - 0.75, gc, gz - 0.85), 0.07), _barra((gx - 0.75, gc, gz - 0.85), (gx - 0.75, gc, gz - 0.32), 0.07)], "hierro"))
+    ax_ = gx + 2.0
+    o.append(toro("Gancho_Anillo", (ax_, gc, gz), "X", 0.42, 0.11, "acero"))
+    garras = []
+    for ang in (90, 210, 330):
+        a = math.radians(ang)
+        cy_, sz_ = math.cos(a), math.sin(a)
+        pts = [(ax_, 0.42), (ax_ + 0.3, 0.75), (ax_ + 0.7, 1.0), (ax_ + 1.05, 0.95), (ax_ + 1.2, 0.72), (ax_ + 1.1, 0.52)]
+        pts = [(x, gc + cy_ * r, gz + sz_ * r) for x, r in pts]
+        garras += [_barra(pts[i], pts[i + 1], 0.17 if i < 3 else 0.12) for i in range(5)]
+    o.append(pieza("Gancho_Garras", garras, "acero"))
+    cab = [(gx - 1.55, gc, gz - 1.85), (gx - 0.9, gc, gz - 2.35), (gx + 0.2, gc, gz - 2.45), (gx + 1.2, gc, gz - 2.0), (ax_, gc, gz - 0.55)]
+    o.append(pieza("Gancho_CableFino", [_barra(cab[i], cab[i + 1], 0.05) for i in range(len(cab) - 1)], "goma"))
+    o.append(pieza("Neon_Gancho", [((1.7, 0.08, 0.16), (gx + 0.4, gc - 0.32, gz + 0.05))], "neon-gancho"))
+    return o
+
+
+def cama_barrotes():
+    """Pie de cama con barrotes de hierro, como en la referencia."""
+    kx, ky = (11 + HX - G) / 2 + 0.4, HY - G - 2.1
+    x = kx - 3.42
+    bar = [((0.14, 3.4, 0.14), (x, ky, ENTREPISO + 2.75))] + [((0.12, 0.12, 1.4), (x, ky + d, ENTREPISO + 2.05)) for d in (-1.4, -0.7, 0, 0.7, 1.4)]
+    return [pieza("Cama_Barrotes", bar, "hierro")]
+
+
 def detalles():
     """Piezas que suman detalle modelado: columnas y correas, herramientas, cajones, motor del auto,
     manchas, etc. Las de muchas partes chicas no se biselan ni se hornean (solo material)."""
@@ -714,24 +753,7 @@ def detalles():
     # el gancho de Tano: la estrella de la Beta, solo en su propio panel a la izquierda del tablero, el doble de grande
     gx, gz, gy = -9.5, 8.0, HY - G - 0.45
     o.append(pieza("GanchoPanel", [((5.2, 0.25, 5.0), (gx, HY - G - 0.15, gz))], "tablero-oscuro"))
-    # gancho: caño con empuñadura y gatillo, rollo de cable con el cable enrollado, anillo en la punta con 3 garras
-    # curvas iguales a 120° unidas al anillo, cable fino del rollo a la punta y la luz de carga celeste al costado
-    gc = HY - G - 1.4  # eje del gancho, a 1,4 studs del panel
-    pared = HY - G - 0.275
-    o.append(pieza("GanchoPanel_Soportes", [((0.18, pared - (gc + 0.33), 0.18), (gx + d, (pared + gc + 0.33) / 2, gz - 0.45)) for d in (-0.9, 0.7)], "hierro"))
-    o.append(pieza("Gancho", [((0.5, 0.45, 1.1), (gx - 1.15, gc, gz - 0.75), (0, 14, 0)), ((0.18, 0.2, 0.4), (gx - 0.65, gc, gz - 0.55))]
-                   + [_barra((gx - 0.85, gc, gz - 0.35), (gx - 0.4, gc, gz - 0.85), 0.07), _barra((gx - 0.4, gc, gz - 0.85), (gx - 0.4, gc, gz - 0.35), 0.07)],
-                   "acero", cilindros=[(0.35, 3.0, (gx - 1.6, gc, gz), "X", 16), (0.42, 0.25, (gx - 1.7, gc, gz), "X", 16), (0.28, 0.3, (gx + 1.35, gc, gz), "X", 12)]))
-    o.append(pieza("Gancho_Empunadura", [((0.55, 0.5, 0.8), (gx - 1.2, gc, gz - 0.95), (0, 14, 0))], "goma"))
-    rx, ry, rz = gx - 0.5, gc - 0.62, gz + 0.1
-    o.append(pieza("Gancho_Rollo", [], "hierro", cilindros=[(0.6, 0.06, (rx, ry - 0.2, rz), "Y", 16), (0.6, 0.06, (rx, ry + 0.2, rz), "Y", 16), (0.18, 0.46, (rx, ry - 0.23, rz), "Y", 10)]))
-    for k, dy in enumerate((-0.12, 0.0, 0.12)):
-        o.append(toro(f"Gancho_Cable{k}", (rx, ry + dy, rz), "Y", 0.42, 0.06, "goma"))
-    ax_ = gx + 1.7
-    o.append(toro("Gancho_Anillo", (ax_, gc, gz), "X", 0.45, 0.1, "acero"))
-    o.append(garras_gancho(ax_, gc, gz))
-    o.append(pieza("Gancho_CableFino", [_barra((rx + 0.3, ry, rz + 0.45), (gx + 0.6, gc - 0.36, gz + 0.2), 0.04), _barra((gx + 0.6, gc - 0.36, gz + 0.2), (ax_, gc - 0.3, gz + 0.12), 0.04)], "goma"))
-    o.append(pieza("Neon_Gancho", [((1.6, 0.05, 0.16), (gx - 0.2, gc - 0.36, gz - 0.1))], "neon-gancho"))
+    o += gancho_tano(gx, gz)
     o.append(pieza("Tablero_Mangos", mangos, "mango-amarillo"))
     o.append(pieza("Tablero_Manguera", [], "goma", cilindros=[(0.9, 0.25, (bx - 5.6, ty, 7.0), "Y", 14, 0.9)]))
     # banco: frentes de cajones con manijas, mango de la morsa y trapo rojo
@@ -785,7 +807,7 @@ def detalles():
     return o
 
 
-def pintar_taller():
+def pintar_taller(solo=None):
     """Todo lo plano va en la textura: piso, chapa, banco, tablero de herramientas y panel del gancho."""
     import numpy as np
     import random
@@ -900,14 +922,14 @@ def pintar_taller():
     def panel(p, n, base):
         x, z = p[:, 0], p[:, 2]
         c = base.copy()
-        cuerpo = T.dist_polilinea(x, z, [(gx - 1.7, gz), (gx + 3.1, gz)]) - 0.75
-        mango = T.dist_polilinea(x, z, [(gx - 1.1, gz - 0.5), (gx - 1.35, gz - 1.4)]) - 0.45
+        cuerpo = np.minimum(T.dist_polilinea(x, z, [(gx - 1.9, gz), (gx - 0.9, gz)]) - 0.95, T.dist_polilinea(x, z, [(gx - 0.9, gz), (gx + 3.3, gz)]) - 0.6)
+        mango = T.dist_polilinea(x, z, [(gx - 1.35, gz - 0.6), (gx - 1.55, gz - 1.9)]) - 0.45
         sdf = np.minimum(cuerpo, mango)
         return T.mezclar(c, T.hexa("e8d38a"), (np.abs(sdf) < 0.07).astype(float))
 
     hechos = 0
     for o in list(bpy.data.objects):
-        if o.type != "MESH":
+        if o.type != "MESH" or (solo and o.name not in solo):
             continue
         if o.name.startswith("Piso_") and o.name[5:].isdigit():
             hechos += T.pintar(o, piso, piso_rug) > 0
@@ -942,7 +964,7 @@ def detalle():
     B.MATERIALES.setdefault("porton-verde", {"hex": "2f5d5a", "rugosidad": 0.6, "metal": 0.5})
     B.MATERIALES.setdefault("hierro", {"hex": "3a3d42", "rugosidad": 0.6, "metal": 0.7})
     est, mue, det = estructura(), muebles() + auto(), detalles()
-    det += trapos()
+    det += trapos() + cama_barrotes()
     todo = est + mue + det
     cruces, flotan = revisar(todo)
     print("CHEQUEO", cruces, flotan, flush=True)
