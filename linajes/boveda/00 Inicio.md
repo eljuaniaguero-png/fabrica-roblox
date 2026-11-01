@@ -39,7 +39,8 @@ RPG de superhéroes para Roblox: combate en tiempo real, multijugador, mundo abi
 ## Atajos
 - [[Elenco]]: todos los personajes, con su nombre de DC de trabajo y el nombre final.
 - [[Poderes, inicio y personalización]]: cómo conseguís tus poderes.
-- [[Historia viva]] y [[Mundo abierto y reputación]]: cómo se arma tu historia y cómo te trata el mundo.
+- [[Historia]]: el mundo, la Noche del Eclipse, el misterio, los arcos y cómo se arma tu historia.
+- [[Mundo abierto y reputación]]: cómo te trata el mundo.
 - [[Calle viva]]: crimen, policía, atracos y noticias.
 - [[Cinemáticas (plan completo)]] y [[Animaciones (plan completo)]].
 - [[Plan por etapas]]: qué entra en la Beta y qué queda para después.

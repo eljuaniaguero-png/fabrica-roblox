@@ -47,7 +47,7 @@ Cada prompt tiene estas partes, siempre en el mismo orden:
 2. **Tanda 2**: historia completa (`05 Historia`).
 3. **Tanda 3**: los 12 Linajes (`06 Linajes`).
 4. **Tanda 4**: NPCs y personajes (`07 NPCs` y `04 Personajes`).
-5. **Tanda 5**: lugares (`08 Lugares`).
+5. **Tanda 5**: lugares (`08 Lugares`) y las notas de cómo se juega de `01 Juego` (combate, árbol, mejoras, reputación, calle viva), reescritas y sin duplicados.
 6. **Tanda 6**: los prompts que faltan de la **Beta** (unos 25), reescritos con la plantilla y sus prompts de Gemini.
 7. **Tanda 7**: los prompts del **Post Beta**.
 8. **Tanda 8**: los prompts **ya hechos**, actualizados con cómo quedaron (como registro).
