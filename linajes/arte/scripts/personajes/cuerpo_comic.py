@@ -111,9 +111,9 @@ def main():
     for lado, n in ((1, "Left"), (-1, "Right")):
         x = 0.412 * lado
         caja(f"Cuerpo_{n}Hand", f"{n}Hand", (x, 0, 0.652), (0.235, 0.245, 0.1), "Piel", "Cuerpo")
-        # Remera: antebrazo. Campera: manga corta hasta el codo, para que el codo doble limpio.
-        caja(f"Cuerpo_{n}LowerArm", f"{n}LowerArm", (x, 0, 0.805), (0.245, 0.25, 0.218), "Remera", "Remera")
-        caja(f"Cuerpo_{n}UpperArm", f"{n}UpperArm", (x, 0, 1.02), (0.27, 0.275, 0.3), "Campera", "Campera")
+        # Manga continua de la campera: dos bloques iguales que se tocan en el codo.
+        caja(f"Cuerpo_{n}LowerArm", f"{n}LowerArm", (x, 0, 0.805), (0.27, 0.275, 0.218), "Campera", "Campera")
+        caja(f"Cuerpo_{n}UpperArm", f"{n}UpperArm", (x, 0, 1.045), (0.27, 0.275, 0.262), "Campera", "Campera")
         # Pantalón y zapatillas
         caja(f"Cuerpo_{n}UpperLeg", f"{n}UpperLeg", (0.14 * lado, 0, 0.484), (0.255, 0.255, 0.27), "Pantalon", "Pantalon")
         caja(f"Cuerpo_{n}LowerLeg", f"{n}LowerLeg", (0.14 * lado, 0, 0.215), (0.25, 0.25, 0.29), "Pantalon", "Pantalon")
@@ -137,12 +137,10 @@ def main():
         caja(f"Campera_Tapa{n}", "UpperTorso", (0.185 * lado, -0.164, 0.875), (0.145, 0.018, 0.026), "Ribete", "Campera")
         caja(f"Campera_Cierre{n}", "UpperTorso", (0.103 * lado, -0.155, 0.86), (0.012, 0.012, 0.28), "Metal", "Campera")
         caja(f"Campera_Forro{n}", "UpperTorso", (0.097 * lado, -0.143, 0.965), (0.022, 0.018, 0.49), "Forro", "Campera")
-        caja(f"Campera_Punio{n}", f"{n}UpperArm", (x, 0, 0.885), (0.285, 0.29, 0.05), "Forro", "Campera")
-        caja(f"Campera_Ribete{n}", f"{n}UpperArm", (x, 0, 0.917), (0.288, 0.293, 0.018), "Ribete", "Campera")
         caja(f"Campera_Hombro{n}", f"{n}UpperArm", (x, 0, 1.175), (0.282, 0.287, 0.028), "Cuello", "Campera")
-        caja(f"Campera_Tira{n}", f"{n}UpperArm", (x + 0.139 * lado, 0, 1.03), (0.012, 0.09, 0.235), "Ribete", "Campera")
-        # Remera: puño del antebrazo.
-        caja(f"Remera_Punio{n}", f"{n}LowerArm", (x, 0, 0.71), (0.255, 0.26, 0.032), "Forro", "Remera")
+        # Puño de la manga, en la muñeca.
+        caja(f"Campera_Punio{n}", f"{n}LowerArm", (x, 0, 0.715), (0.283, 0.288, 0.045), "Forro", "Campera")
+        caja(f"Campera_Ribete{n}", f"{n}LowerArm", (x, 0, 0.746), (0.285, 0.29, 0.016), "Ribete", "Campera")
         # Pantalón: bolsillo, rodillera y costura; botamanga arriba de la zapatilla.
         lx = 0.14 * lado
         caja(f"Pantalon_Bolsillo{n}", f"{n}UpperLeg", (lx + 0.075 * lado, -0.132, 0.56), (0.08, 0.012, 0.075), "Forro", "Pantalon")
@@ -217,18 +215,22 @@ def main():
         + [((x * 0.18, 0.05, 0.08), (x * 0.08, 0, -0.14), 0.04) for x in (-1, 1)]
         + [((0.179 * x, 0.02, 0.03), (0.018 * x, -0.03, -0.12), 0.04) for x in (-1, 1)],
     )
+    # Sin casco plano: una base al ras de la cabeza y puntas que salen de toda la cabeza.
+    base = [((0, 0, 0.169), (0.345, 0.315, 0.014))]
     peinado(
         "Flequillo",
-        casco + nuca,
+        base + nuca,
         [((x, -0.155, 0.17), (x * 0.15, -0.015, -h), 0.058) for x, h in ((-0.15, 0.2), (-0.075, 0.13), (0, 0.16), (0.075, 0.12), (0.15, 0.2))]
-        + [((x, 0.05, 0.19), (x * 0.5, 0.12, 0.15), 0.09) for x in (-0.13, 0, 0.13)]
+        + [((x, y, 0.15), (x * 0.65, y * 0.65, 0.16), 0.085) for x in (-0.12, 0, 0.12) for y in (-0.08, 0.02, 0.11)]
+        + [((0.16 * x, y, 0.1), (0.13 * x, y * 0.4, 0.07), 0.07) for x in (-1, 1) for y in (-0.07, 0.07)]
         + atras,
         [((x, -0.158, 0.13), (x * 0.1, -0.01, -h), 0.034) for x, h in ((-0.11, 0.14), (-0.035, 0.09), (0.04, 0.11), (0.115, 0.15))]
-        + [((x, 0.06, 0.24), (x * 0.5, 0.08, 0.13), 0.055) for x in (-0.08, 0.08)],
+        + [((x, y, 0.2), (x * 0.5, y * 0.5, 0.14), 0.05) for x in (-0.07, 0.07) for y in (-0.03, 0.08)],
     )
     peinado(
         "Cresta",
-        [((0, 0.01, 0.17), (0.2, 0.33, 0.055))] + nuca[:1],
+        # Costados parejos: pelo corto en los dos lados, sin zonas de piel.
+        [((0, 0, 0.169), (0.345, 0.315, 0.014)), ((0, 0.01, 0.185), (0.2, 0.33, 0.04)), ((0.176, 0.03, 0.09), (0.018, 0.26, 0.15)), ((-0.176, 0.03, 0.09), (0.018, 0.26, 0.15))] + nuca[:1],
         [((0, y, 0.17), (0, y * 0.45, h), 0.1) for y, h in ((-0.12, 0.17), (-0.04, 0.23), (0.04, 0.22), (0.12, 0.16))] + atras,
         [((0, y, 0.2), (0, y * 0.35, h), 0.052) for y, h in ((-0.09, 0.2), (0, 0.27), (0.09, 0.19))]
         + [((x, -0.02, 0.15), (x * 0.15, 0, -0.06), 0.03) for x in (-0.14, 0.14)],
