@@ -112,8 +112,8 @@ def mapa_mundo():
     barrios(c, [("Muelles", -300, 1025, 600, 250), ("Aduana", 300, 1025, 600, 250),
                 ("Galpones", -350, 1525, 500, 750), ("Mercado\nde Pescado", 100, 1525, 400, 750),
                 ("La Feria", 450, 1525, 300, 750)], CARMESI)
-    c.texto(-1200, -1890, "CIUDAD VÓRTICE (posición propuesta)", 21, negrita=True)
-    c.texto(1200, -1890, "DISTRITO CORONA (posición propuesta)", 21, negrita=True)
+    c.texto(-1200, -1890, "CIUDAD VÓRTICE", 21, negrita=True)
+    c.texto(1200, -1890, "DISTRITO CORONA", 21, negrita=True)
     c.texto(0, 1950, "PUERTO ÓXIDO", 21, negrita=True)
 
     radio = 300 * c.k / ESCALA

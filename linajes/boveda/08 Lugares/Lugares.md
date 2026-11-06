@@ -20,7 +20,7 @@ tags: [lugares, indice]
 | [[Galpón del Albatros]] | Interior (Beta) | El Albatros | **Sí** |
 
 ## Mapas 2D
-Lo punteado y lo marcado como propuesta todavía no está decidido. Se regeneran con `linajes/arte/scripts/mapa_2d.py`.
+Las posiciones de Vórtice, Corona y el Cráter están decididas. Lo punteado y lo marcado como propuesta todavía no. El reparto de barrios dentro de Vórtice y Corona sigue siendo propuesta. Se regeneran con `linajes/arte/scripts/mapa_2d.py`.
 
 ![[mapa-mundo.png]]
 

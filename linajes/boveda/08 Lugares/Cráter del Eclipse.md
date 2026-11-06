@@ -9,7 +9,7 @@ tipo: "Zona libre"
 
 | Tipo | Tamaño y dónde | Quién manda | DC (nombre de trabajo) | En la Beta |
 |---|---|---|---|---|
-| Zona libre | 600 de diámetro, al oeste, fuera de las ciudades | Nadie (PvP libre) | — | No |
+| Zona libre | 600 de diámetro, al oeste, fuera de las ciudades (centro en X −1.500, Z 650) | Nadie (PvP libre) | — | No |
 
 ## Cómo se ve
 - **Paleta**: tierra quemada `#2a2018`, cristal negro `#0e1016` con borde de fuego `#f2652b`.

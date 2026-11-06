@@ -9,7 +9,7 @@ tipo: "Ciudad"
 
 | Tipo | Tamaño y dónde | Quién manda | DC (nombre de trabajo) | En la Beta |
 |---|---|---|---|---|
-| Ciudad | 1.200 x 1.200 studs, al noroeste | Vigilantes | Gotham | No |
+| Ciudad | 1.200 x 1.200 studs, al noroeste (X −1.800 a −600, Z −1.800 a −600) | Vigilantes | Gotham | No |
 
 ## Cómo se ve
 - **Paleta**: ladrillo `#6a3b2e`, piedra gris `#4b4f58`, cielo negro violáceo `#121216`, faroles ámbar `#f2a23a`, acento violeta de los Vigilantes `#6b5ba8`.

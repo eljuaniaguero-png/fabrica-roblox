@@ -9,7 +9,7 @@ tipo: "Ciudad"
 
 | Tipo | Tamaño y dónde | Quién manda | DC (nombre de trabajo) | En la Beta |
 |---|---|---|---|---|
-| Ciudad | 1.200 x 1.200 studs, al noreste | Liga de Guardianes | Metrópolis | No |
+| Ciudad | 1.200 x 1.200 studs, al noreste (X 600 a 1.800, Z −1.800 a −600) | Liga de Guardianes | Metrópolis | No |
 
 ## Cómo se ve
 - **Paleta**: vidrio celeste `#9fc6d9`, acero `#c7ccd1`, blanco `#e8e6e0`, dorado Corona `#d9a441`, azul Liga `#2f6fdb`.
