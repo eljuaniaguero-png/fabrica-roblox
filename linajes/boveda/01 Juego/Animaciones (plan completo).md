@@ -29,6 +29,7 @@ Juani pidió rehacer todas las animaciones. Se hacen por tandas con **poses nuev
 - **Tanda 1:** hecha en Blender y sin publicar. Comparación en `linajes/arte/renders/anim-comparacion-tanda1.gif`.
 - **Para después: efectos de movimiento.** Van aparte del FBX, en Roblox, y salen de los marcadores. Orden: 1. probar animaciones en Studio · 2. polvo de pasos y aterrizaje, estela de dash e impacto de golpe (P30b-01) · 3. efectos de cada Linaje con su color (P30b-02 en adelante) · 4. Calidad Alta y Baja (P30b-07).
 - **Fuerza Bruta:** Z, X, C y Cargar poder hechas en Blender, con FBX, sin publicar. Script `linajes/arte/scripts/animaciones/linaje-fuerzabruta.py`; hoja en `linajes/arte/renders/anim-base-hoja-fuerzabruta.png`. Ajustadas con las notas de Juani: Z gira solo el torso (55°). Embestida son 3 piezas (inicio 0,2 s, carrera en loop, frenada 0,3 s) y Cargar son 2 (inicio 0,3 s y loop). El código encadena las piezas.
+- **Publicadas (6 nov):** las 7 de Fuerza Bruta, con IDs en `Config.Animaciones.linaje_fuerzabruta`. De las nuevas del jugador solo `correr-rapido` (135723695428939) y `dash-adelante` (88885509221229): sus IDs todavía no reemplazan a los viejos. Las nuevas están en `ServerStorage.AnimSaves` y las viejas en `AnimSavesViejas`.
 - **Tanda 2:** las 27 restantes del jugador, hechas en Blender y sin publicar. Los loops usan arrastre de cabeza y brazos; trepar y las animaciones de salto sueltas quedan igual. Comparación en `linajes/arte/renders/anim-comparacion-tanda2.gif`.
 
 ---

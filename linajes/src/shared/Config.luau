@@ -287,6 +287,17 @@ Config.Animaciones = {
 		Derrota = "rbxassetid://119935981736480",
 		Levantarse = "rbxassetid://113046535730775",
 	},
+	-- Fuerza Bruta (P27-01), hecha con arte/scripts/animaciones/linaje-fuerzabruta.py. Embestida y Cargar
+	-- van en piezas: inicio, loop y frenada. Marcadores: Impacto en Puño, GolpePiso y EmbestidaFrenada.
+	linaje_fuerzabruta = {
+		PunoSismico = "rbxassetid://98115806880348",
+		GolpePiso = "rbxassetid://118246801340832",
+		EmbestidaInicio = "rbxassetid://111963141629338",
+		EmbestidaCarrera = "rbxassetid://82375231487944",
+		EmbestidaFrenada = "rbxassetid://76562140317323",
+		CargarInicio = "rbxassetid://82574390662886",
+		CargarLoop = "rbxassetid://101325236228868",
+	},
 }
 
 -- Civiles de la calle viva (ficha 0e). Ropa en ServerStorage.Civiles.<Tipo>.<Pieza> (kit de
