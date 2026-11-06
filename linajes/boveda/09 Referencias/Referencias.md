@@ -15,6 +15,7 @@ tags: [referencias, indice]
 - [[Referencias de ciudades]]: vida real, GTA, RPG, Roblox y DC.
 - [[Referencias de animación]]: primera búsqueda de golpes, efectos y FBX.
 - [[Referencias de RPG de Roblox]]: Bloodlines y top 5, con 2 videos por juego.
+- [[Referencias de Fuerza Bruta]]: peso, golpe al piso, embestida y efectos.
 
 ## Ideas ya pasadas a las fichas
 - [[Combate y progresión]]: sección "Sensación del golpe (a probar)".
