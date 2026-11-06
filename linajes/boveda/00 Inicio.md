@@ -43,6 +43,7 @@ RPG de superhéroes para Roblox: combate en tiempo real, multijugador, mundo abi
 - [[Linajes]]: los 12 poderes, cada uno con habilidades, Variantes, Despertar y movimiento.
 - [[NPCs]]: los 23 personajes (16 del elenco y 7 de historia), cada uno con su nota completa.
 - [[Lugares]]: el mapa zona por zona (colores, barrios, lugares clave).
+- [[Referencias]]: informes, mapas e imágenes para sacar ideas.
 - [[Mundo abierto y reputación]]: cómo te trata el mundo.
 - [[Calle viva]]: crimen, policía, atracos y noticias.
 - [[Cinemáticas (plan completo)]] y [[Animaciones (plan completo)]].

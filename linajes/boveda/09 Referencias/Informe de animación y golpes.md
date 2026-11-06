@@ -1,6 +1,9 @@
+---
+tags: [referencias]
+---
 # Informe 1: animación y golpes (6 nov 2026)
 
-Amplía [las referencias de animación](2026-11-06-referencias-animacion.md). Solo se toman técnicas: ningún movimiento, personaje o arte se copia.
+Amplía [[Referencias de animación]]. Solo se toman técnicas: ningún movimiento, personaje o arte se copia.
 
 ## Conclusión
 
@@ -114,3 +117,5 @@ Los valores no están probados en Linajes. La charla se leyó por partes y sus s
 - [Roblox: eventos](https://create.roblox.com/docs/animation/events)
 - [Roblox: usar animaciones](https://create.roblox.com/docs/animation/using)
 - [Quaternius UAL 2](https://quaternius.com/packs/universalanimationlibrary2.html)
+
+Volver a [[Referencias]]

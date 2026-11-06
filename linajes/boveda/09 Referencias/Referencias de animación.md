@@ -1,3 +1,6 @@
+---
+tags: [referencias]
+---
 # Referencias de animación, golpes, efectos y FBX (6 nov 2026)
 
 Solo se toman técnicas. Personajes, efectos y animaciones de otros juegos no se copian.
@@ -65,3 +68,5 @@ YouTube bloqueó por límite dos videos: daño de personajes de Masahiro Sakurai
 - [MoCap Online](https://mocaponline.itch.io/punch-starter-animation-pack/purchase)
 - [DevForum: animación Blender a Studio](https://devforum.roblox.com/t/how-can-i-animate-skinned-mesh-r15-in-blender-and-import-into-studio/2962873)
 - [DevForum: exportar FBX R15](https://devforum.roblox.com/t/is-there-any-way-to-export-the-roblox-r15-rig-as-an-fbx-without-messing-up-the-rig/2640687)
+
+Volver a [[Referencias]]

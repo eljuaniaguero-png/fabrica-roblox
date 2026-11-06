@@ -33,7 +33,7 @@ Las posiciones de Vórtice, Corona y el Cráter están decididas. Lo punteado y 
 - Te movés a pie, con tu poder ([[Estadísticas y movimiento]]), en vehículo, subte y ferry.
 
 ## Diseño de ciudades (a probar)
-Ideas sacadas de [las referencias de ciudades](../../../ideas/2026-11-06-referencias-ciudades.md). No se copian mapas, edificios ni nombres de otros juegos ni de DC.
+Ideas sacadas de [[Referencias de ciudades]]. No se copian mapas, edificios ni nombres de otros juegos ni de DC.
 - **Hito por ciudad, visible desde lejos:** una grúa gigante en Puerto Óxido, la torre de reloj en Vórtice y la torre de cristal en Corona.
 - **Una actividad única por barrio:** si un barrio no tiene algo que no esté en otro, se achica o se saca.
 - **Tres alturas:** calle, techos y cielo, cada una con recorridos y secretos propios.

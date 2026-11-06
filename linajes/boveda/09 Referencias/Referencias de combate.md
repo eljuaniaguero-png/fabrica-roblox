@@ -1,3 +1,6 @@
+---
+tags: [referencias]
+---
 # Referencias de combate de superhéroes (6 nov 2026)
 
 Solo se toman mecánicas y técnicas. Nombres, personajes, efectos y arte de estos juegos no se copian.
@@ -32,3 +35,5 @@ Muestra chica: 3 videos de exhibición de poderes y 4 hojas de fotogramas mirada
 - [Update Showcase, Death Skeleton](https://www.youtube.com/watch?v=RQTGZHn2aZk): 287 fotogramas en 2:48
 - [Arena Showcase, LameBoyLee](https://www.youtube.com/watch?v=4iAPoHczaF4): 17 fotogramas en 44 s
 - [Update moves, Av Gamer](https://www.youtube.com/watch?v=4hV4-XL7-AE): 79 fotogramas en 1:46
+
+Volver a [[Referencias]]

@@ -1,3 +1,6 @@
+---
+tags: [referencias]
+---
 # Referencias de ciudades (6 nov 2026)
 
 Solo se toman ideas de diseño. Nombres, mapas, edificios, personajes y arte de estos juegos y de DC no se copian.
@@ -65,3 +68,5 @@ No pude leer el video de historia de un juego de Roblox por un límite de YouTub
 - [Realism and Legibility in Open-World Level Design](https://www.jikguard.com/news/realism-and-legibility-in-open-world-level-design)
 - [Roblox: Design for performance](https://create.roblox.com/docs/performance-optimization/design)
 - [Historia del diseño de Anton Furst](https://boldentrance.com/inside-the-mind-of-anton-furst-the-man-who-put-the-gothic-into-gotham-city/)
+
+Volver a [[Referencias]]

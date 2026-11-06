@@ -1,6 +1,9 @@
+---
+tags: [referencias]
+---
 # Informe 2: efectos y FBX (6 nov 2026)
 
-Complementa el [informe de animación y golpes](2026-11-06-informe-animacion-y-golpes.md). Los efectos de los reels son referencia de técnica: no se copian diseños, personajes ni texturas.
+Complementa el [[Informe de animación y golpes]]. Los efectos de los reels son referencia de técnica: no se copian diseños, personajes ni texturas.
 
 ## Conclusión
 
@@ -112,3 +115,5 @@ La regla del proyecto no cambia: **Claude hace las animaciones en Blender**. Las
 - [Uhiyama Lab: respuesta al golpe](https://uhiyama-lab.com/en/notes/unity/unity-game-feel-hit-feedback/)
 - [Quaternius UAL 2](https://quaternius.com/packs/universalanimationlibrary2.html)
 - [onetupthree: Anatomy Of A Slash](https://www.youtube.com/watch?v=QyI8ZS-G9nw)
+
+Volver a [[Referencias]]
