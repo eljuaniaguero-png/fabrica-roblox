@@ -7,7 +7,8 @@ tags: [ficha]
 > El juego **no usa el personaje de Roblox** del jugador. Todos (jugadores, NPCs, enemigos) usan el **cuerpo propio de Linajes**, que se arma en el creador de personaje.
 
 > [!important] Cuerpo oficial (Juani, 6 nov): cómic urbano
-> El cuerpo, los peinados y las caras viejos se descartan (quedan en git). El personaje de pelo en puntas y campera azul con cuello rojo es el cuerpo oficial y el atuendo inicial.
+> El cuerpo, los peinados y las caras viejos se descartan (quedan en git). El personaje de pelo en puntas y campera azul con cuello rojo es el cuerpo oficial.
+> - **Corrección (Juani, 6 nov):** su ropa NO es el atuendo inicial. Es el **primer conjunto comprable (Urbano)**, con plata del juego. Todos arrancan con un atuendo básico. El pelo y la cara se eligen gratis. Ver [[Ropa y tienda]].
 > - Mismo esqueleto R15 de 15 partes: `linajes/arte/blender/cuerpo.blend` queda solo como fuente del esqueleto.
 > - Modelo: `linajes/arte/blender/cuerpo-comic.blend`, hecho con `scripts/personajes/cuerpo_comic.py`.
 > - Piezas con color propio: Cuerpo, Remera, Campera (incluye cuello), Cinturon, Pantalon, Zapatillas. FBX en `linajes/arte/exports/cuerpo-comic/`.
