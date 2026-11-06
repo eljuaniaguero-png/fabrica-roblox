@@ -380,6 +380,56 @@ def con(base, **cambios):
     return p
 
 
+# Motor de actuación: cada parte del cuerpo llega a su tiempo y cada tramo tiene su curva. El golpe
+# nace en la cadera y termina en el puño. Se conservan duración y marcador Impacto de cada animación.
+CURVAS = {
+    "seco": lambda u: u**3,  # acelera y llega de golpe al impacto
+    "sale": lambda u: 1 - (1 - u) ** 3,  # sale rápido y se frena
+    "suave": lambda u: u * u * (3 - 2 * u),
+}
+ADELANTO_GOLPE = {
+    "raiz": 2,
+    "LowerTorso": 2,
+    "LeftUpperLeg": 2,
+    "RightUpperLeg": 2,
+    "LeftLowerLeg": 2,
+    "RightLowerLeg": 2,
+    "UpperTorso": 1,
+    "Head": -1,
+}
+# Al recibir, el golpe entra por el torso: la cabeza y los brazos llegan después.
+ADELANTO_REACCION = {"raiz": 1, "UpperTorso": 1, "LowerTorso": 0, "Head": -1, "LeftLowerArm": -2, "RightLowerArm": -2}
+
+
+def pasarse(a, b, k):
+    """Pose b exagerada un k más allá de a. Codos y rodillas no: se doblarían al revés."""
+    out = dict(b)
+    for n, vb in b.items():
+        if n in a and (n == "LowerTorso" or "Lower" not in n):
+            out[n] = tuple(y + (y - x) * k for x, y in zip(a[n], vb))
+    return out
+
+
+def actuar(t, cuadros, claves, adelanto=ADELANTO_GOLPE):
+    """Como secuencia, con claves (cuadro, pose, curva del tramo que llega) y tiempo por hueso."""
+    f = t * cuadros
+    huesos = set().union(*(c[1] for c in claves))
+    out = {}
+    for n in huesos:
+        fn = min(max(f + adelanto.get(n, 0), 0), cuadros)
+        for (f0, p0, *_), (f1, p1, *curva) in zip(claves, claves[1:]):
+            if fn <= f1:
+                u = 0.0 if f1 == f0 else (fn - f0) / (f1 - f0)
+                u = CURVAS[curva[0] if curva else "suave"](u)
+                break
+        else:
+            p0 = p1 = claves[-1][1]
+            u = 0.0
+        a, b = p0.get(n, (0, 0, 0)), p1.get(n, (0, 0, 0))
+        out[n] = tuple(x + (y - x) * u for x, y in zip(a, b))
+    return out
+
+
 GUARDIA = {
     "raiz": (0, 0, -0.14),
     "LowerTorso": (8, 0, -20),
@@ -421,15 +471,19 @@ def golpe_1(t):
     )
     pega = con(
         GUARDIA,
-        raiz=(0, -0.06, -0.16),
-        LowerTorso=(14, 0, -20),
+        raiz=(0, -0.11, -0.17),
+        LowerTorso=(18, 0, -20),
         UpperTorso=_giro_arriba(32),
         RightUpperArm=(-88, 4, -8),
         RightLowerArm=(-4, 0, 0),
         LeftLowerLeg=(66, 0, 0),
         RightLowerLeg=(40, 0, 0),
     )
-    return secuencia(t, 14, [(0, GUARDIA), (4, carga), (6, pega), (8, pega), (14, GUARDIA)])
+    return actuar(
+        t,
+        14,
+        [(0, GUARDIA), (4, pasarse(GUARDIA, carga, 0.5), "sale"), (6, pega, "seco"), (8, pasarse(carga, pega, 0.08), "sale"), (14, GUARDIA)],
+    )
 
 
 def golpe_2(t):
@@ -447,8 +501,8 @@ def golpe_2(t):
     )
     pega = con(
         GUARDIA,
-        raiz=(0, -0.09, -0.17),
-        LowerTorso=(16, 0, -48),
+        raiz=(0, -0.15, -0.19),
+        LowerTorso=(22, 0, -48),
         LeftUpperLeg=(-40, -6, 48),
         RightUpperLeg=(10, 6, 48),
         LeftLowerLeg=(70, 0, 0),
@@ -459,7 +513,11 @@ def golpe_2(t):
         LeftLowerArm=(0, 0, 0),
         RightUpperArm=(-30, -26, 14),
     )
-    return secuencia(t, 14, [(0, GUARDIA), (4, carga), (6, pega), (8, pega), (14, GUARDIA)])
+    return actuar(
+        t,
+        14,
+        [(0, GUARDIA), (4, pasarse(GUARDIA, carga, 0.6), "sale"), (6, pega, "seco"), (8, pasarse(carga, pega, 0.1), "sale"), (14, GUARDIA)],
+    )
 
 
 def golpe_3(t):
@@ -493,7 +551,7 @@ def golpe_3(t):
         RightLowerLeg=(18, 0, 0),
         RightFoot=(-35, 0, 0),
     )
-    return secuencia(t, 18, [(0, GUARDIA), (5, abajo), (8, arriba), (10, arriba), (18, GUARDIA)])
+    return actuar(t, 18, [(0, GUARDIA), (5, abajo, "sale"), (8, arriba, "seco"), (10, pasarse(abajo, arriba, 0.06), "sale"), (18, GUARDIA)])
 
 
 def golpe_4(t):
@@ -534,7 +592,11 @@ def golpe_4(t):
         RightLowerLeg=(40, 0, 0),
     )
     fin = con(GUARDIA, LowerTorso=(8, 0, -380))
-    return secuencia(t, 24, [(0, GUARDIA), (8, carga), (12, patada), (14, patada), (18, sigue), (24, fin)])
+    return actuar(
+        t,
+        24,
+        [(0, GUARDIA), (8, pasarse(GUARDIA, carga, 0.5), "sale"), (12, patada, "seco"), (14, patada), (18, sigue, "sale"), (24, fin)],
+    )
 
 
 def golpe_aire(t):
@@ -574,7 +636,7 @@ def golpe_aire(t):
         "LeftFoot": (-15, 0, 0),
         "RightFoot": (25, 0, 0),
     }
-    return secuencia(t, 22, [(0, GUARDIA), (8, arriba), (12, abajo), (15, abajo), (22, GUARDIA)])
+    return actuar(t, 22, [(0, GUARDIA), (8, arriba, "sale"), (12, abajo, "seco"), (15, abajo), (22, GUARDIA)])
 
 
 BLOQUEO = con(
@@ -671,7 +733,7 @@ def golpe_liviano(t):
         UpperTorso=(-8, 0, 0),
         Head=(-25, 0, 20),
     )
-    return secuencia(t, 10, [(0, GUARDIA), (2, tira), (4, tira), (10, GUARDIA)])
+    return actuar(t, 10, [(0, GUARDIA), (2, pasarse(GUARDIA, tira, 0.25), "sale"), (4, tira), (10, GUARDIA)], ADELANTO_REACCION)
 
 
 def golpe_fuerte(t):
@@ -696,7 +758,7 @@ def golpe_fuerte(t):
         LeftLowerLeg=(55, 0, 0),
         RightLowerLeg=(50, 0, 0),
     )
-    return secuencia(t, 18, [(0, GUARDIA), (3, vuela), (7, vuela), (12, retoma), (18, GUARDIA)])
+    return actuar(t, 18, [(0, GUARDIA), (3, pasarse(GUARDIA, vuela, 0.2), "sale"), (7, vuela), (12, retoma), (18, GUARDIA)], ADELANTO_REACCION)
 
 
 def aturdido(t):
@@ -981,6 +1043,7 @@ GRUPOS = {
     "interaccion": list(_INTERACCION),
     "interaccion-ajustes": ["recoger", "banco", "saludar"],
     "combate": [n for n in ANIMACIONES if n.startswith(_COMBATE)],
+    "tanda1": ["golpe-1", "golpe-2", "golpe-3", "golpe-4", "golpe-aire", "golpe-liviano", "golpe-fuerte"],
 }
 
 # Trepar se ve desde atrás, como lo ve el jugador con la cámara del juego.

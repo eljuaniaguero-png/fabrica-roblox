@@ -20,6 +20,16 @@ Todo lo que se mueve en el juego, quién lo hace y en qué orden. Manda sobre la
 
 ---
 
+## Rehacer todo (método decidido el 6 nov 2026)
+Juani pidió rehacer todas las animaciones. Se hacen por tandas con **poses nuevas en Blender**, sin bibliotecas externas. Ver [[Informe de animación y golpes]].
+- **Motor `actuar`** en `linajes/arte/scripts/animaciones/base.py`: cada parte llega a su tiempo (el golpe nace en la cadera y termina en el puño) y cada tramo tiene su curva (`seco`, `sale`, `suave`).
+- Se conservan duración y marcador `Impacto`, para no cambiar el combate.
+- Los IDs de `Config.luau` cambian recién cuando la tanda esté aprobada, publicada y probada.
+- **Orden:** 1. golpes y reacciones · 2. defensa, dash y derrota · 3. locomoción · 4. interacción · 5. Linajes, jefes, NPCs y el resto a medida que se hagan.
+- **Tanda 1:** hecha en Blender y sin publicar. Comparación en `linajes/arte/renders/anim-comparacion-tanda1.gif`.
+
+---
+
 ## 1. Jugador: base (Blender, 70 animaciones)
 **Locomoción (14):** quieto (3 variantes que se alternan), caminar, correr, correr rápido, agacharse y caminar agachado, saltar (inicio, aire, caer), doble salto (implante de columna), caída larga y aterrizaje fuerte (rodilla al piso), trepar, colgarse de un borde y subir, nadar (superficie y bajo el agua), deslizarse por una pendiente, volar quieto y volar avanzando (Origen Estelar y vuelo de gadget).
 
@@ -211,3 +221,24 @@ Una animación por fila, con su nombre a la izquierda (3 cuadros: anticipación,
 ![[anim-base-levantarse-atras.gif]]
 
 Publicadas en Roblox (IDs en `Config.Animaciones.base`, de `Golpe1` a `Levantarse`). FBX en `linajes/arte/animaciones/base/`. Probado sobre el Dummy: cargan las 29 animaciones base y el marcador `Impacto` llega al código (Golpe 4 a los 0,40 s, Parry a los 0,12 s).
+
+### P26-03 Interacción del jugador (1 nov, segunda vuelta, esperando OK)
+5 animaciones a 30 fps, mismo script y `.blend`. Salen de la pose parada (el cuadro 0 de `quieto`) y vuelven a ella. Ninguna mano entra en la cabeza. Las referencias de Gemini (`anim-interaccion/`) no estaban: se hicieron sin ellas.
+
+| Animación | Cuadros | Loop | Marcador | Qué hace |
+|---|---|---|---|---|
+| hablar | 60 | sí | — | antebrazos arriba, las manos explican una y después la otra; la cabeza asiente dos veces |
+| recoger | 27 (0,9 s) | no | Agarrar 13 | se agacha flexionando las rodillas con la espalda casi derecha, la mano derecha llega al piso (10), agarra (13) y se para con el objeto contra el pecho |
+| banco | 48 | sí | — | la izquierda sostiene la pieza sobre el banco y la derecha martilla 3 veces (golpes en 10, 20 y 30); pausa corta mirando la pieza de cerca (36-44) |
+| celebrar | 40 | no | — | se agacha cargando el puño y lo sube bien arriba (14-28), vuelve parado |
+| saludar | 30 | no | — | brazo derecho bien abierto al costado y arriba; la mano va de un lado al otro 3 veces. Chequeo de cruces con el brazo entero: nada toca la cabeza |
+
+Prioridad en Roblox: Action. Una por fila (anticipación, pose máxima, recuperación):
+
+![[anim-base-hoja-interaccion.png]]
+
+**Las corregidas en movimiento** (3/4 adelante y de atrás, 30 fps):
+
+![[anim-base-recoger-frente.gif]] ![[anim-base-recoger-atras.gif]]
+![[anim-base-banco-frente.gif]] ![[anim-base-banco-atras.gif]]
+![[anim-base-saludar-frente.gif]] ![[anim-base-saludar-atras.gif]]
