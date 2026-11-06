@@ -28,16 +28,17 @@ ADELANTO_PESADO = {"raiz": 3, "LowerTorso": 3, "LeftUpperLeg": 3, "RightUpperLeg
 
 
 def puno_sismico(t):
-    # Derecha cargada, firme: el cuerpo no se tira, se afirma. Los pies no se mueven.
+    # Derecha cargada, firme. Cadera y piernas siguen mirando al rival: solo gira el torso (55°).
     carga = con(
         G,
         raiz=(0, 0.14, -0.14),
-        LowerTorso=(2, 0, -46),
-        LeftUpperLeg=(-34, -9, 46),
-        RightUpperLeg=(-4, 9, 46),
+        LowerTorso=(2, 0, -20),
+        LeftUpperLeg=(-34, -9, 20),
+        RightUpperLeg=(-4, 9, 20),
         LeftLowerLeg=(56, 0, 0),
         RightLowerLeg=(66, 0, 0),
-        UpperTorso=(0, 0, -28),
+        UpperTorso=(0, 0, -25),
+        Head=(12, 0, 37),
         RightUpperArm=(34, -38, 22),
         RightLowerArm=(-122, 0, 0),
         LeftUpperArm=(-66, 30, -16),
@@ -46,20 +47,20 @@ def puno_sismico(t):
     pega = con(
         G,
         raiz=(0, -0.17, -0.16),
-        LowerTorso=(8, 0, 26),
-        LeftUpperLeg=(-48, -9, -26),
-        RightUpperLeg=(18, 9, -26),
+        LowerTorso=(8, 0, -20),
+        LeftUpperLeg=(-48, -9, 20),
+        RightUpperLeg=(18, 9, 20),
         LeftLowerLeg=(70, 0, 0),
         RightLowerLeg=(30, 0, 0),
         RightFoot=(-28, 0, 0),
-        UpperTorso=(12, 0, 26),
+        UpperTorso=(12, 0, 30),
         Head=(2, 0, -18),
         RightUpperArm=(-68, 4, -8),
         RightLowerArm=(-3, 0, 0),
         LeftUpperArm=(-14, 30, 8),
         LeftLowerArm=(-125, 0, 0),
     )
-    queda = con(pega, raiz=(0, -0.15, -0.17), UpperTorso=(16, 0, 22), RightUpperArm=(-60, 4, -8))
+    queda = con(pega, raiz=(0, -0.15, -0.17), UpperTorso=(16, 0, 27), RightUpperArm=(-60, 4, -8))
     tiempos = {"raiz": 1, "LowerTorso": 1, "LeftUpperLeg": 1, "RightUpperLeg": 1, "Head": -1}
     return actuar(t, 30, [(0, G), (6, carga, "sale"), (10, pasarse(G, carga, 0.08)), (12, pega, "seco"), (18, queda, "sale"), (30, G)], tiempos)
 
@@ -123,50 +124,41 @@ def golpe_piso(t):
     )
 
 
-def embestida(t):
-    # Como un toro: hombro izquierdo adelante y bajo, cabeza detrás del hombro, pasos largos.
-    toro = {
-        "LowerTorso": (36, 0, -52),
-        "UpperTorso": (8, 0, -8),
-        "Head": (-12, 0, 44),
-        "LeftUpperArm": (-72, 22, -10),
-        "LeftLowerArm": (-138, 0, 0),
-        "RightUpperArm": (12, -22, 18),
-        "RightLowerArm": (-104, 0, 0),
-    }
-    arranque = con(
-        G,
-        raiz=(0, 0.14, -0.2),
-        LeftUpperLeg=(-52, -9, 52),
-        RightUpperLeg=(-14, 9, 52),
-        LeftLowerLeg=(82, 0, 0),
-        RightLowerLeg=(70, 0, 0),
-        **toro,
+# Embestida en 3 piezas que encadena el juego: inicio, carrera (loop) y frenada.
+# Como un toro: hombro izquierdo adelante y bajo, cabeza detrás del hombro.
+TORO = {
+    "LowerTorso": (36, 0, -52),
+    "UpperTorso": (8, 0, -8),
+    "Head": (-12, 0, 44),
+    "LeftUpperArm": (-72, 22, -10),
+    "LeftLowerArm": (-138, 0, 0),
+    "RightUpperArm": (12, -22, 18),
+    "RightLowerArm": (-104, 0, 0),
+}
+
+
+def embestida_carrera(t):
+    paso = onda(t)
+    rodilla = A.cos(2 * A.pi * t)
+    return con(
+        TORO,
+        # Altura medida para que el pie de apoyo quede en el piso durante toda la zancada.
+        raiz=(0, -0.02, -0.2225 - 0.085 * rodilla + 0.06 * paso + 0.0925 * onda(t * 2, 0.25)),
+        LeftUpperLeg=(-30 - 56 * paso, -7, 52),
+        RightUpperLeg=(-30 + 56 * paso, 7, 52),
+        LeftLowerLeg=(50 + 38 * rodilla, 0, 0),
+        RightLowerLeg=(50 - 38 * rodilla, 0, 0),
+        LeftFoot=(-12, 0, 0),
+        RightFoot=(-12, 0, 0),
+        RightUpperArm=(12 + 7 * paso, -22, 18),
     )
-    paso_a = con(
-        arranque,
-        raiz=(0, -0.02, -0.18),
-        LeftUpperLeg=(-82, -7, 52),
-        RightUpperLeg=(24, 7, 52),
-        LeftLowerLeg=(62, 0, 0),
-        RightLowerLeg=(24, 0, 0),
-    )
-    paso_b = con(
-        arranque,
-        raiz=(0, -0.1, -0.21),
-        LeftUpperLeg=(16, -7, 52),
-        RightUpperLeg=(-84, 7, 52),
-        LeftLowerLeg=(30, 0, 0),
-        RightLowerLeg=(66, 0, 0),
-    )
-    choca = con(
-        paso_a,
-        raiz=(0, -0.28, -0.3),
-        LowerTorso=(42, 0, -60),
-        LeftUpperLeg=(-86, -7, 60),
-        RightUpperLeg=(30, 7, 60),
-        LeftUpperArm=(-52, 22, -10),
-    )
+
+
+def embestida_inicio(t):
+    return actuar(t, 6, [(0, G), (6, embestida_carrera(0.0), "sale")], {"raiz": 1, "LowerTorso": 1, "Head": -1})
+
+
+def embestida_frenada(t):
     frena = con(
         G,
         raiz=(0, 0.02, -0.34),
@@ -178,12 +170,7 @@ def embestida(t):
         RightLowerLeg=(92, 0, 0),
         LeftFoot=(26, 0, 0),
     )
-    return actuar(
-        t,
-        40,
-        [(0, G), (7, arranque, "sale"), (11, paso_a), (15, paso_b), (18, choca, "seco"), (28, frena, "sale"), (40, G)],
-        {"raiz": 1, "LowerTorso": 1, "Head": -1},
-    )
+    return actuar(t, 9, [(0, embestida_carrera(0.0)), (4, frena, "sale"), (9, G)], {"raiz": 1, "LowerTorso": 1, "Head": -1})
 
 
 def cargar_poder(t):
@@ -209,11 +196,22 @@ def cargar_poder(t):
     }
 
 
+CARGA_LOOP = A._con_arrastre(cargar_poder, 30)
+
+
+def cargar_inicio(t):
+    # Termina exactamente en el primer cuadro del loop.
+    return actuar(t, 9, [(0, G), (9, CARGA_LOOP(0.0), "sale")], {"raiz": 1, "LowerTorso": 1, "Head": -2})
+
+
 NUEVAS = {
     "fuerzabruta-puno-sismico": (puno_sismico, 30, False, "Action", (10, 12, 18)),
     "fuerzabruta-golpe-piso": (golpe_piso, 36, False, "Action", (8, 13, 16)),
-    "fuerzabruta-embestida": (embestida, 40, False, "Action", (7, 15, 18)),
-    "fuerzabruta-cargar": (A._con_arrastre(cargar_poder, 30), 30, True, "Action", (0, 7, 22)),
+    "fuerzabruta-embestida-inicio": (embestida_inicio, 6, False, "Action", (0, 3, 6)),
+    "fuerzabruta-embestida-carrera": (A._con_arrastre(embestida_carrera, 20), 20, True, "Action", (0, 5, 15)),
+    "fuerzabruta-embestida-frenada": (embestida_frenada, 9, False, "Action", (0, 4, 9)),
+    "fuerzabruta-cargar-inicio": (cargar_inicio, 9, False, "Action", (0, 5, 9)),
+    "fuerzabruta-cargar-loop": (CARGA_LOOP, 30, True, "Action", (0, 7, 22)),
 }
 A.ANIMACIONES = NUEVAS
 A.GRUPOS["fuerzabruta"] = list(NUEVAS)
@@ -221,22 +219,24 @@ A.ETIQUETAS.update(
     {
         "fuerzabruta-puno-sismico": "Z Puño/sísmico",
         "fuerzabruta-golpe-piso": "X Golpe/al piso",
-        "fuerzabruta-embestida": "C Embestida",
-        "fuerzabruta-cargar": "Cargar/poder",
+        "fuerzabruta-embestida-inicio": "C Embestida/inicio",
+        "fuerzabruta-embestida-carrera": "C Embestida/carrera",
+        "fuerzabruta-embestida-frenada": "C Embestida/frenada",
+        "fuerzabruta-cargar-inicio": "Cargar/inicio",
+        "fuerzabruta-cargar-loop": "Cargar/loop",
     }
 )
 A.MARCADORES.update(
     {
         "fuerzabruta-puno-sismico": [(12, "Impacto")],
         "fuerzabruta-golpe-piso": [(16, "Impacto")],
-        "fuerzabruta-embestida": [(11, "Paso"), (15, "Paso"), (18, "Impacto")],
+        "fuerzabruta-embestida-carrera": [(5, "Paso"), (15, "Paso")],
+        "fuerzabruta-embestida-frenada": [(2, "Impacto")],
     }
 )
 A.GIRO_CAMARA.update({n: 90 for n in NUEVAS})
-A.GIRO_CAMARA["fuerzabruta-cargar"] = 30
 A.B.LENTE *= 0.68  # más lejos: entra el salto de Golpe al piso
 A.GIF_VISTAS.update({n: {"costado": 90, "atras": 135} for n in NUEVAS})
-A.GIF_VISTAS["fuerzabruta-cargar"] = {"frente": 30, "costado": 90}
 
 
 def acciones():
@@ -247,7 +247,7 @@ def acciones():
     for nombre in NUEVAS:
         A.crear_accion(arm, nombre)
         print(f"CRUCES {nombre}: {A.chequear_cruces(arm, nombre)[:6]}")
-    arm.animation_data.action = bpy.data.actions["fuerzabruta-cargar"]
+    arm.animation_data.action = bpy.data.actions["fuerzabruta-cargar-loop"]
     bpy.ops.wm.save_as_mainfile(filepath=A.BLEND)
 
 
