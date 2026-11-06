@@ -478,10 +478,10 @@ GUARDIA = {
     "Head": (12, 0, 12),
     # Codos pegados al cuerpo (cuidan las costillas) y puños a la altura del mentón. En reposo el
     # brazo del maniquí ya sale abierto: +Y cierra el izquierdo hacia el cuerpo, -Y el derecho.
-    "LeftUpperArm": (-44, 34, -16),
-    "RightUpperArm": (-36, -34, 18),
-    "LeftLowerArm": (-138, 0, 0),
-    "RightLowerArm": (-145, 0, 0),
+    "LeftUpperArm": (-44, 18, -16),
+    "RightUpperArm": (-36, -18, 18),
+    "LeftLowerArm": (-124, 0, 0),
+    "RightLowerArm": (-128, 0, 0),
     # Pierna izquierda adelante, derecha atrás, rodillas bien flexionadas (lista para moverse).
     # El giro Z de las piernas compensa el de la cadera: los pies siguen mirando adelante.
     "LeftUpperLeg": (-36, -6, 20),
@@ -536,7 +536,7 @@ def golpe_2(t):
         LeftUpperLeg=(-36, -6, 8),
         RightUpperLeg=(4, 6, 8),
         UpperTorso=_giro_arriba(15),
-        LeftUpperArm=(-32, 26, -15),
+        LeftUpperArm=(-32, 10, -15),
         LeftLowerArm=(-148, 0, 0),
     )
     pega = con(
@@ -568,8 +568,8 @@ def golpe_3(t):
         raiz=(0, 0, -0.26),
         LowerTorso=(26, 0, -20),
         UpperTorso=_giro_arriba(-18),
-        RightUpperArm=(5, -10, 10),
-        RightLowerArm=(-90, 0, 0),
+        RightUpperArm=(5, 8, 10),
+        RightLowerArm=(-74, 0, 0),
         LeftUpperLeg=(-55, -6, 20),
         RightUpperLeg=(-20, 6, 20),
         LeftLowerLeg=(85, 0, 0),
@@ -649,8 +649,8 @@ def golpe_aire(t):
         "LowerTorso": (-6, 0, 0),
         "UpperTorso": (-6, 0, 0),
         "Head": (-14, 0, 0),
-        "LeftUpperArm": (-168, 22, 0),
-        "RightUpperArm": (-168, -22, 0),
+        "LeftUpperArm": (-168, 58, 0),
+        "RightUpperArm": (-168, -58, 0),
         "LeftLowerArm": (-35, 0, 0),
         "RightLowerArm": (-35, 0, 0),
         "LeftUpperLeg": (-4, -3, 0),
@@ -676,7 +676,9 @@ def golpe_aire(t):
         "LeftFoot": (-15, 0, 0),
         "RightFoot": (25, 0, 0),
     }
-    return actuar(t, 22, [(0, GUARDIA), (8, arriba, "sale"), (12, abajo, "seco"), (15, abajo), (22, GUARDIA)])
+    # Los brazos suben por afuera: pasar por delante atravesaría la cabeza.
+    abre = con(GUARDIA, LeftUpperArm=(-55, -72, 0), RightUpperArm=(-55, 72, 0), LeftLowerArm=(-35, 0, 0), RightLowerArm=(-35, 0, 0))
+    return actuar(t, 22, [(0, GUARDIA), (4, abre, "sale"), (8, arriba), (12, abajo, "seco"), (15, abajo), (18, abre), (22, GUARDIA)])
 
 
 BLOQUEO = con(
@@ -684,13 +686,13 @@ BLOQUEO = con(
     # Más agachado que la guardia (se distingue desde atrás) y la cabeza escondida.
     raiz=(0, 0, -0.24),
     LowerTorso=(16, 0, -10),
-    Head=(30, 0, 0),
+    Head=(-4, 0, 0),
     # Codos juntos y antebrazos verticales cruzados delante de la cara: el brazo apunta adelante
     # y un poco abajo, y el antebrazo sube derecho (-70 - 110 = vertical), inclinado para cruzar.
-    LeftUpperArm=(-70, 18, -38),
-    RightUpperArm=(-70, -18, 38),
-    LeftLowerArm=(-110, 0, -30),
-    RightLowerArm=(-110, 0, 30),
+    LeftUpperArm=(-96, -6, -14),
+    RightUpperArm=(-96, 6, 14),
+    LeftLowerArm=(-70, 0, -10),
+    RightLowerArm=(-70, 0, 10),
     LeftUpperLeg=(-50, -6, 10),
     RightUpperLeg=(-12, 6, 10),
     LeftLowerLeg=(80, 0, 0),
@@ -813,8 +815,8 @@ def aturdido(t):
         "UpperTorso": (10, -tarde * 6, 0),
         # Círculo: adelante/atrás (X) y costado (Y) desfasados un cuarto de vuelta.
         "Head": (22 + c * 14, s * 14, s * 6),
-        "LeftUpperArm": (6 + tarde * 8, 6 + tarde * 10, 0),
-        "RightUpperArm": (6 - tarde * 8, -6 + tarde * 10, 0),
+        "LeftUpperArm": (6 + tarde * 8, -8 + tarde * 4, 0),
+        "RightUpperArm": (6 - tarde * 8, 8 + tarde * 4, 0),
         "LeftLowerArm": (-8, 0, 0),
         "RightLowerArm": (-8, 0, 0),
         "LeftUpperLeg": (-18 - abs(s) * 14, -s * 8, 0),
@@ -1103,7 +1105,7 @@ GRUPOS = {
     "interaccion-ajustes": ["recoger", "banco", "saludar"],
     "combate": [n for n in ANIMACIONES if n.startswith(_COMBATE)],
     "tanda2": [n for n in ANIMACIONES if not n.startswith(("golpe-1", "golpe-2", "golpe-3", "golpe-4", "golpe-aire", "golpe-liviano", "golpe-fuerte"))],
-    "prueba": ["correr", "golpe-4", "dash-izquierda", "levantarse"],
+    "prueba": ["bloqueo", "golpe-aire", "golpe-1", "levantarse"],
     "loco": ["quieto", "caminar", "correr", "correr-rapido", "saltar-inicio", "saltar-aire", "saltar-caer"],
     "tanda1": ["golpe-1", "golpe-2", "golpe-3", "golpe-4", "golpe-aire", "golpe-liviano", "golpe-fuerte"],
 }

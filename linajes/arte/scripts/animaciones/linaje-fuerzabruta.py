@@ -39,9 +39,9 @@ def puno_sismico(t):
         RightLowerLeg=(66, 0, 0),
         UpperTorso=(0, 0, -25),
         Head=(12, 0, 37),
-        RightUpperArm=(34, -38, 22),
-        RightLowerArm=(-122, 0, 0),
-        LeftUpperArm=(-66, 30, -16),
+        RightUpperArm=(34, 12, 0),
+        RightLowerArm=(-100, 0, 0),
+        LeftUpperArm=(-66, 16, -16),
     )
     # El peso pasa al pie de adelante y el puño sale un poco hacia abajo.
     pega = con(
@@ -57,7 +57,7 @@ def puno_sismico(t):
         Head=(2, 0, -18),
         RightUpperArm=(-68, 4, -8),
         RightLowerArm=(-3, 0, 0),
-        LeftUpperArm=(-14, 30, 8),
+        LeftUpperArm=(-14, 12, 8),
         LeftLowerArm=(-125, 0, 0),
     )
     queda = con(pega, raiz=(0, -0.15, -0.17), UpperTorso=(16, 0, 27), RightUpperArm=(-60, 4, -8))
@@ -104,8 +104,8 @@ def golpe_piso(t):
         "LowerTorso": (56, 0, 0),
         "UpperTorso": (18, 0, 0),
         "Head": (-34, 0, 0),
-        "LeftUpperArm": (-34, 12, 0),
-        "RightUpperArm": (-34, -12, 0),
+        "LeftUpperArm": (-62, -14, 0),
+        "RightUpperArm": (-62, 14, 0),
         "LeftLowerArm": (-4, 0, 0),
         "RightLowerArm": (-4, 0, 0),
         "LeftUpperLeg": (-104, -14, 0),
@@ -130,9 +130,9 @@ TORO = {
     "LowerTorso": (36, 0, -52),
     "UpperTorso": (8, 0, -8),
     "Head": (-12, 0, 44),
-    "LeftUpperArm": (-72, 22, -10),
+    "LeftUpperArm": (-72, 12, -10),
     "LeftLowerArm": (-138, 0, 0),
-    "RightUpperArm": (12, -22, 18),
+    "RightUpperArm": (12, 6, 18),
     "RightLowerArm": (-104, 0, 0),
 }
 
@@ -150,7 +150,7 @@ def embestida_carrera(t):
         RightLowerLeg=(50 - 38 * rodilla, 0, 0),
         LeftFoot=(-12, 0, 0),
         RightFoot=(-12, 0, 0),
-        RightUpperArm=(12 + 7 * paso, -22, 18),
+        RightUpperArm=(12 + 7 * paso, 6, 18),
     )
 
 
