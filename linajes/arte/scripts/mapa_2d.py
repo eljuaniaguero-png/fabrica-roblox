@@ -3,7 +3,7 @@
 Uso: uv run --python 3.12 --with pillow python linajes/arte/scripts/mapa_2d.py
 
 Puerto Óxido sale de linajes/herramientas/GrayboxPuerto.luau. Lo punteado es
-propuesta: la bóveda no fija esa posición. +Z es el sur, así que el norte queda arriba.
+propuesta. +Z es el sur, así que el norte queda arriba.
 """
 
 from pathlib import Path
