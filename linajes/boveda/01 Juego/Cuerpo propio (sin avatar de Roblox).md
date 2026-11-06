@@ -6,6 +6,15 @@ tags: [ficha]
 > [!important] Cambio de Juani (30 oct). Manda sobre todo lo que diga "avatar"
 > El juego **no usa el personaje de Roblox** del jugador. Todos (jugadores, NPCs, enemigos) usan el **cuerpo propio de Linajes**, que se arma en el creador de personaje.
 
+> [!important] Acabado elegido por Juani (6 nov): A, cómic urbano
+> Manda sobre el acabado anterior. Mismo esqueleto R15 y mismas animaciones. Muestra: `linajes/arte/renders/muestra-personajes-frente.png`.
+> - Bloques rectos, con muy poco redondeo.
+> - Ropa en capas: al menos 3 zonas de color y una prenda grande.
+> - Pelo filoso, más grande que la cabeza.
+> - Cara fina con cejas y ojos angulosos.
+> - Borde negro marcado si rinde bien en celular; si no, se resuelve con textura.
+> - Referencias: [[Referencias de personajes]].
+
 ## Cómo es
 - **Mismo esqueleto R15** que el maniquí del kit. Por eso los trajes que ya hicimos (Cuervo, Centinela, Mascarada, Remache) y todas las animaciones sirven sin rehacerlos.
 - El cuerpo lo hace Claude en Blender, con el estilo de la [[Guía de estilo]]. **Estilo (Juani, 31 oct):** el cuerpo de bloques de Roblox tal cual (piezas R15 del maniquí) con cabeza clásica, remera de manga corta y pantalón como ropa clásica, cara anime (delineado grueso en punta, iris grande, cejas finas, nariz con sombra y brillo) y pelo de mechones en capas y en punta. Referencias en `arte/referencias/anime/` (de otro juego: solo ideas). El detalle sigue estando en el traje.
