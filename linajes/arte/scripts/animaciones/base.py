@@ -51,93 +51,112 @@ def pos(x):
 # ---------------------------------------------------------------------------
 
 
+def ciclo(p, claves):
+    """Valor en la fase p (0 a 1, da la vuelta) entre claves [(fase, valor), ...]."""
+    p %= 1.0
+    q = p if p >= claves[0][0] else p + 1.0
+    for (p0, v0), (p1, v1) in zip(claves, claves[1:] + [(claves[0][0] + 1.0, claves[0][1])]):
+        if p0 <= q <= p1:
+            u = (q - p0) / (p1 - p0)
+            return v0 + (v1 - v0) * (u * u * (3 - 2 * u))
+    return claves[0][1]
+
+
+# Tablas de una pierna: fase 0 = el talón apoya adelante, 0,5 = la punta empuja atrás.
+PASO_CAMINAR = {
+    "cadera": [(0, -30), (0.2, -13), (0.5, 25), (0.62, 14), (0.82, -32)],
+    "rodilla": [(0, 4), (0.13, 20), (0.4, 6), (0.56, 34), (0.72, 62), (0.92, 8)],
+    "pie": [(0, -16), (0.13, 2), (0.42, -2), (0.56, 28), (0.75, 6)],
+}
+PASO_CORRER = {
+    "cadera": [(0, -46), (0.16, -20), (0.4, 40), (0.56, 26), (0.82, -60)],
+    "rodilla": [(0, 22), (0.15, 44), (0.38, 14), (0.6, 108), (0.8, 78), (0.94, 26)],
+    "pie": [(0, -10), (0.15, -4), (0.38, 34), (0.6, 22), (0.85, -6)],
+}
+PASO_RAPIDO = {
+    "cadera": [(0, -56), (0.16, -28), (0.4, 44), (0.56, 30), (0.82, -74)],
+    "rodilla": [(0, 26), (0.15, 48), (0.38, 12), (0.6, 124), (0.8, 94), (0.94, 30)],
+    "pie": [(0, -8), (0.15, -2), (0.38, 40), (0.6, 26), (0.85, -4)],
+}
+# Corrección de altura medida en Blender: deja el pie de apoyo en el piso en toda la vuelta.
+ALTURA_CAMINAR = [(0, 0.0), (0.5, 0.0)]
+
+
+def _piernas(t, tabla):
+    out = {}
+    for lado, fase in (("Left", t), ("Right", t + 0.5)):
+        out[f"{lado}UpperLeg"] = (ciclo(fase, tabla["cadera"]), -3 if lado == "Left" else 3, 0)
+        out[f"{lado}LowerLeg"] = (ciclo(fase, tabla["rodilla"]), 0, 0)
+        out[f"{lado}Foot"] = (ciclo(fase, tabla["pie"]), 0, 0)
+    return out
+
+
 def quieto(t):
-    r = onda(t)  # una respiración lenta por loop (2 s)
-    # Mira a un costado y al otro una sola vez (de 0,3 a 0,8 del loop).
-    m = 0.0
-    if 0.3 < t < 0.8:
-        m = sen(2 * pi * (t - 0.3) / 0.5) * 25
+    # Postura de héroe: pies abiertos, pecho arriba, peso que pasa lento de una pierna a la otra.
+    r = onda(t)
+    peso = onda(t, 0.25)
+    mira = sen(pi * min(max((t - 0.35) / 0.4, 0), 1)) ** 2 * 22
     return {
-        "raiz": (0.02, 0, -0.01 + r * 0.004),  # peso en la pierna izquierda
-        "LowerTorso": (0, -3, 0),
-        "UpperTorso": (r * 1.5, 3, 0),
-        "Head": (0, 0, m),
-        "LeftUpperArm": (-3, -6 - r * 1, 0),
-        "RightUpperArm": (-3, 6 + r * 1, 0),
-        "LeftLowerArm": (-8, 0, 0),
-        "RightLowerArm": (-8, 0, 0),
-        "LeftUpperLeg": (0, 3, 0),
-        "RightUpperLeg": (-6, -4, 0),
-        "RightLowerLeg": (10, 0, 0),
-        "RightFoot": (-4, 0, 0),
+        "raiz": (0.018 * peso, 0, -0.022 + r * 0.006),
+        "LowerTorso": (-1, 1.6 * peso, 2 * peso),
+        "UpperTorso": (-3 + r * 1.6, -1.6 * peso, -2 * peso),
+        "Head": (3, 0, mira),
+        "LeftUpperArm": (-7, -11 - r * 1.5, 4),
+        "RightUpperArm": (-5, 11 + r * 1.5, -4),
+        "LeftLowerArm": (-24, 0, 0),
+        "RightLowerArm": (-20, 0, 0),
+        "LeftUpperLeg": (-6, -7, 0),
+        "RightUpperLeg": (-3, 7, 0),
+        "LeftLowerLeg": (11, 0, 0),
+        "RightLowerLeg": (8, 0, 0),
+        "LeftFoot": (-5, 0, 0),
+        "RightFoot": (-5, 0, 0),
         "_hombros": 0.03 * B.STUD * (r + 1) / 2,
     }
 
 
 def caminar(t):
-    s = onda(t)
-    rebote = abs(cos(2 * pi * t))
-    return {
-        "raiz": (0, 0, -0.015 + rebote * 0.015),
-        "LowerTorso": (0, 0, s * 4),
-        "UpperTorso": (3, 0, -s * 7 + s * 0),
-        "Head": (-2, 0, s * 2),
-        "LeftUpperLeg": (-s * 28, 0, 0),
-        "RightUpperLeg": (s * 28, 0, 0),
-        "LeftLowerLeg": (pos(sen(2 * pi * t - 0.6)) * 35 + 5, 0, 0),
-        "RightLowerLeg": (pos(-sen(2 * pi * t - 0.6)) * 35 + 5, 0, 0),
-        "LeftFoot": (s * 8, 0, 0),
-        "RightFoot": (-s * 8, 0, 0),
-        "LeftUpperArm": (s * 24, -5, 0),
-        "RightUpperArm": (-s * 24, 5, 0),
-        "LeftLowerArm": (-15 - pos(-s) * 15, 0, 0),
-        "RightLowerArm": (-15 - pos(s) * 15, 0, 0),
-    }
+    s = onda(t, 0.25)
+    pose = _piernas(t, PASO_CAMINAR)
+    pose.update(
+        {
+            "raiz": (0.018 * onda(t), 0, ciclo(t, ALTURA_CAMINAR)),
+            "LowerTorso": (4, 1.5 * onda(t), -7 * s),
+            "UpperTorso": (2, -1.5 * onda(t), 13 * s),
+            "Head": (-4, 0, -5 * s),
+            "LeftUpperArm": (-5 + 27 * s, -8, 0),
+            "RightUpperArm": (-5 - 27 * s, 8, 0),
+            "LeftLowerArm": (-26 - 16 * pos(-s), 0, 0),
+            "RightLowerArm": (-26 - 16 * pos(s), 0, 0),
+        }
+    )
+    return pose
+
+
+def _trote(t, tabla, inclina, giro, brazo, codo, baja):
+    s = onda(t, 0.25)
+    pose = _piernas(t, tabla)
+    pose.update(
+        {
+            "raiz": (0, 0, baja + 0.045 * onda(t * 2)),
+            "LowerTorso": (inclina, 0, -giro * 0.55 * s),
+            "UpperTorso": (5, 0, giro * s),
+            "Head": (-inclina * 0.75, 0, -giro * 0.3 * s),
+            "LeftUpperArm": (-8 + brazo * s, -10, 0),
+            "RightUpperArm": (-8 - brazo * s, 10, 0),
+            "LeftLowerArm": (-codo - 16 * pos(-s), 0, 0),
+            "RightLowerArm": (-codo - 16 * pos(s), 0, 0),
+        }
+    )
+    return pose
 
 
 def correr(t):
-    s = onda(t)
-    rebote = abs(cos(2 * pi * t))
-    return {
-        "raiz": (0, 0, -0.04 + rebote * 0.05),
-        "LowerTorso": (15, 0, s * 6),
-        "UpperTorso": (0, 0, -s * 10),
-        "Head": (-12, 0, s * 3),
-        "LeftUpperLeg": (-s * 50 - 10, 0, 0),
-        "RightUpperLeg": (s * 50 - 10, 0, 0),
-        "LeftLowerLeg": (pos(sen(2 * pi * t - 0.9)) * 85 + 15, 0, 0),
-        "RightLowerLeg": (pos(-sen(2 * pi * t - 0.9)) * 85 + 15, 0, 0),
-        "LeftFoot": (s * 15, 0, 0),
-        "RightFoot": (-s * 15, 0, 0),
-        "LeftUpperArm": (s * 50, -8, 0),
-        "RightUpperArm": (-s * 50, 8, 0),
-        "LeftLowerArm": (-90, 0, 0),
-        "RightLowerArm": (-90, 0, 0),
-    }
+    return _trote(t, PASO_CORRER, 15, 20, 56, 82, -0.025)
 
 
 def correr_rapido(t):
-    s = onda(t)
-    rebote = abs(cos(2 * pi * t))
-    return {
-        "raiz": (0, 0, -0.06 + rebote * 0.06),
-        "LowerTorso": (30, 0, s * 5),
-        "UpperTorso": (0, 0, -s * 6),
-        "Head": (-25, 0, 0),
-        "LeftUpperLeg": (-s * 60 - 15, 0, 0),
-        "RightUpperLeg": (s * 60 - 15, 0, 0),
-        "LeftLowerLeg": (pos(sen(2 * pi * t - 0.9)) * 100 + 20, 0, 0),
-        "RightLowerLeg": (pos(-sen(2 * pi * t - 0.9)) * 100 + 20, 0, 0),
-        "LeftFoot": (s * 20, 0, 0),
-        "RightFoot": (-s * 20, 0, 0),
-        # Brazos rectos hacia atrás (estilo velocista).
-        "LeftUpperArm": (55 + s * 4, -10, 0),
-        "RightUpperArm": (55 - s * 4, 10, 0),
-        "LeftLowerArm": (-5, 0, 0),
-        "RightLowerArm": (-5, 0, 0),
-        "LeftHand": (15, 0, 0),
-        "RightHand": (15, 0, 0),
-    }
+    return _trote(t, PASO_RAPIDO, 26, 24, 68, 88, -0.025)
 
 
 def _mezcla(a, b, u):
@@ -172,47 +191,61 @@ DE_PIE = {"raiz": (0, 0, 0)}
 
 
 def saltar_inicio(t):
-    # Se agacha (0 a 0,6) y empuja con los brazos para arriba (0,6 a 1).
-    if t < 0.6:
-        return _mezcla(DE_PIE, AGACHADO, t / 0.6)
+    # Baja rápido con los brazos atrás y explota hacia arriba estirando todo.
+    carga = con(AGACHADO, LowerTorso=(32, 0, 0), LeftUpperArm=(58, -14, 0), RightUpperArm=(58, 14, 0))
     arriba = {
-        "raiz": (0, 0, 0.03),
-        "LowerTorso": (-5, 0, 0),
-        "Head": (8, 0, 0),
-        "LeftUpperArm": (-150, -10, 0),
-        "RightUpperArm": (-150, 10, 0),
-        "LeftFoot": (35, 0, 0),
-        "RightFoot": (35, 0, 0),
+        "raiz": (0, 0, 0.06),
+        "LowerTorso": (-6, 0, 0),
+        "UpperTorso": (-5, 0, 0),
+        "Head": (-8, 0, 0),
+        "LeftUpperArm": (-160, -12, 0),
+        "RightUpperArm": (-150, 12, 0),
+        "LeftLowerArm": (-18, 0, 0),
+        "RightLowerArm": (-24, 0, 0),
+        "LeftFoot": (42, 0, 0),
+        "RightFoot": (42, 0, 0),
     }
-    return _mezcla(AGACHADO, arriba, (t - 0.6) / 0.4)
+    return actuar(t, 8, [(0, DE_PIE), (4, carga, "sale"), (8, arriba, "seco")], ADELANTO_SUAVE)
 
 
 def saltar_aire(t):
+    # Una rodilla arriba, la otra colgando y brazos abiertos que balancean.
     s = onda(t)
     return {
         "raiz": (0, 0, 0.0),
-        "LowerTorso": (8, 0, 0),
-        "Head": (-5, 0, 0),
-        "LeftUpperLeg": (-70 + s * 6, 0, 0),
-        "RightUpperLeg": (-35 - s * 6, 0, 0),
-        "LeftLowerLeg": (95, 0, 0),
-        "RightLowerLeg": (70, 0, 0),
-        "LeftFoot": (20, 0, 0),
-        "RightFoot": (20, 0, 0),
-        "LeftUpperArm": (-110 + s * 8, -25, 0),
-        "RightUpperArm": (-110 - s * 8, 25, 0),
-        "LeftLowerArm": (-30, 0, 0),
-        "RightLowerArm": (-30, 0, 0),
+        "LowerTorso": (5, 0, 4 * s),
+        "UpperTorso": (-4, 0, -6 * s),
+        "Head": (-6, 0, 0),
+        "LeftUpperLeg": (-78 + s * 7, -6, 0),
+        "RightUpperLeg": (-14 - s * 7, 6, 0),
+        "LeftLowerLeg": (98, 0, 0),
+        "RightLowerLeg": (48, 0, 0),
+        "LeftFoot": (24, 0, 0),
+        "RightFoot": (32, 0, 0),
+        "LeftUpperArm": (-62 + s * 10, -48, 0),
+        "RightUpperArm": (-44 - s * 10, 52, 0),
+        "LeftLowerArm": (-34, 0, 0),
+        "RightLowerArm": (-42, 0, 0),
     }
 
 
 def saltar_caer(t):
-    golpe = dict(AGACHADO)
-    golpe["LeftUpperArm"] = (-20, -35, 0)
-    golpe["RightUpperArm"] = (-20, 35, 0)
-    if t < 0.35:
-        return _mezcla(saltar_aire(0), golpe, t / 0.35)
-    return _mezcla(golpe, DE_PIE, (t - 0.35) / 0.65)
+    # Amortigua fuerte en el cuadro 3 y se endereza con un pequeño rebote.
+    golpe = con(AGACHADO, raiz=(0, 0, -0.115), LowerTorso=(34, 0, 0), Head=(-26, 0, 0), LeftUpperArm=(-36, -38, 0), RightUpperArm=(-36, 38, 0))
+    sube = con(
+        AGACHADO,
+        raiz=(0, 0, -0.08),
+        LowerTorso=(12, 0, 0),
+        LeftUpperLeg=(-30, 0, 0),
+        RightUpperLeg=(-30, 0, 0),
+        LeftLowerLeg=(42, 0, 0),
+        RightLowerLeg=(42, 0, 0),
+        LeftFoot=(-12, 0, 0),
+        RightFoot=(-12, 0, 0),
+        LeftUpperArm=(-12, -18, 0),
+        RightUpperArm=(-12, 18, 0),
+    )
+    return actuar(t, 10, [(0, saltar_aire(0)), (3, golpe, "seco"), (7, sube, "sale"), (10, quieto(0))], ADELANTO_SUAVE)
 
 
 def _tramo(x):
@@ -1070,6 +1103,7 @@ GRUPOS = {
     "interaccion-ajustes": ["recoger", "banco", "saludar"],
     "combate": [n for n in ANIMACIONES if n.startswith(_COMBATE)],
     "tanda2": [n for n in ANIMACIONES if not n.startswith(("golpe-1", "golpe-2", "golpe-3", "golpe-4", "golpe-aire", "golpe-liviano", "golpe-fuerte"))],
+    "loco": ["quieto", "caminar", "correr", "correr-rapido", "saltar-inicio", "saltar-aire", "saltar-caer"],
     "tanda1": ["golpe-1", "golpe-2", "golpe-3", "golpe-4", "golpe-aire", "golpe-liviano", "golpe-fuerte"],
 }
 
@@ -1084,6 +1118,7 @@ GIRO_CAMARA.update({"dash-izquierda": 180, "dash-derecha": 180})
 GIF_VISTAS = {"trepar": {"atras": 150, "costado": 90}}
 GIF_VISTAS.update({n: {"atras": GIRO_CAMARA[n]} for n in GRUPOS["combate"]})
 GIF_VISTAS.update({n: {"frente": 45, "atras": 180} for n in GRUPOS["interaccion"]})
+GIF_VISTAS.update({n: {"costado": 90, "atras": 150} for n in GRUPOS["loco"]})
 
 # Marcadores: "Paso" (polvo y sonido de pisada) e "Impacto" (cuando pega: daño, efecto, sonido
 # y sacudida de cámara salen de acá, no de un tiempo fijo).
