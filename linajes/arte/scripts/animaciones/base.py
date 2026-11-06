@@ -397,6 +397,10 @@ ADELANTO_GOLPE = {
     "UpperTorso": 1,
     "Head": -1,
 }
+# Movimientos sin golpe: el cuerpo manda y cabeza y antebrazos llegan un poco después.
+ADELANTO_SUAVE = {"raiz": 1, "LowerTorso": 1, "Head": -1, "LeftLowerArm": -1, "RightLowerArm": -1}
+# Loops: cuadros de retraso de cada parte. Los pies no, para que no patinen.
+ARRASTRE = {"Head": 2, "LeftLowerArm": 2, "RightLowerArm": 2, "LeftHand": 3, "RightHand": 3}
 # Al recibir, el golpe entra por el torso: la cabeza y los brazos llegan después.
 ADELANTO_REACCION = {"raiz": 1, "UpperTorso": 1, "LowerTorso": 0, "Head": -1, "LeftLowerArm": -2, "RightLowerArm": -2}
 
@@ -405,7 +409,7 @@ def pasarse(a, b, k):
     """Pose b exagerada un k más allá de a. Codos y rodillas no: se doblarían al revés."""
     out = dict(b)
     for n, vb in b.items():
-        if n in a and (n == "LowerTorso" or "Lower" not in n):
+        if n in a and not n.startswith("_") and (n == "LowerTorso" or "Lower" not in n):
             out[n] = tuple(y + (y - x) * k for x, y in zip(a[n], vb))
     return out
 
@@ -425,6 +429,9 @@ def actuar(t, cuadros, claves, adelanto=ADELANTO_GOLPE):
         else:
             p0 = p1 = claves[-1][1]
             u = 0.0
+        if n.startswith("_"):  # ajustes sueltos, como _hombros: un número, no un giro
+            out[n] = p0.get(n, 0.0) + (p1.get(n, 0.0) - p0.get(n, 0.0)) * u
+            continue
         a, b = p0.get(n, (0, 0, 0)), p1.get(n, (0, 0, 0))
         out[n] = tuple(x + (y - x) * u for x, y in zip(a, b))
     return out
@@ -661,7 +668,7 @@ BLOQUEO = con(
 
 
 def bloqueo_inicio(t):
-    return secuencia(t, 4, [(0, GUARDIA), (4, BLOQUEO)])
+    return actuar(t, 4, [(0, GUARDIA), (4, BLOQUEO, "sale")], ADELANTO_SUAVE)
 
 
 def bloqueo(t):
@@ -688,7 +695,7 @@ def parry(t):
         LeftLowerLeg=(62, 0, 0),
         RightUpperLeg=(14, 6, 20),
     )
-    return secuencia(t, 12, [(0, GUARDIA), (3, empuja), (5, empuja), (12, GUARDIA)])
+    return actuar(t, 12, [(0, GUARDIA), (3, empuja, "seco"), (5, pasarse(GUARDIA, empuja, 0.06), "sale"), (12, GUARDIA)])
 
 
 def _dash(lean, brazos, piernas):
@@ -720,7 +727,7 @@ DASH = {
 
 def _hacer_dash(lado):
     def dash(t):
-        return secuencia(t, 8, [(0, GUARDIA), (2, DASH[lado]), (5, DASH[lado]), (8, GUARDIA)])
+        return actuar(t, 8, [(0, GUARDIA), (2, pasarse(GUARDIA, DASH[lado], 0.1), "sale"), (5, DASH[lado]), (8, GUARDIA)], ADELANTO_SUAVE)
 
     return dash
 
@@ -831,7 +838,7 @@ def derrota(t):
         LeftLowerArm=(-10, 0, 0),
         RightLowerArm=(-10, 0, 0),
     )
-    return secuencia(t, 40, [(0, GUARDIA), (8, tambalea), (20, RODILLAS), (30, CUATRO), (40, EN_EL_PISO)])
+    return actuar(t, 40, [(0, GUARDIA), (8, tambalea, "sale"), (20, RODILLAS, "seco"), (30, CUATRO, "seco"), (40, EN_EL_PISO, "sale")], ADELANTO_SUAVE)
 
 
 def levantarse(t):
@@ -845,7 +852,7 @@ def levantarse(t):
         LeftUpperArm=(-30, -10, 0),
         RightUpperArm=(-10, 10, 0),
     )
-    return secuencia(t, 30, [(0, EN_EL_PISO), (10, RODILLAS), (18, una), (26, GUARDIA), (30, GUARDIA)])
+    return actuar(t, 30, [(0, EN_EL_PISO), (10, RODILLAS), (18, una), (26, GUARDIA, "sale"), (30, GUARDIA)], ADELANTO_SUAVE)
 
 
 # ---------------------------------------------------------------------------
@@ -899,7 +906,7 @@ def recoger(t):
     mira = con(PARADO, Head=(20, 0, 0))
     cierra = con(AGARRA, RightHand=(25, 0, 0))
     sube = con(PARADO, RightUpperArm=(-25, 8, 0), RightLowerArm=(-95, 0, 0))
-    return secuencia(t, 27, [(0, mira), (10, AGARRA), (13, cierra), (22, sube), (27, sube)])
+    return actuar(t, 27, [(0, mira), (10, AGARRA), (13, cierra), (22, sube, "sale"), (27, sube)], ADELANTO_SUAVE)
 
 
 def banco(t):
@@ -921,7 +928,7 @@ def banco(t):
     claves = [(0, abajo)]
     for i in range(3):
         claves += [(i * 10 + 6, arriba), (i * 10 + 10, abajo)]  # golpe en 10, 20 y 30
-    return secuencia(t, 48, claves + [(36, mira), (44, mira), (48, abajo)])
+    return actuar(t, 48, claves + [(36, mira), (44, mira), (48, abajo)], ADELANTO_SUAVE)
 
 
 def celebrar(t):
@@ -948,7 +955,7 @@ def celebrar(t):
         LeftUpperArm=(-10, -25, 0),
         LeftLowerArm=(-45, 0, 0),
     )
-    return secuencia(t, 40, [(0, PARADO), (8, carga), (14, arriba), (28, arriba), (40, PARADO)])
+    return actuar(t, 40, [(0, PARADO), (8, carga, "sale"), (14, pasarse(carga, arriba, 0.08), "seco"), (28, arriba), (40, PARADO)], ADELANTO_SUAVE)
 
 
 def saludar(t):
@@ -966,7 +973,7 @@ def saludar(t):
     claves = [(0, PARADO), (6, mano(0))]
     for i in range(3):
         claves += [(8 + i * 6, mano(1)), (11 + i * 6, mano(-1))]
-    return secuencia(t, 30, claves + [(30, PARADO)])
+    return actuar(t, 30, claves + [(30, PARADO)], ADELANTO_SUAVE)
 
 
 # nombre: (función, cuadros, loop, prioridad en Roblox, cuadros clave para la tira)
@@ -1009,6 +1016,25 @@ ANIMACIONES = {
     "saludar": (saludar, 30, False, "Action", (6, 14, 17)),
 }
 
+
+def _con_arrastre(funcion, cuadros):
+    """Mismo loop, con cabeza y brazos llegando después: sigue cerrando en t = 1."""
+
+    def pose(t):
+        out = dict(funcion(t))
+        for hueso, retraso in ARRASTRE.items():
+            atrasada = funcion((t - retraso / cuadros) % 1.0)
+            if hueso in atrasada:
+                out[hueso] = atrasada[hueso]
+        return out
+
+    return pose
+
+
+for _n in ("quieto", "caminar", "correr", "correr-rapido", "saltar-aire", "volar-quieto", "volar-avanzando", "nadar", "flotar", "bloqueo", "aturdido", "hablar"):
+    _f, _c, *_resto = ANIMACIONES[_n]
+    ANIMACIONES[_n] = (_con_arrastre(_f, _c), _c, *_resto)
+
 # Nombre que se lee en la columna de la hoja (hoja.py); "/" corta la línea.
 ETIQUETAS = {
     "golpe-1": "Golpe 1/jab derecho",
@@ -1043,6 +1069,7 @@ GRUPOS = {
     "interaccion": list(_INTERACCION),
     "interaccion-ajustes": ["recoger", "banco", "saludar"],
     "combate": [n for n in ANIMACIONES if n.startswith(_COMBATE)],
+    "tanda2": [n for n in ANIMACIONES if not n.startswith(("golpe-1", "golpe-2", "golpe-3", "golpe-4", "golpe-aire", "golpe-liviano", "golpe-fuerte"))],
     "tanda1": ["golpe-1", "golpe-2", "golpe-3", "golpe-4", "golpe-aire", "golpe-liviano", "golpe-fuerte"],
 }
 

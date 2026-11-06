@@ -27,6 +27,7 @@ Juani pidió rehacer todas las animaciones. Se hacen por tandas con **poses nuev
 - Los IDs de `Config.luau` cambian recién cuando la tanda esté aprobada, publicada y probada.
 - **Orden:** 1. golpes y reacciones · 2. defensa, dash y derrota · 3. locomoción · 4. interacción · 5. Linajes, jefes, NPCs y el resto a medida que se hagan.
 - **Tanda 1:** hecha en Blender y sin publicar. Comparación en `linajes/arte/renders/anim-comparacion-tanda1.gif`.
+- **Tanda 2:** las 27 restantes del jugador, hechas en Blender y sin publicar. Los loops usan arrastre de cabeza y brazos; trepar y las animaciones de salto sueltas quedan igual. Comparación en `linajes/arte/renders/anim-comparacion-tanda2.gif`.
 
 ---
 
