@@ -30,7 +30,7 @@ import bpy  # noqa: E402
 from mathutils import Euler, Matrix, Vector  # noqa: E402
 
 FPS = 30
-CUERPO = os.path.join(B.BLENDER, "cuerpo.blend")
+CUERPO = os.path.join(B.BLENDER, "cuerpo-comic.blend")
 BLEND = os.path.join(B.BLENDER, "animaciones-base.blend")
 SALIDA_FBX = os.path.join(B.ARTE, "animaciones", "base")
 PASO_CLAVE = 1  # una clave por cuadro: los loops quedan suaves y sin cortes
@@ -1103,6 +1103,7 @@ GRUPOS = {
     "interaccion-ajustes": ["recoger", "banco", "saludar"],
     "combate": [n for n in ANIMACIONES if n.startswith(_COMBATE)],
     "tanda2": [n for n in ANIMACIONES if not n.startswith(("golpe-1", "golpe-2", "golpe-3", "golpe-4", "golpe-aire", "golpe-liviano", "golpe-fuerte"))],
+    "prueba": ["correr", "golpe-4"],
     "loco": ["quieto", "caminar", "correr", "correr-rapido", "saltar-inicio", "saltar-aire", "saltar-caer"],
     "tanda1": ["golpe-1", "golpe-2", "golpe-3", "golpe-4", "golpe-aire", "golpe-liviano", "golpe-fuerte"],
 }

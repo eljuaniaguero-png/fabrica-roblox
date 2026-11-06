@@ -4,6 +4,9 @@ beta: "Cuerpo propio completo + las piezas de la Beta (4 cascos, 4 capas, 4 peto
 ---
 # P36b Creador de personaje y personalización
 
+> [!important] Cambio de Juani (6 nov): cuerpo cómic urbano
+> El creador usa el nuevo cuerpo: peinado (accesorio), cara (textura), campera, remera, cinturón, pantalón y zapatillas, cada pieza con color propio. Ver [[Cuerpo propio (sin avatar de Roblox)]].
+
 > [!summary] En tres líneas
 > El creador de personaje sobre el cuerpo propio (nunca el avatar de Roblox): cuerpo, cara, pelo, piezas de traje con colores, nombre y armado de habilidades.
 

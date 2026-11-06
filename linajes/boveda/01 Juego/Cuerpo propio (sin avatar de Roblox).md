@@ -6,6 +6,14 @@ tags: [ficha]
 > [!important] Cambio de Juani (30 oct). Manda sobre todo lo que diga "avatar"
 > El juego **no usa el personaje de Roblox** del jugador. Todos (jugadores, NPCs, enemigos) usan el **cuerpo propio de Linajes**, que se arma en el creador de personaje.
 
+> [!important] Cuerpo oficial (Juani, 6 nov): cómic urbano
+> El cuerpo, los peinados y las caras viejos se descartan (quedan en git). El personaje de pelo en puntas y campera azul con cuello rojo es el cuerpo oficial y el atuendo inicial.
+> - Mismo esqueleto R15 de 15 partes: `linajes/arte/blender/cuerpo.blend` queda solo como fuente del esqueleto.
+> - Modelo: `linajes/arte/blender/cuerpo-comic.blend`, hecho con `scripts/personajes/cuerpo_comic.py`.
+> - Piezas con color propio: Cuerpo, Remera, Campera (incluye cuello), Cinturon, Pantalon, Zapatillas. FBX en `linajes/arte/exports/cuerpo-comic/`.
+> - 3 peinados: Puntas, Flequillo y Cresta. 3 caras en `exports/cuerpo-comic/caras/`.
+> - Falta pasarlo a Studio: `StarterCharacter` todavía usa el cuerpo viejo.
+
 > [!important] Acabado elegido por Juani (6 nov): A, cómic urbano
 > Manda sobre el acabado anterior. Mismo esqueleto R15 y mismas animaciones. Muestra: `linajes/arte/renders/muestra-personajes-frente.png`.
 > - Bloques rectos, con muy poco redondeo.
@@ -26,8 +34,8 @@ tags: [ficha]
 | Contextura | 3: normal, ancha, delgada (cambia el ancho de hombros y cadera, no los huesos) |
 | Altura | 3: baja, media, alta (escala de 0,95, 1 y 1,05) |
 | Tono de piel | 10 |
-| Cara (ojos, cejas, boca) | 12 texturas, con expresiones animadas (ver [[Animaciones (plan completo)]]) |
-| Pelo | 12 peinados + color libre |
+| Cara (ojos, cejas, boca) | 3 texturas por ahora (meta: 12), con expresiones animadas (ver [[Animaciones (plan completo)]]) |
+| Pelo | 3 peinados por ahora (meta: 12) + color libre |
 | Cicatrices y marcas | 6, opcionales |
 | Traje | las piezas de [[Poderes, inicio y personalización]] (cascos, capas, petos, etc.) |
 
