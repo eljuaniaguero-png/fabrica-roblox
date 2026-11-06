@@ -117,7 +117,7 @@ def main():
         # Pantalón y zapatillas
         caja(f"Cuerpo_{n}UpperLeg", f"{n}UpperLeg", (0.14 * lado, 0, 0.484), (0.255, 0.255, 0.27), "Pantalon", "Pantalon")
         caja(f"Cuerpo_{n}LowerLeg", f"{n}LowerLeg", (0.14 * lado, 0, 0.215), (0.25, 0.25, 0.29), "Pantalon", "Pantalon")
-        caja(f"Cuerpo_{n}Foot", f"{n}Foot", (0.14 * lado, -0.025, 0.045), (0.265, 0.315, 0.09), "Zapatillas", "Zapatillas")
+        caja(f"Cuerpo_{n}Foot", f"{n}Foot", (0.14 * lado, -0.025, 0.066), (0.265, 0.315, 0.132), "Zapatillas", "Zapatillas")
         # Campera en el torso: frente abierto, costado y solapa.
         caja(f"Campera_Frente{n}", "UpperTorso", (0.185 * lado, -0.135, 0.965), (0.17, 0.035, 0.49), "Campera", "Campera")
         caja(f"Campera_Costado{n}", "UpperTorso", (0.262 * lado, 0, 0.965), (0.035, 0.28, 0.49), "Campera", "Campera")
@@ -149,8 +149,9 @@ def main():
         caja(f"Pantalon_Rodillera{n}", f"{n}LowerLeg", (lx, -0.133, 0.285), (0.18, 0.018, 0.105), "Forro", "Pantalon")
         caja(f"Pantalon_Botamanga{n}", f"{n}LowerLeg", (lx, 0, 0.098), (0.265, 0.265, 0.038), "Forro", "Pantalon")
         # Zapatillas: suela, puntera, lengüeta y cordones.
-        caja(f"Zapa_Suela{n}", f"{n}Foot", (lx, -0.027, 0.014), (0.278, 0.33, 0.028), "Suela", "Zapatillas")
+        caja(f"Zapa_Suela{n}", f"{n}Foot", (lx, -0.025, 0.014), (0.267, 0.317, 0.028), "Suela", "Zapatillas")
         caja(f"Zapa_Puntera{n}", f"{n}Foot", (lx, -0.158, 0.05), (0.268, 0.055, 0.06), "Suela", "Zapatillas")
+        caja(f"Zapa_Franja{n}", f"{n}Foot", (lx, -0.025, 0.043), (0.269, 0.319, 0.018), "Cuello", "Zapatillas")
         caja(f"Zapa_Lengua{n}", f"{n}Foot", (lx, -0.11, 0.086), (0.11, 0.08, 0.018), "Ribete", "Zapatillas")
         for i, y in enumerate((-0.135, -0.105, -0.075)):
             caja(f"Zapa_Cordon{n}{i}", f"{n}Foot", (lx, y, 0.095), (0.14, 0.012, 0.01), "Suela", "Zapatillas")
@@ -238,6 +239,26 @@ def main():
     for o in bpy.data.objects:
         if o.get("Pieza", "").startswith("Pelo") and o["Pieza"] != "PeloPuntas":
             o.hide_render = o.hide_viewport = True
+
+    # Cada zapatilla es UNA sola malla pegada a su pie: capellada, suela, franja y cordones.
+    for n in ("Left", "Right"):
+        pie = bpy.data.objects[f"Cuerpo_{n}Foot"]
+        bpy.ops.object.select_all(action="DESELECT")
+        for o in bpy.data.objects:
+            if o.name.startswith("Zapa_") and n in o.name:
+                o.select_set(True)
+        pie.select_set(True)
+        bpy.context.view_layer.objects.active = pie
+        bpy.ops.object.join()
+        viejos = list(pie.data.materials)
+        nuevos = [m for m in viejos if m.name != "Contorno"] + [borde]
+        indice = [nuevos.index(m) for m in viejos]
+        for cara in pie.data.polygons:
+            cara.material_index = indice[cara.material_index]
+        pie.data.materials.clear()
+        for m in nuevos:
+            pie.data.materials.append(m)
+        pie.modifiers["Borde"].material_offset = len(nuevos) - 1
 
     bpy.ops.wm.save_as_mainfile(filepath=SALIDA)
 

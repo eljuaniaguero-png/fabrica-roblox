@@ -1105,7 +1105,7 @@ GRUPOS = {
     "interaccion-ajustes": ["recoger", "banco", "saludar"],
     "combate": [n for n in ANIMACIONES if n.startswith(_COMBATE)],
     "tanda2": [n for n in ANIMACIONES if not n.startswith(("golpe-1", "golpe-2", "golpe-3", "golpe-4", "golpe-aire", "golpe-liviano", "golpe-fuerte"))],
-    "prueba": ["bloqueo", "golpe-aire", "golpe-1", "levantarse"],
+    "prueba": ["correr"],
     "loco": ["quieto", "caminar", "correr", "correr-rapido", "saltar-inicio", "saltar-aire", "saltar-caer"],
     "tanda1": ["golpe-1", "golpe-2", "golpe-3", "golpe-4", "golpe-aire", "golpe-liviano", "golpe-fuerte"],
 }
