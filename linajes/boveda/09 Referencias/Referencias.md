@@ -16,6 +16,7 @@ tags: [referencias, indice]
 - [[Referencias de animación]]: primera búsqueda de golpes, efectos y FBX.
 - [[Referencias de RPG de Roblox]]: Bloodlines y top 5, con 2 videos por juego.
 - [[Referencias de Fuerza Bruta]]: peso, golpe al piso, embestida y efectos.
+- [[Referencias de personajes]]: por qué parecen plastilina y cómo mejorarlos.
 
 ## Ideas ya pasadas a las fichas
 - [[Combate y progresión]]: sección "Sensación del golpe (a probar)".
