@@ -112,6 +112,101 @@ def rebelde(n, oscuro, luz):
         mechon(f"{n}D{lado}", (0.17 * lado, 0.09, 0.08), (0.22 * lado, 0.12, 0.02), (0.2 * lado, 0.14, -0.1), 0.05, 0.016, oscuro, (lado, 0, 0.2))
 
 
+def solido(nombre, material):
+    """Pelo como UNA superficie continua alrededor de la cabeza: cerrada, sin huecos posibles.
+
+    Es una grilla de N columnas (vuelta a la cabeza) por M filas (de la coronilla al borde).
+    El borde tiene dientes y las puntas de arriba son bultos de la misma superficie.
+    """
+    N, M = 150, 24
+    centro = Vector((0, 0.012, Z + 0.04))
+    # Puntas: ángulo (0 = frente), fila, altura, ancho, hacia dónde se barren.
+    puntas = [
+        (-165, 0.34, 0.1, 0.3, (-0.2, 0.75, 0.25)),
+        (165, 0.34, 0.1, 0.3, (0.2, 0.75, 0.25)),
+        (-125, 0.34, 0.11, 0.3, (-0.6, 0.45, 0.35)),
+        (125, 0.34, 0.11, 0.3, (0.6, 0.45, 0.35)),
+        (-82, 0.34, 0.12, 0.3, (-0.85, 0, 0.45)),
+        (82, 0.34, 0.12, 0.3, (0.85, 0, 0.45)),
+        (-45, 0.33, 0.13, 0.28, (-0.55, -0.15, 0.7)),
+        (45, 0.33, 0.13, 0.28, (0.55, -0.15, 0.7)),
+        (-14, 0.3, 0.15, 0.27, (-0.15, -0.2, 0.9)),
+        (18, 0.3, 0.15, 0.27, (0.2, -0.2, 0.9)),
+        (-90, 0.2, 0.12, 0.26, (-0.35, 0.1, 0.8)),
+        (70, 0.2, 0.13, 0.26, (0.35, 0, 0.8)),
+        (180, 0.2, 0.12, 0.26, (0, 0.45, 0.75)),
+    ]
+
+    def borde(g):
+        """Altura del borde según el ángulo: frente alta, costado medio, nuca baja, con dientes."""
+        c = (1 + math.cos(math.radians(g))) / 2
+        base = -0.085 + 0.205 * c**1.1
+        dientes = 15
+        fase = (g / 360 * dientes) % 1
+        tri = abs(fase * 2 - 1)
+        return base - (0.065 + 0.035 * (1 - c)) * (1 - tri) ** 0.9
+
+    def punto(g, v):
+        t = math.radians(g)
+        sx, sy = math.sin(t), -math.cos(t)
+        e = 0.22  # casi cuadrado, como la cabeza: cubre las esquinas
+        rx = math.copysign(abs(sx) ** e, sx) * 0.195
+        ry = math.copysign(abs(sy) ** e, sy) * 0.18
+        ancho = math.sin(min(v * 2.6, 1) * math.pi / 2) ** 0.55
+        z = 0.205 + (borde(g) - 0.205) * v**1.2
+        p = Vector((rx * ancho, ry * ancho + 0.012, z + Z))
+        n = (p - centro).normalized()
+        for pg, pv, h, w, barre in puntas:
+            dg = math.radians((g - pg + 180) % 360 - 180) * (0.2 + pv)
+            d = math.sqrt(dg * dg + ((v - pv) * 1.7) ** 2) / w
+            if d < 1:
+                k = (1 - d) ** 2.2
+                p = p + (n * 0.35 + Vector(barre)) * h * k * 1.05
+        return p
+
+    verts = [Vector((0, 0.012, Z + 0.205))]
+    for j in range(1, M + 1):
+        for i in range(N):
+            verts.append(punto(i / N * 360 - 180, j / M))
+    caras = []
+    for i in range(N):
+        caras.append((0, 1 + i, 1 + (i + 1) % N))
+    for j in range(M - 1):
+        a0, a1 = 1 + j * N, 1 + (j + 1) * N
+        for i in range(N):
+            k = (i + 1) % N
+            caras.append((a0 + i, a1 + i, a1 + k, a0 + k))
+    # Tapa interna, dentro de la cabeza: cierra la malla sin que se vea.
+    ultimo = 1 + (M - 1) * N
+    interno = len(verts)
+    for i in range(N):
+        verts.append(Vector((verts[ultimo + i].x * 0.72, verts[ultimo + i].y * 0.72, verts[ultimo + i].z + 0.01)))
+    fondo = len(verts)
+    verts.append(Vector((0, 0.012, Z + 0.04)))
+    for i in range(N):
+        k = (i + 1) % N
+        caras.append((ultimo + i, interno + i, interno + k, ultimo + k))
+        caras.append((interno + i, fondo, interno + k))
+    me = bpy.data.meshes.new(nombre)
+    me.from_pydata([tuple(v) for v in verts], [], caras)
+    me.update()
+    o = bpy.data.objects.new(nombre, me)
+    bpy.context.collection.objects.link(o)
+    bpy.ops.object.select_all(action="DESELECT")
+    o.select_set(True)
+    bpy.context.view_layer.objects.active = o
+    bpy.ops.object.mode_set(mode="EDIT")
+    bpy.ops.mesh.select_all(action="SELECT")
+    bpy.ops.mesh.normals_make_consistent(inside=False)
+    bpy.ops.object.mode_set(mode="OBJECT")
+    bpy.ops.object.shade_smooth()
+    me.materials.append(material)
+    me.materials.append(bpy.data.materials["Contorno"])
+    b = o.modifiers.new("Borde", "SOLIDIFY")
+    b.thickness, b.offset, b.use_flip_normals, b.material_offset = 0.006, 1, True, 1
+    return o
+
+
 def main():
     bpy.ops.wm.open_mainfile(filepath=os.path.join(ARTE, "blender", "cuerpo-comic.blend"))
     for o in list(bpy.data.objects):
@@ -135,19 +230,50 @@ def main():
     sol.data.energy = 3.2
     sol.rotation_euler = (Vector((0, 0, 1.4)) - sol.location).to_track_quat("-Z", "Y").to_euler()
     e.render.resolution_x, e.render.resolution_y = 480, 520
-    for i, f in enumerate((barrido, atras, rebelde), 1):
-        antes = set(bpy.data.objects)
-        f(f"Op{i}_", oscuro, luz)
-        nuevos = set(bpy.data.objects) - antes
-        for giro, v in ((0, "frente"), (45, "tres"), (180, "espalda")):
-            a = math.radians(giro)
-            cam.location = (-5 * math.sin(a), -5 * math.cos(a), 1.75)
-            cam.rotation_euler = (Vector((0, 0, 1.47)) - cam.location).to_track_quat("-Z", "Y").to_euler()
-            sol.rotation_euler = (Vector((0, 0, 1.4)) - Vector((-2 * math.cos(a) + 4 * math.sin(a), -2 * math.sin(a) - 4 * math.cos(a), 5))).to_track_quat("-Z", "Y").to_euler()
-            e.render.filepath = os.path.join(ARTE, "renders", f"pelo-comic-{i}-{v}.png")
-            bpy.ops.render.render(write_still=True)
-        for o in nuevos:
-            bpy.data.objects.remove(o)
+    pelo = solido("PeloSolido", oscuro)
+    me = pelo.data
+    aristas = {}
+    for f in me.polygons:
+        for k in f.edge_keys:
+            aristas[k] = aristas.get(k, 0) + 1
+    abiertas = sum(1 for v in aristas.values() if v != 2)
+    import bmesh
+
+    bm = bmesh.new()
+    bm.from_mesh(me)
+    islas, vistos = 0, set()
+    for v in bm.verts:
+        if v.index in vistos:
+            continue
+        islas += 1
+        pila = [v]
+        while pila:
+            u = pila.pop()
+            if u.index in vistos:
+                continue
+            vistos.add(u.index)
+            pila += [e2.other_vert(u) for e2 in u.link_edges]
+    print("MALLA triangulos", sum(len(f.vertices) - 2 for f in me.polygons), "aristas_abiertas", abiertas, "piezas_sueltas", islas)
+    for giro, v in ((0, "frente"), (45, "tres"), (90, "costado"), (135, "atras-tres"), (180, "espalda")):
+        a = math.radians(giro)
+        cam.location = (-5 * math.sin(a), -5 * math.cos(a), 1.75)
+        cam.rotation_euler = (Vector((0, 0, 1.47)) - cam.location).to_track_quat("-Z", "Y").to_euler()
+        sol.rotation_euler = (Vector((0, 0, 1.4)) - Vector((-2 * math.cos(a) + 4 * math.sin(a), -2 * math.sin(a) - 4 * math.cos(a), 5))).to_track_quat("-Z", "Y").to_euler()
+        e.render.filepath = os.path.join(ARTE, "renders", f"pelo-solido-{v}.png")
+        bpy.ops.render.render(write_still=True)
+    bpy.ops.object.select_all(action="DESELECT")
+    pelo.select_set(True)
+    bpy.ops.export_scene.fbx(
+        filepath=os.path.join(ARTE, "exports", "cuerpo-comic", "PeloSolido.fbx"),
+        use_selection=True,
+        object_types={"MESH"},
+        use_mesh_modifiers=False,
+        global_scale=1 / 0.28,
+        apply_unit_scale=True,
+        apply_scale_options="FBX_SCALE_UNITS",
+        axis_forward="Z",
+        axis_up="Y",
+    )
 
 
 main()
