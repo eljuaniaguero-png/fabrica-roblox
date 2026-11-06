@@ -30,6 +30,11 @@ COLORES = {
     "Pantalon": "#242a39",
     "Zapatillas": "#7f2831",
     "Pelo": "#12141e",
+    "PeloLuz": "#30405f",
+    "Forro": "#17233b",
+    "Ribete": "#d7d2c4",
+    "Suela": "#ece8dd",
+    "Metal": "#c9ced8",
 }
 
 
@@ -91,14 +96,14 @@ def main():
         bpy.ops.object.transform_apply(location=False, rotation=False, scale=True)
         return preparar(o, hueso, mats[mat], pieza, arm, borde)
 
-    def punta(nombre, base, hacia, ancho, pieza):
+    def punta(nombre, base, hacia, ancho, pieza, mat="Pelo"):
         d = Vector(hacia)
         bpy.ops.mesh.primitive_cone_add(vertices=4, radius1=ancho, depth=d.length, location=Vector(base) + d / 2)
         o = bpy.context.object
         o.name = nombre
         o.rotation_mode = "QUATERNION"
         o.rotation_quaternion = d.to_track_quat("Z", "Y")
-        return preparar(o, "Head", mats["Pelo"], pieza, arm, borde)
+        return preparar(o, "Head", mats[mat], pieza, arm, borde)
 
     # Piel
     caja("Cuerpo_Head", "Head", (0, 0, 1.363), (0.34, 0.31, 0.325), "Piel", "Cuerpo")
@@ -124,6 +129,47 @@ def main():
     caja("Cuerpo_LowerTorso", "LowerTorso", (0, 0, 0.665), (0.54, 0.26, 0.11), "Pantalon", "Pantalon")
     caja("Cinturon", "LowerTorso", (0, 0, 0.724), (0.55, 0.275, 0.05), "Cinturon", "Cinturon")
 
+    # Capas de ropa: todas siguen a su hueso, así que no estorban las articulaciones.
+    for lado, n in ((1, "Left"), (-1, "Right")):
+        x = 0.412 * lado
+        # Campera: bolsillo, cierre, puño con ribete, tira de hombro y forro visible.
+        caja(f"Campera_Bolsillo{n}", "UpperTorso", (0.185 * lado, -0.156, 0.82), (0.13, 0.012, 0.1), "Forro", "Campera")
+        caja(f"Campera_Tapa{n}", "UpperTorso", (0.185 * lado, -0.164, 0.875), (0.145, 0.018, 0.026), "Ribete", "Campera")
+        caja(f"Campera_Cierre{n}", "UpperTorso", (0.103 * lado, -0.155, 0.86), (0.012, 0.012, 0.28), "Metal", "Campera")
+        caja(f"Campera_Forro{n}", "UpperTorso", (0.097 * lado, -0.143, 0.965), (0.022, 0.018, 0.49), "Forro", "Campera")
+        caja(f"Campera_Punio{n}", f"{n}UpperArm", (x, 0, 0.885), (0.285, 0.29, 0.05), "Forro", "Campera")
+        caja(f"Campera_Ribete{n}", f"{n}UpperArm", (x, 0, 0.917), (0.288, 0.293, 0.018), "Ribete", "Campera")
+        caja(f"Campera_Hombro{n}", f"{n}UpperArm", (x, 0, 1.175), (0.282, 0.287, 0.028), "Cuello", "Campera")
+        caja(f"Campera_Tira{n}", f"{n}UpperArm", (x + 0.139 * lado, 0, 1.03), (0.012, 0.09, 0.235), "Ribete", "Campera")
+        # Remera: puño del antebrazo.
+        caja(f"Remera_Punio{n}", f"{n}LowerArm", (x, 0, 0.71), (0.255, 0.26, 0.032), "Forro", "Remera")
+        # Pantalón: bolsillo, rodillera y costura; botamanga arriba de la zapatilla.
+        lx = 0.14 * lado
+        caja(f"Pantalon_Bolsillo{n}", f"{n}UpperLeg", (lx + 0.075 * lado, -0.132, 0.56), (0.08, 0.012, 0.075), "Forro", "Pantalon")
+        caja(f"Pantalon_Costura{n}", f"{n}UpperLeg", (lx + 0.131 * lado, 0, 0.484), (0.01, 0.045, 0.255), "Cuello", "Pantalon")
+        caja(f"Pantalon_Costura2{n}", f"{n}LowerLeg", (lx + 0.129 * lado, 0, 0.21), (0.01, 0.045, 0.27), "Cuello", "Pantalon")
+        caja(f"Pantalon_Rodillera{n}", f"{n}LowerLeg", (lx, -0.133, 0.285), (0.18, 0.018, 0.105), "Forro", "Pantalon")
+        caja(f"Pantalon_Botamanga{n}", f"{n}LowerLeg", (lx, 0, 0.098), (0.265, 0.265, 0.038), "Forro", "Pantalon")
+        # Zapatillas: suela, puntera, lengüeta y cordones.
+        caja(f"Zapa_Suela{n}", f"{n}Foot", (lx, -0.027, 0.014), (0.278, 0.33, 0.028), "Suela", "Zapatillas")
+        caja(f"Zapa_Puntera{n}", f"{n}Foot", (lx, -0.158, 0.05), (0.268, 0.055, 0.06), "Suela", "Zapatillas")
+        caja(f"Zapa_Lengua{n}", f"{n}Foot", (lx, -0.11, 0.086), (0.11, 0.08, 0.018), "Ribete", "Zapatillas")
+        for i, y in enumerate((-0.135, -0.105, -0.075)):
+            caja(f"Zapa_Cordon{n}{i}", f"{n}Foot", (lx, y, 0.095), (0.14, 0.012, 0.01), "Suela", "Zapatillas")
+    # Cuello doble, parche de espalda original y dobladillo.
+    caja("Cuello_Forro", "UpperTorso", (0, 0.098, 1.25), (0.26, 0.035, 0.07), "Forro", "Campera")
+    caja("Campera_Dobladillo", "UpperTorso", (0, 0.154, 0.74), (0.565, 0.012, 0.045), "Forro", "Campera")
+    caja("Campera_Parche", "UpperTorso", (0, 0.158, 1.01), (0.2, 0.012, 0.2), "Cuello", "Campera", (0, 45, 0))
+    caja("Campera_ParcheCentro", "UpperTorso", (0, 0.165, 1.01), (0.11, 0.012, 0.11), "Ribete", "Campera", (0, 45, 0))
+    # Remera: cuello y franja.
+    caja("Remera_Cuello", "UpperTorso", (0, -0.128, 1.18), (0.2, 0.014, 0.035), "Forro", "Remera")
+    caja("Remera_Franja", "UpperTorso", (0, -0.13, 0.95), (0.13, 0.012, 0.055), "Cuello", "Remera")
+    # Cinturón: hebilla y presillas.
+    caja("Cinturon_Hebilla", "LowerTorso", (0, -0.144, 0.724), (0.085, 0.018, 0.058), "Metal", "Cinturon")
+    caja("Cinturon_Centro", "LowerTorso", (0, -0.155, 0.724), (0.045, 0.012, 0.028), "Cuello", "Cinturon")
+    for x in (-0.19, 0.19):
+        caja(f"Cinturon_Presilla{x}", "LowerTorso", (x, -0.142, 0.724), (0.022, 0.014, 0.07), "Pantalon", "Cinturon")
+
     # Cara: un plano con textura delante de la cabeza.
     for i in (1, 2, 3):
         bpy.ops.mesh.primitive_plane_add(size=1, location=(0, -0.1565, 1.36), rotation=(math.radians(90), 0, 0))
@@ -148,8 +194,10 @@ def main():
     def cabeza(x, y, z):
         return (x, y, 1.363 + z)
 
-    def peinado(nombre, cajas, puntas):
+    def peinado(nombre, cajas, puntas, capa=()):
         pieza = f"Pelo{nombre}"
+        for i, (b, h, a) in enumerate(capa):
+            punta(f"Pelo_{nombre}_L{i}", cabeza(*b), h, a, pieza, "PeloLuz")
         for i, (c, m) in enumerate(cajas):
             caja(f"Pelo_{nombre}_C{i}", "Head", cabeza(*c), m, "Pelo", pieza)
         for i, (b, h, a) in enumerate(puntas):
@@ -164,6 +212,10 @@ def main():
         [((-0.15, -0.08, 0.16), (-0.13, -0.03, 0.1), 0.095), ((-0.08, -0.08, 0.17), (-0.08, -0.07, 0.17), 0.095), ((0, -0.09, 0.17), (0.01, -0.09, 0.2), 0.095), ((0.08, -0.08, 0.17), (0.08, -0.07, 0.16), 0.095), ((0.15, -0.08, 0.16), (0.13, -0.02, 0.09), 0.095)]
         + [((x, 0.09, 0.17), (x * 0.8, 0.14, 0.12), 0.09) for x in (-0.14, 0, 0.14)]
         + atras,
+        [((-0.13, -0.13, 0.18), (-0.11, -0.05, 0.1), 0.055), ((-0.04, -0.13, 0.19), (-0.04, -0.09, 0.14), 0.055), ((0.05, -0.13, 0.19), (0.05, -0.09, 0.13), 0.055), ((0.13, -0.13, 0.18), (0.1, -0.04, 0.09), 0.055)]
+        + [((x, 0.03, 0.24), (x * 0.7, -0.02, 0.17), 0.065) for x in (-0.1, 0.1)]
+        + [((x * 0.18, 0.05, 0.08), (x * 0.08, 0, -0.14), 0.04) for x in (-1, 1)]
+        + [((0.179 * x, 0.02, 0.03), (0.018 * x, -0.03, -0.12), 0.04) for x in (-1, 1)],
     )
     peinado(
         "Flequillo",
@@ -171,11 +223,15 @@ def main():
         [((x, -0.155, 0.17), (x * 0.15, -0.015, -h), 0.058) for x, h in ((-0.15, 0.2), (-0.075, 0.13), (0, 0.16), (0.075, 0.12), (0.15, 0.2))]
         + [((x, 0.05, 0.19), (x * 0.5, 0.12, 0.15), 0.09) for x in (-0.13, 0, 0.13)]
         + atras,
+        [((x, -0.158, 0.13), (x * 0.1, -0.01, -h), 0.034) for x, h in ((-0.11, 0.14), (-0.035, 0.09), (0.04, 0.11), (0.115, 0.15))]
+        + [((x, 0.06, 0.24), (x * 0.5, 0.08, 0.13), 0.055) for x in (-0.08, 0.08)],
     )
     peinado(
         "Cresta",
         [((0, 0.01, 0.17), (0.2, 0.33, 0.055))] + nuca[:1],
         [((0, y, 0.17), (0, y * 0.45, h), 0.1) for y, h in ((-0.12, 0.17), (-0.04, 0.23), (0.04, 0.22), (0.12, 0.16))] + atras,
+        [((0, y, 0.2), (0, y * 0.35, h), 0.052) for y, h in ((-0.09, 0.2), (0, 0.27), (0.09, 0.19))]
+        + [((x, -0.02, 0.15), (x * 0.15, 0, -0.06), 0.03) for x in (-0.14, 0.14)],
     )
     for o in bpy.data.objects:
         if o.get("Pieza", "").startswith("Pelo") and o["Pieza"] != "PeloPuntas":
