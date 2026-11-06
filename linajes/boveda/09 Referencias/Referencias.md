@@ -14,6 +14,7 @@ tags: [referencias, indice]
 - [[Referencias de combate]]: lo que se repite en combates de superhéroes.
 - [[Referencias de ciudades]]: vida real, GTA, RPG, Roblox y DC.
 - [[Referencias de animación]]: primera búsqueda de golpes, efectos y FBX.
+- [[Referencias de RPG de Roblox]]: Bloodlines y top 5, con 2 videos por juego.
 
 ## Ideas ya pasadas a las fichas
 - [[Combate y progresión]]: sección "Sensación del golpe (a probar)".
