@@ -7,6 +7,7 @@ Escribe renders/muestra-personajes.png. Proporciones R15 en studs, mirando a -Y.
 """
 
 import math
+import sys
 import os
 
 import bpy
@@ -96,10 +97,14 @@ def muestra_a(x):
         m.caja((0.72 * lado, -0.03, 3.15), (0.62, 1.13, 1.88), campera)
         m.caja((1.5 * lado, -0.01, 3.42), (1.03, 1.05, 1.28), campera)
         m.caja((0.42 * lado, -0.59, 3.62), (0.2, 0.05, 0.95), rojo, (0, -12 * lado, 0))
+    m.caja((0, 0.54, 3.15), (2.06, 0.1, 1.88), campera)  # espalda cerrada
     m.caja((0, -0.03, 2.28), (2.05, 1.08, 0.2), rojo)
     m.cara("#39d3ff")
     pelo = material("PeloA", "#12141e")
     m.caja((0, 0.08, 5.3), (1.38, 1.1, 0.42), pelo)
+    m.caja((0, 0.52, 4.82), (1.36, 0.24, 0.98), pelo)  # nuca
+    for lado in (-1, 1):
+        m.caja((0.66 * lado, 0.28, 4.95), (0.1, 0.72, 0.72), pelo)
     for bx, hz in [(-0.56, (-0.45, -0.1, 0.35)), (-0.28, (-0.28, -0.25, 0.62)), (0, (0.02, -0.35, 0.72)), (0.3, (0.28, -0.28, 0.58)), (0.58, (0.48, -0.08, 0.3))]:
         m.punta((bx, -0.28, 5.28), hz, 0.34, pelo)
     for bx in (-0.5, 0, 0.5):
@@ -158,7 +163,7 @@ def render(ruta, desde):
         bpy.ops.object.camera_add()
         cam = bpy.context.object
         cam.name = "Cam"
-        cam.data.type, cam.data.ortho_scale = "ORTHO", 19
+        cam.data.type, cam.data.ortho_scale = "ORTHO", 19 if "angulos" not in sys.argv else 8.5
         e.camera = cam
     cam.location = desde
     cam.rotation_euler = (Vector((0, 0, 3)) - Vector(desde)).to_track_quat("-Z", "Y").to_euler()
@@ -189,4 +194,42 @@ def main():
         render(os.path.join(ARTE, "renders", f"muestra-personajes-{nombre}.png"), desde)
 
 
-main()
+
+def angulos_a():
+    """Personaje A desde varios ángulos: renders/muestra-a-<vista>.png."""
+    bpy.ops.object.select_all(action="SELECT")
+    bpy.ops.object.delete()
+    muestra_a(0)
+    e = bpy.context.scene
+    e.render.engine = "BLENDER_EEVEE"
+    e.render.resolution_x, e.render.resolution_y = 700, 900
+    e.view_settings.view_transform = "Standard"
+    mundo = bpy.data.worlds.new("MundoA")
+    mundo.use_nodes = True
+    mundo.node_tree.nodes["Background"].inputs[0].default_value = (0.08, 0.1, 0.14, 1)
+    e.world = mundo
+    bpy.ops.mesh.primitive_plane_add(size=60, location=(0, 0, 0))
+    bpy.context.object.data.materials.append(material("Piso", "#30343d"))
+    luz("SUN", (-8, -14, 18), 4, (1, 0.96, 0.9))
+    luz("SUN", (12, 8, 8), 1.6, (0.65, 0.78, 1))
+    luz("SUN", (6, 16, 10), 1.8, (1, 0.95, 0.9))
+    vistas = {"frente": 0, "tres-cuartos": 40, "costado": 90, "atras-tres-cuartos": 140, "espalda": 180, "izquierda": -60}
+    for nombre, giro in vistas.items():
+        a = math.radians(giro)
+        render(os.path.join(ARTE, "renders", f"muestra-a-{nombre}.png"), (-30 * math.sin(a), -30 * math.cos(a), 5))
+        bpy.data.objects["Cam"].data.ortho_scale = 8.5
+    bpy.data.objects["Cam"].data.ortho_scale = 3.4
+    bpy.context.scene.render.resolution_y = 700
+    cam = bpy.data.objects["Cam"]
+    cam.location = (-6, -22, 5.2)
+    cam.rotation_euler = (Vector((0, 0, 4.85)) - cam.location).to_track_quat("-Z", "Y").to_euler()
+    e.render.filepath = os.path.join(ARTE, "renders", "muestra-a-cara.png")
+    bpy.ops.render.render(write_still=True)
+
+
+import sys  # noqa: E402
+
+if "angulos" in sys.argv:
+    angulos_a()
+else:
+    main()
