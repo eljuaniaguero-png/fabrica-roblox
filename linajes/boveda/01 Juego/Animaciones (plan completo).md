@@ -28,6 +28,7 @@ Juani pidió rehacer todas las animaciones. Se hacen por tandas con **poses nuev
 - **Orden:** 1. golpes y reacciones · 2. defensa, dash y derrota · 3. locomoción · 4. interacción · 5. Linajes, jefes, NPCs y el resto a medida que se hagan.
 - **Tanda 1:** hecha en Blender y sin publicar. Comparación en `linajes/arte/renders/anim-comparacion-tanda1.gif`.
 - **Para después: efectos de movimiento.** Van aparte del FBX, en Roblox, y salen de los marcadores. Orden: 1. probar animaciones en Studio · 2. polvo de pasos y aterrizaje, estela de dash e impacto de golpe (P30b-01) · 3. efectos de cada Linaje con su color (P30b-02 en adelante) · 4. Calidad Alta y Baja (P30b-07).
+- **Fuerza Bruta:** Z, X, C y Cargar poder hechas en Blender, con FBX, sin publicar. Script `linajes/arte/scripts/animaciones/linaje-fuerzabruta.py`; hoja en `linajes/arte/renders/anim-base-hoja-fuerzabruta.png`. Falta ajustar los pies de Embestida.
 - **Tanda 2:** las 27 restantes del jugador, hechas en Blender y sin publicar. Los loops usan arrastre de cabeza y brazos; trepar y las animaciones de salto sueltas quedan igual. Comparación en `linajes/arte/renders/anim-comparacion-tanda2.gif`.
 
 ---
