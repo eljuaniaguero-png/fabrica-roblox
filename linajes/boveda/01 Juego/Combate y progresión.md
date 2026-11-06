@@ -36,6 +36,14 @@ Distancia del golpe (hitbox en el servidor), recargas, energía, que el objetivo
 ## Rangos de bando
 Novato → Clase C → B → A → S. Se sube con reputación de bando **y** la prueba del líder (Gorrión para Vigilantes, Centinela para la Liga, el Albatros para la Cofradía).
 
+## Sensación del golpe (a probar)
+Ideas de mecánica sacadas de [las referencias de combate](../../../ideas/2026-11-06-referencias-combate-superheroes.md). No se copian efectos, nombres ni arte de otros juegos.
+- **Color dominante por Linaje:** los golpes fuertes y la definitiva usan el color de su Linaje, para reconocerlos de un vistazo.
+- **Marca en el piso:** después de una definitiva queda una grieta, quemadura o similar durante unos segundos. Es solo visual.
+- **Corte de contraste:** un destello muy breve, solo en el impacto más fuerte. Con límite para no repetirlo seguido y apagado en Calidad Baja.
+- **Combinación dentro del Linaje:** dos habilidades del mismo Linaje usadas seguidas dan un efecto extra. Es distinta de la técnica combinada (tecla B), que necesita 2 Linajes compatibles. El servidor valida el orden y el tiempo.
+- **Regla:** ningún efecto puede tapar al jugador ni al rival en una pelea. Los números van en `Config.luau` cuando se implemente.
+
 ## Pantallas (tomado de las referencias)
 | Pantalla | Cómo es en Linajes |
 |---|---|
