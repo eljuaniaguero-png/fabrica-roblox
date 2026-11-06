@@ -4,12 +4,11 @@
 
 local Players = game:GetService("Players")
 
-local Apariencia = require(script.Parent.Apariencia)
+local CuerpoComic = require(script.Parent.CuerpoComic)
 
 local function alAparecer(jugador: Player, personaje: Model)
 	-- Más adelante sale de los datos guardados (creador de personaje); por ahora, al azar fijo.
-	local datos = Apariencia.limpiar(Apariencia.porDefecto(jugador.UserId))
-	Apariencia.aplicar(personaje, datos)
+	CuerpoComic.vestir(personaje, jugador)
 end
 
 local function alEntrar(jugador: Player)

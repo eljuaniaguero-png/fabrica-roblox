@@ -224,6 +224,16 @@ Config.Cuerpo.Ropa = {
 		RightFoot = "Zapatos",
 	},
 }
+-- Cuerpo oficial cómic urbano: piezas en ServerStorage.CuerpoComic (arte/scripts/personajes/cuerpo_comic.py).
+Config.Cuerpo.Comic = {
+	Piezas = { "Cuerpo", "Remera", "Campera", "Cinturon", "Pantalon", "Zapatillas" },
+	Peinados = { "PeloPuntas", "PeloFlequillo", "PeloCresta" },
+	Caras = {
+		"rbxassetid://131546855294230",
+		"rbxassetid://112533320464128",
+		"rbxassetid://130513753581230",
+	},
+}
 -- Diferencia mínima de color (0 a 1,7) entre pelo y piel cuando el pelo sale al azar.
 Config.Cuerpo.ContrastePelo = 0.3
 Config.Cuerpo.ColoresPelo = {
