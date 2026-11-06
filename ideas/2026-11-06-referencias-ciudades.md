@@ -15,6 +15,21 @@ Muestra chica: 5 videos y 6 búsquedas web. Varias conclusiones son opiniones de
 | **Roblox** (mapa de rol, a la venta) | Se ve prolijo, pero son edificios repetidos entre calles vacías, sin identidad. Semáforos y autos dan vida con poco | Sumar detalles chicos que se muevan. Evitar el aspecto de "ciudad genérica" |
 | **DC** (ciudades de cómics y cine) | La mezcla de estilos históricos hace que parezca una ciudad encima de otra, y las gárgolas sirven de lugar para posarse | Mezclar épocas propias. Decoración de techo como lugar para pararse, con diseños nuestros |
 
+## Segunda tanda de referencias
+
+| Fuente | Idea útil | Cómo pasarla a Linajes |
+|---|---|---|
+| **Hamburgo** (puerto real) | Depósitos viejos que pasan a tener otros usos, un muelle flotante con comida y paseo, y un edificio gigante con forma de proa | Puerto Óxido puede mezclar trabajo y vida: puestos en los muelles, no solo galpones |
+| **Tokio** (mapa por barrios) | Cada zona se recuerda por una sola cosa. Hay un cruce muy concurrido, un parque enorme en medio de la ciudad y barrios que cambian de noche | Una frase por barrio; el Mercado de Pescado ya cambia de noche y otros barrios también podrían |
+| **Ciudad chica y densa de un juego japonés** | Un mapa pequeño funciona si está lleno, y al final lo conocés como tu barrio | Puerto Óxido no necesita crecer para la Beta: necesita más cosas por manzana |
+| **Juego de sigilo con tres niveles** | Un camino central, otro alto y otro lateral dan varias formas de cruzar | Calles con ruta por techo y por callejón, útil para escapar o emboscar |
+| **Mapas de juegos de superhéroes** (opinión) | El mapa sirve a la historia, y un lugar repetido pierde sorpresa si no cambia | Cada arco tiene que cambiar algo visible en el barrio |
+| **Anatomía de una ciudad de juego** (opinión) | Siluetas simples primero y detalles después. Los sonidos salen de lugares concretos | Parlantes, puestos y máquinas con sonido propio al acercarte |
+| **Cómo fallar con un mundo abierto** (humor) | Puntos lejanos con vacío entre medio y coleccionables sin sentido aburren | Las Plumas deben estar en lugares creíbles y dar algo útil |
+| **Minimapa** (desarrollador de juegos) | Un minimapa debe mostrar poco, y los íconos tienen que parecerse a algo conocido | Minimapa simple, con íconos que se enseñen al verlos en el mundo |
+
+No pude leer el video de historia de un juego de Roblox por un límite de YouTube. Los de Roblox siguen siendo el punto débil de esta muestra.
+
 ## Ideas concretas para Linajes
 
 1. **Hito por ciudad, visible desde lejos:** Óxido, una grúa gigante; Vórtice, la torre de reloj; Corona, la torre de cristal.
@@ -38,6 +53,14 @@ Muestra chica: 5 videos y 6 búsquedas web. Varias conclusiones son opiniones de
 - [Razbuten: cómo los mundos chicos se sienten grandes](https://www.youtube.com/watch?v=S3cPJL4ISlU)
 - [Schizofenik: arquitectura de una ciudad de DC](https://www.youtube.com/watch?v=rmpwUiMJMSk)
 - [Mapa de rol en Roblox](https://www.youtube.com/watch?v=D5YvF9GAQAA)
+- [Rick Steves: HafenCity, Hamburgo](https://www.youtube.com/watch?v=-RUvF6Keanw)
+- [Bright Trip: barrios de Tokio](https://www.youtube.com/watch?v=TUxYSAGPW4s)
+- [Nishant Kotai: mapa chico y denso](https://www.youtube.com/watch?v=9JLXchcIDUw)
+- [Jonas Tykesson: diseño de niveles con varias rutas](https://www.youtube.com/watch?v=wZVpemDPmM0)
+- [GothamPaladin: mapas de juegos de superhéroes](https://www.youtube.com/watch?v=symukJBuJ3c)
+- [Adam Srayi: anatomía de una ciudad de juego](https://www.youtube.com/watch?v=SixF6Xt23lY)
+- [Artindi: cómo fallar con un mundo abierto](https://www.youtube.com/watch?v=3aau9Z7KLgs)
+- [Xanthos: diseño de minimapa](https://www.youtube.com/watch?v=dPdqlZNv5fA)
 - [The Image of the Open World Game (Wellesley)](https://cs.wellesley.edu/~pmwh/mvmap/papers/open_world_elements/open_world_elements.html)
 - [Realism and Legibility in Open-World Level Design](https://www.jikguard.com/news/realism-and-legibility-in-open-world-level-design)
 - [Roblox: Design for performance](https://create.roblox.com/docs/performance-optimization/design)
