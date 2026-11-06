@@ -10,6 +10,7 @@ Objetivo: entregar 3 ideas de juego construibles, cada una basada en una mecáni
 ## Pasos
 
 1. Buscá en la web qué está creciendo ahora en Roblox. Fuentes: el chart Top Trending y Up-and-Coming de roblox.com/charts, Rotrends, y notas recientes del DevForum. Anotá la fecha de cada dato.
+   Sumá YouTube, TikTok, Instagram y Reddit: vidIQ si está conectado, y si no la web o el navegador. Para mirar un video por dentro corré `python herramientas/ver_video.py URL --nombre x`, y leé las hojas y los subtítulos de `investigacion/x/`. Para un momento puntual, cuadro por cuadro: `--desde 12 --hasta 15 --fps 15`. Ese material es solo para ideas: no se copia ni se sube a Roblox.
 2. Agrupá lo que encuentres por mecánica central (por ejemplo: tycoon incremental, obby cooperativo, supervivencia por rondas), no por nombre de juego.
 3. Elegí las 3 mecánicas con mejor relación entre crecimiento y facilidad de construir por una sola persona.
 4. Para cada una escribí una idea con este formato:
