@@ -786,6 +786,127 @@ def levantarse(t):
     return secuencia(t, 30, [(0, EN_EL_PISO), (10, RODILLAS), (18, una), (26, GUARDIA), (30, GUARDIA)])
 
 
+# ---------------------------------------------------------------------------
+# Interacción del jugador (P26-03). Salen de una pose parada tranquila y vuelven a ella.
+# ---------------------------------------------------------------------------
+
+PARADO = quieto(0.0)
+
+
+def hablar(t):
+    """Charla con un NPC: antebrazos arriba y las manos explican, una y después la otra; la
+    cabeza acompaña con dos asentimientos chicos por loop."""
+    a, b = onda(t), onda(t, 0.5)
+    r = onda(2 * t)
+    return con(
+        PARADO,
+        UpperTorso=(2 + r * 1.5, 3, a * 4),
+        Head=(r * 5, 0, -a * 6),
+        LeftUpperArm=(-14 - pos(a) * 14, -10 - pos(a) * 8, 0),
+        RightUpperArm=(-14 - pos(b) * 14, 10 + pos(b) * 8, 0),
+        LeftLowerArm=(-70 - pos(a) * 25, 0, 0),
+        RightLowerArm=(-70 - pos(b) * 25, 0, 0),
+        LeftHand=(0, -pos(a) * 30, 0),
+        RightHand=(0, pos(b) * 30, 0),
+    )
+
+
+# Agachado con las rodillas (cuclillas), espalda casi derecha: la mano derecha cuelga hasta el piso.
+AGARRA = con(
+    PARADO,
+    raiz=(0, 0.05, -0.42),
+    LowerTorso=(12, 0, 0),
+    UpperTorso=(6, 0, 0),
+    Head=(10, 0, 0),
+    LeftUpperLeg=(-105, -10, 0),
+    RightUpperLeg=(-95, 10, 0),
+    LeftLowerLeg=(140, 0, 0),
+    RightLowerLeg=(135, 0, 0),
+    LeftFoot=(-47, 0, 0),
+    RightFoot=(-52, 0, 0),
+    RightUpperArm=(-12, 14, 0),
+    RightLowerArm=(-5, 0, 0),
+    LeftUpperArm=(-35, -12, 0),
+    LeftLowerArm=(-60, 0, 0),
+)
+
+
+def recoger(t):
+    # 27 cuadros (0,9 s): baja con las rodillas, la mano llega al piso en 10 y agarra en 13
+    # (Agarrar), se para con el objeto contra el pecho.
+    mira = con(PARADO, Head=(20, 0, 0))
+    cierra = con(AGARRA, RightHand=(25, 0, 0))
+    sube = con(PARADO, RightUpperArm=(-25, 8, 0), RightLowerArm=(-95, 0, 0))
+    return secuencia(t, 27, [(0, mira), (10, AGARRA), (13, cierra), (22, sube), (27, sube)])
+
+
+def banco(t):
+    """Trabaja en el banco del taller: inclinado sobre la mesa, la izquierda sostiene la pieza y
+    la derecha martilla 3 veces (sube y baja); después una pausa corta mirando la pieza de cerca."""
+    base = con(
+        PARADO,
+        raiz=(0, 0, -0.03),
+        LowerTorso=(10, 0, 0),
+        UpperTorso=(12, 0, -6),
+        Head=(18, 0, 4),
+        LeftUpperArm=(-40, -6, 0),
+        LeftLowerArm=(-50, 0, 0),
+        LeftHand=(0, 0, 10),
+    )
+    abajo = con(base, RightUpperArm=(-45, 10, 0), RightLowerArm=(-45, 0, 0), RightHand=(20, 0, 0))
+    arriba = con(base, UpperTorso=(8, 0, -10), RightUpperArm=(-115, 28, 0), RightLowerArm=(-70, 0, 0), RightHand=(-25, 0, 0))
+    mira = con(abajo, UpperTorso=(18, 0, 0), Head=(28, 0, -12), RightUpperArm=(-30, 10, 0), RightLowerArm=(-60, 0, 0))
+    claves = [(0, abajo)]
+    for i in range(3):
+        claves += [(i * 10 + 6, arriba), (i * 10 + 10, abajo)]  # golpe en 10, 20 y 30
+    return secuencia(t, 48, claves + [(36, mira), (44, mira), (48, abajo)])
+
+
+def celebrar(t):
+    carga = con(
+        PARADO,
+        raiz=(0, 0, -0.08),
+        LowerTorso=(10, 0, 0),
+        UpperTorso=(8, 0, 10),
+        Head=(10, 0, 0),
+        LeftUpperLeg=(-20, 0, 0),
+        RightUpperLeg=(-20, 0, 0),
+        LeftLowerLeg=(35, 0, 0),
+        RightLowerLeg=(35, 0, 0),
+        RightUpperArm=(15, 15, 0),
+        RightLowerArm=(-110, 0, 0),
+    )
+    arriba = con(
+        PARADO,
+        raiz=(0, 0, 0.02),
+        UpperTorso=(-8, 0, -5),
+        Head=(-20, 0, 0),
+        RightUpperArm=(-165, 25, 0),
+        RightLowerArm=(-25, 0, 0),
+        LeftUpperArm=(-10, -25, 0),
+        LeftLowerArm=(-45, 0, 0),
+    )
+    return secuencia(t, 40, [(0, PARADO), (8, carga), (14, arriba), (28, arriba), (40, PARADO)])
+
+
+def saludar(t):
+    # Brazo derecho bien abierto al costado y arriba (lejos de la cabeza); el antebrazo va de un
+    # lado al otro tres veces.
+    def mano(lado):
+        return con(
+            PARADO,
+            Head=(0, 0, -10),
+            UpperTorso=(0, 4, 0),
+            RightUpperArm=(-10, 110, 0),
+            RightLowerArm=(0, 8 + lado * 26, 0),
+        )
+
+    claves = [(0, PARADO), (6, mano(0))]
+    for i in range(3):
+        claves += [(8 + i * 6, mano(1)), (11 + i * 6, mano(-1))]
+    return secuencia(t, 30, claves + [(30, PARADO)])
+
+
 # nombre: (función, cuadros, loop, prioridad en Roblox, cuadros clave para la tira)
 ANIMACIONES = {
     "quieto": (quieto, 60, True, "Core", (0, 27, 45)),
@@ -818,6 +939,12 @@ ANIMACIONES = {
     "aturdido": (aturdido, 40, True, "Action", (0, 10, 20)),
     "derrota": (derrota, 40, False, "Action", (8, 20, 40)),
     "levantarse": (levantarse, 30, False, "Action", (0, 18, 30)),
+    # Interacción.
+    "hablar": (hablar, 60, True, "Action", (0, 15, 45)),
+    "recoger": (recoger, 27, False, "Action", (5, 13, 22)),
+    "banco": (banco, 48, True, "Action", (6, 10, 40)),
+    "celebrar": (celebrar, 40, False, "Action", (8, 16, 40)),
+    "saludar": (saludar, 30, False, "Action", (6, 14, 17)),
 }
 
 # Nombre que se lee en la columna de la hoja (hoja.py); "/" corta la línea.
@@ -839,12 +966,20 @@ ETIQUETAS = {
     "aturdido": "Aturdido",
     "derrota": "Derrota",
     "levantarse": "Levantarse",
+    "hablar": "Hablar/con NPC",
+    "recoger": "Recoger/del piso",
+    "banco": "Banco/del taller",
+    "celebrar": "Celebrar",
+    "saludar": "Saludar",
 }
 
 # Grupos para renders, GIFs y FBX (`-- renders combate`); sin grupo, todas.
 _COMBATE = ("golpe", "bloqueo", "parry", "dash", "aturdido", "derrota", "levantarse")
+_INTERACCION = ("hablar", "recoger", "banco", "celebrar", "saludar")
 GRUPOS = {
-    "locomocion": [n for n in ANIMACIONES if not n.startswith(_COMBATE)],
+    "locomocion": [n for n in ANIMACIONES if not n.startswith(_COMBATE + _INTERACCION)],
+    "interaccion": list(_INTERACCION),
+    "interaccion-ajustes": ["recoger", "banco", "saludar"],
     "combate": [n for n in ANIMACIONES if n.startswith(_COMBATE)],
 }
 
@@ -858,6 +993,7 @@ GIRO_CAMARA.update({"dash-izquierda": 180, "dash-derecha": 180})
 # GIFs a 30 fps (un cuadro por cuadro) y desde varias vistas: nombre -> {vista: giro de cámara}.
 GIF_VISTAS = {"trepar": {"atras": 150, "costado": 90}}
 GIF_VISTAS.update({n: {"atras": GIRO_CAMARA[n]} for n in GRUPOS["combate"]})
+GIF_VISTAS.update({n: {"frente": 45, "atras": 180} for n in GRUPOS["interaccion"]})
 
 # Marcadores: "Paso" (polvo y sonido de pisada) e "Impacto" (cuando pega: daño, efecto, sonido
 # y sacudida de cámara salen de acá, no de un tiempo fijo).
@@ -872,6 +1008,7 @@ MARCADORES = {
     "golpe-4": [(12, "Impacto")],
     "golpe-aire": [(12, "Impacto")],
     "parry": [(3, "Impacto")],
+    "recoger": [(13, "Agarrar")],
 }
 
 
@@ -923,6 +1060,11 @@ def crear_accion(arm, nombre):
     return accion
 
 
+BRAZOS = ("Cuerpo_LeftHand", "Cuerpo_RightHand", "Cuerpo_LeftLowerArm", "Cuerpo_RightLowerArm")
+# Saludar: el brazo entero (también el de arriba) tiene que quedar lejos de la cabeza.
+BRAZOS_CHEQUEO = {"saludar": BRAZOS + ("Cuerpo_RightUpperArm",)}
+
+
 def chequear_cruces(arm, nombre):
     """Devuelve los cuadros en que alguna mano se mete en la cabeza (caja de la cabeza con
     3 cm de margen, en los ejes de la cabeza)."""
@@ -933,7 +1075,7 @@ def chequear_cruces(arm, nombre):
     for f in range(0, ANIMACIONES[nombre][1] + 1):
         escena.frame_set(f)
         inversa = cabeza.matrix_world.inverted()
-        for mano in ("Cuerpo_LeftHand", "Cuerpo_RightHand", "Cuerpo_LeftLowerArm", "Cuerpo_RightLowerArm"):
+        for mano in BRAZOS_CHEQUEO.get(nombre, BRAZOS):
             obj = bpy.data.objects[mano]
             for v in obj.bound_box:
                 p = inversa @ (obj.matrix_world @ Vector(v))
