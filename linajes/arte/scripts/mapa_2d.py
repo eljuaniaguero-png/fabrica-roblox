@@ -118,7 +118,7 @@ def mapa_mundo():
 
     radio = 300 * c.k / ESCALA
     c.circulo(-1500, 650, radio, relleno="#2b1c33", borde=VIOLETA, grosor=3)
-    c.texto(-1500, 650, "CRÁTER DEL ECLIPSE\nPvP libre\n(posición propuesta)", 16)
+    c.texto(-1500, 650, "CRÁTER DEL ECLIPSE\nPvP libre", 16)
     c.rect(0, 0, 300, 300, relleno="#4b4f58", borde=TEXTO)
     c.texto(0, 0, "PENAL\nISLAROCA", 16, negrita=True)
     c.texto(0, -360, "BAHÍA", 26, "#7fb3d5", True)
