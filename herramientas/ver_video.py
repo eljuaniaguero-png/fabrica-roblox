@@ -37,7 +37,7 @@ def bajar(url: str, carpeta: Path) -> Path:
     )
     # Los subtítulos son un extra: si fallan, el video igual sirve.
     subprocess.run(
-        base + ["--skip-download", "--write-subs", "--write-auto-subs", "--sub-langs", "es.*,en.*",
+        base + ["--skip-download", "--write-subs", "--write-auto-subs", "--sub-langs", "en,es",
                 "--sub-format", "vtt", "-o", str(carpeta / "subtitulos"), url],
         check=False,
     )
