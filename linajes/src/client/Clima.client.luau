@@ -60,6 +60,21 @@ local function ponerLuz(hora: number)
 	end
 end
 
+local cielo = Lighting:FindFirstChildOfClass("Sky") or Instance.new("Sky")
+cielo.Parent = Lighting
+local cieloOriginal = {}
+for _, cara in { "Bk", "Dn", "Ft", "Lf", "Rt", "Up" } do
+	cieloOriginal[cara] = (cielo :: any)["Skybox" .. cara]
+end
+
+local function ponerCielo(caras: { [string]: string })
+	for cara, id in caras do
+		(cielo :: any)["Skybox" .. cara] = id
+	end
+	cielo.MoonAngularSize = 0
+	cielo.StarCount = 0
+end
+
 local function ponerNoche()
 	Lighting.ClockTime = Luz.Hora
 	Lighting.Ambient = hexa(Luz.Ambiente)
@@ -113,6 +128,7 @@ end
 local ciudadActual = ""
 
 local function ponerNiebla(ciudad: string)
+	ponerCielo(if ciudad == "Arena" then Luz.Cielo else cieloOriginal)
 	local n = if ciudad == "Arena"
 		then Luz.Niebla
 		else Config.Mundo.Niebla[ciudad] or Config.Mundo.Niebla.Bahia
