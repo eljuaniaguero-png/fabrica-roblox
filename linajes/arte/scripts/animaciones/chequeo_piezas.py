@@ -25,7 +25,7 @@ def actualizar(escena, f):
 
 bpy.ops.wm.open_mainfile(filepath=os.path.join(BLENDER, "animaciones-base.blend"))
 with bpy.data.libraries.load(os.path.join(BLENDER, "animaciones-linajes.blend")) as (src, dst):
-    dst.actions = [a for a in src.actions if a.startswith(("fuerzabruta", "reflejos"))]
+    dst.actions = [a for a in src.actions if a.startswith(("fuerzabruta", "reflejos", "piroquinesis"))]
 arm = bpy.data.objects["Maniqui"]
 e = bpy.context.scene
 piezas = [o for o in e.objects if o.type == "MESH" and o.parent == arm and o.parent_type == "BONE" and o.visible_get()]
