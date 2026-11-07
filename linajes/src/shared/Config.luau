@@ -344,7 +344,9 @@ Config.Combate = {
 		Vida = 120,
 		Velocidad = 13,
 		Detecta = 70,
-		Golpea = 7,
+		Golpea = 10, -- pega de lejos: usa la cadena
+		AlcanceCadena = 12,
+		SinPiezas = { Maton_Panuelo = true },
 		Pausa = 1.3,
 		Aviso = 0.45,
 		Danio = 10,

@@ -509,6 +509,7 @@ local function ropaMaton(m: Model, numero: number)
 		local desfase = pieza:GetAttribute("Desfase")
 		if
 			pieza:IsA("BasePart")
+			and not (C.Matones.SinPiezas :: any)[pieza.Name]
 			and (not esGorro or pieza.Name == gorro)
 			and hueso
 			and hueso:IsA("BasePart")
@@ -629,8 +630,9 @@ local function crearMaton(punto: { number }, numero: number)
 					task.wait(M.Aviso)
 					if h.Health > 0 and os.clock() >= estadoDe(m).aturdidoHasta then
 						golpe:Play()
+						remoto:FireAllClients("Ataca", m, 1) -- estela de la cadena
 						task.wait(C.Golpes[2].Impacto)
-						resolverGolpe(m, M.Danio, "Normal")
+						resolverGolpe(m, M.Danio, "Normal", M.AlcanceCadena)
 					end
 					listo = os.clock() + M.Pausa
 				end
