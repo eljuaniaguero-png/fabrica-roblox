@@ -340,6 +340,60 @@ Config.Combate = {
 	ManiquiVuelve = 3,
 }
 
+-- Guardado (server/Perfiles.luau).
+Config.Guardado = { Almacen = "Linajes_v1", Version = 1 }
+
+-- Ruleta (server/Ruleta.server.luau). Peso: % del plan de lanzamiento. Los no Disponibles no salen
+-- ni se muestran; los % visibles se recalculan. Las Fichas solo se ganan jugando.
+Config.Ruleta = {
+	BajasPorFicha = 5,
+	Espera = 3,
+	Opciones = {
+		{
+			Linaje = "FuerzaBruta",
+			Nombre = "Fuerza Bruta",
+			Rareza = "Común",
+			Peso = 21.67,
+			Disponible = true,
+		},
+		{
+			Linaje = "Reflejos",
+			Nombre = "Reflejos",
+			Rareza = "Común",
+			Peso = 21.67,
+			Disponible = true,
+		},
+		{
+			Linaje = "Piroquinesis",
+			Nombre = "Piroquinesis",
+			Rareza = "Común",
+			Peso = 21.66,
+			Disponible = true,
+		},
+		{
+			Linaje = "Electro",
+			Nombre = "Electro",
+			Rareza = "Poco común",
+			Peso = 11.67,
+			Disponible = false,
+		},
+		{
+			Linaje = "Criogenia",
+			Nombre = "Criogenia",
+			Rareza = "Poco común",
+			Peso = 11.67,
+			Disponible = false,
+		},
+		{
+			Linaje = "Telequinesis",
+			Nombre = "Telequinesis",
+			Rareza = "Poco común",
+			Peso = 11.66,
+			Disponible = false,
+		},
+	},
+}
+
 -- Habilidades de los Linajes (server/Poderes.server.luau). Números de las notas de la bóveda.
 -- Impacto: segundos desde que se aprieta hasta que el servidor resuelve la habilidad.
 Config.Poderes = {

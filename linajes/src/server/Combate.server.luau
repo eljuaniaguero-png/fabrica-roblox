@@ -10,6 +10,7 @@ local StarterPlayer = game:GetService("StarterPlayer")
 
 local Config = require(ReplicatedStorage.Shared.Config)
 local CuerpoComic = require(script.Parent.CuerpoComic)
+local Perfiles = require(script.Parent.Perfiles)
 
 local C = Config.Combate
 local TAG = "Combatiente"
@@ -181,7 +182,14 @@ pegarA = function(atacante: Model, objetivo: Model, danio: number, tipo: string,
 		end
 		empujar(objetivo, r, direccion, tipo)
 	end
+	local estabaVivo = h.Health > 0
 	h:TakeDamage(danio)
+	if estabaVivo and h.Health <= 0 then
+		local ganador = Players:GetPlayerFromCharacter(atacante)
+		if ganador then
+			Perfiles.sumarBaja(ganador)
+		end
+	end
 end
 
 local function resolverGolpe(atacante: Model, danio: number, tipo: string, alcance: number?)

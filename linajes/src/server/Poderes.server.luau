@@ -212,7 +212,7 @@ remoto.OnServerEvent:Connect(function(jugador, pedido)
 	ultimoPedido[jugador] = ahora
 	local actual = jugador:GetAttribute("Linaje")
 	if pedido == "Cambiar" then
-		if P.CambioLibre then
+		if P.CambioLibre and RunService:IsStudio() then
 			local i = table.find(P.Orden, actual) or 0
 			jugador:SetAttribute("Linaje", P.Orden[i % #P.Orden + 1])
 		end
@@ -245,13 +245,6 @@ remoto.OnServerEvent:Connect(function(jugador, pedido)
 	end)
 end)
 
-local function alEntrar(jugador: Player)
-	jugador:SetAttribute("Linaje", P.Orden[1])
-end
-Players.PlayerAdded:Connect(alEntrar)
-for _, jugador in Players:GetPlayers() do
-	alEntrar(jugador)
-end
 Players.PlayerRemoving:Connect(function(jugador)
 	recargas[jugador] = nil
 	ultimoPedido[jugador] = nil
