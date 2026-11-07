@@ -186,7 +186,8 @@ pegarA = function(atacante: Model, objetivo: Model, danio: number, tipo: string,
 	h:TakeDamage(danio)
 	if estabaVivo and h.Health <= 0 then
 		local ganador = Players:GetPlayerFromCharacter(atacante)
-		if ganador then
+		-- Solo cuentan los jugadores: el maniquí no da Fichas.
+		if ganador and Players:GetPlayerFromCharacter(objetivo) then
 			Perfiles.sumarBaja(ganador)
 		end
 	end
