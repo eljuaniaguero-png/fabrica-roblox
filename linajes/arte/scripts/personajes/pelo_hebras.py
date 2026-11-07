@@ -3,10 +3,10 @@
 Uso:
     <blender.exe> -b --factory-startup -P linajes/arte/scripts/personajes/pelo_hebras.py
 
-Sigue la nota "Referencias de pelos" de la bóveda. No toca cuerpo-comic.blend. Hace el peinado
-principal (mechones finos) y el alternativo (mechones anchos). La textura es gris casi blanca:
-el color lo pone el juego con SurfaceAppearance.Color. Deja renders pelo-principal-*.png y
-pelo-alterno-*.png, y los FBX en exports/cuerpo-comic/.
+Sigue la nota "Referencias de pelos" de la bóveda. No toca cuerpo-comic.blend. Hace los peinados
+Puntas, Corto y Flequillo. La textura es gris casi blanca:
+el color lo pone el juego con SurfaceAppearance.Color. Deja renders pelo-<peinado>-*.png y los FBX
+en exports/cuerpo-comic/.
 """
 
 import math
@@ -64,12 +64,21 @@ class Malla:
     def mechon(self, g, s0, s1, ancho, alto, giro=0.0, levante=0.05, arriba=0.0, capa="media"):
         """Hoja de sección triangular que sigue la cabeza y se despega hacia la punta."""
         tira = random.randrange(TIRAS) / TIRAS
-        base = len(self.v)
         puntos = []
         for i in range(PASOS + 1):
             t = i / PASOS
             p = superficie(g + giro * t, s0 + (s1 - s0) * t, alto)
             puntos.append(p + ((p - CENTRO).normalized() * (1 - arriba) + Vector((0, 0, arriba))) * levante * t * t)
+        self.tira(puntos, ancho, capa, tira)
+
+    def punta(self, raiz, medio, fin, ancho):
+        """Punta grande con recorrido fijo: de raiz a fin, curvada hacia medio (relativos a Z)."""
+        a, b, c = (Vector((x, y, z + Z)) for x, y, z in (raiz, medio, fin))
+        puntos = [a * (1 - t) ** 2 + b * 2 * t * (1 - t) + c * t * t for t in (i / PASOS for i in range(PASOS + 1))]
+        self.tira(puntos, ancho, "puntas", random.randrange(TIRAS) / TIRAS)
+
+    def tira(self, puntos, ancho, capa, tira):
+        base = len(self.v)
         for i in range(PASOS):
             t = i / PASOS
             d = (puntos[i + 1] - puntos[i]).normalized()
@@ -140,8 +149,8 @@ class Malla:
         return o
 
 
-def peinado_principal():
-    """Mechones finos en capas, con puntas que suben un poco en la coronilla."""
+def peinado_puntas():
+    """Mechones finos en capas y seis puntas grandes en la coronilla."""
     m = Malla()
     m.gorro()
     azar = random.uniform
@@ -160,17 +169,53 @@ def peinado_principal():
         g = i / 22 * 360 - 180 + azar(-6, 6)
         fin = s_de_altura(azar(0.085, 0.13)) if abs(g) < 72 else azar(1.0, 1.3)
         m.mechon(g, 0.0, fin, 0.046, 0.036, azar(-16, 16), 0.012, capa="arriba")
-    for i in range(12):
-        g = i / 12 * 360 - 180 + azar(-10, 10)
-        m.mechon(g, 0.1, azar(0.62, 0.8), 0.04, 0.04, azar(-14, 14), azar(0.09, 0.12), 1.0, capa="puntas")
+    # Seis puntas grandes hacia arriba y atrás; ninguna sale hacia los costados.
+    for x, y, tx, ty, alto in (
+        (-0.1, -0.07, -0.11, 0.06, 0.34),
+        (0.0, -0.09, 0.0, 0.03, 0.38),
+        (0.1, -0.07, 0.11, 0.06, 0.34),
+        (-0.11, 0.05, -0.135, 0.19, 0.3),
+        (0.0, 0.05, 0.0, 0.21, 0.34),
+        (0.11, 0.05, 0.135, 0.19, 0.3),
+    ):
+        m.punta((x, y, 0.13), (x, y + 0.01, 0.25), (tx, ty, alto), 0.075)
     for i in range(13):
         g = -68 + i * 11.3 + azar(-2, 2)
         fin = azar(0.075, 0.115) if i % 3 else azar(0.05, 0.07)
         m.mechon(g, 0.4, s_de_altura(fin), 0.034, 0.012, 15 + azar(-5, 5), 0.004, capa="frente")
+    # Tapan las esquinas de la frente.
+    for g in (-64, -50, 50, 64):
+        m.mechon(g, 0.3, s_de_altura(0.09), 0.05, 0.02, 0, 0.004, capa="frente")
     return m
 
 
-def peinado_alterno():
+def peinado_flequillo():
+    """Mechones anchos con flequillo que cae sobre los ojos."""
+    m = Malla()
+    m.gorro()
+    azar = random.uniform
+    for i in range(34):
+        g = i / 34 * 360 - 180 + azar(-3, 3)
+        if abs(g) < 50:
+            continue
+        m.mechon(g, 0.25, s_de_altura(fin_de_pelo(g) + azar(-0.02, 0.03)), 0.08, 0.004, azar(-6, 6), 0.0, capa="abajo")
+    for i in range(30):
+        g = i / 30 * 360 - 180 + azar(-4, 4)
+        fin = fin_de_pelo(g) + azar(0.0, 0.07)
+        if abs(g) < 45:
+            fin = max(fin, 0.1)
+        m.mechon(g, CORONILLA, s_de_altura(fin), 0.066, 0.018, azar(-10, 10), azar(0.004, 0.016))
+    for i in range(20):
+        g = i / 20 * 360 - 180 + azar(-6, 6)
+        m.mechon(g, 0.0, azar(1.03, 1.2), 0.064, 0.036, azar(-16, 16), 0.006, capa="arriba")
+    for i in range(9):
+        g = -54 + i * 13.5 + azar(-2, 2)
+        fin = azar(0.0, 0.085) if i % 3 else azar(-0.03, 0.03)
+        m.mechon(g, 0.4, s_de_altura(fin), 0.044, 0.012, 15 + azar(-5, 5), 0.004, capa="frente")
+    return m
+
+
+def peinado_corto():
     """Capas de abajo hacia arriba. Todos los mechones pasan el borde de la cabeza y caen."""
     m = Malla()
     m.gorro()
@@ -298,7 +343,7 @@ def main():
     sol.data.energy = 3.2
     e.render.resolution_x, e.render.resolution_y = 480, 520
 
-    for nombre, armar in (("principal", peinado_principal), ("alterno", peinado_alterno)):
+    for nombre, armar in (("puntas", peinado_puntas), ("corto", peinado_corto), ("flequillo", peinado_flequillo)):
         random.seed(11)
         datos = armar()
         print("PEINADO", nombre)

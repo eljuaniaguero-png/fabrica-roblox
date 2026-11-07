@@ -49,9 +49,15 @@ tags: [ficha]
 
 Volver a [[Ficha del juego]]
 
-## Peinados nuevos (7 nov)
+## Peinados aprobados (7 nov)
 
-- **Principal:** mechones finos con puntas (`PeloPrincipal`). **Alternativo:** mechones anchos (`PeloAlterno`). Falta un tercero con la misma técnica.
+| Peinado | Forma | Triángulos | Archivo |
+|---|---|---|---|
+| **Puntas** | Mechones finos y 6 puntas grandes hacia arriba y atrás | 2.840 | `PeloPuntas.fbx` |
+| **Corto** | Mechones anchos, sin puntas | 2.136 | `PeloCorto.fbx` |
+| **Flequillo** | Mechones anchos con flequillo sobre los ojos | 2.136 | `PeloFlequillo.fbx` |
+
 - La forma es el peinado; el color lo elige el jugador. Azul por defecto: `#2C3E66`.
 - La textura es gris casi blanca y el juego la tiñe con `SurfaceAppearance.Color`.
-- Script: `arte/scripts/personajes/pelo_hebras.py`. Reemplazan a Puntas, Flequillo y Cresta cuando pasen a Studio.
+- Script: `arte/scripts/personajes/pelo_hebras.py`. Reemplazan a los peinados Puntas, Flequillo y Cresta de antes cuando pasen a Studio.
+- Pendiente: los tres pasan el tope de 2.000 triángulos de la guía; hay que recortarlos o subir el tope.
