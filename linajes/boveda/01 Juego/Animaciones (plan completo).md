@@ -278,7 +278,7 @@ Plantado y a distancia. Hechas con `linaje-piroquinesis.py`, en `animaciones-lin
 | piroquinesis-chorro-fin | 9 | no | no | vuelve a la guardia |
 | piroquinesis-muro-fuego | 40 | no | `Impacto` 18 | aprobado: clava la palma derecha |
 | piroquinesis-cargar-inicio | 10 | no | no | entra a la carga |
-| piroquinesis-cargar-loop | 60 | sí | no | manos juntas con la llama, respiración honda, balanceo lento |
+| piroquinesis-cargar-loop | 54 | sí | no | llama entre las manos, dos respiraciones de 0,9 s, balanceo de ±6° |
 
 ![[anim-linaje-piroquinesis-hoja.png]]
 

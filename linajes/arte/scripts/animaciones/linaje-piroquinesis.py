@@ -59,8 +59,8 @@ def bola_de_fuego(t):
 
 def chorro_loop(t):
     # El fuego lo empuja: se resiste tirado apenas para atrás y tiembla. Frecuencias enteras: cierra.
-    tiembla = A.sen(2 * A.pi * 6 * t)
-    fino = A.sen(2 * A.pi * 9 * t)
+    tiembla = A.cos(2 * A.pi * 6 * t)
+    fino = A.cos(2 * A.pi * 9 * t)
     empuje = A.cos(2 * A.pi * t)
     return con(
         G,
@@ -122,19 +122,22 @@ def muro_de_fuego(t):
     return actuar(t, 40, [(0, G), (10, prepara, "sale"), (14, pasarse(G, prepara, 0.06)), (18, clava, "seco"), (25, sube, "sale"), (40, G)], {"Head": -1})
 
 
+MANOS = 3.6  # grados de apertura de los brazos: separa y junta las manos
+
+
 def cargar_poder(t):
-    # Calor: casi quieto. Manos juntas delante del pecho sosteniendo una llama, hombros que suben
-    # y bajan con una respiración honda y un balanceo lento. Un ciclo de 2 s; cierra sin salto.
-    respira = A.cos(2 * A.pi * t)
+    # Calor: llama entre las manos. Loop de 1,8 s: dos respiraciones de 0,9 s y un balanceo entero.
+    # Todo es coseno con vueltas enteras: el primer cuadro y el último son iguales.
+    respira = A.cos(4 * A.pi * t)
     balancea = A.cos(2 * A.pi * t)
     return {
-        "raiz": (0.018 * balancea, 0, -0.022 + 0.004 * respira),
+        "raiz": (0.012 * balancea, 0, -0.022 + 0.004 * respira),
         "_hombros": 0.09 * A.B.STUD * (respira + 1) / 2,
-        "LowerTorso": (2, 2.5 * balancea, 0),
-        "UpperTorso": (-2 - 3 * respira, -1.5 * balancea, 0),
-        "Head": (10 + 3 * respira, 1.5 * balancea, 0),
-        "LeftUpperArm": (-34 - 2 * respira, 28, -36),
-        "RightUpperArm": (-34 - 2 * respira, -28, 36),
+        "LowerTorso": (2, 0, 0),
+        "UpperTorso": (-2 - 3 * respira, 6 * balancea, 0),
+        "Head": (10 - 8 * balancea, -3 * balancea, 0),
+        "LeftUpperArm": (-34 - 2 * respira, 28 - MANOS * respira, -36),
+        "RightUpperArm": (-34 - 2 * respira, -28 + MANOS * respira, 36),
         "LeftLowerArm": (-76, 0, 0),
         "RightLowerArm": (-76, 0, 0),
         "LeftUpperLeg": (-24, -12, 0),
@@ -157,7 +160,7 @@ NUEVAS = {
     "piroquinesis-chorro-fin": (chorro_fin, 9, False, "Action", (0, 4, 9)),
     "piroquinesis-muro-fuego": (muro_de_fuego, 40, False, "Action", (14, 18, 28)),
     "piroquinesis-cargar-inicio": (cargar_inicio, 10, False, "Action", (0, 5, 10)),
-    "piroquinesis-cargar-loop": (cargar_poder, 60, True, "Action", (0, 15, 30)),
+    "piroquinesis-cargar-loop": (cargar_poder, 54, True, "Action", (0, 13, 27)),
 }
 A.ANIMACIONES = NUEVAS
 A.GRUPOS["piroquinesis"] = list(NUEVAS)
