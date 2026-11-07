@@ -413,6 +413,7 @@ Config.Poderes = {
 	QuemaDanio = 4,
 	BolaVelocidad = 90,
 	MuroDura = 4,
+	MuroGrosor = 3,
 	Colores = {
 		FuerzaBruta = Color3.fromHex("#f2a23a"),
 		Reflejos = Color3.fromHex("#3fe0f0"),
@@ -986,6 +987,17 @@ Config.Efectos = {
 			},
 		},
 	},
+}
+
+-- Progresión: cada nivel agranda y refuerza todos los ataques. Se suma a los puntos de la bóveda.
+Config.Niveles = {
+	Maximo = 100,
+	DanioPorNivel = 0.01, -- nivel 100: doble de daño
+	TamanoPorNivel = 0.006, -- nivel 100: 60 % más de tamaño y alcance
+	XpBase = 100,
+	XpCurva = 1.35,
+	XpPorBaja = 60,
+	XpPruebaManiqui = 25, -- solo en Studio, hasta que existan los bots
 }
 
 return Config

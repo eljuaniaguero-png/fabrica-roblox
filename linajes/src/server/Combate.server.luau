@@ -10,6 +10,7 @@ local StarterPlayer = game:GetService("StarterPlayer")
 
 local Config = require(ReplicatedStorage.Shared.Config)
 local CuerpoComic = require(script.Parent.CuerpoComic)
+local Niveles = require(ReplicatedStorage.Shared.Niveles)
 local Perfiles = require(script.Parent.Perfiles)
 
 local C = Config.Combate
@@ -141,6 +142,7 @@ pegarA = function(atacante: Model, objetivo: Model, danio: number, tipo: string,
 	if desde and enZona(desde.Position) then
 		return
 	end
+	danio *= Niveles.danio(atacante)
 	-- Contragolpe: esquiva y responde. Solo sirve contra golpes, no contra quemaduras.
 	if ahora < e.contraHasta and tipo ~= "Suave" then
 		e.contraHasta = 0
@@ -193,6 +195,14 @@ pegarA = function(atacante: Model, objetivo: Model, danio: number, tipo: string,
 	end
 	local estabaVivo = h.Health > 0
 	h:TakeDamage(danio)
+	local dueno = Players:GetPlayerFromCharacter(atacante)
+	if
+		dueno
+		and not Players:GetPlayerFromCharacter(objetivo)
+		and game:GetService("RunService"):IsStudio()
+	then
+		Perfiles.sumarXp(dueno, Config.Niveles.XpPruebaManiqui)
+	end
 	if estabaVivo and h.Health <= 0 then
 		local ganador = Players:GetPlayerFromCharacter(atacante)
 		-- Solo cuentan los jugadores: el maniquí no da Fichas.
@@ -216,7 +226,10 @@ local function resolverGolpe(atacante: Model, danio: number, tipo: string, alcan
 			if ro then
 				local hacia = ro.Position - r.Position
 				local plano = Vector3.new(hacia.X, 0, hacia.Z)
-				if plano.Magnitude <= (alcance or C.Alcance) and plano.Magnitude > 0 then
+				if
+					plano.Magnitude <= (alcance or C.Alcance) * Niveles.tamano(atacante)
+					and plano.Magnitude > 0
+				then
 					local direccion = plano.Unit
 					if r.CFrame.LookVector:Dot(direccion) >= C.ConoGolpe then
 						pegarA(atacante, otro, danio, tipo, direccion)

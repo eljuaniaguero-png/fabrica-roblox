@@ -56,8 +56,8 @@ local function chispas(soporte: BasePart, color: Color3, cantidad: number)
 	e:Emit(cantidad)
 end
 
-function EfectosGolpe.reproducir(punto: Vector3, fuerte: boolean, color: Color3)
-	local s = if fuerte then E.EscalaFuerte else 1
+function EfectosGolpe.reproducir(punto: Vector3, fuerte: boolean, color: Color3, escala: number?)
+	local s = (if fuerte then E.EscalaFuerte else 1) * (escala or 1)
 	local soporte = Instance.new("Part")
 	soporte.Anchored = true
 	soporte.CanCollide = false
@@ -73,8 +73,8 @@ function EfectosGolpe.reproducir(punto: Vector3, fuerte: boolean, color: Color3)
 	capa(soporte, E.Arco, E.TamArco * s, BLANCO, 0.17, 1)
 	chispas(soporte, color, if fuerte then 26 else 12)
 	if fuerte then
-		capa(soporte, E.Lineas, E.TamLineas, color, 0.24, 1)
-		capa(soporte, E.Humo, E.TamHumo, Color3.fromHex("#8d90a0"), 0.55, 0)
+		capa(soporte, E.Lineas, E.TamLineas * s / E.EscalaFuerte, color, 0.24, 1)
+		capa(soporte, E.Humo, E.TamHumo * s / E.EscalaFuerte, Color3.fromHex("#8d90a0"), 0.55, 0)
 	end
 	Debris:AddItem(soporte, 0.8)
 end

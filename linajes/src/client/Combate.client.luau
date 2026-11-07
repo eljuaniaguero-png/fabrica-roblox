@@ -11,6 +11,7 @@ local UserInputService = game:GetService("UserInputService")
 
 local Config = require(ReplicatedStorage:WaitForChild("Shared"):WaitForChild("Config"))
 local EfectosGolpe = require(script.Parent:WaitForChild("EfectosGolpe"))
+local Niveles = require(ReplicatedStorage:WaitForChild("Shared"):WaitForChild("Niveles"))
 local remoto = ReplicatedStorage:WaitForChild("Combate") :: RemoteEvent
 
 local C = Config.Combate
@@ -124,12 +125,12 @@ local function colorDe(atacante: Model?): Color3
 	return typeof(linaje) == "string" and (Config.Poderes.Colores :: any)[linaje] or C.ColorChispas
 end
 
-local function impacto(objetivo: Model, fuerte: boolean, color: Color3)
+local function impacto(objetivo: Model, fuerte: boolean, color: Color3, escala: number)
 	local r = objetivo:FindFirstChild("HumanoidRootPart")
 	if not (r and r:IsA("BasePart")) then
 		return
 	end
-	EfectosGolpe.reproducir(r.Position, fuerte, color)
+	EfectosGolpe.reproducir(r.Position, fuerte, color, escala)
 end
 
 -- Arco: la mano deja una estela mientras pega.
@@ -389,7 +390,7 @@ remoto.OnClientEvent:Connect(function(tipo: string, a: any, b: any, _c: any, d: 
 		local fuerte = _c == true
 		destello(a, Color3.new(1, 1, 1))
 		local color = colorDe(d)
-		impacto(a, fuerte, color)
+		impacto(a, fuerte, color, Niveles.tamano(d))
 		numero(a, tostring(math.round(b)), if fuerte then color else Color3.fromRGB(255, 225, 120))
 		if d == personaje then
 			contar(b)

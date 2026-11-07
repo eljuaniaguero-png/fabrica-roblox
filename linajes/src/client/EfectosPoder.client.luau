@@ -9,6 +9,7 @@ local TweenService = game:GetService("TweenService")
 local Config = require(ReplicatedStorage:WaitForChild("Shared"):WaitForChild("Config"))
 local EfectosGolpe = require(script.Parent:WaitForChild("EfectosGolpe"))
 local Fuego = require(script.Parent:WaitForChild("Fuego"))
+local Niveles = require(ReplicatedStorage:WaitForChild("Shared"):WaitForChild("Niveles"))
 local remoto = ReplicatedStorage:WaitForChild("Poderes") :: RemoteEvent
 
 local P = Config.Poderes
@@ -27,7 +28,11 @@ local function suelta(tamano: Vector3, color: Color3, material: Enum.Material): 
 	return p
 end
 
-local anillo = EfectosGolpe.onda
+local escalaActual = 1
+
+local function anillo(centro: Vector3, radio: number, color: Color3)
+	EfectosGolpe.onda(centro, radio * escalaActual, color)
+end
 
 -- Bloques de piso que saltan.
 local function escombros(centro: Vector3, cantidad: number, fuerza: number)
@@ -46,7 +51,7 @@ local function escombros(centro: Vector3, cantidad: number, fuerza: number)
 end
 
 local function estallido(centro: Vector3, color: Color3, cantidad: number, _rapidez: number)
-	EfectosGolpe.reproducir(centro, cantidad >= 30, color)
+	EfectosGolpe.reproducir(centro, cantidad >= 30, color, escalaActual)
 end
 
 local function raizDe(personaje: Model): BasePart?
@@ -122,7 +127,7 @@ local efectos: { [string]: (Model, BasePart, any) -> () } = {
 		end)
 	end,
 	Chorro = function(_p, r, d)
-		Fuego.chorro(r, d.Dura)
+		Fuego.chorro(r, d.Dura, escalaActual)
 	end,
 }
 
@@ -132,12 +137,33 @@ remoto.OnClientEvent:Connect(function(tipo: string, a: any, b: any)
 		local hacer = efectos[datos.Accion]
 		local r = raizDe(a)
 		if hacer and r then
+			escalaActual = Niveles.tamano(a)
 			hacer(a, r, datos)
 		end
 	elseif tipo == "Carga" then
 		Fuego.carga(a, b.Impacto)
 	elseif tipo == "Explota" then
-		Fuego.explosion(a)
+		Fuego.explosion(a, b)
 		-- SONIDO: explosión de fuego
 	end
+end)
+
+-- Subir de nivel: festejo propio.
+local jugador = game:GetService("Players").LocalPlayer
+local nivelVisto = jugador:GetAttribute("Nivel")
+jugador:GetAttributeChangedSignal("Nivel"):Connect(function()
+	local nivel = jugador:GetAttribute("Nivel")
+	local personaje = jugador.Character
+	local r = personaje and raizDe(personaje)
+	if
+		r
+		and typeof(nivel) == "number"
+		and typeof(nivelVisto) == "number"
+		and nivel > nivelVisto
+	then
+		local dorado = Color3.fromHex("#ffd34d")
+		EfectosGolpe.reproducir(r.Position, true, dorado)
+		EfectosGolpe.onda(piso(r), 10, dorado)
+	end
+	nivelVisto = nivel
 end)

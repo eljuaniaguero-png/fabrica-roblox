@@ -7,6 +7,7 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local ServerStorage = game:GetService("ServerStorage")
 
 local Config = require(ReplicatedStorage.Shared.Config)
+local Niveles = require(ReplicatedStorage.Shared.Niveles)
 local ProfileStore = require(ServerStorage.ServerPackages.ProfileStore) :: any
 
 local G = Config.Guardado
@@ -16,6 +17,8 @@ local almacen = ProfileStore.New(G.Almacen, {
 	Fichas = 0,
 	Bajas = 0,
 	MejorRacha = 0,
+	Nivel = 1,
+	Xp = 0,
 })
 
 local Perfiles = {}
@@ -25,19 +28,22 @@ local function mostrar(jugador: Player, datos: any)
 	jugador:SetAttribute("Linaje", if datos.Linaje ~= "" then datos.Linaje else nil)
 	jugador:SetAttribute("Fichas", datos.Fichas)
 	jugador:SetAttribute("Bajas", datos.Bajas)
+	jugador:SetAttribute("Nivel", datos.Nivel)
+	jugador:SetAttribute("Xp", datos.Xp)
 	jugador:SetAttribute("DatosListos", true)
 	local tabla = jugador:FindFirstChild("leaderstats")
 	if not tabla then
 		tabla = Instance.new("Folder")
 		tabla.Name = "leaderstats"
-		for _, nombre in { "Bajas", "Racha" } do
+		for _, nombre in { "Nivel", "Bajas", "Racha" } do
 			local v = Instance.new("IntValue")
 			v.Name = nombre
 			v.Parent = tabla
 		end
 		tabla.Parent = jugador
 	end
-	(tabla:FindFirstChild("Bajas") :: IntValue).Value = datos.Bajas
+	(tabla:FindFirstChild("Bajas") :: IntValue).Value = datos.Bajas;
+	(tabla:FindFirstChild("Nivel") :: IntValue).Value = datos.Nivel
 end
 
 local function ponerRacha(jugador: Player, racha: number)
@@ -64,6 +70,18 @@ function Perfiles.cambiar(jugador: Player, campos: { [string]: any })
 	end
 end
 
+function Perfiles.sumarXp(jugador: Player, cantidad: number)
+	local d = Perfiles.datos(jugador)
+	if d then
+		local nivel, xp = d.Nivel, d.Xp + cantidad
+		while nivel < Config.Niveles.Maximo and xp >= Niveles.xpPara(nivel) do
+			xp -= Niveles.xpPara(nivel)
+			nivel += 1
+		end
+		Perfiles.cambiar(jugador, { Nivel = nivel, Xp = xp })
+	end
+end
+
 -- Baja en la arena: cuenta y cada tantas da una Ficha de Eclipse.
 function Perfiles.sumarBaja(jugador: Player)
 	local d = Perfiles.datos(jugador)
@@ -76,6 +94,7 @@ function Perfiles.sumarBaja(jugador: Player)
 			Bajas = bajas,
 			Fichas = d.Fichas + (if bajas % Config.Ruleta.BajasPorFicha == 0 then 1 else 0),
 		})
+		Perfiles.sumarXp(jugador, Config.Niveles.XpPorBaja)
 	end
 end
 

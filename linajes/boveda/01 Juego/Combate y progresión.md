@@ -29,6 +29,7 @@ Distancia del golpe (hitbox en el servidor), recargas, energía, que el objetivo
 
 ## Subir de nivel
 - **Niveles 1 a 100.** Experiencia por enemigos, misiones, trabajos y arcos.
+- **Crecimiento automático (pedido de Juani, 7 nov):** cada nivel suma 1 % de daño y 0,6 % de tamaño y alcance a todos los ataques. Nivel 100: doble daño y 60 % más grande. Valores en `Config.Niveles`.
 - **2 puntos por nivel** para el árbol de estadísticas común (vida, energía, fuerza, velocidad, defensa, recarga) y las mejoras de movimiento. Ver [[Estadísticas y movimiento]].
 - El **árbol del Linaje** tiene 3 ramas: **Poder**, **Cuerpo** y **Técnica** (cambia cómo funciona una habilidad). Ver cada nota en [[Linajes]].
 - **Despertar 1** (nivel 25): elegís una de 2 ramas a ciegas y se abre la definitiva. **Despertar 2** (nivel 60): segundo poder.

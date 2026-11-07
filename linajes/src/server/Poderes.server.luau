@@ -9,6 +9,7 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService = game:GetService("RunService")
 
 local Config = require(ReplicatedStorage.Shared.Config)
+local Niveles = require(ReplicatedStorage.Shared.Niveles)
 local api = script.Parent:WaitForChild("CombateApi") :: BindableFunction
 
 local P = Config.Poderes
@@ -48,13 +49,14 @@ local function rivales(
 	cono: number
 ): { Model }
 	local lista = {}
+	local radio = alcance * Niveles.tamano(atacante)
 	for _, m in CollectionService:GetTagged("Combatiente") do
 		if m ~= atacante and m:IsA("Model") then
 			local r = raizDe(m)
 			if r then
 				local hacia = Vector3.new(r.Position.X - centro.X, 0, r.Position.Z - centro.Z)
 				if
-					hacia.Magnitude <= alcance
+					hacia.Magnitude <= radio
 					and (hacia.Magnitude < 0.1 or frente:Dot(hacia.Unit) >= cono)
 				then
 					table.insert(lista, m)
@@ -107,6 +109,7 @@ local function bolaDeFuego(atacante: Model, datos: any)
 	bola.CanQuery = false
 	bola.CanTouch = false
 	bola.Position = r.Position + frente * 3
+	bola:SetAttribute("Escala", Niveles.tamano(atacante))
 	bola:AddTag("BolaFuego") -- el fuego lo dibuja cada cliente (client/Fuego.luau)
 	bola.Parent = workspace
 	local recorrido = 0
@@ -118,7 +121,7 @@ local function bolaDeFuego(atacante: Model, datos: any)
 		local cerca = rivales(atacante, bola.Position, frente, 4, -1)
 		if cerca[1] or recorrido >= datos.Alcance then
 			conexion:Disconnect()
-			remoto:FireAllClients("Explota", bola.Position)
+			remoto:FireAllClients("Explota", bola.Position, Niveles.tamano(atacante))
 			bola:Destroy()
 			for _, m in cerca do
 				pegar(atacante, m, datos.Danio, "Normal", frente)
@@ -135,7 +138,8 @@ local function muroDeFuego(atacante: Model, datos: any)
 	end
 	-- Parte invisible sobre el piso: el fuego lo dibuja cada cliente (client/Fuego.luau).
 	local muro = Instance.new("Part")
-	muro.Size = Vector3.new(datos.Alcance, 0.4, 1.5)
+	local ancho = datos.Alcance * Niveles.tamano(atacante)
+	muro.Size = Vector3.new(ancho, 0.4, 1.5)
 	muro.Transparency = 1
 	muro.Anchored = true
 	muro.CanCollide = false
@@ -143,15 +147,30 @@ local function muroDeFuego(atacante: Model, datos: any)
 	muro.CanTouch = false
 	muro.CFrame = r.CFrame * CFrame.new(0, -2.4, -Config.Efectos.Fuego.MuroDistancia)
 	muro:SetAttribute("Dura", P.MuroDura)
+	muro:SetAttribute("Escala", Niveles.tamano(atacante))
 	muro:AddTag("MuroFuego")
 	muro.Parent = workspace
 	Debris:AddItem(muro, P.MuroDura + 1.4)
-	local frente = r.CFrame.LookVector
-	for _ = 1, P.MuroDura * 2 do
-		task.wait(0.5)
-		for _, m in rivales(atacante, muro.Position, frente, datos.Alcance / 2 + 1, -1) do
-			pegar(atacante, m, datos.Danio / 2, "Suave", Vector3.zero)
+	-- Barrera: quien la toca se quema y sale despedido hacia el lado del que vino.
+	local proximo: { [Model]: number } = {}
+	local fin = os.clock() + P.MuroDura
+	while os.clock() < fin do
+		for _, m in CollectionService:GetTagged("Combatiente") do
+			local rm = m:IsA("Model") and m ~= atacante and raizDe(m)
+			if rm and os.clock() >= (proximo[m] or 0) then
+				local p = muro.CFrame:PointToObjectSpace(rm.Position)
+				if math.abs(p.X) <= ancho / 2 + 1 and math.abs(p.Z) <= P.MuroGrosor then
+					local primera = proximo[m] == nil
+					proximo[m] = os.clock() + 1
+					local lado = if p.Z <= 0 then 1 else -1
+					pegar(atacante, m, datos.Danio, "Lanza", muro.CFrame.LookVector * lado)
+					if primera then
+						quemar(atacante, m)
+					end
+				end
+			end
 		end
+		task.wait(0.1)
 	end
 end
 

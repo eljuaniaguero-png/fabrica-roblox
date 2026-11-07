@@ -8,6 +8,7 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService = game:GetService("RunService")
 
 local Config = require(ReplicatedStorage:WaitForChild("Shared"):WaitForChild("Config"))
+local Niveles = require(ReplicatedStorage:WaitForChild("Shared"):WaitForChild("Niveles"))
 
 local F = Config.Efectos.Fuego
 
@@ -124,7 +125,8 @@ function Fuego.carga(personaje: Model, dura: number)
 		punto.Parent = mano
 		local capas = armar(punto, F.Bola)
 		luz(punto, F.Bola.Luz)
-		crecer(capas, F.BolaEscalaMano * 0.4, F.BolaEscalaMano, dura - F.EnciendeEn)
+		local s = Niveles.tamano(personaje)
+		crecer(capas, F.BolaEscalaMano * 0.4 * s, F.BolaEscalaMano * s, dura - F.EnciendeEn)
 		task.delay(dura - F.EnciendeEn, function()
 			apagar(capas)
 		end)
@@ -135,24 +137,27 @@ end
 local function alAparecerBola(parte: Instance)
 	local capas = armar(parte, F.Bola)
 	luz(parte, F.Bola.Luz)
-	crecer(capas, F.BolaEscalaMano, 1, F.BolaCrece)
+	local s = (parte:GetAttribute("Escala") :: number?) or 1
+	crecer(capas, F.BolaEscalaMano * s, s, F.BolaCrece)
 end
 
 local function alAparecerMuro(parte: Instance)
 	local capas = armar(parte, F.Muro)
 	luz(parte, F.Muro.Luz)
-	crecer(capas, 0.4, 1, 0.3)
+	local s = (parte:GetAttribute("Escala") :: number?) or 1
+	crecer(capas, 0.4 * s, s, 0.3)
 	task.delay(parte:GetAttribute("Dura") :: number, function()
 		apagar(capas)
 	end)
 end
 
-function Fuego.chorro(raiz: BasePart, dura: number)
+function Fuego.chorro(raiz: BasePart, dura: number, escala: number)
 	local punto = Instance.new("Attachment")
 	punto.Position = Vector3.new(0, 0.5, -2.5)
 	punto.Orientation = Vector3.new(-90, 0, 0)
 	punto.Parent = raiz
 	local capas = armar(punto, F.Chorro)
+	escalar(capas, escala)
 	luz(punto, F.Chorro.Luz)
 	task.delay(dura, function()
 		apagar(capas)
@@ -160,7 +165,7 @@ function Fuego.chorro(raiz: BasePart, dura: number)
 	Debris:AddItem(punto, dura + 1.2)
 end
 
-function Fuego.explosion(centro: Vector3)
+function Fuego.explosion(centro: Vector3, escala: number)
 	local soporte = Instance.new("Part")
 	soporte.Anchored = true
 	soporte.CanCollide = false
@@ -171,7 +176,9 @@ function Fuego.explosion(centro: Vector3)
 	soporte.Position = centro
 	soporte.Parent = workspace
 	for nombre, cantidad in F.Explosion.Cantidad do
-		capa(soporte, (F.Explosion :: any)[nombre], false).emisor:Emit(cantidad)
+		local c = capa(soporte, (F.Explosion :: any)[nombre], false)
+		escalar({ c }, escala)
+		c.emisor:Emit(cantidad)
 	end
 	luz(soporte, F.Explosion.Luz)
 	Debris:AddItem(soporte, 1.6)
