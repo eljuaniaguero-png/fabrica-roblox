@@ -342,10 +342,50 @@ Config.Combate = {
 
 -- Arena libre. Nadie pega ni recibe daño dentro de la zona segura.
 Config.Arena = {
-	ZonaCentro = Vector3.new(-330, 0, 1000),
+	ZonaCentro = Vector3.new(-430, 0, 1120),
 	ZonaRadio = 22,
 	ProteccionAparecer = 4,
 	Reaparicion = 2,
+	-- Plano de la arena (server/ArenaMapa.server.luau). Posiciones relativas a Centro.
+	Mapa = {
+		Centro = Vector3.new(-330, 0, 1035),
+		Ancho = 288,
+		Largo = 260,
+		RadioCirculo = 26,
+		TorreX = 92,
+		Grupos = { { -72, -66 }, { 72, -66 }, { -60, 66 }, { 72, 66 } },
+		Charcos = {
+			{ -30, -46, 22, 12 },
+			{ 44, 30, 16, 26 },
+			{ -96, 30, 26, 14 },
+			{ 104, -92, 20, 12 },
+		},
+		Faroles = {
+			{ -122, -112, 1 },
+			{ 0, -112, 1 },
+			{ 122, -112, 1 },
+			{ -44, 44, 1 },
+			{ 44, -44, 1 },
+			{ 122, 96, 0 },
+			{ -30, 112, 0 },
+		},
+		TonosContenedor = { "Rojo", "Azul", "Verde", "Gris" },
+		Colores = {
+			Asfalto = "#23262f",
+			Hormigon = "#3c404b",
+			Linea = "#b9902c",
+			Charco = "#141820",
+			Acero = "#4a505c",
+			Oxido = "#6e3b2e",
+			Madera = "#6b4a2f",
+			Sodio = "#e8a33c",
+			Acento = "#3fe0f0",
+			Rojo = "#8e2f2a",
+			Azul = "#264f78",
+			Verde = "#2f6650",
+			Gris = "#5a6068",
+		},
+	},
 }
 
 -- Guardado (server/Perfiles.luau).
