@@ -351,12 +351,7 @@ Config.Combate = {
 		Vuelve = 6,
 		Xp = 40,
 		Semilla = 21,
-		-- Ropa de cada matón: mientras no esté importado su modelo propio.
-		Ropa = {
-			{ Campera = "#4a4f55", Pantalon = "#2b2d31", Remera = "#8e2f2a", Pelo = "#2a2320" },
-			{ Campera = "#3a5a44", Pantalon = "#33302a", Remera = "#c9c2b0", Pelo = "#6e3b2e" },
-			{ Campera = "#6b4a2f", Pantalon = "#2a3038", Remera = "#3a3f4b", Pelo = "#8a8f99" },
-		},
+		Gorros = { "Maton_Gorro", "Maton_Gorro_Gris", "Maton_Gorro_Verde" },
 	},
 }
 

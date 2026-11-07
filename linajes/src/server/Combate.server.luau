@@ -6,6 +6,7 @@
 local CollectionService = game:GetService("CollectionService")
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local ServerStorage = game:GetService("ServerStorage")
 local StarterPlayer = game:GetService("StarterPlayer")
 
 local Config = require(ReplicatedStorage.Shared.Config)
@@ -485,27 +486,42 @@ local function crearManiqui(cerca: CFrame)
 	end)
 end
 
-local function ropaMaton(m: Model, ropa: { [string]: string })
+-- Modelo propio: esconde la ropa del cuerpo común y suelda las piezas de ServerStorage.MatonRopa.
+local function ropaMaton(m: Model, numero: number)
+	local carpeta = ServerStorage:FindFirstChild("MatonRopa")
+	if not carpeta then
+		warn("Combate: falta ServerStorage.MatonRopa")
+		return
+	end
 	for _, parte in m:GetChildren() do
-		if parte:IsA("MeshPart") and parte.Transparency < 1 then
+		if parte:IsA("MeshPart") and parte.Name ~= "Cuello_Piel" then
 			local prefijo = string.match(parte.Name, "^%a+")
-			if prefijo == "Cuello" and parte.Name ~= "Cuello_Piel" then
-				prefijo = "Campera"
-			elseif
-				prefijo == "PeloPuntas"
-				or prefijo == "PeloCorto"
-				or prefijo == "PeloFlequillo"
-			then
-				prefijo = "Pelo"
+			if prefijo ~= "Cuerpo" and prefijo ~= "Remera" then
+				parte.Transparency = 1
 			end
-			local hex = prefijo and ropa[prefijo]
-			if hex then
-				parte.Color = Color3.fromHex(hex)
-				local capa = parte:FindFirstChildOfClass("SurfaceAppearance")
-				if capa then
-					capa.Color = Color3.fromHex(hex)
-				end
-			end
+		end
+	end
+	local gorros = C.Matones.Gorros
+	local gorro = gorros[(numero - 1) % #gorros + 1]
+	for _, pieza in carpeta:GetChildren() do
+		local esGorro = string.find(pieza.Name, "Gorro", 1, true) ~= nil
+		local hueso = m:FindFirstChild(pieza:GetAttribute("Hueso") :: string)
+		local desfase = pieza:GetAttribute("Desfase")
+		if
+			pieza:IsA("BasePart")
+			and (not esGorro or pieza.Name == gorro)
+			and hueso
+			and hueso:IsA("BasePart")
+			and typeof(desfase) == "CFrame"
+		then
+			local copia = pieza:Clone()
+			copia.Anchored = false
+			copia.CFrame = hueso.CFrame * desfase
+			local union = Instance.new("WeldConstraint")
+			union.Part0 = hueso
+			union.Part1 = copia
+			union.Parent = copia
+			copia.Parent = m
 		end
 	end
 end
@@ -555,7 +571,7 @@ local function crearMaton(punto: { number }, numero: number)
 	m:SetAttribute("Maton", true)
 	m.Parent = workspace
 	CuerpoComic.vestir(m, M.Semilla + numero)
-	ropaMaton(m, M.Ropa[(numero - 1) % #M.Ropa + 1])
+	ropaMaton(m, numero)
 	prepararPeleador(m)
 	local h = m:WaitForChild("Humanoid") :: Humanoid
 	h.MaxHealth = M.Vida
