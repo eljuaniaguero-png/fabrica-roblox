@@ -94,13 +94,15 @@ end
 
 local function llamas(parte: BasePart, ritmo: number, rapidez: number)
 	local e = Instance.new("ParticleEmitter")
-	e.Texture = "rbxasset://textures/particles/smoke_main.dds"
+	e.Texture = Config.Efectos.Humo
+	e.FlipbookLayout = Enum.ParticleFlipbookLayout.Grid4x4
+	e.FlipbookMode = Enum.ParticleFlipbookMode.OneShot
+	e.Rotation = NumberRange.new(0, 359)
 	e.Color = ColorSequence.new(Color3.fromHex("#ffb347"), Color3.fromHex("#f2652b"))
 	e.LightEmission = 0.8
 	e.Lifetime = NumberRange.new(0.3, 0.7)
 	e.Speed = NumberRange.new(rapidez * 0.5, rapidez)
-	e.Size = NumberSequence.new(2, 0)
-	e.Transparency = NumberSequence.new(0.1, 1)
+	e.Size = NumberSequence.new(2, 4.5)
 	e.Acceleration = Vector3.new(0, 12, 0)
 	e.Rate = ritmo
 	e.Parent = parte

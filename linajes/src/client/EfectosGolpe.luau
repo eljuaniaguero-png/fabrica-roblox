@@ -79,4 +79,33 @@ function EfectosGolpe.reproducir(punto: Vector3, fuerte: boolean, color: Color3)
 	Debris:AddItem(soporte, 0.8)
 end
 
+-- Onda plana en el piso: mira hacia arriba, no a la cámara.
+function EfectosGolpe.onda(centro: Vector3, radio: number, color: Color3)
+	local soporte = Instance.new("Part")
+	soporte.Anchored = true
+	soporte.CanCollide = false
+	soporte.CanQuery = false
+	soporte.CanTouch = false
+	soporte.Transparency = 1
+	soporte.Size = Vector3.one * 0.2
+	soporte.Position = centro + Vector3.new(0, 0.3, 0)
+	soporte.Parent = workspace
+	local e = Instance.new("ParticleEmitter")
+	e.Texture = E.Anillo
+	e.FlipbookLayout = Enum.ParticleFlipbookLayout.Grid4x4
+	e.FlipbookMode = Enum.ParticleFlipbookMode.OneShot
+	e.Orientation = Enum.ParticleOrientation.VelocityPerpendicular
+	e.EmissionDirection = Enum.NormalId.Top
+	e.Color = ColorSequence.new(color)
+	e.LightEmission = 1
+	e.LightInfluence = 0
+	e.Lifetime = NumberRange.new(0.32)
+	e.Speed = NumberRange.new(0.01)
+	e.Size = NumberSequence.new(radio * 2.3)
+	e.Rate = 0
+	e.Parent = soporte
+	e:Emit(1)
+	Debris:AddItem(soporte, 0.7)
+end
+
 return EfectosGolpe

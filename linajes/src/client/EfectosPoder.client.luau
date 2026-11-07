@@ -7,6 +7,7 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local TweenService = game:GetService("TweenService")
 
 local Config = require(ReplicatedStorage:WaitForChild("Shared"):WaitForChild("Config"))
+local EfectosGolpe = require(script.Parent:WaitForChild("EfectosGolpe"))
 local remoto = ReplicatedStorage:WaitForChild("Poderes") :: RemoteEvent
 
 local P = Config.Poderes
@@ -26,19 +27,7 @@ local function suelta(tamano: Vector3, color: Color3, material: Enum.Material): 
 	return p
 end
 
--- Onda que se abre en el piso.
-local function anillo(centro: Vector3, radio: number, color: Color3)
-	local p = suelta(Vector3.new(0.4, 2, 2), color, Enum.Material.Neon)
-	p.Shape = Enum.PartType.Cylinder
-	p.CFrame = CFrame.new(centro) * CFrame.Angles(0, 0, math.pi / 2)
-	p.Transparency = 0.45
-	p.Parent = workspace
-	TweenService:Create(p, TweenInfo.new(0.35, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
-		Size = Vector3.new(0.1, radio * 2, radio * 2),
-		Transparency = 1,
-	}):Play()
-	Debris:AddItem(p, 0.4)
-end
+local anillo = EfectosGolpe.onda
 
 -- Bloques de piso que saltan.
 local function escombros(centro: Vector3, cantidad: number, fuerza: number)
@@ -64,27 +53,22 @@ local function particulas(
 	tam: number
 ): ParticleEmitter
 	local e = Instance.new("ParticleEmitter")
-	e.Texture = "rbxasset://textures/particles/smoke_main.dds"
+	e.Texture = Config.Efectos.Humo
+	e.FlipbookLayout = Enum.ParticleFlipbookLayout.Grid4x4
+	e.FlipbookMode = Enum.ParticleFlipbookMode.OneShot
 	e.Color = ColorSequence.new(Color3.new(1, 0.95, 0.75), color)
 	e.LightEmission = 0.8
 	e.Lifetime = NumberRange.new(vida * 0.6, vida)
 	e.Speed = NumberRange.new(rapidez * 0.6, rapidez)
-	e.Size = NumberSequence.new(tam, 0)
-	e.Transparency = NumberSequence.new(0.1, 1)
+	e.Size = NumberSequence.new(tam, tam * 2.4)
+	e.Rotation = NumberRange.new(0, 359)
 	e.Rate = 0
 	e.Parent = padre
 	return e
 end
 
-local function estallido(centro: Vector3, color: Color3, cantidad: number, rapidez: number)
-	local p = suelta(Vector3.one, color, Enum.Material.Air)
-	p.Transparency = 1
-	p.Position = centro
-	p.Parent = workspace
-	local e = particulas(p, color, rapidez, 0.45, 1.3)
-	e.SpreadAngle = Vector2.new(180, 180)
-	e:Emit(cantidad)
-	Debris:AddItem(p, 0.8)
+local function estallido(centro: Vector3, color: Color3, cantidad: number, _rapidez: number)
+	EfectosGolpe.reproducir(centro, cantidad >= 30, color)
 end
 
 local function raizDe(personaje: Model): BasePart?
