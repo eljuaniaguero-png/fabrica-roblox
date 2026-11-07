@@ -118,16 +118,22 @@ local function numero(objetivo: Model, texto: string, color: Color3)
 end
 
 -- Chispas y anillo en el punto del golpe.
-local function impacto(objetivo: Model, fuerte: boolean)
+local function colorDe(atacante: Model?): Color3
+	local dueno = atacante and Players:GetPlayerFromCharacter(atacante)
+	local linaje = dueno and dueno:GetAttribute("Linaje")
+	return typeof(linaje) == "string" and (Config.Poderes.Colores :: any)[linaje] or C.ColorChispas
+end
+
+local function impacto(objetivo: Model, fuerte: boolean, color: Color3)
 	local r = objetivo:FindFirstChild("HumanoidRootPart")
 	if not (r and r:IsA("BasePart")) then
 		return
 	end
-	local tam = if fuerte then 11 else 6
+	local tam = if fuerte then 7 else 4
 	local bola = Instance.new("Part")
 	bola.Shape = Enum.PartType.Ball
 	bola.Material = Enum.Material.Neon
-	bola.Color = C.ColorChispas
+	bola.Color = color
 	bola.Anchored = true
 	bola.CanCollide = false
 	bola.CanQuery = false
@@ -145,12 +151,12 @@ local function impacto(objetivo: Model, fuerte: boolean)
 	local punto = Instance.new("Attachment")
 	punto.Parent = r
 	local chispas = Instance.new("ParticleEmitter")
-	chispas.Color = ColorSequence.new(Color3.new(1, 1, 1), C.ColorChispas)
+	chispas.Color = ColorSequence.new(Color3.new(1, 1, 1), color)
 	chispas.LightEmission = 1
 	chispas.Lifetime = NumberRange.new(0.2, 0.45)
 	chispas.Speed = NumberRange.new(25, 55)
 	chispas.SpreadAngle = Vector2.new(180, 180)
-	chispas.Size = NumberSequence.new(0.7, 0)
+	chispas.Size = NumberSequence.new(0.4, 0)
 	chispas.Drag = 6
 	chispas.Rate = 0
 	chispas.Parent = punto
@@ -175,7 +181,7 @@ local function arco(atacante: Model, numeroGolpe: number)
 	estela.Lifetime = 0.18
 	estela.LightEmission = 1
 	estela.FaceCamera = true
-	estela.Color = ColorSequence.new(Color3.new(1, 1, 1), C.ColorChispas)
+	estela.Color = ColorSequence.new(Color3.new(1, 1, 1), colorDe(atacante))
 	estela.Transparency = NumberSequence.new(0.05, 1)
 	estela.Parent = mano
 	Debris:AddItem(estela, 0.75)
@@ -410,12 +416,9 @@ remoto.OnClientEvent:Connect(function(tipo: string, a: any, b: any, _c: any, d: 
 	elseif tipo == "Golpeado" then
 		local fuerte = _c == true
 		destello(a, Color3.new(1, 1, 1))
-		impacto(a, fuerte)
-		numero(
-			a,
-			tostring(math.round(b)),
-			if fuerte then C.ColorChispas else Color3.fromRGB(255, 225, 120)
-		)
+		local color = colorDe(d)
+		impacto(a, fuerte, color)
+		numero(a, tostring(math.round(b)), if fuerte then color else Color3.fromRGB(255, 225, 120))
 		if d == personaje then
 			contar(b)
 			sacudir(if fuerte then C.SacudidaFuerte else C.Sacudida)

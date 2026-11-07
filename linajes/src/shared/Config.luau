@@ -413,6 +413,11 @@ Config.Poderes = {
 	QuemaDanio = 4,
 	BolaVelocidad = 90,
 	MuroDura = 4,
+	Colores = {
+		FuerzaBruta = Color3.fromHex("#f2a23a"),
+		Reflejos = Color3.fromHex("#3fe0f0"),
+		Piroquinesis = Color3.fromHex("#f2652b"),
+	},
 	Linajes = {
 		FuerzaBruta = {
 			Z = {

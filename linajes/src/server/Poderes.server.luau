@@ -92,6 +92,20 @@ local function quemar(atacante: Model, objetivo: Model)
 	end)
 end
 
+local function llamas(parte: BasePart, ritmo: number, rapidez: number)
+	local e = Instance.new("ParticleEmitter")
+	e.Texture = "rbxasset://textures/particles/smoke_main.dds"
+	e.Color = ColorSequence.new(Color3.fromHex("#ffb347"), Color3.fromHex("#f2652b"))
+	e.LightEmission = 0.8
+	e.Lifetime = NumberRange.new(0.3, 0.7)
+	e.Speed = NumberRange.new(rapidez * 0.5, rapidez)
+	e.Size = NumberSequence.new(2, 0)
+	e.Transparency = NumberSequence.new(0.1, 1)
+	e.Acceleration = Vector3.new(0, 12, 0)
+	e.Rate = ritmo
+	e.Parent = parte
+end
+
 local function bolaDeFuego(atacante: Model, datos: any)
 	local r = raizDe(atacante)
 	if not r then
@@ -108,6 +122,7 @@ local function bolaDeFuego(atacante: Model, datos: any)
 	bola.CanQuery = false
 	bola.CanTouch = false
 	bola.Position = r.Position + frente * 3
+	llamas(bola, 70, 6)
 	bola.Parent = workspace
 	local recorrido = 0
 	local conexion: RBXScriptConnection
@@ -118,6 +133,7 @@ local function bolaDeFuego(atacante: Model, datos: any)
 		local cerca = rivales(atacante, bola.Position, frente, 4, -1)
 		if cerca[1] or recorrido >= datos.Alcance then
 			conexion:Disconnect()
+			remoto:FireAllClients("Explota", bola.Position)
 			bola:Destroy()
 			for _, m in cerca do
 				pegar(atacante, m, datos.Danio, "Normal", frente)
@@ -136,7 +152,8 @@ local function muroDeFuego(atacante: Model, datos: any)
 	muro.Size = Vector3.new(datos.Alcance, 7, 2)
 	muro.Material = Enum.Material.Neon
 	muro.Color = Color3.fromHex("#f2652b")
-	muro.Transparency = 0.25
+	muro.Transparency = 0.7
+	llamas(muro, 70, 8)
 	muro.Anchored = true
 	muro.CanCollide = false
 	muro.CanQuery = false
@@ -240,6 +257,7 @@ remoto.OnServerEvent:Connect(function(jugador, pedido)
 	personaje:SetAttribute("Energia", energia - datos.Energia)
 	task.delay(datos.Impacto, function()
 		if personaje.Parent and personaje:GetAttribute("Aturdido") ~= true then
+			remoto:FireAllClients("Efecto", personaje, datos)
 			acciones[datos.Accion](personaje, datos)
 		end
 	end)
