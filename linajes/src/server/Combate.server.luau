@@ -27,6 +27,7 @@ type Estado = {
 	aturdidoHasta: number,
 	dashListo: number,
 	pedidos: { number },
+	reacciona: ((fuerte: boolean) -> ())?,
 }
 
 local estados: { [Model]: Estado } = {}
@@ -71,12 +72,31 @@ local function aturdir(personaje: Model)
 	end)
 end
 
-local function empujar(objetivo: Model, raiz: BasePart, direccion: Vector3)
+local function frenar(personaje: Model, tiempo: number)
+	local e = estadoDe(personaje)
+	local hasta = os.clock() + tiempo
+	if hasta <= e.aturdidoHasta then
+		return
+	end
+	e.aturdidoHasta = hasta
+	e.bloqueoDesde = nil
+	personaje:SetAttribute("Frenado", true)
+	task.delay(tiempo, function()
+		if os.clock() >= e.aturdidoHasta - 0.01 then
+			personaje:SetAttribute("Frenado", false)
+		end
+	end)
+end
+
+local function empujar(objetivo: Model, raiz: BasePart, direccion: Vector3, lanza: boolean)
+	local velocidad = if lanza
+		then direccion * C.Lanza + Vector3.new(0, C.LanzaArriba, 0)
+		else direccion * C.Empuje
 	local jugador = Players:GetPlayerFromCharacter(objetivo)
 	if jugador then
-		remoto:FireClient(jugador, "Empuje", direccion * C.Empuje)
+		remoto:FireClient(jugador, "Empuje", velocidad)
 	else
-		raiz.AssemblyLinearVelocity = direccion * C.Empuje
+		raiz.AssemblyLinearVelocity = velocidad
 	end
 end
 
@@ -113,12 +133,14 @@ local function pegarA(
 			e.bloqueoDesde = nil -- sin energía se rompe la guardia
 		end
 	else
-		remoto:FireAllClients("Golpeado", objetivo, danio, empuja)
+		remoto:FireAllClients("Golpeado", objetivo, danio, empuja, atacante)
+		frenar(objetivo, if empuja then C.FrenoLanzado else C.Freno)
+		if e.reacciona then
+			e.reacciona(empuja)
+		end
+		empujar(objetivo, r, direccion, empuja)
 	end
 	h:TakeDamage(danio)
-	if empuja then
-		empujar(objetivo, r, direccion)
-	end
 end
 
 local function resolverGolpe(atacante: Model, danio: number, empuja: boolean)
@@ -170,6 +192,7 @@ local function pedirGolpe(personaje: Model, e: Estado)
 	e.paso = if ahora - e.ultimoGolpe > C.ReinicioCombo then 1 else e.paso % #C.Golpes + 1
 	local g = C.Golpes[e.paso]
 	e.libreDesde = ahora + g.Espera
+	remoto:FireAllClients("Ataca", personaje, e.paso)
 	task.delay(g.Impacto, function()
 		e.ultimoGolpe = os.clock()
 		resolverGolpe(personaje, g.Danio, g.Empuja)
@@ -278,6 +301,15 @@ local function crearManiqui(cerca: CFrame)
 	local anim = Instance.new("Animation")
 	anim.AnimationId = Config.Animaciones.base.Golpe2
 	local pista = animator:LoadAnimation(anim)
+	local function pistaDe(nombre: string): AnimationTrack
+		local a = Instance.new("Animation")
+		a.AnimationId = (Config.Animaciones.base :: any)[nombre]
+		return (animator :: Animator):LoadAnimation(a)
+	end
+	local liviano, fuerte = pistaDe("GolpeLiviano"), pistaDe("GolpeFuerte")
+	estadoDe(m).reacciona = function(duro: boolean)
+		(if duro then fuerte else liviano):Play(0.03)
+	end
 	local quieta = Instance.new("Animation")
 	quieta.AnimationId = Config.Animaciones.base.Quieto
 	animator:LoadAnimation(quieta):Play()

@@ -2,10 +2,12 @@
 -- Teclas del combate, animaciones, cola de teclas, efectos inmediatos y barras de vida y energía.
 -- Acá no se decide nada: el daño lo valida el servidor (server/Combate.server.luau).
 
+local CollectionService = game:GetService("CollectionService")
 local Debris = game:GetService("Debris")
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService = game:GetService("RunService")
+local TweenService = game:GetService("TweenService")
 local UserInputService = game:GetService("UserInputService")
 
 local Config = require(ReplicatedStorage:WaitForChild("Shared"):WaitForChild("Config"))
@@ -36,6 +38,12 @@ local function cargar(nuevo: Model)
 		anim.AnimationId = id
 		pistas[nombre] = animator:LoadAnimation(anim)
 	end
+	h.WalkSpeed = Config.PruebaTeclas.Caminar
+	nuevo:GetAttributeChangedSignal("Frenado"):Connect(function()
+		h.WalkSpeed = if nuevo:GetAttribute("Frenado") == true
+			then 0
+			else Config.PruebaTeclas.Caminar
+	end)
 	nuevo:GetAttributeChangedSignal("Aturdido"):Connect(function()
 		local aturdido = nuevo:GetAttribute("Aturdido") == true
 		h.WalkSpeed = if aturdido then 0 else Config.PruebaTeclas.Caminar
@@ -54,7 +62,8 @@ local function cargar(nuevo: Model)
 end
 
 local function aturdido(): boolean
-	return personaje ~= nil and (personaje :: Model):GetAttribute("Aturdido") == true
+	local p = personaje
+	return p ~= nil and (p:GetAttribute("Aturdido") == true or p:GetAttribute("Frenado") == true)
 end
 
 local function tocar(nombre: string, velocidad: number?): AnimationTrack?
@@ -108,6 +117,147 @@ local function numero(objetivo: Model, texto: string, color: Color3)
 	Debris:AddItem(gui, 0.6)
 end
 
+-- Chispas y anillo en el punto del golpe.
+local function impacto(objetivo: Model, fuerte: boolean)
+	local r = objetivo:FindFirstChild("HumanoidRootPart")
+	if not (r and r:IsA("BasePart")) then
+		return
+	end
+	local tam = if fuerte then 11 else 6
+	local bola = Instance.new("Part")
+	bola.Shape = Enum.PartType.Ball
+	bola.Material = Enum.Material.Neon
+	bola.Color = C.ColorChispas
+	bola.Anchored = true
+	bola.CanCollide = false
+	bola.CanQuery = false
+	bola.CanTouch = false
+	bola.Size = Vector3.one
+	bola.Transparency = 0.15
+	bola.CFrame = r.CFrame
+	bola.Parent = workspace
+	TweenService:Create(
+		bola,
+		TweenInfo.new(0.16, Enum.EasingStyle.Quad, Enum.EasingDirection.Out),
+		{ Size = Vector3.one * tam, Transparency = 1 }
+	):Play()
+	Debris:AddItem(bola, 0.2)
+	local punto = Instance.new("Attachment")
+	punto.Parent = r
+	local chispas = Instance.new("ParticleEmitter")
+	chispas.Color = ColorSequence.new(Color3.new(1, 1, 1), C.ColorChispas)
+	chispas.LightEmission = 1
+	chispas.Lifetime = NumberRange.new(0.2, 0.45)
+	chispas.Speed = NumberRange.new(25, 55)
+	chispas.SpreadAngle = Vector2.new(180, 180)
+	chispas.Size = NumberSequence.new(0.7, 0)
+	chispas.Drag = 6
+	chispas.Rate = 0
+	chispas.Parent = punto
+	chispas:Emit(if fuerte then 60 else 26)
+	Debris:AddItem(punto, 0.6)
+end
+
+-- Arco: la mano deja una estela mientras pega.
+local function arco(atacante: Model, numeroGolpe: number)
+	local mano = atacante:FindFirstChild(if numeroGolpe % 2 == 0 then "LeftHand" else "RightHand")
+	if not (mano and mano:IsA("BasePart")) then
+		return
+	end
+	local a0, a1 = Instance.new("Attachment"), Instance.new("Attachment")
+	a0.Position = Vector3.new(0, 1, 0)
+	a1.Position = Vector3.new(0, -1, 0)
+	a0.Parent = mano
+	a1.Parent = mano
+	local estela = Instance.new("Trail")
+	estela.Attachment0 = a0
+	estela.Attachment1 = a1
+	estela.Lifetime = 0.18
+	estela.LightEmission = 1
+	estela.FaceCamera = true
+	estela.Color = ColorSequence.new(Color3.new(1, 1, 1), C.ColorChispas)
+	estela.Transparency = NumberSequence.new(0.05, 1)
+	estela.Parent = mano
+	Debris:AddItem(estela, 0.75)
+	Debris:AddItem(a0, 0.75)
+	Debris:AddItem(a1, 0.75)
+end
+
+local function sacudir(fuerza: number)
+	local h = humanoid
+	if not h then
+		return
+	end
+	local fin = os.clock() + 0.16
+	task.spawn(function()
+		while os.clock() < fin do
+			local k = (fin - os.clock()) / 0.16 * fuerza
+			h.CameraOffset =
+				Vector3.new(math.random(-10, 10) / 10 * k, math.random(-10, 10) / 10 * k, 0)
+			RunService.RenderStepped:Wait()
+		end
+		h.CameraOffset = Vector3.zero
+	end)
+end
+
+-- Paso hacia el rival más cercano que esté adelante.
+local function avanzar()
+	local r = raiz
+	if not r then
+		return
+	end
+	local mejor: BasePart? = nil
+	local distancia = C.Asistencia
+	for _, otro in CollectionService:GetTagged("Combatiente") do
+		if otro ~= personaje then
+			local ro = otro:FindFirstChild("HumanoidRootPart")
+			if ro and ro:IsA("BasePart") then
+				local d = (ro.Position - r.Position).Magnitude
+				if d < distancia then
+					mejor, distancia = ro, d
+				end
+			end
+		end
+	end
+	if not mejor then
+		return
+	end
+	local objetivo = mejor :: BasePart
+	local plano = Vector3.new(objetivo.Position.X, r.Position.Y, objetivo.Position.Z)
+	r.CFrame = CFrame.lookAt(r.Position, plano)
+	task.spawn(function()
+		local fin = os.clock() + C.AvanceTiempo
+		while os.clock() < fin and (objetivo.Position - r.Position).Magnitude > C.Cercania do
+			r.AssemblyLinearVelocity = r.CFrame.LookVector * C.Avance
+				+ Vector3.new(0, r.AssemblyLinearVelocity.Y, 0)
+			RunService.Heartbeat:Wait()
+		end
+	end)
+end
+
+-- Contador de golpes y daño acumulado.
+local golpes, acumulado, contadorHasta = 0, 0, 0
+local contador = Instance.new("TextLabel")
+contador.AnchorPoint = Vector2.new(1, 0.5)
+contador.Position = UDim2.new(1, -40, 0.42, 0)
+contador.Size = UDim2.fromOffset(260, 80)
+contador.BackgroundTransparency = 1
+contador.Font = Enum.Font.GothamBlack
+contador.TextScaled = true
+contador.TextColor3 = Color3.new(1, 1, 1)
+contador.TextStrokeTransparency = 0.2
+contador.TextXAlignment = Enum.TextXAlignment.Right
+contador.Visible = false
+
+local function contar(danio: number)
+	golpes += 1
+	acumulado += danio
+	contadorHasta = os.clock() + C.ContadorDura
+	contador.Text = string.format("%d GOLPES\n%d", golpes, math.round(acumulado))
+	contador.Visible = true
+	contador.Rotation = math.random(-4, 4)
+end
+
 -- Hit-stop: el golpe propio se frena un instante al conectar.
 local function frenar(pista: AnimationTrack, velocidad: number, tiempo: number)
 	pista:AdjustSpeed(0)
@@ -128,6 +278,8 @@ local function golpear(): boolean
 	libreDesde = ahora + g.Espera
 	ultimoGolpe = ahora
 	remoto:FireServer("Golpe")
+	avanzar()
+	arco(personaje :: Model, paso)
 	tocar("Golpe" .. paso, C.VelocidadGolpes)
 	return true
 end
@@ -231,12 +383,33 @@ RunService.Heartbeat:Connect(function()
 	end
 end)
 
-remoto.OnClientEvent:Connect(function(tipo: string, a: any, b: any, _c: any)
-	if tipo == "Golpeado" then
+remoto.OnClientEvent:Connect(function(tipo: string, a: any, b: any, _c: any, d: any)
+	if tipo == "Ataca" then
+		if a ~= personaje then
+			arco(a, b)
+		end
+	elseif tipo == "Golpeado" then
+		local fuerte = _c == true
 		destello(a, Color3.new(1, 1, 1))
-		numero(a, tostring(math.round(b)), Color3.fromRGB(255, 225, 120))
-		if accion and accion.IsPlaying and a ~= personaje then
-			frenar(accion, C.VelocidadGolpes, C.HitStop)
+		impacto(a, fuerte)
+		numero(
+			a,
+			tostring(math.round(b)),
+			if fuerte then C.ColorChispas else Color3.fromRGB(255, 225, 120)
+		)
+		if d == personaje then
+			contar(b)
+			sacudir(if fuerte then C.SacudidaFuerte else C.Sacudida)
+			if accion and accion.IsPlaying then
+				frenar(accion, C.VelocidadGolpes, C.HitStop)
+			end
+		elseif a == personaje then
+			sacudir(C.SacudidaFuerte)
+			if accion then
+				accion:Stop(0.03)
+			end
+			accion = if fuerte then pistas.GolpeFuerte else pistas.GolpeLiviano
+			accion:Play(0.03)
 		end
 		-- SONIDO: golpe conecta
 	elseif tipo == "Bloqueado" then
@@ -284,11 +457,16 @@ local function barra(y: number, color: Color3): Frame
 	return lleno
 end
 
+contador.Parent = gui
 local vida = barra(16, Color3.fromRGB(210, 58, 74))
 local energia = barra(36, Color3.fromRGB(44, 123, 229))
 gui.Parent = jugador:WaitForChild("PlayerGui")
 
 RunService.RenderStepped:Connect(function()
+	if contador.Visible and os.clock() > contadorHasta then
+		contador.Visible = false
+		golpes, acumulado = 0, 0
+	end
 	local h, p = humanoid, personaje
 	if h and p then
 		vida.Size = UDim2.fromScale(math.clamp(h.Health / h.MaxHealth, 0, 1), 1)
