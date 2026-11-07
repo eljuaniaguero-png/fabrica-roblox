@@ -23,3 +23,6 @@ Para probar una hora: atributo `HoraPrueba` en Lighting.
 
 ## Kit y noche (7 nov)
 Las piezas viven en `ServerStorage.ArenaKit` (asset 80380787186308) y se colocan con `ArenaMapa.server.luau`. Valores de luz: `src/shared/Iluminacion.luau`. La arena queda siempre de noche; fuera de ella sigue el ciclo por horas.
+
+## Rincón lindo (7 nov)
+Prueba de la dirección de arte en `ArenaRincon.server.luau`, valores en `Iluminacion.luau` (`Rincon`). Si Juani lo aprueba, la receta pasa al resto del mapa.

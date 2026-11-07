@@ -146,6 +146,14 @@ local function piso()
 		Enum.Material.Asphalt
 	)
 	base.Reflectance = Luz.PisoBrillo
+	base.Material = Enum.Material.Concrete
+	base.Color = Color3.new(1, 1, 1)
+	local cemento = Instance.new("Texture")
+	cemento.Face = Enum.NormalId.Top
+	cemento.Texture = Luz.Texturas.Piso
+	cemento.StudsPerTileU = Luz.PisoTile
+	cemento.StudsPerTileV = Luz.PisoTile
+	cemento.Parent = base
 	for i = -2, 2 do
 		pieza(
 			carpeta,
@@ -264,7 +272,7 @@ local function bordes()
 	fila(-MEDIO_X + 11, MEDIO_Z - 4, 22, 0, 13, 0)
 	fila(-MEDIO_X + 4, -MEDIO_Z + 40, 0, 22, 9, 90)
 	fila(MEDIO_X - 4, -MEDIO_Z + 40, 0, 22, 9, 90)
-	for x = -MEDIO_X, MEDIO_X, 14 do
+	for x = -84, MEDIO_X, 14 do
 		pieza(
 			carpeta,
 			Vector3.new(1.6, 3.4, 1.6),
@@ -275,8 +283,8 @@ local function bordes()
 	end
 	pieza(
 		carpeta,
-		Vector3.new(M.Ancho, 0.5, 0.5),
-		en(0, 3, -MEDIO_Z + 1),
+		Vector3.new(M.Ancho - 60, 0.5, 0.5),
+		en(30, 3, -MEDIO_Z + 1),
 		"Sodio",
 		Enum.Material.Metal
 	)
@@ -364,7 +372,7 @@ local function fondo()
 		end
 	end
 	-- Los bloques del mundo abierto no se ven desde la arena.
-	for _, nombre in { "Galpones", "Aduana", "MercadoPescado", "LaFeria", "Lugares" } do
+	for _, nombre in { "Galpones", "Aduana", "MercadoPescado", "LaFeria", "Lugares", "Muelles" } do
 		local grupo = puerto and puerto:FindFirstChild(nombre)
 		if grupo then
 			for _, d in grupo:GetDescendants() do

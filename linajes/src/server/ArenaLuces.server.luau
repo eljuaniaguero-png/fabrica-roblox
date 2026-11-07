@@ -100,7 +100,7 @@ end
 local function barco()
 	local B = Luz.Barco
 	local z = B.Z
-	parte(Vector3.new(190, 26, 34), en(B.X, 8, z), "#20252c", Enum.Material.Metal)
+	parte(Vector3.new(190, 26, 34), en(B.X, 8, z), "#39424f", Enum.Material.Metal)
 	parte(Vector3.new(190, 2, 35), en(B.X, 19, z), "#7a3f22", Enum.Material.CorrodedMetal)
 	parte(Vector3.new(36, 24, 24), en(B.X + 58, 33, z), "#c9c6bc", Enum.Material.Metal)
 	parte(Vector3.new(24, 10, 20), en(B.X + 58, 50, z), "#b4b1a8", Enum.Material.Metal)
