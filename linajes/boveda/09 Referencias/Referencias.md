@@ -48,3 +48,5 @@ Volver a [[00 Inicio]]
 - [[Referencias de pelos]]: 110 pelos de Roblox, cómo se construyen y por qué fallaron los nuestros.
 
 - [[Referencias de jefes]]: qué hacen bien los jefes de otros juegos y cómo aplica a Remache.
+
+- [[Referencias de sandbox]]: cómo funcionan los juegos de pelea libre, votaciones, eventos y elección de poder.
