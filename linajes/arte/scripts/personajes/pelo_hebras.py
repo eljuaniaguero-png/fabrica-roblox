@@ -12,6 +12,7 @@ en exports/cuerpo-comic/.
 import math
 import os
 import random
+import sys
 
 import bmesh
 import bpy
@@ -164,21 +165,21 @@ def peinado_puntas():
         fin = fin_de_pelo(g) + azar(0.0, 0.08)
         if abs(g) < 72:
             fin = max(fin, 0.1)
-        m.mechon(g, CORONILLA, s_de_altura(fin), 0.044, 0.02, azar(-12, 12), azar(0.006, 0.03))
+        m.mechon(g, 0.3, s_de_altura(fin), 0.044, 0.014, azar(-12, 12), azar(0.006, 0.03))
     for i in range(22):
         g = i / 22 * 360 - 180 + azar(-6, 6)
         fin = s_de_altura(azar(0.085, 0.13)) if abs(g) < 72 else azar(1.0, 1.3)
-        m.mechon(g, 0.0, fin, 0.046, 0.036, azar(-16, 16), 0.012, capa="arriba")
-    # Seis puntas grandes hacia arriba y atrás; ninguna sale hacia los costados.
-    for x, y, tx, ty, alto in (
-        (-0.1, -0.07, -0.11, 0.06, 0.34),
-        (0.0, -0.09, 0.0, 0.03, 0.38),
-        (0.1, -0.07, 0.11, 0.06, 0.34),
-        (-0.11, 0.05, -0.135, 0.19, 0.3),
-        (0.0, 0.05, 0.0, 0.21, 0.34),
-        (0.11, 0.05, 0.135, 0.19, 0.3),
+        m.mechon(g, 0.1, fin, 0.052, 0.022, azar(-16, 16), 0.012, capa="arriba")
+    # Seis puntas de distinto tamaño, en varias filas y asimétricas, inclinadas hacia atrás.
+    for x, y, tx, ty, alto, ancho in (
+        (-0.03, -0.1, -0.06, 0.0, 0.37, 0.095),
+        (0.09, -0.07, 0.15, 0.03, 0.29, 0.075),
+        (-0.12, -0.03, -0.15, 0.08, 0.26, 0.07),
+        (0.02, 0.02, 0.04, 0.16, 0.33, 0.09),
+        (-0.08, 0.08, -0.12, 0.21, 0.28, 0.08),
+        (0.11, 0.07, 0.12, 0.22, 0.24, 0.07),
     ):
-        m.punta((x, y, 0.13), (x, y + 0.01, 0.25), (tx, ty, alto), 0.075)
+        m.punta((x, y, 0.1), (x, y + 0.01, alto * 0.65), (tx, ty, alto), ancho)
     for i in range(13):
         g = -68 + i * 11.3 + azar(-2, 2)
         fin = azar(0.075, 0.115) if i % 3 else azar(0.05, 0.07)
@@ -343,7 +344,10 @@ def main():
     sol.data.energy = 3.2
     e.render.resolution_x, e.render.resolution_y = 480, 520
 
+    pedidos = sys.argv[sys.argv.index("--") + 1 :] if "--" in sys.argv else []  # vacío = todos
     for nombre, armar in (("puntas", peinado_puntas), ("corto", peinado_corto), ("flequillo", peinado_flequillo)):
+        if pedidos and nombre not in pedidos:
+            continue
         random.seed(11)
         datos = armar()
         print("PEINADO", nombre)
