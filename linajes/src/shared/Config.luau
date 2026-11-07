@@ -266,49 +266,55 @@ Config.Animaciones = {
 	-- SaltarInicio y SaltarCaer; prioridad Core en Quieto y Movement en el resto. Caminar, Correr y
 	-- CorrerRapido tienen marcadores "Paso" (polvo y sonido de pisada).
 	base = {
-		Quieto = "rbxassetid://99949285202495",
-		Caminar = "rbxassetid://76578209242080",
-		Correr = "rbxassetid://124891162063727",
-		CorrerRapido = "rbxassetid://86379296914238", -- Velocista y Reflejos
-		SaltarInicio = "rbxassetid://120016621591002",
-		SaltarAire = "rbxassetid://133941918605722",
-		SaltarCaer = "rbxassetid://74377813132853",
-		Trepar = "rbxassetid://118357290428607",
-		VolarQuieto = "rbxassetid://82495017672119",
-		VolarAvanzando = "rbxassetid://103610213581729",
-		Nadar = "rbxassetid://138733509877221",
-		Flotar = "rbxassetid://119656681494266",
+		Quieto = "rbxassetid://89944914954631",
+		Caminar = "rbxassetid://88356842303752",
+		Correr = "rbxassetid://106850877934413",
+		CorrerRapido = "rbxassetid://114971458302373", -- Velocista y Reflejos
+		SaltarInicio = "rbxassetid://127510848550318",
+		SaltarAire = "rbxassetid://130351075419572",
+		SaltarCaer = "rbxassetid://87298594021701",
+		Trepar = "rbxassetid://106396530746894",
+		VolarQuieto = "rbxassetid://138806002896514",
+		VolarAvanzando = "rbxassetid://80881764642372",
+		Nadar = "rbxassetid://137741739612149",
+		Flotar = "rbxassetid://103898599870719",
 		-- Combate con Puños (P26-02). Prioridad Action, sin loop salvo Bloqueo y Aturdido.
 		-- Marcador "Impacto" (el daño, el efecto y el sonido salen de ahí): Golpe1 y Golpe2 en el
 		-- cuadro 6, Golpe3 en el 8, Golpe4 y GolpeAire en el 12, Parry en el 3.
-		Golpe1 = "rbxassetid://133686566945344", -- jab derecho
-		Golpe2 = "rbxassetid://122244932851180", -- cross izquierdo
-		Golpe3 = "rbxassetid://101680833752326", -- gancho ascendente
-		Golpe4 = "rbxassetid://102197700629923", -- patada giratoria
-		GolpeAire = "rbxassetid://74369993682946", -- ataque desde arriba
-		BloqueoInicio = "rbxassetid://103232878605410",
-		Bloqueo = "rbxassetid://84309745016925",
-		Parry = "rbxassetid://81961752475488",
-		DashAdelante = "rbxassetid://134725239036426",
-		DashAtras = "rbxassetid://102925445348654",
-		DashIzquierda = "rbxassetid://133824666075643",
-		DashDerecha = "rbxassetid://74280413120367",
-		GolpeLiviano = "rbxassetid://112287255919817",
-		GolpeFuerte = "rbxassetid://130947098767449",
-		Aturdido = "rbxassetid://98638901247402",
-		Derrota = "rbxassetid://119935981736480",
-		Levantarse = "rbxassetid://113046535730775",
+		Golpe1 = "rbxassetid://124490545010999", -- jab derecho
+		Golpe2 = "rbxassetid://136367059016439", -- cross izquierdo
+		Golpe3 = "rbxassetid://111928587167090", -- gancho ascendente
+		Golpe4 = "rbxassetid://116334348414128", -- patada giratoria
+		GolpeAire = "rbxassetid://117764910626942", -- ataque desde arriba
+		BloqueoInicio = "rbxassetid://126990103001685",
+		Bloqueo = "rbxassetid://103094181117038",
+		Parry = "rbxassetid://125416864618057",
+		DashAdelante = "rbxassetid://100155623254154",
+		DashAtras = "rbxassetid://114909466999172",
+		DashIzquierda = "rbxassetid://119984320402589",
+		DashDerecha = "rbxassetid://96272898271683",
+		GolpeLiviano = "rbxassetid://100186185692926",
+		GolpeFuerte = "rbxassetid://96263197602089",
+		Aturdido = "rbxassetid://73655937150525",
+		Derrota = "rbxassetid://85197090039101",
+		Levantarse = "rbxassetid://74779451597081",
+		-- Interacción (P26-03): publicadas, sin usar todavía en el código.
+		Banco = "rbxassetid://118422749305884",
+		Celebrar = "rbxassetid://87787355391951",
+		Hablar = "rbxassetid://95409874266176",
+		Recoger = "rbxassetid://98691000300195",
+		Saludar = "rbxassetid://108354307810686",
 	},
 	-- Fuerza Bruta (P27-01), hecha con arte/scripts/animaciones/linaje-fuerzabruta.py. Embestida y Cargar
 	-- van en piezas: inicio, loop y frenada. Marcadores: Impacto en Puño, GolpePiso y EmbestidaFrenada.
 	linaje_fuerzabruta = {
-		PunoSismico = "rbxassetid://98115806880348",
-		GolpePiso = "rbxassetid://118246801340832",
-		EmbestidaInicio = "rbxassetid://111963141629338",
-		EmbestidaCarrera = "rbxassetid://82375231487944",
-		EmbestidaFrenada = "rbxassetid://76562140317323",
-		CargarInicio = "rbxassetid://82574390662886",
-		CargarLoop = "rbxassetid://101325236228868",
+		PunoSismico = "rbxassetid://92821448797182",
+		GolpePiso = "rbxassetid://77792023879204",
+		EmbestidaInicio = "rbxassetid://70565357213088",
+		EmbestidaCarrera = "rbxassetid://114871342098278",
+		EmbestidaFrenada = "rbxassetid://112711315454919",
+		CargarInicio = "rbxassetid://77164726952378",
+		CargarLoop = "rbxassetid://93045599704287",
 	},
 }
 
