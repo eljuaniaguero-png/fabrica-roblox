@@ -28,6 +28,10 @@ local function pegar(personaje: Model, molde: Model, pieza: BasePart)
 	union.Part1 = copia
 	union.C0 = reposo.CFrame:ToObjectSpace(pieza.CFrame)
 	union.Parent = copia
+	local apariencia = copia:FindFirstChildOfClass("SurfaceAppearance")
+	if apariencia then
+		apariencia.Color = C.ColorPelo
+	end
 	copia.Parent = personaje
 end
 
