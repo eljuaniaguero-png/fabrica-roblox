@@ -238,7 +238,7 @@ def main():
         # Campera en el torso: frente abierto, costado y solapa.
         caja(f"Campera_Frente{n}", "UpperTorso", (0.185 * lado, -0.135, 0.965), (0.17, 0.035, 0.49), "Campera", "Campera")
         caja(f"Campera_Costado{n}", "UpperTorso", (0.262 * lado, 0, 0.965), (0.035, 0.28, 0.49), "Campera", "Campera")
-        caja(f"Cuello_Solapa{n}", "UpperTorso", (0.105 * lado, -0.158, 1.07), (0.052, 0.02, 0.265), "Cuello", "Campera", (0, -12 * lado, 0))
+        caja(f"Cuello_Solapa{n}", "UpperTorso", (0.105 * lado, -0.158, 1.04), (0.052, 0.02, 0.235), "Cuello", "Campera", (0, -12 * lado, 0))
         caja(f"Cuello_Lado{n}", "UpperTorso", (0.135 * lado, 0, 1.215), (0.055, 0.25, 0.09), "Cuello", "Campera")
     caja("Cuerpo_UpperTorso", "UpperTorso", (0, 0, 0.965), (0.5, 0.25, 0.48), "Remera", "Remera")
     caja("Campera_Espalda", "UpperTorso", (0, 0.135, 0.965), (0.56, 0.035, 0.49), "Campera", "Campera")

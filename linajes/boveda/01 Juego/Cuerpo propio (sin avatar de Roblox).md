@@ -57,7 +57,7 @@ Volver a [[Ficha del juego]]
 | **Corto** | Mechones anchos, sin puntas | 2.136 | `PeloCorto.fbx` |
 | **Flequillo** | Mechones anchos con flequillo sobre los ojos | 2.136 | `PeloFlequillo.fbx` |
 
-- La forma es el peinado; el color lo elige el jugador. Azul por defecto: `#2C3E66`.
+- La forma es el peinado; el color lo elige el jugador. Azul por defecto: `#4468AE`.
 - La textura es gris casi blanca y el juego la tiñe con `SurfaceAppearance.Color`.
 - Script: `arte/scripts/personajes/pelo_hebras.py`. Reemplazan a los peinados Puntas, Flequillo y Cresta de antes cuando pasen a Studio.
 - Pendiente: los tres pasan el tope de 2.000 triángulos de la guía; hay que recortarlos o subir el tope.

@@ -228,7 +228,7 @@ Config.Cuerpo.Ropa = {
 Config.Cuerpo.Comic = {
 	Piezas = { "Cuerpo", "Remera", "Campera", "Cinturon", "Pantalon", "Zapatillas" },
 	Peinados = { "PeloPuntas", "PeloCorto", "PeloFlequillo" },
-	ColorPelo = Color3.fromHex("#2C3E66"), -- por defecto; el creador deja elegir otro
+	ColorPelo = Color3.fromHex("#4468AE"), -- por defecto; el creador deja elegir otro
 	Texturas = { Pelo = "rbxassetid://93286191132215", Zapatillas = "rbxassetid://117152327461014" },
 	Caras = {
 		"rbxassetid://131546855294230",

@@ -26,7 +26,7 @@ CORONILLA = 0.12  # los mechones de arriba salen de atrás del centro
 PASOS = 4
 MITAD = (0.175, 0.16, 0.168)  # medidas reales de Cuerpo_Head
 TIRAS = 4  # variantes de hebras dentro de la textura
-COLOR_INICIAL = "#2C3E66"  # azul por defecto; el jugador lo cambia en el creador
+COLOR_INICIAL = "#4468AE"  # azul por defecto; el jugador lo cambia en el creador
 
 
 def superficie(g, s, extra=0.0):
