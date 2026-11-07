@@ -91,10 +91,10 @@ def madera(tono=(0.62, 0.45, 0.3)):
     n = C
     y, x = np.mgrid[0:n, 0:n].astype(np.float32)
     onda = ruido(n, 3, 3) * 26
-    vetas = 0.5 + 0.5 * np.sin((y + onda) * 0.95 + ruido(n, 6, 2) * 9)
+    vetas = 0.5 + 0.5 * np.sin((y + onda) * 3.8 + ruido(n, 6, 2) * 9)
     color = np.ones((n, n, 3), np.float32) * np.array(tono, np.float32)
-    color *= (0.88 + 0.2 * vetas)[..., None]
-    alto = vetas * 0.25
+    color *= (0.95 + 0.09 * vetas)[..., None]
+    alto = vetas * 0.08
     for _ in range(5):  # nudos
         cx, cy, rad = r.integers(0, n), r.integers(0, n), r.integers(10, 26)
         d = np.sqrt((x - cx) ** 2 + ((y - cy) * 1.6) ** 2)
@@ -127,7 +127,7 @@ def rotular(color):
 
 
 def normal(alto):
-    fuerza = 2.2
+    fuerza = 1.1
     gy, gx = np.gradient(alto * fuerza)
     n = np.dstack([-gx * 8, gy * 8, np.ones_like(alto)])
     n /= np.linalg.norm(n, axis=2, keepdims=True)
@@ -178,7 +178,7 @@ def ladrillos():
 
 claro = (0.86, 0.86, 0.84)
 c, a, g = metal_pintado(claro, abolladuras=True)
-guardar("contenedor", [(rotular(c), a, g), metal_pintado(claro, 0.14), metal_pintado((0.7, 0.71, 0.72), 0.05), oscuro()])
+guardar("contenedor", [(rotular(c), a, g), metal_pintado(claro, 0.14), metal_pintado((0.26, 0.27, 0.29), 0.05), oscuro()])
 guardar("metal", [metal_pintado(claro, 0.1), metal_pintado(claro, 0.22), metal_pintado((0.72, 0.72, 0.7), 0.05), oscuro()])
 guardar("madera", [madera(), madera((0.48, 0.34, 0.23)), madera((0.7, 0.54, 0.38)), oscuro()])
 ladrillos()

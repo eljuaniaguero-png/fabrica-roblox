@@ -19,7 +19,7 @@ TINTES = [
     ("Contenedor", "Contenedor gris", "#7c838c"),
     ("Prop_Barril", "Barril", "#2f6288"),
     ("Prop_Bita", "Bita", "#3a4048"),
-    ("Galpon_Techo", "Techo de chapa", "#8a6650"),
+    ("Galpon_Techo", "Techo de chapa", "#a4aab0"),
     ("Prop_Cajones", "Cajones", "#ffffff"),
     ("Prop_Cartel", "Cartel", "#ffffff"),
     ("Prop_MuroLadrillo", "Muro de ladrillo", "#ffffff"),

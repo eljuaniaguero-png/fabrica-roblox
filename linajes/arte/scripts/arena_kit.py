@@ -101,6 +101,7 @@ class Pieza:
         self.nombre, self.imagen = nombre, imagen
         self.bm = bmesh.new()
         self.caras = []  # (cara, celda)
+        self.plano = None
 
     def _marcar(self, geom, celda):
         for c in {f for v in geom for f in v.link_faces}:
@@ -140,6 +141,8 @@ class Pieza:
         for cara, celda in self.caras:
             n = cara.normal
             eje = max(range(3), key=lambda i: abs(n[i]))
+            if self.plano is not None:
+                eje = self.plano(cara, eje)
             a, b = [(1, 2), (0, 2), (0, 1)][eje]
             cu, cv = (celda % CELDAS) / CELDAS, (celda // CELDAS) / CELDAS
             ancho = 1 if entera else 1 / CELDAS
@@ -199,6 +202,8 @@ def contenedor(nombre, pintura):
         p.cilindro((x + 0.07, y, H / 2), 0.024, H - 0.3, 2, lados=8)
         p.caja((x + 0.08, y + 0.08, 1.1), (0.03, 0.2, 0.05), 2)
     p.caja((x + 0.01, 0, H / 2), (0.05, 0.03, H - 0.34), 3)
+    # Las costillas se pintan como una sola pared: sin esto sus caras salen negras.
+    p.plano = lambda cara, eje: 1 if eje == 0 and abs(cara.calc_center_median().x) < L / 2 - 0.2 else eje
     for i in range(9):  # otra punta, acanalada
         y = -W / 2 + 0.3 + i * (W - 0.6) / 8
         p.caja((-L / 2 + 0.03, y, H / 2), (0.09, 0.14, H - 0.34), 0)
@@ -276,7 +281,7 @@ def cartel():
 def techo():
     img = tabla("Galpon_Techo", [("#6a4a3a", 0.4), ("#7a5442", 0.55), ("#3a3d44", 0.2)])
     p = Pieza("Galpon_Techo", img)
-    ancho, media, alto, n = 2.3, 1.2, 0.7, 13
+    ancho, media, alto, n = 2.3, 1.2, 0.7, 28
     for lado in (-1, 1):
         a, b = (0, lado * media, 0.0), (0, 0, alto)
         angulo = math.atan2(alto, media) * -lado
@@ -284,7 +289,7 @@ def techo():
         p.caja((0, lado * media / 2, alto / 2), (ancho, math.hypot(media, alto), 0.025), 0, giro)
         for i in range(n):
             x = -ancho / 2 + 0.08 + i * (ancho - 0.16) / (n - 1)
-            p.barra((x, a[1], a[2] + 0.03), (x, b[1], b[2] + 0.03), 0.07, 1 if i % 4 == 0 else 0)
+            p.barra((x, a[1], a[2] + 0.03), (x, b[1], b[2] + 0.02), 0.045, 1 if i % 7 == 0 else 0)
     p.caja((0, 0, alto + 0.05), (ancho + 0.04, 0.22, 0.05), 2)
     return p.terminar()
 
