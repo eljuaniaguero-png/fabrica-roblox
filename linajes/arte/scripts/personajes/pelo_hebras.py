@@ -18,9 +18,10 @@ from mathutils import Vector
 
 ARTE = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 Z = 1.363  # centro de la cabeza
-CENTRO = Vector((0, 0.012, Z + 0.02))
+CENTRO = Vector((0, 0, Z + 0.02))
 CORONILLA = 0.12  # los mechones de arriba salen de atrás del centro
-PASOS = 5
+PASOS = 4
+MITAD = (0.175, 0.16, 0.168)  # medidas reales de Cuerpo_Head
 TIRAS = 4  # variantes de hebras dentro de la textura
 
 
@@ -28,22 +29,22 @@ def superficie(g, s, extra=0.0):
     """Punto sobre la cabeza. g = ángulo (0 = frente), s = 0 arriba, 1 ecuador, más de 1 baja."""
     t = math.radians(g)
     sx, sy = math.sin(t), -math.cos(t)
-    a, b, e = 0.2 + extra, 0.19 + extra, 5  # contorno casi cuadrado, repartido parejo por ángulo
+    a, b, e = MITAD[0] + 0.002 + extra, MITAD[1] + 0.002 + extra, 8  # contorno de la cabeza real
     r = (abs(sx / a) ** e + abs(sy / b) ** e) ** (-1 / e)
     rx, ry = sx * r, sy * r
     if s <= 1:
-        f = math.sin(s * math.pi / 2) ** 0.55
-        z = (0.212 + extra) * math.cos(s * math.pi / 2) ** 0.6
+        f = math.sin(s * math.pi / 2) ** 0.35
+        z = (MITAD[2] + 0.002 + extra) * math.cos(s * math.pi / 2) ** 0.35
     else:
         f, z = 1, -(s - 1) * 0.3
-    return Vector((rx * f, ry * f + 0.012, z + Z))
+    return Vector((rx * f, ry * f, z + Z))
 
 
 def s_de_altura(z):
     """Inversa de superficie: qué s llega a la altura z."""
     if z <= 0:
         return 1 - z / 0.3
-    return math.acos(min(z / 0.212, 1) ** (1 / 0.6)) * 2 / math.pi
+    return math.acos(min(z / 0.17, 1) ** (1 / 0.35)) * 2 / math.pi
 
 
 def fin_de_pelo(g):
@@ -55,8 +56,9 @@ def fin_de_pelo(g):
 class Malla:
     def __init__(self):
         self.v, self.f, self.uv = [], [], []
+        self.puntas = []
 
-    def mechon(self, g, s0, s1, ancho, alto, giro=0.0, levante=0.05, arriba=0.0):
+    def mechon(self, g, s0, s1, ancho, alto, giro=0.0, levante=0.05, arriba=0.0, capa="media"):
         """Hoja de sección triangular que sigue la cabeza y se despega hacia la punta."""
         tira = random.randrange(TIRAS) / TIRAS
         base = len(self.v)
@@ -75,6 +77,7 @@ class Malla:
             h = w * 0.45
             self.v += [puntos[i] - lado * w - n * h * 0.5, puntos[i] + n * h, puntos[i] + lado * w - n * h * 0.5]
             self.uv += [(tira, t), (tira + 0.5 / TIRAS, t), (tira + 1 / TIRAS, t)]
+        self.puntas.append((capa, puntos[-2], puntos[-1]))
         self.v.append(puntos[-1])
         self.uv.append((tira + 0.5 / TIRAS, 1))
         self.f.append((base, base + 1, base + 2))
@@ -89,16 +92,16 @@ class Malla:
 
     def gorro(self):
         """Base cerrada al ras de la cabeza: evita que se vea piel entre mechones."""
-        n, m = 32, 8
+        n, m = 24, 6
         base = len(self.v)
-        self.v.append(superficie(0, 0, 0.006))
-        self.uv.append((0.1, 0.03))
+        self.v.append(superficie(0, 0, 0.001))
+        self.uv.append((0.1, 0.1))
         for j in range(1, m + 1):
             for i in range(n):
                 g = i / n * 360 - 180
-                s = s_de_altura(fin_de_pelo(g) + 0.012) * j / m
-                self.v.append(superficie(g, s, 0.006))
-                self.uv.append((0.1, 0.03))
+                s = s_de_altura(fin_de_pelo(g) + 0.06) * j / m
+                self.v.append(superficie(g, s, 0.001))
+                self.uv.append((0.1, 0.1))
         for i in range(n):
             self.f.append((base, base + 1 + i, base + 1 + (i + 1) % n))
         for j in range(m - 1):
@@ -107,8 +110,8 @@ class Malla:
                 k = (i + 1) % n
                 self.f.append((a + i, b + i, b + k, a + k))
         fondo = len(self.v)
-        self.v.append(Vector((0, 0.012, Z + 0.05)))
-        self.uv.append((0.1, 0.03))
+        self.v.append(Vector((0, 0, Z + 0.05)))
+        self.uv.append((0.1, 0.1))
         a = base + 1 + (m - 1) * n
         for i in range(n):
             self.f.append((a + i, fondo, a + (i + 1) % n))
@@ -135,60 +138,51 @@ class Malla:
 
 
 def peinado():
-    """Capas de abajo hacia arriba. Los números salen de mirar las hojas de referencia."""
+    """Capas de abajo hacia arriba. Todos los mechones pasan el borde de la cabeza y caen."""
     m = Malla()
     m.gorro()
     azar = random.uniform
-    # Capa de abajo: cubre todo el contorno.
-    for i in range(42):
-        g = i / 42 * 360 - 180 + azar(-3, 3)
+    # Capa de abajo: pegada a la cabeza, sin levante.
+    for i in range(34):
+        g = i / 34 * 360 - 180 + azar(-3, 3)
         if abs(g) < 50:
             continue
-        m.mechon(g, 0.25, s_de_altura(fin_de_pelo(g) + azar(-0.04, 0.03)), 0.066, 0.012, azar(-8, 8), 0.02)
-    # Capa media: más despegada y con largos distintos.
-    for i in range(44):
-        g = i / 44 * 360 - 180 + azar(-4, 4)
-        fin = fin_de_pelo(g) + azar(0.0, 0.1)
-        if abs(g) < 45:
+        m.mechon(g, 0.25, s_de_altura(fin_de_pelo(g) + azar(-0.02, 0.03)), 0.08, 0.004, azar(-6, 6), 0.0, capa="abajo")
+    # Capa media: largos distintos, apenas despegada.
+    for i in range(30):
+        g = i / 30 * 360 - 180 + azar(-4, 4)
+        fin = fin_de_pelo(g) + azar(0.0, 0.07)
+        if abs(g) < 72:
             fin = max(fin, 0.1)
-        m.mechon(g, CORONILLA, s_de_altura(fin), 0.046, 0.03, azar(-12, 12), azar(0.015, 0.045))
-    # Capa de arriba: puntas cortas que dibujan la silueta.
-    for i in range(24):
-        g = i / 24 * 360 - 180 + azar(-6, 6)
-        m.mechon(g, 0.0, azar(0.55, 0.85), 0.05, 0.06, azar(-20, 20), azar(0.05, 0.1), 0.3)
+        m.mechon(g, CORONILLA, s_de_altura(fin), 0.066, 0.018, azar(-10, 10), azar(0.006, 0.028))
+    # Capa de arriba: da volumen y cae por el borde, nunca sale horizontal.
+    for i in range(20):
+        g = i / 20 * 360 - 180 + azar(-6, 6)
+        fin = s_de_altura(azar(0.085, 0.13)) if abs(g) < 72 else azar(1.0, 1.32)
+        m.mechon(g, 0.0, fin, 0.064, 0.036, azar(-16, 16), 0.012, capa="arriba")
     # Frente: fila de mechones barridos que tapan la unión con la piel.
-    for i in range(11):
-        g = -56 + i * 11 + azar(-2, 2)
-        fin = azar(0.0, 0.085) if i % 3 else azar(-0.03, 0.03)
-        m.mechon(g, 0.4, s_de_altura(fin), 0.034, 0.03, 15 + azar(-5, 5), 0.015)
-    # Hebras sueltas que rompen el contorno.
-    for i in range(8):
-        g = azar(-180, 180)
-        m.mechon(g, 0.2, azar(0.55, 0.8), 0.014, 0.055, azar(-25, 25), azar(0.06, 0.11), 0.4)
+    for i in range(9):
+        g = -54 + i * 13.5 + azar(-2, 2)
+        fin = azar(0.075, 0.115) if i % 3 else azar(0.05, 0.07)
+        m.mechon(g, 0.4, s_de_altura(fin), 0.044, 0.012, 15 + azar(-5, 5), 0.004, capa="frente")
     return m
 
 
 def textura(ruta):
-    """Raíz oscura, punta más clara, brillo en banda y líneas de hebras."""
+    """Cómic: tres tonos planos de azul sacados de la campera, sin negro ni ruido fino."""
     n = 512
-    r = np.random.default_rng(7)
-    lineas = np.zeros(n)
-    for ancho, peso in ((3, 0.5), (9, 0.35), (25, 0.15)):
-        ruido = r.standard_normal(n)
-        lineas += peso * np.convolve(np.tile(ruido, 3), np.ones(ancho) / ancho, "same")[n : 2 * n] * math.sqrt(ancho)
-    lineas = np.clip(0.5 + lineas * 0.35, 0, 1)[None, :]
+    lin = lambda c: np.array(c) ** 2.2
+    oscuro, medio, claro = lin((0.11, 0.17, 0.29)), lin((0.157, 0.263, 0.435)), lin((0.27, 0.4, 0.62))
     v = np.linspace(0, 1, n)[:, None]
     u = np.linspace(0, 1, n)[None, :]
-    borde = np.abs((u * TIRAS) % 1 - 0.5) * 2
-    raiz, punta, brillo = (np.array(c) for c in ((0.012, 0.014, 0.03), (0.06, 0.09, 0.2), (0.3, 0.42, 0.72)))
-    k = (v**1.3)[..., None]
-    color = raiz * (1 - k) + punta * k
-    color = color * (0.55 + 0.9 * lineas[..., None])
-    banda = (np.exp(-(((v - 0.48) / 0.07) ** 2)) * lineas**2)[..., None]
-    color = color + brillo * banda * 0.55
-    color = color * (1 - 0.6 * borde**3)[..., None]
+    f = (u * TIRAS) % 1  # posición a lo ancho del mechón
+    corte = 0.3 + 0.1 * np.sin(u * 37)  # sombra de raíz con borde dentado
+    color = np.where((v < corte)[..., None], oscuro, medio)
+    luz = (np.abs(f - 0.42) < 0.09 + 0.05 * np.sin(v * 9)) & (v > 0.5) & (v < 0.82)
+    color = np.where(luz[..., None], claro, color)
+    color = np.where((np.abs(f - 0.5) > 0.42)[..., None], oscuro, color)
     pixeles = np.ones((n, n, 4), dtype=np.float32)
-    pixeles[..., :3] = np.clip(color, 0, 1)
+    pixeles[..., :3] = color
     img = bpy.data.images.new("PeloHebras_color", n, n, alpha=False, float_buffer=False)
     img.colorspace_settings.name = "Linear Rec.709"
     img.pixels.foreach_set(pixeles.ravel())
@@ -196,6 +190,19 @@ def textura(ruta):
     img.file_format = "PNG"
     img.save()
     return img
+
+
+def chequear(m):
+    """Mechones horizontales en la coronilla y distancia de cada punta baja a la cabeza."""
+    planos, lejos = 0, {}
+    for capa, a, b in m.puntas:
+        d = (b - a).normalized()
+        if b.z > Z + 0.1 and abs(d.z) < 0.35:
+            planos += 1
+        q = b - Vector((0, 0, Z))
+        fuera = Vector([max(abs(q[i]) - MITAD[i], 0) for i in range(3)]).length
+        lejos[capa] = max(lejos.get(capa, 0), fuera)
+    print("CHEQUEO mechones", len(m.puntas), "planos_arriba", planos, "punta_a_cabeza", {k: round(v, 3) for k, v in lejos.items()})
 
 
 def medir(me):
@@ -229,12 +236,21 @@ def main():
     material.use_nodes = True
     nodos = material.node_tree
     bsdf = nodos.nodes["Principled BSDF"]
-    bsdf.inputs["Roughness"].default_value = 0.55
+    bsdf.inputs["Roughness"].default_value = 0.62
     tex = nodos.nodes.new("ShaderNodeTexImage")
     tex.image = img
     nodos.links.new(tex.outputs["Color"], bsdf.inputs["Base Color"])
-    pelo = peinado().objeto("PeloHebras", material)
+    datos = peinado()
+    chequear(datos)
+    pelo = datos.objeto("PeloHebras", material)
     medir(pelo.data)
+    borde = bpy.data.materials.new("PeloContorno")
+    borde.use_nodes = True
+    borde.node_tree.nodes["Principled BSDF"].inputs["Base Color"].default_value = (0.012, 0.022, 0.05, 1)
+    borde.use_backface_culling = True  # si no, la cáscara del contorno tapa el color del pelo
+    pelo.data.materials.append(borde)
+    contorno = pelo.modifiers.new("Borde", "SOLIDIFY")
+    contorno.thickness, contorno.offset, contorno.use_flip_normals, contorno.material_offset = 0.005, 1, True, 1
 
     e = bpy.context.scene
     e.render.engine = "BLENDER_EEVEE"
@@ -259,6 +275,11 @@ def main():
         sol.rotation_euler = (Vector((0, 0, 1.4)) - Vector((-2 * math.cos(a) + 4 * math.sin(a), -2 * math.sin(a) - 4 * math.cos(a), 5))).to_track_quat("-Z", "Y").to_euler()
         e.render.filepath = os.path.join(ARTE, "renders", f"pelo-hebras-{v}.png")
         bpy.ops.render.render(write_still=True)
+    cam.location = (0, -0.01, 6)
+    cam.rotation_euler = (0, 0, 0)
+    sol.rotation_euler = (0.4, 0.2, 0)
+    e.render.filepath = os.path.join(ARTE, "renders", "pelo-hebras-arriba.png")
+    bpy.ops.render.render(write_still=True)
     bpy.ops.object.select_all(action="DESELECT")
     pelo.select_set(True)
     bpy.ops.export_scene.fbx(
