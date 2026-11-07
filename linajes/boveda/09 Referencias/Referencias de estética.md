@@ -32,12 +32,32 @@ Tenemos buena base: textura, noche y grúas. Nos falta **color e identidad**: ho
 7. **Centro iluminado y bordes oscuros** para guiar la vista a la pelea.
 
 ## r0aringexe (TikTok, RPG de espadas con Claude)
-[Cuenta](https://www.tiktok.com/@r0aringexe). Vi cuadros de 3 videos: días 3, 5 y 6. Sin audio ni subtítulos. El día 3 tuvo 195.900 vistas.
+[Cuenta](https://www.tiktok.com/@r0aringexe). Vi los 7 videos, un cuadro por segundo. Sin audio ni subtítulos. El día 3 tuvo 195.900 vistas.
 - **Menú cinematográfico:** escena 3D de fondo, título con serif fino y opciones chicas a la izquierda. Parece juego de PC, no de Roblox.
 - **Interfaz sobria:** paneles oscuros, bordes finos y pocos colores. Rehízo tienda, inventario, códice y noticias con el mismo estilo.
 - **Personaje en pedestal** dentro de tienda e inventario.
 - **Primer minuto con historia:** cámara al cielo y el personaje despierta en el piso; después, tutorial.
 - **Mapa con vida:** pasto denso, caminos de piedra, farolas cálidas y nombre de zona al entrar.
 - **Difusión:** un video por día con la lista de cambios. Es un formato fácil de repetir para Linajes.
+
+### Cómo fue mejorando, día por día
+- **Día 1:** colores saturados y casas simples. Ya tenía menú con cámara que recorre el mapa.
+- **Día 2:** inventario, mapa de regiones, códice, diario y diálogos con NPC.
+- **Día 3:** rehízo todo el mapa con look oscuro y realista. Es el video con más vistas: el salto visual fue el gancho.
+- **Día 4:** herrero, ciudad amurallada con cartel de zona y un susto con texto rojo en una cripta.
+- **Día 5:** habilidades con efectos grandes, jefes y caballos.
+- **Día 6:** rehízo la interfaz en negro y dorado; tienda por tarjetas y pantalla "FALLEN" al morir.
+- **Último:** forja de armas por partes y presentación de jefes con nombre gigante en cine.
+
+### Ideas que suman para Linajes
+- **Presentación de jefe:** silueta contra el cielo, nombre con letras separadas y subtítulo. Ideal para Remache.
+- **Texto en pantalla como sensación:** "FALLEN" al morir; nombre de zona al llegar.
+- **Tutorial en un ring:** Golpe, Bloqueo y Parry con cartel chico y "APRENDIDO" al lograrlo.
+- **Contraste de escenarios:** un jefe en zona de hielo o cristal corta la oscuridad.
+
+### Lo que hace mal
+- Algunos efectos son manchas planas de un color (zona amarilla enorme).
+- La interfaz del día 6 es tan oscura y chica que cuesta leer; en celular sería un problema.
+- Los personajes siguen siendo simples al lado del escenario.
 
 Para Linajes: tomar la sobriedad, el menú y la apertura, con estética propia.
