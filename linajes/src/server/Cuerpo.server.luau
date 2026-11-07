@@ -8,7 +8,7 @@ local CuerpoComic = require(script.Parent.CuerpoComic)
 
 local function alAparecer(jugador: Player, personaje: Model)
 	-- Más adelante sale de los datos guardados (creador de personaje); por ahora, al azar fijo.
-	CuerpoComic.vestir(personaje, jugador)
+	CuerpoComic.vestir(personaje, jugador.UserId)
 end
 
 local function alEntrar(jugador: Player)

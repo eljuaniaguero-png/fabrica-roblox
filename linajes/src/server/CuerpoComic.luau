@@ -35,14 +35,14 @@ local function pegar(personaje: Model, molde: Model, pieza: BasePart)
 	copia.Parent = personaje
 end
 
-function CuerpoComic.vestir(personaje: Model, jugador: Player)
+function CuerpoComic.vestir(personaje: Model, semilla: number)
 	local carpeta = ServerStorage:FindFirstChild("CuerpoComic")
 	local molde = StarterPlayer:FindFirstChild("StarterCharacter")
 	if not (carpeta and molde and molde:IsA("Model")) then
 		warn("CuerpoComic: falta ServerStorage.CuerpoComic o StarterCharacter")
 		return
 	end
-	local azar = Random.new(jugador.UserId)
+	local azar = Random.new(semilla)
 	local peinado = C.Peinados[azar:NextInteger(1, #C.Peinados)]
 	local cara = C.Caras[azar:NextInteger(1, #C.Caras)]
 	for _, parte in personaje:GetChildren() do

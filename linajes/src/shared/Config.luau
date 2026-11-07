@@ -253,6 +253,45 @@ Config.Cuerpo.ColoresPelo = {
 	"f2652b",
 }
 
+-- Combate cuerpo a cuerpo (server/Combate.server.luau). Impacto y Espera en segundos, ya con la
+-- velocidad de VelocidadGolpes aplicada.
+Config.Combate = {
+	Vida = 400,
+	Energia = 100,
+	EnergiaPorSegundo = 8,
+	Golpes = {
+		{ Danio = 8, Impacto = 0.27, Espera = 0.45, Empuja = false },
+		{ Danio = 8, Impacto = 0.27, Espera = 0.45, Empuja = false },
+		{ Danio = 10, Impacto = 0.36, Espera = 0.55, Empuja = false },
+		{ Danio = 14, Impacto = 0.53, Espera = 0.8, Empuja = true },
+	},
+	VelocidadGolpes = 0.75,
+	ReinicioCombo = 0.8,
+	Alcance = 7.5,
+	ConoGolpe = 0.3, -- 1 es justo adelante, 0 es a los costados
+	Empuje = 45,
+	FrenaBloqueo = 0.7,
+	EnergiaBloqueo = 10,
+	VentanaParry = 0.2,
+	AturdeParry = 1,
+	DashDistancia = 20,
+	DashTiempo = 0.2,
+	DashRecarga = 1.5,
+	DashInvulnerable = 0.25,
+	ColaTeclas = 0.15,
+	PedidosPorSegundo = 10,
+	HitStop = 0.05,
+	HitStopParry = 0.12,
+	Destello = 0.12,
+	ManiquiDistancia = 10,
+	ManiquiSemilla = 7,
+	ManiquiPausa = 3,
+	ManiquiAtaca = 9, -- pega si hay un jugador a esta distancia
+	ManiquiAviso = 0.6,
+	ManiquiDanio = 12,
+	ManiquiVuelve = 3,
+}
+
 -- Animaciones de nuestro Animate (src/character/Animate.client.luau).
 -- Teclas de prueba (client/PruebaTeclas): solo visuales. Apagar antes de publicar.
 Config.PruebaTeclas = {
@@ -267,7 +306,7 @@ Config.PruebaTeclas = {
 	EsperaCombo = 0.75, -- parte del golpe que tiene que pasar antes del siguiente
 	VelocidadCombo = 0.75, -- 1 es la velocidad original
 	SaltoAire = 38,
-	Cartel = "Click: combo   Q + WASD: dash   F: bloqueo   G: parry\nR: salta y martillazo\nShift: correr   Ctrl: rápido   Y: vuelo\nZ: puño sísmico   X: golpe al piso   C: embestida   V: cargar\nReflejos: J contragolpe   K paso fantasma   L lluvia (mantener)   P cargar (mantener)\nPiroquinesis: U bola   I chorro (mantener)   O muro   H cargar (mantener)\n1 saludar  2 celebrar  3 recoger  4 hablar  5 banco\n6 aturdido  7 derrota  8 levantarse  9 recibe liviano  0 recibe fuerte",
+	Cartel = "Click: combo   Q + WASD: dash   F: bloqueo (justo antes del golpe: parry)\nR: salta y martillazo\nShift: correr   Ctrl: rápido   Y: vuelo\nZ: puño sísmico   X: golpe al piso   C: embestida   V: cargar\nReflejos: J contragolpe   K paso fantasma   L lluvia (mantener)   P cargar (mantener)\nPiroquinesis: U bola   I chorro (mantener)   O muro   H cargar (mantener)\n1 saludar  2 celebrar  3 recoger  4 hablar  5 banco\n6 aturdido  7 derrota  8 levantarse  9 recibe liviano  0 recibe fuerte",
 }
 
 Config.Animaciones = {

@@ -21,10 +21,8 @@ local humanoid: Humanoid? = nil
 local raiz: BasePart? = nil
 local accion: AnimationTrack? = nil
 local embistiendo = false
-local golpe, ultimoGolpe = 0, 0
 
 local UNA_VEZ: { [Enum.KeyCode]: string } = {
-	[K.G] = "Parry",
 	[K.Z] = "PunoSismico",
 	[K.J] = "ReflejosContragolpe",
 	[K.U] = "PiroBolaFuego",
@@ -107,54 +105,13 @@ local function iniciarYSeguir(inicio: string, loop: string, tecla: Enum.KeyCode)
 	end
 end
 
-local function dash()
-	local r, c = raiz, workspace.CurrentCamera
-	if not (r and c) then
-		return
-	end
-	local adelante = Vector3.new(c.CFrame.LookVector.X, 0, c.CFrame.LookVector.Z).Unit
-	local derecha = Vector3.new(c.CFrame.RightVector.X, 0, c.CFrame.RightVector.Z).Unit
-	local nombre, direccion = "DashAdelante", adelante
-	if UserInputService:IsKeyDown(K.S) then
-		nombre, direccion = "DashAtras", -adelante
-	elseif UserInputService:IsKeyDown(K.A) then
-		nombre, direccion = "DashIzquierda", -derecha
-	elseif UserInputService:IsKeyDown(K.D) then
-		nombre, direccion = "DashDerecha", derecha
-	end
-	tocar(nombre)
-	local fin = os.clock() + P.DashTiempo
-	while os.clock() < fin do
-		r.AssemblyLinearVelocity = direccion * P.Dash
-			+ Vector3.new(0, r.AssemblyLinearVelocity.Y, 0)
-		RunService.Heartbeat:Wait()
-	end
-end
-
-local function comboGolpes()
-	-- Un golpe no se corta con el siguiente: hay que esperar a que casi termine.
-	local previo = accion
-	if previo and previo.IsPlaying and previo.TimePosition < previo.Length * P.EsperaCombo then
-		return
-	end
-	local ahora = os.clock()
-	golpe = if ahora - ultimoGolpe > P.PausaCombo then 1 else golpe % 4 + 1
-	ultimoGolpe = ahora
-	local pista = tocar("Golpe" .. golpe)
-	if pista then
-		pista:AdjustSpeed(P.VelocidadCombo)
-	end
-end
-
 UserInputService.InputBegan:Connect(function(entrada, usado)
 	if usado then
 		return
 	end
 	local tecla = entrada.KeyCode
 	local h = humanoid
-	if entrada.UserInputType == Enum.UserInputType.MouseButton1 then
-		comboGolpes()
-	elseif UNA_VEZ[tecla] then
+	if UNA_VEZ[tecla] then
 		tocar(UNA_VEZ[tecla])
 	elseif tecla == K.R then
 		-- Ataque desde arriba: salta y baja de un martillazo.
@@ -163,10 +120,6 @@ UserInputService.InputBegan:Connect(function(entrada, usado)
 			r.AssemblyLinearVelocity += Vector3.new(0, P.SaltoAire, 0)
 		end
 		tocar("GolpeAire")
-	elseif tecla == K.Q then
-		task.spawn(dash)
-	elseif tecla == K.F then
-		iniciarYSeguir("BloqueoInicio", "Bloqueo", K.F)
 	elseif tecla == K.I then
 		iniciarYSeguir("PiroChorroInicio", "PiroChorroLoop", K.I)
 	elseif tecla == K.H then
@@ -197,7 +150,7 @@ UserInputService.InputEnded:Connect(function(entrada)
 	local h = humanoid
 	if tecla == K.I then
 		tocar("PiroChorroFin")
-	elseif tecla == K.F or tecla == K.V or tecla == K.P or tecla == K.L or tecla == K.H then
+	elseif tecla == K.V or tecla == K.P or tecla == K.L or tecla == K.H then
 		soltar()
 	elseif tecla == K.C then
 		embistiendo = false

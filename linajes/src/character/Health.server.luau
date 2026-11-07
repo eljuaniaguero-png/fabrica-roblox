@@ -1,0 +1,2 @@
+--!strict
+-- Vacío a propósito: reemplaza al script Health de Roblox, que cura solo. En el sandbox la vida no se regenera.
