@@ -125,8 +125,8 @@ local function farol(x: number, z: number, con: boolean)
 		local luz = Instance.new("SpotLight")
 		luz.Face = Enum.NormalId.Bottom
 		luz.Color = color("Sodio")
-		luz.Brightness = 3
-		luz.Range = 40
+		luz.Brightness = 6
+		luz.Range = 55
 		luz.Angle = 110
 		luz.Parent = bulbo
 	end

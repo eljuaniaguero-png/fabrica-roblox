@@ -10,3 +10,10 @@ Primera versión, 7 nov 2026. Se genera con `linajes/src/server/ArenaMapa.server
 - **Bordes:** contenedores dobles al sur, este y oeste; baranda al mar al norte.
 
 Pendiente: piso y objetos que se rompan, eventos, y cambiar las piezas de bloques por los modelos de `arte/exports/puerto-oxido/`.
+
+## Luz (7 nov)
+Por horas en `Config.Mundo.Luz`; se mezcla en `Clima.client.luau`. Noche azul y legible, con faroles de sodio como luz principal. Niebla más baja dentro de la arena para ver al rival.
+
+Referencias: [Develuper](https://www.youtube.com/watch?v=vkEXLmRAQgs), [DevForum, paso a paso](https://devforum.roblox.com/t/improve-lighting-step-by-step/1387033). Regla que tomamos: la noche se resuelve con luces locales, no con oscuridad.
+
+Para probar una hora: atributo `HoraPrueba` en Lighting.

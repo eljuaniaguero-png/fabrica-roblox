@@ -27,6 +27,11 @@
       "StarterCharacterScripts": {
         "$path": "src/character"
       }
+    },
+    "Lighting": {
+      "$properties": {
+        "Technology": "Future"
+      }
     }
   }
 }
