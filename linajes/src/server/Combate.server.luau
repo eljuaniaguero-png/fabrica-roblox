@@ -72,6 +72,11 @@ local function partes(personaje: Model): (Humanoid?, BasePart?)
 	return nil, nil
 end
 
+local function enZona(posicion: Vector3): boolean
+	local A = Config.Arena
+	return (Vector3.new(posicion.X, 0, posicion.Z) - A.ZonaCentro).Magnitude <= A.ZonaRadio
+end
+
 local function aturdir(personaje: Model)
 	local e = estadoDe(personaje)
 	local ahora = os.clock()
@@ -129,7 +134,11 @@ pegarA = function(atacante: Model, objetivo: Model, danio: number, tipo: string,
 	end
 	local e = estadoDe(objetivo)
 	local ahora = os.clock()
-	if ahora < e.invulnerableHasta then
+	if ahora < e.invulnerableHasta or enZona(r.Position) then
+		return
+	end
+	local _, desde = partes(atacante)
+	if desde and enZona(desde.Position) then
 		return
 	end
 	-- Contragolpe: esquiva y responde. Solo sirve contra golpes, no contra quemaduras.
@@ -320,6 +329,13 @@ local function prepararPeleador(personaje: Model)
 	personaje:SetAttribute("Energia", C.Energia)
 	personaje:SetAttribute("Aturdido", false)
 	CollectionService:AddTag(personaje, TAG)
+	local jugador = Players:GetPlayerFromCharacter(personaje)
+	if jugador then
+		estadoDe(personaje).invulnerableHasta = os.clock() + Config.Arena.ProteccionAparecer
+		h.Died:Once(function()
+			Perfiles.cortarRacha(jugador)
+		end)
+	end
 	personaje.Destroying:Once(function()
 		estados[personaje] = nil
 	end)
@@ -333,6 +349,25 @@ for _, jugador in Players:GetPlayers() do
 	if jugador.Character then
 		task.spawn(prepararPeleador, jugador.Character)
 	end
+end
+
+-- Arena: reaparición rápida y círculo que marca la zona segura.
+Players.RespawnTime = Config.Arena.Reaparicion
+do
+	local zona = Instance.new("Part")
+	zona.Name = "ZonaSegura"
+	zona.Shape = Enum.PartType.Cylinder
+	zona.Size = Vector3.new(0.3, Config.Arena.ZonaRadio * 2, Config.Arena.ZonaRadio * 2)
+	zona.CFrame = CFrame.new(Config.Arena.ZonaCentro + Vector3.new(0, 1.2, 0))
+		* CFrame.Angles(0, 0, math.pi / 2)
+	zona.Anchored = true
+	zona.CanCollide = false
+	zona.CanQuery = false
+	zona.CanTouch = false
+	zona.Material = Enum.Material.Neon
+	zona.Color = Color3.fromHex("#3fe0f0")
+	zona.Transparency = 0.85
+	zona.Parent = workspace
 end
 
 -- API para Poderes.server.luau: el daño pasa siempre por acá.

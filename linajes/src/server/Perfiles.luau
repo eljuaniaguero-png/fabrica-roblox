@@ -26,6 +26,27 @@ local function mostrar(jugador: Player, datos: any)
 	jugador:SetAttribute("Fichas", datos.Fichas)
 	jugador:SetAttribute("Bajas", datos.Bajas)
 	jugador:SetAttribute("DatosListos", true)
+	local tabla = jugador:FindFirstChild("leaderstats")
+	if not tabla then
+		tabla = Instance.new("Folder")
+		tabla.Name = "leaderstats"
+		for _, nombre in { "Bajas", "Racha" } do
+			local v = Instance.new("IntValue")
+			v.Name = nombre
+			v.Parent = tabla
+		end
+		tabla.Parent = jugador
+	end
+	(tabla:FindFirstChild("Bajas") :: IntValue).Value = datos.Bajas
+end
+
+local function ponerRacha(jugador: Player, racha: number)
+	jugador:SetAttribute("Racha", racha)
+	local tabla = jugador:FindFirstChild("leaderstats")
+	local v = tabla and tabla:FindFirstChild("Racha")
+	if v then
+		(v :: IntValue).Value = racha
+	end
 end
 
 function Perfiles.datos(jugador: Player): any?
@@ -48,11 +69,18 @@ function Perfiles.sumarBaja(jugador: Player)
 	local d = Perfiles.datos(jugador)
 	if d then
 		local bajas = d.Bajas + 1
+		local racha = ((jugador:GetAttribute("Racha") :: number?) or 0) + 1
+		ponerRacha(jugador, racha)
 		Perfiles.cambiar(jugador, {
+			MejorRacha = math.max(d.MejorRacha, racha),
 			Bajas = bajas,
 			Fichas = d.Fichas + (if bajas % Config.Ruleta.BajasPorFicha == 0 then 1 else 0),
 		})
 	end
+end
+
+function Perfiles.cortarRacha(jugador: Player)
+	ponerRacha(jugador, 0)
 end
 
 local function alEntrar(jugador: Player)

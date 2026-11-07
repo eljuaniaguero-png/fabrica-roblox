@@ -331,13 +331,21 @@ Config.Combate = {
 	HitStop = 0.07,
 	HitStopParry = 0.12,
 	Destello = 0.12,
-	ManiquiDistancia = 10,
+	ManiquiDistancia = 30,
 	ManiquiSemilla = 7,
 	ManiquiPausa = 3,
 	ManiquiAtaca = 9, -- pega si hay un jugador a esta distancia
 	ManiquiAviso = 0.6,
 	ManiquiDanio = 12,
 	ManiquiVuelve = 3,
+}
+
+-- Arena libre. Nadie pega ni recibe daño dentro de la zona segura.
+Config.Arena = {
+	ZonaCentro = Vector3.new(-330, 0, 1000),
+	ZonaRadio = 22,
+	ProteccionAparecer = 4,
+	Reaparicion = 2,
 }
 
 -- Guardado (server/Perfiles.luau).
