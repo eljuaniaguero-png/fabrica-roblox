@@ -254,6 +254,19 @@ Config.Cuerpo.ColoresPelo = {
 }
 
 -- Animaciones de nuestro Animate (src/character/Animate.client.luau).
+-- Teclas de prueba (client/PruebaTeclas): solo visuales. Apagar antes de publicar.
+Config.PruebaTeclas = {
+	Activas = true,
+	Caminar = 8,
+	Correr = 16,
+	CorrerRapido = 28,
+	Dash = 70,
+	DashTiempo = 0.18,
+	Embestida = 34,
+	PausaCombo = 1,
+	Cartel = "Click: combo   Q + WASD: dash   F: bloqueo   G: parry\nE: liviano   T: fuerte   R: aire\nShift: correr   Ctrl: rápido   Y: vuelo\nZ: puño sísmico   X: golpe al piso   C: embestida   V: cargar\n1 saludar  2 celebrar  3 recoger  4 hablar  5 banco\n6 aturdido  7 derrota  8 levantarse",
+}
+
 Config.Animaciones = {
 	VelocidadCorrer = 12, -- studs/s: desde acá pasa de caminar a correr
 	VelocidadCorrerRapido = 24, -- studs/s: desde acá usa CorrerRapido (Velocista, Reflejos)
