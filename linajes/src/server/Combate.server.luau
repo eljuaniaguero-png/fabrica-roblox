@@ -26,6 +26,7 @@ type Estado = {
 	invulnerableHasta: number,
 	aturdidoHasta: number,
 	dashListo: number,
+	dashEn: number,
 	pedidos: { number },
 	golpesSeguidos: number,
 	ultimoRecibido: number,
@@ -45,6 +46,7 @@ local function estadoDe(personaje: Model): Estado
 			invulnerableHasta = 0,
 			aturdidoHasta = 0,
 			dashListo = 0,
+			dashEn = 0,
 			pedidos = {},
 			golpesSeguidos = 0,
 			ultimoRecibido = 0,
@@ -92,10 +94,15 @@ local function frenar(personaje: Model, tiempo: number)
 	end)
 end
 
-local function empujar(objetivo: Model, raiz: BasePart, direccion: Vector3, lanza: boolean)
-	local velocidad = if lanza
-		then direccion * C.Lanza + Vector3.new(0, C.LanzaArriba, 0)
-		else direccion * C.Empuje
+local function empujar(objetivo: Model, raiz: BasePart, direccion: Vector3, tipo: string)
+	local velocidad = direccion * C.Empuje
+	if tipo == "Lanza" then
+		velocidad = direccion * C.Lanza + Vector3.new(0, C.LanzaArriba, 0)
+	elseif tipo == "Arriba" then
+		velocidad = direccion * 4 + Vector3.new(0, C.SubeArriba, 0)
+	elseif tipo == "Piso" then
+		velocidad = Vector3.new(0, -C.BajaPiso, 0)
+	end
 	local jugador = Players:GetPlayerFromCharacter(objetivo)
 	if jugador then
 		remoto:FireClient(jugador, "Empuje", velocidad)
@@ -108,7 +115,7 @@ local function pegarA(
 	atacante: Model,
 	objetivo: Model,
 	danio: number,
-	empuja: boolean,
+	tipo: string,
 	direccion: Vector3
 )
 	local h, r = partes(objetivo)
@@ -123,7 +130,9 @@ local function pegarA(
 	local _, raizAtacante = partes(atacante)
 	local deFrente = raizAtacante ~= nil
 		and r.CFrame.LookVector:Dot((raizAtacante.Position - r.Position).Unit) > 0
-	if e.bloqueoDesde and deFrente then
+	local fuerte = tipo ~= "Normal"
+	-- El martillazo desde el aire rompe el bloqueo.
+	if e.bloqueoDesde and deFrente and tipo ~= "Piso" then
 		if ahora - e.bloqueoDesde <= C.VentanaParry then
 			aturdir(atacante)
 			remoto:FireAllClients("Parry", objetivo, atacante)
@@ -137,26 +146,26 @@ local function pegarA(
 			e.bloqueoDesde = nil -- sin energía se rompe la guardia
 		end
 	else
-		remoto:FireAllClients("Golpeado", objetivo, danio, empuja, atacante)
+		remoto:FireAllClients("Golpeado", objetivo, danio, fuerte, atacante)
 		e.golpesSeguidos = if ahora - e.ultimoRecibido > C.VentanaDesgaste
 			then 1
 			else e.golpesSeguidos + 1
 		e.ultimoRecibido = ahora
 		local freno = C.Freno * C.DesgasteFreno ^ (e.golpesSeguidos - 1)
-		frenar(objetivo, if empuja then C.FrenoLanzado else freno)
-		if empuja then
+		frenar(objetivo, if fuerte then C.FrenoLanzado else freno)
+		if tipo == "Lanza" or tipo == "Piso" then
 			e.invulnerableHasta = ahora + C.FrenoLanzado + C.Proteccion
 			e.golpesSeguidos = 0
 		end
 		if e.reacciona then
-			e.reacciona(empuja)
+			e.reacciona(fuerte)
 		end
-		empujar(objetivo, r, direccion, empuja)
+		empujar(objetivo, r, direccion, tipo)
 	end
 	h:TakeDamage(danio)
 end
 
-local function resolverGolpe(atacante: Model, danio: number, empuja: boolean, alcance: number?)
+local function resolverGolpe(atacante: Model, danio: number, tipo: string, alcance: number?)
 	local _, r = partes(atacante)
 	if not r then
 		return
@@ -173,7 +182,7 @@ local function resolverGolpe(atacante: Model, danio: number, empuja: boolean, al
 				if plano.Magnitude <= (alcance or C.Alcance) and plano.Magnitude > 0 then
 					local direccion = plano.Unit
 					if r.CFrame.LookVector:Dot(direccion) >= C.ConoGolpe then
-						pegarA(atacante, otro, danio, empuja, direccion)
+						pegarA(atacante, otro, danio, tipo, direccion)
 					end
 				end
 			end
@@ -197,25 +206,48 @@ local function limite(e: Estado): boolean
 	return true
 end
 
-local function pedirGolpe(personaje: Model, e: Estado)
+local function enElAire(personaje: Model, raiz: BasePart): boolean
+	local filtro = RaycastParams.new()
+	filtro.FilterDescendantsInstances = { personaje }
+	filtro.FilterType = Enum.RaycastFilterType.Exclude
+	return workspace:Raycast(raiz.Position, Vector3.new(0, -C.AlturaAire - 3, 0), filtro) == nil
+end
+
+local function pedirGolpe(personaje: Model, e: Estado, variante: unknown)
 	local ahora = os.clock()
 	if ahora < e.libreDesde or e.bloqueoDesde or ahora < e.aturdidoHasta then
 		return
 	end
-	e.paso = if ahora - e.ultimoGolpe > C.ReinicioCombo then 1 else e.paso % #C.Golpes + 1
-	local g = C.Golpes[e.paso]
-	e.ultimoGolpe = ahora
-	e.libreDesde = ahora + g.Espera * C.Tolerancia
-	if g.Empuja then
-		e.libreDesde += C.RecargaCombo * C.Tolerancia
+	local vigente = ahora - e.ultimoGolpe <= C.ReinicioCombo
+	local _, raiz = partes(personaje)
+	local g: any = nil
+	-- La variante es un pedido: el servidor revisa que se cumpla.
+	if variante == "Aire" and raiz and enElAire(personaje, raiz) then
+		g = C.Variantes.Aire
+		e.paso = 0
+	elseif variante == "Arriba" and vigente and e.paso == #C.Golpes - 1 then
+		g = C.Variantes.Arriba
+		e.paso = 0
+	elseif variante == "Dash" and ahora - e.dashEn <= C.VentanaDash then
+		g = C.Variantes.Dash
+	else
+		e.paso = if vigente then e.paso % #C.Golpes + 1 else 1
+		g = C.Golpes[e.paso]
 	end
-	remoto:FireAllClients("Ataca", personaje, e.paso)
+	e.ultimoGolpe = ahora
+	e.libreDesde = ahora + (g.Espera + g.Recarga) * C.Tolerancia
+	remoto:FireAllClients("Ataca", personaje, math.max(e.paso, 1))
 	task.delay(g.Impacto, function()
-		resolverGolpe(personaje, g.Danio, g.Empuja, if g.Empuja then C.AlcancePatada else C.Alcance)
+		resolverGolpe(
+			personaje,
+			g.Danio,
+			g.Tipo,
+			if g.Tipo == "Normal" then C.Alcance else C.AlcancePatada
+		)
 	end)
 end
 
-remoto.OnServerEvent:Connect(function(jugador, pedido)
+remoto.OnServerEvent:Connect(function(jugador, pedido, variante)
 	if typeof(pedido) ~= "string" then
 		return
 	end
@@ -233,7 +265,7 @@ remoto.OnServerEvent:Connect(function(jugador, pedido)
 	end
 	local ahora = os.clock()
 	if pedido == "Golpe" then
-		pedirGolpe(personaje, e)
+		pedirGolpe(personaje, e, variante)
 	elseif pedido == "BloqueoInicio" then
 		if
 			ahora >= e.aturdidoHasta
@@ -246,6 +278,7 @@ remoto.OnServerEvent:Connect(function(jugador, pedido)
 	elseif pedido == "Dash" then
 		if ahora >= e.dashListo and ahora >= e.aturdidoHasta then
 			e.dashListo = ahora + C.DashRecarga
+			e.dashEn = ahora
 			e.invulnerableHasta = ahora + C.DashInvulnerable
 			e.bloqueoDesde = nil
 		end
@@ -347,7 +380,7 @@ local function crearManiqui(cerca: CFrame)
 						task.wait(C.ManiquiAviso)
 						pista:Play()
 						task.wait(C.Golpes[2].Impacto)
-						resolverGolpe(m, C.ManiquiDanio, false)
+						resolverGolpe(m, C.ManiquiDanio, "Normal")
 						break
 					end
 				end

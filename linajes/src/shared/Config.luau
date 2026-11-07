@@ -260,14 +260,44 @@ Config.Combate = {
 	Energia = 100,
 	EnergiaPorSegundo = 8,
 	Golpes = {
-		{ Danio = 8, Impacto = 0.27, Espera = 0.45, Empuja = false },
-		{ Danio = 8, Impacto = 0.27, Espera = 0.45, Empuja = false },
-		{ Danio = 10, Impacto = 0.36, Espera = 0.55, Empuja = false },
-		{ Danio = 14, Impacto = 0.53, Espera = 0.8, Empuja = true },
+		{ Danio = 8, Impacto = 0.27, Espera = 0.45, Tipo = "Normal", Recarga = 0 },
+		{ Danio = 8, Impacto = 0.27, Espera = 0.45, Tipo = "Normal", Recarga = 0 },
+		{ Danio = 10, Impacto = 0.36, Espera = 0.55, Tipo = "Normal", Recarga = 0 },
+		{ Danio = 14, Impacto = 0.53, Espera = 0.8, Tipo = "Lanza", Recarga = 1.4 },
 	},
+	-- Variantes: Aire (clic en el aire), Arriba (S + clic en el 4.º golpe), Dash (clic justo después del dash).
+	Variantes = {
+		Aire = {
+			Danio = 16,
+			Impacto = 0.53,
+			Espera = 0.8,
+			Tipo = "Piso",
+			Recarga = 1.2,
+			Anim = "GolpeAire",
+		},
+		Arriba = {
+			Danio = 12,
+			Impacto = 0.36,
+			Espera = 0.6,
+			Tipo = "Arriba",
+			Recarga = 0.5,
+			Anim = "Golpe3",
+		},
+		Dash = {
+			Danio = 10,
+			Impacto = 0.27,
+			Espera = 0.45,
+			Tipo = "Normal",
+			Recarga = 0,
+			Anim = "Golpe1",
+		},
+	},
+	VentanaDash = 0.45, -- tiempo después del dash para el golpe de dash
+	AlturaAire = 1.2, -- el servidor cuenta aire desde esta altura sobre el piso
+	SubeArriba = 62,
+	BajaPiso = 70,
 	VelocidadGolpes = 0.75,
 	ReinicioCombo = 1.1, -- desde el último pedido de golpe
-	RecargaCombo = 1.4, -- después del 4.º golpe no se puede pegar
 	Proteccion = 1.2, -- el lanzado no recibe daño ni freno al levantarse
 	DesgasteFreno = 0.8, -- cada golpe seguido frena menos
 	VentanaDesgaste = 2.5,
@@ -324,7 +354,7 @@ Config.PruebaTeclas = {
 	EsperaCombo = 0.75, -- parte del golpe que tiene que pasar antes del siguiente
 	VelocidadCombo = 0.75, -- 1 es la velocidad original
 	SaltoAire = 38,
-	Cartel = "Click: combo   Q + WASD: dash   F: bloqueo (justo antes del golpe: parry)\nR: salta y martillazo\nShift: correr   Ctrl: rápido   Y: vuelo\nZ: puño sísmico   X: golpe al piso   C: embestida   V: cargar\nReflejos: J contragolpe   K paso fantasma   L lluvia (mantener)   P cargar (mantener)\nPiroquinesis: U bola   I chorro (mantener)   O muro   H cargar (mantener)\n1 saludar  2 celebrar  3 recoger  4 hablar  5 banco\n6 aturdido  7 derrota  8 levantarse  9 recibe liviano  0 recibe fuerte",
+	Cartel = "Click: combo   S + click en el 4.º: levanta   Click en el aire: martillazo   Click tras el dash: golpe de dash\nQ + WASD: dash   F: bloqueo (justo antes del golpe: parry)\nR: salta y martillazo\nShift: correr   Ctrl: rápido   Y: vuelo\nZ: puño sísmico   X: golpe al piso   C: embestida   V: cargar\nReflejos: J contragolpe   K paso fantasma   L lluvia (mantener)   P cargar (mantener)\nPiroquinesis: U bola   I chorro (mantener)   O muro   H cargar (mantener)\n1 saludar  2 celebrar  3 recoger  4 hablar  5 banco\n6 aturdido  7 derrota  8 levantarse  9 recibe liviano  0 recibe fuerte",
 }
 
 Config.Animaciones = {

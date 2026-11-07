@@ -22,7 +22,7 @@ local personaje: Model? = nil
 local humanoid: Humanoid? = nil
 local raiz: BasePart? = nil
 local accion: AnimationTrack? = nil
-local libreDesde, ultimoGolpe, paso, dashListo = 0, 0, 0, 0
+local libreDesde, ultimoGolpe, paso, dashListo, dashEn = 0, 0, 0, 0, 0
 local bloqueando = false
 local cola: { pedido: string, cuando: number }? = nil
 
@@ -273,14 +273,32 @@ local function golpear(): boolean
 	if ahora < libreDesde or bloqueando or aturdido() then
 		return false
 	end
-	paso = if ahora - ultimoGolpe > C.ReinicioCombo then 1 else paso % #C.Golpes + 1
-	local g = C.Golpes[paso]
-	libreDesde = ahora + g.Espera + (if g.Empuja then C.RecargaCombo else 0)
+	local vigente = ahora - ultimoGolpe <= C.ReinicioCombo
+	local h = humanoid
+	local variante: string? = nil
+	if h and h.FloorMaterial == Enum.Material.Air then
+		variante = "Aire"
+	elseif ahora - dashEn <= C.VentanaDash then
+		variante = "Dash"
+	elseif vigente and paso == #C.Golpes - 1 and UserInputService:IsKeyDown(K.S) then
+		variante = "Arriba"
+	end
+	local g: any
+	if variante then
+		g = (C.Variantes :: any)[variante]
+		if variante ~= "Dash" then
+			paso = 0
+		end
+	else
+		paso = if vigente then paso % #C.Golpes + 1 else 1
+		g = C.Golpes[paso]
+	end
+	libreDesde = ahora + g.Espera + g.Recarga
 	ultimoGolpe = ahora
-	remoto:FireServer("Golpe")
+	remoto:FireServer("Golpe", variante)
 	avanzar()
-	arco(personaje :: Model, paso)
-	tocar("Golpe" .. paso, C.VelocidadGolpes)
+	arco(personaje :: Model, math.max(paso, 1))
+	tocar(g.Anim or ("Golpe" .. paso), C.VelocidadGolpes)
 	return true
 end
 
@@ -291,6 +309,7 @@ local function dash(): boolean
 		return false
 	end
 	dashListo = ahora + C.DashRecarga
+	dashEn = ahora
 	remoto:FireServer("Dash")
 	if bloqueando then
 		bloqueando = false
