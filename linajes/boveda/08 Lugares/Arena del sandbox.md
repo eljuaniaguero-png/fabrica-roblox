@@ -17,3 +17,6 @@ Por horas en `Config.Mundo.Luz`; se mezcla en `Clima.client.luau`. Noche azul y 
 Referencias: [Develuper](https://www.youtube.com/watch?v=vkEXLmRAQgs), [DevForum, paso a paso](https://devforum.roblox.com/t/improve-lighting-step-by-step/1387033). Regla que tomamos: la noche se resuelve con luces locales, no con oscuridad.
 
 Para probar una hora: atributo `HoraPrueba` en Lighting.
+
+## Matones de práctica (7 nov)
+3 matones con vida de 120 en `Config.Combate.Matones`. Te buscan fuera de la zona segura, avisan y pegan. Reaparecen a los 6 s y dan 40 de experiencia. Usan el cuerpo común: todavía no el modelo de matón de `arte/exports/enemigo-maton/`.

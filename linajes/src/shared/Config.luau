@@ -338,6 +338,20 @@ Config.Combate = {
 	ManiquiAviso = 0.6,
 	ManiquiDanio = 12,
 	ManiquiVuelve = 3,
+	-- Matones de práctica: se mueven, avisan y pegan. Puntos relativos al centro de la arena.
+	Matones = {
+		Puntos = { { -20, -92 }, { 100, 30 }, { 24, 92 } },
+		Vida = 120,
+		Velocidad = 13,
+		Detecta = 70,
+		Golpea = 7,
+		Pausa = 1.3,
+		Aviso = 0.45,
+		Danio = 10,
+		Vuelve = 6,
+		Xp = 40,
+		Semilla = 21,
+	},
 }
 
 -- Arena libre. Nadie pega ni recibe daño dentro de la zona segura.
@@ -1131,7 +1145,6 @@ Config.Niveles = {
 	XpBase = 100,
 	XpCurva = 1.35,
 	XpPorBaja = 60,
-	XpPruebaManiqui = 25, -- solo en Studio, hasta que existan los bots
 }
 
 -- Sonidos del combate (ForgeGUI). Se pueden cambiar por propios.

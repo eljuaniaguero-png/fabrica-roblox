@@ -133,6 +133,9 @@ pegarA = function(atacante: Model, objetivo: Model, danio: number, tipo: string,
 	if not (h and r) then
 		return
 	end
+	if atacante:GetAttribute("Maton") and not Players:GetPlayerFromCharacter(objetivo) then
+		return
+	end
 	local e = estadoDe(objetivo)
 	local ahora = os.clock()
 	if ahora < e.invulnerableHasta or enZona(r.Position) then
@@ -195,19 +198,14 @@ pegarA = function(atacante: Model, objetivo: Model, danio: number, tipo: string,
 	end
 	local estabaVivo = h.Health > 0
 	h:TakeDamage(danio)
-	local dueno = Players:GetPlayerFromCharacter(atacante)
-	if
-		dueno
-		and not Players:GetPlayerFromCharacter(objetivo)
-		and game:GetService("RunService"):IsStudio()
-	then
-		Perfiles.sumarXp(dueno, Config.Niveles.XpPruebaManiqui)
-	end
 	if estabaVivo and h.Health <= 0 then
 		local ganador = Players:GetPlayerFromCharacter(atacante)
 		-- Solo cuentan los jugadores: el maniquí no da Fichas.
 		if ganador and Players:GetPlayerFromCharacter(objetivo) then
 			Perfiles.sumarBaja(ganador)
+		end
+		if ganador and objetivo:GetAttribute("Maton") then
+			Perfiles.sumarXp(ganador, C.Matones.Xp)
 		end
 	end
 end
@@ -487,6 +485,146 @@ local function crearManiqui(cerca: CFrame)
 	end)
 end
 
+-- Barra de vida sobre el matón.
+local function barraMaton(m: Model, h: Humanoid)
+	local cartel = Instance.new("BillboardGui")
+	cartel.Size = UDim2.fromOffset(90, 9)
+	cartel.StudsOffsetWorldSpace = Vector3.new(0, 4.4, 0)
+	cartel.AlwaysOnTop = true
+	cartel.MaxDistance = 80
+	cartel.Adornee = m:FindFirstChild("HumanoidRootPart") :: BasePart
+	local fondo = Instance.new("Frame")
+	fondo.Size = UDim2.fromScale(1, 1)
+	fondo.BackgroundColor3 = Color3.fromRGB(27, 31, 42)
+	fondo.BorderSizePixel = 0
+	fondo.Parent = cartel
+	local lleno = Instance.new("Frame")
+	lleno.Size = UDim2.fromScale(1, 1)
+	lleno.BackgroundColor3 = Color3.fromRGB(210, 58, 74)
+	lleno.BorderSizePixel = 0
+	lleno.Parent = fondo
+	cartel.Parent = m
+	local borde = Instance.new("Highlight")
+	borde.FillTransparency = 1
+	borde.OutlineColor = Color3.fromRGB(230, 60, 60)
+	borde.DepthMode = Enum.HighlightDepthMode.Occluded
+	borde.Parent = m
+	h.HealthChanged:Connect(function(vida)
+		lleno.Size = UDim2.fromScale(math.clamp(vida / h.MaxHealth, 0, 1), 1)
+	end)
+end
+
+local function objetivoDe(r: BasePart): BasePart?
+	local mejor: BasePart? = nil
+	local distancia = C.Matones.Detecta
+	for _, jugador in Players:GetPlayers() do
+		local p = jugador.Character
+		local rp = p and p:FindFirstChild("HumanoidRootPart") :: BasePart?
+		local hp = p and p:FindFirstChildOfClass("Humanoid")
+		if rp and hp and hp.Health > 0 and not enZona(rp.Position) then
+			local d = (rp.Position - r.Position).Magnitude
+			if d < distancia then
+				mejor, distancia = rp, d
+			end
+		end
+	end
+	return mejor
+end
+
+-- Matón: busca al jugador cercano, se acerca, avisa y pega. Si se traba, se corre de costado.
+local function crearMaton(punto: { number }, numero: number)
+	local M = C.Matones
+	local molde = StarterPlayer:FindFirstChild("StarterCharacter")
+	if not (molde and molde:IsA("Model")) then
+		return
+	end
+	local m = molde:Clone()
+	m.Name = "Maton"
+	for _, s in m:GetDescendants() do
+		if s:IsA("BaseScript") then
+			s:Destroy()
+		end
+	end
+	local base = Config.Arena.Mapa.Centro + Vector3.new(punto[1], 4, punto[2])
+	m:PivotTo(CFrame.new(base))
+	m:SetAttribute("Maton", true)
+	m.Parent = workspace
+	CuerpoComic.vestir(m, M.Semilla + numero)
+	prepararPeleador(m)
+	local h = m:WaitForChild("Humanoid") :: Humanoid
+	h.MaxHealth = M.Vida
+	h.Health = M.Vida
+	h.WalkSpeed = M.Velocidad
+	h.DisplayDistanceType = Enum.HumanoidDisplayDistanceType.None
+	barraMaton(m, h)
+	local animator = h:FindFirstChildOfClass("Animator")
+	if not animator then
+		animator = Instance.new("Animator")
+		animator.Parent = h
+	end
+	local function pistaDe(nombre: string): AnimationTrack
+		local a = Instance.new("Animation")
+		a.AnimationId = (Config.Animaciones.base :: any)[nombre]
+		return (animator :: Animator):LoadAnimation(a)
+	end
+	local liviano, fuerte = pistaDe("GolpeLiviano"), pistaDe("GolpeFuerte")
+	local golpe, camina, quieto = pistaDe("Golpe2"), pistaDe("Caminar"), pistaDe("Quieto")
+	estadoDe(m).reacciona = function(duro: boolean)
+		(if duro then fuerte else liviano):Play(0.03)
+	end
+	quieto:Play()
+	h.Running:Connect(function(rapidez)
+		if rapidez > 1 and not camina.IsPlaying then
+			camina:Play(0.1)
+		elseif rapidez <= 1 and camina.IsPlaying then
+			camina:Stop(0.1)
+		end
+	end)
+
+	task.spawn(function()
+		local listo = 0
+		local antes = base
+		while m.Parent and h.Health > 0 do
+			task.wait(0.2)
+			local _, r = partes(m)
+			local libre = r and os.clock() >= estadoDe(m).aturdidoHasta
+			local objetivo = r and libre and objetivoDe(r)
+			if r and objetivo then
+				local d = (objetivo.Position - r.Position).Magnitude
+				if d > M.Golpea then
+					local trabado = (r.Position - antes).Magnitude < 0.5
+					local costado = if trabado
+						then r.CFrame.RightVector * (if math.random() < 0.5 then -14 else 14)
+						else Vector3.zero
+					h:MoveTo(objetivo.Position + costado)
+				elseif os.clock() >= listo then
+					h:MoveTo(r.Position)
+					r.CFrame = CFrame.lookAt(
+						r.Position,
+						Vector3.new(objetivo.Position.X, r.Position.Y, objetivo.Position.Z)
+					)
+					remoto:FireAllClients("Aviso", m)
+					task.wait(M.Aviso)
+					if h.Health > 0 and os.clock() >= estadoDe(m).aturdidoHasta then
+						golpe:Play()
+						task.wait(C.Golpes[2].Impacto)
+						resolverGolpe(m, M.Danio, "Normal")
+					end
+					listo = os.clock() + M.Pausa
+				end
+				antes = r.Position
+			elseif r and libre and (r.Position - base).Magnitude > 6 then
+				h:MoveTo(base)
+			end
+		end
+	end)
+	h.Died:Once(function()
+		task.wait(M.Vuelve)
+		m:Destroy()
+		crearMaton(punto, numero)
+	end)
+end
+
 local hayManiqui = false
 local function primerManiqui(personaje: Model)
 	if hayManiqui then
@@ -496,6 +634,9 @@ local function primerManiqui(personaje: Model)
 	local r = personaje:WaitForChild("HumanoidRootPart") :: BasePart
 	task.wait(1)
 	crearManiqui(r.CFrame)
+	for i, punto in C.Matones.Puntos do
+		task.spawn(crearMaton, punto, i)
+	end
 end
 
 Players.PlayerAdded:Connect(function(jugador)
