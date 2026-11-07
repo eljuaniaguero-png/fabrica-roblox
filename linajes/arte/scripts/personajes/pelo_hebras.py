@@ -3,8 +3,10 @@
 Uso:
     <blender.exe> -b --factory-startup -P linajes/arte/scripts/personajes/pelo_hebras.py
 
-Sigue la nota "Referencias de pelos" de la bóveda. No toca cuerpo-comic.blend. Deja renders
-pelo-hebras-*.png, la textura y exports/cuerpo-comic/PeloHebras.fbx.
+Sigue la nota "Referencias de pelos" de la bóveda. No toca cuerpo-comic.blend. Hace el peinado
+principal (mechones finos) y el alternativo (mechones anchos). La textura es gris casi blanca:
+el color lo pone el juego con SurfaceAppearance.Color. Deja renders pelo-principal-*.png y
+pelo-alterno-*.png, y los FBX en exports/cuerpo-comic/.
 """
 
 import math
@@ -23,6 +25,7 @@ CORONILLA = 0.12  # los mechones de arriba salen de atrás del centro
 PASOS = 4
 MITAD = (0.175, 0.16, 0.168)  # medidas reales de Cuerpo_Head
 TIRAS = 4  # variantes de hebras dentro de la textura
+COLOR_INICIAL = "#2C3E66"  # azul por defecto; el jugador lo cambia en el creador
 
 
 def superficie(g, s, extra=0.0):
@@ -137,7 +140,37 @@ class Malla:
         return o
 
 
-def peinado():
+def peinado_principal():
+    """Mechones finos en capas, con puntas que suben un poco en la coronilla."""
+    m = Malla()
+    m.gorro()
+    azar = random.uniform
+    for i in range(36):
+        g = i / 36 * 360 - 180 + azar(-3, 3)
+        if abs(g) < 50:
+            continue
+        m.mechon(g, 0.25, s_de_altura(fin_de_pelo(g) + azar(-0.02, 0.03)), 0.07, 0.004, azar(-6, 6), 0.0, capa="abajo")
+    for i in range(44):
+        g = i / 44 * 360 - 180 + azar(-4, 4)
+        fin = fin_de_pelo(g) + azar(0.0, 0.08)
+        if abs(g) < 72:
+            fin = max(fin, 0.1)
+        m.mechon(g, CORONILLA, s_de_altura(fin), 0.044, 0.02, azar(-12, 12), azar(0.006, 0.03))
+    for i in range(22):
+        g = i / 22 * 360 - 180 + azar(-6, 6)
+        fin = s_de_altura(azar(0.085, 0.13)) if abs(g) < 72 else azar(1.0, 1.3)
+        m.mechon(g, 0.0, fin, 0.046, 0.036, azar(-16, 16), 0.012, capa="arriba")
+    for i in range(12):
+        g = i / 12 * 360 - 180 + azar(-10, 10)
+        m.mechon(g, 0.1, azar(0.62, 0.8), 0.04, 0.04, azar(-14, 14), azar(0.09, 0.12), 1.0, capa="puntas")
+    for i in range(13):
+        g = -68 + i * 11.3 + azar(-2, 2)
+        fin = azar(0.075, 0.115) if i % 3 else azar(0.05, 0.07)
+        m.mechon(g, 0.4, s_de_altura(fin), 0.034, 0.012, 15 + azar(-5, 5), 0.004, capa="frente")
+    return m
+
+
+def peinado_alterno():
     """Capas de abajo hacia arriba. Todos los mechones pasan el borde de la cabeza y caen."""
     m = Malla()
     m.gorro()
@@ -169,10 +202,10 @@ def peinado():
 
 
 def textura(ruta):
-    """Cómic: tres tonos planos de azul sacados de la campera, sin negro ni ruido fino."""
+    """Cómic: tres grises claros planos. Multiplicados por el color del jugador dan los tonos."""
     n = 512
     lin = lambda c: np.array(c) ** 2.2
-    oscuro, medio, claro = lin((0.11, 0.17, 0.29)), lin((0.157, 0.263, 0.435)), lin((0.27, 0.4, 0.62))
+    oscuro, medio, claro = lin((0.68,) * 3), lin((0.86,) * 3), lin((1.0,) * 3)
     v = np.linspace(0, 1, n)[:, None]
     u = np.linspace(0, 1, n)[None, :]
     f = (u * TIRAS) % 1  # posición a lo ancho del mechón
@@ -224,7 +257,6 @@ def medir(me):
 
 
 def main():
-    random.seed(11)
     bpy.ops.wm.open_mainfile(filepath=os.path.join(ARTE, "blender", "cuerpo-comic.blend"))
     for o in list(bpy.data.objects):
         if o.type == "LIGHT" or o.name == "Niebla" or o.name.startswith("Pelo_"):
@@ -239,18 +271,15 @@ def main():
     bsdf.inputs["Roughness"].default_value = 0.62
     tex = nodos.nodes.new("ShaderNodeTexImage")
     tex.image = img
-    nodos.links.new(tex.outputs["Color"], bsdf.inputs["Base Color"])
-    datos = peinado()
-    chequear(datos)
-    pelo = datos.objeto("PeloHebras", material)
-    medir(pelo.data)
+    tinte = nodos.nodes.new("ShaderNodeVectorMath")
+    tinte.operation = "MULTIPLY"
+    tinte.inputs[1].default_value = [(int(COLOR_INICIAL[i : i + 2], 16) / 255) ** 2.2 for i in (1, 3, 5)]
+    nodos.links.new(tex.outputs["Color"], tinte.inputs[0])
+    nodos.links.new(tinte.outputs[0], bsdf.inputs["Base Color"])
     borde = bpy.data.materials.new("PeloContorno")
     borde.use_nodes = True
     borde.node_tree.nodes["Principled BSDF"].inputs["Base Color"].default_value = (0.012, 0.022, 0.05, 1)
     borde.use_backface_culling = True  # si no, la cáscara del contorno tapa el color del pelo
-    pelo.data.materials.append(borde)
-    contorno = pelo.modifiers.new("Borde", "SOLIDIFY")
-    contorno.thickness, contorno.offset, contorno.use_flip_normals, contorno.material_offset = 0.005, 1, True, 1
 
     e = bpy.context.scene
     e.render.engine = "BLENDER_EEVEE"
@@ -268,31 +297,43 @@ def main():
     sol = bpy.context.object
     sol.data.energy = 3.2
     e.render.resolution_x, e.render.resolution_y = 480, 520
-    for giro, v in ((0, "frente"), (45, "tres"), (90, "costado"), (135, "atras-tres"), (180, "espalda")):
-        a = math.radians(giro)
-        cam.location = (-5 * math.sin(a), -5 * math.cos(a), 1.75)
-        cam.rotation_euler = (Vector((0, 0, 1.47)) - cam.location).to_track_quat("-Z", "Y").to_euler()
-        sol.rotation_euler = (Vector((0, 0, 1.4)) - Vector((-2 * math.cos(a) + 4 * math.sin(a), -2 * math.sin(a) - 4 * math.cos(a), 5))).to_track_quat("-Z", "Y").to_euler()
-        e.render.filepath = os.path.join(ARTE, "renders", f"pelo-hebras-{v}.png")
+
+    for nombre, armar in (("principal", peinado_principal), ("alterno", peinado_alterno)):
+        random.seed(11)
+        datos = armar()
+        print("PEINADO", nombre)
+        chequear(datos)
+        pelo = datos.objeto("Pelo" + nombre.capitalize(), material)
+        medir(pelo.data)
+        pelo.data.materials.append(borde)
+        contorno = pelo.modifiers.new("Borde", "SOLIDIFY")
+        contorno.thickness, contorno.offset, contorno.use_flip_normals, contorno.material_offset = 0.005, 1, True, 1
+        for giro, v in ((0, "frente"), (45, "tres"), (90, "costado"), (135, "atras-tres"), (180, "espalda")):
+            a = math.radians(giro)
+            cam.location = (-5 * math.sin(a), -5 * math.cos(a), 1.75)
+            cam.rotation_euler = (Vector((0, 0, 1.47)) - cam.location).to_track_quat("-Z", "Y").to_euler()
+            sol.rotation_euler = (Vector((0, 0, 1.4)) - Vector((-2 * math.cos(a) + 4 * math.sin(a), -2 * math.sin(a) - 4 * math.cos(a), 5))).to_track_quat("-Z", "Y").to_euler()
+            e.render.filepath = os.path.join(ARTE, "renders", f"pelo-{nombre}-{v}.png")
+            bpy.ops.render.render(write_still=True)
+        cam.location = (0, -0.01, 6)
+        cam.rotation_euler = (0, 0, 0)
+        sol.rotation_euler = (0.4, 0.2, 0)
+        e.render.filepath = os.path.join(ARTE, "renders", f"pelo-{nombre}-arriba.png")
         bpy.ops.render.render(write_still=True)
-    cam.location = (0, -0.01, 6)
-    cam.rotation_euler = (0, 0, 0)
-    sol.rotation_euler = (0.4, 0.2, 0)
-    e.render.filepath = os.path.join(ARTE, "renders", "pelo-hebras-arriba.png")
-    bpy.ops.render.render(write_still=True)
-    bpy.ops.object.select_all(action="DESELECT")
-    pelo.select_set(True)
-    bpy.ops.export_scene.fbx(
-        filepath=os.path.join(ARTE, "exports", "cuerpo-comic", "PeloHebras.fbx"),
-        use_selection=True,
-        object_types={"MESH"},
-        use_mesh_modifiers=False,
-        global_scale=1 / 0.28,
-        apply_unit_scale=True,
-        apply_scale_options="FBX_SCALE_UNITS",
-        axis_forward="Z",
-        axis_up="Y",
-    )
+        bpy.ops.object.select_all(action="DESELECT")
+        pelo.select_set(True)
+        bpy.ops.export_scene.fbx(
+            filepath=os.path.join(ARTE, "exports", "cuerpo-comic", f"Pelo{nombre.capitalize()}.fbx"),
+            use_selection=True,
+            object_types={"MESH"},
+            use_mesh_modifiers=False,
+            global_scale=1 / 0.28,
+            apply_unit_scale=True,
+            apply_scale_options="FBX_SCALE_UNITS",
+            axis_forward="Z",
+            axis_up="Y",
+        )
+        bpy.data.objects.remove(pelo)
 
 
 main()

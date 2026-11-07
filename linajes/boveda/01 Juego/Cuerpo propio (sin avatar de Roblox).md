@@ -48,3 +48,10 @@ tags: [ficha]
 - Los jefes grandes (Remache a 1,6x, El Eclipsador) usan el mismo esqueleto escalado o un esqueleto propio.
 
 Volver a [[Ficha del juego]]
+
+## Peinados nuevos (7 nov)
+
+- **Principal:** mechones finos con puntas (`PeloPrincipal`). **Alternativo:** mechones anchos (`PeloAlterno`). Falta un tercero con la misma técnica.
+- La forma es el peinado; el color lo elige el jugador. Azul por defecto: `#2C3E66`.
+- La textura es gris casi blanca y el juego la tiñe con `SurfaceAppearance.Color`.
+- Script: `arte/scripts/personajes/pelo_hebras.py`. Reemplazan a Puntas, Flequillo y Cresta cuando pasen a Studio.
