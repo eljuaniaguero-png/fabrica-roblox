@@ -108,4 +108,35 @@ function EfectosGolpe.onda(centro: Vector3, radio: number, color: Color3)
 	Debris:AddItem(soporte, 0.7)
 end
 
+-- Explosión de fuego: bolas que salen y se apagan.
+function EfectosGolpe.fuego(punto: Vector3)
+	local soporte = Instance.new("Part")
+	soporte.Anchored = true
+	soporte.CanCollide = false
+	soporte.CanQuery = false
+	soporte.CanTouch = false
+	soporte.Transparency = 1
+	soporte.Size = Vector3.one * 0.2
+	soporte.Position = punto
+	soporte.Parent = workspace
+	local e = Instance.new("ParticleEmitter")
+	e.Texture = E.BolaFuego
+	e.FlipbookLayout = Enum.ParticleFlipbookLayout.Grid4x4
+	e.FlipbookMode = Enum.ParticleFlipbookMode.Loop
+	e.LightEmission = 0.25
+	e.LightInfluence = 0
+	e.Lifetime = NumberRange.new(0.3, 0.55)
+	e.Speed = NumberRange.new(10, 26)
+	e.SpreadAngle = Vector2.new(180, 180)
+	e.Drag = 5
+	e.Size = NumberSequence.new(6, 1)
+	e.Rotation = NumberRange.new(0, 359)
+	e.Transparency = NumberSequence.new(0, 0.6)
+	e.ZOffset = 2
+	e.Rate = 0
+	e.Parent = soporte
+	e:Emit(22)
+	Debris:AddItem(soporte, 0.9)
+end
+
 return EfectosGolpe

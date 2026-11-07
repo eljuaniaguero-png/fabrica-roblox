@@ -47,17 +47,16 @@ end
 
 local function particulas(
 	padre: Instance,
-	color: Color3,
 	rapidez: number,
 	vida: number,
 	tam: number
 ): ParticleEmitter
 	local e = Instance.new("ParticleEmitter")
-	e.Texture = Config.Efectos.Humo
+	e.Texture = Config.Efectos.BolaFuego
 	e.FlipbookLayout = Enum.ParticleFlipbookLayout.Grid4x4
-	e.FlipbookMode = Enum.ParticleFlipbookMode.OneShot
-	e.Color = ColorSequence.new(Color3.new(1, 0.95, 0.75), color)
-	e.LightEmission = 0.8
+	e.FlipbookMode = Enum.ParticleFlipbookMode.Loop
+	e.LightEmission = 0.25
+	e.LightInfluence = 0
 	e.Lifetime = NumberRange.new(vida * 0.6, vida)
 	e.Speed = NumberRange.new(rapidez * 0.6, rapidez)
 	e.Size = NumberSequence.new(tam, tam * 2.4)
@@ -148,7 +147,7 @@ local efectos: { [string]: (Model, BasePart, any) -> () } = {
 		punto.Position = Vector3.new(0, 0.5, -2.5)
 		punto.Orientation = Vector3.new(-90, 0, 0)
 		punto.Parent = r
-		local e = particulas(punto, FUEGO, 42, 0.4, 2)
+		local e = particulas(punto, 42, 0.4, 2)
 		e.SpreadAngle = Vector2.new(16, 16)
 		e.Rate = 70
 		e.Acceleration = Vector3.new(0, 6, 0)
@@ -169,7 +168,8 @@ remoto.OnClientEvent:Connect(function(tipo: string, a: any, b: any)
 		end
 	elseif tipo == "Explota" then
 		anillo(a - Vector3.new(0, 2.8, 0), 6, FUEGO)
-		estallido(a, FUEGO, 22, 24)
+		EfectosGolpe.fuego(a)
+		estallido(a, FUEGO, 30, 24)
 		-- SONIDO: explosión de fuego
 	end
 end)
