@@ -250,13 +250,18 @@ Prioridad en Roblox: Action. Una por fila (anticipación, pose máxima, recupera
 
 ### P27-02 Animaciones de Reflejos (7 nov, esperando OK de Juani)
 
-4 animaciones en `animaciones-linajes.blend`, hechas con `linaje-reflejos.py`. Sin referencias de Gemini: la carpeta no existe.
+Rápidas y livianas, al revés que Fuerza Bruta. Hechas con `linaje-reflejos.py`, en `animaciones-linajes.blend`.
 
-| Animación | Cuadros | Loop | Marcadores `Impacto` | Qué hace |
+| Animación | Cuadros | Loop | Marcadores | Qué hace |
 |---|---|---|---|---|
-| reflejos-contragolpe | 30 | no | 12, 17, 22 | postura, esquive de costado y tres rectos |
-| reflejos-paso-fantasma | 36 | no | 16 | se tira, pasa de largo, media vuelta y pega por la espalda; termina mirando adelante |
-| reflejos-lluvia-golpes | 40 | no | 18, 21, 24, 27, 30, 33 | seis rectos alternados en medio segundo |
-| reflejos-cargar | 30 | sí | no | calma atenta, manos bajas: ruleta y menú |
+| reflejos-contragolpe | 18 | no | `Impacto` 8 | manotazo afuera con el cuerpo al costado (0,15 s) y gancho corto a las costillas en 3 cuadros |
+| reflejos-paso-fantasma | 9 | no | `Desaparece` 3, `Aparece` 6 | se agacha y reaparece en guardia; el efecto lo pone el código |
+| reflejos-lluvia-golpes | 30 | sí | `Impacto` 3, 8, 13, 18, 23, 28 | 6 piñas por segundo, brazos estirados, torso gira con cada golpe |
+| reflejos-cargar-inicio | 8 | no | no | entra al rebote |
+| reflejos-cargar-loop | 30 | sí | no | rebota en las puntas, puños sueltos, cabeza atenta |
+
+El avance de Lluvia de golpes lo tiene que hacer el código: la animación solo inclina el cuerpo.
 
 ![[anim-linaje-reflejos-hoja.png]]
+
+![[anim-linaje-reflejos-contragolpe-atras.gif]] ![[anim-linaje-reflejos-paso-fantasma-atras.gif]] ![[anim-linaje-reflejos-lluvia-golpes-atras.gif]] ![[anim-linaje-reflejos-cargar-loop-atras.gif]]
