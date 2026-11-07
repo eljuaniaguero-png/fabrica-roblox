@@ -248,7 +248,7 @@ Prioridad en Roblox: Action. Una por fila (anticipación, pose máxima, recupera
 ![[anim-base-banco-frente.gif]] ![[anim-base-banco-atras.gif]]
 ![[anim-base-saludar-frente.gif]] ![[anim-base-saludar-atras.gif]]
 
-### P27-02 Animaciones de Reflejos (7 nov, esperando OK de Juani)
+### P27-02 Animaciones de Reflejos (7 nov, APROBADA y publicada)
 
 Rápidas y livianas, al revés que Fuerza Bruta. Hechas con `linaje-reflejos.py`, en `animaciones-linajes.blend`.
 

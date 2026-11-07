@@ -267,7 +267,7 @@ Config.PruebaTeclas = {
 	EsperaCombo = 0.75, -- parte del golpe que tiene que pasar antes del siguiente
 	VelocidadCombo = 0.75, -- 1 es la velocidad original
 	SaltoAire = 38,
-	Cartel = "Click: combo   Q + WASD: dash   F: bloqueo   G: parry\nR: salta y martillazo\nShift: correr   Ctrl: rápido   Y: vuelo\nZ: puño sísmico   X: golpe al piso   C: embestida   V: cargar\n1 saludar  2 celebrar  3 recoger  4 hablar  5 banco\n6 aturdido  7 derrota  8 levantarse  9 recibe liviano  0 recibe fuerte",
+	Cartel = "Click: combo   Q + WASD: dash   F: bloqueo   G: parry\nR: salta y martillazo\nShift: correr   Ctrl: rápido   Y: vuelo\nZ: puño sísmico   X: golpe al piso   C: embestida   V: cargar\nReflejos: J contragolpe   K paso fantasma   L lluvia (mantener)   P cargar (mantener)\n1 saludar  2 celebrar  3 recoger  4 hablar  5 banco\n6 aturdido  7 derrota  8 levantarse  9 recibe liviano  0 recibe fuerte",
 }
 
 Config.Animaciones = {
@@ -330,6 +330,15 @@ Config.Animaciones = {
 	},
 	-- Fuerza Bruta (P27-01), hecha con arte/scripts/animaciones/linaje-fuerzabruta.py. Embestida y Cargar
 	-- van en piezas: inicio, loop y frenada. Marcadores: Impacto en Puño, GolpePiso y EmbestidaFrenada.
+	-- Reflejos (P27-02), hecha con arte/scripts/animaciones/linaje-reflejos.py. Marcadores: Impacto en
+	-- Contragolpe y en cada piña de Lluvia; Desaparece y Aparece en PasoFantasma (ahí va el efecto).
+	linaje_reflejos = {
+		Contragolpe = "rbxassetid://133853485880035",
+		PasoFantasma = "rbxassetid://86385013535898",
+		LluviaGolpes = "rbxassetid://125343911488522",
+		CargarInicio = "rbxassetid://72086404050001",
+		CargarLoop = "rbxassetid://100169266387602",
+	},
 	linaje_fuerzabruta = {
 		PunoSismico = "rbxassetid://92821448797182",
 		GolpePiso = "rbxassetid://77792023879204",

@@ -26,6 +26,8 @@ local golpe, ultimoGolpe = 0, 0
 local UNA_VEZ: { [Enum.KeyCode]: string } = {
 	[K.G] = "Parry",
 	[K.Z] = "PunoSismico",
+	[K.J] = "ReflejosContragolpe",
+	[K.K] = "ReflejosPasoFantasma",
 	[K.X] = "GolpePiso",
 	[K.One] = "Saludar",
 	[K.Two] = "Celebrar",
@@ -46,6 +48,14 @@ local function cargar(personaje: Model)
 	raiz = personaje:WaitForChild("HumanoidRootPart") :: BasePart
 	h.WalkSpeed = P.Caminar
 	table.clear(pistas)
+	local function sumar(nombre: string, id: string)
+		local anim = Instance.new("Animation")
+		anim.AnimationId = id
+		pistas[nombre] = animator:LoadAnimation(anim)
+	end
+	for nombre, id in Config.Animaciones.linaje_reflejos do
+		sumar("Reflejos" .. nombre, id)
+	end
 	for _, grupo in { Config.Animaciones.base, Config.Animaciones.linaje_fuerzabruta } do
 		for nombre, id in grupo do
 			if typeof(id) == "string" then
@@ -152,6 +162,10 @@ UserInputService.InputBegan:Connect(function(entrada, usado)
 		task.spawn(dash)
 	elseif tecla == K.F then
 		iniciarYSeguir("BloqueoInicio", "Bloqueo", K.F)
+	elseif tecla == K.P then
+		iniciarYSeguir("ReflejosCargarInicio", "ReflejosCargarLoop", K.P)
+	elseif tecla == K.L then
+		tocar("ReflejosLluviaGolpes")
 	elseif tecla == K.V then
 		iniciarYSeguir("CargarInicio", "CargarLoop", K.V)
 	elseif tecla == K.C then
@@ -172,7 +186,7 @@ end)
 UserInputService.InputEnded:Connect(function(entrada)
 	local tecla = entrada.KeyCode
 	local h = humanoid
-	if tecla == K.F or tecla == K.V then
+	if tecla == K.F or tecla == K.V or tecla == K.P or tecla == K.L then
 		soltar()
 	elseif tecla == K.C then
 		embistiendo = false
