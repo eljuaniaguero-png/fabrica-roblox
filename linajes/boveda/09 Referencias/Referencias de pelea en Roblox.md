@@ -49,3 +49,9 @@ Además, el video de Juani `arte/referencias/combate/Roblox 2026-11-07 08-51-02.
 8. Sonidos (de ForgeGUI, cuando estén).
 
 Decidir antes: si hay sangre roja. Roblox la permite según el cuestionario de madurez, y puede subir la clasificación del juego. Alternativa: chispas del color del Linaje.
+
+## Segunda vuelta (7 nov): combo infinito y golpes perdidos
+
+- En Roblox se usa una recarga corta después del último golpe, y un freno que no se alarga solo.
+- En juegos de pelea: cada golpe seguido frena menos, o un tope de combo. Fuentes: [DevForum: M1s](https://devforum.roblox.com/t/creating-basic-m1s-in-a-battle-ground-game/1446335), [Stun system](https://devforum.roblox.com/t/stun-system-issues/1570629), [Infinite prevention](https://dustloop.com/w/User:Slimegirl-scientist/Infinite_Prevention_and_Combo_Mechanics), [Hitstun deterioration](https://srk.shib.live/w/Marvel_vs_Capcom_3/Combo_Limiters/Hit_Stun_Deterioration).
+- Los pedidos del cliente llegan con demora: el servidor tiene que aceptarlos un poco antes para no perder golpes.

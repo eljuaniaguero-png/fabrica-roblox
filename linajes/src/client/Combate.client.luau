@@ -273,9 +273,9 @@ local function golpear(): boolean
 	if ahora < libreDesde or bloqueando or aturdido() then
 		return false
 	end
-	paso = if ahora - ultimoGolpe > C.ReinicioCombo + 0.3 then 1 else paso % #C.Golpes + 1
+	paso = if ahora - ultimoGolpe > C.ReinicioCombo then 1 else paso % #C.Golpes + 1
 	local g = C.Golpes[paso]
-	libreDesde = ahora + g.Espera
+	libreDesde = ahora + g.Espera + (if g.Empuja then C.RecargaCombo else 0)
 	ultimoGolpe = ahora
 	remoto:FireServer("Golpe")
 	avanzar()

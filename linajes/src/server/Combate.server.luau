@@ -27,6 +27,8 @@ type Estado = {
 	aturdidoHasta: number,
 	dashListo: number,
 	pedidos: { number },
+	golpesSeguidos: number,
+	ultimoRecibido: number,
 	reacciona: ((fuerte: boolean) -> ())?,
 }
 
@@ -44,6 +46,8 @@ local function estadoDe(personaje: Model): Estado
 			aturdidoHasta = 0,
 			dashListo = 0,
 			pedidos = {},
+			golpesSeguidos = 0,
+			ultimoRecibido = 0,
 		}
 		estados[personaje] = e
 	end
@@ -134,7 +138,16 @@ local function pegarA(
 		end
 	else
 		remoto:FireAllClients("Golpeado", objetivo, danio, empuja, atacante)
-		frenar(objetivo, if empuja then C.FrenoLanzado else C.Freno)
+		e.golpesSeguidos = if ahora - e.ultimoRecibido > C.VentanaDesgaste
+			then 1
+			else e.golpesSeguidos + 1
+		e.ultimoRecibido = ahora
+		local freno = C.Freno * C.DesgasteFreno ^ (e.golpesSeguidos - 1)
+		frenar(objetivo, if empuja then C.FrenoLanzado else freno)
+		if empuja then
+			e.invulnerableHasta = ahora + C.FrenoLanzado + C.Proteccion
+			e.golpesSeguidos = 0
+		end
 		if e.reacciona then
 			e.reacciona(empuja)
 		end
@@ -143,7 +156,7 @@ local function pegarA(
 	h:TakeDamage(danio)
 end
 
-local function resolverGolpe(atacante: Model, danio: number, empuja: boolean)
+local function resolverGolpe(atacante: Model, danio: number, empuja: boolean, alcance: number?)
 	local _, r = partes(atacante)
 	if not r then
 		return
@@ -157,7 +170,7 @@ local function resolverGolpe(atacante: Model, danio: number, empuja: boolean)
 			if ro then
 				local hacia = ro.Position - r.Position
 				local plano = Vector3.new(hacia.X, 0, hacia.Z)
-				if plano.Magnitude <= C.Alcance and plano.Magnitude > 0 then
+				if plano.Magnitude <= (alcance or C.Alcance) and plano.Magnitude > 0 then
 					local direccion = plano.Unit
 					if r.CFrame.LookVector:Dot(direccion) >= C.ConoGolpe then
 						pegarA(atacante, otro, danio, empuja, direccion)
@@ -191,11 +204,14 @@ local function pedirGolpe(personaje: Model, e: Estado)
 	end
 	e.paso = if ahora - e.ultimoGolpe > C.ReinicioCombo then 1 else e.paso % #C.Golpes + 1
 	local g = C.Golpes[e.paso]
-	e.libreDesde = ahora + g.Espera
+	e.ultimoGolpe = ahora
+	e.libreDesde = ahora + g.Espera * C.Tolerancia
+	if g.Empuja then
+		e.libreDesde += C.RecargaCombo * C.Tolerancia
+	end
 	remoto:FireAllClients("Ataca", personaje, e.paso)
 	task.delay(g.Impacto, function()
-		e.ultimoGolpe = os.clock()
-		resolverGolpe(personaje, g.Danio, g.Empuja)
+		resolverGolpe(personaje, g.Danio, g.Empuja, if g.Empuja then C.AlcancePatada else C.Alcance)
 	end)
 end
 

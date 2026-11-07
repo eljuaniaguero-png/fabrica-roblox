@@ -266,9 +266,15 @@ Config.Combate = {
 		{ Danio = 14, Impacto = 0.53, Espera = 0.8, Empuja = true },
 	},
 	VelocidadGolpes = 0.75,
-	ReinicioCombo = 0.8,
-	Alcance = 7.5,
-	ConoGolpe = 0.3, -- 1 es justo adelante, 0 es a los costados
+	ReinicioCombo = 1.1, -- desde el último pedido de golpe
+	RecargaCombo = 1.4, -- después del 4.º golpe no se puede pegar
+	Proteccion = 1.2, -- el lanzado no recibe daño ni freno al levantarse
+	DesgasteFreno = 0.8, -- cada golpe seguido frena menos
+	VentanaDesgaste = 2.5,
+	Tolerancia = 0.75, -- el servidor acepta el golpe antes: tapa la demora de la red
+	Alcance = 9,
+	AlcancePatada = 11,
+	ConoGolpe = 0, -- 1 es justo adelante, 0 es todo el frente
 	Empuje = 12, -- retroceso de los golpes 1 a 3
 	Lanza = 58, -- el 4.º golpe lanza
 	LanzaArriba = 26,
