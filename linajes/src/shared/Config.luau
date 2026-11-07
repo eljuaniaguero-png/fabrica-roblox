@@ -302,8 +302,8 @@ Config.Animaciones = {
 		Golpe3 = "rbxassetid://102236631709002", -- gancho de costado
 		Golpe4 = "rbxassetid://116334348414128", -- patada giratoria
 		GolpeAire = "rbxassetid://117764910626942", -- ataque desde arriba
-		BloqueoInicio = "rbxassetid://94998844636130",
-		Bloqueo = "rbxassetid://121294671074779",
+		BloqueoInicio = "rbxassetid://90977026835987",
+		Bloqueo = "rbxassetid://90842853618125",
 		Parry = "rbxassetid://74732296763320",
 		DashAdelante = "rbxassetid://100155623254154",
 		DashAtras = "rbxassetid://114909466999172",
@@ -314,6 +314,13 @@ Config.Animaciones = {
 		Aturdido = "rbxassetid://73655937150525",
 		Derrota = "rbxassetid://85197090039101",
 		Levantarse = "rbxassetid://74779451597081",
+		-- Solo de la cintura para arriba: se usan al moverse, y las piernas siguen caminando.
+		Golpe1Torso = "rbxassetid://139023511235294",
+		Golpe2Torso = "rbxassetid://84773377193523",
+		Golpe3Torso = "rbxassetid://103930499788159",
+		BloqueoInicioTorso = "rbxassetid://99465234209472",
+		BloqueoTorso = "rbxassetid://101911376174368",
+		ParryTorso = "rbxassetid://78764778298793",
 		-- Interacción (P26-03): publicadas, sin usar todavía en el código.
 		Banco = "rbxassetid://118422749305884",
 		Celebrar = "rbxassetid://87787355391951",

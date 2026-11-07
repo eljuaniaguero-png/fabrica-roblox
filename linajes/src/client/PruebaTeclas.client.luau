@@ -58,7 +58,10 @@ local function cargar(personaje: Model)
 end
 
 local function tocar(nombre: string): AnimationTrack?
-	local pista = pistas[nombre]
+	-- Si se está moviendo, usa la versión que deja libres las piernas.
+	local h = humanoid
+	local torso = pistas[nombre .. "Torso"]
+	local pista = if h and torso and h.MoveDirection.Magnitude > 0.1 then torso else pistas[nombre]
 	if not pista then
 		return nil
 	end

@@ -24,13 +24,21 @@ local HIJOS = {
 	RightLowerLeg = { "RightFoot" },
 }
 
+-- Versiones "-torso": solo de la cintura para arriba. Las piernas siguen con caminar o correr.
+local SOLO_TORSO = { ["golpe-1"] = true, ["golpe-2"] = true, ["golpe-3"] = true, parry = true, bloqueo = true, ["bloqueo-inicio"] = true }
+local PIERNAS = { LeftUpperLeg = true, RightUpperLeg = true }
+local torso = false
+
 local function pose(nombre, j, padre)
+	if torso and PIERNAS[nombre] then
+		return
+	end
 	local p = Instance.new("Pose")
 	p.Name = nombre
 	p.EasingStyle = Enum.PoseEasingStyle.Linear
 	p.EasingDirection = Enum.PoseEasingDirection.In
 	local c = j[nombre]
-	if nombre == "HumanoidRootPart" then
+	if nombre == "HumanoidRootPart" or (torso and nombre == "LowerTorso") then
 		p.Weight = 0
 		p.CFrame = CFrame.new(0, 0, 0)
 	else
@@ -48,25 +56,33 @@ end
 local n = 0
 for _, archivo in fs.readDir(ENT) do
 	local d = serde.decode("json", fs.readFile(ENT .. "/" .. archivo))
-	local ks = Instance.new("KeyframeSequence")
-	ks.Name = d.nombre
-	ks.Loop = d.loop
-	local pr = d.prioridad
-	ks.Priority = if type(pr) == "string" then Enum.AnimationPriority[pr] else Enum.AnimationPriority:GetEnumItems()[1]
-	for _, clave in d.claves do
-		local kf = Instance.new("Keyframe")
-		kf.Time = clave.t
-		kf.Parent = ks
-		pose("HumanoidRootPart", clave.j, kf)
-		for _, m in d.marcadores do
-			if math.abs(m[1] - clave.t) < 0.001 then
-				local km = Instance.new("KeyframeMarker")
-				km.Name = m[2]
-				km.Parent = kf
+	local function armar(sufijo)
+		local ks = Instance.new("KeyframeSequence")
+		ks.Name = d.nombre .. sufijo
+		ks.Loop = d.loop
+		local pr = d.prioridad
+		ks.Priority = if type(pr) == "string" then Enum.AnimationPriority[pr] else Enum.AnimationPriority:GetEnumItems()[1]
+		for _, clave in d.claves do
+			local kf = Instance.new("Keyframe")
+			kf.Time = clave.t
+			kf.Parent = ks
+			pose("HumanoidRootPart", clave.j, kf)
+			for _, m in d.marcadores do
+				if math.abs(m[1] - clave.t) < 0.001 then
+					local km = Instance.new("KeyframeMarker")
+					km.Name = m[2]
+					km.Parent = kf
+				end
 			end
 		end
+		fs.writeFile(SAL .. "/" .. d.nombre .. sufijo .. ".rbxm", roblox.serializeModel({ ks }))
 	end
-	fs.writeFile(SAL .. "/" .. d.nombre .. ".rbxm", roblox.serializeModel({ ks }))
+	torso = false
+	armar("")
+	if SOLO_TORSO[d.nombre] then
+		torso = true
+		armar("-torso")
+	end
 	n += 1
 end
 print("armadas", n)

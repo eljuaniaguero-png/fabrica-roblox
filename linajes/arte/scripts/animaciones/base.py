@@ -677,22 +677,16 @@ def golpe_aire(t):
 
 BLOQUEO = con(
     GUARDIA,
-    # Más agachado que la guardia (se distingue desde atrás) y la cabeza escondida.
-    raiz=(0, 0, -0.24),
-    LowerTorso=(16, 0, -10),
-    Head=(-4, 0, 0),
-    # Codos juntos y antebrazos verticales cruzados delante de la cara: el brazo apunta adelante
-    # y un poco abajo, y el antebrazo sube derecho (-70 - 110 = vertical), inclinado para cruzar.
-    LeftUpperArm=(-96, -6, -14),
-    RightUpperArm=(-96, 6, 14),
-    LeftLowerArm=(-70, 0, -10),
-    RightLowerArm=(-70, 0, 10),
-    LeftUpperLeg=(-50, -6, 10),
-    RightUpperLeg=(-12, 6, 10),
-    LeftLowerLeg=(80, 0, 0),
-    RightLowerLeg=(76, 0, 0),
-    LeftFoot=(-28, 0, 0),
-    RightFoot=(-30, 0, 0),
+    # Erguido y cerrado sobre sí mismo: el peso queda sobre los pies, no adelante.
+    raiz=(0, 0.02, -0.17),
+    LowerTorso=(5, 0, -14),
+    UpperTorso=(2, 0, 0),
+    Head=(8, 0, 10),
+    # Codos abajo pegados a las costillas y antebrazos verticales tapando la cara de cerca.
+    LeftUpperArm=(-58, 16, -12),
+    RightUpperArm=(-58, -16, 12),
+    LeftLowerArm=(-122, 0, -8),
+    RightLowerArm=(-122, 0, 8),
 )
 
 
@@ -702,19 +696,16 @@ def bloqueo_inicio(t):
 
 
 def bloqueo(t):
-    # Vivo, no estatua: balancea el peso de un pie al otro, respira agitado y los brazos se
-    # reacomodan a destiempo.
+    # Vivo, no estatua: balancea el peso y respira, sin irse para adelante.
     s, r, q = onda(t), onda(t * 2), onda(t, 0.25)
     return con(
         BLOQUEO,
-        raiz=(s * 0.03, 0, -0.24 + r * 0.014),
-        LowerTorso=(16 + r * 2, s * 3, -10 + s * 5),
-        UpperTorso=(4 + r * 3, 0, q * 6),
-        Head=(-4 + q * 2, 0, -s * 3),
-        LeftUpperArm=(-96 + s * 3, -6, -14),
-        RightUpperArm=(-96 - s * 3, 6, 14),
-        LeftLowerArm=(-70 + q * 3, 0, -10),
-        RightLowerArm=(-70 - q * 3, 0, 10),
+        raiz=(s * 0.022, 0.02, -0.17 + r * 0.012),
+        LowerTorso=(5 + r * 1.5, s * 2, -14 + s * 4),
+        UpperTorso=(2 + r * 2, 0, q * 4),
+        Head=(8 + q * 2, 0, 10 - s * 3),
+        LeftUpperArm=(-58 + s * 3, 16, -12),
+        RightUpperArm=(-58 - s * 3, -16, 12),
     )
 
 
