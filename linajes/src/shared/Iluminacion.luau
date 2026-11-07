@@ -13,7 +13,7 @@ return {
 	Resplandor = 0.7,
 	ResplandorUmbral = 1.3,
 	ResplandorTamano = 22,
-	Niebla = { Densidad = 0.3, Bruma = 1.2, Color = "7f8aa3" },
+	Niebla = { Densidad = 0.18, Bruma = 0.4, Color = "7f8aa3" },
 	-- Luz suave que sigue al personaje para que nunca se pierda.
 	Borde = { Color = "a9c4ff", Brillo = 0.75, Alcance = 16 },
 	-- Farolas cálidas y reflectores fríos, colocados por server/ArenaMapa.server.luau.
@@ -22,17 +22,19 @@ return {
 	PisoBrillo = 0.06,
 	CharcoBrillo = 0.55,
 	Cielo = {
-		Bk = "rbxassetid://133195762314202",
+		Bk = "rbxassetid://79523488749061",
 		Dn = "rbxassetid://73769727771919",
 		Ft = "rbxassetid://73906046350120",
 		Lf = "rbxassetid://79523488749061",
 		Rt = "rbxassetid://110437939502254",
 		Up = "rbxassetid://123732981660928",
 	},
-	NeonBrillo = 6,
+	CieloDistancia = 900,
+	CieloBrillo = 1,
+	NeonBrillo = 10,
 	NeonAlcance = 60,
 	ReflejoLargo = 62,
-	ReflejoFuerza = 0.45,
+	ReflejoFuerza = 0.72,
 	ReflejoGiro = 90,
 	-- Nombres inventados. X y Z relativos al centro de la arena; Giro: hacia dónde mira.
 	Carteles = {

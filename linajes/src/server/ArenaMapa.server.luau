@@ -320,6 +320,8 @@ local function letrero()
 	)
 	local gui = Instance.new("SurfaceGui")
 	gui.Face = Enum.NormalId.Front
+	gui.SizingMode = Enum.SurfaceGuiSizingMode.PixelsPerStud
+	gui.PixelsPerStud = 8
 	gui.LightInfluence = 0
 	gui.Parent = base
 	local texto = Instance.new("TextLabel")
@@ -341,6 +343,17 @@ local function fondo()
 		for _, g in muelles:GetChildren() do
 			if g.Name == "Grua" then
 				g:Destroy()
+			end
+		end
+	end
+	-- Los bloques del mundo abierto no se ven desde la arena.
+	for _, nombre in { "Galpones", "Aduana", "MercadoPescado", "LaFeria", "Lugares" } do
+		local grupo = puerto and puerto:FindFirstChild(nombre)
+		if grupo then
+			for _, d in grupo:GetDescendants() do
+				if d:IsA("BasePart") then
+					d.Transparency = 1
+				end
 			end
 		end
 	end

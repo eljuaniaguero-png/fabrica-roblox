@@ -86,6 +86,8 @@ local function cartel(c: any)
 	end
 	local gui = Instance.new("SurfaceGui")
 	gui.Face = Enum.NormalId.Front
+	gui.SizingMode = Enum.SurfaceGuiSizingMode.PixelsPerStud
+	gui.PixelsPerStud = 8
 	gui.LightInfluence = 0
 	gui.Brightness = 2.2
 	gui.Parent = base
