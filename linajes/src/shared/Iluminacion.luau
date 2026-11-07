@@ -24,7 +24,7 @@ return {
 	Cielo = {
 		Bk = "rbxassetid://79523488749061",
 		Dn = "rbxassetid://73769727771919",
-		Ft = "rbxassetid://73906046350120",
+		Ft = "rbxassetid://76506551755697",
 		Lf = "rbxassetid://79523488749061",
 		Rt = "rbxassetid://110437939502254",
 		Up = "rbxassetid://123732981660928",

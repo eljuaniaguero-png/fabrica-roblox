@@ -45,11 +45,11 @@ def costado(luna=False):
     c += estrellas[..., None] * 170
     if luna:
         yy, xx = np.mgrid[0:T, 0:T].astype(np.float32)
-        d = np.hypot(xx - T * 0.5, yy - T * 0.36)
-        radio = 165
-        halo = np.exp(-(((d - radio) / 90) ** 2)) * 0.8
+        d = np.hypot(xx - T * 0.5, yy - T * 0.4)
+        radio = 80
+        halo = np.exp(-(((d - radio) / 46) ** 2)) * 0.8
         c = c * (1 - halo[..., None]) + np.array([255, 150, 70], np.float32) * halo[..., None]
-        anillo = np.exp(-(((d - radio) / 7) ** 2))
+        anillo = np.exp(-(((d - radio) / 4) ** 2))
         c = c * (1 - anillo[..., None]) + np.array([255, 236, 190], np.float32) * anillo[..., None]
         disco = paso(radio, radio - 3, d)
         c = c * (1 - disco[..., None]) + np.array([9, 12, 20], np.float32) * disco[..., None]
