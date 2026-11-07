@@ -92,43 +92,6 @@ local function quemar(atacante: Model, objetivo: Model)
 	end)
 end
 
--- Capa de fuego con textura propia; el color ya viene pintado en la imagen.
-local function capaFuego(parte: BasePart, textura: string, ritmo: number): ParticleEmitter
-	local e = Instance.new("ParticleEmitter")
-	e.Texture = textura
-	e.FlipbookLayout = Enum.ParticleFlipbookLayout.Grid4x4
-	e.FlipbookMode = Enum.ParticleFlipbookMode.OneShot
-	e.LightEmission = 0.25
-	e.LightInfluence = 0
-	e.ZOffset = 1
-	e.Rate = ritmo
-	e.Parent = parte
-	return e
-end
-
-local function brasas(parte: BasePart, ritmo: number)
-	local e = Instance.new("ParticleEmitter")
-	e.Color = ColorSequence.new(Color3.fromHex("#fff0b0"), Color3.fromHex("#f2652b"))
-	e.LightEmission = 1
-	e.LightInfluence = 0
-	e.Lifetime = NumberRange.new(0.5, 1.1)
-	e.Speed = NumberRange.new(5, 14)
-	e.SpreadAngle = Vector2.new(35, 35)
-	e.EmissionDirection = Enum.NormalId.Top
-	e.Size = NumberSequence.new(0.22, 0)
-	e.Acceleration = Vector3.new(0, 10, 0)
-	e.Rate = ritmo
-	e.Parent = parte
-end
-
-local function luzFuego(parte: BasePart, alcance: number)
-	local luz = Instance.new("PointLight")
-	luz.Color = Color3.fromHex("#ff8a30")
-	luz.Brightness = 3
-	luz.Range = alcance
-	luz.Parent = parte
-end
-
 local function bolaDeFuego(atacante: Model, datos: any)
 	local r = raizDe(atacante)
 	if not r then
@@ -144,24 +107,7 @@ local function bolaDeFuego(atacante: Model, datos: any)
 	bola.CanQuery = false
 	bola.CanTouch = false
 	bola.Position = r.Position + frente * 3
-	local nucleo = capaFuego(bola, Config.Efectos.BolaFuego, 30)
-	nucleo.FlipbookMode = Enum.ParticleFlipbookMode.Loop
-	nucleo.LockedToPart = true
-	nucleo.Lifetime = NumberRange.new(0.14)
-	nucleo.Speed = NumberRange.new(0)
-	nucleo.Size = NumberSequence.new(8)
-	nucleo.Rotation = NumberRange.new(0, 359)
-	nucleo.ZOffset = 2
-	local cola = capaFuego(bola, Config.Efectos.BolaFuego, 110)
-	cola.FlipbookMode = Enum.ParticleFlipbookMode.Loop
-	cola.Lifetime = NumberRange.new(0.22, 0.42)
-	cola.Speed = NumberRange.new(1, 4)
-	cola.SpreadAngle = Vector2.new(180, 180)
-	cola.Size = NumberSequence.new(5.5, 0.6)
-	cola.Rotation = NumberRange.new(0, 359)
-	cola.Transparency = NumberSequence.new(0, 0.5)
-	brasas(bola, 40)
-	luzFuego(bola, 24)
+	bola:AddTag("BolaFuego") -- el fuego lo dibuja cada cliente (client/Fuego.luau)
 	bola.Parent = workspace
 	local recorrido = 0
 	local conexion: RBXScriptConnection
@@ -187,7 +133,7 @@ local function muroDeFuego(atacante: Model, datos: any)
 	if not r then
 		return
 	end
-	-- Fila de llamas sobre el piso: la parte es invisible, solo sostiene el fuego.
+	-- Parte invisible sobre el piso: el fuego lo dibuja cada cliente (client/Fuego.luau).
 	local muro = Instance.new("Part")
 	muro.Size = Vector3.new(datos.Alcance, 0.4, 1.5)
 	muro.Transparency = 1
@@ -195,29 +141,11 @@ local function muroDeFuego(atacante: Model, datos: any)
 	muro.CanCollide = false
 	muro.CanQuery = false
 	muro.CanTouch = false
-	muro.CFrame = r.CFrame * CFrame.new(0, -2.4, -8)
-	local altas = capaFuego(muro, Config.Efectos.Llama, datos.Alcance * 3.5)
-	altas.EmissionDirection = Enum.NormalId.Top
-	altas.Lifetime = NumberRange.new(0.6, 0.95)
-	altas.Speed = NumberRange.new(4, 7)
-	altas.Size = NumberSequence.new(8, 10)
-	local bajas = capaFuego(muro, Config.Efectos.Llama, datos.Alcance * 3)
-	bajas.EmissionDirection = Enum.NormalId.Top
-	bajas.Lifetime = NumberRange.new(0.4, 0.65)
-	bajas.Speed = NumberRange.new(2, 4)
-	bajas.Size = NumberSequence.new(4.5, 5.5)
-	bajas.ZOffset = 2
-	brasas(muro, datos.Alcance * 2)
-	luzFuego(muro, 26)
+	muro.CFrame = r.CFrame * CFrame.new(0, -2.4, -Config.Efectos.Fuego.MuroDistancia)
+	muro:SetAttribute("Dura", P.MuroDura)
+	muro:AddTag("MuroFuego")
 	muro.Parent = workspace
-	Debris:AddItem(muro, P.MuroDura + 1.2)
-	task.delay(P.MuroDura, function()
-		for _, e in muro:GetChildren() do
-			if e:IsA("ParticleEmitter") then
-				e.Rate = 0
-			end
-		end
-	end)
+	Debris:AddItem(muro, P.MuroDura + 1.4)
 	local frente = r.CFrame.LookVector
 	for _ = 1, P.MuroDura * 2 do
 		task.wait(0.5)
@@ -312,6 +240,9 @@ remoto.OnServerEvent:Connect(function(jugador, pedido)
 	end
 	propias[clave] = ahora + datos.Recarga
 	personaje:SetAttribute("Energia", energia - datos.Energia)
+	if datos.Accion == "BolaFuego" then
+		remoto:FireAllClients("Carga", personaje, datos)
+	end
 	task.delay(datos.Impacto, function()
 		if personaje.Parent and personaje:GetAttribute("Aturdido") ~= true then
 			remoto:FireAllClients("Efecto", personaje, datos)

@@ -8,10 +8,10 @@ local TweenService = game:GetService("TweenService")
 
 local Config = require(ReplicatedStorage:WaitForChild("Shared"):WaitForChild("Config"))
 local EfectosGolpe = require(script.Parent:WaitForChild("EfectosGolpe"))
+local Fuego = require(script.Parent:WaitForChild("Fuego"))
 local remoto = ReplicatedStorage:WaitForChild("Poderes") :: RemoteEvent
 
 local P = Config.Poderes
-local FUEGO = P.Colores.Piroquinesis
 local POLVO = P.Colores.FuerzaBruta
 local REFLEJO = P.Colores.Reflejos
 
@@ -43,27 +43,6 @@ local function escombros(centro: Vector3, cantidad: number, fuerza: number)
 			Vector3.new(math.random(-9, 9), math.random(-9, 9), math.random(-9, 9))
 		Debris:AddItem(p, 1.1)
 	end
-end
-
-local function particulas(
-	padre: Instance,
-	rapidez: number,
-	vida: number,
-	tam: number
-): ParticleEmitter
-	local e = Instance.new("ParticleEmitter")
-	e.Texture = Config.Efectos.BolaFuego
-	e.FlipbookLayout = Enum.ParticleFlipbookLayout.Grid4x4
-	e.FlipbookMode = Enum.ParticleFlipbookMode.Loop
-	e.LightEmission = 0.25
-	e.LightInfluence = 0
-	e.Lifetime = NumberRange.new(vida * 0.6, vida)
-	e.Speed = NumberRange.new(rapidez * 0.6, rapidez)
-	e.Size = NumberSequence.new(tam, tam * 2.4)
-	e.Rotation = NumberRange.new(0, 359)
-	e.Rate = 0
-	e.Parent = padre
-	return e
 end
 
 local function estallido(centro: Vector3, color: Color3, cantidad: number, _rapidez: number)
@@ -143,18 +122,7 @@ local efectos: { [string]: (Model, BasePart, any) -> () } = {
 		end)
 	end,
 	Chorro = function(_p, r, d)
-		local punto = Instance.new("Attachment")
-		punto.Position = Vector3.new(0, 0.5, -2.5)
-		punto.Orientation = Vector3.new(-90, 0, 0)
-		punto.Parent = r
-		local e = particulas(punto, 42, 0.4, 2)
-		e.SpreadAngle = Vector2.new(16, 16)
-		e.Rate = 70
-		e.Acceleration = Vector3.new(0, 6, 0)
-		Debris:AddItem(punto, d.Dura + 0.5)
-		task.delay(d.Dura, function()
-			e.Rate = 0
-		end)
+		Fuego.chorro(r, d.Dura)
 	end,
 }
 
@@ -166,10 +134,10 @@ remoto.OnClientEvent:Connect(function(tipo: string, a: any, b: any)
 		if hacer and r then
 			hacer(a, r, datos)
 		end
+	elseif tipo == "Carga" then
+		Fuego.carga(a, b.Impacto)
 	elseif tipo == "Explota" then
-		anillo(a - Vector3.new(0, 2.8, 0), 6, FUEGO)
-		EfectosGolpe.fuego(a)
-		estallido(a, FUEGO, 30, 24)
+		Fuego.explosion(a)
 		-- SONIDO: explosión de fuego
 	end
 end)
