@@ -283,3 +283,9 @@ Plantado y a distancia. Hechas con `linaje-piroquinesis.py`, en `animaciones-lin
 ![[anim-linaje-piroquinesis-hoja.png]]
 
 ![[anim-linaje-piroquinesis-bola-fuego-atras.gif]] ![[anim-linaje-piroquinesis-chorro-inicio-atras.gif]] ![[anim-linaje-piroquinesis-chorro-loop-atras.gif]] ![[anim-linaje-piroquinesis-chorro-fin-atras.gif]] ![[anim-linaje-piroquinesis-cargar-loop-atras.gif]]
+
+### P28-01 Animaciones de Remache (7 nov, esperando OK de Juani)
+
+12 animaciones en `animaciones-remache.blend`, hechas con `remache.py`. Carga hidráulica en 3 piezas. `Aviso` 12 cuadros antes de cada `Impacto`.
+
+![[anim-jefe-remache-hoja.png]]
