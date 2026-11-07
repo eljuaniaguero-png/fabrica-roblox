@@ -485,33 +485,38 @@ local function crearManiqui(cerca: CFrame)
 	end)
 end
 
--- Barra de vida sobre el matón.
-local function barraMaton(m: Model, h: Humanoid)
-	local cartel = Instance.new("BillboardGui")
-	cartel.Size = UDim2.fromOffset(90, 9)
-	cartel.StudsOffsetWorldSpace = Vector3.new(0, 4.4, 0)
-	cartel.AlwaysOnTop = true
-	cartel.MaxDistance = 80
-	cartel.Adornee = m:FindFirstChild("HumanoidRootPart") :: BasePart
-	local fondo = Instance.new("Frame")
-	fondo.Size = UDim2.fromScale(1, 1)
-	fondo.BackgroundColor3 = Color3.fromRGB(27, 31, 42)
-	fondo.BorderSizePixel = 0
-	fondo.Parent = cartel
-	local lleno = Instance.new("Frame")
-	lleno.Size = UDim2.fromScale(1, 1)
-	lleno.BackgroundColor3 = Color3.fromRGB(210, 58, 74)
-	lleno.BorderSizePixel = 0
-	lleno.Parent = fondo
-	cartel.Parent = m
+local function ropaMaton(m: Model, ropa: { [string]: string })
+	for _, parte in m:GetChildren() do
+		if parte:IsA("MeshPart") and parte.Transparency < 1 then
+			local prefijo = string.match(parte.Name, "^%a+")
+			if prefijo == "Cuello" and parte.Name ~= "Cuello_Piel" then
+				prefijo = "Campera"
+			elseif
+				prefijo == "PeloPuntas"
+				or prefijo == "PeloCorto"
+				or prefijo == "PeloFlequillo"
+			then
+				prefijo = "Pelo"
+			end
+			local hex = prefijo and ropa[prefijo]
+			if hex then
+				parte.Color = Color3.fromHex(hex)
+				local capa = parte:FindFirstChildOfClass("SurfaceAppearance")
+				if capa then
+					capa.Color = Color3.fromHex(hex)
+				end
+			end
+		end
+	end
+end
+
+-- Borde rojo para distinguirlo de un jugador. La barra de vida la dibuja el cliente.
+local function marcarMaton(m: Model)
 	local borde = Instance.new("Highlight")
 	borde.FillTransparency = 1
 	borde.OutlineColor = Color3.fromRGB(230, 60, 60)
 	borde.DepthMode = Enum.HighlightDepthMode.Occluded
 	borde.Parent = m
-	h.HealthChanged:Connect(function(vida)
-		lleno.Size = UDim2.fromScale(math.clamp(vida / h.MaxHealth, 0, 1), 1)
-	end)
 end
 
 local function objetivoDe(r: BasePart): BasePart?
@@ -550,13 +555,14 @@ local function crearMaton(punto: { number }, numero: number)
 	m:SetAttribute("Maton", true)
 	m.Parent = workspace
 	CuerpoComic.vestir(m, M.Semilla + numero)
+	ropaMaton(m, M.Ropa[(numero - 1) % #M.Ropa + 1])
 	prepararPeleador(m)
 	local h = m:WaitForChild("Humanoid") :: Humanoid
 	h.MaxHealth = M.Vida
 	h.Health = M.Vida
 	h.WalkSpeed = M.Velocidad
 	h.DisplayDistanceType = Enum.HumanoidDisplayDistanceType.None
-	barraMaton(m, h)
+	marcarMaton(m)
 	local animator = h:FindFirstChildOfClass("Animator")
 	if not animator then
 		animator = Instance.new("Animator")
