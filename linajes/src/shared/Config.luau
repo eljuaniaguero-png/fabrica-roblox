@@ -992,6 +992,7 @@ Config.Efectos = {
 -- Progresión: cada nivel agranda y refuerza todos los ataques. Se suma a los puntos de la bóveda.
 Config.Niveles = {
 	Maximo = 100,
+	ColorBarra = "#e8b923",
 	DanioPorNivel = 0.01, -- nivel 100: doble de daño
 	TamanoPorNivel = 0.006, -- nivel 100: 60 % más de tamaño y alcance
 	XpBase = 100,
