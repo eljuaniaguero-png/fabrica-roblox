@@ -78,23 +78,24 @@ def quieto(t):
 
 
 def caminar(t):
-    # Paso pesado: la cadera cae en cada apoyo y los hombros pesan del lado contrario.
+    # Paso lento y pesado: el cuerpo se hunde en cada pisada (cuadros 16 y 48) y los hombros giran.
     s = sen(2 * pi * t)
     ri = max(cos(2 * pi * t), 0)
     rd = max(-cos(2 * pi * t), 0)
-    p = postura(izq=(-16 - 24 * s, 16 + 42 * ri), der=(-16 + 24 * s, 16 + 42 * rd), inclina=10, corre=(0.05 * s, 0))
+    hunde = abs(s) ** 3  # 1 justo en la pisada
+    p = postura(izq=(-20 - 30 * s, 24 + 50 * ri + 16 * hunde), der=(-20 + 30 * s, 24 + 50 * rd + 16 * hunde), inclina=12 + 5 * hunde, corre=(0.09 * s, 0))
     return {
         **G,
         **p,
-        "UpperTorso": (8, 4 * s, 9 * s),
-        "Head": (2, -3 * s, -6 * s),
-        "LeftUpperArm": (-14 + 20 * s, -24, 0),
-        "RightUpperArm": (-14 - 20 * s, 24, 0),
+        "UpperTorso": (8 + 7 * hunde, 7 * s, 15 * s),
+        "Head": (2 - 6 * hunde, -5 * s, -10 * s),
+        "LeftUpperArm": (-14 + 30 * s, -24, 0),
+        "RightUpperArm": (-14 - 30 * s, 24, 0),
     }
 
 
 def recibir_golpe(t):
-    pega = {**G, **postura(izq=(-10, 30), der=(-30, 38), inclina=-8, corre=(0, 0.1)), "UpperTorso": (-12, 0, -10), "Head": (-16, 0, 8), "LeftUpperArm": (-30, -40, 0), "RightUpperArm": (-30, 40, 0)}
+    pega = {**G, **postura(izq=(-10, 30), der=(-30, 38), inclina=-8, corre=(0, 0.1)), "UpperTorso": (-12, 0, -10), "Head": (-16, 0, 8), "LeftUpperArm": (-26, -28, 0), "RightUpperArm": (-26, 28, 0)}
     return actuar(t, 20, [(0, G), (4, pega, "seco"), (8, pega), (20, G)], {})
 
 
@@ -130,19 +131,29 @@ def entrada(t):
 
 
 def martillazo(t):
-    # Levanta los dos puños y aguanta (Aviso 18), golpe al piso (Impacto 30).
-    sube = {**G, **postura(izq=(-16, 28), der=(-10, 22), inclina=-4, abre=12), **ARRIBA, "UpperTorso": (-10, 0, 0), "Head": (-14, 0, 0)}
+    # Preparación de 0,8 s (Aviso 6 a Impacto 30): se estira hacia atrás con los puños bien arriba.
+    sube = {
+        **G,
+        **postura(izq=(-12, 18), der=(-6, 14), inclina=-12, abre=13),
+        "LeftUpperArm": (-186, 20, 0),
+        "RightUpperArm": (-186, -20, 0),
+        "LeftLowerArm": (-52, 0, 0),
+        "RightLowerArm": (-52, 0, 0),
+        "UpperTorso": (-16, 0, 0),
+        "Head": (-16, 0, 0),
+    }
     pega = {**G, **postura(izq=(-54, 88), der=(-34, 76), inclina=36, abre=12), **ABAJO, "UpperTorso": (20, 0, 0), "Head": (-30, 0, 0)}
-    return actuar(t, 60, [(0, G), (16, sube, "sale"), (26, pasarse(G, sube, 0.05)), (30, pega, "seco"), (42, pega), (60, G)], PESADO)
+    return actuar(t, 60, [(0, G), (6, G), (20, sube, "sale"), (27, pasarse(G, sube, 0.08)), (30, pega, "seco"), (42, pega), (60, G)], PESADO)
 
 
+# Ariete: el brazo derecho mecánico va estirado adelante, con el hombro; el otro queda atrás.
 TORO = {
-    "UpperTorso": (18, 0, 0),
-    "Head": (-24, 0, 0),
-    "LeftUpperArm": (-72, -10, 0),
-    "RightUpperArm": (-72, 10, 0),
-    "LeftLowerArm": (-30, 0, 0),
-    "RightLowerArm": (-30, 0, 0),
+    "UpperTorso": (10, 0, 36),
+    "Head": (-12, 0, -34),
+    "RightUpperArm": (-90, 0, 0),
+    "RightLowerArm": (-2, 0, 0),
+    "LeftUpperArm": (22, -16, 0),
+    "LeftLowerArm": (-64, 0, 0),
 }
 
 
@@ -150,22 +161,22 @@ def carga_carrera(t):
     s = sen(2 * pi * t)
     ri = max(cos(2 * pi * t), 0)
     rd = max(-cos(2 * pi * t), 0)
-    return {**G, **postura(izq=(-34 - 34 * s, 40 + 52 * ri), der=(-34 + 34 * s, 40 + 52 * rd), inclina=26), **TORO, "UpperTorso": (18, 0, 8 * s)}
+    return {**G, **postura(izq=(-30 - 34 * s, 36 + 52 * ri), der=(-30 + 34 * s, 36 + 52 * rd), inclina=20, giro=-14), **TORO, "UpperTorso": (10, 0, 36 + 5 * s)}
 
 
 def carga_inicio(t):
-    # Los brazos se comprimen hacia atrás como pistones (Aviso 18) y sale disparado.
+    # Preparación de 0,8 s (Aviso 2): tira el ariete bien atrás, comprimido, y sale disparado.
     comprime = {
         **G,
-        **postura(izq=(-40, 66), der=(-8, 42), inclina=20),
-        "UpperTorso": (10, 0, 0),
-        "Head": (-16, 0, 0),
-        "LeftUpperArm": (34, -18, 0),
-        "RightUpperArm": (34, 18, 0),
-        "LeftLowerArm": (-112, 0, 0),
-        "RightLowerArm": (-112, 0, 0),
+        **postura(izq=(-46, 74), der=(-4, 50), inclina=24, giro=-20),
+        "UpperTorso": (6, 0, -34),
+        "Head": (-14, 0, 42),
+        "RightUpperArm": (52, 16, 0),
+        "RightLowerArm": (-122, 0, 0),
+        "LeftUpperArm": (-62, -14, 0),
+        "LeftLowerArm": (-70, 0, 0),
     }
-    return actuar(t, 30, [(0, G), (14, comprime, "sale"), (24, pasarse(G, comprime, 0.05)), (30, carga_carrera(0.0), "seco")], PESADO)
+    return actuar(t, 30, [(0, G), (2, G), (16, comprime, "sale"), (26, pasarse(G, comprime, 0.08)), (30, carga_carrera(0.0), "seco")], PESADO)
 
 
 def carga_frenada(t):
@@ -179,7 +190,7 @@ def contenedor(t):
     # Agarra del piso (16), levanta hasta el cuadro 40 y lo tira (Aviso 44, Impacto 56).
     agarra = {**G, **postura(izq=(-62, 96), der=(-56, 92), inclina=30, abre=14), **ABAJO, "UpperTorso": (18, 0, 0), "Head": (-24, 0, 0)}
     arriba = {**G, **postura(izq=(-20, 34), der=(-12, 26), inclina=-4, abre=14), **ARRIBA, "UpperTorso": (-8, 0, 0), "Head": (-10, 0, 0)}
-    atras = con(arriba, UpperTorso=(-18, 0, 0), Head=(-4, 0, 0), LeftUpperArm=(-186, 22, 0), RightUpperArm=(-186, -22, 0))
+    atras = con(arriba, UpperTorso=(-26, 0, 0), Head=(-2, 0, 0), LeftUpperArm=(-200, 20, 0), RightUpperArm=(-200, -20, 0), LowerTorso=(-10, 0, 0))
     tira = {
         **G,
         **postura(izq=(-44, 64), der=(6, 34), inclina=20, abre=14),
@@ -190,11 +201,12 @@ def contenedor(t):
         "LeftLowerArm": (-8, 0, 0),
         "RightLowerArm": (-8, 0, 0),
     }
-    return actuar(t, 80, [(0, G), (16, agarra, "sale"), (22, agarra), (40, arriba, "suave"), (50, atras, "sale"), (56, tira, "seco"), (64, tira), (80, G)], PESADO)
+    return actuar(t, 80, [(0, G), (16, agarra, "sale"), (22, agarra), (36, arriba, "suave"), (52, atras, "sale"), (56, tira, "seco"), (64, tira), (80, G)], PESADO)
 
 
 def cambio_fase(t):
-    # Se clava la jeringa del pecho (Inyecta 20), se estremece y abre los brazos (Vapor 38).
+    # 2 s: se inyecta (Inyecta 12), tiembla, se golpea el pecho (Golpe 28), pausa con la cabeza baja
+    # y ruge con los brazos abiertos (Vapor 40).
     inyecta = {
         **G,
         **postura(izq=(-30, 52), der=(-24, 48), inclina=22),
@@ -205,8 +217,18 @@ def cambio_fase(t):
         "LeftUpperArm": (-24, -18, 0),
     }
     temblor = con(inyecta, UpperTorso=(14, 3, 0), Head=(10, -4, 0), LeftUpperArm=(-20, -24, 0))
+    pecho = {
+        **G,
+        **postura(izq=(-26, 46), der=(-20, 40), inclina=4, abre=12),
+        "UpperTorso": (10, 0, 0),
+        "Head": (20, 0, 0),
+        "LeftUpperArm": (-58, 34, -30),
+        "RightUpperArm": (-58, -34, 30),
+        "LeftLowerArm": (-100, 0, 0),
+        "RightLowerArm": (-100, 0, 0),
+    }
     grita = {**G, **postura(izq=(-22, 40), der=(-16, 34), inclina=-6, abre=14), "UpperTorso": (-14, 0, 0), "Head": (-24, 0, 0), "LeftUpperArm": (-40, -72, 0), "RightUpperArm": (-40, 72, 0), "LeftLowerArm": (-70, 0, 0), "RightLowerArm": (-70, 0, 0)}
-    return actuar(t, 60, [(0, G), (14, inyecta, "sale"), (20, inyecta), (24, temblor), (28, inyecta), (32, temblor), (38, grita, "seco"), (50, grita), (60, G)], {})
+    return actuar(t, 60, [(0, G), (10, inyecta, "sale"), (14, temblor), (18, inyecta), (22, temblor), (28, pecho, "seco"), (36, pecho), (40, grita, "seco"), (54, grita), (60, G)], {})
 
 
 def derrota(t):
@@ -235,17 +257,38 @@ def derrota(t):
 NUEVAS = {
     "remache-entrada": (entrada, 90, False, "Action", (30, 45, 60)),
     "remache-quieto": (quieto, 60, True, "Idle", (0, 15, 30)),
-    "remache-caminar": (caminar, 40, True, "Movement", (0, 10, 20)),
+    "remache-caminar": (caminar, 64, True, "Movement", (0, 16, 32)),
     "remache-recibir-golpe": (recibir_golpe, 20, False, "Action", (0, 4, 12)),
     "remache-aturdido": (aturdido, 40, True, "Action", (0, 10, 20)),
-    "remache-cambio-fase": (cambio_fase, 60, False, "Action", (20, 32, 42)),
+    "remache-cambio-fase": (cambio_fase, 60, False, "Action", (14, 28, 46)),
     "remache-derrota": (derrota, 90, False, "Action", (22, 45, 88)),
-    "remache-martillazo": (martillazo, 60, False, "Action", (18, 30, 46)),
-    "remache-carga-inicio": (carga_inicio, 30, False, "Action", (14, 24, 30)),
+    "remache-martillazo": (martillazo, 60, False, "Action", (24, 30, 46)),
+    "remache-carga-inicio": (carga_inicio, 30, False, "Action", (16, 26, 30)),
     "remache-carga-carrera": (carga_carrera, 24, True, "Action", (0, 6, 18)),
     "remache-carga-frenada": (carga_frenada, 45, False, "Action", (6, 14, 36)),
-    "remache-contenedor": (contenedor, 80, False, "Action", (16, 40, 56)),
+    "remache-contenedor": (contenedor, 80, False, "Action", (36, 52, 56)),
 }
+
+
+def en_el_piso(funcion):
+    """Mide la bota más baja en cada pose y corre el cuerpo para que apoye en el piso."""
+
+    def con_piso(t):
+        pose = funcion(t)
+        arm = bpy.data.objects.get("Maniqui")
+        botas = [bpy.data.objects.get(n) for n in ("Remache_BotaIzq", "Remache_BotaDer")]
+        if not arm or not all(botas):
+            return pose
+        A.poner_pose(arm, pose)
+        bpy.context.view_layer.update()
+        z = min((o.matrix_world @ v.co).z for o in botas for v in o.data.vertices)
+        x, y, r = pose["raiz"]
+        return {**pose, "raiz": (x, y, r - z)}
+
+    return con_piso
+
+
+NUEVAS = {n: (en_el_piso(d[0]), *d[1:]) for n, d in NUEVAS.items()}
 A.ANIMACIONES = NUEVAS
 A.GRUPOS["remache"] = list(NUEVAS)
 A.ETIQUETAS.update(
@@ -267,13 +310,13 @@ A.ETIQUETAS.update(
 A.MARCADORES.update(
     {
         "remache-entrada": [(48, "Aviso"), (60, "Impacto")],
-        "remache-caminar": [(10, "Paso"), (30, "Paso")],
-        "remache-cambio-fase": [(20, "Inyecta"), (38, "Vapor")],
-        "remache-martillazo": [(18, "Aviso"), (30, "Impacto")],
-        "remache-carga-inicio": [(18, "Aviso")],
+        "remache-caminar": [(16, "Paso"), (48, "Paso")],
+        "remache-cambio-fase": [(12, "Inyecta"), (28, "Golpe"), (40, "Vapor")],
+        "remache-martillazo": [(6, "Aviso"), (30, "Impacto")],
+        "remache-carga-inicio": [(2, "Aviso")],
         "remache-carga-carrera": [(6, "Paso"), (18, "Paso")],
         "remache-carga-frenada": [(3, "Impacto")],
-        "remache-contenedor": [(44, "Aviso"), (56, "Impacto")],
+        "remache-contenedor": [(30, "Aviso"), (56, "Impacto")],
     }
 )
 A.GIRO_CAMARA.update({n: 60 for n in NUEVAS})
@@ -314,6 +357,68 @@ def medir():
         print("BOTAS", nombre, round(min(z), 3), round(max(z), 3))
 
 
+def piezas():
+    """Cada pieza tiene que mantener su distancia al hueso en todas las animaciones."""
+    arm = A.B.esqueleto()
+    escena = bpy.context.scene
+    lista = [o for o in bpy.data.objects if o.type == "MESH" and o.visible_get() and o.parent == arm and o.parent_type == "BONE"]
+    sueltas = [o.name for o in bpy.data.objects if o.type == "MESH" and o.visible_get() and o.parent != arm and o.name != "Niebla"]
+    arm.animation_data.action = None
+    for b in arm.pose.bones:
+        b.matrix_basis.identity()
+    bpy.context.view_layer.update()
+    base = {o.name: (arm.matrix_world @ arm.pose.bones[o.parent_bone].matrix).inverted() @ o.matrix_world for o in lista}
+    total = 0
+    for nombre, (_, cuadros, *_r) in NUEVAS.items():
+        arm.animation_data.action = bpy.data.actions[nombre]
+        malos = set()
+        for f in range(0, cuadros + 1, 2):
+            escena.frame_set(f)
+            bpy.context.view_layer.update()
+            for o in lista:
+                rel = (arm.matrix_world @ arm.pose.bones[o.parent_bone].matrix).inverted() @ o.matrix_world
+                if (rel.translation - base[o.name].translation).length > 0.002:
+                    malos.add(o.name)
+        total += len(malos)
+        print("PIEZAS", nombre, len(malos), list(malos)[:3])
+    print("TOTAL_SEPARADAS", total, "piezas", len(lista), "sin soldar", sueltas, "brazos", [(o.name, o.parent_bone) for o in lista if "Antebrazo" in o.name][:4])
+
+
+def jugador():
+    """GIF desde la cámara del jugador: atrás y un poco arriba, a unos 15 studs."""
+    bpy.ops.wm.open_mainfile(filepath=A.BLEND)
+    escena = bpy.context.scene
+    A.B.configurar_luz()
+    escena.view_settings.exposure = 1.5
+    escena.render.resolution_x, escena.render.resolution_y = 400, 400
+    datos = bpy.data.cameras.new("CamJugador")
+    datos.lens = 42
+    cam = bpy.data.objects.new("CamJugador", datos)
+    escena.collection.objects.link(cam)
+    centro = Vector((0, -0.2, 1.2))
+    A.B._apuntar(cam, Vector((0.5, 4.0, 2.6)), centro)
+    escena.camera = cam
+    arm = A.B.esqueleto()
+    for salida, partes in (
+        ("martillazo", ["remache-martillazo"]),
+        ("carga", ["remache-carga-inicio", "remache-carga-carrera", "remache-carga-carrera", "remache-carga-frenada"]),
+        ("contenedor", ["remache-contenedor"]),
+        ("cambio-fase", ["remache-cambio-fase"]),
+    ):
+        carpeta = os.path.join(A.B.RENDERS, "_gif", f"remache-jugador-{salida}")
+        os.makedirs(carpeta, exist_ok=True)
+        with open(os.path.join(carpeta, "fps.txt"), "w") as fh:
+            fh.write("15")
+        i = 0
+        for nombre in partes:
+            arm.animation_data.action = bpy.data.actions[nombre]
+            for f in range(0, NUEVAS[nombre][1], 2):
+                escena.frame_set(f)
+                escena.render.filepath = os.path.join(carpeta, f"{i:03d}.png")
+                bpy.ops.render.render(write_still=True)
+                i += 1
+
+
 def acciones():
     bpy.ops.wm.open_mainfile(filepath=A.CUERPO)
     escena = bpy.context.scene
@@ -323,6 +428,7 @@ def acciones():
         A.crear_accion(arm, nombre)
     arm.animation_data.action = bpy.data.actions["remache-quieto"]
     medir()
+    piezas()
     bpy.ops.wm.save_as_mainfile(filepath=A.BLEND)
 
 
@@ -337,3 +443,5 @@ if __name__ == "__main__":
         A.cuadros_gif("remache")
     if paso in ("fbx", "todo"):
         A.fbx("remache")
+    if paso == "jugador":
+        jugador()

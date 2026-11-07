@@ -289,3 +289,7 @@ Plantado y a distancia. Hechas con `linaje-piroquinesis.py`, en `animaciones-lin
 12 animaciones en `animaciones-remache.blend`, hechas con `remache.py`. Carga hidráulica en 3 piezas. `Aviso` 12 cuadros antes de cada `Impacto`.
 
 ![[anim-jefe-remache-hoja.png]]
+
+Ajustes del 7 nov: preparaciones de 0,8 s con `Aviso` al inicio, caminar de 64 cuadros, carrera con ariete, cambio de fase con golpe al pecho y pausa. La altura sale de medir las botas en cada pose.
+
+![[anim-jefe-remache-jugador-martillazo.gif]] ![[anim-jefe-remache-jugador-carga.gif]] ![[anim-jefe-remache-jugador-contenedor.gif]] ![[anim-jefe-remache-jugador-cambio-fase.gif]]
