@@ -27,6 +27,9 @@ type Estado = {
 	aturdidoHasta: number,
 	dashListo: number,
 	dashEn: number,
+	contraHasta: number,
+	contraDanio: number,
+	contraGolpes: number,
 	pedidos: { number },
 	golpesSeguidos: number,
 	ultimoRecibido: number,
@@ -47,6 +50,9 @@ local function estadoDe(personaje: Model): Estado
 			aturdidoHasta = 0,
 			dashListo = 0,
 			dashEn = 0,
+			contraHasta = 0,
+			contraDanio = 0,
+			contraGolpes = 0,
 			pedidos = {},
 			golpesSeguidos = 0,
 			ultimoRecibido = 0,
@@ -96,7 +102,9 @@ end
 
 local function empujar(objetivo: Model, raiz: BasePart, direccion: Vector3, tipo: string)
 	local velocidad = direccion * C.Empuje
-	if tipo == "Lanza" then
+	if tipo == "Suave" then
+		return
+	elseif tipo == "Lanza" or tipo == "Rompe" then
 		velocidad = direccion * C.Lanza + Vector3.new(0, C.LanzaArriba, 0)
 	elseif tipo == "Arriba" then
 		velocidad = direccion * 4 + Vector3.new(0, C.SubeArriba, 0)
@@ -111,13 +119,9 @@ local function empujar(objetivo: Model, raiz: BasePart, direccion: Vector3, tipo
 	end
 end
 
-local function pegarA(
-	atacante: Model,
-	objetivo: Model,
-	danio: number,
-	tipo: string,
-	direccion: Vector3
-)
+local pegarA: (Model, Model, number, string, Vector3) -> ()
+
+pegarA = function(atacante: Model, objetivo: Model, danio: number, tipo: string, direccion: Vector3)
 	local h, r = partes(objetivo)
 	if not (h and r) then
 		return
@@ -127,12 +131,25 @@ local function pegarA(
 	if ahora < e.invulnerableHasta then
 		return
 	end
+	-- Contragolpe: esquiva y responde. Solo sirve contra golpes, no contra quemaduras.
+	if ahora < e.contraHasta and tipo ~= "Suave" then
+		e.contraHasta = 0
+		e.invulnerableHasta = ahora + 0.5
+		remoto:FireAllClients("Parry", objetivo, atacante)
+		task.spawn(function()
+			for _ = 1, e.contraGolpes do
+				pegarA(objetivo, atacante, e.contraDanio, "Normal", -direccion)
+				task.wait(0.14)
+			end
+		end)
+		return
+	end
 	local _, raizAtacante = partes(atacante)
 	local deFrente = raizAtacante ~= nil
 		and r.CFrame.LookVector:Dot((raizAtacante.Position - r.Position).Unit) > 0
-	local fuerte = tipo ~= "Normal"
+	local fuerte = tipo ~= "Normal" and tipo ~= "Suave"
 	-- El martillazo desde el aire rompe el bloqueo.
-	if e.bloqueoDesde and deFrente and tipo ~= "Piso" then
+	if e.bloqueoDesde and deFrente and tipo ~= "Piso" and tipo ~= "Rompe" and tipo ~= "Suave" then
 		if ahora - e.bloqueoDesde <= C.VentanaParry then
 			aturdir(atacante)
 			remoto:FireAllClients("Parry", objetivo, atacante)
@@ -152,8 +169,10 @@ local function pegarA(
 			else e.golpesSeguidos + 1
 		e.ultimoRecibido = ahora
 		local freno = C.Freno * C.DesgasteFreno ^ (e.golpesSeguidos - 1)
-		frenar(objetivo, if fuerte then C.FrenoLanzado else freno)
-		if tipo == "Lanza" or tipo == "Piso" then
+		if tipo ~= "Suave" then
+			frenar(objetivo, if fuerte then C.FrenoLanzado else freno)
+		end
+		if tipo == "Lanza" or tipo == "Piso" or tipo == "Rompe" then
 			e.invulnerableHasta = ahora + C.FrenoLanzado + C.Proteccion
 			e.golpesSeguidos = 0
 		end
@@ -306,6 +325,22 @@ for _, jugador in Players:GetPlayers() do
 		task.spawn(prepararPeleador, jugador.Character)
 	end
 end
+
+-- API para Poderes.server.luau: el daño pasa siempre por acá.
+local api = Instance.new("BindableFunction")
+api.Name = "CombateApi"
+api.OnInvoke = function(accion: string, a: Model, b: any, c: any, d: any, e2: any)
+	if accion == "Pegar" then
+		pegarA(a, b, c, d, e2)
+	elseif accion == "Contra" then
+		local e = estadoDe(a)
+		e.contraHasta = os.clock() + b
+		e.contraDanio = c
+		e.contraGolpes = d
+	end
+	return true
+end
+api.Parent = script.Parent
 
 -- Energía: se recupera sola.
 task.spawn(function()

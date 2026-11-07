@@ -23,12 +23,10 @@ local accion: AnimationTrack? = nil
 local embistiendo = false
 
 local UNA_VEZ: { [Enum.KeyCode]: string } = {
-	[K.Z] = "PunoSismico",
 	[K.J] = "ReflejosContragolpe",
 	[K.U] = "PiroBolaFuego",
 	[K.O] = "PiroMuroFuego",
 	[K.K] = "ReflejosPasoFantasma",
-	[K.X] = "GolpePiso",
 	[K.One] = "Saludar",
 	[K.Two] = "Celebrar",
 	[K.Three] = "Recoger",
@@ -130,9 +128,6 @@ UserInputService.InputBegan:Connect(function(entrada, usado)
 		tocar("ReflejosLluviaGolpes")
 	elseif tecla == K.V then
 		iniciarYSeguir("CargarInicio", "CargarLoop", K.V)
-	elseif tecla == K.C then
-		embistiendo = true
-		iniciarYSeguir("EmbestidaInicio", "EmbestidaCarrera", K.C)
 	elseif tecla == K.LeftShift and h then
 		h.WalkSpeed = P.Correr
 	elseif tecla == K.LeftControl and h then
@@ -152,9 +147,6 @@ UserInputService.InputEnded:Connect(function(entrada)
 		tocar("PiroChorroFin")
 	elseif tecla == K.V or tecla == K.P or tecla == K.L or tecla == K.H then
 		soltar()
-	elseif tecla == K.C then
-		embistiendo = false
-		tocar("EmbestidaFrenada")
 	elseif (tecla == K.LeftShift or tecla == K.LeftControl) and h then
 		h.WalkSpeed = P.Caminar
 	end

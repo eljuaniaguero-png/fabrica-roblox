@@ -340,6 +340,112 @@ Config.Combate = {
 	ManiquiVuelve = 3,
 }
 
+-- Habilidades de los Linajes (server/Poderes.server.luau). Números de las notas de la bóveda.
+-- Impacto: segundos desde que se aprieta hasta que el servidor resuelve la habilidad.
+Config.Poderes = {
+	CambioLibre = true, -- T cambia de Linaje; se apaga cuando esté la ruleta
+	Orden = { "FuerzaBruta", "Reflejos", "Piroquinesis" },
+	MargenRecarga = 0.2,
+	MargenRed = 4,
+	QuemaVeces = 3,
+	QuemaDanio = 4,
+	BolaVelocidad = 90,
+	MuroDura = 4,
+	Linajes = {
+		FuerzaBruta = {
+			Z = {
+				Nombre = "Puño sísmico",
+				Accion = "PunoSismico",
+				Danio = 30,
+				Recarga = 6,
+				Energia = 20,
+				Alcance = 8,
+				Impacto = 0.4,
+			},
+			X = {
+				Nombre = "Golpe al piso",
+				Accion = "GolpePiso",
+				Danio = 25,
+				Recarga = 9,
+				Energia = 25,
+				Alcance = 10,
+				Impacto = 0.53,
+			},
+			C = {
+				Nombre = "Embestida",
+				Accion = "Embestida",
+				Danio = 20,
+				Recarga = 12,
+				Energia = 20,
+				Alcance = 14,
+				Impacto = 0.45,
+			},
+		},
+		Reflejos = {
+			Z = {
+				Nombre = "Contragolpe",
+				Accion = "Contragolpe",
+				Danio = 10,
+				Golpes = 3,
+				Dura = 0.6,
+				Recarga = 7,
+				Energia = 15,
+				Impacto = 0,
+			},
+			X = {
+				Nombre = "Paso fantasma",
+				Accion = "PasoFantasma",
+				Danio = 25,
+				Recarga = 8,
+				Energia = 20,
+				Alcance = 12,
+				Impacto = 0.2,
+			},
+			C = {
+				Nombre = "Lluvia de golpes",
+				Accion = "LluviaGolpes",
+				Danio = 5,
+				Golpes = 6,
+				Recarga = 10,
+				Energia = 25,
+				Alcance = 7,
+				Impacto = 0.1,
+			},
+		},
+		Piroquinesis = {
+			Z = {
+				Nombre = "Bola de fuego",
+				Accion = "BolaFuego",
+				Danio = 22,
+				Recarga = 5,
+				Energia = 15,
+				Alcance = 40,
+				Impacto = 0.4,
+			},
+			X = {
+				Nombre = "Chorro",
+				Accion = "Chorro",
+				Danio = 5,
+				Golpes = 6,
+				Dura = 1.5,
+				Recarga = 9,
+				Energia = 25,
+				Alcance = 12,
+				Impacto = 0.2,
+			},
+			C = {
+				Nombre = "Muro de fuego",
+				Accion = "MuroFuego",
+				Danio = 8,
+				Recarga = 12,
+				Energia = 25,
+				Alcance = 10,
+				Impacto = 0.6,
+			},
+		},
+	},
+}
+
 -- Animaciones de nuestro Animate (src/character/Animate.client.luau).
 -- Teclas de prueba (client/PruebaTeclas): solo visuales. Apagar antes de publicar.
 Config.PruebaTeclas = {
@@ -354,7 +460,7 @@ Config.PruebaTeclas = {
 	EsperaCombo = 0.75, -- parte del golpe que tiene que pasar antes del siguiente
 	VelocidadCombo = 0.75, -- 1 es la velocidad original
 	SaltoAire = 38,
-	Cartel = "Click: combo   S + click en el 4.º: levanta   Click en el aire: martillazo   Click tras el dash: golpe de dash\nQ + WASD: dash   F: bloqueo (justo antes del golpe: parry)\nR: salta y martillazo\nShift: correr   Ctrl: rápido   Y: vuelo\nZ: puño sísmico   X: golpe al piso   C: embestida   V: cargar\nReflejos: J contragolpe   K paso fantasma   L lluvia (mantener)   P cargar (mantener)\nPiroquinesis: U bola   I chorro (mantener)   O muro   H cargar (mantener)\n1 saludar  2 celebrar  3 recoger  4 hablar  5 banco\n6 aturdido  7 derrota  8 levantarse  9 recibe liviano  0 recibe fuerte",
+	Cartel = "Click: combo   S + click en el 4.º: levanta   Click en el aire: martillazo   Click tras el dash: golpe de dash\nQ + WASD: dash   F: bloqueo (justo antes del golpe: parry)   Z X C: poderes   T: cambia Linaje\nShift: correr más   Ctrl: rápido   Y: vuelo",
 }
 
 Config.Animaciones = {
