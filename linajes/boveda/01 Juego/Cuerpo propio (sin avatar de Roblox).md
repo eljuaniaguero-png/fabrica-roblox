@@ -61,3 +61,7 @@ Volver a [[Ficha del juego]]
 - La textura es gris casi blanca y el juego la tiñe con `SurfaceAppearance.Color`.
 - Script: `arte/scripts/personajes/pelo_hebras.py`. Reemplazan a los peinados Puntas, Flequillo y Cresta de antes cuando pasen a Studio.
 - Pendiente: los tres pasan el tope de 2.000 triángulos de la guía; hay que recortarlos o subir el tope.
+
+## Zapatillas (7 nov)
+
+Una malla cerrada por pie (168 triángulos): suela continua y capellada, con punta apenas redondeada. Línea de suela y cordones van en la textura `blender/texturas/zapatillas/Zapatillas_color.png`. El dobladillo del pantalón termina arriba de la zapatilla. Pendiente: que el jugador pueda teñir la capellada.

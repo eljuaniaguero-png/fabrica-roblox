@@ -12,6 +12,7 @@ import math
 import os
 
 import bpy
+import numpy as np
 from mathutils import Euler, Vector
 
 ARTE = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -20,6 +21,7 @@ SALIDA = os.path.join(ARTE, "blender", "cuerpo-comic.blend")
 EXPORTS = os.path.join(ARTE, "exports", "cuerpo-comic")
 STUD = 0.28
 BORDE = 0.009
+ZAPA_X, ZAPA_ATRAS, ZAPA_FRENTE, ZAPA_SUELA = 0.134, 0.134, -0.205, 0.034
 
 COLORES = {
     "Piel": "#d8a06f",
@@ -77,6 +79,120 @@ def preparar(o, hueso, mat, pieza, arm, borde):
     return o
 
 
+def contorno(mx, atras, frente, radio):
+    """Planta del pie: talón recto y punta apenas redondeada. Mismo orden de puntos siempre."""
+    b = 0.006
+    puntos = [(-mx + b, atras), (mx - b, atras), (mx, atras - b)]
+    for i in range(5):
+        a = math.radians(-90 * i / 4)
+        puntos.append((mx - radio + radio * math.cos(a), frente + radio + radio * math.sin(a)))
+    for i in range(5):
+        a = math.radians(-90 - 90 * i / 4)
+        puntos.append((-mx + radio + radio * math.cos(a), frente + radio + radio * math.sin(a)))
+    puntos.append((-mx, atras - b))
+    return puntos
+
+
+def textura_zapatilla():
+    """Mitad izquierda: capellada vista de arriba, con cordones. Mitad derecha: suela con línea."""
+    n = 256
+
+    def lin(nombre):
+        return np.array([(int(COLORES[nombre][i : i + 2], 16) / 255) ** 2.2 for i in (1, 3, 5)])
+
+    def fila(y):
+        return int(((y - ZAPA_FRENTE) / (ZAPA_ATRAS - ZAPA_FRENTE) * 0.96 + 0.02) * n)
+
+    px = np.ones((n, n, 4), dtype=np.float32)
+    px[:, : n // 2, :3] = lin("Zapatillas")
+    px[:, n // 2 :, :3] = lin("Suela")
+    px[int(n * 0.3) : int(n * 0.36), n // 2 :, :3] = lin("Pantalon")  # línea de la suela
+    px[fila(-0.17) : fila(-0.1), 48:80, :3] = lin("Ribete")  # lengüeta
+    for y in (-0.16, -0.14, -0.12):
+        px[fila(y) : fila(y + 0.008), 38:90, :3] = lin("Suela")  # cordones
+    img = bpy.data.images.new("Zapatillas_color", n, n, alpha=False)
+    img.colorspace_settings.name = "Linear Rec.709"
+    img.pixels.foreach_set(px.ravel())
+    carpeta = os.path.join(ARTE, "blender", "texturas", "zapatillas")
+    os.makedirs(carpeta, exist_ok=True)
+    img.filepath_raw = os.path.join(carpeta, "Zapatillas_color.png")
+    img.file_format = "PNG"
+    img.save()
+    img.pack()
+    m = bpy.data.materials.new("Mat_ZapatillaTextura")
+    m.use_nodes = True
+    t = m.node_tree.nodes.new("ShaderNodeTexImage")
+    t.image = img
+    t.interpolation = "Closest"
+    b = m.node_tree.nodes["Principled BSDF"]
+    b.inputs["Roughness"].default_value = 0.62
+    m.node_tree.links.new(t.outputs["Color"], b.inputs["Base Color"])
+    return m
+
+
+def zapatilla(nombre, hueso, lx, mat, arm, borde):
+    """Una malla cerrada: suela continua alrededor de todo el pie y capellada encima."""
+
+    def alto(y):
+        k = min(max((-0.12 - y) / (-0.12 - ZAPA_FRENTE), 0), 1)
+        return 0.125 - 0.05 * k * k
+
+    suela = contorno(ZAPA_X, ZAPA_ATRAS, ZAPA_FRENTE, 0.04)
+    arriba = contorno(ZAPA_X - 0.006, ZAPA_ATRAS - 0.006, ZAPA_FRENTE + 0.006, 0.036)
+    abajo = contorno(ZAPA_X - 0.005, ZAPA_ATRAS - 0.005, ZAPA_FRENTE + 0.005, 0.036)
+    aros = [
+        [(x, y, 0.0) for x, y in abajo],
+        [(x, y, 0.006) for x, y in suela],
+        [(x, y, ZAPA_SUELA) for x, y in suela],
+        [(x, y, ZAPA_SUELA) for x, y in arriba],
+        [(x, y, alto(y)) for x, y in arriba],
+        [(x * 0.55, y * 0.6 - 0.03, alto(y * 0.6 - 0.03)) for x, y in arriba],
+    ]
+    n = len(suela)
+    verts = [v for aro in aros for v in aro]
+    abajo_c, arriba_c = len(verts), len(verts) + 1
+    verts += [(0, -0.03, 0.0), (0, -0.03, alto(-0.03))]
+    caras, es_suela = [], []
+    for j in range(len(aros) - 1):
+        for i in range(n):
+            k = (i + 1) % n
+            caras.append((j * n + i, j * n + k, (j + 1) * n + k, (j + 1) * n + i))
+            es_suela.append(j < 3)
+    for i in range(n):
+        k = (i + 1) % n
+        caras.append((abajo_c, k, i))
+        es_suela.append(True)
+        caras.append((arriba_c, (len(aros) - 1) * n + i, (len(aros) - 1) * n + k))
+        es_suela.append(False)
+    me = bpy.data.meshes.new(nombre)
+    me.from_pydata([(x + lx, y, z) for x, y, z in verts], [], caras)
+    capa = me.uv_layers.new(name="UV")
+    for cara, blanca in zip(me.polygons, es_suela):
+        for lazo in cara.loop_indices:
+            x, y, z = verts[me.loops[lazo].vertex_index]
+            if blanca:
+                capa.data[lazo].uv = (0.75, 0.05 + 0.9 * z / ZAPA_SUELA)
+            else:
+                capa.data[lazo].uv = ((x + ZAPA_X) / (2 * ZAPA_X) * 0.46 + 0.02, (y - ZAPA_FRENTE) / (ZAPA_ATRAS - ZAPA_FRENTE) * 0.96 + 0.02)
+    me.update()
+    o = bpy.data.objects.new(nombre, me)
+    bpy.context.collection.objects.link(o)
+    bpy.ops.object.select_all(action="DESELECT")
+    o.select_set(True)
+    bpy.context.view_layer.objects.active = o
+    bpy.ops.object.mode_set(mode="EDIT")
+    bpy.ops.mesh.select_all(action="SELECT")
+    bpy.ops.mesh.normals_make_consistent(inside=False)
+    bpy.ops.object.mode_set(mode="OBJECT")
+    aristas = {}
+    for f in me.polygons:
+        for k in f.edge_keys:
+            aristas[k] = aristas.get(k, 0) + 1
+    unicos = {tuple(round(c, 5) for c in v.co) for v in me.vertices}
+    print("ZAPATILLA", nombre, "triangulos", sum(len(f.vertices) - 2 for f in me.polygons), "abiertas", sum(1 for c in aristas.values() if c != 2), "vertices_duplicados", len(me.vertices) - len(unicos))
+    return preparar(o, hueso, mat, "Zapatillas", arm, borde)
+
+
 def main():
     bpy.ops.wm.open_mainfile(filepath=BASE)
     arm = bpy.data.objects["Maniqui"]
@@ -86,6 +202,7 @@ def main():
             bpy.data.objects.remove(o)
     mats = {n: material(n) for n in COLORES}
     borde = negro()
+    mat_zapa = textura_zapatilla()
 
     def caja(nombre, hueso, centro, medida, mat, pieza, giro=(0, 0, 0)):
         bpy.ops.mesh.primitive_cube_add(size=1, location=centro)
@@ -117,7 +234,7 @@ def main():
         # Pantalón y zapatillas
         caja(f"Cuerpo_{n}UpperLeg", f"{n}UpperLeg", (0.14 * lado, 0, 0.484), (0.255, 0.255, 0.27), "Pantalon", "Pantalon")
         caja(f"Cuerpo_{n}LowerLeg", f"{n}LowerLeg", (0.14 * lado, 0, 0.215), (0.25, 0.25, 0.29), "Pantalon", "Pantalon")
-        caja(f"Cuerpo_{n}Foot", f"{n}Foot", (0.14 * lado, -0.025, 0.066), (0.265, 0.315, 0.132), "Zapatillas", "Zapatillas")
+        zapatilla(f"Cuerpo_{n}Foot", f"{n}Foot", 0.14 * lado, mat_zapa, arm, borde)
         # Campera en el torso: frente abierto, costado y solapa.
         caja(f"Campera_Frente{n}", "UpperTorso", (0.185 * lado, -0.135, 0.965), (0.17, 0.035, 0.49), "Campera", "Campera")
         caja(f"Campera_Costado{n}", "UpperTorso", (0.262 * lado, 0, 0.965), (0.035, 0.28, 0.49), "Campera", "Campera")
@@ -145,16 +262,9 @@ def main():
         lx = 0.14 * lado
         caja(f"Pantalon_Bolsillo{n}", f"{n}UpperLeg", (lx + 0.075 * lado, -0.132, 0.56), (0.08, 0.012, 0.075), "Forro", "Pantalon")
         caja(f"Pantalon_Costura{n}", f"{n}UpperLeg", (lx + 0.131 * lado, 0, 0.484), (0.01, 0.045, 0.255), "Cuello", "Pantalon")
-        caja(f"Pantalon_Costura2{n}", f"{n}LowerLeg", (lx + 0.129 * lado, 0, 0.21), (0.01, 0.045, 0.27), "Cuello", "Pantalon")
+        caja(f"Pantalon_Costura2{n}", f"{n}LowerLeg", (lx + 0.129 * lado, 0, 0.2575), (0.01, 0.045, 0.205), "Cuello", "Pantalon")
         caja(f"Pantalon_Rodillera{n}", f"{n}LowerLeg", (lx, -0.133, 0.285), (0.18, 0.018, 0.105), "Forro", "Pantalon")
-        caja(f"Pantalon_Botamanga{n}", f"{n}LowerLeg", (lx, 0, 0.098), (0.265, 0.265, 0.038), "Forro", "Pantalon")
-        # Zapatillas: suela, puntera, lengüeta y cordones.
-        caja(f"Zapa_Suela{n}", f"{n}Foot", (lx, -0.025, 0.014), (0.267, 0.317, 0.028), "Suela", "Zapatillas")
-        caja(f"Zapa_Puntera{n}", f"{n}Foot", (lx, -0.158, 0.05), (0.268, 0.055, 0.06), "Suela", "Zapatillas")
-        caja(f"Zapa_Franja{n}", f"{n}Foot", (lx, -0.025, 0.043), (0.269, 0.319, 0.018), "Cuello", "Zapatillas")
-        caja(f"Zapa_Lengua{n}", f"{n}Foot", (lx, -0.11, 0.086), (0.11, 0.08, 0.018), "Ribete", "Zapatillas")
-        for i, y in enumerate((-0.135, -0.105, -0.075)):
-            caja(f"Zapa_Cordon{n}{i}", f"{n}Foot", (lx, y, 0.095), (0.14, 0.012, 0.01), "Suela", "Zapatillas")
+        caja(f"Pantalon_Botamanga{n}", f"{n}LowerLeg", (lx, 0, 0.135), (0.265, 0.265, 0.038), "Forro", "Pantalon")
     # Cuello doble, parche de espalda original y dobladillo.
     caja("Cuello_Forro", "UpperTorso", (0, 0.098, 1.25), (0.26, 0.035, 0.07), "Forro", "Campera")
     caja("Campera_Dobladillo", "UpperTorso", (0, 0.154, 0.74), (0.565, 0.012, 0.045), "Forro", "Campera")
@@ -240,31 +350,11 @@ def main():
         if o.get("Pieza", "").startswith("Pelo") and o["Pieza"] != "PeloPuntas":
             o.hide_render = o.hide_viewport = True
 
-    # Cada zapatilla es UNA sola malla pegada a su pie: capellada, suela, franja y cordones.
-    for n in ("Left", "Right"):
-        pie = bpy.data.objects[f"Cuerpo_{n}Foot"]
-        bpy.ops.object.select_all(action="DESELECT")
-        for o in bpy.data.objects:
-            if o.name.startswith("Zapa_") and n in o.name:
-                o.select_set(True)
-        pie.select_set(True)
-        bpy.context.view_layer.objects.active = pie
-        bpy.ops.object.join()
-        viejos = list(pie.data.materials)
-        nuevos = [m for m in viejos if m.name != "Contorno"] + [borde]
-        indice = [nuevos.index(m) for m in viejos]
-        for cara in pie.data.polygons:
-            cara.material_index = indice[cara.material_index]
-        pie.data.materials.clear()
-        for m in nuevos:
-            pie.data.materials.append(m)
-        pie.modifiers["Borde"].material_offset = len(nuevos) - 1
-
     bpy.ops.wm.save_as_mainfile(filepath=SALIDA)
 
     # Un FBX por pieza, para el creador de personaje.
     os.makedirs(EXPORTS, exist_ok=True)
-    piezas = sorted({o["Pieza"] for o in bpy.data.objects if "Pieza" in o and not o["Pieza"].startswith("Cara")})
+    piezas = sorted({o["Pieza"] for o in bpy.data.objects if "Pieza" in o and not o["Pieza"].startswith(("Cara", "Pelo"))})  # los peinados salen de pelo_hebras.py
     for o in bpy.data.objects:
         o.hide_viewport = False
     for pieza in piezas:
