@@ -1001,4 +1001,12 @@ Config.Niveles = {
 	XpPruebaManiqui = 25, -- solo en Studio, hasta que existan los bots
 }
 
+-- Sonidos del combate (ForgeGUI). Se pueden cambiar por propios.
+Config.Sonidos = {
+	Variacion = 0.12,
+	Golpe = { Id = "rbxassetid://116089304319844", Volumen = 0.7 },
+	GolpeFuerte = { Id = "rbxassetid://122802277794974", Volumen = 0.9 },
+	Bloqueo = { Id = "rbxassetid://134479353254444", Volumen = 0.7 },
+}
+
 return Config

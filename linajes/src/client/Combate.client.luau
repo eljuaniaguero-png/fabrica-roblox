@@ -118,6 +118,22 @@ local function numero(objetivo: Model, texto: string, color: Color3)
 	Debris:AddItem(gui, 0.6)
 end
 
+-- Suena en el cuerpo que recibe, con una variación chica para que no se repita igual.
+local function sonar(objetivo: Model, nombre: string)
+	local r = objetivo:FindFirstChild("HumanoidRootPart")
+	local datos = (Config.Sonidos :: any)[nombre]
+	if r and datos and datos.Id ~= "" then
+		local s = Instance.new("Sound")
+		s.SoundId = datos.Id
+		s.Volume = datos.Volumen
+		s.PlaybackSpeed = 1 + (math.random() - 0.5) * Config.Sonidos.Variacion
+		s.RollOffMaxDistance = 90
+		s.Parent = r
+		s:Play()
+		Debris:AddItem(s, 2)
+	end
+end
+
 -- Chispas y anillo en el punto del golpe.
 local function colorDe(atacante: Model?): Color3
 	local dueno = atacante and Players:GetPlayerFromCharacter(atacante)
@@ -406,11 +422,11 @@ remoto.OnClientEvent:Connect(function(tipo: string, a: any, b: any, _c: any, d: 
 			accion = if fuerte then pistas.GolpeFuerte else pistas.GolpeLiviano
 			accion:Play(0.03)
 		end
-		-- SONIDO: golpe conecta
+		sonar(a, if fuerte then "GolpeFuerte" else "Golpe") -- SONIDO: golpe conecta
 	elseif tipo == "Bloqueado" then
 		destello(a, Color3.fromRGB(120, 170, 255))
 		numero(a, tostring(math.round(b)), Color3.fromRGB(150, 190, 255))
-		-- SONIDO: bloqueo
+		sonar(a, "Bloqueo") -- SONIDO: bloqueo
 	elseif tipo == "Parry" then
 		destello(a, Color3.fromRGB(63, 224, 240))
 		numero(a, "¡PARRY!", Color3.fromRGB(63, 224, 240))
