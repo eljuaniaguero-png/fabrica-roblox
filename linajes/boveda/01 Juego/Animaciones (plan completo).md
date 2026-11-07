@@ -266,7 +266,7 @@ El avance de Lluvia de golpes lo tiene que hacer el código: la animación solo 
 
 ![[anim-linaje-reflejos-contragolpe-atras.gif]] ![[anim-linaje-reflejos-paso-fantasma-atras.gif]] ![[anim-linaje-reflejos-lluvia-golpes-atras.gif]] ![[anim-linaje-reflejos-cargar-loop-atras.gif]]
 
-### P27-03 Animaciones de Piroquinesis (7 nov, esperando OK de Juani)
+### P27-03 Animaciones de Piroquinesis (7 nov, APROBADA y publicada)
 
 Plantado y a distancia. Hechas con `linaje-piroquinesis.py`, en `animaciones-linajes.blend`.
 

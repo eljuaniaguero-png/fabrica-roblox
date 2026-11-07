@@ -27,6 +27,8 @@ local UNA_VEZ: { [Enum.KeyCode]: string } = {
 	[K.G] = "Parry",
 	[K.Z] = "PunoSismico",
 	[K.J] = "ReflejosContragolpe",
+	[K.U] = "PiroBolaFuego",
+	[K.O] = "PiroMuroFuego",
 	[K.K] = "ReflejosPasoFantasma",
 	[K.X] = "GolpePiso",
 	[K.One] = "Saludar",
@@ -52,6 +54,9 @@ local function cargar(personaje: Model)
 		local anim = Instance.new("Animation")
 		anim.AnimationId = id
 		pistas[nombre] = animator:LoadAnimation(anim)
+	end
+	for nombre, id in Config.Animaciones.linaje_piroquinesis do
+		sumar("Piro" .. nombre, id)
 	end
 	for nombre, id in Config.Animaciones.linaje_reflejos do
 		sumar("Reflejos" .. nombre, id)
@@ -162,6 +167,10 @@ UserInputService.InputBegan:Connect(function(entrada, usado)
 		task.spawn(dash)
 	elseif tecla == K.F then
 		iniciarYSeguir("BloqueoInicio", "Bloqueo", K.F)
+	elseif tecla == K.I then
+		iniciarYSeguir("PiroChorroInicio", "PiroChorroLoop", K.I)
+	elseif tecla == K.H then
+		iniciarYSeguir("PiroCargarInicio", "PiroCargarLoop", K.H)
 	elseif tecla == K.P then
 		iniciarYSeguir("ReflejosCargarInicio", "ReflejosCargarLoop", K.P)
 	elseif tecla == K.L then
@@ -186,7 +195,9 @@ end)
 UserInputService.InputEnded:Connect(function(entrada)
 	local tecla = entrada.KeyCode
 	local h = humanoid
-	if tecla == K.F or tecla == K.V or tecla == K.P or tecla == K.L then
+	if tecla == K.I then
+		tocar("PiroChorroFin")
+	elseif tecla == K.F or tecla == K.V or tecla == K.P or tecla == K.L or tecla == K.H then
 		soltar()
 	elseif tecla == K.C then
 		embistiendo = false

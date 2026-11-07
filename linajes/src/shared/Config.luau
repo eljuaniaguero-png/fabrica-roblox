@@ -267,7 +267,7 @@ Config.PruebaTeclas = {
 	EsperaCombo = 0.75, -- parte del golpe que tiene que pasar antes del siguiente
 	VelocidadCombo = 0.75, -- 1 es la velocidad original
 	SaltoAire = 38,
-	Cartel = "Click: combo   Q + WASD: dash   F: bloqueo   G: parry\nR: salta y martillazo\nShift: correr   Ctrl: rápido   Y: vuelo\nZ: puño sísmico   X: golpe al piso   C: embestida   V: cargar\nReflejos: J contragolpe   K paso fantasma   L lluvia (mantener)   P cargar (mantener)\n1 saludar  2 celebrar  3 recoger  4 hablar  5 banco\n6 aturdido  7 derrota  8 levantarse  9 recibe liviano  0 recibe fuerte",
+	Cartel = "Click: combo   Q + WASD: dash   F: bloqueo   G: parry\nR: salta y martillazo\nShift: correr   Ctrl: rápido   Y: vuelo\nZ: puño sísmico   X: golpe al piso   C: embestida   V: cargar\nReflejos: J contragolpe   K paso fantasma   L lluvia (mantener)   P cargar (mantener)\nPiroquinesis: U bola   I chorro (mantener)   O muro   H cargar (mantener)\n1 saludar  2 celebrar  3 recoger  4 hablar  5 banco\n6 aturdido  7 derrota  8 levantarse  9 recibe liviano  0 recibe fuerte",
 }
 
 Config.Animaciones = {
@@ -338,6 +338,17 @@ Config.Animaciones = {
 		LluviaGolpes = "rbxassetid://125343911488522",
 		CargarInicio = "rbxassetid://72086404050001",
 		CargarLoop = "rbxassetid://100169266387602",
+	},
+	-- Piroquinesis (P27-03), hecha con arte/scripts/animaciones/linaje-piroquinesis.py. Marcadores:
+	-- Enciende y Lanza en BolaFuego, Enciende en ChorroInicio, Impacto en MuroFuego.
+	linaje_piroquinesis = {
+		BolaFuego = "rbxassetid://73899188252872",
+		ChorroInicio = "rbxassetid://128292249326676",
+		ChorroLoop = "rbxassetid://131380095550558",
+		ChorroFin = "rbxassetid://96398977781364",
+		MuroFuego = "rbxassetid://128169833720239",
+		CargarInicio = "rbxassetid://131965854869947",
+		CargarLoop = "rbxassetid://87000928657902",
 	},
 	linaje_fuerzabruta = {
 		PunoSismico = "rbxassetid://92821448797182",
