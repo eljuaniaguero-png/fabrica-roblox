@@ -177,7 +177,7 @@ local function circulo()
 		Vector3.new(0.1, M.RadioCirculo * 2, M.RadioCirculo * 2),
 		en(0, 0.16, 0) * CFrame.Angles(0, 0, math.pi / 2),
 		"Acento",
-		Enum.Material.Neon,
+		Enum.Material.SmoothPlastic,
 		false
 	)
 	anillo.Shape = Enum.PartType.Cylinder
@@ -310,28 +310,45 @@ local function zonaSegura()
 	end
 end
 
+-- Cartel de chapa pintada y gastada, con una sola lamparita.
 local function letrero()
 	local base = pieza(
 		carpeta,
-		Vector3.new(44, 7, 1),
-		en(0, 26, MEDIO_Z - 8.5),
-		"Asfalto",
-		Enum.Material.Metal
+		Vector3.new(40, 7, 0.6),
+		en(0, 22, MEDIO_Z - 8.5),
+		"Oxido",
+		Enum.Material.CorrodedMetal
 	)
 	local gui = Instance.new("SurfaceGui")
 	gui.Face = Enum.NormalId.Front
 	gui.SizingMode = Enum.SurfaceGuiSizingMode.PixelsPerStud
 	gui.PixelsPerStud = 8
-	gui.LightInfluence = 0
+	gui.LightInfluence = 1
 	gui.Parent = base
 	local texto = Instance.new("TextLabel")
-	texto.Size = UDim2.fromScale(1, 1)
+	texto.Size = UDim2.fromScale(0.92, 0.8)
+	texto.Position = UDim2.fromScale(0.04, 0.1)
 	texto.BackgroundTransparency = 1
 	texto.Font = Enum.Font.GothamBlack
 	texto.Text = "PUERTO ÓXIDO"
 	texto.TextScaled = true
-	texto.TextColor3 = color("Acento")
+	texto.TextColor3 = color("Hormigon"):Lerp(Color3.new(1, 1, 1), 0.45)
 	texto.Parent = gui
+	local lampara = pieza(
+		carpeta,
+		Vector3.new(1, 1, 1),
+		en(0, 26.2, MEDIO_Z - 10),
+		"Sodio",
+		Enum.Material.Neon,
+		false
+	)
+	local luz = Instance.new("SpotLight")
+	luz.Face = Enum.NormalId.Bottom
+	luz.Color = color("Sodio")
+	luz.Brightness = 2
+	luz.Range = 14
+	luz.Angle = 100
+	luz.Parent = lampara
 end
 
 -- Fondo: grúas de contenedores en vez de los bloques del mapa viejo.
