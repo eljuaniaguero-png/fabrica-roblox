@@ -283,7 +283,7 @@ def en_el_piso(funcion):
         bpy.context.view_layer.update()
         z = min((o.matrix_world @ v.co).z for o in botas for v in o.data.vertices)
         x, y, r = pose["raiz"]
-        return {**pose, "raiz": (x, y, r - z)}
+        return {**pose, "raiz": (x, y, r - z / arm.matrix_world.to_scale().z)}
 
     return con_piso
 

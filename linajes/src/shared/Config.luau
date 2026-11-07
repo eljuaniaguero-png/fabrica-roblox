@@ -350,6 +350,22 @@ Config.Animaciones = {
 		CargarInicio = "rbxassetid://131965854869947",
 		CargarLoop = "rbxassetid://87000928657902",
 	},
+	-- Remache (P28-01), hecha con arte/scripts/animaciones/remache.py. Publicada y sin usar: el jefe
+	-- vuelve en el evento de la semana 4. Faltan importar el modelo y programarlo.
+	jefe_remache = {
+		Entrada = "rbxassetid://125922233015465",
+		Quieto = "rbxassetid://131122330439514",
+		Caminar = "rbxassetid://73955414675145",
+		RecibirGolpe = "rbxassetid://132284113150173",
+		Aturdido = "rbxassetid://72920279603229",
+		CambioFase = "rbxassetid://105515250041535",
+		Derrota = "rbxassetid://134547056528273",
+		Martillazo = "rbxassetid://130108324798220",
+		CargaInicio = "rbxassetid://117911039438817",
+		CargaCarrera = "rbxassetid://139137804608398",
+		CargaFrenada = "rbxassetid://132329831457405",
+		Contenedor = "rbxassetid://93000774808385",
+	},
 	linaje_fuerzabruta = {
 		PunoSismico = "rbxassetid://92821448797182",
 		GolpePiso = "rbxassetid://77792023879204",
