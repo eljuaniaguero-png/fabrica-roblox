@@ -247,3 +247,16 @@ Prioridad en Roblox: Action. Una por fila (anticipación, pose máxima, recupera
 ![[anim-base-recoger-frente.gif]] ![[anim-base-recoger-atras.gif]]
 ![[anim-base-banco-frente.gif]] ![[anim-base-banco-atras.gif]]
 ![[anim-base-saludar-frente.gif]] ![[anim-base-saludar-atras.gif]]
+
+### P27-02 Animaciones de Reflejos (7 nov, esperando OK de Juani)
+
+4 animaciones en `animaciones-linajes.blend`, hechas con `linaje-reflejos.py`. Sin referencias de Gemini: la carpeta no existe.
+
+| Animación | Cuadros | Loop | Marcadores `Impacto` | Qué hace |
+|---|---|---|---|---|
+| reflejos-contragolpe | 30 | no | 12, 17, 22 | postura, esquive de costado y tres rectos |
+| reflejos-paso-fantasma | 36 | no | 16 | se tira, pasa de largo, media vuelta y pega por la espalda; termina mirando adelante |
+| reflejos-lluvia-golpes | 40 | no | 18, 21, 24, 27, 30, 33 | seis rectos alternados en medio segundo |
+| reflejos-cargar | 30 | sí | no | calma atenta, manos bajas: ruleta y menú |
+
+![[anim-linaje-reflejos-hoja.png]]
