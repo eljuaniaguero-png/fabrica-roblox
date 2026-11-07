@@ -263,8 +263,11 @@ Config.PruebaTeclas = {
 	Dash = 70,
 	DashTiempo = 0.18,
 	Embestida = 34,
-	PausaCombo = 1,
-	Cartel = "Click: combo   Q + WASD: dash   F: bloqueo   G: parry\nE: liviano   T: fuerte   R: aire\nShift: correr   Ctrl: rápido   Y: vuelo\nZ: puño sísmico   X: golpe al piso   C: embestida   V: cargar\n1 saludar  2 celebrar  3 recoger  4 hablar  5 banco\n6 aturdido  7 derrota  8 levantarse",
+	PausaCombo = 1.4,
+	EsperaCombo = 0.75, -- parte del golpe que tiene que pasar antes del siguiente
+	VelocidadCombo = 0.75, -- 1 es la velocidad original
+	SaltoAire = 38,
+	Cartel = "Click: combo   Q + WASD: dash   F: bloqueo   G: parry\nR: salta y martillazo\nShift: correr   Ctrl: rápido   Y: vuelo\nZ: puño sísmico   X: golpe al piso   C: embestida   V: cargar\n1 saludar  2 celebrar  3 recoger  4 hablar  5 banco\n6 aturdido  7 derrota  8 levantarse  9 recibe liviano  0 recibe fuerte",
 }
 
 Config.Animaciones = {
@@ -296,12 +299,12 @@ Config.Animaciones = {
 		-- cuadro 6, Golpe3 en el 8, Golpe4 y GolpeAire en el 12, Parry en el 3.
 		Golpe1 = "rbxassetid://124490545010999", -- jab derecho
 		Golpe2 = "rbxassetid://136367059016439", -- cross izquierdo
-		Golpe3 = "rbxassetid://111928587167090", -- gancho ascendente
+		Golpe3 = "rbxassetid://102236631709002", -- gancho de costado
 		Golpe4 = "rbxassetid://116334348414128", -- patada giratoria
 		GolpeAire = "rbxassetid://117764910626942", -- ataque desde arriba
-		BloqueoInicio = "rbxassetid://126990103001685",
-		Bloqueo = "rbxassetid://103094181117038",
-		Parry = "rbxassetid://125416864618057",
+		BloqueoInicio = "rbxassetid://94998844636130",
+		Bloqueo = "rbxassetid://121294671074779",
+		Parry = "rbxassetid://74732296763320",
 		DashAdelante = "rbxassetid://100155623254154",
 		DashAtras = "rbxassetid://114909466999172",
 		DashIzquierda = "rbxassetid://119984320402589",

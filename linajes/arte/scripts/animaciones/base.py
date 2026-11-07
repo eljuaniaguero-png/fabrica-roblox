@@ -561,37 +561,31 @@ def golpe_2(t):
 
 
 def golpe_3(t):
-    # Gancho ascendente derecho: se agacha bien (rodillas dobladas, puño bajo) y explota hacia
-    # arriba (Impacto 8). Los pies no se juntan: las piernas mantienen la guardia (Z 20).
-    abajo = con(
+    # Gancho derecho de costado: el brazo queda doblado y barre horizontal con el giro de la
+    # cadera y los hombros (Impacto 8). Nada de subir el puño: la fuerza viene del giro.
+    carga = con(
         GUARDIA,
-        raiz=(0, 0, -0.26),
-        LowerTorso=(26, 0, -20),
-        UpperTorso=_giro_arriba(-18),
-        RightUpperArm=(5, 8, 10),
-        RightLowerArm=(-74, 0, 0),
-        LeftUpperLeg=(-55, -6, 20),
-        RightUpperLeg=(-20, 6, 20),
-        LeftLowerLeg=(85, 0, 0),
-        RightLowerLeg=(80, 0, 0),
-        LeftFoot=(-30, 0, 0),
-        RightFoot=(-35, 0, 0),
+        raiz=(0.03, 0.02, -0.17),
+        UpperTorso=_giro_arriba(-30),
+        LowerTorso=(8, 0, -32),
+        LeftUpperLeg=(-36, -6, 32),
+        RightUpperLeg=(4, 6, 32),
+        RightUpperArm=(-60, 66, 90),
+        RightLowerArm=(-100, 0, 0),
     )
-    arriba = con(
+    pega = con(
         GUARDIA,
-        raiz=(0, -0.04, -0.02),
-        LowerTorso=(-8, 0, -20),
-        UpperTorso=_giro_arriba(30),
-        Head=(-15, 0, 5),
-        RightUpperArm=(-150, 18, -5),
-        RightLowerArm=(-60, 0, 0),
-        LeftUpperLeg=(-24, -6, 20),
-        RightUpperLeg=(10, 6, 20),
-        LeftLowerLeg=(22, 0, 0),
-        RightLowerLeg=(18, 0, 0),
-        RightFoot=(-35, 0, 0),
+        raiz=(-0.03, -0.1, -0.18),
+        LowerTorso=(16, 0, -2),
+        LeftUpperLeg=(-40, -6, 2),
+        RightUpperLeg=(8, 6, 2),
+        UpperTorso=_giro_arriba(42),
+        RightUpperArm=(-68, 46, 90),
+        RightLowerArm=(-92, 0, 0),
+        LeftLowerLeg=(66, 0, 0),
+        RightLowerLeg=(42, 0, 0),
     )
-    return actuar(t, 18, [(0, GUARDIA), (5, abajo, "sale"), (8, arriba, "seco"), (10, pasarse(abajo, arriba, 0.06), "sale"), (18, GUARDIA)])
+    return actuar(t, 18, [(0, GUARDIA), (5, pasarse(GUARDIA, carga, 0.15), "sale"), (8, pega, "seco"), (10, pasarse(carga, pega, 0.08), "sale"), (18, GUARDIA)])
 
 
 def golpe_4(t):
@@ -703,34 +697,44 @@ BLOQUEO = con(
 
 
 def bloqueo_inicio(t):
-    return actuar(t, 4, [(0, GUARDIA), (4, BLOQUEO, "sale")], ADELANTO_SUAVE)
+    # Se cierra de golpe y se pasa un poco, como si frenara un impacto.
+    return actuar(t, 6, [(0, GUARDIA), (3, pasarse(GUARDIA, BLOQUEO, 0.12), "seco"), (6, BLOQUEO, "sale")], ADELANTO_SUAVE)
 
 
 def bloqueo(t):
-    s = onda(t)
-    return con(BLOQUEO, raiz=(0, 0, -0.1 + s * 0.008), UpperTorso=(4 + s * 1.5, 0, 0))
+    # Vivo, no estatua: balancea el peso de un pie al otro, respira agitado y los brazos se
+    # reacomodan a destiempo.
+    s, r, q = onda(t), onda(t * 2), onda(t, 0.25)
+    return con(
+        BLOQUEO,
+        raiz=(s * 0.03, 0, -0.24 + r * 0.014),
+        LowerTorso=(16 + r * 2, s * 3, -10 + s * 5),
+        UpperTorso=(4 + r * 3, 0, q * 6),
+        Head=(-4 + q * 2, 0, -s * 3),
+        LeftUpperArm=(-96 + s * 3, -6, -14),
+        RightUpperArm=(-96 - s * 3, 6, 14),
+        LeftLowerArm=(-70 + q * 3, 0, -10),
+        RightLowerArm=(-70 - q * 3, 0, 10),
+    )
 
 
 def parry(t):
-    # Corto y seco (distinto del bloqueo, que se queda quieto): en 3 cuadros los dos antebrazos
-    # empujan hacia afuera y adelante y el cuerpo da medio paso adelante (Impacto 3); aguanta
-    # hasta el 5 y vuelve a la guardia.
-    empuja = con(
+    # Desvío con el antebrazo izquierdo: barre hacia afuera con giro de hombros (Impacto 3), el
+    # puño derecho queda cargado para contestar y el cuerpo se corre medio paso atrás.
+    desvia = con(
         GUARDIA,
-        raiz=(0, -0.12, -0.15),
-        LowerTorso=(14, 0, -20),
-        Head=(4, 0, 12),
-        LeftUpperArm=(-75, -18, -20),
-        RightUpperArm=(-75, 18, 20),
-        LeftLowerArm=(-45, 0, 0),
-        RightLowerArm=(-45, 0, 0),
-        LeftHand=(0, -15, 0),
-        RightHand=(0, 15, 0),
-        LeftUpperLeg=(-48, -6, 20),
-        LeftLowerLeg=(62, 0, 0),
-        RightUpperLeg=(14, 6, 20),
+        raiz=(0.05, 0.07, -0.17),
+        LowerTorso=(6, 0, -28),
+        UpperTorso=_giro_arriba(-26),
+        Head=(4, 0, 26),
+        LeftUpperArm=(-108, -42, -8),
+        LeftLowerArm=(-82, 0, 0),
+        RightUpperArm=(-22, -22, 18),
+        RightLowerArm=(-145, 0, 0),
+        LeftUpperLeg=(-30, -6, 28),
+        RightUpperLeg=(10, 6, 28),
     )
-    return actuar(t, 12, [(0, GUARDIA), (3, empuja, "seco"), (5, pasarse(GUARDIA, empuja, 0.06), "sale"), (12, GUARDIA)])
+    return actuar(t, 14, [(0, GUARDIA), (3, desvia, "seco"), (6, pasarse(GUARDIA, desvia, 0.07), "sale"), (8, desvia), (14, GUARDIA)])
 
 
 def _dash(lean, brazos, piernas):
@@ -1031,9 +1035,9 @@ ANIMACIONES = {
     "golpe-3": (golpe_3, 18, False, "Action", (5, 8, 14)),
     "golpe-4": (golpe_4, 24, False, "Action", (8, 12, 20)),
     "golpe-aire": (golpe_aire, 22, False, "Action", (8, 12, 18)),
-    "bloqueo-inicio": (bloqueo_inicio, 4, False, "Action", (0, 2, 4)),
+    "bloqueo-inicio": (bloqueo_inicio, 6, False, "Action", (0, 3, 6)),
     "bloqueo": (bloqueo, 30, True, "Action", (0, 8, 15)),
-    "parry": (parry, 12, False, "Action", (1, 3, 8)),
+    "parry": (parry, 14, False, "Action", (1, 3, 8)),
     "dash-adelante": (_hacer_dash("adelante"), 8, False, "Action", (1, 3, 7)),
     "dash-atras": (_hacer_dash("atras"), 8, False, "Action", (1, 3, 7)),
     "dash-izquierda": (_hacer_dash("izquierda"), 8, False, "Action", (1, 3, 7)),
@@ -1074,7 +1078,7 @@ for _n in ("quieto", "caminar", "correr", "correr-rapido", "saltar-aire", "volar
 ETIQUETAS = {
     "golpe-1": "Golpe 1/jab derecho",
     "golpe-2": "Golpe 2/cross izquierdo",
-    "golpe-3": "Golpe 3/gancho ascendente",
+    "golpe-3": "Golpe 3/gancho de costado",
     "golpe-4": "Golpe 4/patada giratoria",
     "golpe-aire": "Ataque desde/arriba",
     "bloqueo-inicio": "Bloqueo/(inicio)",
@@ -1106,6 +1110,7 @@ GRUPOS = {
     "combate": [n for n in ANIMACIONES if n.startswith(_COMBATE)],
     "tanda2": [n for n in ANIMACIONES if not n.startswith(("golpe-1", "golpe-2", "golpe-3", "golpe-4", "golpe-aire", "golpe-liviano", "golpe-fuerte"))],
     "prueba": ["correr"],
+    "ajustes": ["golpe-3", "bloqueo-inicio", "bloqueo", "parry"],
     "loco": ["quieto", "caminar", "correr", "correr-rapido", "saltar-inicio", "saltar-aire", "saltar-caer"],
     "tanda1": ["golpe-1", "golpe-2", "golpe-3", "golpe-4", "golpe-aire", "golpe-liviano", "golpe-fuerte"],
 }

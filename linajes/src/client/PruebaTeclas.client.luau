@@ -24,9 +24,6 @@ local embistiendo = false
 local golpe, ultimoGolpe = 0, 0
 
 local UNA_VEZ: { [Enum.KeyCode]: string } = {
-	[K.E] = "GolpeLiviano",
-	[K.T] = "GolpeFuerte",
-	[K.R] = "GolpeAire",
 	[K.G] = "Parry",
 	[K.Z] = "PunoSismico",
 	[K.X] = "GolpePiso",
@@ -38,6 +35,8 @@ local UNA_VEZ: { [Enum.KeyCode]: string } = {
 	[K.Six] = "Aturdido",
 	[K.Seven] = "Derrota",
 	[K.Eight] = "Levantarse",
+	[K.Nine] = "GolpeLiviano", -- recibe un golpe liviano
+	[K.Zero] = "GolpeFuerte", -- recibe un golpe fuerte
 }
 
 local function cargar(personaje: Model)
@@ -115,10 +114,18 @@ local function dash()
 end
 
 local function comboGolpes()
+	-- Un golpe no se corta con el siguiente: hay que esperar a que casi termine.
+	local previo = accion
+	if previo and previo.IsPlaying and previo.TimePosition < previo.Length * P.EsperaCombo then
+		return
+	end
 	local ahora = os.clock()
 	golpe = if ahora - ultimoGolpe > P.PausaCombo then 1 else golpe % 4 + 1
 	ultimoGolpe = ahora
-	tocar("Golpe" .. golpe)
+	local pista = tocar("Golpe" .. golpe)
+	if pista then
+		pista:AdjustSpeed(P.VelocidadCombo)
+	end
 end
 
 UserInputService.InputBegan:Connect(function(entrada, usado)
@@ -131,6 +138,13 @@ UserInputService.InputBegan:Connect(function(entrada, usado)
 		comboGolpes()
 	elseif UNA_VEZ[tecla] then
 		tocar(UNA_VEZ[tecla])
+	elseif tecla == K.R then
+		-- Ataque desde arriba: salta y baja de un martillazo.
+		local r = raiz
+		if r then
+			r.AssemblyLinearVelocity += Vector3.new(0, P.SaltoAire, 0)
+		end
+		tocar("GolpeAire")
 	elseif tecla == K.Q then
 		task.spawn(dash)
 	elseif tecla == K.F then
