@@ -27,7 +27,8 @@ A.SALIDA_FBX = os.path.join(A.B.ARTE, "animaciones", "linaje-piroquinesis")
 
 
 def bola_de_fuego(t):
-    # Junta el fuego en la mano derecha al lado de la cadera y lo empuja de palma (Impacto 12).
+    # Una mano: el brazo derecho va atrás, la bola nace en esa mano (Enciende 7) y sale con el
+    # giro del torso (Lanza 12). La izquierda queda en guardia y las piernas plantadas.
     carga = con(
         G,
         raiz=(0, 0.1, -0.16),
@@ -36,10 +37,8 @@ def bola_de_fuego(t):
         RightUpperLeg=(0, 6, 24),
         UpperTorso=(2, 0, -26),
         Head=(10, 0, 42),
-        RightUpperArm=(24, 10, 0),
-        RightLowerArm=(-92, 0, 0),
-        LeftUpperArm=(-62, 12, -14),
-        LeftLowerArm=(-58, 0, 0),
+        RightUpperArm=(46, 16, 0),
+        RightLowerArm=(-58, 0, 0),
     )
     lanza = con(
         G,
@@ -49,8 +48,6 @@ def bola_de_fuego(t):
         Head=(4, 0, -56),
         RightUpperArm=(-90, 2, -8),
         RightLowerArm=(-2, 0, 0),
-        LeftUpperArm=(-16, 14, 6),
-        LeftLowerArm=(-118, 0, 0),
         LeftUpperLeg=(-44, -6, 20),
         RightUpperLeg=(14, 6, 20),
         LeftLowerLeg=(66, 0, 0),
@@ -60,26 +57,19 @@ def bola_de_fuego(t):
     return actuar(t, 30, [(0, G), (7, carga, "sale"), (10, pasarse(G, carga, 0.06)), (12, lanza, "seco"), (17, queda, "sale"), (30, G)], {"Head": -1})
 
 
-def chorro(t):
-    # Las dos palmas juntas adelante y aguanta el retroceso del lanzallamas (Impacto 16).
-    junta = con(
+def chorro_loop(t):
+    # El fuego lo empuja: se resiste tirado apenas para atrás y tiembla. Frecuencias enteras: cierra.
+    tiembla = A.sen(2 * A.pi * 6 * t)
+    fino = A.sen(2 * A.pi * 9 * t)
+    empuje = A.cos(2 * A.pi * t)
+    return con(
         G,
-        raiz=(0, 0.1, -0.2),
-        LowerTorso=(6, 0, -20),
-        UpperTorso=(2, 0, 6),
-        LeftUpperArm=(-24, 24, -12),
-        RightUpperArm=(-24, -24, 12),
-        LeftLowerArm=(-122, 0, 0),
-        RightLowerArm=(-122, 0, 0),
-    )
-    suelta = con(
-        G,
-        raiz=(0, -0.08, -0.15),
-        LowerTorso=(12, 0, -20),
-        UpperTorso=(4, 0, 20),
-        Head=(4, 0, -2),
-        LeftUpperArm=(-84, 12, 0),
-        RightUpperArm=(-84, -12, 0),
+        raiz=(0.004 * fino, 0.05 + 0.012 * empuje + 0.004 * tiembla, -0.15),
+        LowerTorso=(2 + 1.2 * tiembla, 0, -20),
+        UpperTorso=(-5 + 1.5 * empuje + 1.2 * fino, 0, 20),
+        Head=(6 + 1.5 * tiembla, 0, -2),
+        LeftUpperArm=(-84 + 1.8 * tiembla, 12, 0),
+        RightUpperArm=(-84 - 1.8 * fino, -12, 0),
         LeftLowerArm=(-8, 0, 0),
         RightLowerArm=(-8, 0, 0),
         LeftUpperLeg=(-46, -6, 20),
@@ -87,8 +77,16 @@ def chorro(t):
         LeftLowerLeg=(70, 0, 0),
         RightLowerLeg=(46, 0, 0),
     )
-    atras = con(suelta, raiz=(0, -0.03, -0.145), LowerTorso=(7, 0, -20), LeftUpperArm=(-90, 12, 0), RightUpperArm=(-90, -12, 0))
-    return actuar(t, 36, [(0, G), (9, junta, "sale"), (12, pasarse(G, junta, 0.06)), (16, suelta, "seco"), (20, atras, "sale"), (24, suelta), (28, atras), (36, G)], {})
+
+
+def chorro_inicio(t):
+    # 0,2 s: las palmas salen adelante y se enciende al llegar (Enciende 6).
+    return actuar(t, 6, [(0, G), (6, chorro_loop(0.0), "seco")], {})
+
+
+def chorro_fin(t):
+    # 0,3 s: vuelve a la guardia.
+    return actuar(t, 9, [(0, chorro_loop(0.0)), (9, G, "sale")], {})
 
 
 def muro_de_fuego(t):
@@ -125,20 +123,20 @@ def muro_de_fuego(t):
 
 
 def cargar_poder(t):
-    # Plantado y tranquilo: las palmas suben como sosteniendo una llama y la cabeza se levanta.
-    # Todo es coseno en t: en la unión del loop nada va rápido.
+    # Calor: casi quieto. Manos juntas delante del pecho sosteniendo una llama, hombros que suben
+    # y bajan con una respiración honda y un balanceo lento. Un ciclo de 2 s; cierra sin salto.
     respira = A.cos(2 * A.pi * t)
-    lento = A.cos(2 * A.pi * t)
+    balancea = A.cos(2 * A.pi * t)
     return {
-        "raiz": (0, 0, -0.022 + 0.006 * respira),
-        "_hombros": 0.05 * A.B.STUD * (respira + 1) / 2,
-        "LowerTorso": (2, 0, 0),
-        "UpperTorso": (-3 - 3 * respira, 0, 0),
-        "Head": (-6 - 5 * respira, 0, 0),
-        "LeftUpperArm": (-34 - 7 * lento, 24, -18),
-        "RightUpperArm": (-34 - 7 * lento, -24, 18),
-        "LeftLowerArm": (-72 - 8 * lento, 0, 0),
-        "RightLowerArm": (-72 - 8 * lento, 0, 0),
+        "raiz": (0.018 * balancea, 0, -0.022 + 0.004 * respira),
+        "_hombros": 0.09 * A.B.STUD * (respira + 1) / 2,
+        "LowerTorso": (2, 2.5 * balancea, 0),
+        "UpperTorso": (-2 - 3 * respira, -1.5 * balancea, 0),
+        "Head": (10 + 3 * respira, 1.5 * balancea, 0),
+        "LeftUpperArm": (-34 - 2 * respira, 28, -36),
+        "RightUpperArm": (-34 - 2 * respira, -28, 36),
+        "LeftLowerArm": (-76, 0, 0),
+        "RightLowerArm": (-76, 0, 0),
         "LeftUpperLeg": (-24, -12, 0),
         "RightUpperLeg": (-24, 12, 0),
         "LeftLowerLeg": (44, 0, 0),
@@ -154,17 +152,21 @@ def cargar_inicio(t):
 
 NUEVAS = {
     "piroquinesis-bola-fuego": (bola_de_fuego, 30, False, "Action", (10, 12, 20)),
-    "piroquinesis-chorro": (chorro, 36, False, "Action", (12, 16, 28)),
+    "piroquinesis-chorro-inicio": (chorro_inicio, 6, False, "Action", (0, 3, 6)),
+    "piroquinesis-chorro-loop": (chorro_loop, 30, True, "Action", (0, 8, 20)),
+    "piroquinesis-chorro-fin": (chorro_fin, 9, False, "Action", (0, 4, 9)),
     "piroquinesis-muro-fuego": (muro_de_fuego, 40, False, "Action", (14, 18, 28)),
     "piroquinesis-cargar-inicio": (cargar_inicio, 10, False, "Action", (0, 5, 10)),
-    "piroquinesis-cargar-loop": (cargar_poder, 30, True, "Action", (0, 7, 15)),
+    "piroquinesis-cargar-loop": (cargar_poder, 60, True, "Action", (0, 15, 30)),
 }
 A.ANIMACIONES = NUEVAS
 A.GRUPOS["piroquinesis"] = list(NUEVAS)
 A.ETIQUETAS.update(
     {
         "piroquinesis-bola-fuego": "Z Bola/de fuego",
-        "piroquinesis-chorro": "X Chorro",
+        "piroquinesis-chorro-inicio": "X Chorro/inicio",
+        "piroquinesis-chorro-loop": "X Chorro/loop",
+        "piroquinesis-chorro-fin": "X Chorro/fin",
         "piroquinesis-muro-fuego": "C Muro/de fuego",
         "piroquinesis-cargar-inicio": "Cargar/inicio",
         "piroquinesis-cargar-loop": "Cargar/loop",
@@ -172,8 +174,8 @@ A.ETIQUETAS.update(
 )
 A.MARCADORES.update(
     {
-        "piroquinesis-bola-fuego": [(12, "Impacto")],
-        "piroquinesis-chorro": [(16, "Impacto")],
+        "piroquinesis-bola-fuego": [(7, "Enciende"), (12, "Lanza")],
+        "piroquinesis-chorro-inicio": [(6, "Enciende")],
         "piroquinesis-muro-fuego": [(18, "Impacto")],
     }
 )

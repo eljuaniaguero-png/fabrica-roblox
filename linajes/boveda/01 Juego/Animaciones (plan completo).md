@@ -270,14 +270,16 @@ El avance de Lluvia de golpes lo tiene que hacer el código: la animación solo 
 
 Plantado y a distancia. Hechas con `linaje-piroquinesis.py`, en `animaciones-linajes.blend`.
 
-| Animación | Cuadros | Loop | Marcador | Qué hace |
+| Animación | Cuadros | Loop | Marcadores | Qué hace |
 |---|---|---|---|---|
-| piroquinesis-bola-fuego | 30 | no | `Impacto` 12 | junta fuego en la cadera y empuja de palma |
-| piroquinesis-chorro | 36 | no | `Impacto` 16 | dos palmas adelante, aguanta el retroceso |
-| piroquinesis-muro-fuego | 40 | no | `Impacto` 18 | se agacha y clava la palma en el piso |
-| piroquinesis-cargar-inicio | 10 | no | no | entra a la pose de carga |
-| piroquinesis-cargar-loop | 30 | sí | no | palmas que suben como sosteniendo una llama |
+| piroquinesis-bola-fuego | 30 | no | `Enciende` 7, `Lanza` 12 | una mano: brazo atrás y lanza con el giro del torso |
+| piroquinesis-chorro-inicio | 6 | no | `Enciende` 6 | dos palmas adelante |
+| piroquinesis-chorro-loop | 30 | sí | no | se resiste hacia atrás y tiembla |
+| piroquinesis-chorro-fin | 9 | no | no | vuelve a la guardia |
+| piroquinesis-muro-fuego | 40 | no | `Impacto` 18 | aprobado: clava la palma derecha |
+| piroquinesis-cargar-inicio | 10 | no | no | entra a la carga |
+| piroquinesis-cargar-loop | 60 | sí | no | manos juntas con la llama, respiración honda, balanceo lento |
 
 ![[anim-linaje-piroquinesis-hoja.png]]
 
-![[anim-linaje-piroquinesis-bola-fuego-atras.gif]] ![[anim-linaje-piroquinesis-chorro-atras.gif]] ![[anim-linaje-piroquinesis-muro-fuego-atras.gif]] ![[anim-linaje-piroquinesis-cargar-loop-atras.gif]]
+![[anim-linaje-piroquinesis-bola-fuego-atras.gif]] ![[anim-linaje-piroquinesis-chorro-inicio-atras.gif]] ![[anim-linaje-piroquinesis-chorro-loop-atras.gif]] ![[anim-linaje-piroquinesis-chorro-fin-atras.gif]] ![[anim-linaje-piroquinesis-cargar-loop-atras.gif]]
