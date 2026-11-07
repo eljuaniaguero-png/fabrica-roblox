@@ -7,10 +7,10 @@ local Debris = game:GetService("Debris")
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService = game:GetService("RunService")
-local TweenService = game:GetService("TweenService")
 local UserInputService = game:GetService("UserInputService")
 
 local Config = require(ReplicatedStorage:WaitForChild("Shared"):WaitForChild("Config"))
+local EfectosGolpe = require(script.Parent:WaitForChild("EfectosGolpe"))
 local remoto = ReplicatedStorage:WaitForChild("Combate") :: RemoteEvent
 
 local C = Config.Combate
@@ -129,39 +129,7 @@ local function impacto(objetivo: Model, fuerte: boolean, color: Color3)
 	if not (r and r:IsA("BasePart")) then
 		return
 	end
-	local tam = if fuerte then 7 else 4
-	local bola = Instance.new("Part")
-	bola.Shape = Enum.PartType.Ball
-	bola.Material = Enum.Material.Neon
-	bola.Color = color
-	bola.Anchored = true
-	bola.CanCollide = false
-	bola.CanQuery = false
-	bola.CanTouch = false
-	bola.Size = Vector3.one
-	bola.Transparency = 0.15
-	bola.CFrame = r.CFrame
-	bola.Parent = workspace
-	TweenService:Create(
-		bola,
-		TweenInfo.new(0.16, Enum.EasingStyle.Quad, Enum.EasingDirection.Out),
-		{ Size = Vector3.one * tam, Transparency = 1 }
-	):Play()
-	Debris:AddItem(bola, 0.2)
-	local punto = Instance.new("Attachment")
-	punto.Parent = r
-	local chispas = Instance.new("ParticleEmitter")
-	chispas.Color = ColorSequence.new(Color3.new(1, 1, 1), color)
-	chispas.LightEmission = 1
-	chispas.Lifetime = NumberRange.new(0.2, 0.45)
-	chispas.Speed = NumberRange.new(25, 55)
-	chispas.SpreadAngle = Vector2.new(180, 180)
-	chispas.Size = NumberSequence.new(0.4, 0)
-	chispas.Drag = 6
-	chispas.Rate = 0
-	chispas.Parent = punto
-	chispas:Emit(if fuerte then 60 else 26)
-	Debris:AddItem(punto, 0.6)
+	EfectosGolpe.reproducir(r.Position, fuerte, color)
 end
 
 -- Arco: la mano deja una estela mientras pega.
@@ -259,7 +227,11 @@ local function contar(danio: number)
 	golpes += 1
 	acumulado += danio
 	contadorHasta = os.clock() + C.ContadorDura
-	contador.Text = string.format("%d GOLPES\n%d", golpes, math.round(acumulado))
+	contador.Text = string.format(
+		"%d " .. (if golpes == 1 then "GOLPE" else "GOLPES") .. "\n%d",
+		golpes,
+		math.round(acumulado)
+	)
 	contador.Visible = true
 	contador.Rotation = math.random(-4, 4)
 end

@@ -747,4 +747,18 @@ Config.Mundo = {
 	VelocidadVuelo = 80,
 }
 
+Config.Efectos = {
+	Destello = "rbxassetid://92495499682051",
+	Anillo = "rbxassetid://86594022376451",
+	Arco = "rbxassetid://73680797455213",
+	Humo = "rbxassetid://74115882130548",
+	Lineas = "rbxassetid://76247666580830",
+	TamDestello = 6,
+	TamAnillo = 7,
+	TamArco = 8,
+	TamLineas = 15,
+	TamHumo = 9,
+	EscalaFuerte = 1.5,
+}
+
 return Config
