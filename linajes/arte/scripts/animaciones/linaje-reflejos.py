@@ -31,9 +31,11 @@ def contragolpe(t):
     desvia = con(
         G,
         raiz=(-0.15, 0.03, -0.17),
-        LowerTorso=(8, -10, -30),
-        UpperTorso=(4, -6, -22),
-        Head=(6, 8, 26),
+        LowerTorso=(8, -6, -24),
+        LeftUpperLeg=(-36, -6, 24),
+        RightUpperLeg=(4, 6, 24),
+        UpperTorso=(4, -4, -6),
+        Head=(6, 6, 30),
         LeftUpperArm=(-100, -46, -8),
         LeftLowerArm=(-78, 0, 0),
         RightUpperArm=(-20, -14, 18),
@@ -42,9 +44,9 @@ def contragolpe(t):
     gancho = con(
         G,
         raiz=(-0.05, -0.1, -0.2),
-        LowerTorso=(14, 6, -4),
-        UpperTorso=(8, 0, 46),
-        Head=(8, 0, -14),
+        LowerTorso=(14, 3, -20),
+        UpperTorso=(8, 0, 70),
+        Head=(8, 0, -58),
         LeftUpperArm=(-60, 18, -16),
         RightUpperArm=(-52, 44, 90),
         RightLowerArm=(-90, 0, 0),
@@ -103,26 +105,30 @@ def lluvia_de_golpes(t):
     return actuar(t, 30, claves, {})
 
 
+ALTO_CARGA, FOOT_CARGA, FOOT_REBOTE = 0.082, 16, 8
+
+
 def cargar_poder(t):
     # Rebota en las puntas de los pies como un boxeador: puños sueltos y cabeza que vigila.
-    # Todo es periódico en t: el loop cierra sin salto.
-    rebote = onda(t * 2)
-    lado = onda(t)
+    # Las piernas no cambian: sube el cuerpo entero y el pie gira sobre la punta, que queda en el
+    # piso. Todo es coseno en t: en la unión del loop nada va rápido, y no se nota el empalme.
+    rebote = A.cos(4 * A.pi * t)
+    lado = A.cos(2 * A.pi * t)
     return {
-        "raiz": (0.03 * lado, 0, -0.07 + 0.035 * rebote),
-        "LowerTorso": (5, 0, -14 + 6 * lado),
+        "raiz": (0.02 * lado, 0, ALTO_CARGA + 0.028 * rebote),
+        "LowerTorso": (5, 0, -14 + 5 * lado),
         "UpperTorso": (3 - 2 * rebote, 0, 7 * lado),
-        "Head": (8, 0, 14 - 22 * onda(t, 0.2)),
+        "Head": (8, 0, 14 - 20 * lado),
         "LeftUpperArm": (-28 + 4 * rebote, 22, -14),
         "RightUpperArm": (-26 - 4 * rebote, -22, 14),
         "LeftLowerArm": (-88 + 7 * lado, 0, 0),
         "RightLowerArm": (-88 - 7 * lado, 0, 0),
-        "LeftUpperLeg": (-24 - 5 * rebote, -5, 14),
-        "RightUpperLeg": (-8 - 5 * rebote, 5, 14),
-        "LeftLowerLeg": (38 - 9 * rebote, 0, 0),
-        "RightLowerLeg": (32 - 9 * rebote, 0, 0),
-        "LeftFoot": (10 + 8 * rebote, 0, 0),
-        "RightFoot": (10 + 8 * rebote, 0, 0),
+        "LeftUpperLeg": (-24, -5, 14 - 5 * lado),
+        "RightUpperLeg": (-8, 5, 14 - 5 * lado),
+        "LeftLowerLeg": (38, 0, 0),
+        "RightLowerLeg": (30, 0, 0),
+        "LeftFoot": (FOOT_CARGA + FOOT_REBOTE * rebote, 0, 0),
+        "RightFoot": (FOOT_CARGA + FOOT_REBOTE * rebote, 0, 0),
     }
 
 

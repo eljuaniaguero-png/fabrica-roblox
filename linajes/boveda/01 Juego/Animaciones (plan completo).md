@@ -254,11 +254,11 @@ Rápidas y livianas, al revés que Fuerza Bruta. Hechas con `linaje-reflejos.py`
 
 | Animación | Cuadros | Loop | Marcadores | Qué hace |
 |---|---|---|---|---|
-| reflejos-contragolpe | 18 | no | `Impacto` 8 | manotazo afuera con el cuerpo al costado (0,15 s) y gancho corto a las costillas en 3 cuadros |
+| reflejos-contragolpe | 18 | no | `Impacto` 8 | manotazo afuera y gancho corto; cadera fija a 20-24°, torso gira hasta 57° |
 | reflejos-paso-fantasma | 9 | no | `Desaparece` 3, `Aparece` 6 | se agacha y reaparece en guardia; el efecto lo pone el código |
 | reflejos-lluvia-golpes | 30 | sí | `Impacto` 3, 8, 13, 18, 23, 28 | 6 piñas por segundo, brazos estirados, torso gira con cada golpe |
 | reflejos-cargar-inicio | 8 | no | no | entra al rebote |
-| reflejos-cargar-loop | 30 | sí | no | rebota en las puntas, puños sueltos, cabeza atenta |
+| reflejos-cargar-loop | 30 | sí | no | rebota en las puntas (±0,1 studs), puños sueltos, cabeza atenta |
 
 El avance de Lluvia de golpes lo tiene que hacer el código: la animación solo inclina el cuerpo.
 
