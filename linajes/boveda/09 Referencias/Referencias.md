@@ -50,3 +50,5 @@ Volver a [[00 Inicio]]
 - [[Referencias de jefes]]: qué hacen bien los jefes de otros juegos y cómo aplica a Remache.
 
 - [[Referencias de sandbox]]: cómo funcionan los juegos de pelea libre, votaciones, eventos y elección de poder.
+
+- [[Referencias de pelea en Roblox]]: 10 juegos, por qué nuestro combate se siente flojo y qué agregar.
