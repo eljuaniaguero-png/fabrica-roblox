@@ -3,14 +3,17 @@
 -- Plano: zona segura en la esquina, cuatro grupos de contenedores, círculo central y pasarela alta.
 
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local ServerStorage = game:GetService("ServerStorage")
 
 local Config = require(ReplicatedStorage.Shared.Config)
+local Luz = require(ReplicatedStorage.Shared.Iluminacion)
 
 local M = Config.Arena.Mapa
 local O = M.Centro
 local MEDIO_X, MEDIO_Z = M.Ancho / 2, M.Largo / 2
-local LARGO_C, ALTO_C, ANCHO_C = 20, 9, 8
+local LARGO_C, ALTO_C = 20, 9
 
+local kit = ServerStorage:WaitForChild("ArenaKit")
 local carpeta = Instance.new("Folder")
 carpeta.Name = "Arena"
 
@@ -46,34 +49,26 @@ local function en(x: number, y: number, z: number): CFrame
 	return CFrame.new(O + Vector3.new(x, y, z))
 end
 
--- Contenedor apoyado en y: cuerpo que choca, nervios y puertas de adorno.
-local function contenedor(x: number, z: number, nivel: number, giro: number, tono: string)
-	local m = Instance.new("Model")
-	m.Name = "Contenedor"
-	local cf = en(x, nivel * ALTO_C + ALTO_C / 2, z) * CFrame.Angles(0, math.rad(giro), 0)
-	local cuerpo = pieza(m, Vector3.new(LARGO_C, ALTO_C, ANCHO_C), cf, tono, Enum.Material.Metal)
-	m.PrimaryPart = cuerpo
-	for _, lado in { -1, 1 } do
-		for i = -2, 2 do
-			pieza(
-				m,
-				Vector3.new(1.1, ALTO_C - 1, 0.3),
-				cf * CFrame.new(i * 3.8, 0, lado * (ANCHO_C / 2 + 0.1)),
-				tono,
-				Enum.Material.Metal,
-				false
-			)
-		end
-		pieza(
-			m,
-			Vector3.new(0.4, ALTO_C, ANCHO_C),
-			cf * CFrame.new(lado * (LARGO_C / 2 + 0.15), 0, 0),
-			"Oxido",
-			Enum.Material.CorrodedMetal,
-			false
-		)
+-- Copia una pieza del kit (ServerStorage.ArenaKit). Tono tiñe su SurfaceAppearance.
+local function poner(nombre: string, cf: CFrame, tono: string?, escala: number?): MeshPart
+	local molde = kit:FindFirstChild(nombre, true) :: MeshPart
+	local p = molde:Clone()
+	p.Anchored = true
+	if escala then
+		p.Size *= escala
 	end
-	m.Parent = carpeta
+	p.CFrame = cf * (molde.CFrame - molde.CFrame.Position)
+	local capa = p:FindFirstChildOfClass("SurfaceAppearance")
+	if capa and tono then
+		capa.Color = color(tono)
+	end
+	p.Parent = carpeta
+	return p
+end
+
+local function contenedor(x: number, z: number, nivel: number, giro: number, tono: string)
+	local cf = en(x, nivel * ALTO_C + ALTO_C / 2, z) * CFrame.Angles(0, math.rad(giro), 0)
+	poner("Contenedor", cf, tono)
 end
 
 local function fila(
@@ -92,54 +87,65 @@ local function fila(
 	end
 end
 
-local function caja(x: number, z: number, lado: number, y: number?)
-	pieza(
-		carpeta,
-		Vector3.one * lado,
-		en(x, (y or 0) + lado / 2, z) * CFrame.Angles(0, math.rad(math.random(-12, 12)), 0),
-		"Madera",
-		Enum.Material.WoodPlanks
+local function caja(x: number, z: number, lado: number, _y: number?)
+	local alto = 8.2 * lado / 4.5
+	poner(
+		"Prop_Cajones",
+		en(x, alto / 2, z) * CFrame.Angles(0, math.rad(math.random(-20, 20)), 0),
+		nil,
+		lado / 4.5
 	)
 end
 
 local function barriles(x: number, z: number)
-	for i = 0, 3 do
-		local p = pieza(
-			carpeta,
-			Vector3.new(4.4, 2.8, 2.8),
-			en(x + (i % 2) * 3.1, 2.2, z + math.floor(i / 2) * 3.1)
-				* CFrame.Angles(0, 0, math.pi / 2),
-			if i == 2 then "Rojo" else "Oxido",
-			Enum.Material.CorrodedMetal
-		)
-		p.Shape = Enum.PartType.Cylinder
+	for i = 0, 2 do
+		poner("Prop_Barril", en(x + i * 2.6, 1.65, z + (i % 2) * 2.4), "BarrilAzul")
 	end
+end
+
+local function luzHacia(parte: BasePart, datos: any)
+	local luz = Instance.new("SpotLight")
+	luz.Face = Enum.NormalId.Bottom
+	luz.Color = Color3.fromHex(datos.Color)
+	luz.Brightness = datos.Brillo
+	luz.Range = datos.Alcance
+	luz.Angle = datos.Angulo
+	luz.Shadows = false
+	luz.Parent = parte
 end
 
 local function farol(x: number, z: number, con: boolean)
-	pieza(carpeta, Vector3.new(0.9, 22, 0.9), en(x, 11, z), "Acero", Enum.Material.Metal)
-	pieza(carpeta, Vector3.new(6, 0.6, 0.9), en(x, 22, z), "Acero", Enum.Material.Metal)
-	local bulbo =
-		pieza(carpeta, Vector3.new(3, 0.5, 1.2), en(x, 21.6, z), "Sodio", Enum.Material.Neon, false)
+	poner("Prop_Farola", en(x, 11, z), nil, 1.5)
+	local bulbo = pieza(
+		carpeta,
+		Vector3.new(1.4, 1.4, 1.4),
+		en(x, 20.5, z),
+		"Sodio",
+		Enum.Material.Neon,
+		false
+	)
 	if con then
-		local luz = Instance.new("SpotLight")
-		luz.Face = Enum.NormalId.Bottom
-		luz.Color = color("Sodio")
-		luz.Brightness = 6
-		luz.Range = 55
-		luz.Angle = 110
-		luz.Parent = bulbo
+		luzHacia(bulbo, Luz.Calida)
 	end
 end
 
+-- Reflector frío en lo alto, para el contraste con las farolas.
+local function reflector(x: number, z: number)
+	pieza(carpeta, Vector3.new(1.2, 34, 1.2), en(x, 17, z), "Acero", Enum.Material.Metal)
+	local foco =
+		pieza(carpeta, Vector3.new(5, 1, 2), en(x, 34, z), "Reflector", Enum.Material.Neon, false)
+	luzHacia(foco, Luz.Fria)
+end
+
 local function piso()
-	pieza(
+	local base = pieza(
 		carpeta,
 		Vector3.new(M.Ancho, 0.2, M.Largo),
 		en(0, 0, 0),
 		"Asfalto",
 		Enum.Material.Asphalt
 	)
+	base.Reflectance = Luz.PisoBrillo
 	for i = -2, 2 do
 		pieza(
 			carpeta,
@@ -159,7 +165,7 @@ local function piso()
 			Enum.Material.Glass,
 			false
 		)
-		p.Reflectance = 0.25
+		p.Reflectance = Luz.CharcoBrillo
 		p.Transparency = 0.15
 	end
 end
@@ -326,7 +332,28 @@ local function letrero()
 	texto.Parent = gui
 end
 
+-- Fondo: grúas de contenedores en vez de los bloques del mapa viejo.
+local function fondo()
+	local mundo = workspace:FindFirstChild("Mundo")
+	local puerto = mundo and mundo:FindFirstChild("PuertoOxido")
+	local muelles = puerto and puerto:FindFirstChild("Muelles")
+	if muelles then
+		for _, g in muelles:GetChildren() do
+			if g.Name == "Grua" then
+				g:Destroy()
+			end
+		end
+	end
+	for _, x in M.Porticos do
+		poner("Grua_Portico", en(x, 80, -MEDIO_Z - 50) * CFrame.Angles(0, math.rad(90), 0))
+	end
+	for _, r in M.Reflectores do
+		reflector(r[1], r[2])
+	end
+end
+
 piso()
+fondo()
 circulo()
 pasarela()
 bordes()

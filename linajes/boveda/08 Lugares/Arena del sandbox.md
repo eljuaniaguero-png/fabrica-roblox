@@ -20,3 +20,6 @@ Para probar una hora: atributo `HoraPrueba` en Lighting.
 
 ## Matones de práctica (7 nov)
 3 matones en `Config.Combate.Matones`, con modelo propio sin pañuelo ni cadena. Te buscan fuera de la zona segura, embisten desde lejos, hacen combos de 2 o 3 golpes y a veces se cubren. Reaparecen a los 6 s y dan 60 de experiencia.
+
+## Kit y noche (7 nov)
+Las piezas viven en `ServerStorage.ArenaKit` (asset 80380787186308) y se colocan con `ArenaMapa.server.luau`. Valores de luz: `src/shared/Iluminacion.luau`. La arena queda siempre de noche; fuera de ella sigue el ciclo por horas.

@@ -371,6 +371,8 @@ Config.Arena = {
 		Largo = 260,
 		RadioCirculo = 26,
 		TorreX = 92,
+		Porticos = { -110, 20, 130 },
+		Reflectores = { { -136, -100 }, { 136, -100 }, { -136, 118 }, { 136, 118 } },
 		Grupos = { { -72, -66 }, { 72, -66 }, { -60, 66 }, { 72, 66 } },
 		Charcos = {
 			{ -30, -46, 22, 12 },
@@ -398,10 +400,12 @@ Config.Arena = {
 			Madera = "#6b4a2f",
 			Sodio = "#e8a33c",
 			Acento = "#3fe0f0",
-			Rojo = "#8e2f2a",
-			Azul = "#264f78",
-			Verde = "#2f6650",
-			Gris = "#5a6068",
+			Rojo = "#a8342c",
+			Azul = "#2c5f92",
+			Verde = "#35785c",
+			Gris = "#7c838c",
+			BarrilAzul = "#2f6288",
+			Reflector = "#cfe0ff",
 		},
 	},
 }
@@ -893,7 +897,6 @@ Config.Mundo = {
 			Resplandor = 0.9,
 		},
 	},
-	NieblaArena = { Densidad = 0.2, Bruma = 0.5, Color = "8a95ad" },
 	-- Velocidades para medir recorridos (studs por segundo).
 	VelocidadPie = 16,
 	VelocidadVuelo = 80,

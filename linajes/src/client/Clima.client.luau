@@ -10,6 +10,7 @@ local RunService = game:GetService("RunService")
 local TweenService = game:GetService("TweenService")
 
 local Config = require(ReplicatedStorage.Shared.Config)
+local Luz = require(ReplicatedStorage.Shared.Iluminacion)
 local Tiempo = require(ReplicatedStorage.Shared.Tiempo)
 
 local atmosfera = Lighting:FindFirstChildOfClass("Atmosphere") or Instance.new("Atmosphere")
@@ -19,6 +20,10 @@ local correccion = Lighting:FindFirstChildOfClass("ColorCorrectionEffect")
 	or Instance.new("ColorCorrectionEffect")
 correccion.Parent = Lighting
 local bloom = Lighting:FindFirstChildOfClass("BloomEffect")
+local rayos = Lighting:FindFirstChildOfClass("SunRaysEffect")
+if rayos then
+	rayos.Enabled = false
+end
 local desenfoque = Lighting:FindFirstChildOfClass("DepthOfFieldEffect")
 if desenfoque then
 	desenfoque.Enabled = false -- en pelea hay que ver lejos
@@ -55,6 +60,37 @@ local function ponerLuz(hora: number)
 	end
 end
 
+local function ponerNoche()
+	Lighting.ClockTime = Luz.Hora
+	Lighting.Ambient = hexa(Luz.Ambiente)
+	Lighting.OutdoorAmbient = hexa(Luz.Exterior)
+	Lighting.Brightness = Luz.Brillo
+	Lighting.ExposureCompensation = Luz.Exposicion
+	correccion.TintColor = hexa(Luz.Tinte)
+	correccion.Contrast = Luz.Contraste
+	correccion.Saturation = Luz.Saturacion
+	if bloom then
+		bloom.Intensity = Luz.Resplandor
+		bloom.Threshold = Luz.ResplandorUmbral
+		bloom.Size = Luz.ResplandorTamano
+	end
+end
+
+local function borde(raiz: BasePart, prendido: boolean)
+	local luz = raiz:FindFirstChild("LuzBorde") :: PointLight?
+	if not luz then
+		local nueva = Instance.new("PointLight")
+		nueva.Name = "LuzBorde"
+		nueva.Shadows = false
+		nueva.Color = hexa(Luz.Borde.Color)
+		nueva.Brightness = Luz.Borde.Brillo
+		nueva.Range = Luz.Borde.Alcance
+		nueva.Parent = raiz
+		luz = nueva
+	end
+	(luz :: PointLight).Enabled = prendido
+end
+
 local function enArena(pos: Vector3): boolean
 	local m = Config.Arena.Mapa
 	local d = pos - m.Centro
@@ -78,7 +114,7 @@ local ciudadActual = ""
 
 local function ponerNiebla(ciudad: string)
 	local n = if ciudad == "Arena"
-		then Config.Mundo.NieblaArena
+		then Luz.Niebla
 		else Config.Mundo.Niebla[ciudad] or Config.Mundo.Niebla.Bahia
 	TweenService:Create(atmosfera, TweenInfo.new(3), {
 		Density = n.Densidad,
@@ -100,10 +136,15 @@ RunService.RenderStepped:Connect(function(dt)
 			ponerNiebla(ciudad)
 		end
 	end
-	local prueba = Lighting:GetAttribute("HoraPrueba")
-	local hora = if typeof(prueba) == "number"
-		then prueba
-		elseif ciudadActual == "CiudadVortice" then Config.Mundo.HoraNocheEterna
+	if raiz and raiz:IsA("BasePart") then
+		borde(raiz, ciudadActual == "Arena")
+	end
+	if ciudadActual == "Arena" then
+		ponerNoche()
+		return
+	end
+	local hora = if ciudadActual == "CiudadVortice"
+		then Config.Mundo.HoraNocheEterna
 		else Tiempo.hora()
 	Lighting.ClockTime = hora
 	ponerLuz(hora)
