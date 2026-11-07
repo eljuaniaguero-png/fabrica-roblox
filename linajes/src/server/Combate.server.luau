@@ -591,9 +591,23 @@ local function crearMaton(punto: { number }, numero: number)
 		return (animator :: Animator):LoadAnimation(a)
 	end
 	local liviano, fuerte = pistaDe("GolpeLiviano"), pistaDe("GolpeFuerte")
-	local golpe, camina, quieto = pistaDe("Golpe2"), pistaDe("Caminar"), pistaDe("Quieto")
+	local golpes = { pistaDe("Golpe1"), pistaDe("Golpe2"), pistaDe("Golpe3") }
+	local camina, quieto = pistaDe("Caminar"), pistaDe("Quieto")
+	local bloqueoListo = 0
 	estadoDe(m).reacciona = function(duro: boolean)
 		(if duro then fuerte else liviano):Play(0.03)
+		-- A veces corta tu combo cubriéndose.
+		local B = M.Bloqueo
+		if os.clock() >= bloqueoListo and math.random() < B.Chance then
+			bloqueoListo = os.clock() + B.Recarga
+			task.delay(0.25, function()
+				local e = estadoDe(m)
+				e.bloqueoDesde = os.clock()
+				task.delay(B.Dura, function()
+					e.bloqueoDesde = nil
+				end)
+			end)
+		end
 	end
 	quieto:Play()
 	h.Running:Connect(function(rapidez)
@@ -606,6 +620,7 @@ local function crearMaton(punto: { number }, numero: number)
 
 	task.spawn(function()
 		local listo = 0
+		local embestidaLista = 0
 		local antes = base
 		while m.Parent and h.Health > 0 do
 			task.wait(0.2)
@@ -614,7 +629,22 @@ local function crearMaton(punto: { number }, numero: number)
 			local objetivo = r and libre and objetivoDe(r)
 			if r and objetivo then
 				local d = (objetivo.Position - r.Position).Magnitude
-				if d > M.Golpea then
+				local E = M.Embestida
+				if d >= E.Desde and d <= E.Hasta and os.clock() >= embestidaLista then
+					embestidaLista = os.clock() + E.Recarga
+					local fin = os.clock() + E.Dura
+					local rumbo = Vector3.new(
+						objetivo.Position.X - r.Position.X,
+						0,
+						objetivo.Position.Z - r.Position.Z
+					).Unit
+					r.CFrame = CFrame.lookAt(r.Position, r.Position + rumbo)
+					while os.clock() < fin and h.Health > 0 do
+						r.AssemblyLinearVelocity = rumbo * E.Rapidez
+							+ Vector3.new(0, r.AssemblyLinearVelocity.Y, 0)
+						task.wait()
+					end
+				elseif d > M.Golpea then
 					local trabado = (r.Position - antes).Magnitude < 0.5
 					local costado = if trabado
 						then r.CFrame.RightVector * (if math.random() < 0.5 then -14 else 14)
@@ -622,17 +652,22 @@ local function crearMaton(punto: { number }, numero: number)
 					h:MoveTo(objetivo.Position + costado)
 				elseif os.clock() >= listo then
 					h:MoveTo(r.Position)
-					r.CFrame = CFrame.lookAt(
-						r.Position,
-						Vector3.new(objetivo.Position.X, r.Position.Y, objetivo.Position.Z)
-					)
 					remoto:FireAllClients("Aviso", m)
 					task.wait(M.Aviso)
-					if h.Health > 0 and os.clock() >= estadoDe(m).aturdidoHasta then
-						golpe:Play()
-						remoto:FireAllClients("Ataca", m, 1) -- estela de la cadena
-						task.wait(C.Golpes[2].Impacto)
-						resolverGolpe(m, M.Danio, "Normal", M.AlcanceCadena)
+					-- Combo de 2 o 3 golpes: el último lanza.
+					local cantidad = math.random(2, 3)
+					for i = 1, cantidad do
+						if h.Health <= 0 or os.clock() < estadoDe(m).aturdidoHasta then
+							break
+						end
+						r.CFrame = CFrame.lookAt(
+							r.Position,
+							Vector3.new(objetivo.Position.X, r.Position.Y, objetivo.Position.Z)
+						)
+						golpes[i]:Play()
+						task.wait(C.Golpes[i].Impacto)
+						resolverGolpe(m, M.Danio, if i == 3 then "Lanza" else "Normal")
+						task.wait(0.14)
 					end
 					listo = os.clock() + M.Pausa
 				end

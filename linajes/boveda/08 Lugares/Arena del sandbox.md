@@ -19,4 +19,4 @@ Referencias: [Develuper](https://www.youtube.com/watch?v=vkEXLmRAQgs), [DevForum
 Para probar una hora: atributo `HoraPrueba` en Lighting.
 
 ## Matones de práctica (7 nov)
-3 matones con vida de 120 en `Config.Combate.Matones`. Te buscan fuera de la zona segura, avisan y pegan. Reaparecen a los 6 s y dan 40 de experiencia. Usan el cuerpo común: todavía no el modelo de matón de `arte/exports/enemigo-maton/`.
+3 matones en `Config.Combate.Matones`, con modelo propio sin pañuelo ni cadena. Te buscan fuera de la zona segura, embisten desde lejos, hacen combos de 2 o 3 golpes y a veces se cubren. Reaparecen a los 6 s y dan 60 de experiencia.
