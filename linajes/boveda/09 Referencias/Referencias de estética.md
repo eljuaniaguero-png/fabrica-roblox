@@ -30,3 +30,14 @@ Tenemos buena base: textura, noche y grúas. Nos falta **color e identidad**: ho
 5. **Escenario que reacciona:** contenedores que se abollan, chispas, vapor y cajones que se rompen.
 6. **Detalle de piso:** escombros, sogas, pallets y marcas pintadas.
 7. **Centro iluminado y bordes oscuros** para guiar la vista a la pelea.
+
+## r0aringexe (TikTok, RPG de espadas con Claude)
+[Cuenta](https://www.tiktok.com/@r0aringexe). Vi cuadros de 3 videos: días 3, 5 y 6. Sin audio ni subtítulos. El día 3 tuvo 195.900 vistas.
+- **Menú cinematográfico:** escena 3D de fondo, título con serif fino y opciones chicas a la izquierda. Parece juego de PC, no de Roblox.
+- **Interfaz sobria:** paneles oscuros, bordes finos y pocos colores. Rehízo tienda, inventario, códice y noticias con el mismo estilo.
+- **Personaje en pedestal** dentro de tienda e inventario.
+- **Primer minuto con historia:** cámara al cielo y el personaje despierta en el piso; después, tutorial.
+- **Mapa con vida:** pasto denso, caminos de piedra, farolas cálidas y nombre de zona al entrar.
+- **Difusión:** un video por día con la lista de cambios. Es un formato fácil de repetir para Linajes.
+
+Para Linajes: tomar la sobriedad, el menú y la apertura, con estética propia.
