@@ -44,3 +44,5 @@ Son de otros juegos y artistas: quedan solo en esta computadora, fuera de git, y
 `herramientas/ver_video.py` saca escenas, cuadros y subtítulos a `investigacion/`, fuera de git.
 
 Volver a [[00 Inicio]]
+
+- [[Referencias de pelos]]: 110 pelos de Roblox, cómo se construyen y por qué fallaron los nuestros.
