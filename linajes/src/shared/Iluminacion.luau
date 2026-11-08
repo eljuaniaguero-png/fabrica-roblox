@@ -3,8 +3,8 @@
 
 return {
 	Hora = 1,
-	Ambiente = "27304a",
-	Exterior = "3a4768",
+	Ambiente = "2c3754",
+	Exterior = "46557a",
 	Brillo = 0.9,
 	Exposicion = 0.2,
 	Tinte = "eef0fa",
@@ -16,7 +16,7 @@ return {
 	-- Niebla: lo lejano se funde en azul grisáceo, nunca queda recortado contra el negro.
 	Niebla = {
 		Densidad = 0.35,
-		Bruma = 1.4,
+		Bruma = 0.4,
 		Color = "2a3550",
 		Decaimiento = "2a3550",
 		Destello = 0,
@@ -31,14 +31,18 @@ return {
 	CharcoBrillo = 0.55,
 	-- Noche de verdad: azul casi negro con estrellas tenues pintadas en la textura.
 	Cielo = {
-		Bk = "rbxassetid://100574161582624",
+		Bk = "rbxassetid://137180182185044",
 		Dn = "rbxassetid://70751777794900",
-		Ft = "rbxassetid://100574161582624",
-		Lf = "rbxassetid://100574161582624",
-		Rt = "rbxassetid://100574161582624",
-		Up = "rbxassetid://96865384959736",
+		Ft = "rbxassetid://137180182185044",
+		Lf = "rbxassetid://137180182185044",
+		Rt = "rbxassetid://137180182185044",
+		Up = "rbxassetid://89737934447295",
 	},
-	Estrellas = 500,
+	Estrellas = 900,
+	-- De noche Roblox apaga el skybox: la arena lo dibuja con paneles lejanos que siguen
+	-- a la cámara (client/CieloArena.client.luau).
+	CieloDistancia = 420,
+	CieloBrillo = 1,
 	Texturas = {
 		Piso = "rbxassetid://82415998089554",
 		Sombra = "rbxassetid://115998922807089",

@@ -88,23 +88,23 @@ def estrellas(c, cantidad, fuerza, alto=1.0):
 
 
 def cielo():
-    """Noche de verdad: azul casi negro (#0b1020) y un poco mas claro en el horizonte."""
+    """Noche de verdad: cenit azul casi negro (#0b1020) y niebla azul en el horizonte.
+    En un skybox el horizonte cae en el MEDIO de la cara: el resplandor va en y=0,5."""
     y = np.linspace(0, 1, T, dtype=np.float32)[:, None] * np.ones((1, T), np.float32)
-    arriba = np.array([7, 10, 20], np.float32)
-    medio = np.array([11, 16, 32], np.float32)
-    horizonte = np.array([22, 29, 48], np.float32)
-    t = paso(0.0, 0.6, y)[..., None]
-    h = paso(0.66, 1.0, y)[..., None]
-    c = arriba * (1 - t) + medio * t
-    c = c * (1 - h) + horizonte * h
-    c *= (0.92 + 0.16 * ruido(3))[..., None]
-    c = estrellas(c, 900, 1.0, 0.72)
+    cenit = np.array([11, 16, 32], np.float32)
+    niebla = np.array([56, 72, 108], np.float32)
+    # Resplandor de niebla centrado en el horizonte (y = 0,5), que se apaga hacia arriba.
+    glow = np.exp(-(((y - 0.5) / 0.14) ** 2))
+    bajo = paso(0.5, 0.95, y)  # debajo del horizonte, agua: se apaga
+    c = cenit + (niebla - cenit) * (glow * (1 - 0.7 * bajo))[..., None]
+    c *= (0.94 + 0.12 * ruido(3))[..., None]
+    c = estrellas(c, 420, 0.75, 0.42)
     Image.fromarray(np.clip(c, 0, 255).astype(np.uint8)).save(SALIDA / "cielo.png")
-    a = np.ones((T, T, 3), np.float32) * np.array([6, 9, 18], np.float32)
-    a *= (0.92 + 0.16 * ruido(3))[..., None]
-    a = estrellas(a, 1100, 1.1)
+    a = np.ones((T, T, 3), np.float32) * np.array([10, 14, 28], np.float32)
+    a *= (0.94 + 0.12 * ruido(3))[..., None]
+    a = estrellas(a, 700, 0.8)
     Image.fromarray(np.clip(a, 0, 255).astype(np.uint8)).save(SALIDA / "cielo-arriba.png")
-    b = np.ones((64, 64, 3), np.uint8) * np.array([8, 11, 20], np.uint8)
+    b = np.ones((64, 64, 3), np.uint8) * np.array([9, 12, 22], np.uint8)
     Image.fromarray(b).save(SALIDA / "cielo-abajo.png")
 
 

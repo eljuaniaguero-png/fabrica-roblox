@@ -37,4 +37,6 @@ Pedido de Juani: lo técnico lo hace Claude, las posiciones las acomoda él a ma
 - **Farolas:** la lámpara es chica y emite poco; la luz la hace un `SpotLight` hacia abajo con cono de 72°.
 - **Ventana:** el vidrio cálido ahora tiene marco y cruz, y está en la pared del galpón. Los contenedores no llevan ninguna luz.
 - **Cámara:** `FieldOfView` 70 (`Config.Mundo.Camara.FOV`, lo pone `client/Camara.client.luau`).
+- **Cielo de noche:** Roblox apaga el skybox cuando es de noche, así que el cielo lo siguen dibujando los paneles de `CieloArena.client.luau` (que siguen a la cámara), ahora con la textura nocturna: azul casi negro, estrellas tenues y el resplandor de niebla centrado en el horizonte (en un skybox el horizonte cae en el MEDIO de la cara).
+- **Linea blanca del muelle:** era el canto del piso de la arena, que estaba en blanco con la textura solo arriba. Ahora el piso es `#2b2f36` y las marcas amarillas del piso están apagadas (`#6b5520`).
 - **Carpeta:** las piezas van a `workspace.Rincon`. Si esa carpeta ya existe en el place, el script no toca nada: manda lo que acomodó Juani. El armado vive en `server/RinconArmar.luau`.

@@ -148,7 +148,8 @@ local function piso()
 	)
 	base.Reflectance = Luz.PisoBrillo
 	base.Material = Enum.Material.Concrete
-	base.Color = Color3.new(1, 1, 1)
+	-- Oscuro: la textura va solo arriba, y en blanco los cantos se ven como una linea blanca.
+	base.Color = Color3.fromHex("#2b2f36")
 	local cemento = Instance.new("Texture")
 	cemento.Face = Enum.NormalId.Top
 	cemento.Texture = Luz.Texturas.Piso

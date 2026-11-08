@@ -260,10 +260,10 @@ function Modulo.armar(): Folder
 	local agua = suelta(
 		Vector3.new(2200, 1, 1200),
 		CFrame.new(O + Vector3.new(0, -3, -740)),
-		"#0d1626",
+		"#0a111d",
 		Enum.Material.Glass
 	)
-	agua.Reflectance = 0.22
+	agua.Reflectance = 0.08
 	agua.Transparency = 0.05
 
 	return carpeta
