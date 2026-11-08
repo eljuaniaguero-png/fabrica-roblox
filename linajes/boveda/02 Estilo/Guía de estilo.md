@@ -10,9 +10,44 @@ Copia del sistema de diseño https://claude.ai/artifact/WJxLkCEZEGJWzWzuyeU49y (
 
 La guía para hacer los modelos 3D de Linajes del Eclipse: superhéroes de cómic oscuro en una ciudad nocturna, con mucho detalle de forma. Sirve para pedir un modelo nuevo y revisar que quede igual que los demás.
 
-## Frase de estilo
+## Dirección de arte (decisión de Juani, 7 nov). MANDA sobre todo lo de abajo
 
-> Cómic oscuro en 3D: siluetas heroicas y exageradas, mucho detalle de forma (placas, costuras, pliegues de capa, cables), ciudad mojada de noche con neón; el color del bando va en los acentos, el resto es oscuro.
+> [!important] Mundo como Deepwoken, poderes como Shindo Life
+> **El mundo** es oscuro, con niebla y colores apagados (óxido, gris, azul noche), y luz dramática que sale de fuentes reales. **Los poderes** son lo único muy saturado y brillante, para que cada pelea resalte contra el mundo apagado.
+
+Referencias de Juani: **Deepwoken** (atmósfera, niebla, luz), **Shindo Life** y **Bloodlines** (efectos de poderes anime, espectáculo).
+
+### Frase de estilo (nueva)
+> Puerto oxidado de noche, con niebla azulada y luz dramática de farolas de sodio, reflectores y ventanas; colores apagados y gastados. Personajes cómic con acentos de color del bando. Los poderes son la única parte saturada y brillante: volumen, partículas, luz y temblor de cámara.
+
+### El mundo
+- **Nunca negro puro.** El fondo siempre tiene niebla azulada (`Atmosphere`) que se ve iluminada a lo lejos.
+- **La luz sale de cosas reales del lugar:** farolas naranjas de sodio, reflectores blancos fríos de la grúa, ventanas cálidas de galpones, luces de barcos, la luz roja de altura de la grúa. Contraste frío/cálido.
+- **Luz con forma:** conos de las farolas y rayos de los reflectores que se ven atravesando la niebla, charcos de luz en el piso.
+- **Piso mojado** que refleja un poco las luces.
+- **Nada de carteles de neón ni estética cyberpunk.** Si hay carteles, de chapa pintada y gastada, apagados o con una sola lamparita.
+- **Texturas pintadas a mano, gastadas pero legibles:** óxido en bordes y uniones, pintura descascarada, suciedad abajo. Nada de ruido fotográfico.
+- **Colores del mundo apagados** (ver [[Colores]]): óxido, gris acero, azul noche, madera gastada. El color fuerte queda reservado para los poderes y los acentos de bando.
+
+### Los personajes
+- Cuerpo cómic de bloques con contorno, como el personaje del jugador.
+- Ropa de colores oscuros con **acentos claros** (bando, franjas, cuello) para que se lean de noche.
+- El personaje se tiene que leer siempre contra el fondo: luz de borde o una luz suave que lo acompañe.
+
+### Los poderes (lo que más tiene que brillar)
+- **Colores muy saturados**, uno por Linaje (naranja fuego, celeste rayo, violeta sombra, etc.).
+- **Volumen y capas:** centro brillante, cuerpo del efecto, humo o restos y partículas que salen volando. Nada de una imagen 2D plana.
+- **Luz propia:** cada poder ilumina el piso, las paredes y a los personajes cercanos.
+- **Impacto en pantalla:** temblor de cámara, destello corto y hit-stop en los golpes fuertes.
+- **Sonido propio** en cada habilidad (carga, lanzamiento e impacto).
+- Que no tapen la cámara: los efectos grandes aparecen delante del jugador, no pegados a la cámara.
+
+### Cómo se prueba
+Antes de cambiar todo el juego, se hace **un rincón lindo**: un pedazo chico del puerto con su luz, su piso, su niebla y sus objetos, pulido hasta que a Juani le guste. Si ese rincón queda bien, el resto repite la receta.
+
+## Frase de estilo anterior (reemplazada el 7 nov)
+
+> ~~Cómic oscuro en 3D: siluetas heroicas y exageradas, mucho detalle de forma (placas, costuras, pliegues de capa, cables), ciudad mojada de noche con neón; el color del bando va en los acentos, el resto es oscuro.~~
 
 Pegala en cada pedido de modelo, con la ficha del personaje de **Modelos**.
 

@@ -19,7 +19,7 @@ Mantenés distancia y quemás. Las quemaduras hacen daño 3 s después del golpe
 |---|---|---|---|---|---|---|
 | Z | **Bola de fuego** | Proyectil que explota al tocar | 22 + quema 3 × 4 | 5 s | 15 | 40 studs |
 | X | **Chorro** | Lanzallamas de 1,5 s en cono | 6 × 5 + quema | 9 s | 25 | Cono de 12 studs |
-| C | **Muro de fuego** | Línea de fuego de 10 studs que dura 4 s y quema al cruzar | 8 por segundo | 12 s | 25 | 10 studs |
+| C | **Muro de fuego** | Barrera de fuego de 10 studs que dura 4 s: quien la toca sale despedido y se quema | 8 por segundo | 12 s | 25 | 10 studs |
 | (pasiva) | **Quemadura** | Todo tu fuego quema 3 s | 4 por segundo | — | — | — |
 
 ## Las 4 Variantes

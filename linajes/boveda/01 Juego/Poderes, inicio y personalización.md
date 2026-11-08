@@ -73,6 +73,7 @@ El juego anota estadísticas de tu partida y, en cada Despertar y cada 10 nivele
 
 ## Personalización
 - **Cuerpo propio** (nunca el avatar de Roblox, ver [[Cuerpo propio (sin avatar de Roblox)]]): contextura, altura, piel, cara y pelo.
+- **Ropa de civil**: atuendo básico gratis y conjuntos que se compran con plata del juego (nunca Robux), mezclables. Ver [[Ropa y tienda]].
 - **Piezas de traje** para mezclar: 8 cascos y máscaras, 8 capas, 8 petos, 6 hombreras, 6 guantes, 6 botas al empezar (en la Beta: 4 cascos, 4 capas y 4 petos). **3 canales de color** por pieza, material (tela, cuero, metal, neon) y largo de capa.
 - **Emblema propio**: 20 formas, color, borde y brillo; va en el pecho, la capa y la bandera de tu base.
 - **Nombre de héroe + título** ganado ("El que venció a Remache", "Rey del puerto").

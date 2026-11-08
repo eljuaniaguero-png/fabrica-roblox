@@ -41,11 +41,11 @@ Juani pasó una revisión hecha con Gemini. Claude la comparó con las reglas de
 
 ## Ya decidido
 - **Primera versión solo con Puerto Óxido** (31 oct): sí. Está en [[Plan por etapas]], con los 3 Linajes Comunes en lugar de 2, porque sus prompts ya existen.
+- **Beta de pago: no** (1 nov). El juego sale gratis con un sandbox de pelea, y la historia y el mundo abierto se desbloquean con un Game Pass; el pack fundador se vende aparte. Ver [[Plan por etapas]] y [[Ganancias estimadas]].
 
 ## Lo decidís vos
 | Propuesta | Qué opina Claude |
 |---|---|
-| **Beta de pago** (Paid Access de 350 a 400 Robux) y después gratis | Puede servir para juntar plata con poca gente y filtrar tramposos. El riesgo es que, con pocos jugadores, los servidores de 24 se ven vacíos y el mundo abierto no luce. Antes de decidir hay que revisar las reglas actuales de Roblox para el acceso pago (requisitos de la cuenta y cuánto se lleva Roblox). |
 | **Pack de fundador** (150 Robux: título "Fundador", color de traje, espacio extra) | Va bien con [[Plan por etapas]] y con la regla de vender solo lo que no da poder. |
 | **Vender el 2.º y 3.er espacio de personaje** | Hoy la ficha dice que los 3 espacios son gratis. Venderlos da plata y no rompe la pelea, pero es un cambio de diseño. Sugerencia: el 2.º gratis y el 3.º pago. |
 | **Compras que activan un evento para todo el servidor** ("Llamado de emergencia", 20 minutos) | Buena idea: el que paga gana reconocimiento y todos juegan el evento. Con límite de una cada 30 minutos por servidor. |

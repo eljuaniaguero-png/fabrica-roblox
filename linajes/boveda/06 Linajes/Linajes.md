@@ -17,9 +17,9 @@ tags: [linajes, indice]
 
 - Las probabilidades **siempre se ven** y suman 100 %.
 - **Seguro de mala suerte**: cada 40 tiradas sin Raro o mejor, la siguiente es Raro o mejor.
-- Las tiradas son **Fichas de Eclipse** y se ganan jugando. Si algún día se venden por Robux: probabilidades a la vista con un botón con texto antes de comprar y `PolicyService` (ver las reglas de monetización). Nada de casino.
+- Las tiradas son **Fichas de Eclipse** y **solo se ganan jugando**. **Decisión de Juani (7 nov): ni los Linajes ni las Fichas se venden por Robux**, nunca. Con Robux se venden **estilos de Linaje** (mismo poder, otro look).
 - **Sin poder fuerte también se puede**: la tecnología y los implantes te hacen fuerte igual (el "camino del vigilante").
-- **En la Beta salen solo los 3 Comunes** (un tercio cada uno).
+- **En el sandbox de lanzamiento salen 6**: los 3 Comunes (21,67 % cada uno) y los 3 Poco comunes (11,67 % cada uno). Los Raros, Legendarios y el Mítico entran de a 1 o 2 cada 2 semanas. Calendario en [[Plan por etapas]].
 
 ## Las partes de un poder
 | Parte | Qué es | Cómo se consigue |

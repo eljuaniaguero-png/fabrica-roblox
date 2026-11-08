@@ -2,7 +2,7 @@
 tags: [estilo]
 ---
 # Colores
-Para copiar en los prompts.
+Para copiar en los prompts. Desde el 7 nov: el mundo usa los colores apagados y la luz; los colores saturados quedan para los poderes y los acentos de bando (ver [[Guía de estilo]]).
 | Token | Hex | Uso |
 |---|---|---|
 | fondo | #0e1016 | Negro azulado de la noche |
@@ -12,7 +12,10 @@ Para copiar en los prompts.
 | asfalto | #3a3f4b | Calles, techos |
 | ladrillo | #6e3b2e | Fachadas viejas |
 | acero | #8a94a6 | Metal, implantes |
-| neon-cian | #3fe0f0 | Luces de tecnología |
+| neon-cian | #3fe0f0 | Luces de tecnología, solo en objetos tecnológicos chicos (no carteles de neón) |
+| sodio | #f29a3a | Luz de farolas (cálida) |
+| reflector | #cfe3ff | Luz de reflectores de la grúa (fría) |
+| niebla | #2a3550 | Color de la niebla de noche |
 | liga | #2f6fdb | Acento Liga de Guardianes |
 | cofradia | #c2213a | Acento Cofradía Carmesí |
 | vigilantes | #6b5ba8 | Acento Vigilantes |
