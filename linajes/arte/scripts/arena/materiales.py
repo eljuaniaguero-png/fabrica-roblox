@@ -248,17 +248,17 @@ def cemento_mojado():
     c.val(juntas, "Mortar", (0, 0, 0, 1))
     c.unir(mapa, "Vector", juntas, "Vector")
 
-    grano = c.ruido(-1500, 700, escala=28.0, detalle=10.0, aspereza=0.65)
+    grano = c.ruido(-1500, 700, escala=6.0, detalle=10.0, aspereza=0.65)
     c.unir(mapa, "Vector", grano, "Vector")
-    manchas = c.ruido(-1500, 450, escala=1.6, detalle=5.0, aspereza=0.55)
+    manchas = c.ruido(-1500, 450, escala=0.25, detalle=5.0, aspereza=0.55)
     c.unir(mapa, "Vector", manchas, "Vector")
 
-    bordes = mascara_bordes(c, -1500, 150, fuerza=0.3, radio=0.015)
+    bordes = mascara_bordes(c, -1500, 150, fuerza=0.0, radio=0.01)
     rincones = mascara_rincones(c, -1500, -150, distancia=0.5)
 
     base = c.mezcla(-1000, 800, "MIX", 0.5)
-    c.val(base, "A", srgb_a_lineal((0.400, 0.396, 0.376)))
-    c.val(base, "B", srgb_a_lineal((0.482, 0.471, 0.443)))
+    c.val(base, "A", srgb_a_lineal((0.459, 0.420, 0.345)))
+    c.val(base, "B", srgb_a_lineal((0.549, 0.498, 0.396)))
     c.unir(manchas, "Fac", base, "Factor")
 
     con_grano = c.mezcla(-800, 800, "MULTIPLY", 0.22)
@@ -275,7 +275,7 @@ def cemento_mojado():
     # Cantos gastados: el cemento se despunta y se ve mas claro.
     cantos = c.mezcla(-400, 800, "MIX", 1.0)
     c.unir(con_juntas, "Result", cantos, "A")
-    c.val(cantos, "B", srgb_a_lineal((0.498, 0.494, 0.475)))
+    c.val(cantos, "B", srgb_a_lineal((0.565, 0.525, 0.435)))
     c.unir(bordes, "Color", cantos, "Factor")
 
     # Mugre en los rincones.
@@ -289,7 +289,7 @@ def cemento_mojado():
     c.unir(sucio, "Result", bsdf, "Base Color")
 
     # Charcos: zonas lisas y oscuras donde el ruido es bajo.
-    charcos = c.ruido(-1500, -450, escala=2.2, detalle=4.0, aspereza=0.5)
+    charcos = c.ruido(-1500, -450, escala=0.22, detalle=4.0, aspereza=0.5)
     c.unir(mapa, "Vector", charcos, "Vector")
     mascara_charco = c.rampa(-1300, -450, [(0.30, (0.8, 0.8, 0.8)), (0.40, (0, 0, 0))])
     c.unir(charcos, "Fac", mascara_charco, "Fac")

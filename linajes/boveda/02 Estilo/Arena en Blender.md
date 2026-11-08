@@ -34,12 +34,19 @@ El desgaste sale de la forma de la pieza:
 ## Ciclos de comparación hechos
 Atardecer: 5 vueltas. Noche: 3 vueltas. Lo que se corrigió en el camino: el volumen de niebla iba en el World y se comía el sol (pasó a una caja), el parentado movía las piezas (faltaba `matrix_parent_inverse`), las grúas se armaban con vigas mal orientadas (ahora con `to_track_quat`), el cemento salía blanco como nieve (eran los cantos del Bevel y los charcos espejados).
 
-## Lo que todavía no se parece (siguiente vuelta)
-1. Las grúas se ven de alambre: faltan celosía, cabina grande y contrapeso macizo.
-2. La cámara está más lejos y alta que la de la referencia.
-3. La plaza es gris azulada; la referencia es ocre cálido tipo arena.
-4. Faltan contenedores: la referencia tiene más pilas y colores más vivos.
-5. El muelle de tablas es demasiado ancho.
+## Segunda vuelta (8 nov): lo que se acercó
+1. **Grúas de celosía**: cordones paralelos con diagonales en zig-zag (`celosia()`), casa de máquinas grande, cabina colgada con vidrio y contrapeso macizo.
+2. **Explanada de hormigón** detrás y a la derecha de la plaza: antes los contenedores flotaban sobre el agua.
+3. **Piso ocre cálido** como la referencia (antes gris azulado).
+4. **Más contenedores**, en dos hileras de fondo a la derecha y colores vivos (rojo, azul, verde, amarillo, gris, naranja).
+5. **Muelle de tablas más angosto** y cámara más cerca y más baja.
+
+Otro arreglo importante: las coordenadas de objeto están en **metros**, así que un ruido con escala 2,2 sobre una plaza de 34 m daba charcos de 45 cm que se veían como puntitos blancos ("nieve"). Los ruidos del piso van entre 0,2 y 6.
+
+## Lo que todavía se puede acercar
+- El cielo del atardecer de la referencia tiene nubes; el nuestro es un degradé limpio.
+- Las grúas de la referencia tienen más piezas chicas (poleas, escaleras, barandas).
+- Falta el camino de sol sobre el agua bien marcado.
 
 ## Lo que falta del pedido
 Hornear Color + AO, Normal (OpenGL) y Roughness a 1024, exportar con `SurfaceAppearance` y comparar en Studio desde el mismo ángulo.
