@@ -72,11 +72,13 @@ local function ponerCielo(caras: { [string]: string })
 		(cielo :: any)["Skybox" .. cara] = id
 	end
 	cielo.MoonAngularSize = 0
-	cielo.StarCount = 0
+	cielo.SunAngularSize = 0
+	cielo.StarCount = if caras == Luz.Cielo then Luz.Estrellas else 0
 end
 
 local function ponerNoche()
 	Lighting.ClockTime = Luz.Hora
+	Lighting.GlobalShadows = true
 	Lighting.Ambient = hexa(Luz.Ambiente)
 	Lighting.OutdoorAmbient = hexa(Luz.Exterior)
 	Lighting.Brightness = Luz.Brillo
@@ -135,7 +137,9 @@ local function ponerNiebla(ciudad: string)
 	TweenService:Create(atmosfera, TweenInfo.new(3), {
 		Density = n.Densidad,
 		Haze = n.Bruma,
+		Glare = n.Destello or 0,
 		Color = Color3.fromHex(n.Color),
+		Decay = Color3.fromHex(n.Decaimiento or n.Color),
 	}):Play()
 end
 

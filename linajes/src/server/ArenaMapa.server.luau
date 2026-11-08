@@ -54,6 +54,7 @@ local function poner(nombre: string, cf: CFrame, tono: string?, escala: number?)
 	local molde = kit:FindFirstChild(nombre, true) :: MeshPart
 	local p = molde:Clone()
 	p.Anchored = true
+	p.CastShadow = true -- todo lo del kit tira sombra
 	if escala then
 		p.Size *= escala
 	end

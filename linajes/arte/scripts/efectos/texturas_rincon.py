@@ -32,12 +32,12 @@ def paso(a, b, v):
 
 def piso():
     grande, fino = ruido(3), ruido(32, 3)
-    c = np.ones((T, T, 3), np.float32) * np.array([62, 66, 74], np.float32)
-    c *= (0.72 + 0.4 * grande + 0.14 * fino)[..., None]
+    c = np.ones((T, T, 3), np.float32) * np.array([43, 47, 54], np.float32)
+    c *= (0.72 + 0.2 * grande + 0.1 * fino)[..., None]
     mojado = paso(0.5, 0.72, ruido(4))
     c *= (1 - 0.42 * mojado)[..., None]
-    oxido = paso(0.74, 0.86, ruido(5))[..., None]
-    c = c * (1 - oxido * 0.4) + np.array([84, 52, 36], np.float32) * oxido * 0.4
+    oxido = paso(0.78, 0.9, ruido(5))[..., None]
+    c = c * (1 - oxido * 0.35) + np.array([62, 40, 28], np.float32) * oxido * 0.35
     y, x = np.mgrid[0:T, 0:T]
     junta = (np.minimum(x % 512, 512 - x % 512) < 3) | (np.minimum(y % 512, 512 - y % 512) < 3)
     c[junta] *= 0.32
@@ -74,21 +74,52 @@ def reflejo():
     Image.fromarray(im, "RGBA").filter(ImageFilter.GaussianBlur(2)).save(SALIDA / "reflejo.png")
 
 
+def estrellas(c, cantidad, fuerza, alto=1.0):
+    """Puntos tenues; alto 1 = todo el cuadro, 0.6 = solo la parte de arriba."""
+    n = c.shape[0]
+    for _ in range(cantidad):
+        x = int(r.integers(0, n))
+        y = int(r.integers(0, max(2, int(n * alto))))
+        b = r.uniform(0.35, 1.0) ** 2 * fuerza
+        c[y, x] += np.array([b * 210, b * 220, b * 255], np.float32)
+        for dx, dy in ((1, 0), (-1, 0), (0, 1), (0, -1)):
+            c[(y + dy) % n, (x + dx) % n] += np.array([b * 60, b * 64, b * 76], np.float32)
+    return c
+
+
 def cielo():
+    """Noche de verdad: azul casi negro (#0b1020) y un poco mas claro en el horizonte."""
     y = np.linspace(0, 1, T, dtype=np.float32)[:, None] * np.ones((1, T), np.float32)
-    arriba = np.array([18, 25, 42], np.float32)
-    medio = np.array([42, 53, 80], np.float32)
-    horizonte = np.array([84, 96, 122], np.float32)
-    t = paso(0.05, 0.55, y)[..., None]
-    h = paso(0.55, 0.72, y)[..., None]
+    arriba = np.array([7, 10, 20], np.float32)
+    medio = np.array([11, 16, 32], np.float32)
+    horizonte = np.array([22, 29, 48], np.float32)
+    t = paso(0.0, 0.6, y)[..., None]
+    h = paso(0.66, 1.0, y)[..., None]
     c = arriba * (1 - t) + medio * t
     c = c * (1 - h) + horizonte * h
-    c *= (0.9 + 0.2 * ruido(3))[..., None]
+    c *= (0.92 + 0.16 * ruido(3))[..., None]
+    c = estrellas(c, 900, 1.0, 0.72)
     Image.fromarray(np.clip(c, 0, 255).astype(np.uint8)).save(SALIDA / "cielo.png")
-    Image.fromarray(np.ones((64, 64, 3), np.uint8) * np.array([18, 25, 42], np.uint8)).save(SALIDA / "cielo-arriba.png")
+    a = np.ones((T, T, 3), np.float32) * np.array([6, 9, 18], np.float32)
+    a *= (0.92 + 0.16 * ruido(3))[..., None]
+    a = estrellas(a, 1100, 1.1)
+    Image.fromarray(np.clip(a, 0, 255).astype(np.uint8)).save(SALIDA / "cielo-arriba.png")
+    b = np.ones((64, 64, 3), np.uint8) * np.array([8, 11, 20], np.uint8)
+    Image.fromarray(b).save(SALIDA / "cielo-abajo.png")
+
+
+def sombra():
+    """Sombra de contacto: mancha oscura blanda para apoyar los objetos en el piso."""
+    n = 512
+    yy, xx = np.mgrid[0:n, 0:n].astype(np.float32) / n - 0.5
+    d = np.hypot(xx, yy) * 2
+    a = (1 - paso(0.15, 1.0, d)) ** 1.6 * 0.72
+    im = np.dstack([np.zeros((n, n, 3), np.float32), np.clip(a, 0, 1) * 255]).astype(np.uint8)
+    Image.fromarray(im, "RGBA").filter(ImageFilter.GaussianBlur(6)).save(SALIDA / "sombra.png")
 
 
 piso()
 charco()
 reflejo()
 cielo()
+sombra()

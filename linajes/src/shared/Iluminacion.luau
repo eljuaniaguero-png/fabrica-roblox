@@ -13,24 +13,35 @@ return {
 	Resplandor = 0.5,
 	ResplandorUmbral = 1.7,
 	ResplandorTamano = 18,
-	Niebla = { Densidad = 0.14, Bruma = 0.6, Color = "2a3550" },
+	-- Niebla: lo lejano se funde en azul grisáceo, nunca queda recortado contra el negro.
+	Niebla = {
+		Densidad = 0.35,
+		Bruma = 1.4,
+		Color = "2a3550",
+		Decaimiento = "2a3550",
+		Destello = 0,
+	},
 	-- Luz suave que sigue al personaje para que nunca se pierda.
 	Borde = { Color = "a9c4ff", Brillo = 0.4, Alcance = 16 },
 	-- Farolas cálidas y reflectores fríos, colocados por server/ArenaMapa.server.luau.
-	Calida = { Color = "f29a3a", Brillo = 4, Alcance = 42, Angulo = 125, Haz = 0.86 },
-	Fria = { Color = "cfe3ff", Brillo = 9, Alcance = 60, Angulo = 60, Haz = 0.82 },
-	PisoBrillo = 0.06,
+	-- Angulo chico = cono de luz marcado en el piso, no una mancha pareja.
+	Calida = { Color = "f29a3a", Brillo = 7, Alcance = 44, Angulo = 72, Haz = 0.9 },
+	Fria = { Color = "cfe3ff", Brillo = 9, Alcance = 60, Angulo = 55, Haz = 0.88 },
+	PisoBrillo = 0.04,
 	CharcoBrillo = 0.55,
+	-- Noche de verdad: azul casi negro con estrellas tenues pintadas en la textura.
 	Cielo = {
-		Bk = "rbxassetid://117073989322194",
-		Dn = "rbxassetid://127885275680103",
-		Ft = "rbxassetid://117073989322194",
-		Lf = "rbxassetid://117073989322194",
-		Rt = "rbxassetid://117073989322194",
-		Up = "rbxassetid://127885275680103",
+		Bk = "rbxassetid://100574161582624",
+		Dn = "rbxassetid://70751777794900",
+		Ft = "rbxassetid://100574161582624",
+		Lf = "rbxassetid://100574161582624",
+		Rt = "rbxassetid://100574161582624",
+		Up = "rbxassetid://96865384959736",
 	},
+	Estrellas = 500,
 	Texturas = {
-		Piso = "rbxassetid://75033065340692",
+		Piso = "rbxassetid://82415998089554",
+		Sombra = "rbxassetid://115998922807089",
 		Charco = "rbxassetid://127320075658676",
 		Reflejo = "rbxassetid://140017634433020",
 	},
@@ -44,6 +55,8 @@ return {
 		TonoBita = "#3a4048",
 		Ventana = "#c98a45",
 		Farola = { X = 2, Z = -8 },
+		-- Lámpara chica: la luz la hace el SpotLight, no un cartel amarillo.
+		Lampara = { Ancho = 1.6, Alto = 0.5, Largo = 1.6, Tono = "#ffcf8a", Transparencia = 0.25 },
 		Reflector = { X = -4, Y = 48, Z = -34, DestinoX = -2, DestinoZ = 4, Inclina = -24 },
 		Charcos = {
 			{ 2, -2, 16, 10, 12 },
@@ -52,8 +65,6 @@ return {
 			{ -8, -12, 14, 7, 0 },
 		},
 	},
-	CieloDistancia = 420,
-	CieloBrillo = 2.2,
 	Galpon = {
 		X = 118,
 		Z = -92,

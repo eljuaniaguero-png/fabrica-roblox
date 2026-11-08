@@ -792,6 +792,8 @@ Config.Civiles = {
 -- Mundo abierto (graybox). El día dura MinutosPorDia minutos reales; en Vórtice siempre es de noche.
 Config.Mundo = {
 	MinutosPorDia = 24,
+	-- Cámara: 70 de campo de visión. Más alto deforma a los personajes de cerca.
+	Camara = { FOV = 70 },
 	HoraNocheEterna = 0,
 	-- Niebla por ciudad (Atmosphere). "Bahia" es fuera de toda ciudad.
 	Niebla = {

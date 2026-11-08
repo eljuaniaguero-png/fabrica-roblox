@@ -26,3 +26,15 @@ Las piezas viven en `ServerStorage.ArenaKit` (asset 80380787186308) y se colocan
 
 ## Rincón lindo (7 nov)
 Prueba de la dirección de arte en `ArenaRincon.server.luau`, valores en `Iluminacion.luau` (`Rincon`). Si Juani lo aprueba, la receta pasa al resto del mapa.
+
+## Arreglos técnicos del rincón (8 nov)
+Pedido de Juani: lo técnico lo hace Claude, las posiciones las acomoda él a mano.
+
+- **Cielo:** se fue el degradé azul saturado y los paneles que seguían a la cámara (`CieloArena.client.luau`, borrado). Ahora es un `Sky` de verdad: azul casi negro (#0b1020) con estrellas tenues pintadas en la textura y 500 estrellas de Roblox arriba.
+- **Niebla:** `Atmosphere` con Density 0,35, Color y Decay #2a3550 y Glare 0: lo lejano se funde en niebla en vez de recortarse contra el negro.
+- **Piso:** textura nueva, cemento mojado oscuro (media #21232 8). Solo se aclara donde cae la luz.
+- **Sombras:** todo el kit tira sombra (`CastShadow`) y cada objeto suelto tiene una mancha oscura debajo (textura `sombra.png`) para que apoye en el piso. Falta que el place tenga `Lighting.Technology = Future` (no se puede cambiar por MCP: lo pone Juani).
+- **Farolas:** la lámpara es chica y emite poco; la luz la hace un `SpotLight` hacia abajo con cono de 72°.
+- **Ventana:** el vidrio cálido ahora tiene marco y cruz, y está en la pared del galpón. Los contenedores no llevan ninguna luz.
+- **Cámara:** `FieldOfView` 70 (`Config.Mundo.Camara.FOV`, lo pone `client/Camara.client.luau`).
+- **Carpeta:** las piezas van a `workspace.Rincon`. Si esa carpeta ya existe en el place, el script no toca nada: manda lo que acomodó Juani. El armado vive en `server/RinconArmar.luau`.
