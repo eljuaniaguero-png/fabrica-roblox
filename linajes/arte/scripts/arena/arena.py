@@ -143,13 +143,7 @@ def contenedor(nombre, centro, giro, tono, col):
 def pila_contenedores(nombre, centro, giro, tonos, alturas, col):
     for i, tono in enumerate(tonos):
         z = centro[2] + alturas * i
-        contenedor(
-            "%s_%d" % (nombre, i),
-            (centro[0] + random.uniform(-0.12, 0.12), centro[1] + random.uniform(-0.12, 0.12), z),
-            giro + random.uniform(-0.03, 0.03),
-            tono,
-            col,
-        )
+        contenedor("%s_%d" % (nombre, i), (centro[0], centro[1], z), giro, tono, col)
 
 
 def barril(nombre, centro, col, giro=0.0):
@@ -230,8 +224,8 @@ def farola(nombre, centro, col, alto=5.4, brazo=1.1, giro=0.0):
             if nd.type != "OUTPUT_MATERIAL":
                 nt.nodes.remove(nd)
         em = nt.nodes.new("ShaderNodeEmission")
-        em.inputs[0].default_value = (1.0, 0.62, 0.26, 1)
-        em.inputs[1].default_value = 28.0
+        em.inputs[0].default_value = (0.949, 0.604, 0.227, 1)
+        em.inputs[1].default_value = 60.0
         salida = next(nd for nd in nt.nodes if nd.type == "OUTPUT_MATERIAL")
         nt.links.new(em.outputs[0], salida.inputs["Surface"])
     vidrio.data.materials.append(emisor)
@@ -317,8 +311,8 @@ def celosia(nombre, a, b, grosor, m, col, separacion=0.0, pasos=6, diagonal=0.12
 
 
 def grua(nombre, centro, col, giro=0.0, escala=1.0):
-    """Grua de puerto como la de la referencia: patas de celosia, casa de maquinas,
-    cabina colgada, pluma y contrapluma de celosia con tirantes, y contrapeso."""
+    """Grua vieja de puerto: cuatro patas gruesas, cuerpo macizo, cabina y brazo pesado.
+    Nada de reticulado fino: son cajas grandes, como las de la referencia."""
     m = mat("MAT_MetalPiso")
     e = escala
     cx, cy, cz = centro
@@ -328,75 +322,81 @@ def grua(nombre, centro, col, giro=0.0, escala=1.0):
         return (cx + dx * co - dy * si, cy + dx * si + dy * co, cz + dz)
 
     piezas = []
-    sep = 3.4 * e
-    alto_pata = 8.0 * e
-    # Patas de celosia inclinadas hacia adentro.
+    sep = 3.6 * e
+    alto_pata = 7.6 * e
+
+    # Cuatro patas gruesas, apenas inclinadas hacia adentro.
     for sx in (-1, 1):
         for sy in (-1, 1):
-            p0 = local(sx * sep, sy * sep, 0.25)
-            p1 = local(sx * 1.1 * e, sy * 1.1 * e, alto_pata)
-            piezas += celosia(nombre + "_Pata", p0, p1, 0.17 * e, m, col, pasos=5)
+            p0 = local(sx * sep, sy * sep, 0.3)
+            p1 = local(sx * 1.6 * e, sy * 1.6 * e, alto_pata)
+            piezas.append(viga(nombre + "_Pata", p0, p1, 0.75 * e, m, col))
             piezas.append(
-                caja(nombre + "_Zapata", local(sx * sep, sy * sep, 0.2),
-                     (1.4 * e, 1.4 * e, 0.4), mat("MAT_CementoMojado"), col, giro=giro)
+                caja(nombre + "_Zapata", local(sx * sep, sy * sep, 0.25),
+                     (1.8 * e, 1.8 * e, 0.5), mat("MAT_CementoMojado"), col, giro=giro)
             )
-    # Anillos horizontales entre patas.
-    for z in (0.34, 0.66):
-        h = alto_pata * z
-        d = sep - (sep - 1.1 * e) * z
-        esq = [local(-d, -d, h), local(d, -d, h), local(d, d, h), local(-d, d, h)]
-        for i in range(4):
-            piezas.append(viga(nombre + "_Anillo", esq[i], esq[(i + 1) % 4], 0.12 * e, m, col))
-            medio = tuple((esq[i][k] + esq[(i + 1) % 4][k]) / 2 for k in range(3))
-            arriba = (medio[0], medio[1], medio[2] + alto_pata * 0.16)
-            piezas.append(viga(nombre + "_V", esq[i], arriba, 0.09 * e, m, col))
-            piezas.append(viga(nombre + "_V", esq[(i + 1) % 4], arriba, 0.09 * e, m, col))
-    # Plataforma, casa de maquinas y cabina.
+    # Dos vigas de amarre entre patas (las que llevan las ruedas).
+    for sy in (-1, 1):
+        piezas.append(
+            caja(nombre + "_Riel", local(0, sy * sep, 0.55),
+                 (sep * 2.4, 1.1 * e, 0.7 * e), m, col, giro=giro)
+        )
+    # Anillo macizo a media altura.
     piezas.append(
-        caja(nombre + "_Plataforma", local(0, 0, alto_pata + 0.35),
-             (5.6 * e, 5.0 * e, 0.6), m, col, giro=giro)
+        caja(nombre + "_Anillo", local(0, 0, alto_pata * 0.56),
+             (sep * 2.1, sep * 2.1, 0.55 * e), m, col, giro=giro)
     )
-    casa = caja(nombre + "_Casa", local(-1.6 * e, 0, alto_pata + 2.2),
-                (4.2 * e, 3.8 * e, 3.0 * e), m, col, giro=giro)
-    piezas.append(casa)
+    # Cuerpo: plataforma y casa de maquinas grande.
     piezas.append(
-        caja(nombre + "_Techo", local(-1.6 * e, 0, alto_pata + 3.8),
-             (4.4 * e, 4.0 * e, 0.2), m, col, giro=giro)
+        caja(nombre + "_Plataforma", local(0, 0, alto_pata + 0.45),
+             (6.4 * e, 5.6 * e, 0.9), m, col, giro=giro)
     )
-    cabina = caja(nombre + "_Cabina", local(2.4 * e, -1.9 * e, alto_pata + 1.5),
-                  (1.8 * e, 1.5 * e, 1.9 * e), m, col, giro=giro)
-    piezas.append(cabina)
-    vidrio_cabina = caja(nombre + "_CabinaVidrio",
-                         local(3.2 * e, -1.9 * e, alto_pata + 1.7),
-                         (0.12, 1.2 * e, 1.1 * e), m, col, giro=giro, bisel=0.01)
-    piezas.append(vidrio_cabina)
-    # Mastil, pluma y contrapluma, todo de celosia.
-    raiz = local(0.8 * e, 0, alto_pata + 1.2)
-    punta_mastil = local(-0.6 * e, 0, alto_pata + 9.0 * e)
-    punta_pluma = local(13.0 * e, 0, alto_pata + 8.2 * e)
-    cola = local(-5.6 * e, 0, alto_pata + 2.6 * e)
-    piezas += celosia(nombre + "_Mastil", raiz, punta_mastil, 0.15 * e, m, col,
-                      separacion=0.42 * e, pasos=6)
-    piezas += celosia(nombre + "_Pluma", raiz, punta_pluma, 0.15 * e, m, col,
-                      separacion=0.5 * e, pasos=9)
-    piezas += celosia(nombre + "_Cola", raiz, cola, 0.13 * e, m, col,
-                      separacion=0.4 * e, pasos=4)
-    piezas.append(viga(nombre + "_Tirante1", punta_mastil, punta_pluma, 0.1 * e, m, col))
-    piezas.append(viga(nombre + "_Tirante2", punta_mastil, cola, 0.1 * e, m, col))
-    # Contrapeso macizo.
     piezas.append(
-        caja(nombre + "_Contrapeso", local(-5.6 * e, 0, alto_pata + 1.5 * e),
-             (3.2 * e, 3.0 * e, 2.2 * e), m, col, giro=giro)
+        caja(nombre + "_Casa", local(-1.8 * e, 0, alto_pata + 2.6),
+             (5.0 * e, 4.4 * e, 4.2 * e), m, col, giro=giro)
+    )
+    piezas.append(
+        caja(nombre + "_Techo", local(-1.8 * e, 0, alto_pata + 4.45),
+             (5.4 * e, 4.8 * e, 0.3), m, col, giro=giro)
+    )
+    # Cabina del operario, colgada del lado del agua.
+    piezas.append(
+        caja(nombre + "_Cabina", local(2.6 * e, -2.2 * e, alto_pata + 1.6),
+             (2.2 * e, 1.9 * e, 2.2 * e), m, col, giro=giro)
+    )
+    piezas.append(
+        caja(nombre + "_CabinaVidrio", local(3.65 * e, -2.2 * e, alto_pata + 1.9),
+             (0.16, 1.4 * e, 1.3 * e), m, col, giro=giro, bisel=0.01)
+    )
+    # Brazo pesado: una viga gruesa que se afina hacia la punta, con su soporte.
+    raiz = local(1.0 * e, 0, alto_pata + 2.0)
+    punta = local(12.5 * e, 0, alto_pata + 9.6 * e)
+    brazo = viga(nombre + "_Brazo", raiz, punta, 1.0 * e, m, col)
+    piezas.append(brazo)
+    piezas.append(viga(nombre + "_BrazoBajo", raiz, punta, 0.45 * e, m, col))
+    # Punta del brazo con la polea.
+    piezas.append(
+        caja(nombre + "_Polea", punta, (1.3 * e, 1.5 * e, 1.0 * e), m, col, giro=giro)
+    )
+    # Mastil corto y tirantes gruesos.
+    mastil = local(-0.8 * e, 0, alto_pata + 8.4 * e)
+    piezas.append(viga(nombre + "_Mastil", local(-0.8 * e, 0, alto_pata + 2.4), mastil,
+                       0.75 * e, m, col))
+    piezas.append(viga(nombre + "_Tirante", mastil, punta, 0.3 * e, m, col))
+    cola = local(-6.0 * e, 0, alto_pata + 3.0 * e)
+    piezas.append(viga(nombre + "_Cola", mastil, cola, 0.3 * e, m, col))
+    piezas.append(
+        caja(nombre + "_Contrapeso", local(-6.0 * e, 0, alto_pata + 2.0 * e),
+             (3.4 * e, 3.2 * e, 2.4 * e), m, col, giro=giro)
     )
     # Cable y gancho.
-    gancho_z = cz + 2.8 * e
+    gancho_z = cz + 3.0 * e
     piezas.append(
-        viga(nombre + "_Cable", punta_pluma, (punta_pluma[0], punta_pluma[1], gancho_z),
-             0.05 * e, m, col)
+        viga(nombre + "_Cable", punta, (punta[0], punta[1], gancho_z), 0.06 * e, m, col)
     )
     piezas.append(
-        caja(nombre + "_Gancho", (punta_pluma[0], punta_pluma[1], gancho_z - 0.55 * e),
-             (0.7 * e, 0.7 * e, 1.1 * e), m, col, giro=giro)
+        caja(nombre + "_Gancho", (punta[0], punta[1], gancho_z - 0.6 * e),
+             (0.8 * e, 0.8 * e, 1.2 * e), m, col, giro=giro)
     )
     return piezas
 
@@ -459,28 +459,43 @@ def armar_arena():
     luces = coleccion("Luces")
     chatarra = coleccion("Chatarra")
 
-    # Agua: plano grande y oscuro.
-    bpy.ops.mesh.primitive_plane_add(size=400, location=(0, 0, -1.6))
+    # Mar: malla con olas suaves, oscura y espejada (refleja el sol del atardecer).
+    bpy.ops.mesh.primitive_grid_add(x_subdivisions=220, y_subdivisions=220, size=700,
+                                    location=(0, 0, -1.6))
     agua = bpy.context.active_object
     agua.name = "Agua"
+    m_agua = bpy.data.materials.get("MAT_Agua")
+    if m_agua:
+        bpy.data.materials.remove(m_agua)
     m_agua = bpy.data.materials.new("MAT_Agua")
     m_agua.use_nodes = True
     bsdf = next(n for n in m_agua.node_tree.nodes if n.type == "BSDF_PRINCIPLED")
-    bsdf.inputs["Base Color"].default_value = (0.012, 0.022, 0.035, 1)
-    bsdf.inputs["Roughness"].default_value = 0.03
-    if "Metallic" in bsdf.inputs:
-        bsdf.inputs["Metallic"].default_value = 0.0
+    bsdf.inputs["Base Color"].default_value = (0.010, 0.020, 0.032, 1)
+    bsdf.inputs["Roughness"].default_value = 0.055
+    if "IOR" in bsdf.inputs:
+        bsdf.inputs["IOR"].default_value = 1.33
     agua.data.materials.append(m_agua)
     meter(agua, piso)
-    # Olas chiquitas.
-    mod = agua.modifiers.new("Olas", "DISPLACE")
+    tex = bpy.data.textures.get("OlasTex")
+    if tex:
+        bpy.data.textures.remove(tex)
     tex = bpy.data.textures.new("OlasTex", "CLOUDS")
-    tex.noise_scale = 1.6
+    tex.noise_scale = 4.5
+    tex.noise_depth = 4
+    mod = agua.modifiers.new("Olas", "DISPLACE")
     mod.texture = tex
-    mod.strength = 0.08
-    sub = agua.modifiers.new("Sub", "SUBSURF")
-    sub.levels = 0
-    sub.render_levels = 2
+    mod.strength = 0.5
+    mod.mid_level = 0.5
+    tex2 = bpy.data.textures.get("OlasFinas")
+    if tex2:
+        bpy.data.textures.remove(tex2)
+    tex2 = bpy.data.textures.new("OlasFinas", "CLOUDS")
+    tex2.noise_scale = 0.9
+    mod2 = agua.modifiers.new("OlasFinas", "DISPLACE")
+    mod2.texture = tex2
+    mod2.strength = 0.1
+    mod2.mid_level = 0.5
+    bpy.ops.object.shade_smooth()
 
     # Muelle de tablas (el borde que da al agua, a la izquierda y al frente).
     caja("MuelleTablas", (-22.0, 2.0, -0.18), (9.0, 42.0, 0.36), mat("MAT_TablasMuelle"), piso)
@@ -523,35 +538,36 @@ def armar_arena():
         bita("Bita", (-27.5, y, 0.0), chatarra)
 
     # Contenedores: muralla al fondo y pilas a la derecha.
-    fondo_y = 16.0
-    for i, x in enumerate(range(-12, 4, 7)):
-        pila_contenedores(
-            "ContFondo%d" % i,
-            (x, fondo_y, 1.3),
-            0.0,
-            [TONOS_CONTENEDOR[(i * 2 + k) % len(TONOS_CONTENEDOR)] for k in range(2)],
-            2.62,
-            carga,
-        )
-    # Muralla de contenedores a la derecha, de a dos en fondo y de 2 o 3 de alto.
-    for i, y in enumerate(range(-17, 13, 6)):
-        for j, x in enumerate((24.0, 30.0)):
+    # Contenedores: grilla prolija, ninguno encima de otro ni fuera de la explanada.
+    # Cada contenedor mide 6,0 x 2,44 x 2,59; la explanada va de x -15 a 35, y -22 a 34.
+    LARGO_C, ANCHO_C, ALTO_C = 6.0, 2.44, 2.59
+
+    def fila(nombre, x0, y0, giro, cantidad, paso, alturas, salto=0):
+        for i in range(cantidad):
+            if giro == 0.0:
+                x, y = x0 + i * paso, y0
+            else:
+                x, y = x0, y0 + i * paso
             pila_contenedores(
-                "ContDer%d_%d" % (i, j),
-                (x, y, 1.3),
-                math.pi / 2,
+                "%s%d" % (nombre, i),
+                (x, y, ALTO_C / 2 + 0.2),
+                giro,
                 [
-                    TONOS_CONTENEDOR[(i * 3 + j * 2 + k) % len(TONOS_CONTENEDOR)]
-                    for k in range(2 + ((i + j) % 2))
+                    TONOS_CONTENEDOR[(i * 3 + k + salto) % len(TONOS_CONTENEDOR)]
+                    for k in range(alturas[i % len(alturas)])
                 ],
-                2.62,
+                ALTO_C + 0.03,
                 carga,
             )
-    # Pilas sueltas adelante a la derecha, como en la referencia.
-    pila_contenedores("ContFrente1", (17.0, -19.0, 1.3), 0.15,
-                      [TONOS_CONTENEDOR[1], TONOS_CONTENEDOR[3], TONOS_CONTENEDOR[0]], 2.62, carga)
-    pila_contenedores("ContFrente2", (9.0, -20.0, 1.3), -0.1,
-                      [TONOS_CONTENEDOR[2], TONOS_CONTENEDOR[5]], 2.62, carga)
+
+    # Fondo: dos hileras, detras de la plaza (la plaza llega a y = 15).
+    fila("ContFondoA", -13.0, 18.6, 0.0, 4, LARGO_C + 0.5, [2, 3, 2, 2])
+    fila("ContFondoB", -13.0, 21.6, 0.0, 4, LARGO_C + 0.5, [2, 2, 3, 2], salto=2)
+    # Derecha: dos hileras de contenedores de punta (la plaza llega a x = 20).
+    fila("ContDerA", 24.5, -14.0, math.pi / 2, 5, LARGO_C + 0.5, [2, 3, 2, 3, 2], salto=1)
+    fila("ContDerB", 28.0, -14.0, math.pi / 2, 5, LARGO_C + 0.5, [3, 2, 2, 2, 3], salto=4)
+    # Un par de pilas sueltas adelante a la derecha, sobre la explanada.
+    fila("ContFrente", 8.0, -19.5, 0.0, 2, LARGO_C + 0.6, [2, 3], salto=3)
 
     # Galpones al fondo a la derecha.
     galpon("Galpon1", (13.0, 28.0, 0.0), 11.0, 13.0, 5.4, edificios, giro=-math.pi / 2,
@@ -560,8 +576,8 @@ def armar_arena():
            puerta=True)
 
     # Grúas sobre el muelle, mirando al agua.
-    grua("Grua1", (-14.0, 1.0, 0.0), maquinas, giro=math.pi * 1.06, escala=1.0)
-    grua("Grua2", (-13.0, 21.0, 0.0), maquinas, giro=math.pi * 0.97, escala=0.9)
+    grua("Grua1", (-16.0, 4.0, 0.0), maquinas, giro=math.pi * 1.08, escala=0.95)
+    grua("Grua2", (-15.0, 22.0, 0.0), maquinas, giro=math.pi * 0.98, escala=0.85)
 
     # Torre de reflectores atras.
     REFLECTORES += torre_reflector("Torre1", (26.0, 20.0, 0.0), maquinas, alto=9.0)
@@ -614,15 +630,15 @@ def poner_camara(nombre="CamRef"):
     cam = bpy.data.objects.get(nombre)
     if cam:
         bpy.data.objects.remove(cam, do_unlink=True)
-    bpy.ops.object.camera_add(location=(-45.0, -41.0, 23.0))
+    bpy.ops.object.camera_add(location=(-54.0, -46.0, 27.0))
     cam = bpy.context.active_object
     cam.name = nombre
-    cam.data.lens = 36
+    cam.data.lens = 42
     cam.data.sensor_width = 36
     # Apuntar al centro de la plaza (to_track_quat es la forma segura).
     import mathutils
 
-    objetivo = mathutils.Vector((5.0, 6.0, 2.0))
+    objetivo = mathutils.Vector((3.0, 9.0, 4.0))
     direccion = objetivo - cam.location
     cam.rotation_euler = direccion.to_track_quat("-Z", "Y").to_euler()
     bpy.context.scene.camera = cam
@@ -743,7 +759,7 @@ def cielo_nishita(elevacion, giro, polvo=2.2, fuerza=1.0):
     for campo, valor in (
         ("dust_density", polvo),
         ("sun_disc", True),
-        ("sun_intensity", 1.4),
+        ("sun_intensity", 2.5),
         ("air_density", 1.4),
         ("altitude", 20.0),
     ):
@@ -760,9 +776,9 @@ def luz_atardecer():
     ob = bpy.data.objects.get("SolNoche")
     if ob:
         bpy.data.objects.remove(ob, do_unlink=True)
-    _sol("SolAtardecer", (1.0, 0.58, 0.30), 4.5, 9.0, 212.0, angulo=3.0)
-    cielo_nishita(elevacion=3.0, giro=212.0, polvo=4.0, fuerza=0.35)
-    niebla_caja((1.0, 0.78, 0.58, 1), 0.00028)
+    _sol("SolAtardecer", (1.0, 0.46, 0.18), 3.4, 6.5, 118.0, angulo=1.2)
+    cielo_nishita(elevacion=3.2, giro=118.0, polvo=5.0, fuerza=0.5)
+    niebla_caja((1.0, 0.72, 0.48, 1), 0.0006)
     bpy.context.scene.view_settings.view_transform = "Standard"
     return True
 
@@ -774,9 +790,9 @@ def luz_noche():
     if ob:
         bpy.data.objects.remove(ob, do_unlink=True)
     _sol("SolNoche", (0.42, 0.56, 1.0), 0.35, 34.0, 120.0, angulo=8.0)
-    _mundo((0.05, 0.085, 0.16, 1), 1.0, niebla=((0.38, 0.50, 0.72, 1), 0.0022))
+    _mundo((0.045, 0.075, 0.14, 1), 1.0, niebla=((0.165, 0.208, 0.314, 1), 0.0085))
     for i, pos in enumerate(FAROLAS):
-        _lampara("LuzFarola%d" % i, pos, (1.0, 0.58, 0.24), 2600.0, radio=0.16)
+        _lampara("LuzFarola%d" % i, pos, (0.949, 0.604, 0.227), 5200.0, radio=0.22)
     for i, pos in enumerate(REFLECTORES):
         _lampara("LuzReflector%d" % i, pos, (0.84, 0.91, 1.0), 2600.0, radio=0.35)
     # Ventanas de galpon encendidas.

@@ -145,7 +145,7 @@ def principled(c, x=300, y=0):
     return bsdf
 
 
-def mascara_bordes(c, x=-1600, y=600, fuerza=0.9, radio=0.035, rango=(0.80, 0.985)):
+def mascara_bordes(c, x=-1600, y=600, fuerza=0.9, radio=0.09, rango=(0.72, 0.985)):
     """1 en los bordes y uniones. Compara la normal suavizada (Bevel) con la real:
     donde difieren hay un canto. Pointiness no sirve en esta version de Blender."""
     geo = c.nodo("ShaderNodeNewGeometry", x, y)
@@ -240,8 +240,8 @@ def cemento_mojado():
 
     # Juntas: cuadricula de 1,4 m (5 studs) con el nodo Brick en cuadrado.
     juntas = c.nodo("ShaderNodeTexBrick", -1500, 950, offset=0.0, squash=1.0)
-    c.val(juntas, "Scale", 0.7)
-    c.val(juntas, "Mortar Size", 0.012)
+    c.val(juntas, "Scale", 0.11)
+    c.val(juntas, "Mortar Size", 0.004)
     c.val(juntas, "Mortar Smooth", 0.1)
     c.val(juntas, "Color1", (1, 1, 1, 1))
     c.val(juntas, "Color2", (1, 1, 1, 1))
@@ -257,18 +257,18 @@ def cemento_mojado():
     rincones = mascara_rincones(c, -1500, -150, distancia=0.5)
 
     base = c.mezcla(-1000, 800, "MIX", 0.5)
-    c.val(base, "A", srgb_a_lineal((0.459, 0.420, 0.345)))
-    c.val(base, "B", srgb_a_lineal((0.549, 0.498, 0.396)))
+    c.val(base, "A", srgb_a_lineal((0.396, 0.361, 0.294)))
+    c.val(base, "B", srgb_a_lineal((0.573, 0.522, 0.420)))
     c.unir(manchas, "Fac", base, "Factor")
 
-    con_grano = c.mezcla(-800, 800, "MULTIPLY", 0.22)
+    con_grano = c.mezcla(-800, 800, "MULTIPLY", 0.35)
     c.unir(base, "Result", con_grano, "A")
     c.unir(grano, "Color", con_grano, "B")
 
     # Juntas oscuras.
     con_juntas = c.mezcla(-600, 800, "MULTIPLY", 1.0)
     c.unir(con_grano, "Result", con_juntas, "A")
-    juntas_tono = c.rampa(-800, 1000, [(0.0, (0.35, 0.35, 0.38)), (0.35, (1, 1, 1))])
+    juntas_tono = c.rampa(-800, 1000, [(0.0, (0.62, 0.62, 0.63)), (0.3, (1, 1, 1))])
     c.unir(juntas, "Color", juntas_tono, "Fac")
     c.unir(juntas_tono, "Color", con_juntas, "B")
 
@@ -284,7 +284,7 @@ def cemento_mojado():
     c.val(sucio, "B", color("mugre"))
     mugre_suave = c.nodo("ShaderNodeMath", -400, 500, operation="MULTIPLY")
     c.unir(rincones, "Color", mugre_suave, 0)
-    mugre_suave.inputs[1].default_value = 0.45
+    mugre_suave.inputs[1].default_value = 0.65
     c.unir(mugre_suave, "Value", sucio, "Factor")
     c.unir(sucio, "Result", bsdf, "Base Color")
 
@@ -319,18 +319,18 @@ def chapa_oxidada():
 
     # Acanalado: onda en X.
     onda = c.nodo("ShaderNodeTexWave", -1500, 950, bands_direction="X", wave_profile="SIN")
-    c.val(onda, "Scale", 9.0)
+    c.val(onda, "Scale", 11.0)
     c.val(onda, "Distortion", 0.0)
     c.unir(mapa, "Vector", onda, "Vector")
 
-    oxido_ruido = c.ruido(-1500, 650, escala=6.0, detalle=10.0, aspereza=0.7)
+    oxido_ruido = c.ruido(-1500, 650, escala=0.8, detalle=10.0, aspereza=0.7)
     c.unir(mapa, "Vector", oxido_ruido, "Vector")
-    pintura = c.ruido(-1500, 400, escala=14.0, detalle=8.0, aspereza=0.75)
+    pintura = c.ruido(-1500, 400, escala=1.3, detalle=8.0, aspereza=0.75)
     c.unir(mapa, "Vector", pintura, "Vector")
 
     bordes = mascara_bordes(c, -1500, 120, fuerza=0.9)
     rincones = mascara_rincones(c, -1500, -180, distancia=0.3)
-    chorro = chorreados(c, mapa, -1500, -520)
+    chorro = chorreados(c, mapa, -1500, -520, escala=(0.5, 0.5, 0.06))
 
     # Mascara de oxido = bordes + chorreados + manchas de ruido.
     manchas = c.rampa(-1300, 650, [(0.47, (0, 0, 0)), (0.64, (0.95, 0.95, 0.95))])
@@ -410,9 +410,9 @@ def ladrillo():
     c.val(ladrillos, "Mortar", srgb_a_lineal((0.278, 0.263, 0.239)))
     c.unir(mapa, "Vector", ladrillos, "Vector")
 
-    variacion = c.ruido(-1500, 620, escala=18.0, detalle=8.0, aspereza=0.7)
+    variacion = c.ruido(-1500, 620, escala=2.2, detalle=8.0, aspereza=0.7)
     c.unir(mapa, "Vector", variacion, "Vector")
-    musgo_ruido = c.ruido(-1500, 380, escala=7.0, detalle=8.0, aspereza=0.75)
+    musgo_ruido = c.ruido(-1500, 380, escala=0.9, detalle=8.0, aspereza=0.75)
     c.unir(mapa, "Vector", musgo_ruido, "Vector")
 
     rincones = mascara_rincones(c, -1500, 80, distancia=0.4)
@@ -464,7 +464,7 @@ def madera_gastada():
 
     # Vetas: onda muy estirada + distorsion.
     vetas = c.nodo("ShaderNodeTexWave", -1500, 950, bands_direction="Z", wave_profile="SIN")
-    c.val(vetas, "Scale", 2.2)
+    c.val(vetas, "Scale", 1.4)
     c.val(vetas, "Distortion", 12.0)
     c.val(vetas, "Detail", 6.0)
     c.unir(mapa, "Vector", vetas, "Vector")
@@ -479,7 +479,7 @@ def madera_gastada():
     c.val(tablas, "Mortar", (0.05, 0.05, 0.05, 1))
     c.unir(mapa, "Vector", tablas, "Vector")
 
-    gris = c.ruido(-1500, 380, escala=4.0, detalle=8.0, aspereza=0.7)
+    gris = c.ruido(-1500, 380, escala=0.6, detalle=8.0, aspereza=0.7)
     c.unir(mapa, "Vector", gris, "Vector")
     bordes = mascara_bordes(c, -1500, 100, fuerza=0.9)
     rincones = mascara_rincones(c, -1500, -200, distancia=0.3)
@@ -549,11 +549,11 @@ def metal_piso():
     c.l.new(a.outputs["Color"], estrias.inputs[0])
     c.l.new(b.outputs["Color"], estrias.inputs[1])
 
-    oxido_ruido = c.ruido(-1500, 620, escala=5.0, detalle=10.0, aspereza=0.72)
+    oxido_ruido = c.ruido(-1500, 620, escala=0.7, detalle=10.0, aspereza=0.72)
     c.unir(mapa, "Vector", oxido_ruido, "Vector")
     bordes = mascara_bordes(c, -1500, 320, fuerza=0.9)
     rincones = mascara_rincones(c, -1500, 20, distancia=0.25)
-    chorro = chorreados(c, mapa, -1500, -300, escala=(4.0, 4.0, 0.3))
+    chorro = chorreados(c, mapa, -1500, -300, escala=(0.6, 0.6, 0.08))
 
     manchas = c.rampa(-1250, 620, [(0.56, (0, 0, 0)), (0.74, (0.8, 0.8, 0.8))])
     c.unir(oxido_ruido, "Fac", manchas, "Fac")
@@ -613,12 +613,12 @@ def tablas_muelle():
     c.unir(mapa, "Vector", tablas, "Vector")
 
     vetas = c.nodo("ShaderNodeTexWave", -1500, 650, bands_direction="Y", wave_profile="SIN")
-    c.val(vetas, "Scale", 3.0)
+    c.val(vetas, "Scale", 1.2)
     c.val(vetas, "Distortion", 14.0)
     c.val(vetas, "Detail", 8.0)
     c.unir(mapa, "Vector", vetas, "Vector")
 
-    sal = c.ruido(-1500, 400, escala=6.0, detalle=8.0, aspereza=0.7)
+    sal = c.ruido(-1500, 400, escala=0.8, detalle=8.0, aspereza=0.7)
     c.unir(mapa, "Vector", sal, "Vector")
     bordes = mascara_bordes(c, -1500, 100, fuerza=0.85)
     rincones = mascara_rincones(c, -1500, -200, distancia=0.3)
@@ -674,11 +674,11 @@ def material_contenedor(nombre, tono):
     c.val(nervio, "Distortion", 0.0)
     c.unir(mapa, "Vector", nervio, "Vector")
 
-    sucio_ruido = c.ruido(-1500, 650, escala=5.0, detalle=9.0, aspereza=0.7)
+    sucio_ruido = c.ruido(-1500, 650, escala=0.7, detalle=9.0, aspereza=0.7)
     c.unir(mapa, "Vector", sucio_ruido, "Vector")
     bordes = mascara_bordes(c, -1500, 300, fuerza=0.95)
     rincones = mascara_rincones(c, -1500, 0, distancia=0.3)
-    chorro = chorreados(c, mapa, -1500, -300, escala=(5.0, 5.0, 0.35), fuerza=(0.55, 0.82))
+    chorro = chorreados(c, mapa, -1500, -300, escala=(0.7, 0.7, 0.09), fuerza=(0.5, 0.78))
 
     manchas = c.rampa(-1250, 650, [(0.55, (0, 0, 0)), (0.74, (0.85, 0.85, 0.85))])
     c.unir(sucio_ruido, "Fac", manchas, "Fac")

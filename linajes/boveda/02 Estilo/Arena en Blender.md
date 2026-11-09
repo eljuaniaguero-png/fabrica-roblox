@@ -50,3 +50,22 @@ Otro arreglo importante: las coordenadas de objeto están en **metros**, así qu
 
 ## Lo que falta del pedido
 Hornear Color + AO, Normal (OpenGL) y Roughness a 1024, exportar con `SurfaceAppearance` y comparar en Studio desde el mismo ángulo.
+
+## Tercera vuelta (8 nov): los 8 puntos de Juani
+1. **Mar de verdad:** malla de 700 m con 220 subdivisiones y dos Displace de nubes (olas grandes y finas), agua casi negra con roughness 0,055. El sol bajo deja su camino de luz sobre el agua.
+2. **Atardecer:** sol a 6,5° de altura, color (1 / 0,46 / 0,18), fuerza 3,4 y angulo 1,2° (sombras largas y duras). Cielo fisico con elevacion 3,2°, polvo 5. Exposicion −0,7.
+3. **Texturas con desgaste en todo:** contenedores, gruas, galpones y barriles. El piso perdio la cuadricula de azulejos: ahora es cemento manchado.
+4. **Farolas de sodio:** color exacto #f29a3a, 5200 W, charcos grandes en el piso.
+5. **Niebla de noche:** caja volumetrica azul #2a3550 con densidad 0,0085: las luces tienen halo y el fondo se funde.
+6. **Gruas macizas:** cuatro patas gruesas, rieles, anillo, casa de maquinas grande, cabina con vidrio, brazo pesado y contrapeso. Se fue el reticulado fino.
+7. **Contenedores en grilla:** `fila()` los coloca sin temblequeo; ninguno flota, se cruza ni sobresale de la explanada.
+8. **Camara:** 42 mm a 27 m de alto, como el angulo de la referencia.
+
+**El bicho de esta vuelta:** todos los ruidos de los materiales estaban pensados para un cubo de 1 m. Sobre piezas de 6 m se promediaban y las texturas se veian lisas. Ahora las escalas estan en metros (oxido 0,7-1,3; chorreados 0,5-0,7).
+
+## Renderizar sin abrir Blender
+Blender se cerro a mitad de camino, asi que ahora los renders salen por consola (mas rapido: 30 s con OPTIX):
+
+```
+"C:\Program Files\Blender Foundation\Blender 5.2lender.exe" -b --python linajes/arte/scripts/arena/render_arena.py -- atardecer salida.png 96 [guardar.blend]
+```
