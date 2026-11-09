@@ -68,7 +68,19 @@ def main():
         bpy.context.scene.view_settings.exposure = -0.7
     entorno["ajustes_render"](muestras=muestras, ancho=1280, alto=720)
     dispositivo = usar_gpu()
-    bpy.context.scene.view_settings.view_transform = "Standard"
+    vista = bpy.context.scene.view_settings
+    vista.view_transform = "Standard"
+    vista.use_curve_mapping = False
+    # Curva en S solo de dia: de noche hundiria todo en negro.
+    vista.use_curve_mapping = luz != "noche"
+    curva = vista.curve_mapping.curves[3]
+    while len(curva.points) > 2:
+        curva.points.remove(curva.points[1])
+    curva.points[0].location = (0.0, 0.0)
+    curva.points[1].location = (1.0, 1.0)
+    curva.points.new(0.22, 0.09)
+    curva.points.new(0.62, 0.72)
+    vista.curve_mapping.update()
     bpy.context.scene.render.filepath = salida
     print("RENDER: luz=%s dispositivo=%s objetos=%d" % (luz, dispositivo, len(bpy.data.objects)))
     bpy.ops.render.render(write_still=True)

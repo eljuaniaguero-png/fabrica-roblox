@@ -69,3 +69,18 @@ Blender se cerro a mitad de camino, asi que ahora los renders salen por consola 
 ```
 "C:\Program Files\Blender Foundation\Blender 5.2lender.exe" -b --python linajes/arte/scripts/arena/render_arena.py -- atardecer salida.png 96 [guardar.blend]
 ```
+
+## Cuarta vuelta (8 nov): los 6 puntos
+1. **Camara** a 22 m, 42 mm, inclinada apenas hacia abajo: el horizonte queda en el tercio de arriba y entran el cielo y el camino del sol.
+2. **Contraste de atardecer**: la luz de relleno del cielo baja a 0,30 y el render pasa por una curva en S (negros al 0,09, medios al 0,72). Sombras largas y casi negras. La curva se aplica solo de dia.
+3. **Sol** a 4,2 de fuerza con color (1 / 0,52 / 0,26): dora sin quemar, y los contenedores siguen leyendose rojos, azules y verdes.
+4. **Farolas naranjas**: el truco es al reves de lo que parece: menos potencia (1300 W), color mas saturado (1 / 0,33 / 0,04) y radio grande. Con mucha potencia el charco sale blanco.
+5. **Gruas altas**: patas de 12 m, brazo en diagonal a 44 grados de 15 m, cable largo y gancho colgando. Duplican la altura de las pilas de contenedores.
+6. **Luces de noche**: ventanas y porton de cada galpon, vidrio de la cabina de la grua y luz roja de posicion en la punta del brazo. Las posiciones se guardan en las listas VENTANAS, CABINAS y PUNTAS cuando se arma la escena.
+
+**Otro bicho:** la caja de niebla medía 260 m y se veia como una franja marron arriba del horizonte. Ahora mide 900 m, y la densidad de noche bajo a 0,0020.
+
+## Lo que sigue sin parecerse
+- La grua de adelante ocupa el tercio izquierdo; en la referencia las dos gruas estan mas lejos y se ven enteras.
+- Los charcos de las farolas tiran a crema; en la referencia son naranjas fuertes.
+- De noche nuestra plaza esta mas iluminada que la de la referencia.

@@ -126,6 +126,25 @@ def material_de_contenedor(tono):
     return m
 
 
+def emisor(nombre, color, fuerza):
+    """Material que ilumina (ventanas, lamparas, luces de posicion)."""
+    m = bpy.data.materials.get(nombre)
+    if m:
+        return m
+    m = bpy.data.materials.new(nombre)
+    m.use_nodes = True
+    nt = m.node_tree
+    for nd in list(nt.nodes):
+        if nd.type != "OUTPUT_MATERIAL":
+            nt.nodes.remove(nd)
+    em = nt.nodes.new("ShaderNodeEmission")
+    em.inputs[0].default_value = color
+    em.inputs[1].default_value = fuerza
+    salida = next(nd for nd in nt.nodes if nd.type == "OUTPUT_MATERIAL")
+    nt.links.new(em.outputs[0], salida.inputs["Surface"])
+    return m
+
+
 def contenedor(nombre, centro, giro, tono, col):
     """Contenedor de 6 m x 2,44 m x 2,59 m con puertas."""
     m = material_de_contenedor(tono)
@@ -224,8 +243,8 @@ def farola(nombre, centro, col, alto=5.4, brazo=1.1, giro=0.0):
             if nd.type != "OUTPUT_MATERIAL":
                 nt.nodes.remove(nd)
         em = nt.nodes.new("ShaderNodeEmission")
-        em.inputs[0].default_value = (0.949, 0.604, 0.227, 1)
-        em.inputs[1].default_value = 60.0
+        em.inputs[0].default_value = (1.0, 0.45, 0.10, 1)
+        em.inputs[1].default_value = 14.0
         salida = next(nd for nd in nt.nodes if nd.type == "OUTPUT_MATERIAL")
         nt.links.new(em.outputs[0], salida.inputs["Surface"])
     vidrio.data.materials.append(emisor)
@@ -264,8 +283,19 @@ def galpon(nombre, centro, ancho, largo, alto, col, giro=0.0, puerta=True):
         px = centro[0] + math.cos(giro) * (ancho / 2 + 0.04)
         py = centro[1] + math.sin(giro) * (ancho / 2 + 0.04)
         hueco = caja(nombre + "_Porton", (px, py, centro[2] + 1.55), (0.1, largo * 0.4, 3.1),
-                     mat("MAT_MetalPiso"), col, giro=giro, bisel=0.01)
+                     None, col, giro=giro, bisel=0.01)
+        hueco.data.materials.append(emisor("MAT_LuzPorton", (1.0, 0.66, 0.30, 1), 2.5))
         emparentar(hueco, paredes)
+        VENTANAS.append((px, py, centro[2] + 1.6))
+        # Dos ventanas cálidas a los costados del portón.
+        for lado in (-1, 1):
+            vx = px - math.sin(giro) * lado * largo * 0.3
+            vy = py + math.cos(giro) * lado * largo * 0.3
+            ven = caja(nombre + "_Ventana", (vx, vy, centro[2] + alto * 0.62),
+                       (0.1, largo * 0.16, 1.1), None, col, giro=giro, bisel=0.01)
+            ven.data.materials.append(emisor("MAT_LuzVentana", (1.0, 0.70, 0.34, 1), 4.0))
+            emparentar(ven, paredes)
+            VENTANAS.append((vx, vy, centro[2] + alto * 0.62))
     return paredes
 
 
@@ -311,8 +341,8 @@ def celosia(nombre, a, b, grosor, m, col, separacion=0.0, pasos=6, diagonal=0.12
 
 
 def grua(nombre, centro, col, giro=0.0, escala=1.0):
-    """Grua vieja de puerto: cuatro patas gruesas, cuerpo macizo, cabina y brazo pesado.
-    Nada de reticulado fino: son cajas grandes, como las de la referencia."""
+    """Grua vieja de puerto, alta: patas gruesas, cuerpo macizo, cabina y un brazo
+    pesado en diagonal hacia arriba (45 grados) con el cable y el gancho colgando."""
     m = mat("MAT_MetalPiso")
     e = escala
     cx, cy, cz = centro
@@ -322,81 +352,90 @@ def grua(nombre, centro, col, giro=0.0, escala=1.0):
         return (cx + dx * co - dy * si, cy + dx * si + dy * co, cz + dz)
 
     piezas = []
-    sep = 3.6 * e
-    alto_pata = 7.6 * e
+    sep = 4.0 * e
+    alto_pata = 12.0 * e
 
-    # Cuatro patas gruesas, apenas inclinadas hacia adentro.
     for sx in (-1, 1):
         for sy in (-1, 1):
             p0 = local(sx * sep, sy * sep, 0.3)
-            p1 = local(sx * 1.6 * e, sy * 1.6 * e, alto_pata)
-            piezas.append(viga(nombre + "_Pata", p0, p1, 0.75 * e, m, col))
+            p1 = local(sx * 1.7 * e, sy * 1.7 * e, alto_pata)
+            piezas.append(viga(nombre + "_Pata", p0, p1, 0.8 * e, m, col))
             piezas.append(
                 caja(nombre + "_Zapata", local(sx * sep, sy * sep, 0.25),
-                     (1.8 * e, 1.8 * e, 0.5), mat("MAT_CementoMojado"), col, giro=giro)
+                     (2.0 * e, 2.0 * e, 0.5), mat("MAT_CementoMojado"), col, giro=giro)
             )
-    # Dos vigas de amarre entre patas (las que llevan las ruedas).
     for sy in (-1, 1):
         piezas.append(
-            caja(nombre + "_Riel", local(0, sy * sep, 0.55),
-                 (sep * 2.4, 1.1 * e, 0.7 * e), m, col, giro=giro)
+            caja(nombre + "_Riel", local(0, sy * sep, 0.6),
+                 (sep * 2.5, 1.2 * e, 0.8 * e), m, col, giro=giro)
         )
-    # Anillo macizo a media altura.
+    for z in (0.42, 0.72):
+        d = sep - (sep - 1.7 * e) * z
+        piezas.append(
+            caja(nombre + "_Anillo", local(0, 0, alto_pata * z),
+                 (d * 2.1, d * 2.1, 0.5 * e), m, col, giro=giro)
+        )
     piezas.append(
-        caja(nombre + "_Anillo", local(0, 0, alto_pata * 0.56),
-             (sep * 2.1, sep * 2.1, 0.55 * e), m, col, giro=giro)
-    )
-    # Cuerpo: plataforma y casa de maquinas grande.
-    piezas.append(
-        caja(nombre + "_Plataforma", local(0, 0, alto_pata + 0.45),
-             (6.4 * e, 5.6 * e, 0.9), m, col, giro=giro)
-    )
-    piezas.append(
-        caja(nombre + "_Casa", local(-1.8 * e, 0, alto_pata + 2.6),
-             (5.0 * e, 4.4 * e, 4.2 * e), m, col, giro=giro)
+        caja(nombre + "_Plataforma", local(0, 0, alto_pata + 0.5),
+             (7.0 * e, 6.0 * e, 1.0), m, col, giro=giro)
     )
     piezas.append(
-        caja(nombre + "_Techo", local(-1.8 * e, 0, alto_pata + 4.45),
-             (5.4 * e, 4.8 * e, 0.3), m, col, giro=giro)
-    )
-    # Cabina del operario, colgada del lado del agua.
-    piezas.append(
-        caja(nombre + "_Cabina", local(2.6 * e, -2.2 * e, alto_pata + 1.6),
-             (2.2 * e, 1.9 * e, 2.2 * e), m, col, giro=giro)
+        caja(nombre + "_Casa", local(-2.0 * e, 0, alto_pata + 2.9),
+             (5.4 * e, 4.8 * e, 4.4 * e), m, col, giro=giro)
     )
     piezas.append(
-        caja(nombre + "_CabinaVidrio", local(3.65 * e, -2.2 * e, alto_pata + 1.9),
-             (0.16, 1.4 * e, 1.3 * e), m, col, giro=giro, bisel=0.01)
+        caja(nombre + "_Techo", local(-2.0 * e, 0, alto_pata + 5.25),
+             (5.8 * e, 5.2 * e, 0.3), m, col, giro=giro)
     )
-    # Brazo pesado: una viga gruesa que se afina hacia la punta, con su soporte.
-    raiz = local(1.0 * e, 0, alto_pata + 2.0)
-    punta = local(12.5 * e, 0, alto_pata + 9.6 * e)
-    brazo = viga(nombre + "_Brazo", raiz, punta, 1.0 * e, m, col)
-    piezas.append(brazo)
-    piezas.append(viga(nombre + "_BrazoBajo", raiz, punta, 0.45 * e, m, col))
-    # Punta del brazo con la polea.
+    # Cabina del operario, del lado del agua.
+    cab = local(2.9 * e, -2.4 * e, alto_pata + 1.8)
+    piezas.append(caja(nombre + "_Cabina", cab, (2.4 * e, 2.0 * e, 2.4 * e), m, col, giro=giro))
+    vidrio_cab = local(4.05 * e, -2.4 * e, alto_pata + 2.1)
+    v = caja(nombre + "_CabinaVidrio", vidrio_cab, (0.16, 1.5 * e, 1.4 * e), None, col,
+             giro=giro, bisel=0.01)
+    v.data.materials.append(emisor("MAT_LuzCabina", (1.0, 0.72, 0.38, 1), 6.0))
+    piezas.append(v)
+    CABINAS.append(vidrio_cab)
+
+    # Brazo en diagonal hacia arriba, unos 45 grados.
+    raiz = local(1.2 * e, 0, alto_pata + 2.2)
+    largo = 15.0 * e
+    ang = math.radians(44)
+    punta = local(1.2 * e + math.cos(ang) * largo, 0, alto_pata + 2.2 + math.sin(ang) * largo)
+    piezas.append(viga(nombre + "_Brazo", raiz, punta, 1.0 * e, m, col))
     piezas.append(
-        caja(nombre + "_Polea", punta, (1.3 * e, 1.5 * e, 1.0 * e), m, col, giro=giro)
+        viga(nombre + "_BrazoBajo",
+             local(1.2 * e, 0, alto_pata + 1.2),
+             (punta[0], punta[1], punta[2] - 1.2 * e), 0.45 * e, m, col)
     )
-    # Mastil corto y tirantes gruesos.
-    mastil = local(-0.8 * e, 0, alto_pata + 8.4 * e)
-    piezas.append(viga(nombre + "_Mastil", local(-0.8 * e, 0, alto_pata + 2.4), mastil,
-                       0.75 * e, m, col))
+    piezas.append(caja(nombre + "_Polea", punta, (1.4 * e, 1.6 * e, 1.1 * e), m, col, giro=giro))
+    # Luz de posicion en la punta.
+    luz_punta = (punta[0], punta[1], punta[2] + 0.9 * e)
+    lp = caja(nombre + "_LuzPunta", luz_punta, (0.35 * e, 0.35 * e, 0.35 * e), None, col)
+    lp.data.materials.append(emisor("MAT_LuzRoja", (1.0, 0.12, 0.08, 1), 25.0))
+    piezas.append(lp)
+    PUNTAS.append(luz_punta)
+
+    # Mastil y tirantes que sostienen el brazo.
+    mastil = local(-1.0 * e, 0, alto_pata + 11.0 * e)
+    piezas.append(viga(nombre + "_Mastil", local(-1.0 * e, 0, alto_pata + 2.6), mastil,
+                       0.8 * e, m, col))
     piezas.append(viga(nombre + "_Tirante", mastil, punta, 0.3 * e, m, col))
-    cola = local(-6.0 * e, 0, alto_pata + 3.0 * e)
+    cola = local(-7.0 * e, 0, alto_pata + 3.4 * e)
     piezas.append(viga(nombre + "_Cola", mastil, cola, 0.3 * e, m, col))
     piezas.append(
-        caja(nombre + "_Contrapeso", local(-6.0 * e, 0, alto_pata + 2.0 * e),
-             (3.4 * e, 3.2 * e, 2.4 * e), m, col, giro=giro)
+        caja(nombre + "_Contrapeso", local(-7.0 * e, 0, alto_pata + 2.2 * e),
+             (3.6 * e, 3.4 * e, 2.6 * e), m, col, giro=giro)
     )
-    # Cable y gancho.
-    gancho_z = cz + 3.0 * e
+    # Cable largo y gancho colgando cerca del piso.
+    gancho_z = cz + 3.5 * e
     piezas.append(
-        viga(nombre + "_Cable", punta, (punta[0], punta[1], gancho_z), 0.06 * e, m, col)
+        viga(nombre + "_Cable", (punta[0], punta[1], punta[2] - 0.6 * e),
+             (punta[0], punta[1], gancho_z), 0.07 * e, m, col)
     )
     piezas.append(
-        caja(nombre + "_Gancho", (punta[0], punta[1], gancho_z - 0.6 * e),
-             (0.8 * e, 0.8 * e, 1.2 * e), m, col, giro=giro)
+        caja(nombre + "_Gancho", (punta[0], punta[1], gancho_z - 0.7 * e),
+             (0.9 * e, 0.9 * e, 1.4 * e), m, col, giro=giro)
     )
     return piezas
 
@@ -446,11 +485,15 @@ TONOS_CONTENEDOR = [
 
 FAROLAS = []
 REFLECTORES = []
+VENTANAS = []
+CABINAS = []
+PUNTAS = []
 
 
 def armar_arena():
-    global FAROLAS, REFLECTORES
+    global FAROLAS, REFLECTORES, VENTANAS, CABINAS, PUNTAS
     FAROLAS, REFLECTORES = [], []
+    VENTANAS, CABINAS, PUNTAS = [], [], []
     limpiar()
     piso = coleccion("Piso")
     carga = coleccion("Carga")
@@ -576,8 +619,8 @@ def armar_arena():
            puerta=True)
 
     # Grúas sobre el muelle, mirando al agua.
-    grua("Grua1", (-16.0, 4.0, 0.0), maquinas, giro=math.pi * 1.08, escala=0.95)
-    grua("Grua2", (-15.0, 22.0, 0.0), maquinas, giro=math.pi * 0.98, escala=0.85)
+    grua("Grua1", (-22.0, 9.0, 0.0), maquinas, giro=math.pi * 1.08, escala=0.9)
+    grua("Grua2", (-17.0, 24.0, 0.0), maquinas, giro=math.pi * 0.98, escala=0.8)
 
     # Torre de reflectores atras.
     REFLECTORES += torre_reflector("Torre1", (26.0, 20.0, 0.0), maquinas, alto=9.0)
@@ -630,7 +673,7 @@ def poner_camara(nombre="CamRef"):
     cam = bpy.data.objects.get(nombre)
     if cam:
         bpy.data.objects.remove(cam, do_unlink=True)
-    bpy.ops.object.camera_add(location=(-54.0, -46.0, 27.0))
+    bpy.ops.object.camera_add(location=(-58.0, -50.0, 22.0))
     cam = bpy.context.active_object
     cam.name = nombre
     cam.data.lens = 42
@@ -638,7 +681,7 @@ def poner_camara(nombre="CamRef"):
     # Apuntar al centro de la plaza (to_track_quat es la forma segura).
     import mathutils
 
-    objetivo = mathutils.Vector((3.0, 9.0, 4.0))
+    objetivo = mathutils.Vector((4.0, 10.0, 6.5))
     direccion = objetivo - cam.location
     cam.rotation_euler = direccion.to_track_quat("-Z", "Y").to_euler()
     bpy.context.scene.camera = cam
@@ -672,12 +715,12 @@ def _mundo(color_cielo, fuerza, niebla=None):
     return mundo
 
 
-def niebla_caja(color, densidad, tam=(260, 260, 60)):
+def niebla_caja(color, densidad, tam=(900, 900, 220)):
     """Niebla de verdad: una caja grande con Principled Volume alrededor de todo."""
     viejo = bpy.data.objects.get("NieblaCaja")
     if viejo:
         bpy.data.objects.remove(viejo, do_unlink=True)
-    bpy.ops.mesh.primitive_cube_add(size=1, location=(0, 0, tam[2] / 2 - 6))
+    bpy.ops.mesh.primitive_cube_add(size=1, location=(0, 0, tam[2] / 2 - 20))
     ob = bpy.context.active_object
     ob.name = "NieblaCaja"
     ob.scale = tam
@@ -776,9 +819,9 @@ def luz_atardecer():
     ob = bpy.data.objects.get("SolNoche")
     if ob:
         bpy.data.objects.remove(ob, do_unlink=True)
-    _sol("SolAtardecer", (1.0, 0.46, 0.18), 3.4, 6.5, 118.0, angulo=1.2)
-    cielo_nishita(elevacion=3.2, giro=118.0, polvo=5.0, fuerza=0.5)
-    niebla_caja((1.0, 0.72, 0.48, 1), 0.0006)
+    _sol("SolAtardecer", (1.0, 0.52, 0.26), 4.2, 9.0, 142.0, angulo=1.0)
+    cielo_nishita(elevacion=4.5, giro=142.0, polvo=2.2, fuerza=0.30)
+    niebla_caja((1.0, 0.72, 0.48, 1), 0.00035)
     bpy.context.scene.view_settings.view_transform = "Standard"
     return True
 
@@ -790,14 +833,18 @@ def luz_noche():
     if ob:
         bpy.data.objects.remove(ob, do_unlink=True)
     _sol("SolNoche", (0.42, 0.56, 1.0), 0.35, 34.0, 120.0, angulo=8.0)
-    _mundo((0.045, 0.075, 0.14, 1), 1.0, niebla=((0.165, 0.208, 0.314, 1), 0.0085))
+    _mundo((0.055, 0.090, 0.17, 1), 1.8, niebla=((0.165, 0.208, 0.314, 1), 0.0020))
     for i, pos in enumerate(FAROLAS):
-        _lampara("LuzFarola%d" % i, pos, (0.949, 0.604, 0.227), 5200.0, radio=0.22)
+        _lampara("LuzFarola%d" % i, pos, (1.0, 0.33, 0.04), 1300.0, radio=0.45)
     for i, pos in enumerate(REFLECTORES):
-        _lampara("LuzReflector%d" % i, pos, (0.84, 0.91, 1.0), 2600.0, radio=0.35)
+        _lampara("LuzReflector%d" % i, pos, (0.80, 0.88, 1.0), 2400.0, radio=0.5)
     # Ventanas de galpon encendidas.
-    for pos in ((13.0, 22.0, 2.8), (27.0, 22.0, 2.6)):
-        _lampara("LuzGalpon", pos, (1.0, 0.72, 0.38), 700.0, radio=0.5)
+    for i, pos in enumerate(VENTANAS):
+        _lampara("LuzVentana%d" % i, pos, (1.0, 0.60, 0.26), 700.0, radio=0.6)
+    for i, pos in enumerate(CABINAS):
+        _lampara("LuzCabina%d" % i, pos, (1.0, 0.66, 0.32), 220.0, radio=0.4)
+    for i, pos in enumerate(PUNTAS):
+        _lampara("LuzPunta%d" % i, pos, (1.0, 0.15, 0.10), 160.0, radio=0.3)
     esc = bpy.context.scene
     esc.view_settings.view_transform = "Standard"
     return True
