@@ -65,7 +65,7 @@ def main():
         bpy.context.scene.view_settings.exposure = 0.0
     else:
         entorno["luz_atardecer"]()
-        bpy.context.scene.view_settings.exposure = -0.7
+        bpy.context.scene.view_settings.exposure = -0.45
     entorno["ajustes_render"](muestras=muestras, ancho=1280, alto=720)
     dispositivo = usar_gpu()
     vista = bpy.context.scene.view_settings
@@ -84,9 +84,17 @@ def main():
     bpy.context.scene.render.filepath = salida
     print("RENDER: luz=%s dispositivo=%s objetos=%d" % (luz, dispositivo, len(bpy.data.objects)))
     bpy.ops.render.render(write_still=True)
+    entorno["poner_camara"]()
+    bpy.context.scene.render.filepath = salida
     if len(args) > 3 and args[3]:
         bpy.ops.wm.save_as_mainfile(filepath=args[3])
         print("GUARDADO:", args[3])
+    # Segunda captura: desde la camara del juego, detras del personaje.
+    entorno["camara_juego"]()
+    raiz, ext = os.path.splitext(salida)
+    bpy.context.scene.render.filepath = raiz + "-juego" + ext
+    bpy.ops.render.render(write_still=True)
+    print("JUEGO:", raiz + "-juego" + ext)
     print("LISTO:", salida)
 
 

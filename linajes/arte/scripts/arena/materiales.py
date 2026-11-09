@@ -736,22 +736,23 @@ def material_grua():
     rincones = mascara_rincones(c, -1500, -150, distancia=0.5)
     chorro = chorreados(c, mapa, -1500, -450, escala=(0.45, 0.45, 0.05), fuerza=(0.45, 0.75))
 
-    manchas = c.rampa(-1250, 650, [(0.42, (0, 0, 0)), (0.62, (0.95, 0.95, 0.95))])
+    manchas = c.rampa(-1250, 650, [(0.52, (0, 0, 0)), (0.70, (0.9, 0.9, 0.9))])
     c.unir(manchas_ruido, "Fac", manchas, "Fac")
-    b_esc = escalar(c, bordes, "Color", 1.0, -1050, 420)
-    m_esc = escalar(c, manchas, "Color", 0.75, -1050, 280)
-    ch_esc = escalar(c, chorro, "Color", 0.7, -1050, 140)
+    b_esc = escalar(c, bordes, "Color", 0.85, -1050, 420)
+    m_esc = escalar(c, manchas, "Color", 0.5, -1050, 280)
+    ch_esc = escalar(c, chorro, "Color", 0.45, -1050, 140)
     ox1 = sumar(c, b_esc, "Value", m_esc, "Value", -880, 300)
     ox2 = sumar(c, ox1, "Value", ch_esc, "Value", -720, 300)
 
+    # Pintura gastada: gris verdoso de astillero, con parches rojo oxido.
     base = c.mezcla(-1000, 950, "MIX", 0.5)
-    c.val(base, "A", srgb_a_lineal((0.278, 0.302, 0.337)))
-    c.val(base, "B", srgb_a_lineal((0.361, 0.384, 0.420)))
+    c.val(base, "A", srgb_a_lineal((0.247, 0.267, 0.267)))
+    c.val(base, "B", srgb_a_lineal((0.341, 0.357, 0.345)))
     c.unir(pintura, "Fac", base, "Factor")
 
     tono_ox = c.mezcla(-800, 600, "MIX", 0.5)
-    c.val(tono_ox, "A", color("oxido"))
-    c.val(tono_ox, "B", color("oxido_claro"))
+    c.val(tono_ox, "A", srgb_a_lineal((0.333, 0.165, 0.102)))
+    c.val(tono_ox, "B", srgb_a_lineal((0.435, 0.235, 0.137)))
     c.unir(manchas, "Color", tono_ox, "Factor")
 
     con_oxido = c.mezcla(-600, 950, "MIX", 1.0)

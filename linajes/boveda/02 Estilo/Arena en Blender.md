@@ -95,3 +95,11 @@ Las 4 vistas salen con:
 blender.exe -b --python linajes/arte/scripts/arena/render_grua.py -- renders/grua.png 64
 ```
 Mientras Juani no apruebe la grua nueva, el mapa sigue con la grua vieja de cajas.
+
+## Sexta vuelta (8 nov): cielo, camara del juego y grua aparte
+**Juani frena los ciclos de composicion**: el mapa lo acomoda el a mano (gruas, contenedores y galpones). Los scripts no vuelven a mover nada de lugar.
+
+- **Cielo en degrade**: `cielo_degradado()` arma el mundo con una rampa sobre la Z de la direccion de vista (naranja fuerte en el horizonte, rosado arriba, azul en el cenit) y agrega una **esfera emisiva** a 1400 m en la direccion del sol, asi se ve el disco y su reflejo en el agua. Se fue la franja naranja plana. Ojo: el vector Generated del mundo va de -1 a 1, hay que llevarlo a 0..1 antes de la rampa.
+- **Camara del juego**: `camara_juego()` deja un personaje de prueba (1,60 m) y pone la camara 8 studs (2,24 m) detras, a la altura de la cabeza, con lente 24 mm (el FOV de Roblox es mas abierto que el de cine). `render_arena.py` saca siempre las dos capturas: `<salida>.png` (aerea) y `<salida>-juego.png`.
+- **Grua**: material `MAT_Grua` pasa a pintura gastada gris verdosa con parches rojo oxido (nada de amarillo saturado; el amarillo del mapa era el sol quemando el render). Sigue esperando el OK de Juani para entrar al mapa.
+- La referencia `08 Lugares/renders/grua-gemini-ref.png` todavia no esta en la carpeta.

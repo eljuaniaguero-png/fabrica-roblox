@@ -284,7 +284,7 @@ def galpon(nombre, centro, ancho, largo, alto, col, giro=0.0, puerta=True):
         py = centro[1] + math.sin(giro) * (ancho / 2 + 0.04)
         hueco = caja(nombre + "_Porton", (px, py, centro[2] + 1.55), (0.1, largo * 0.4, 3.1),
                      None, col, giro=giro, bisel=0.01)
-        hueco.data.materials.append(emisor("MAT_LuzPorton", (1.0, 0.66, 0.30, 1), 2.5))
+        hueco.data.materials.append(emisor("MAT_LuzPorton", (1.0, 0.66, 0.30, 1), 1.1))
         emparentar(hueco, paredes)
         VENTANAS.append((px, py, centro[2] + 1.6))
         # Dos ventanas cálidas a los costados del portón.
@@ -293,7 +293,7 @@ def galpon(nombre, centro, ancho, largo, alto, col, giro=0.0, puerta=True):
             vy = py + math.cos(giro) * lado * largo * 0.3
             ven = caja(nombre + "_Ventana", (vx, vy, centro[2] + alto * 0.62),
                        (0.1, largo * 0.16, 1.1), None, col, giro=giro, bisel=0.01)
-            ven.data.materials.append(emisor("MAT_LuzVentana", (1.0, 0.70, 0.34, 1), 4.0))
+            ven.data.materials.append(emisor("MAT_LuzVentana", (1.0, 0.70, 0.34, 1), 1.5))
             emparentar(ven, paredes)
             VENTANAS.append((vx, vy, centro[2] + alto * 0.62))
     return paredes
@@ -685,6 +685,51 @@ def poner_camara(nombre="CamRef"):
     return cam
 
 
+def camara_juego(nombre="CamJuego", pos_personaje=(3.0, -2.0), giro=0.6):
+    """Camara como la del juego: detras del personaje, a 8 studs (2,24 m) y a la
+    altura de la cabeza. Deja un personaje de prueba para que se vea la escala."""
+    alto = 1.6
+    px, py = pos_personaje
+    viejo = bpy.data.objects.get("PersonajePrueba")
+    if viejo:
+        bpy.data.objects.remove(viejo, do_unlink=True)
+    bpy.ops.mesh.primitive_cylinder_add(radius=0.3, depth=alto, location=(px, py, alto / 2),
+                                        vertices=16)
+    cuerpo = bpy.context.active_object
+    cuerpo.name = "PersonajePrueba"
+    m = bpy.data.materials.get("MAT_Personaje")
+    if not m:
+        m = bpy.data.materials.new("MAT_Personaje")
+        m.use_nodes = True
+        b = next(n for n in m.node_tree.nodes if n.type == "BSDF_PRINCIPLED")
+        b.inputs["Base Color"].default_value = (0.12, 0.14, 0.2, 1)
+        b.inputs["Roughness"].default_value = 0.6
+    cuerpo.data.materials.append(m)
+    bpy.ops.mesh.primitive_uv_sphere_add(radius=0.28, location=(px, py, alto + 0.22),
+                                         segments=20, ring_count=12)
+    cabeza = bpy.context.active_object
+    cabeza.name = "PersonajePruebaCabeza"
+    cabeza.data.materials.append(m)
+    meter(cuerpo, coleccion("Luces"))
+    meter(cabeza, coleccion("Luces"))
+
+    cam = bpy.data.objects.get(nombre)
+    if cam:
+        bpy.data.objects.remove(cam, do_unlink=True)
+    dist = 8 * 0.28  # 8 studs
+    cx = px - math.cos(giro) * dist
+    cy = py - math.sin(giro) * dist
+    bpy.ops.object.camera_add(location=(cx, cy, alto + 0.55))
+    cam = bpy.context.active_object
+    cam.name = nombre
+    cam.data.lens = 24  # el FOV de Roblox (70 grados) es mas abierto que el de cine
+    objetivo = mathutils.Vector((px + math.cos(giro) * 14, py + math.sin(giro) * 14, alto + 0.2))
+    d = objetivo - cam.location
+    cam.rotation_euler = d.to_track_quat("-Z", "Y").to_euler()
+    bpy.context.scene.camera = cam
+    return cam
+
+
 def _mundo(color_cielo, fuerza, niebla=None):
     mundo = bpy.data.worlds.get("World") or bpy.data.worlds.new("World")
     bpy.context.scene.world = mundo
@@ -780,6 +825,88 @@ def _lampara(nombre, pos, color, fuerza, radio=0.25):
     return luz
 
 
+def cielo_degradado(elevacion, giro, colores=None, fuerza=1.0, sol_visible=True):
+    """Cielo pintado en degrade (nada de franja plana): naranja cerca del horizonte,
+    mas claro y rosado arriba, azul en el cenit. El sol es una esfera lejana que
+    ademas se refleja en el agua."""
+    mundo = bpy.data.worlds.get("World") or bpy.data.worlds.new("World")
+    bpy.context.scene.world = mundo
+    mundo.use_nodes = True
+    nt = mundo.node_tree
+    for nd in list(nt.nodes):
+        if nd.type != "OUTPUT_WORLD":
+            nt.nodes.remove(nd)
+    salida = next(nd for nd in nt.nodes if nd.type == "OUTPUT_WORLD")
+
+    coord = nt.nodes.new("ShaderNodeTexCoord")
+    sep = nt.nodes.new("ShaderNodeSeparateXYZ")
+    nt.links.new(coord.outputs["Generated"], sep.inputs["Vector"])
+    # Generated va de 0 a 1; el horizonte queda en 0,5.
+    rampa = nt.nodes.new("ShaderNodeValToRGB")
+    puntos = colores or [
+        (0.30, (0.42, 0.20, 0.12)),   # abajo del horizonte
+        (0.498, (1.00, 0.52, 0.20)),  # justo en el horizonte: naranja fuerte
+        (0.540, (1.00, 0.62, 0.40)),
+        (0.610, (0.92, 0.60, 0.58)),  # rosado
+        (0.730, (0.60, 0.50, 0.66)),
+        (1.000, (0.26, 0.33, 0.56)),  # cenit azul
+    ]
+    r = rampa.color_ramp
+    while len(r.elements) > 1:
+        r.elements.remove(r.elements[-1])
+    for i, (pos, col) in enumerate(puntos):
+        el = r.elements[0] if i == 0 else r.elements.new(pos)
+        el.position = pos
+        el.color = (col[0], col[1], col[2], 1.0)
+    medio = nt.nodes.new("ShaderNodeMath")
+    medio.operation = "MULTIPLY_ADD"
+    medio.inputs[1].default_value = 0.5
+    medio.inputs[2].default_value = 0.5
+    nt.links.new(sep.outputs["Z"], medio.inputs[0])
+    nt.links.new(medio.outputs["Value"], rampa.inputs["Fac"])
+
+    fondo = nt.nodes.new("ShaderNodeBackground")
+    fondo.inputs[1].default_value = fuerza
+    nt.links.new(rampa.outputs["Color"], fondo.inputs["Color"])
+    nt.links.new(fondo.outputs[0], salida.inputs["Surface"])
+
+    # Sol visible: esfera emisiva lejana en la direccion del sol.
+    viejo = bpy.data.objects.get("SolEsfera")
+    if viejo:
+        bpy.data.objects.remove(viejo, do_unlink=True)
+    if sol_visible:
+        acimut = math.radians(giro - 90.0)
+        alt = math.radians(elevacion)
+        d = 1400.0
+        pos = (
+            math.cos(acimut) * math.cos(alt) * d,
+            math.sin(acimut) * math.cos(alt) * d,
+            math.sin(alt) * d,
+        )
+        bpy.ops.mesh.primitive_uv_sphere_add(radius=34, location=pos, segments=32, ring_count=16)
+        esfera = bpy.context.active_object
+        esfera.name = "SolEsfera"
+        bpy.ops.object.shade_smooth()
+        esfera.visible_shadow = False
+        m = bpy.data.materials.get("MAT_SolEsfera")
+        if m:
+            bpy.data.materials.remove(m)
+        m = bpy.data.materials.new("MAT_SolEsfera")
+        m.use_nodes = True
+        nt2 = m.node_tree
+        for nd in list(nt2.nodes):
+            if nd.type != "OUTPUT_MATERIAL":
+                nt2.nodes.remove(nd)
+        em = nt2.nodes.new("ShaderNodeEmission")
+        em.inputs[0].default_value = (1.0, 0.72, 0.42, 1)
+        em.inputs[1].default_value = 90.0
+        sal = next(nd for nd in nt2.nodes if nd.type == "OUTPUT_MATERIAL")
+        nt2.links.new(em.outputs[0], sal.inputs["Surface"])
+        esfera.data.materials.append(m)
+        meter(esfera, coleccion("Luces"))
+    return mundo
+
+
 def cielo_nishita(elevacion, giro, polvo=2.2, fuerza=1.0):
     """Cielo fisico: da el degrade del atardecer y el sol sobre el agua."""
     mundo = bpy.data.worlds.get("World") or bpy.data.worlds.new("World")
@@ -816,8 +943,8 @@ def luz_atardecer():
     ob = bpy.data.objects.get("SolNoche")
     if ob:
         bpy.data.objects.remove(ob, do_unlink=True)
-    _sol("SolAtardecer", (1.0, 0.52, 0.26), 4.2, 9.0, 142.0, angulo=1.0)
-    cielo_nishita(elevacion=4.5, giro=142.0, polvo=2.2, fuerza=0.30)
+    _sol("SolAtardecer", (1.0, 0.56, 0.30), 8.0, 10.0, 138.0, angulo=1.2)
+    cielo_degradado(elevacion=5.5, giro=138.0, fuerza=1.7)
     niebla_caja((1.0, 0.72, 0.48, 1), 0.00035)
     bpy.context.scene.view_settings.view_transform = "Standard"
     return True
