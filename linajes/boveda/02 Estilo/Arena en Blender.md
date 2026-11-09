@@ -124,3 +124,11 @@ Mientras Juani no apruebe la grua nueva, el mapa sigue con la grua vieja de caja
 | `relleno_cielo()` (luz rebotada) | `Lighting.EnvironmentDiffuseScale` y `EnvironmentSpecularScale` |
 | Focos con cono (spot) | `SpotLight` con Angle y Range |
 | Emision de lamparas y ventanas | material `Neon` + `PointLight`/`SurfaceLight` |
+
+## Octava vuelta (8 nov): segunda pasada sobre los mismos 6 puntos
+Juani repitio la misma lista, asi que en vez de rehacerla se apreto lo que habia quedado flojo:
+- **Conos**: las farolas pasan a 64 grados con borde mas duro (`spot_blend` 0,22) y 7000 W; los reflectores a 40 grados y 9000 W. Niebla de noche a 0,0075: el haz se ve sin lavar el fondo.
+- **Contenedores**: nervaduras al doble de tamano y relieve mas fuerte, con mas superficie de oxido; ahora se leen desde lejos y desde el piso.
+- **Piso**: manchas de aceite mas grandes y marcadas. Ojo con los charcos y las manchas: si tienen mucho contraste, de noche el piso **parece nieve**. El cemento quedo con poca diferencia entre manchas y los charcos chicos.
+- **Fuego**: bola mas grande con brasas alrededor (chicas y tenues: grandes parecen burbujas).
+- **Camara del juego**: corrida sobre el hombro, porque centrada la cabeza del personaje tapaba el golpe.

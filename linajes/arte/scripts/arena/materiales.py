@@ -257,11 +257,11 @@ def cemento_mojado():
     rincones = mascara_rincones(c, -1500, -150, distancia=0.5)
 
     base = c.mezcla(-1000, 800, "MIX", 0.5)
-    c.val(base, "A", srgb_a_lineal((0.396, 0.361, 0.294)))
-    c.val(base, "B", srgb_a_lineal((0.573, 0.522, 0.420)))
+    c.val(base, "A", srgb_a_lineal((0.404, 0.369, 0.306)))
+    c.val(base, "B", srgb_a_lineal((0.478, 0.439, 0.365)))
     c.unir(manchas, "Fac", base, "Factor")
 
-    con_grano = c.mezcla(-800, 800, "MULTIPLY", 0.35)
+    con_grano = c.mezcla(-800, 800, "MULTIPLY", 0.25)
     c.unir(base, "Result", con_grano, "A")
     c.unir(grano, "Color", con_grano, "B")
 
@@ -292,7 +292,7 @@ def cemento_mojado():
     # Charcos: zonas lisas y oscuras donde el ruido es bajo.
     charcos = c.ruido(-1500, -450, escala=0.22, detalle=4.0, aspereza=0.5)
     c.unir(mapa, "Vector", charcos, "Vector")
-    mascara_charco = c.rampa(-1300, -450, [(0.30, (0.8, 0.8, 0.8)), (0.40, (0, 0, 0))])
+    mascara_charco = c.rampa(-1300, -450, [(0.28, (0.85, 0.85, 0.85)), (0.38, (0, 0, 0))])
     c.unir(charcos, "Fac", mascara_charco, "Fac")
     # Solo arriba (caras horizontales).
     arriba = mascara_abajo(c, -1500, -700, desde=0.85, hasta=0.45)
@@ -300,7 +300,7 @@ def cemento_mojado():
     c.unir(mascara_charco, "Color", charco_final, 0)
     c.unir(arriba, "Color", charco_final, 1)
 
-    rug = c.rampa(-800, -550, [(0.0, (0.86, 0.86, 0.86)), (1.0, (0.3, 0.3, 0.3))])
+    rug = c.rampa(-800, -550, [(0.0, (0.86, 0.86, 0.86)), (1.0, (0.38, 0.38, 0.38))])
     c.unir(charco_final, "Value", rug, "Fac")
     # Variacion grande de rugosidad: el piso refleja las luces de forma despareja.
     parches = c.ruido(-800, -800, escala=0.18, detalle=5.0, aspereza=0.6)
@@ -325,9 +325,9 @@ def cemento_mojado():
 
 def _mancha_aceite(c, mapa, sucio, x=-200, y=1200):
     """Manchas de aceite oscuras y brillosas sobre el piso."""
-    ruido = c.ruido(x - 700, y, escala=0.35, detalle=8.0, aspereza=0.8)
+    ruido = c.ruido(x - 700, y, escala=0.14, detalle=8.0, aspereza=0.8)
     c.unir(mapa, "Vector", ruido, "Vector")
-    mascara = c.rampa(x - 500, y, [(0.60, (0, 0, 0)), (0.68, (0.9, 0.9, 0.9))])
+    mascara = c.rampa(x - 500, y, [(0.52, (0, 0, 0)), (0.63, (0.95, 0.95, 0.95))])
     c.unir(ruido, "Fac", mascara, "Fac")
     mezcla = c.mezcla(x - 280, y, "MIX", 1.0)
     c.unir(sucio, "Result", mezcla, "A")
@@ -696,7 +696,7 @@ def material_contenedor(nombre, tono):
     mapa = c.coords_objeto(escala=(1, 1, 1))
 
     nervio = c.nodo("ShaderNodeTexWave", -1500, 950, bands_direction="X", wave_profile="SIN")
-    c.val(nervio, "Scale", 7.0)
+    c.val(nervio, "Scale", 4.0)
     c.val(nervio, "Distortion", 0.0)
     c.unir(mapa, "Vector", nervio, "Vector")
 
@@ -706,7 +706,7 @@ def material_contenedor(nombre, tono):
     rincones = mascara_rincones(c, -1500, 0, distancia=0.3)
     chorro = chorreados(c, mapa, -1500, -300, escala=(0.7, 0.7, 0.09), fuerza=(0.5, 0.78))
 
-    manchas = c.rampa(-1250, 650, [(0.55, (0, 0, 0)), (0.74, (0.85, 0.85, 0.85))])
+    manchas = c.rampa(-1250, 650, [(0.46, (0, 0, 0)), (0.66, (0.95, 0.95, 0.95))])
     c.unir(sucio_ruido, "Fac", manchas, "Fac")
     b_esc = escalar(c, bordes, "Color", 0.9, -1050, 420)
     m_esc = escalar(c, manchas, "Color", 0.5, -1050, 280)
@@ -716,7 +716,8 @@ def material_contenedor(nombre, tono):
 
     base = c.mezcla(-1000, 950, "MULTIPLY", 0.5)
     c.val(base, "A", srgb_a_lineal(tono))
-    nervio_tono = c.rampa(-1250, 950, [(0.0, (0.55, 0.55, 0.55)), (1.0, (1.2, 1.2, 1.2))])
+    nervio_tono = c.rampa(-1250, 950, [(0.0, (0.42, 0.42, 0.42)), (0.5, (0.9, 0.9, 0.9)),
+                                       (1.0, (1.35, 1.35, 1.35))])
     c.unir(nervio, "Fac", nervio_tono, "Fac")
     c.unir(nervio_tono, "Color", base, "B")
 
@@ -741,7 +742,8 @@ def material_contenedor(nombre, tono):
     c.unir(rug, "Color", bsdf, "Roughness")
 
     relieve = c.nodo("ShaderNodeBump", 100, -400)
-    c.val(relieve, "Strength", 0.55)
+    c.val(relieve, "Strength", 0.9)
+    c.val(relieve, "Distance", 0.05)
     c.unir(nervio, "Fac", relieve, "Height")
     c.unir(relieve, "Normal", bsdf, "Normal")
     return mat

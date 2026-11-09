@@ -747,9 +747,8 @@ def poner_camara(nombre="CamRef"):
 def pelea_central(centro=(3.0, 0.0), separacion=6.0):
     """Dos personajes peleando en el medio de la plaza, con fuego entre los dos.
     Es solo para las capturas de comparacion: marca el punto focal y la escala."""
-    for n in ("PeleaA", "PeleaB", "PeleaFuego", "PeleaCabezaA", "PeleaCabezaB"):
-        ob = bpy.data.objects.get(n)
-        if ob:
+    for ob in list(bpy.data.objects):
+        if ob.name.startswith("Pelea"):
             bpy.data.objects.remove(ob, do_unlink=True)
     col = coleccion("Luces")
     piel = bpy.data.materials.get("MAT_Personaje")
@@ -777,7 +776,7 @@ def pelea_central(centro=(3.0, 0.0), separacion=6.0):
         cabeza.data.materials.append(piel)
         meter(cabeza, col)
     # Bola de fuego entre los dos.
-    bpy.ops.mesh.primitive_uv_sphere_add(radius=0.6, location=(centro[0], centro[1], 1.1),
+    bpy.ops.mesh.primitive_uv_sphere_add(radius=0.95, location=(centro[0], centro[1], 1.3),
                                          segments=24, ring_count=14)
     fuego = bpy.context.active_object
     fuego.name = "PeleaFuego"
@@ -793,12 +792,39 @@ def pelea_central(centro=(3.0, 0.0), separacion=6.0):
             nt.nodes.remove(nd)
     em = nt.nodes.new("ShaderNodeEmission")
     em.inputs[0].default_value = (1.0, 0.42, 0.08, 1)
-    em.inputs[1].default_value = 28.0
+    em.inputs[1].default_value = 34.0
     sal = next(nd for nd in nt.nodes if nd.type == "OUTPUT_MATERIAL")
     nt.links.new(em.outputs[0], sal.inputs["Surface"])
     fuego.data.materials.append(m)
     meter(fuego, col)
-    _lampara("LuzFuego", (centro[0], centro[1], 1.4), (1.0, 0.45, 0.12), 1100.0, radio=0.8)
+    _lampara("LuzFuego", (centro[0], centro[1], 1.5), (1.0, 0.45, 0.12), 2000.0, radio=1.0)
+    # Brasas que saltan alrededor del golpe.
+    brasa_mat = bpy.data.materials.get("MAT_Brasa")
+    if not brasa_mat:
+        brasa_mat = bpy.data.materials.new("MAT_Brasa")
+        brasa_mat.use_nodes = True
+        nt2 = brasa_mat.node_tree
+        for nd in list(nt2.nodes):
+            if nd.type != "OUTPUT_MATERIAL":
+                nt2.nodes.remove(nd)
+        em2 = nt2.nodes.new("ShaderNodeEmission")
+        em2.inputs[0].default_value = (1.0, 0.55, 0.14, 1)
+        em2.inputs[1].default_value = 18.0
+        sal2 = next(nd for nd in nt2.nodes if nd.type == "OUTPUT_MATERIAL")
+        nt2.links.new(em2.outputs[0], sal2.inputs["Surface"])
+    for i in range(14):
+        ang = random.uniform(0, 6.28)
+        rad = random.uniform(0.8, 2.2)
+        alt = random.uniform(0.6, 2.4)
+        bpy.ops.mesh.primitive_uv_sphere_add(
+            radius=random.uniform(0.02, 0.045),
+            location=(centro[0] + math.cos(ang) * rad, centro[1] + math.sin(ang) * rad, alt),
+            segments=8, ring_count=5,
+        )
+        br = bpy.context.active_object
+        br.name = "PeleaBrasa"
+        br.data.materials.append(brasa_mat)
+        meter(br, col)
     return fuego
 
 
@@ -822,12 +848,14 @@ def camara_juego(nombre="CamJuego", detras_de="PeleaA", mirar_a="PeleaB"):
         bpy.data.objects.remove(cam, do_unlink=True)
     dist = 8 * 0.28  # 8 studs
     alto_ojos = 2.15
-    pos = pa - adelante * dist + mathutils.Vector((0, 0, alto_ojos - pa.z))
+    # Un poco al costado (sobre el hombro): si no, la cabeza tapa lo que pasa adelante.
+    costado = mathutils.Vector((-adelante.y, adelante.x, 0)) * 0.95
+    pos = pa - adelante * dist + costado + mathutils.Vector((0, 0, alto_ojos - pa.z))
     bpy.ops.object.camera_add(location=pos)
     cam = bpy.context.active_object
     cam.name = nombre
     cam.data.lens = 24  # el FOV de Roblox (70 grados) es mas abierto que el de cine
-    objetivo = pa + adelante * 10 + mathutils.Vector((0, 0, 1.2 - pa.z))
+    objetivo = pa + adelante * 10 + costado * 0.35 + mathutils.Vector((0, 0, 1.2 - pa.z))
     d = objetivo - cam.location
     cam.rotation_euler = d.to_track_quat("-Z", "Y").to_euler()
     bpy.context.scene.camera = cam
@@ -930,7 +958,7 @@ def _lampara(nombre, pos, color, fuerza, radio=0.25, cono=None, mira=None):
     luz.data.shadow_soft_size = radio
     if cono:
         luz.data.spot_size = math.radians(cono)
-        luz.data.spot_blend = 0.45
+        luz.data.spot_blend = 0.22
         objetivo = mathutils.Vector(mira or (pos[0], pos[1], 0.0))
         d = objetivo - mathutils.Vector(pos)
         luz.rotation_euler = d.to_track_quat("-Z", "Y").to_euler()
@@ -1090,12 +1118,12 @@ def luz_noche():
     if ob:
         bpy.data.objects.remove(ob, do_unlink=True)
     _sol("SolNoche", (0.42, 0.56, 1.0), 0.5, 34.0, 120.0, angulo=12.0)
-    _mundo((0.055, 0.090, 0.17, 1), 1.8, niebla=((0.165, 0.208, 0.314, 1), 0.0060))
+    _mundo((0.055, 0.090, 0.17, 1), 1.8, niebla=((0.165, 0.208, 0.314, 1), 0.0075))
     relleno_cielo((0.30, 0.42, 0.72), 2600.0)
     for i, pos in enumerate(FAROLAS):
-        _lampara("LuzFarola%d" % i, pos, (1.0, 0.36, 0.05), 5200.0, radio=0.30, cono=78)
+        _lampara("LuzFarola%d" % i, pos, (1.0, 0.36, 0.05), 7000.0, radio=0.22, cono=64)
     for i, pos in enumerate(REFLECTORES):
-        _lampara("LuzReflector%d" % i, pos, (0.80, 0.88, 1.0), 6000.0, radio=0.4, cono=62,
+        _lampara("LuzReflector%d" % i, pos, (0.80, 0.88, 1.0), 9000.0, radio=0.25, cono=40,
                  mira=(3.0, 2.0, 0.2))
     # Ventanas de galpon encendidas.
     for i, pos in enumerate(VENTANAS):
