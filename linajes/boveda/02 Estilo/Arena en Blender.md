@@ -84,3 +84,14 @@ Blender se cerro a mitad de camino, asi que ahora los renders salen por consola 
 - La grua de adelante ocupa el tercio izquierdo; en la referencia las dos gruas estan mas lejos y se ven enteras.
 - Los charcos de las farolas tiran a crema; en la referencia son naranjas fuertes.
 - De noche nuestra plaza esta mas iluminada que la de la referencia.
+
+## Quinta vuelta (8 nov): composicion con logica y grua aparte
+**Composicion** (como en la referencia): las dos gruas van sobre el borde del muelle, una detras de la otra, sobre rieles paralelos al borde y con el brazo apuntando al agua; no tocan ni la plaza ni los contenedores. Los contenedores quedan del lado opuesto al agua y al fondo, junto a los galpones. Barriles y cajones en el borde del muelle. La plaza central, libre.
+
+**Grua como pieza aparte**: `linajes/arte/scripts/arena/grua.py`, con las reglas de modelado (bisel en todo, tubos redondos, pivote abajo). Lleva portico de 4 patas sobre rieles con carros y ruedas, cruces de San Andres, casa de maquinas con ventanas, cabina con vidrio iluminado, escalera de gato, baranda, brazo de 22 m a 45 grados con montantes, poleas, cable, moton y gancho, mastil con tirantes y contrapeso. Material propio `MAT_Grua` (metal pintado comido por el oxido).
+
+Las 4 vistas salen con:
+```
+blender.exe -b --python linajes/arte/scripts/arena/render_grua.py -- renders/grua.png 64
+```
+Mientras Juani no apruebe la grua nueva, el mapa sigue con la grua vieja de cajas.

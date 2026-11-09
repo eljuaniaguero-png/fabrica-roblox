@@ -619,8 +619,10 @@ def armar_arena():
            puerta=True)
 
     # Grúas sobre el muelle, mirando al agua.
-    grua("Grua1", (-22.0, 9.0, 0.0), maquinas, giro=math.pi * 1.08, escala=0.9)
-    grua("Grua2", (-17.0, 24.0, 0.0), maquinas, giro=math.pi * 0.98, escala=0.8)
+    # Las dos gruas van sobre el borde del muelle, una detras de la otra, sobre
+    # rieles paralelos al borde y con el brazo apuntando al agua (-X).
+    grua("Grua1", (-21.5, -2.0, 0.0), maquinas, giro=math.pi, escala=0.85)
+    grua("Grua2", (-21.5, 15.0, 0.0), maquinas, giro=math.pi, escala=0.8)
 
     # Torre de reflectores atras.
     REFLECTORES += torre_reflector("Torre1", (26.0, 20.0, 0.0), maquinas, alto=9.0)
@@ -637,34 +639,29 @@ def armar_arena():
         _, lamp = farola("Farola", (pos[0], pos[1], 0.12), luces, giro=giro)
         FAROLAS.append(lamp)
 
-    # Chatarra suelta: barriles y cajones en los bordes.
+    # Chatarra suelta: todo en el borde del muelle, como recien descargado.
     grupos = [
-        (-21.0, -13.0), (-20.0, -10.0), (-22.5, 12.0), (-21.0, 15.0),
-        (13.0, 14.0), (16.0, 13.0), (-8.0, -16.0), (-5.0, -17.0),
-        (19.0, -6.0), (18.5, 2.0),
+        (-19.5, -14.0), (-19.0, -10.5), (-19.5, 6.0), (-19.0, 9.5),
+        (-19.5, 19.0), (-19.0, 21.5), (-24.0, -16.0), (-24.5, 11.0),
     ]
     for i, (x, y) in enumerate(grupos):
         if i % 2 == 0:
             for k in range(3):
-                barril("Barril", (x + random.uniform(-0.9, 0.9), y + random.uniform(-0.9, 0.9),
+                barril("Barril", (x + random.uniform(-0.7, 0.7), y + random.uniform(-0.8, 0.8),
                                   0.56), chatarra, giro=random.uniform(0, 3.1))
         else:
             for k in range(2):
                 lado = random.uniform(0.9, 1.3)
-                cajon("Cajon", (x + random.uniform(-1.0, 1.0), y + random.uniform(-1.0, 1.0),
+                cajon("Cajon", (x + random.uniform(-0.8, 0.8), y + random.uniform(-0.9, 0.9),
                                 lado / 2 + 0.12), lado, chatarra, giro=random.uniform(0, 1.5))
-    # Fila de barriles y cajones contra el borde del muelle, como en la referencia.
-    for i in range(8):
-        barril("BarrilFila", (-25.5 + (i % 2) * 0.75, -16.0 + i * 4.2, 0.56), chatarra,
+    # Fila prolija de barriles contra el borde, como en la referencia.
+    for i in range(7):
+        barril("BarrilFila", (-25.3 + (i % 2) * 0.72, -12.0 + i * 4.6, 0.56), chatarra,
                giro=random.uniform(0, 3.1))
-    for i in range(5):
-        lado = 1.1
-        cajon("CajonFila", (-23.0, -18.0 + i * 8.5, lado / 2 + 0.2), lado, chatarra,
-              giro=random.uniform(0, 1.2))
 
-    # Un par de cajones apilados.
-    cajon("CajonAlto", (-19.5, -8.0, 0.62), 1.1, chatarra, giro=0.3)
-    cajon("CajonAlto2", (-19.5, -8.0, 1.75), 1.0, chatarra, giro=0.8)
+    # Un par de cajones apilados en el muelle.
+    cajon("CajonAlto", (-24.0, 2.0, 0.62), 1.1, chatarra, giro=0.3)
+    cajon("CajonAlto2", (-24.0, 2.0, 1.75), 1.0, chatarra, giro=0.8)
     return True
 
 

@@ -721,7 +721,67 @@ def material_contenedor(nombre, tono):
     return mat
 
 
+def material_grua():
+    """Metal pintado de la grua, comido por el oxido en cantos y chorreados."""
+    mat = nuevo_material("MAT_Grua")
+    c = Constructor(mat)
+    bsdf = principled(c)
+    mapa = c.coords_objeto(escala=(1, 1, 1))
+
+    manchas_ruido = c.ruido(-1500, 650, escala=0.5, detalle=10.0, aspereza=0.75)
+    c.unir(mapa, "Vector", manchas_ruido, "Vector")
+    pintura = c.ruido(-1500, 400, escala=1.6, detalle=8.0, aspereza=0.7)
+    c.unir(mapa, "Vector", pintura, "Vector")
+    bordes = mascara_bordes(c, -1500, 150, fuerza=1.0, radio=0.12)
+    rincones = mascara_rincones(c, -1500, -150, distancia=0.5)
+    chorro = chorreados(c, mapa, -1500, -450, escala=(0.45, 0.45, 0.05), fuerza=(0.45, 0.75))
+
+    manchas = c.rampa(-1250, 650, [(0.42, (0, 0, 0)), (0.62, (0.95, 0.95, 0.95))])
+    c.unir(manchas_ruido, "Fac", manchas, "Fac")
+    b_esc = escalar(c, bordes, "Color", 1.0, -1050, 420)
+    m_esc = escalar(c, manchas, "Color", 0.75, -1050, 280)
+    ch_esc = escalar(c, chorro, "Color", 0.7, -1050, 140)
+    ox1 = sumar(c, b_esc, "Value", m_esc, "Value", -880, 300)
+    ox2 = sumar(c, ox1, "Value", ch_esc, "Value", -720, 300)
+
+    base = c.mezcla(-1000, 950, "MIX", 0.5)
+    c.val(base, "A", srgb_a_lineal((0.278, 0.302, 0.337)))
+    c.val(base, "B", srgb_a_lineal((0.361, 0.384, 0.420)))
+    c.unir(pintura, "Fac", base, "Factor")
+
+    tono_ox = c.mezcla(-800, 600, "MIX", 0.5)
+    c.val(tono_ox, "A", color("oxido"))
+    c.val(tono_ox, "B", color("oxido_claro"))
+    c.unir(manchas, "Color", tono_ox, "Factor")
+
+    con_oxido = c.mezcla(-600, 950, "MIX", 1.0)
+    c.unir(base, "Result", con_oxido, "A")
+    c.unir(tono_ox, "Result", con_oxido, "B")
+    c.unir(ox2, "Value", con_oxido, "Factor")
+
+    sucio = c.mezcla(-400, 950, "MIX", 1.0)
+    c.unir(con_oxido, "Result", sucio, "A")
+    c.val(sucio, "B", color("mugre"))
+    mugre = escalar(c, rincones, "Color", 0.6, -600, 400)
+    c.unir(mugre, "Value", sucio, "Factor")
+    c.unir(sucio, "Result", bsdf, "Base Color")
+
+    rug = c.rampa(-200, 500, [(0.0, (0.5, 0.5, 0.5)), (1.0, (0.95, 0.95, 0.95))])
+    c.unir(ox2, "Value", rug, "Fac")
+    c.unir(rug, "Color", bsdf, "Roughness")
+    metal = c.rampa(-200, 300, [(0.0, (0.8, 0.8, 0.8)), (1.0, (0.05, 0.05, 0.05))])
+    c.unir(ox2, "Value", metal, "Fac")
+    c.unir(metal, "Color", bsdf, "Metallic")
+
+    relieve = c.nodo("ShaderNodeBump", 100, -400)
+    c.val(relieve, "Strength", 0.3)
+    c.unir(ox2, "Value", relieve, "Height")
+    c.unir(relieve, "Normal", bsdf, "Normal")
+    return mat
+
+
 CONSTRUCTORES = {
+    "MAT_Grua": material_grua,
     "MAT_CementoMojado": cemento_mojado,
     "MAT_ChapaOxidada": chapa_oxidada,
     "MAT_Ladrillo": ladrillo,
