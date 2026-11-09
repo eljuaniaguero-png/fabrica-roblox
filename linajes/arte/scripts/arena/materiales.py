@@ -286,7 +286,8 @@ def cemento_mojado():
     c.unir(rincones, "Color", mugre_suave, 0)
     mugre_suave.inputs[1].default_value = 0.65
     c.unir(mugre_suave, "Value", sucio, "Factor")
-    c.unir(sucio, "Result", bsdf, "Base Color")
+    aceite, aceite_mask = _mancha_aceite(c, mapa, sucio)
+    c.unir(aceite, "Result", bsdf, "Base Color")
 
     # Charcos: zonas lisas y oscuras donde el ruido es bajo.
     charcos = c.ruido(-1500, -450, escala=0.22, detalle=4.0, aspereza=0.5)
@@ -301,13 +302,38 @@ def cemento_mojado():
 
     rug = c.rampa(-800, -550, [(0.0, (0.86, 0.86, 0.86)), (1.0, (0.3, 0.3, 0.3))])
     c.unir(charco_final, "Value", rug, "Fac")
-    c.unir(rug, "Color", bsdf, "Roughness")
+    # Variacion grande de rugosidad: el piso refleja las luces de forma despareja.
+    parches = c.ruido(-800, -800, escala=0.18, detalle=5.0, aspereza=0.6)
+    c.unir(mapa, "Vector", parches, "Vector")
+    parches_r = c.rampa(-620, -800, [(0.35, (0.78, 0.78, 0.78)), (0.72, (1.05, 1.05, 1.05))])
+    c.unir(parches, "Fac", parches_r, "Fac")
+    rug_mix = c.mezcla(-440, -620, "MULTIPLY", 1.0)
+    c.unir(rug, "Color", rug_mix, "A")
+    c.unir(parches_r, "Color", rug_mix, "B")
+    rug_aceite = c.mezcla(-260, -620, "MIX", 1.0)
+    c.unir(rug_mix, "Result", rug_aceite, "A")
+    c.val(rug_aceite, "B", (0.22, 0.22, 0.22, 1))
+    c.unir(aceite_mask, "Color", rug_aceite, "Factor")
+    c.unir(rug_aceite, "Result", bsdf, "Roughness")
 
     relieve = c.nodo("ShaderNodeBump", 100, -400)
     c.val(relieve, "Strength", 0.25)
     c.unir(con_juntas, "Result", relieve, "Height")
     c.unir(relieve, "Normal", bsdf, "Normal")
     return mat
+
+
+def _mancha_aceite(c, mapa, sucio, x=-200, y=1200):
+    """Manchas de aceite oscuras y brillosas sobre el piso."""
+    ruido = c.ruido(x - 700, y, escala=0.35, detalle=8.0, aspereza=0.8)
+    c.unir(mapa, "Vector", ruido, "Vector")
+    mascara = c.rampa(x - 500, y, [(0.60, (0, 0, 0)), (0.68, (0.9, 0.9, 0.9))])
+    c.unir(ruido, "Fac", mascara, "Fac")
+    mezcla = c.mezcla(x - 280, y, "MIX", 1.0)
+    c.unir(sucio, "Result", mezcla, "A")
+    c.val(mezcla, "B", srgb_a_lineal((0.047, 0.043, 0.039)))
+    c.unir(mascara, "Color", mezcla, "Factor")
+    return mezcla, mascara
 
 
 def chapa_oxidada():

@@ -48,6 +48,61 @@ def usar_gpu():
     return "CPU"
 
 
+def posproducción(luz):
+    """Bloom (glow en lo emisivo) y color grading. En Roblox esto es
+    BloomEffect + ColorCorrectionEffect + SunRaysEffect."""
+    esc = bpy.context.scene
+    # Blender 5: el compositor es un grupo de nodos (scene.compositing_node_group).
+    grupo = bpy.data.node_groups.get("PostArena")
+    if grupo:
+        bpy.data.node_groups.remove(grupo)
+    grupo = bpy.data.node_groups.new("PostArena", "CompositorNodeTree")
+    esc.compositing_node_group = grupo
+    nt = grupo
+    for nd in list(nt.nodes):
+        nt.nodes.remove(nd)
+    entrada = nt.nodes.new("NodeGroupInput")
+    entrada.location = (-800, 0)
+    if not grupo.interface.items_tree:
+        grupo.interface.new_socket("Image", in_out="INPUT", socket_type="NodeSocketColor")
+        grupo.interface.new_socket("Image", in_out="OUTPUT", socket_type="NodeSocketColor")
+    rl = nt.nodes.new("CompositorNodeRLayers")
+    rl.location = (-600, 0)
+    glare = nt.nodes.new("CompositorNodeGlare")
+    glare.location = (-300, 0)
+
+    def poner(nodo, nombre, valor, indice=0):
+        """En Blender 5 los ajustes del Glare y del ColorBalance son enchufes."""
+        encontrados = [i for i in nodo.inputs if i.name == nombre]
+        if not encontrados:
+            return
+        encontrados[min(indice, len(encontrados) - 1)].default_value = valor
+
+    poner(glare, "Type", "Bloom")
+    poner(glare, "Quality", "High")
+    poner(glare, "Threshold", 1.0 if luz == "noche" else 1.7)
+    poner(glare, "Size", 0.5)
+    poner(glare, "Strength", 0.35 if luz == "noche" else 0.13)
+    poner(glare, "Smoothness", 0.35)
+
+    balance = nt.nodes.new("CompositorNodeColorBalance")
+    balance.location = (0, 0)
+    poner(balance, "Type", "Lift/Gamma/Gain")
+    if luz == "noche":
+        poner(balance, "Lift", (0.97, 0.99, 1.06, 1.0), indice=1)
+        poner(balance, "Gain", (1.0, 1.0, 1.06, 1.0), indice=1)
+    else:
+        poner(balance, "Lift", (1.03, 0.99, 1.08, 1.0), indice=1)
+        poner(balance, "Gain", (1.09, 1.02, 0.90, 1.0), indice=1)
+
+    salida = nt.nodes.new("NodeGroupOutput")
+    salida.location = (320, 0)
+    nt.links.new(rl.outputs["Image"], glare.inputs["Image"])
+    nt.links.new(glare.outputs["Image"], balance.inputs["Image"])
+    nt.links.new(balance.outputs["Image"], salida.inputs[0])
+    return True
+
+
 def main():
     args = argumentos()
     luz = args[0] if args else "atardecer"
@@ -62,11 +117,13 @@ def main():
     entorno["poner_camara"]()
     if luz == "noche":
         entorno["luz_noche"]()
-        bpy.context.scene.view_settings.exposure = 0.0
+        bpy.context.scene.view_settings.exposure = 0.25
     else:
         entorno["luz_atardecer"]()
-        bpy.context.scene.view_settings.exposure = -0.45
+        bpy.context.scene.view_settings.exposure = -0.6
+    entorno["pelea_central"]()
     entorno["ajustes_render"](muestras=muestras, ancho=1280, alto=720)
+    posproducción(luz)
     dispositivo = usar_gpu()
     vista = bpy.context.scene.view_settings
     vista.view_transform = "Standard"

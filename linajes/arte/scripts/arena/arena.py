@@ -62,9 +62,11 @@ def caja(nombre, centro, tam, material=None, col=None, giro=0.0, bisel=0.02):
     if bisel:
         m = ob.modifiers.new("Bisel", "BEVEL")
         m.width = bisel
-        m.segments = 2
+        m.segments = 3
         m.limit_method = "ANGLE"
         m.angle_limit = math.radians(40)
+        # Smooth shading con angulo: los cantos biselados se ven redondeados.
+        bpy.ops.object.shade_auto_smooth(angle=math.radians(32))
     if material:
         ob.data.materials.append(material)
     if col:
@@ -145,24 +147,42 @@ def emisor(nombre, color, fuerza):
     return m
 
 
-def contenedor(nombre, centro, giro, tono, col):
-    """Contenedor de 6 m x 2,44 m x 2,59 m con puertas."""
+def contenedor(nombre, centro, giro, tono, col, abierta=False):
+    """Contenedor de 6 m x 2,44 m x 2,59 m con puertas. `abierta` deja una hoja
+    abierta de par en par, como si lo estuvieran cargando."""
     m = material_de_contenedor(tono)
     cuerpo = caja(nombre, centro, (6.0, 2.44, 2.59), m, col, giro=giro, bisel=0.03)
-    # Puertas en una punta: dos hojas con manija.
     for lado in (-0.6, 0.6):
         px = centro[0] + math.cos(giro) * 3.02 - math.sin(giro) * lado
         py = centro[1] + math.sin(giro) * 3.02 + math.cos(giro) * lado
         hoja = caja(nombre + "_Puerta", (px, py, centro[2]), (0.06, 1.14, 2.42), m, col,
                     giro=giro, bisel=0.01)
+        if abierta and lado > 0:
+            # Girar la hoja sobre su bisagra (el borde de afuera).
+            bisagra = mathutils.Vector((
+                centro[0] + math.cos(giro) * 3.02 - math.sin(giro) * 1.19,
+                centro[1] + math.sin(giro) * 3.02 + math.cos(giro) * 1.19,
+                centro[2],
+            ))
+            giro_puerta = mathutils.Matrix.Rotation(math.radians(105), 4, "Z")
+            pos = mathutils.Vector(hoja.location) - bisagra
+            hoja.location = bisagra + giro_puerta @ pos
+            hoja.rotation_euler = (0, 0, giro + math.radians(105))
         emparentar(hoja, cuerpo)
     return cuerpo
 
 
 def pila_contenedores(nombre, centro, giro, tonos, alturas, col):
+    ultimo = len(tonos) - 1
     for i, tono in enumerate(tonos):
         z = centro[2] + alturas * i
-        contenedor("%s_%d" % (nombre, i), (centro[0], centro[1], z), giro, tono, col)
+        # El de mas arriba queda apenas torcido y a veces con una puerta abierta:
+        # un puerto prolijo del todo se ve falso.
+        torcido = random.uniform(-0.05, 0.05) if (i == ultimo and i > 0) else 0.0
+        corrido = random.uniform(-0.25, 0.25) if torcido else 0.0
+        abierta = i == ultimo and random.random() < 0.22
+        contenedor("%s_%d" % (nombre, i), (centro[0] + corrido, centro[1], z),
+                   giro + torcido, tono, col, abierta=abierta)
 
 
 def barril(nombre, centro, col, giro=0.0):
@@ -517,6 +537,33 @@ def armar_arena():
     bsdf.inputs["Roughness"].default_value = 0.055
     if "IOR" in bsdf.inputs:
         bsdf.inputs["IOR"].default_value = 1.33
+    # Olas chicas como normal map: el agua deja de ser un espejo plano.
+    nt = m_agua.node_tree
+    coord = nt.nodes.new("ShaderNodeTexCoord")
+    mapeo = nt.nodes.new("ShaderNodeMapping")
+    mapeo.inputs["Scale"].default_value = (1.0, 0.35, 1.0)
+    nt.links.new(coord.outputs["Object"], mapeo.inputs["Vector"])
+    olas = nt.nodes.new("ShaderNodeTexNoise")
+    olas.inputs["Scale"].default_value = 1.1
+    olas.inputs["Detail"].default_value = 8.0
+    olas.inputs["Roughness"].default_value = 0.55
+    nt.links.new(mapeo.outputs["Vector"], olas.inputs["Vector"])
+    olas2 = nt.nodes.new("ShaderNodeTexNoise")
+    olas2.inputs["Scale"].default_value = 7.0
+    olas2.inputs["Detail"].default_value = 6.0
+    nt.links.new(mapeo.outputs["Vector"], olas2.inputs["Vector"])
+    suma = nt.nodes.new("ShaderNodeMix")
+    suma.data_type = "RGBA"
+    suma.blend_type = "ADD"
+    suma.inputs["Factor"].default_value = 0.35
+    nt.links.new(olas.outputs["Fac"], next(x for x in suma.inputs if x.identifier == "A_Color"))
+    nt.links.new(olas2.outputs["Fac"], next(x for x in suma.inputs if x.identifier == "B_Color"))
+    bump = nt.nodes.new("ShaderNodeBump")
+    bump.inputs["Strength"].default_value = 0.28
+    bump.inputs["Distance"].default_value = 0.12
+    nt.links.new(next(x for x in suma.outputs if x.identifier == "Result_Color"),
+                 bump.inputs["Height"])
+    nt.links.new(bump.outputs["Normal"], bsdf.inputs["Normal"])
     agua.data.materials.append(m_agua)
     meter(agua, piso)
     tex = bpy.data.textures.get("OlasTex")
@@ -563,8 +610,20 @@ def armar_arena():
         marco = bpy.data.materials.new("MAT_PinturaPiso")
         marco.use_nodes = True
         b = next(n for n in marco.node_tree.nodes if n.type == "BSDF_PRINCIPLED")
-        b.inputs["Base Color"].default_value = (0.26, 0.25, 0.23, 1)
-        b.inputs["Roughness"].default_value = 0.8
+        # Pintura vieja y despareja: el blanco se come con la mugre.
+        nt = marco.node_tree
+        b.inputs["Base Color"].default_value = (0.30, 0.29, 0.26, 1)
+        b.inputs["Roughness"].default_value = 0.85
+        ruido = nt.nodes.new("ShaderNodeTexNoise")
+        ruido.inputs["Scale"].default_value = 0.6
+        ruido.inputs["Detail"].default_value = 8.0
+        rampa = nt.nodes.new("ShaderNodeValToRGB")
+        rampa.color_ramp.elements[0].position = 0.42
+        rampa.color_ramp.elements[0].color = (0.10, 0.10, 0.09, 1)
+        rampa.color_ramp.elements[1].position = 0.62
+        rampa.color_ramp.elements[1].color = (0.36, 0.35, 0.31, 1)
+        nt.links.new(ruido.outputs["Fac"], rampa.inputs["Fac"])
+        nt.links.new(rampa.outputs["Color"], b.inputs["Base Color"])
     for dx, dy, sx, sy in (
         (0, PLAZA[1] / 2 - 1.2, PLAZA[0] - 2.4, 0.35),
         (0, -(PLAZA[1] / 2 - 1.2), PLAZA[0] - 2.4, 0.35),
@@ -685,45 +744,90 @@ def poner_camara(nombre="CamRef"):
     return cam
 
 
-def camara_juego(nombre="CamJuego", pos_personaje=(3.0, -2.0), giro=0.6):
-    """Camara como la del juego: detras del personaje, a 8 studs (2,24 m) y a la
-    altura de la cabeza. Deja un personaje de prueba para que se vea la escala."""
-    alto = 1.6
-    px, py = pos_personaje
-    viejo = bpy.data.objects.get("PersonajePrueba")
-    if viejo:
-        bpy.data.objects.remove(viejo, do_unlink=True)
-    bpy.ops.mesh.primitive_cylinder_add(radius=0.3, depth=alto, location=(px, py, alto / 2),
-                                        vertices=16)
-    cuerpo = bpy.context.active_object
-    cuerpo.name = "PersonajePrueba"
-    m = bpy.data.materials.get("MAT_Personaje")
-    if not m:
-        m = bpy.data.materials.new("MAT_Personaje")
-        m.use_nodes = True
-        b = next(n for n in m.node_tree.nodes if n.type == "BSDF_PRINCIPLED")
-        b.inputs["Base Color"].default_value = (0.12, 0.14, 0.2, 1)
+def pelea_central(centro=(3.0, 0.0), separacion=6.0):
+    """Dos personajes peleando en el medio de la plaza, con fuego entre los dos.
+    Es solo para las capturas de comparacion: marca el punto focal y la escala."""
+    for n in ("PeleaA", "PeleaB", "PeleaFuego", "PeleaCabezaA", "PeleaCabezaB"):
+        ob = bpy.data.objects.get(n)
+        if ob:
+            bpy.data.objects.remove(ob, do_unlink=True)
+    col = coleccion("Luces")
+    piel = bpy.data.materials.get("MAT_Personaje")
+    if not piel:
+        piel = bpy.data.materials.new("MAT_Personaje")
+        piel.use_nodes = True
+        b = next(n for n in piel.node_tree.nodes if n.type == "BSDF_PRINCIPLED")
+        b.inputs["Base Color"].default_value = (0.09, 0.11, 0.17, 1)
         b.inputs["Roughness"].default_value = 0.6
-    cuerpo.data.materials.append(m)
-    bpy.ops.mesh.primitive_uv_sphere_add(radius=0.28, location=(px, py, alto + 0.22),
-                                         segments=20, ring_count=12)
-    cabeza = bpy.context.active_object
-    cabeza.name = "PersonajePruebaCabeza"
-    cabeza.data.materials.append(m)
-    meter(cuerpo, coleccion("Luces"))
-    meter(cabeza, coleccion("Luces"))
+    alto = 1.6
+    for nombre, dx in (("PeleaA", -separacion / 2), ("PeleaB", separacion / 2)):
+        bpy.ops.mesh.primitive_cylinder_add(radius=0.3, depth=alto,
+                                            location=(centro[0] + dx, centro[1], alto / 2),
+                                            vertices=16)
+        cuerpo = bpy.context.active_object
+        cuerpo.name = nombre
+        cuerpo.data.materials.append(piel)
+        bpy.ops.object.shade_auto_smooth(angle=math.radians(35))
+        meter(cuerpo, col)
+        bpy.ops.mesh.primitive_uv_sphere_add(radius=0.28,
+                                             location=(centro[0] + dx, centro[1], alto + 0.22),
+                                             segments=20, ring_count=12)
+        cabeza = bpy.context.active_object
+        cabeza.name = "PeleaCabeza" + nombre[-1]
+        cabeza.data.materials.append(piel)
+        meter(cabeza, col)
+    # Bola de fuego entre los dos.
+    bpy.ops.mesh.primitive_uv_sphere_add(radius=0.6, location=(centro[0], centro[1], 1.1),
+                                         segments=24, ring_count=14)
+    fuego = bpy.context.active_object
+    fuego.name = "PeleaFuego"
+    bpy.ops.object.shade_smooth()
+    m = bpy.data.materials.get("MAT_Fuego")
+    if m:
+        bpy.data.materials.remove(m)
+    m = bpy.data.materials.new("MAT_Fuego")
+    m.use_nodes = True
+    nt = m.node_tree
+    for nd in list(nt.nodes):
+        if nd.type != "OUTPUT_MATERIAL":
+            nt.nodes.remove(nd)
+    em = nt.nodes.new("ShaderNodeEmission")
+    em.inputs[0].default_value = (1.0, 0.42, 0.08, 1)
+    em.inputs[1].default_value = 28.0
+    sal = next(nd for nd in nt.nodes if nd.type == "OUTPUT_MATERIAL")
+    nt.links.new(em.outputs[0], sal.inputs["Surface"])
+    fuego.data.materials.append(m)
+    meter(fuego, col)
+    _lampara("LuzFuego", (centro[0], centro[1], 1.4), (1.0, 0.45, 0.12), 1100.0, radio=0.8)
+    return fuego
+
+
+def camara_juego(nombre="CamJuego", detras_de="PeleaA", mirar_a="PeleaB"):
+    """Camara como la del juego: detras del personaje, a 8 studs (2,24 m) y a la
+    altura de la cabeza, mirando al rival. Usa los dos de la pelea del centro."""
+    a = bpy.data.objects.get(detras_de)
+    b = bpy.data.objects.get(mirar_a)
+    if not a or not b:
+        return None
+    pa = mathutils.Vector(a.matrix_world.translation)
+    pb = mathutils.Vector(b.matrix_world.translation)
+    adelante = (pb - pa)
+    adelante.z = 0
+    if adelante.length < 1e-4:
+        adelante = mathutils.Vector((1, 0, 0))
+    adelante.normalize()
 
     cam = bpy.data.objects.get(nombre)
     if cam:
         bpy.data.objects.remove(cam, do_unlink=True)
     dist = 8 * 0.28  # 8 studs
-    cx = px - math.cos(giro) * dist
-    cy = py - math.sin(giro) * dist
-    bpy.ops.object.camera_add(location=(cx, cy, alto + 0.55))
+    alto_ojos = 2.15
+    pos = pa - adelante * dist + mathutils.Vector((0, 0, alto_ojos - pa.z))
+    bpy.ops.object.camera_add(location=pos)
     cam = bpy.context.active_object
     cam.name = nombre
     cam.data.lens = 24  # el FOV de Roblox (70 grados) es mas abierto que el de cine
-    objetivo = mathutils.Vector((px + math.cos(giro) * 14, py + math.sin(giro) * 14, alto + 0.2))
+    objetivo = pa + adelante * 10 + mathutils.Vector((0, 0, 1.2 - pa.z))
     d = objetivo - cam.location
     cam.rotation_euler = d.to_track_quat("-Z", "Y").to_euler()
     bpy.context.scene.camera = cam
@@ -813,13 +917,23 @@ def _borrar_luces_puntuales():
             bpy.data.objects.remove(ob, do_unlink=True)
 
 
-def _lampara(nombre, pos, color, fuerza, radio=0.25):
-    bpy.ops.object.light_add(type="POINT", location=pos)
+def _lampara(nombre, pos, color, fuerza, radio=0.25, cono=None, mira=None):
+    """Punto de luz. Con `cono` (grados) es un foco: en la niebla se ve el haz."""
+    if cono:
+        bpy.ops.object.light_add(type="SPOT", location=pos)
+    else:
+        bpy.ops.object.light_add(type="POINT", location=pos)
     luz = bpy.context.active_object
     luz.name = nombre
     luz.data.energy = fuerza
     luz.data.color = color
     luz.data.shadow_soft_size = radio
+    if cono:
+        luz.data.spot_size = math.radians(cono)
+        luz.data.spot_blend = 0.45
+        objetivo = mathutils.Vector(mira or (pos[0], pos[1], 0.0))
+        d = objetivo - mathutils.Vector(pos)
+        luz.rotation_euler = d.to_track_quat("-Z", "Y").to_euler()
     col = coleccion("Luces")
     meter(luz, col)
     return luz
@@ -899,7 +1013,7 @@ def cielo_degradado(elevacion, giro, colores=None, fuerza=1.0, sol_visible=True)
                 nt2.nodes.remove(nd)
         em = nt2.nodes.new("ShaderNodeEmission")
         em.inputs[0].default_value = (1.0, 0.72, 0.42, 1)
-        em.inputs[1].default_value = 90.0
+        em.inputs[1].default_value = 40.0
         sal = next(nd for nd in nt2.nodes if nd.type == "OUTPUT_MATERIAL")
         nt2.links.new(em.outputs[0], sal.inputs["Surface"])
         esfera.data.materials.append(m)
@@ -937,15 +1051,34 @@ def cielo_nishita(elevacion, giro, polvo=2.2, fuerza=1.0):
     return mundo
 
 
+def relleno_cielo(color, fuerza, alto=70.0, tam=160.0):
+    """Luz de area enorme y suave: hace de luz rebotada del cielo, para que las
+    caras en sombra no queden negras. En Roblox esto es EnvironmentDiffuseScale."""
+    viejo = bpy.data.objects.get("RellenoCielo")
+    if viejo:
+        bpy.data.objects.remove(viejo, do_unlink=True)
+    bpy.ops.object.light_add(type="AREA", location=(0, 0, alto))
+    luz = bpy.context.active_object
+    luz.name = "RellenoCielo"
+    luz.data.shape = "SQUARE"
+    luz.data.size = tam
+    luz.data.energy = fuerza
+    luz.data.color = color
+    luz.data.use_shadow = False
+    meter(luz, coleccion("Luces"))
+    return luz
+
+
 def luz_atardecer():
     """Version 1 de la referencia: sol bajo y naranja sobre el agua."""
     _borrar_luces_puntuales()
     ob = bpy.data.objects.get("SolNoche")
     if ob:
         bpy.data.objects.remove(ob, do_unlink=True)
-    _sol("SolAtardecer", (1.0, 0.56, 0.30), 8.0, 10.0, 138.0, angulo=1.2)
+    _sol("SolAtardecer", (1.0, 0.56, 0.30), 7.0, 10.0, 138.0, angulo=3.5)
     cielo_degradado(elevacion=5.5, giro=138.0, fuerza=1.7)
-    niebla_caja((1.0, 0.72, 0.48, 1), 0.00035)
+    niebla_caja((1.0, 0.74, 0.52, 1), 0.00055)
+    relleno_cielo((0.62, 0.55, 0.78), 9000.0)
     bpy.context.scene.view_settings.view_transform = "Standard"
     return True
 
@@ -956,12 +1089,14 @@ def luz_noche():
     ob = bpy.data.objects.get("SolAtardecer")
     if ob:
         bpy.data.objects.remove(ob, do_unlink=True)
-    _sol("SolNoche", (0.42, 0.56, 1.0), 0.35, 34.0, 120.0, angulo=8.0)
-    _mundo((0.055, 0.090, 0.17, 1), 1.8, niebla=((0.165, 0.208, 0.314, 1), 0.0020))
+    _sol("SolNoche", (0.42, 0.56, 1.0), 0.5, 34.0, 120.0, angulo=12.0)
+    _mundo((0.055, 0.090, 0.17, 1), 1.8, niebla=((0.165, 0.208, 0.314, 1), 0.0060))
+    relleno_cielo((0.30, 0.42, 0.72), 2600.0)
     for i, pos in enumerate(FAROLAS):
-        _lampara("LuzFarola%d" % i, pos, (1.0, 0.33, 0.04), 1300.0, radio=0.45)
+        _lampara("LuzFarola%d" % i, pos, (1.0, 0.36, 0.05), 5200.0, radio=0.30, cono=78)
     for i, pos in enumerate(REFLECTORES):
-        _lampara("LuzReflector%d" % i, pos, (0.80, 0.88, 1.0), 2400.0, radio=0.5)
+        _lampara("LuzReflector%d" % i, pos, (0.80, 0.88, 1.0), 6000.0, radio=0.4, cono=62,
+                 mira=(3.0, 2.0, 0.2))
     # Ventanas de galpon encendidas.
     for i, pos in enumerate(VENTANAS):
         _lampara("LuzVentana%d" % i, pos, (1.0, 0.60, 0.26), 700.0, radio=0.6)

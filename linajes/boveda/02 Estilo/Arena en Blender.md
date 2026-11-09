@@ -103,3 +103,24 @@ Mientras Juani no apruebe la grua nueva, el mapa sigue con la grua vieja de caja
 - **Camara del juego**: `camara_juego()` deja un personaje de prueba (1,60 m) y pone la camara 8 studs (2,24 m) detras, a la altura de la cabeza, con lente 24 mm (el FOV de Roblox es mas abierto que el de cine). `render_arena.py` saca siempre las dos capturas: `<salida>.png` (aerea) y `<salida>-juego.png`.
 - **Grua**: material `MAT_Grua` pasa a pintura gastada gris verdosa con parches rojo oxido (nada de amarillo saturado; el amarillo del mapa era el sol quemando el render). Sigue esperando el OK de Juani para entrar al mapa.
 - La referencia `08 Lugares/renders/grua-gemini-ref.png` todavia no esta en la carpeta.
+
+## Septima vuelta (8 nov): atmosfera, bloom y materiales
+
+1. **Atmosfera**: la niebla volumetrica sube (atardecer 0,00055; noche 0,0060) y las farolas y los reflectores pasaron de punto a **foco** (spot), asi el haz se ve atravesando la niebla. Farola: cono de 78 grados, 5200 W. Reflector: cono de 62 grados apuntando a la plaza, 6000 W.
+2. **Bloom y grading**: compositor con nodo **Glare** (tipo Bloom, umbral 1,7 de dia y 1,0 de noche) y **Color Balance**: sombras violetas y luces doradas de dia, azules de noche. En Blender 5 el compositor es un grupo de nodos (`scene.compositing_node_group`) y los ajustes del Glare son enchufes, no propiedades.
+3. **Luz rebotada**: `relleno_cielo()` agrega un area gigante y suave arriba de todo (9000 W violeta de dia, 2600 W azul de noche) y el sol pasa a 3,5 grados de angulo: las sombras dejan de tener el borde duro y las caras en sombra ya no son negras.
+4. **Materiales**: todas las cajas llevan bisel de 3 segmentos y `shade_auto_smooth`. El piso tiene rugosidad despareja (parches) y manchas de aceite oscuras y brillantes. El agua suma un normal de olas en dos escalas, ademas del desplazamiento.
+5. **Piso y carga**: la plaza queda libre; las lineas pintadas estan gastadas y manchadas. El contenedor de arriba de cada pila queda apenas torcido y uno de cada cinco tiene una puerta abierta.
+6. **Punto focal**: `pelea_central()` pone dos personajes y una bola de fuego en el medio de la plaza. La camara del juego se para **detras de uno de los dos**, a 8 studs, mirando al otro.
+
+### Equivalencias para Studio (paso siguiente)
+| En Blender | En Roblox |
+|---|---|
+| Caja de niebla (Principled Volume) | `Atmosphere`: Density, Haze, Glare, Color, Decay |
+| Nodo Glare (Bloom) | `BloomEffect` (Intensity, Threshold, Size) |
+| Color Balance del compositor | `ColorCorrectionEffect` (TintColor, Contrast, Saturation) |
+| Resplandor del sol en la niebla | `SunRaysEffect` |
+| Sombras suaves y contacto | `Lighting.Technology = Future` |
+| `relleno_cielo()` (luz rebotada) | `Lighting.EnvironmentDiffuseScale` y `EnvironmentSpecularScale` |
+| Focos con cono (spot) | `SpotLight` con Angle y Range |
+| Emision de lamparas y ventanas | material `Neon` + `PointLight`/`SurfaceLight` |
