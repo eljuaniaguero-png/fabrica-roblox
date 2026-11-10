@@ -384,8 +384,12 @@ local function fondo()
 			end
 		end
 	end
-	for _, x in M.Porticos do
-		poner("Grua_Portico", en(x, 80, -MEDIO_Z - 50) * CFrame.Angles(0, math.rad(90), 0))
+	-- Las grúas nuevas (ServerStorage.GruaPuerto) viven en workspace.Gruas, puestas a mano
+	-- sobre el borde del muelle. Los pórticos viejos solo van si esa carpeta no existe.
+	if not workspace:FindFirstChild("Gruas") then
+		for _, x in M.Porticos do
+			poner("Grua_Portico", en(x, 80, -MEDIO_Z - 50) * CFrame.Angles(0, math.rad(90), 0))
+		end
 	end
 	for _, r in M.Reflectores do
 		reflector(r[1], r[2])

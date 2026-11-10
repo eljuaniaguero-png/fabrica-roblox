@@ -1,0 +1,82 @@
+{
+  "stud": 0.28,
+  "mallas": {
+    "Grua_Portico": {
+      "triangulos": 3932,
+      "tam_studs": [
+        36.57,
+        57.14,
+        47.86
+      ],
+      "centro_studs": [
+        0.0,
+        0.0,
+        23.93
+      ]
+    },
+    "Grua_Cuerpo": {
+      "triangulos": 3804,
+      "tam_studs": [
+        94.62,
+        23.75,
+        63.13
+      ],
+      "centro_studs": [
+        12.67,
+        -1.16,
+        77.99
+      ]
+    },
+    "Grua_Brazo": {
+      "triangulos": 1872,
+      "tam_studs": [
+        59.63,
+        7.5,
+        103.08
+      ],
+      "centro_studs": [
+        32.88,
+        0.0,
+        59.73
+      ]
+    },
+    "Grua_Vidrio": {
+      "triangulos": 12,
+      "tam_studs": [
+        0.14,
+        5.36,
+        4.5
+      ],
+      "centro_studs": [
+        15.18,
+        -8.57,
+        54.29
+      ]
+    },
+    "Grua_Interior": {
+      "triangulos": 508,
+      "tam_studs": [
+        5.77,
+        5.71,
+        5.98
+      ],
+      "centro_studs": [
+        11.56,
+        -8.57,
+        52.63
+      ]
+    }
+  },
+  "luces": {
+    "cabina": [
+      10.36,
+      56.61,
+      8.57
+    ],
+    "punta": [
+      59.84,
+      112.7,
+      -0.0
+    ]
+  }
+}

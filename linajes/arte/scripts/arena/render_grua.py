@@ -119,16 +119,24 @@ def main():
     g = {"__name__": "grua"}
     correr("grua.py", g)
     metal = bpy.data.materials.get("MAT_Grua") or bpy.data.materials["MAT_MetalPiso"]
-    g["armar_grua"](
+    _, puntos = g["armar_grua"](
         nombre="Grua",
         centro=(0, 0, 0),
         giro=0.0,
         escala=1.0,
         col=None,
         metal=metal,
-        emisor_cabina=emisor("MAT_LuzCabina", (1.0, 0.76, 0.46, 1), 1.2),
+        vidrio=bpy.data.materials["MAT_VidrioCabina"],
+        interior=bpy.data.materials["MAT_InteriorCabina"],
         emisor_roja=emisor("MAT_LuzRoja", (1.0, 0.12, 0.08, 1), 4.0),
     )
+    # Lampara calida adentro de la cabina (#f2a23a).
+    bpy.ops.object.light_add(type="POINT", location=puntos["cabina"])
+    lamp = bpy.context.active_object
+    lamp.name = "LuzCabina"
+    lamp.data.energy = 140
+    lamp.data.color = (0.949, 0.635, 0.227)
+    lamp.data.shadow_soft_size = 0.15
 
     esc = bpy.context.scene
     esc.render.engine = "CYCLES"
@@ -147,6 +155,12 @@ def main():
         ("4-atras", (-46, -24, 20)),
     ]
     raiz, ext = os.path.splitext(base)
+    # Primer plano de la cabina, para revisar la ventana.
+    cam = camara("Cam_cabina", (13.5, -8.5, 16.6), (3.6, -2.4, 15.1), lente=60)
+    esc.camera = cam
+    esc.render.filepath = "%s-5-cabina%s" % (raiz, ext)
+    bpy.ops.render.render(write_still=True)
+    print("VISTA:", esc.render.filepath)
     for nombre, pos in vistas:
         cam = camara("Cam_" + nombre, pos, centro, lente=50)
         esc.camera = cam

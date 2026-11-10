@@ -132,3 +132,10 @@ Juani repitio la misma lista, asi que en vez de rehacerla se apreto lo que habia
 - **Piso**: manchas de aceite mas grandes y marcadas. Ojo con los charcos y las manchas: si tienen mucho contraste, de noche el piso **parece nieve**. El cemento quedo con poca diferencia entre manchas y los charcos chicos.
 - **Fuego**: bola mas grande con brasas alrededor (chicas y tenues: grandes parecen burbujas).
 - **Camara del juego**: corrida sobre el hombro, porque centrada la cabeza del personaje tapaba el golpe.
+
+## Grúa aprobada (9-10 nov): de Blender a Studio
+- **Ventana de la cabina**: la cabina es hueca, con marco y parante, vidrio sucio (`MAT_VidrioCabina`, luz #f2a23a mezclada con mugre y chorreados) y asiento, respaldo, tablero y palancas oscuros adentro. Nada de cuadrado blanco.
+- **Brazo**: 5 refuerzos diagonales entre montantes.
+- **Exportación** (`exportar_grua.py`): une todo en 5 mallas (Pórtico 3932, Cuerpo 3804, Brazo 1872, Vidrio 12 e Interior 508 triángulos), UV automático, hornea a 1024 Color×AO, Normal (OpenGL), Rugosidad y Metal, y exporta `exports/grua-puerto/GruaPuerto.fbx` en studs.
+- **Subida**: modelo 129983068682562 por Open Cloud y texturas por `upload_image`. Los IDs están en `Config.Arena.Mapa.Grua`.
+- **En Studio** (`armar_grua_studio.luau`): SurfaceAppearance, colisiones simples (4 cajas para las patas y 1 para el cuerpo), PointLight cálida en la cabina y luz roja Neon con PointLight en la punta. Dos grúas en `workspace.Gruas`, sobre el borde norte del muelle, en rieles paralelos al borde y con el brazo al agua. `ArenaMapa` ya no pone los pórticos viejos si existe esa carpeta.

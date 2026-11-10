@@ -372,6 +372,19 @@ Config.Arena = {
 		RadioCirculo = 26,
 		TorreX = 92,
 		Porticos = { -50, 90 },
+		-- Grúa de pórtico nueva (arte/scripts/arena/grua.py, exportada con exportar_grua.py).
+		-- Se arma en Studio con arte/scripts/arena/armar_grua_studio.luau.
+		Grua = {
+			Modelo = 129983068682562,
+			Texturas = {
+				Grua_Portico = { 123252498966862, 98039254804423, 137975529202976, 102168131760233 },
+				Grua_Cuerpo = { 115945904863872, 139558148674191, 81975749861393, 115812068842536 },
+				Grua_Brazo = { 130505943673111, 79677112570986, 93250369091722, 98651287206341 },
+				Grua_Vidrio = { 79156351242833 },
+			},
+			-- Dos grúas sobre el borde norte del muelle, brazo hacia el agua.
+			Posiciones = { -50, 90 },
+		},
 		Reflectores = { { 60, -112 } },
 		Grupos = { { -72, -66 }, { 72, -66 }, { -60, 66 }, { 72, 66 } },
 		Charcos = {},

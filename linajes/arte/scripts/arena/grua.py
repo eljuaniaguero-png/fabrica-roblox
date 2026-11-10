@@ -79,7 +79,7 @@ def viga(nombre, a, b, grosor, material, col, ancho=None):
 
 
 def armar_grua(nombre="Grua", centro=(0, 0, 0), giro=0.0, escala=1.0, col=None,
-               metal=None, emisor_cabina=None, emisor_roja=None):
+               metal=None, vidrio=None, interior=None, emisor_roja=None):
     """Arma la grúa. El brazo apunta al +X local; `giro` la orienta en el mapa.
     Devuelve (piezas, puntos) con las posiciones de la cabina y la punta."""
     e = escala
@@ -155,15 +155,56 @@ def armar_grua(nombre="Grua", centro=(0, 0, 0), giro=0.0, escala=1.0, col=None,
                    L(dx, sy * 2.9, ALTO + 1.8), 0.05 * e, metal, col, lados=8))
 
     # --- Cabina del operario, del lado del agua ----------------------------
-    cab = L(3.1, -2.4, ALTO + 1.9)
-    P(caja(nombre + "_Cabina", cab, (2.4 * e, 2.1 * e, 2.5 * e), metal, col, giro=giro,
-           bisel=0.09))
-    vidrio = L(4.25, -2.4, ALTO + 2.2)
-    v = caja(nombre + "_CabinaVidrio", vidrio, (0.12 * e, 1.6 * e, 1.5 * e), None, col,
-             giro=giro, bisel=0.03)
-    if emisor_cabina:
-        v.data.materials.append(emisor_cabina)
+    # Es una caja hueca: paredes, techo y un frente con el hueco de la ventana.
+    # Adentro hay asiento y tablero oscuros, y una lampara calida: asi el vidrio
+    # deja ver un interior y no es un cuadrado blanco plano.
+    CX, CY, CZ = 3.1, -2.4, ALTO + 1.9
+    G = 0.12  # grosor de chapa
+    P(caja(nombre + "_CabinaFondo", L(CX - 1.14, CY, CZ), (G * e, 2.1 * e, 2.5 * e), metal, col,
+           giro=giro, bisel=0.03))
+    for sy in (-1, 1):
+        P(caja(nombre + "_CabinaLado", L(CX, CY + sy * 0.99, CZ), (2.4 * e, G * e, 2.5 * e),
+               metal, col, giro=giro, bisel=0.03))
+    P(caja(nombre + "_CabinaTecho", L(CX, CY, CZ + 1.22), (2.6 * e, 2.3 * e, G * e), metal, col,
+           giro=giro, bisel=0.04))
+    P(caja(nombre + "_CabinaBase", L(CX, CY, CZ - 1.19), (2.4 * e, 2.1 * e, G * e), metal, col,
+           giro=giro, bisel=0.03))
+    # Frente: antepecho, dintel y dos pilares; en el medio queda el hueco.
+    FX = CX + 1.14
+    P(caja(nombre + "_CabinaAntepecho", L(FX, CY, CZ - 0.8), (G * e, 2.1 * e, 0.9 * e), metal,
+           col, giro=giro, bisel=0.03))
+    P(caja(nombre + "_CabinaDintel", L(FX, CY, CZ + 1.1), (G * e, 2.1 * e, 0.3 * e), metal, col,
+           giro=giro, bisel=0.03))
+    for sy in (-1, 1):
+        P(caja(nombre + "_CabinaPilar", L(FX, CY + sy * 0.9, CZ + 0.3), (G * e, 0.3 * e, 1.3 * e),
+               metal, col, giro=giro, bisel=0.03))
+    # Marco de la ventana, sobresaliendo, con un parante al medio.
+    MX = FX + 0.07
+    for dz in (-0.37, 0.97):
+        P(caja(nombre + "_MarcoH", L(MX, CY, CZ + dz), (0.1 * e, 1.66 * e, 0.09 * e), metal, col,
+               giro=giro, bisel=0.02))
+    for dy in (-0.79, 0.0, 0.79):
+        P(caja(nombre + "_MarcoV", L(MX, CY + dy, CZ + 0.3), (0.1 * e, 0.08 * e, 1.34 * e), metal,
+               col, giro=giro, bisel=0.02))
+    # Vidrio (va en su propia malla).
+    vidrio_pos = L(FX + 0.01, CY, CZ + 0.3)
+    v = caja(nombre + "_CabinaVidrio", vidrio_pos, (0.04 * e, 1.5 * e, 1.26 * e), None, col,
+             giro=giro, bisel=0.0)
+    if vidrio:
+        v.data.materials.append(vidrio)
     P(v)
+    # Interior oscuro: asiento, respaldo, tablero y dos palancas.
+    oscuro = interior or metal
+    P(caja(nombre + "_Asiento", L(CX - 0.35, CY, CZ - 0.75), (0.55 * e, 0.6 * e, 0.5 * e), oscuro,
+           col, giro=giro, bisel=0.04))
+    P(caja(nombre + "_Respaldo", L(CX - 0.6, CY, CZ + 0.05), (0.14 * e, 0.62 * e, 1.25 * e), oscuro,
+           col, giro=giro, bisel=0.04))
+    P(caja(nombre + "_Tablero", L(CX + 0.72, CY, CZ - 0.3), (0.45 * e, 1.6 * e, 0.6 * e), oscuro,
+           col, giro=giro, bisel=0.04))
+    for dy in (-0.4, 0.4):
+        P(tubo(nombre + "_Palanca", L(CX + 0.7, CY + dy, CZ - 0.05), L(CX + 0.5, CY + dy, CZ + 0.42),
+               0.035 * e, oscuro, col, lados=8))
+    lampara_cabina = L(CX - 0.2, CY, CZ + 0.95)
     P(caja(nombre + "_CabinaPiso", L(3.1, -2.4, ALTO + 0.62), (2.8 * e, 2.5 * e, 0.2 * e),
            metal, col, giro=giro))
 
@@ -177,10 +218,16 @@ def armar_grua(nombre="Grua", centro=(0, 0, 0), giro=0.0, escala=1.0, col=None,
     raiz_b = L(1.2, 0, ALTO + 0.9)
     punta_b = (punta[0], punta[1], punta[2] - 1.5 * e)
     P(viga(nombre + "_BrazoBajo", raiz_b, punta_b, 0.45 * e, metal, col))
-    for t in (0.2, 0.4, 0.6, 0.8):
+    tramos = (0.0, 0.2, 0.4, 0.6, 0.8, 1.0)
+    for t in tramos[1:-1]:
         a = mathutils.Vector(raiz).lerp(mathutils.Vector(punta), t)
         b = mathutils.Vector(raiz_b).lerp(mathutils.Vector(punta_b), t)
         P(viga(nombre + "_Montante", a, b, 0.2 * e, metal, col))
+    # Refuerzos diagonales entre montantes (5 piezas: casi no suma triangulos).
+    for t0, t1 in zip(tramos[:-1], tramos[1:]):
+        a = mathutils.Vector(raiz).lerp(mathutils.Vector(punta), t0)
+        b = mathutils.Vector(raiz_b).lerp(mathutils.Vector(punta_b), t1)
+        P(viga(nombre + "_Diagonal", a, b, 0.14 * e, metal, col))
     # Punta: poleas.
     P(caja(nombre + "_Polea", punta, (1.6 * e, 1.8 * e, 1.2 * e), metal, col, giro=giro,
            bisel=0.06))
@@ -216,4 +263,4 @@ def armar_grua(nombre="Grua", centro=(0, 0, 0), giro=0.0, escala=1.0, col=None,
     P(tubo(nombre + "_GanchoPunta", (punta[0], punta[1], gancho_z - 0.8 * e),
            (punta[0] + 0.45 * e, punta[1], gancho_z - 0.45 * e), 0.15 * e, metal, col, lados=10))
 
-    return [x for x in piezas if x], {"cabina": vidrio, "punta": luz_punta}
+    return [x for x in piezas if x], {"cabina": lampara_cabina, "punta": luz_punta}

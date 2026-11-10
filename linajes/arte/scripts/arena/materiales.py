@@ -809,7 +809,53 @@ def material_grua():
     return mat
 
 
+def material_vidrio_cabina():
+    """Vidrio de la cabina: luz calida (#f2a23a) vista a traves de un vidrio sucio.
+    El nodo COLOR_BAKE es el que se hornea para Roblox."""
+    mat = nuevo_material("MAT_VidrioCabina")
+    c = Constructor(mat)
+    salida = next(nd for nd in c.n if nd.type == "OUTPUT_MATERIAL")
+    mapa = c.coords_objeto(escala=(1, 1, 1))
+    mugre_r = c.ruido(-900, 300, escala=3.0, detalle=9.0, aspereza=0.75)
+    c.unir(mapa, "Vector", mugre_r, "Vector")
+    mugre = c.rampa(-700, 300, [(0.45, (0, 0, 0)), (0.72, (0.85, 0.85, 0.85))])
+    c.unir(mugre_r, "Fac", mugre, "Fac")
+    chorro = chorreados(c, mapa, -900, 0, escala=(2.5, 2.5, 0.3), fuerza=(0.5, 0.8))
+    m_esc = escalar(c, mugre, "Color", 0.6, -500, 300)
+    ch_esc = escalar(c, chorro, "Color", 0.5, -500, 100)
+    suma = sumar(c, m_esc, "Value", ch_esc, "Value", -330, 200)
+    color = c.mezcla(-150, 300, "MIX", 1.0)
+    color.name = "COLOR_BAKE"
+    c.val(color, "A", srgb_a_lineal((0.949, 0.635, 0.227)))
+    c.val(color, "B", srgb_a_lineal((0.13, 0.10, 0.07)))
+    c.unir(suma, "Value", color, "Factor")
+    emision = c.nodo("ShaderNodeEmission", 80, 300)
+    emision.inputs[1].default_value = 1.0
+    c.unir(color, "Result", emision, "Color")
+    transp = c.nodo("ShaderNodeBsdfTransparent", 80, 120)
+    transp.inputs[0].default_value = (1.0, 0.82, 0.58, 1.0)
+    mezcla = c.nodo("ShaderNodeMixShader", 300, 220)
+    mezcla.inputs[0].default_value = 0.72
+    c.l.new(emision.outputs[0], mezcla.inputs[1])
+    c.l.new(transp.outputs[0], mezcla.inputs[2])
+    salida.location = (520, 220)
+    c.l.new(mezcla.outputs[0], salida.inputs["Surface"])
+    return mat
+
+
+def material_interior_cabina():
+    """Asiento y tablero de la cabina: casi negro, para que se recorte contra la luz."""
+    mat = nuevo_material("MAT_InteriorCabina")
+    c = Constructor(mat)
+    bsdf = principled(c)
+    c.val(bsdf, "Base Color", srgb_a_lineal((0.07, 0.07, 0.08)))
+    c.val(bsdf, "Roughness", 0.7)
+    return mat
+
+
 CONSTRUCTORES = {
+    "MAT_VidrioCabina": material_vidrio_cabina,
+    "MAT_InteriorCabina": material_interior_cabina,
     "MAT_Grua": material_grua,
     "MAT_CementoMojado": cemento_mojado,
     "MAT_ChapaOxidada": chapa_oxidada,
