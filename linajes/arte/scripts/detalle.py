@@ -488,16 +488,11 @@ def _material_comic(mat, N, salida, z, x, col, d, receta):
     rug.outputs[0].default_value = max(d.get("rugosidad", 0.5), 0.45)
     rug = rug.outputs[0]
     alto = []
-    tinta = None
-    # Líneas de tinta: divisiones de placa (metal) o costuras (tela y cuero), más espaciadas que antes.
-    if receta.get("paneles"):
-        pz, _ = receta["paneles"]
-        tinta, _ = N.linea(z, pz * 2.5, 0.0016)  # solo divisiones horizontales: nada de grilla
-    elif receta.get("costuras"):
-        pz, _ = receta["costuras"]
-        tinta, _ = N.linea(z, pz * 1.5, 0.0013)
-    if tinta is not None:
-        alto.append((N.mate("SUBTRACT", 1.0, tinta), 0.0008))
+    # Tinta SOLO donde dos piezas se juntan (aristas cóncavas, contacto entre placas): una
+    # oclusión de alcance muy corto, cortada en seco, da una línea limpia en cada unión.
+    # Antes había rayas horizontales cada pocos cm por la altura (Z): parecían persianas.
+    junta = N.nodo("ShaderNodeAmbientOcclusion", samples=32, only_local=False, **{"Distance": 0.012})
+    tinta = N.rango(N.mate("SUBTRACT", 1.0, junta.outputs["AO"]), 0.42, 0.55)
     # Aristas aclaradas: donde la normal biselada se aparta de la real.
     bisel = N.nodo("ShaderNodeBevel", samples=8, **{"Radius": 0.008})
     geo = N.nodo("ShaderNodeNewGeometry")
@@ -521,8 +516,7 @@ def _material_comic(mat, N, salida, z, x, col, d, receta):
     sucio = N.rango(N.mate("SUBTRACT", 1.0, oclusion.outputs["AO"]), 0.2, 0.8)
     col = N.mezclar(N.mate("MULTIPLY", sucio, 0.35 * receta.get("suciedad", 0.5)), col, B.color(TINTA))
     # Tinta encima de todo.
-    if tinta is not None:
-        col = N.mezclar(N.mate("MULTIPLY", tinta, 0.95), col, B.color(TINTA))
+    col = N.mezclar(N.mate("MULTIPLY", tinta, 0.9), col, B.color(TINTA))
     normal = None
     for valor, profundidad in alto:
         bump = N.nodo("ShaderNodeBump", **{"Strength": 1.0, "Distance": profundidad})
@@ -694,6 +688,15 @@ def terminar(objs, presupuesto, carpeta, ancho=0.03 * B.STUD, lados=None, receta
         hornear(o, alto, carpeta, lados.get(o.name, 1024), semilla=i, receta=receta, comic=comic)
         altos.append(alto)
         print("  horneada", o.name)
+    if comic:
+        # Neones fieles a su color bajo luz blanca: mucha emisión los quema a pastel (el rojo de
+        # Remache se veía rosa salmón). El brillo extra lo pone el Bloom del juego.
+        for o in objs:
+            if _material_base(o) in SIN_HORNEAR:
+                for m in o.data.materials:
+                    for n in m.node_tree.nodes if m.use_nodes else []:
+                        if n.type == "BSDF_PRINCIPLED" and n.inputs["Emission Strength"].default_value > 1.2:
+                            n.inputs["Emission Strength"].default_value = 1.2
     motores = {m.identifier for m in bpy.types.RenderSettings.bl_rna.properties["engine"].enum_items}
     bpy.context.scene.render.engine = "BLENDER_EEVEE_NEXT" if "BLENDER_EEVEE_NEXT" in motores else "BLENDER_EEVEE"
     random.seed(0)
