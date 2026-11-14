@@ -11,8 +11,37 @@ local Config = require(ReplicatedStorage.Shared.Config)
 local CuerpoComic = {}
 
 local C = Config.Cuerpo.Comic
+local CR = Config.Cuerpo.Creador
 
-local function pegar(personaje: Model, molde: Model, pieza: BasePart)
+export type Apariencia = {
+	Piel: number,
+	Cara: number,
+	Peinado: number,
+	Pelo: number,
+	Campera: number,
+	Acento: number,
+	Pantalon: number,
+}
+
+-- Color final de cada opción del creador (índices ya validados por el servidor).
+local function colores(a: Apariencia): { [string]: Color3 }
+	local campera = Color3.fromHex(CR.Campera[a.Campera])
+	return {
+		Piel = Config.Cuerpo.TonosPiel[a.Piel],
+		Campera = campera,
+		CamperaOscura = campera:Lerp(Color3.new(0, 0, 0), 1 - CR.Oscurecer),
+		Acento = Color3.fromHex(CR.Acento[a.Acento]),
+		Pantalon = Color3.fromHex(CR.Pantalon[a.Pantalon]),
+	}
+end
+
+local function pegar(
+	personaje: Model,
+	molde: Model,
+	pieza: BasePart,
+	tinte: { [string]: Color3 }?,
+	pelo: Color3
+)
 	local hueso = pieza:GetAttribute("Hueso")
 	local parte = typeof(hueso) == "string" and personaje:FindFirstChild(hueso)
 	local reposo = typeof(hueso) == "string" and molde:FindFirstChild(hueso)
@@ -30,21 +59,43 @@ local function pegar(personaje: Model, molde: Model, pieza: BasePart)
 	union.Parent = copia
 	local apariencia = copia:FindFirstChildOfClass("SurfaceAppearance")
 	if apariencia then
-		apariencia.Color = C.ColorPelo
+		apariencia.Color = pelo
 	end
+	if tinte then
+		local opcion = (CR.Molde :: any)[string.lower(pieza.Color:ToHex())]
+		if opcion and tinte[opcion] then
+			copia.Color = tinte[opcion]
+		end
+	end
+	copia:SetAttribute("PiezaCuerpo", true)
 	copia.Parent = personaje
 end
 
-function CuerpoComic.vestir(personaje: Model, semilla: number)
+-- Viste al personaje. Con `apariencia` usa lo elegido en el creador; sin ella, al azar fijo por
+-- `semilla` (maniquí de práctica). Si ya estaba vestido, saca lo anterior primero.
+function CuerpoComic.vestir(personaje: Model, semilla: number, apariencia: Apariencia?)
 	local carpeta = ServerStorage:FindFirstChild("CuerpoComic")
 	local molde = StarterPlayer:FindFirstChild("StarterCharacter")
 	if not (carpeta and molde and molde:IsA("Model")) then
 		warn("CuerpoComic: falta ServerStorage.CuerpoComic o StarterCharacter")
 		return
 	end
+	for _, viejo in personaje:GetChildren() do
+		if viejo:GetAttribute("PiezaCuerpo") then
+			viejo:Destroy()
+		end
+	end
 	local azar = Random.new(semilla)
 	local peinado = C.Peinados[azar:NextInteger(1, #C.Peinados)]
 	local cara = C.Caras[azar:NextInteger(1, #C.Caras)]
+	local pelo = C.ColorPelo
+	local tinte: { [string]: Color3 }? = nil
+	if apariencia then
+		peinado = C.Peinados[apariencia.Peinado]
+		cara = C.Caras[apariencia.Cara]
+		pelo = Color3.fromHex(Config.Cuerpo.ColoresPelo[apariencia.Pelo])
+		tinte = colores(apariencia)
+	end
 	for _, parte in personaje:GetChildren() do
 		if parte:IsA("BasePart") then
 			parte.Transparency = 1
@@ -57,7 +108,7 @@ function CuerpoComic.vestir(personaje: Model, semilla: number)
 		if grupo then
 			for _, pieza in grupo:GetDescendants() do
 				if pieza:IsA("BasePart") then
-					pegar(personaje, molde, pieza)
+					pegar(personaje, molde, pieza, tinte, pelo)
 				end
 			end
 		else
@@ -66,6 +117,10 @@ function CuerpoComic.vestir(personaje: Model, semilla: number)
 	end
 	local cabeza = personaje:FindFirstChild("Cuerpo_Head")
 	if cabeza then
+		local vieja = cabeza:FindFirstChild("Cara")
+		if vieja then
+			vieja:Destroy()
+		end
 		local decal = Instance.new("Decal")
 		decal.Name = "Cara"
 		decal.Face = Enum.NormalId.Front

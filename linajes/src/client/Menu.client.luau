@@ -601,7 +601,7 @@ refrescarEspacios()
 
 local btnArbol = crearItemMenu(yBase + paso * 2, "ÁRBOL Y PODERES", false, IM.Menu.Arbol)
 local btnAjustes = crearItemMenu(yBase + paso * 3, "AJUSTES", false, IM.Menu.Ajustes)
-local btnCreditos = crearItemMenu(yBase + paso * 4, "CRÉDITOS", false, "")
+local btnPersonaje = crearItemMenu(yBase + paso * 4, "PERSONAJE", false, "")
 
 -- Panel derecho secundario (Árbol / Ajustes / Créditos)
 local cajon = Instance.new("CanvasGroup")
@@ -810,6 +810,10 @@ local function abrirSeccion(nombre: string)
 			IM.Controles.Ataque,
 			GRIS
 		)
+		local fCreditos = agregarFilaCajon("CRÉDITOS", "Quién hizo Linajes del Eclipse", "", GRIS)
+		fCreditos.Activated:Connect(function()
+			abrirSeccion("Creditos")
+		end)
 	elseif nombre == "Creditos" then
 		cajonTitulo.Text = Tema.espaciar("CRÉDITOS", 3)
 		agregarFilaCajon(
@@ -833,9 +837,6 @@ btnArbol.Activated:Connect(function()
 end)
 btnAjustes.Activated:Connect(function()
 	abrirSeccion("Ajustes")
-end)
-btnCreditos.Activated:Connect(function()
-	abrirSeccion("Creditos")
 end)
 
 -- Tarjeta resumen abajo a la derecha (bando, linaje activo, monedas)
@@ -1180,6 +1181,11 @@ playerGui.ChildAdded:Connect(function(hijo)
 	end
 end)
 
+-- PERSONAJE: cierra el menú y abre el creador (client/Creador.client.luau lo escucha).
+btnPersonaje.Activated:Connect(function()
+	jugador:SetAttribute("AbrirCreador", true)
+	setAbierto(false)
+end)
 btnContinuar.Activated:Connect(function()
 	setAbierto(false)
 end)

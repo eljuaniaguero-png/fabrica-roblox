@@ -19,6 +19,19 @@ local almacen = ProfileStore.New(G.Almacen, {
 	MejorRacha = 0,
 	Nivel = 1,
 	Xp = 0,
+	Chatarra = 0,
+	Chips = 0,
+	-- Creador de personaje. Creada = false: al entrar se abre el creador.
+	Apariencia = {
+		Creada = false,
+		Piel = Config.Cuerpo.Creador.Inicial.Piel,
+		Cara = Config.Cuerpo.Creador.Inicial.Cara,
+		Peinado = Config.Cuerpo.Creador.Inicial.Peinado,
+		Pelo = Config.Cuerpo.Creador.Inicial.Pelo,
+		Campera = Config.Cuerpo.Creador.Inicial.Campera,
+		Acento = Config.Cuerpo.Creador.Inicial.Acento,
+		Pantalon = Config.Cuerpo.Creador.Inicial.Pantalon,
+	},
 })
 
 local Perfiles = {}
@@ -30,6 +43,14 @@ local function mostrar(jugador: Player, datos: any)
 	jugador:SetAttribute("Bajas", datos.Bajas)
 	jugador:SetAttribute("Nivel", datos.Nivel)
 	jugador:SetAttribute("Xp", datos.Xp)
+	jugador:SetAttribute("Chatarra", datos.Chatarra)
+	jugador:SetAttribute("Chips", datos.Chips)
+	jugador:SetAttribute("AparienciaCreada", datos.Apariencia.Creada)
+	for campo, valor in datos.Apariencia do
+		if campo ~= "Creada" then
+			jugador:SetAttribute("Ap_" .. campo, valor)
+		end
+	end
 	jugador:SetAttribute("DatosListos", true)
 	local tabla = jugador:FindFirstChild("leaderstats")
 	if not tabla then
@@ -93,6 +114,7 @@ function Perfiles.sumarBaja(jugador: Player)
 			MejorRacha = math.max(d.MejorRacha, racha),
 			Bajas = bajas,
 			Fichas = d.Fichas + (if bajas % Config.Ruleta.BajasPorFicha == 0 then 1 else 0),
+			Chatarra = d.Chatarra + Config.Monedas.ChatarraPorBaja,
 		})
 		Perfiles.sumarXp(jugador, Config.Niveles.XpPorBaja)
 	end

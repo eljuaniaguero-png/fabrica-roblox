@@ -236,6 +236,26 @@ Config.Cuerpo.Comic = {
 		"rbxassetid://130513753581230",
 	},
 }
+-- Creador de personaje (client/Creador.client.luau + server/Cuerpo.server.luau). Cada opción guarda
+-- un número (índice en estas listas o en TonosPiel/Peinados/Caras/ColoresPelo). Se tiñen las piezas
+-- del cuerpo cómic según su color original (Molde).
+Config.Cuerpo.Creador = {
+	Campera = { "28436f", "2b2f38", "4a5a3a", "6b2a2a", "3f485c", "5a3fa0", "8a6a3a", "d7d2c4" },
+	Acento = { "c2213a", "f2a23a", "3fc1b0", "2f6fdb", "6b5ba8", "e6e3da", "1c1714", "f2652b" },
+	Pantalon = { "242a39", "1c1714", "3a2a20", "3f485c", "4a5a3a", "6b6f78" },
+	-- Color original de cada pieza en ServerStorage.CuerpoComic -> qué opción la tiñe.
+	Molde = {
+		d8a06f = "Piel",
+		["28436f"] = "Campera",
+		["17233b"] = "CamperaOscura",
+		c2213a = "Acento",
+		["242a39"] = "Pantalon",
+	},
+	Oscurecer = 0.55, -- forro, bolsillos y puños: la campera elegida, más oscura
+	Espera = 0.12, -- segundos mínimos entre cambios (el servidor ignora los que llegan antes)
+	Inicial = { Piel = 4, Cara = 1, Peinado = 1, Pelo = 8, Campera = 1, Acento = 1, Pantalon = 1 },
+}
+
 -- Diferencia mínima de color (0 a 1,7) entre pelo y piel cuando el pelo sale al azar.
 Config.Cuerpo.ContrastePelo = 0.3
 Config.Cuerpo.ColoresPelo = {
@@ -427,7 +447,12 @@ Config.Arena = {
 }
 
 -- Guardado (server/Perfiles.luau).
-Config.Guardado = { Almacen = "Linajes_v1", Version = 1 }
+Config.Guardado = { Almacen = "Linajes_v1", Version = 2 } -- 2: apariencia, Chatarra y Chips
+
+-- Monedas del juego (solo se ganan jugando; ninguna se vende por Robux).
+Config.Monedas = {
+	ChatarraPorBaja = 10,
+}
 
 -- Ruleta (server/Ruleta.server.luau). Peso: % del plan de lanzamiento. Los no Disponibles no salen
 -- ni se muestran; los % visibles se recalculan. Las Fichas solo se ganan jugando.

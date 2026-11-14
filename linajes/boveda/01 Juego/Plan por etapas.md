@@ -72,10 +72,16 @@ Juani estima **unas 2 semanas** para el sandbox. Se mide de verdad cuando el com
 4. **Fase 2: modo historia** como pase, con todo lo que antes era "la primera versión" (tabla de abajo).
 5. **Fase 3**: el resto de las ciudades y los Linajes ([[#Plan original (sigue valiendo para después)]]).
 
+> [!note] Decisiones del 14 nov 2026
+> - El sandbox sale con los **6 Linajes** (confirmado): faltan Electro, Criogenia y Telequinesis.
+> - Orden después del combate: **progresión y creador** primero. Creador de personaje y guardado de apariencia y monedas: **hechos** (14 nov). El árbol de puntos (P37) sigue pendiente.
+> - Chatarra: 10 por baja (`Config.Monedas`), no se vende por Robux. Chips: todavía no se ganan.
+> - Espacios de personaje: por ahora 1; los otros 2 quedan "Próximamente" (el extra va con el pack fundador).
+
 ### Fase 1: lo mínimo que necesita el sandbox
 | Parte | Qué lleva | Estado |
 |---|---|---|
-| Cuerpo | Cuerpo cómic, 3 peinados (Puntas, Corto, Flequillo), caras y atuendo básico | Cuerpo y peinados **hechos** y en Studio; falta el atuendo básico y el creador |
+| Cuerpo | Cuerpo cómic, 3 peinados (Puntas, Corto, Flequillo), caras y atuendo básico | Cuerpo, peinados y **creador hechos** (piel, cara, peinado, pelo, campera, acento, pantalón; se guarda) |
 | Combate | Combo de 4 golpes, bloqueo, parry con hit-stop, dash, cola de teclas de 0,15 s, golpe con efecto inmediato en el cliente y daño validado en el servidor | **Falta** (es lo más importante) |
 | Poderes | **6 Linajes**: Fuerza Bruta, Reflejos, Piroquinesis, Electro, Criogenia y Telequinesis, con su Variante Normal y Z X C | Animaciones de los 3 Comunes **hechas**; falta el código y los 3 Poco comunes |
 | Ruleta | 6 Linajes (65 % Común, 35 % Poco común), % a la vista, Fichas de Eclipse que se ganan jugando | Falta |
