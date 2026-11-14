@@ -41,14 +41,15 @@ PRESUPUESTO = {
     "Sombrero": 3000,
     "MascaraTragedia": 3000,
     "MascaraComedia": 3000,
-    "MascaraNinguna": 3000,
+    "MascaraFuria": 3000,
     "Saco": 10000,
     "Chaleco": 3000,
     "Guantes": 2000,
     "Baston": 3000,
     "Zapatos": 2000,
+    "Traje": 3000,  # mangas y pantalón negros
 }
-MASCARAS = ("MascaraTragedia", "MascaraComedia", "MascaraNinguna")
+MASCARAS = ("MascaraTragedia", "MascaraComedia", "MascaraFuria")
 
 
 def _g(grados, eje):
@@ -149,7 +150,7 @@ def mascaras():
             _linea(bm, Vector((hc.x + a[0], y, hc.z + a[1])), Vector((hc.x + b[0], y, hc.z + b[1])), 0.005)
 
     ninguna = T.pieza(
-        f"{NOMBRE}_MascaraNinguna",
+        f"{NOMBRE}_MascaraFuria",
         "Head",
         [("espejo", lambda bm: _placa_mascara(bm, hc, hm)), ("neon-aviso", grietas)],
     )
@@ -157,7 +158,7 @@ def mascaras():
 
 
 def mostrar_mascara(cual):
-    """Deja visible solo la máscara `cual` (MascaraTragedia, MascaraComedia o MascaraNinguna)."""
+    """Deja visible solo la máscara `cual` (MascaraTragedia, MascaraComedia o MascaraFuria)."""
     for m in MASCARAS:
         obj = bpy.data.objects.get(f"{NOMBRE}_{m}")
         if obj:
@@ -478,42 +479,29 @@ def d_mascaras():
 
     piezas += T.pieza_separada(f"{NOMBRE}_MascaraComedia", "Head", [("blanco-armadura", c_placa), ("neon-eclipse", c_ojos), ("negro", c_negro)])
 
-    # 3. Ninguna: espejo partido en 3 pedazos apenas corridos, sin cara, con grietas que brillan.
-    grieta = [(-0.06, 0.2), (-0.01, 0.07), (-0.04, -0.02), (0.02, -0.1), (-0.01, -0.22)]
-    rama = [(-0.01, 0.07), (0.1, 0.12), (0.16, 0.1)]
+    # 3. Furia (ficha): cejas en V clavadas, ojos rasgados rojos y boca abierta gritando.
+    def f_placa(bm):
+        _placa_cara(bm, centro, mitades)
+        for s in (-1, 1):
+            _trazo(bm, arbol, [(x0 + s * 0.012, oz + 0.02), (x0 + s * ox * 0.7, oz + 0.075), (x0 + s * ox * 1.45, oz + 0.12)], [0.022, 0.018, 0.01], 0.012, 8)  # ceja en V
+            p, _ = _en(arbol, x0 + s * ox * 1.05, z0 - 0.05, 0.004)
+            if p:  # pómulo tenso
+                T.bloque_redondo(bm, p, Vector((0.035, 0.01, 0.02)), 0.7, 12, 8)
+        _trazo(bm, arbol, [(x0, oz + 0.01), (x0, oz - 0.05), (x0, oz - 0.08)], [0.01, 0.015, 0.02], 0.01, 8)  # nariz
+        _trazo(bm, arbol, _curva((x0, z0 - hm.z * 0.6), 0.1, 0, 360, 14, 0.75), 0.013, 0.008, 8)  # labio de la boca abierta
 
-    def x_grieta(z):
-        pts = sorted(grieta, key=lambda p: p[1])
-        for (xa, za), (xb, zb) in zip(pts, pts[1:]):
-            if za <= z <= zb:
-                return xa + (xb - xa) * (z - za) / (zb - za)
-        return pts[0][0] if z < pts[0][1] else pts[-1][0]
+    def f_ojos(bm):
+        for s in (-1, 1):
+            c = (x0 + s * ox, oz)
+            _trazo(bm, arbol, [(c[0] - s * 0.045, c[1] - 0.014), c, (c[0] + s * 0.045, c[1] + 0.02)], [0.006, 0.014, 0.006], 0.012)
 
-    def lado_de(p):
-        izq = p.x - x0 < x_grieta(p.z - z0)
-        arriba = (p.z - z0) > 0.07 + (p.x - x0 + 0.01) * 0.45
-        return 0 if izq else (1 if arriba else 2)
-
-    def espejo(bm):
-        for k, (corre, gira) in enumerate(((Vector((-0.002, 0, 0)), 0), (Vector((0.003, -0.002, 0.003)), 3), (Vector((0.002, 0.001, -0.002)), -2))):
-            tmp = bmesh_nuevo()
-            _placa_cara(tmp, centro, mitades, lambda p, k=k: lado_de(p) == k)
-            mm = Matrix.Translation(centro + corre) @ _g(gira, "Y").to_4x4() @ Matrix.Translation(-centro)
-            import bmesh as BM
-
-            BM.ops.transform(tmp, matrix=mm, verts=tmp.verts)
-            pasar(tmp, bm)
-
-    def grietas(bm):
-        _trazo(bm, arbol, [(x0 + x, z0 + z) for x, z in grieta], [0.005, 0.008, 0.009, 0.008, 0.005], 0.006, 5)
-        _trazo(bm, arbol, [(x0 + x, z0 + z) for x, z in rama], [0.008, 0.006, 0.004], 0.006, 5)
-        for x, z in ((-0.12, 0.0), (0.09, -0.16)):  # astillas chicas
-            _trazo(bm, arbol, [(x0 + x, z0 + z), (x0 + x + 0.04, z0 + z + 0.025)], 0.004, 0.005, 4)
-
-    def n_negro(bm):
+    def f_negro(bm):
+        tmp = bmesh_nuevo()
+        _placa_cara(tmp, Vector((x0, centro.y, z0 - hm.z * 0.6)), Vector((0.085, mitades.y + 0.006, 0.065)))
+        pasar(tmp, bm)  # hueco de la boca
         _correa(bm, hc, hm, centro, mitades)
 
-    piezas += T.pieza_separada(f"{NOMBRE}_MascaraNinguna", "Head", [("espejo", espejo), ("neon-aviso", grietas), ("negro", n_negro)])
+    piezas += T.pieza_separada(f"{NOMBRE}_MascaraFuria", "Head", [("blanco-armadura", f_placa), ("neon-aviso", f_ojos), ("negro", f_negro)])
     return piezas
 
 
@@ -598,6 +586,20 @@ def d_saco():
                   columnas=20, filas=34, cuadros=50, grosor=0.01, tiras=2, corte_desde=0.42, choques_extra=arriba + abajo)
     cola.name = cola.data.name = f"{NOMBRE}_SacoCola"
     return arriba + abajo + [cola]
+
+
+def d_mangas_pantalon():
+    """Mangas y pantalón negros del traje (ficha): antes asomaba el maniquí gris."""
+    piezas = []
+    for hueso_base in ("UpperArm", "LowerArm", "UpperLeg", "LowerLeg"):
+        for lado, hueso in T._lados(hueso_base):
+            _, _, c, m = T.caja_parte(hueso)
+
+            def tela(bm, c=c, m=m):
+                T.bloque_redondo(bm, c, m + Vector((0.016, 0.016, 0.004)), 0.3, 16, 8)
+
+            piezas.append(T.pieza(f"{NOMBRE}_Traje{hueso_base}{lado}", hueso, [("negro", tela)]))
+    return piezas
 
 
 def d_chaleco():
@@ -737,9 +739,9 @@ def _arco_y(fc, fm, piso):
     return pts
 
 
-PIEZAS = (("MascaraTragedia", "MascaraTragedia"), ("MascaraComedia", "MascaraComedia"), ("MascaraNinguna", "MascaraNinguna"),
+PIEZAS = (("MascaraTragedia", "MascaraTragedia"), ("MascaraComedia", "MascaraComedia"), ("MascaraFuria", "MascaraFuria"),
           ("Sombrero", "Sombrero"), ("Saco", "Saco"), ("Chaleco", "Chaleco"), ("Guantes", "Guante"), ("Baston", "Baston"),
-          ("Zapatos", "Zapato"))
+          ("Zapatos", "Zapato"), ("Traje", "Traje"))
 
 
 def _pieza_de(nombre_obj):
@@ -789,7 +791,7 @@ def armar_detalle():
     """Solo la geometría (sin bisel ni horneado), para revisar rápido."""
     bpy.ops.wm.open_mainfile(filepath=B.KIT)
     B.configurar_luz()
-    for armar in (d_sombrero, d_mascaras, d_saco, d_chaleco, d_guantes, d_baston, d_zapatos):
+    for armar in (d_sombrero, d_mascaras, d_saco, d_mangas_pantalon, d_chaleco, d_guantes, d_baston, d_zapatos):
         armar()
     return piezas_detalle()
 

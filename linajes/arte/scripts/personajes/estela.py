@@ -583,9 +583,20 @@ def tabla_triangulos(objs):
     return texto
 
 
+# Ficha: mujer, aerodinámica, placas finas. El esqueleto se afina (en el juego: Humanoid
+# BodyWidthScale 0.85 y BodyDepthScale 0.9), y el traje lo sigue.
+ESCALA = (0.85, 0.9, 1.0)
+
+
+def afinar():
+    B.esqueleto().scale = ESCALA
+    bpy.context.view_layer.update()
+
+
 def armar_detalle():
     bpy.ops.wm.open_mainfile(filepath=B.KIT)
     B.configurar_luz()
+    afinar()
     for armar in (d_casco, d_traje, d_emblema, d_guantes_botas, d_mochila):
         armar()
     return piezas_detalle()

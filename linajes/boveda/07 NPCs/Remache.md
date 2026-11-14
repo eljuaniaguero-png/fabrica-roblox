@@ -15,7 +15,7 @@ bando: "Cofradía"
 Ex estibador gigante que perdió los brazos en un accidente en el muelle. La Cofradía le pagó unos **brazos hidráulicos** robados de Corona Corp. Ahora guarda los cargamentos del Albatros y se inyecta un **líquido rojo** que lo vuelve más fuerte.
 
 ## Cómo se ve
-Enorme (1,6 veces un jugador). Torso en V, **brazos de pistones** con puños-martillo, **casco de soldador con visor rojo**, tubos al líquido rojo `#c2213a` en la espalda. Óxido `#6e4a35` y acero.
+Enorme (1,6 veces un jugador). Torso en V, **brazos de pistones** con puños-martillo, **casco de soldador con visor rojo**, tubos al líquido rojo `#c2213a` en la espalda. Óxido `#6e4a35` y acero. Careta de soldador grande que se levanta (malla aparte `Remache_Careta`, gira en las bisagras) y dos tanques del líquido rojo en la espalda. En el juego va a escala 1,6 (pendiente: el jefe todavía no está programado).
 
 ## Cómo habla
 - "¿Viniste a llevarte mi mercadería? Nadie se lleva nada de Remache."

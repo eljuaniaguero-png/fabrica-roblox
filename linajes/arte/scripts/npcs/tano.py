@@ -219,6 +219,8 @@ PIEZAS = (
     ("Mameluco", "Mameluco"),
     ("Manga", "Mameluco"),
     ("Rollo", "Mameluco"),
+    ("Antebrazo", "Mameluco"),
+    ("Mano", "Mameluco"),
     ("Pernera", "Mameluco"),
     ("Delantal", "Delantal"),
     ("Gorra", "Gorra"),
@@ -342,6 +344,19 @@ def d_mangas_perneras():
             _aro(bm, Vector((c.x, c.y, z - 0.01)), max(m.x, m.y) + 0.06, 0.012, pasos=24)  # pliegue del rollo
 
         piezas.append(T.pieza(f"{NOMBRE}_Rollo{lado}", abajo, [("mameluco", rollo)]))
+
+        # Arremangado (ficha): antebrazo y mano con piel, no el gris del maniquí.
+        def antebrazo(bm, c=c, m=m):
+            T.bloque_redondo(bm, c - Vector((0, 0, 0.02)), m + Vector((0.006, 0.006, -0.02)), 0.3, 16, 8)
+
+        piezas.append(T.pieza(f"{NOMBRE}_Antebrazo{lado}", abajo, [("piel", antebrazo)]))
+        mano = hueso.replace("UpperArm", "Hand")
+        _, _, hc_, hm_ = T.caja_parte(mano)
+
+        def palma(bm, hc_=hc_, hm_=hm_):
+            T.bloque_redondo(bm, hc_, hm_ + Vector((0.006, 0.006, 0.006)), 0.3, 16, 8)
+
+        piezas.append(T.pieza(f"{NOMBRE}_Mano{lado}", mano, [("piel", palma)]))
     for lado, hueso in T._lados("UpperLeg"):
         _, _, c, m = T.caja_parte(hueso)
         lado_x = 1 if c.x > 0 else -1
@@ -518,6 +533,12 @@ def d_llave():
         T.cilindro(bm, t + Vector((0, -0.022, 0)), t + Vector((0, 0.022, 0)), 0.018, 12)
         for k in range(5):  # roscas
             _aro(bm, t + Vector((0, -0.016 + k * 0.008, 0)), 0.019, 0.003, (0, 1, 0), 4, 12)
+        # Ficha: la tiene EN la mano. Se da vuelta para que la cabeza quede arriba de la mano y se
+        # corre un poco adelante: así se ve de frente y no queda colgando detrás de la pierna.
+        import bmesh
+
+        bmesh.ops.rotate(bm, verts=bm.verts, cent=mc, matrix=Matrix.Rotation(math.radians(160), 3, "X"))
+        bmesh.ops.translate(bm, verts=bm.verts, vec=Vector((0, -0.06, -0.04)))
 
     return T.pieza(f"{NOMBRE}_Llave", "RightHand", [("acero", metal)])
 

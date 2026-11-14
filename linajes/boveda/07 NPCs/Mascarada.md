@@ -15,7 +15,7 @@ bando: "Cofradía"
 Nadie sabe su nombre. Fue actor del Teatro Ópalo hasta que cerró. Ahora monta "obras" con la ciudad como escenario y la gente como elenco. Cambia de personaje según la máscara que lleva. Usa a la Cofradía como compañía de teatro.
 
 ## Cómo se ve
-Traje de teatro negro `#121216` con charol, guantes blancos, **máscaras intercambiables**: Tragedia, Comedia y Furia (una por fase). Acento carmesí `#c2213a`. Sin maquillaje de payaso ni sonrisa pintada.
+Traje de teatro negro `#121216` con charol, guantes blancos, **máscaras intercambiables**: Tragedia, Comedia y Furia (una por fase). Acento carmesí `#c2213a`. Sin maquillaje de payaso ni sonrisa pintada. Lleva **galera** negra con cinta carmesí, **cartas** (diamante) y **bastón** con puño dorado (agregados al modelo el 14 nov 2026, aprobados).
 
 ## Cómo habla
 - "¡Bienvenidos a la función!"

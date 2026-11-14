@@ -31,9 +31,9 @@ T.RADIO_MINIMO = 0.01  # GUIA-ESTILO 2.1: sin remaches microscópicos
 T.REDONDEZ_MAXIMA = 0.12  # placas con chaflán, no almohadones
 # GUIA-ESTILO 2.4: Remache más claro para leerse contra su galpón rojo y oscuro (solo en este modelo).
 B.MATERIALES["tela-oscura"] = {**B.MATERIALES["tela-oscura"], "hex": "3a4252"}
-B.MATERIALES["oxido"] = {**B.MATERIALES["oxido"], "hex": "8a5c40"}
 B.MATERIALES["negro"] = {**B.MATERIALES["negro"], "hex": "2b3242"}  # botas y mangueras: placa secundaria
 B.MATERIALES["cuero"] = {**B.MATERIALES["cuero"], "hex": "4a3626"}  # correas legibles
+B.MATERIALES["acero"] = {**B.MATERIALES["acero"], "rugosidad": 0.5, "metal": 0.35}  # se lee claro sin reflejos
 from mathutils import Matrix, Vector  # noqa: E402
 
 NOMBRE = "Remache"
@@ -317,7 +317,20 @@ def d_casco():
         T.caja(bm, Vector((hc.x, frente - 0.006, hc.z - hm.z * 0.5)), Vector((hm.x * 1.2, 0.03, hm.z * 0.35)))  # mentonera
 
     def visor(bm):
-        T.caja(bm, Vector((hc.x, frente - 0.01, vz)), Vector((hm.x * 1.4, 0.02, hm.z * 0.38)))
+        T.caja(bm, Vector((hc.x, frente - 0.05, vz)), Vector((hm.x * 1.5, 0.02, hm.z * 0.42)))
+
+    def careta(bm):
+        # Careta de soldador (ficha): placa grande que tapa toda la cara, con ventana para el visor y
+        # brazos hasta las bisagras. Pieza aparte (Remache_Careta): se levanta girando en la bisagra.
+        ancho, alto = m.x * 2.3, hm.z * 1.9
+        cz = hc.z - hm.z * 0.05
+        y = frente - 0.045
+        T.caja(bm, Vector((hc.x, y, cz + alto * 0.36)), Vector((ancho, 0.03, alto * 0.28)))  # arriba
+        T.caja(bm, Vector((hc.x, y, cz - alto * 0.3)), Vector((ancho, 0.03, alto * 0.4)))  # abajo
+        for s in (-1, 1):
+            T.caja(bm, Vector((hc.x + s * ancho * 0.4, y, vz)), Vector((ancho * 0.2, 0.03, hm.z * 0.5)))  # costados
+            T.caja(bm, Vector((hc.x + s * (m.x + 0.03), hc.y - m.y * 0.35, vz)), Vector((0.03, m.y * 1.3, 0.06)))  # brazo a la bisagra
+        T.caja(bm, Vector((hc.x, y - 0.025, cz - alto * 0.12)), Vector((ancho * 0.25, 0.03, alto * 0.08)))  # filtro
 
     def metal(bm):
         _anillo_remaches(bm, hc, m.x + 0.002, m.y + 0.002, hc.z - m.z * 0.7, 16, 0.014)
@@ -328,7 +341,9 @@ def d_casco():
             T.cilindro(bm, p, p + Vector((sx * 0.035, 0, 0)), 0.045, 16)  # bisagra
             T.remache(bm, p + Vector((sx * 0.037, 0, 0)), 0.02, (sx, 0, 0))
 
-    return T.pieza_separada(f"{NOMBRE}_Casco", "Head", [("oxido", cascara), ("neon-aviso", visor), ("acero", metal)])
+    return T.pieza_separada(f"{NOMBRE}_Casco", "Head", [("oxido", cascara), ("neon-aviso", visor), ("acero", metal)]) + T.pieza_separada(
+        f"{NOMBRE}_Careta", "Head", [("acero", careta)]
+    )
 
 
 def d_arnes():
@@ -352,10 +367,27 @@ def d_arnes():
         )
 
     def musculosa(bm):
-        _trapecio(bm, tc, tm.x * 2 + 0.16, tm.x * 2 + 0.02, tm.y * 2 + 0.05, tm.z * 2 + 0.02)
+        # Torso en V bien marcado, de acero (antes era cuero): las correas van aparte.
+        _trapecio(bm, tc, tm.x * 2 + 0.32, tm.x * 2 - 0.08, tm.y * 2 + 0.05, tm.z * 2 + 0.02)
+
+    def correas(bm):
         for s in (-1, 1):  # correas en X por delante y por detrás
-            for y in (frente - 0.035, atras + 0.005):
-                T.caja(bm, Vector((tc.x, y, tc.z)), Vector((0.06, 0.015, tm.z * 2.2)), _g(s * 32, "Y"))
+            for y in (frente - 0.05, atras + 0.015):
+                T.caja(bm, Vector((tc.x, y, tc.z)), Vector((0.07, 0.015, tm.z * 2.2)), _g(s * 32, "Y"))
+
+    def tanques(bm):
+        # Ficha: el líquido rojo se inyecta desde dos tanques en la espalda.
+        for s in (-1, 1):
+            base = Vector((tc.x + s * 0.17, atras + 0.15, tc.z - tm.z * 0.75))
+            T.cilindro(bm, base, base + Vector((0, 0, tm.z * 1.5)), 0.1, 16)
+            T.cilindro(bm, base + Vector((0, 0, tm.z * 1.5)), base + Vector((0, 0, tm.z * 1.5 + 0.04)), 0.05, 12)  # válvula
+            for z in (0.08, tm.z * 1.42):
+                T.cilindro(bm, base + Vector((0, 0, z - 0.02)), base + Vector((0, 0, z + 0.02)), 0.107, 16)  # zunchos
+
+    def visores_tanque(bm):
+        for s in (-1, 1):
+            base = Vector((tc.x + s * 0.17, atras + 0.15, tc.z - tm.z * 0.75))
+            T.cilindro(bm, base + Vector((0, 0, tm.z * 0.35)), base + Vector((0, 0, tm.z * 1.2)), 0.104, 16)
 
     def placas(bm):
         for s in (-1, 1):
@@ -393,7 +425,8 @@ def d_arnes():
     return T.pieza_separada(
         f"{NOMBRE}_Arnes",
         "UpperTorso",
-        [("cuero", musculosa), ("oxido", placas), ("acero", metal), ("neon-cian", luces), ("liquido-rojo", liquido)],
+        [("acero", musculosa), ("cuero", correas), ("oxido", placas), ("acero", metal), ("neon-cian", luces),
+         ("liquido-rojo", liquido), ("oxido", tanques), ("liquido-rojo", visores_tanque)],
     )
 
 
@@ -539,6 +572,7 @@ def d_piernas():
 
 PIEZAS = (
     ("Casco", "Casco"),
+    ("Casco", "Careta"),
     ("Arnes", "Arnes"),
     ("Brazos", "Brazo"),
     ("Brazos", "Antebrazo"),

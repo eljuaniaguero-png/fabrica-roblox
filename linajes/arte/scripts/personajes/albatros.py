@@ -26,7 +26,7 @@ import trajes as T  # noqa: E402
 T.RADIO_MINIMO = 0.01  # GUIA-ESTILO 2.1: sin remaches microscópicos
 T.REDONDEZ_MAXIMA = 0.12  # placas con chaflán, no almohadones
 T.CAPA_ANGULAR = True  # capa en láminas con pliegues angulares
-B.MATERIALES["oro"] = {**B.MATERIALES["oro"], "rugosidad": 0.48, "metal": 0.6}  # dorado mate, no espejo negro
+B.MATERIALES["oro"] = {**B.MATERIALES["oro"], "hex": "c9962e", "rugosidad": 0.48, "metal": 0.6}  # ficha: dorado envejecido
 B.MATERIALES["azul-marino"] = {**B.MATERIALES["azul-marino"], "hex": "28344a"}  # un escalón más claro
 B.MATERIALES["azul-marino-oscuro"] = {**B.MATERIALES["azul-marino-oscuro"], "hex": "1f2840"}
 from mathutils import Matrix, Vector  # noqa: E402
@@ -41,7 +41,7 @@ PRESUPUESTO = {
     "Abrigo": 11000,
     "Bufanda": 2000,
     "Baston": 3000,
-    "GuantesBotas": 4000,
+    "GuantesBotas": 5000,  # con el pantalón
     "Emblema": 500,
 }
 
@@ -282,6 +282,7 @@ PIEZAS = (
     ("Baston", "Baston"),
     ("Guante", "GuantesBotas"),
     ("Bota", "GuantesBotas"),
+    ("Pantalon", "GuantesBotas"),
 )
 
 
@@ -411,7 +412,25 @@ def d_abrigo():
             T.caja(bm, Vector((lc.x + s * 0.035, lc.y - (lm.y + 0.14), (abajo + z_cint) / 2)), Vector((0.025, 0.02, z_cint - abajo)), _g(s * 6, "Y") @ _g(-12, "X"))
             T.caja(bm, Vector((lc.x + s * 0.02, lc.y + lm.y + 0.13, (abajo + z_cint) / 2 - 0.05)), Vector((0.02, 0.02, (z_cint - abajo) * 0.7)), _g(12, "X"))
             T.caja(bm, Vector((lc.x + s * (lm.x + 0.06), lc.y - lm.y - 0.12, z_cint - 0.1)), Vector((0.16, 0.02, 0.06)), _g(-14, "X") @ _g(s * -20, "Z"))
-        _aro(bm, Vector((lc.x, lc.y, abajo + 0.02)), lm.x + 0.26, 0.012, pasos=40, escala_y=0.78)  # dobladillo
+        # Abrigo, no falda (ficha): se abre adelante en V (más abierto abajo) y tiene tajo atrás.
+        import bmesh
+
+        caras = {f for v in hechos if v.is_valid for f in v.link_faces}
+        sacar = []
+        for f in caras:
+            if len(f.verts) > 4:  # tapas del cono: la de abajo cerraría el abrigo
+                sacar.append(f)
+                continue
+            c = f.calc_center_median()
+            a = math.atan2(c.y - lc.y, c.x - lc.x)
+            t = max(0.0, min(1.0, (z_cint - c.z) / (z_cint - abajo)))
+            if abs(a + math.pi / 2) < 0.12 + 0.42 * t:  # abertura adelante
+                sacar.append(f)
+            elif t > 0.45 and abs(a - math.pi / 2) < 0.1:  # tajo atrás
+                sacar.append(f)
+        bmesh.ops.delete(bm, geom=sacar, context="FACES")
+        quedan = list({f for v in hechos if v.is_valid for f in v.link_faces})
+        bmesh.ops.solidify(bm, geom=quedan, thickness=0.015)  # con grosor: se ve por dentro en Roblox
 
     def cuero(bm):
         _aro(bm, Vector((lc.x, lc.y, z_cint)), lm.x + 0.08, 0.03, lados=4, pasos=32, escala_y=0.82)
@@ -583,6 +602,24 @@ def d_guantes_botas():
     return piezas
 
 
+def d_pantalon():
+    """Pantalón azul marino oscuro: se ve por la abertura del abrigo (antes asomaba el maniquí)."""
+    piezas = []
+    for lado, hueso in T._lados("UpperLeg"):
+        _, _, c, m = T.caja_parte(hueso)
+        _, _, pc, pm = T.caja_parte(hueso.replace("Upper", "Lower"))
+
+        def muslo(bm, c=c, m=m):
+            T.bloque_redondo(bm, c, m + Vector((0.02, 0.02, 0.01)), 0.3, 16, 8)
+
+        def pierna(bm, pc=pc, pm=pm):
+            T.bloque_redondo(bm, pc + Vector((0, 0, pm.z * 0.4)), Vector((pm.x + 0.02, pm.y + 0.02, pm.z * 0.6)), 0.3, 16, 8)
+
+        piezas.append(T.pieza(f"{NOMBRE}_Pantalon{lado}", hueso, [("azul-marino-oscuro", muslo)]))
+        piezas.append(T.pieza(f"{NOMBRE}_PantalonBajo{lado}", hueso.replace("Upper", "Lower"), [("azul-marino-oscuro", pierna)]))
+    return piezas
+
+
 def d_emblema():
     """Albatros de oro: grande en la espalda, chico en el pecho y en la gorra (sobre el ancla)."""
     _, _, tc, tm = T.caja_parte("UpperTorso")
@@ -630,7 +667,7 @@ def armar_detalle():
     bpy.ops.wm.open_mainfile(filepath=B.KIT)
     B.configurar_luz()
     achaparrar()
-    for armar in (d_gorra, d_abrigo, d_mangas, d_bufanda, d_baston, d_guantes_botas, d_emblema):
+    for armar in (d_gorra, d_abrigo, d_mangas, d_bufanda, d_baston, d_guantes_botas, d_pantalon, d_emblema):
         armar()
     return piezas_detalle()
 

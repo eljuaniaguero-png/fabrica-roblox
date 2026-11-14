@@ -431,8 +431,14 @@ def d_peto():
             for k in (-1, 1):
                 T.remache(bm, Vector((lc.x + lado * lm.x * 0.48 + k * lm.x * 0.25, lc.y - lm.y - 0.034, lmin.z + 0.02)), 0.005)
 
-    abajo = T.pieza_separada(f"{NOMBRE}_PetoBajo", "LowerTorso", [("blanco-armadura", bajo), ("oro", cinto)])
-    return arriba + abajo + d_emblema()
+    def juntas(bm):
+        # Ficha: acento azul de la Liga en las juntas (cuello y cintura).
+        T.bloque_redondo(bm, Vector((tc.x, tc.y, tmax.z + 0.03)), Vector((tm.x * 0.36, tm.y * 0.8, 0.012)), 0.3, 24, 4)
+        T.bloque_redondo(bm, Vector((lc.x, lc.y, lc.z + lm.z * 0.4 + 0.04)), Vector((lm.x + 0.03, lm.y + 0.03, 0.01)), 0.3, 32, 4)
+
+    abajo = T.pieza_separada(f"{NOMBRE}_PetoBajo", "LowerTorso",
+                             [("blanco-armadura", bajo), ("oro", cinto), ("liga", juntas)])
+    return arriba + abajo  # ficha: sin letra ni símbolo en el pecho (el sol va solo en la corona)
 
 
 def lugar_emblema():
@@ -597,7 +603,9 @@ def d_capa():
     _, tmax, tc, tm = T.caja_parte("UpperTorso")
     _, _, ac, am = T.caja_parte("LeftUpperArm")
     hombro_x = abs(ac.x) + am.x
-    tela = T.capa(NOMBRE, "tela-dorada", ancho=hombro_x / tm.x * 0.92, vuelo=1.5, pliegues=5, hondo=0.028,
+    _, bmax, _, _ = T.caja_parte("LeftFoot")
+    largo = tmax.z - (bmax.z + 0.03)  # ficha: capa dorada larga (hasta los tobillos)
+    tela = T.capa(NOMBRE, "tela-dorada", largo=largo, ancho=hombro_x / tm.x * 0.92, vuelo=1.35, pliegues=5, hondo=0.028,
                   columnas=24, filas=32, cuadros=55, grosor=0.01, tiras=1,
                   choques_extra=[o for o in piezas_detalle() if o.name.startswith(f"{NOMBRE}_Peto")])
     atras = tmax.y + 0.03
@@ -680,7 +688,7 @@ def _primeros_planos(piezas, prefijo):
         return [o for o in piezas if o.name.startswith(tuple(f"{NOMBRE}_{n}" for n in nombres))]
 
     B.render_primer_plano(f"{prefijo}_corona", de("Corona", "Casco") + [B.parte("Head")], giro=150, altura=12, margen=1.05)
-    B.render_primer_plano(f"{prefijo}_emblema", de("Emblema"), giro=10, margen=1.9)
+    B.render_primer_plano(f"{prefijo}_emblema", de("Peto"), giro=10, margen=1.2)
     B.render_primer_plano(f"{prefijo}_capa", de("Capa"), giro=160, altura=8, margen=1.05)
 
 

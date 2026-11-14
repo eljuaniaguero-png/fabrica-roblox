@@ -72,7 +72,7 @@ RECETAS = {
     "piel-gris": {"trama": 1.0, "rayones": 0.0, "bordes": 0.2, "suciedad": 0.4, "grano": 1.0},
     "tela-blanca": {"costuras": (0.08, 0.0), "trama": 1.0, "rayones": 0.0, "bordes": 0.2, "suciedad": 0.6, "grano": 0.0},
     # Tano (NPC): mameluco engrasado, delantal de cuero gastado
-    "mameluco": {"costuras": (0.09, 0.0), "trama": 1.0, "rayones": 0.0, "bordes": 0.35, "suciedad": 0.95, "grano": 0.0},
+    "mameluco": {"costuras": (0.09, 0.0), "trama": 1.0, "rayones": 0.0, "bordes": 0.5, "suciedad": 0.95, "grano": 0.0, "manchas": 1.0},
     "cuero-claro": {"costuras": (0.07, 0.0), "trama": 0.0, "rayones": 0.5, "bordes": 0.55, "suciedad": 0.7, "grano": 1.0},
     "trapo-rojo": {"trama": 1.0, "rayones": 0.0, "bordes": 0.2, "suciedad": 0.9, "grano": 0.0},
     "civil-color1": {"costuras": (0.09, 0.0), "trama": 1.0, "rayones": 0.0, "bordes": 0.35, "suciedad": 0.35, "grano": 0.0},  # Civiles
@@ -510,6 +510,12 @@ def _material_comic(mat, N, salida, z, x, col, d, receta):
     N.unir(col, claro.inputs[6])
     claro.inputs[7].default_value = (1.3, 1.3, 1.3, 1.0)
     col = N.mezclar(N.mate("MULTIPLY", borde, 0.9), col, claro.outputs[2])
+    # Manchas grandes y planas (grasa, barro): forma pintada de borde duro, no ruido fino.
+    if receta.get("manchas"):
+        mancha = N.nodo("ShaderNodeTexNoise", **{"Scale": 3.5, "Detail": 0.0})
+        N.unir(N.nodo("ShaderNodeTexCoord").outputs["Object"], mancha.inputs["Vector"])
+        borde_duro = N.rango(mancha.outputs["Fac"], 0.6, 0.63)
+        col = N.mezclar(N.mate("MULTIPLY", borde_duro, 0.75 * receta["manchas"]), col, B.color("1a1612"))
     # Juntas: oclusión suave (sin ruido), mucho menos que el modo realista.
     oclusion = N.nodo("ShaderNodeAmbientOcclusion", samples=16, only_local=False, **{"Distance": 0.03})
     sucio = N.rango(N.mate("SUBTRACT", 1.0, oclusion.outputs["AO"]), 0.2, 0.8)

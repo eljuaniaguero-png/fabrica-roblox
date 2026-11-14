@@ -15,7 +15,7 @@ bando: "Liga"
 Repartidora de Corona hasta la Noche del Eclipse: una esquirla le dio velocidad. Es la más nueva de la Liga y la que recluta a los jugadores. Habla rápido y llega antes de que termines la frase.
 
 ## Cómo se ve
-Traje violeta `#5a3fa0` aerodinámico con placas finas, casco con **visor cian** que se alarga hacia atrás, **líneas de luz cian** `#3fe0f0` por los costados, emblema propio de tres líneas inclinadas sobre un rombo violeta claro. Sin rojo ni rayo.
+Traje violeta `#5a3fa0` aerodinámico con placas finas, casco con **visor cian** que se alarga hacia atrás, **líneas de luz cian** `#3fe0f0` por los costados, emblema propio de tres líneas inclinadas sobre un rombo violeta claro. Sin rojo ni rayo. Cuerpo más fino que el estándar: en el juego `BodyWidthScale` 0,85 y `BodyDepthScale` 0,9.
 
 ## Cómo habla
 - "¡Ya llegué! Bueno, hace un rato."

@@ -34,14 +34,14 @@ PRESUPUESTO = {
     "Casco": 7000,
     "Coraza": 8000,
     "Capa": 4000,
-    "Brazaletes": 2000,
+    "Brazaletes": 3000,  # con las mangas plisadas
     "Grebas": 4000,
     "Escudo": 5000,
     "Lanza": 2000,
 }
 
 ESCUDO_DIAMETRO = 1.8 * B.STUD
-LANZA_LARGO = 6.0 * B.STUD
+LANZA_LARGO = 7.4 * B.STUD  # ficha: más alta que ella
 
 
 def _g(grados, eje):
@@ -327,11 +327,15 @@ def d_coraza():
     _, _, ac, am = T.caja_parte("LeftUpperArm")
 
     def bronce(bm):
-        T.bloque_redondo(bm, tc, tm + Vector((0.03, 0.03, 0.01)), 0.3, 28, 14)
+        # Coraza de mujer (ficha): arriba ancha con dos placas de pecho altas, cintura angosta.
+        # Nada de pectorales ni abdominales marcados.
+        T.bloque_redondo(bm, tc + Vector((0, 0, tm.z * 0.35)), Vector((tm.x + 0.03, tm.y + 0.03, tm.z * 0.66)), 0.3, 28, 14)
+        T.bloque_redondo(bm, tc - Vector((0, 0, tm.z * 0.5)), Vector((tm.x * 0.8, tm.y + 0.02, tm.z * 0.52)), 0.3, 28, 10)
         for s in (-1, 1):
-            T.bloque_redondo(bm, Vector((tc.x + s * tm.x * 0.45, frente, tc.z + tm.z * 0.32)), Vector((tm.x * 0.42, 0.022, tm.z * 0.33)), 0.65, 16, 8)  # pectoral
-            for k in range(3):  # abdomen
-                T.bloque_redondo(bm, Vector((tc.x + s * tm.x * 0.2, frente + 0.004, tc.z - tm.z * (0.15 + k * 0.27))), Vector((tm.x * 0.18, 0.014, tm.z * 0.11)), 0.6, 10, 6)
+            T.caja(bm, Vector((tc.x + s * tm.x * 0.42, frente - 0.004, tc.z + tm.z * 0.42)), Vector((tm.x * 0.74, 0.05, tm.z * 0.5)),
+                   _g(-s * 8, "Z") @ _g(-12, "X"))  # placa de pecho, apenas inclinada
+        T.bloque_redondo(bm, Vector((tc.x, frente + 0.004, tc.z - tm.z * 0.08)), Vector((tm.x * 0.82, 0.02, 0.016)), 0.3, 20, 4)  # quiebre de cintura
+        for s in (-1, 1):
             T.bloque_redondo(bm, Vector((tc.x + s * (abs(ac.x) - am.x * 0.1), tc.y, tmax.z + 0.012)), Vector((am.x * 1.1, tm.y + 0.04, 0.016)), 0.5, 16, 6)  # epomide
             T.cilindro(bm, Vector((tc.x + s * tm.x * 0.75, frente - 0.01, tmax.z - 0.04)), Vector((tc.x + s * tm.x * 0.75, frente - 0.02, tmax.z - 0.04)), 0.018, 12)  # anilla
             for k in range(3):  # bisagras laterales
@@ -410,6 +414,25 @@ def d_capa():
             T.tubo(bm, [c + Vector((math.cos(a) * 0.045, 0.004, math.sin(a) * 0.045)) for a in (2 * math.pi * i / 20 for i in range(21))], 0.005, 5, tapas=False)
 
     return [tela] + T.pieza_separada(f"{NOMBRE}_Capa_Oro", "UpperTorso", [("oro", broches)])
+
+
+def d_mangas():
+    """Mangas de túnica (quitón) azul Liga, plisadas, sobre UpperArm: tapan el gris del maniquí."""
+    objs = []
+    for lado, hueso in T._lados("UpperArm"):
+        _, amax, c, m = T.caja_parte(hueso)
+
+        def manga(bm, c=c, m=m):
+            T.bloque_redondo(bm, c, m + Vector((0.012, 0.012, 0.004)), 0.3, 16, 8)
+            # Pliegues: tablas verticales alrededor (se leen como tela plisada).
+            for k in range(10):
+                a = 2 * math.pi * k / 10
+                d = Vector((math.cos(a), math.sin(a), 0))
+                p = Vector((c.x, c.y, c.z)) + Vector((d.x * (m.x + 0.016), d.y * (m.y + 0.016), 0))
+                T.caja(bm, p, Vector((0.022, 0.01, m.z * 1.9)), _g(math.degrees(a) + 90, "Z"))
+
+        objs += T.pieza_separada(f"{NOMBRE}_Manga{lado}", hueso, [("liga", manga)])
+    return objs
 
 
 def d_brazaletes():
@@ -504,12 +527,14 @@ def d_escudo():
         for k in range(16):
             a = 2 * math.pi * k / 16
             T.remache(bm, P(math.cos(a) * r * 0.86, math.sin(a) * r * 0.86, 0.022), 0.01, normal)
-        # Manzana: dos lóbulos y hundido arriba, en relieve sobre la cara.
+        # Manzana grande (ficha): dos lóbulos y hundido arriba, en relieve; ocupa medio escudo.
+        T.REDONDEZ_MAXIMA, tope = 1.0, T.REDONDEZ_MAXIMA  # la manzana sí es redonda
         for s in (-1, 1):
-            T.bloque_redondo(bm, P(s * r * 0.13, 0, 0.05), Vector((r * 0.27, r * 0.1, r * 0.33)), 0.85, 20, 12)
-        T.bloque_redondo(bm, P(0, -r * 0.1, 0.06), Vector((r * 0.3, r * 0.1, r * 0.27)), 0.85, 20, 12)
-        T.cilindro(bm, P(0, r * 0.25, 0.08), P(r * 0.04, r * 0.45, 0.08), 0.014, 8)  # cabito
-        _hoja(bm, P(r * 0.2, r * 0.44, 0.085), r * 0.32, r * 0.14, giro @ Vector((0.85, 0, 0.5)), normal, 0.012)
+            T.bloque_redondo(bm, P(s * r * 0.19, -r * 0.05, 0.05), Vector((r * 0.38, r * 0.12, r * 0.46)), 0.85, 24, 14)
+        T.bloque_redondo(bm, P(0, -r * 0.18, 0.06), Vector((r * 0.42, r * 0.12, r * 0.36)), 0.85, 24, 14)
+        T.REDONDEZ_MAXIMA = tope
+        T.cilindro(bm, P(0, r * 0.32, 0.09), P(r * 0.06, r * 0.6, 0.09), 0.02, 8)  # cabito
+        _hoja(bm, P(r * 0.3, r * 0.6, 0.095), r * 0.5, r * 0.22, giro @ Vector((0.85, 0, 0.5)), normal, 0.014)
 
     def cuero(bm):
         T.bloque_redondo(bm, centro - normal * 0.06, Vector((r * 0.25, 0.025, 0.03)), 0.5, 12, 4)  # brazal (porpax)
@@ -554,7 +579,7 @@ GRUPOS = (
     ("Casco", ("Casco",)),
     ("Coraza", ("Coraza", "Cintura")),
     ("Capa", ("Capa",)),
-    ("Brazaletes", ("Brazalete",)),
+    ("Brazaletes", ("Brazalete", "Manga")),
     ("Grebas", ("Greba", "Sandalia")),
     ("Escudo", ("Escudo",)),
     ("Lanza", ("Lanza",)),
@@ -602,7 +627,7 @@ def tabla_triangulos(objs):
 def armar_detalle():
     bpy.ops.wm.open_mainfile(filepath=B.KIT)
     B.configurar_luz()
-    for armar in (d_casco, d_coraza, d_brazaletes, d_grebas, d_escudo, d_lanza, d_capa):  # la capa al final: choca con la coraza
+    for armar in (d_casco, d_coraza, d_mangas, d_brazaletes, d_grebas, d_escudo, d_lanza, d_capa):  # la capa al final: choca con la coraza
         armar()
     return piezas_detalle()
 
