@@ -159,11 +159,16 @@ OJO = [(-0.1, 0.17), (-0.02, 0.22), (0.06, 0.17), (-0.02, 0.12)]
 PICO_LINEA = [(-0.58, 0.04), (-0.26, 0.03), (-0.26, 0.055), (-0.58, 0.05)]
 # B: placa hexagonal alta.
 HEXAGONO = [(0.0, 0.5), (-0.32, 0.3), (-0.32, -0.3), (0.0, -0.5), (0.32, -0.3), (0.32, 0.3)]
+# Placa del emblema A: hexágono ancho y bajo (entra la cabeza de perfil).
+HEXAGONO_ANCHO = [(0.0, 0.42), (-0.58, 0.24), (-0.58, -0.24), (0.0, -0.42), (0.58, -0.24), (0.58, 0.24)]
 
 
 def logo_capas(variante, centro, alto):
     """Capas (material, función) del logo `variante` ("A", "B" o "C") centrado en `centro`."""
     if variante == "A":
+
+        def placa(bm):
+            _plana(bm, HEXAGONO_ANCHO, centro + Vector((0, 0.012, 0)), alto * 1.25, 0.016, ensanche=0.02)
 
         def relleno(bm):
             _plana(bm, CABEZA, centro, alto, 0.012)
@@ -173,7 +178,7 @@ def logo_capas(variante, centro, alto):
             _plana(bm, OJO, centro + Vector((0, -0.003, 0)), alto, 0.006)
             _plana(bm, PICO_LINEA, centro + Vector((0, -0.003, 0)), alto, 0.006)
 
-        return [("vigilantes", relleno), ("neon-cian", neon)]
+        return [("bronce", placa), ("vigilantes", relleno), ("neon-cian", neon)]
 
     if variante == "B":
         pluma = _hoja(0.78, 0.2, muescas=((0.35, 1, 0.55), (0.55, -1, 0.5), (0.72, 1, 0.45)), curva=0.05)
@@ -600,9 +605,26 @@ def d_capucha():
         )
         # Pico: nace entre los ojos, 0,4 studs hacia adelante, punta curva; cresta por la frente.
         y = frente - 0.022
-        _pico(bm, Vector((hc.x, y + 0.012, hc.z + hm.z * 0.02)), 0.4 * S + 0.025, hm.x * 0.62, hm.z * 0.62, 0.045, 14)
-        cresta = [Vector((hc.x, frente - 0.02 + 0.004 * k, hc.z + hm.z * (0.1 + 0.11 * k))) for k in range(5)]
-        T.tubo(bm, cresta, [0.012, 0.011, 0.009, 0.007, 0.004], 6)
+        _pico(bm, Vector((hc.x, y + 0.012, hc.z + hm.z * 0.02)), 0.65 * S, hm.x * 0.78, hm.z * 0.74, 0.075, 14)
+        # Penacho: 3 plumas grandes en fila sobre la cabeza que barren hacia atrás, con la cara de
+        # costado: de perfil es el copete del cuervo (de frente no parece una corona).
+        for k, (elevacion, largo) in enumerate(((62, 0.34), (42, 0.4), (24, 0.34))):
+            e = math.radians(elevacion)
+            raiz = Vector((hc.x, hc.y - hm.y * 0.55 + k * hm.y * 0.5, hmax.z + 0.02))
+            _pluma_3d(bm, raiz, (0, math.cos(e), math.sin(e)), (1, 0, 0), largo, 0.11, 0.01, curva=0.04, segmentos=8)
+
+    def rejilla(bm):
+        # Placa oscura que tapa el hueco de la cara: ya no asoma el maniquí.
+        abajo_cara = hc.z - hm.z * 0.8
+        alto_hueco = mascara_abajo + 0.01 - abajo_cara
+        T.caja(bm, Vector((hc.x, hc.y - hm.y - 0.006, abajo_cara + alto_hueco / 2)), Vector((m.x * 1.3, 0.008, alto_hueco)))
+
+    def barras(bm):
+        abajo_cara = hc.z - hm.z * 0.8
+        alto_hueco = mascara_abajo + 0.01 - abajo_cara
+        for k in range(3):
+            z = abajo_cara + alto_hueco * (0.25 + 0.25 * k)
+            T.caja(bm, Vector((hc.x, hc.y - hm.y - 0.014, z)), Vector((m.x * 1.2, 0.01, 0.014)))
 
     def ojos(bm):
         for lado in (-1, 1):
@@ -614,7 +636,8 @@ def d_capucha():
     return T.pieza_separada(
         f"{NOMBRE}_Capucha",
         "Head",
-        [("tela-oscura", capucha_tela), ("tela-oscura", costuras), ("acero", mascara), ("neon-cian", ojos)],
+        [("tela-oscura", capucha_tela), ("tela-oscura", costuras), ("acero", mascara), ("negro", rejilla),
+         ("bronce", barras), ("neon-cian", ojos)],
     )
 
 
@@ -716,7 +739,7 @@ def d_peto():
     arriba = T.pieza_separada(
         f"{NOMBRE}_Peto",
         "UpperTorso",
-        [("tela-oscura", base), ("acero", bordes)],
+        [("acero", base), ("bronce", bordes)],
     )
     _, _, lc, lm = T.caja_parte("LowerTorso")
 
@@ -726,7 +749,7 @@ def d_peto():
     def ribete(bm):
         T.bloque_redondo(bm, Vector((lc.x, lc.y, lc.z - lm.z + 0.01)), Vector((lm.x + 0.028, lm.y + 0.028, 0.01)), 0.3, 32, 6)
 
-    abajo = T.pieza_separada(f"{NOMBRE}_PetoBajo", "LowerTorso", [("tela-oscura", bajo), ("acero", ribete)])
+    abajo = T.pieza_separada(f"{NOMBRE}_PetoBajo", "LowerTorso", [("tela-oscura", bajo), ("bronce", ribete)])
     return arriba + abajo + d_logo(LOGO)
 
 
@@ -896,12 +919,12 @@ def d_guantes():
 
         def nudillos(bm, hc=hc, hm=hm, afuera=afuera):
             # Cuatro placas en el dorso (el lado de afuera), abajo.
-            for k in range(4):
-                y = hc.y - hm.y * 0.75 + k * hm.y * 0.5
-                T.bloque_redondo(bm, Vector((hc.x + afuera * (hm.x + 0.016), y, hc.z - hm.z * 0.35)),
-                                 Vector((0.008, hm.y * 0.2, hm.z * 0.45)), 0.4, 10, 6)
+            for k in range(2):
+                y = hc.y - hm.y * 0.5 + k * hm.y
+                T.bloque_redondo(bm, Vector((hc.x + afuera * (hm.x + 0.018), y, hc.z - hm.z * 0.35)),
+                                 Vector((0.01, hm.y * 0.42, hm.z * 0.5)), 0.4, 10, 6)
 
-        objs += T.pieza_separada(f"{NOMBRE}_Guante{lado}", hueso, [("cuero", guante), ("acero", nudillos)])
+        objs += T.pieza_separada(f"{NOMBRE}_Guante{lado}", hueso, [("cuero", guante), ("bronce", nudillos)])
     return objs
 
 
@@ -914,17 +937,20 @@ def d_cinturon():
         T.bloque_redondo(bm, Vector((lc.x, lc.y, z)), Vector((lm.x + 0.035, lm.y + 0.035, 0.032)), 0.3, 32, 8)
 
     def bolsillos(bm):
-        for s in (-0.85, -0.55, -0.27, 0.27, 0.55, 0.85):
+        # Menos y más grandes: a la distancia de juego se leen; 6 chiquitos eran ruido.
+        for s in (-0.8, -0.42, 0.42, 0.8):
             x = lc.x + s * lm.x
-            T.bloque_redondo(bm, Vector((x, frente - 0.016, z - 0.008)), Vector((0.026, 0.017, 0.03)), 0.3, 10, 7)
-            T.bloque_redondo(bm, Vector((x, frente - 0.02, z + 0.02)), Vector((0.029, 0.019, 0.008)), 0.4, 10, 4)
-        # Hebilla: marco de acero.
-        T.bloque_redondo(bm, Vector((lc.x, frente - 0.012, z)), Vector((0.032, 0.008, 0.042)), 0.35, 12, 8)
+            T.bloque_redondo(bm, Vector((x, frente - 0.02, z - 0.01)), Vector((0.04, 0.022, 0.04)), 0.3, 10, 7)
+            T.bloque_redondo(bm, Vector((x, frente - 0.025, z + 0.026)), Vector((0.043, 0.024, 0.01)), 0.4, 10, 4)
+
+    def marco(bm):
+        T.bloque_redondo(bm, Vector((lc.x, frente - 0.012, z)), Vector((0.04, 0.01, 0.046)), 0.35, 12, 8)
 
     def hebilla(bm):
         _pluma_plana(bm, Vector((lc.x, frente - 0.024, z)), 0.075, 0.006, giro_grados=-18)
 
-    return T.pieza_separada(f"{NOMBRE}_Cinturon", "LowerTorso", [("cuero", cinto), ("acero", bolsillos), ("vigilantes", hebilla)])
+    return T.pieza_separada(f"{NOMBRE}_Cinturon", "LowerTorso",
+                            [("cuero", cinto), ("cuero", bolsillos), ("bronce", marco), ("vigilantes", hebilla)])
 
 
 def d_botas():
@@ -1064,8 +1090,53 @@ def tabla_v2(objs):
     return texto
 
 
+def render_neutro_y_silueta(piezas):
+    """Dos controles para el juego (donde no hay contraluz naranja):
+    - cuervo_v2_neutra.png: luz blanca pareja, como un día nublado de Roblox;
+    - cuervo_v2_silueta.png: todo negro sobre gris, chico, para ver si se lee como cuervo."""
+    borde = bpy.data.objects.get("LuzBorde")
+    if borde:
+        borde.data.color = (1.0, 1.0, 1.0)
+        borde.data.energy *= 0.4
+    for nombre in ("LuzPrincipal", "LuzRelleno"):
+        luz = bpy.data.objects.get(nombre)
+        if luz:
+            luz.data.color = (1.0, 1.0, 1.0)
+            luz.data.energy *= 1.6
+    print("Neutra:", B.render_vistas("cuervo_v2_neutra", B.partes() + piezas))
+    negro = bpy.data.materials.new("_SILUETA")
+    negro.diffuse_color = (0, 0, 0, 1)
+    negro.use_nodes = True
+    nodos = negro.node_tree.nodes
+    nodos.clear()
+    em = nodos.new("ShaderNodeEmission")
+    em.inputs["Color"].default_value = (0, 0, 0, 1)
+    sal = nodos.new("ShaderNodeOutputMaterial")
+    negro.node_tree.links.new(em.outputs[0], sal.inputs["Surface"])
+    for o in B.partes() + piezas:
+        o.data.materials.clear()
+        o.data.materials.append(negro)
+    escena = bpy.context.scene
+    escena.world.node_tree.nodes["Background"].inputs["Color"].default_value = (0.5, 0.5, 0.5, 1)
+    niebla = bpy.data.objects.get("Niebla")
+    if niebla:
+        niebla.hide_render = True
+    escena.render.resolution_percentage = 30
+    print("Silueta:", B.render_vistas("cuervo_v2_silueta", B.partes() + piezas))
+    escena.render.resolution_percentage = 100
+
+
+def _paleta_cuervo():
+    """Tres tonos (GUIA-ESTILO 2.1): ropa casi negra, placas claras y mate, bronce de acento.
+    El metal muy metálico se ve negro sin el reflejo de la luz naranja: se baja."""
+    B.MATERIALES["acero"] = {**B.MATERIALES["acero"], "hex": "6c7891", "rugosidad": 0.55, "metal": 0.25}
+    B.MATERIALES["bronce"] = {**B.MATERIALES["bronce"], "hex": "b07a3c", "rugosidad": 0.5, "metal": 0.4}
+
+
 def detalle_v2():
     import detalle as D
+
+    _paleta_cuervo()
 
     v1 = {n: os.path.join(B.RENDERS, f"cuervo_{n}.png") for n in ("vistas", "capucha", "emblema", "gancho")}
     copias = {}
@@ -1084,6 +1155,9 @@ def detalle_v2():
     # Las plumas de la capa no llevan líneas de panel ni remaches: solo rayones y bordes gastados.
     plumas = {"rayones": 1.0, "bordes": 0.6, "suciedad": 0.5}
     D.terminar(piezas, grupos, "cuervo", recetas={f"{NOMBRE}_Capa_Acero": plumas}, estilo="comic")
+    for o in piezas:  # el emblema es plano: con sombreado suave se veía arrugado
+        if o.name.startswith(f"{NOMBRE}_Logo"):
+            o.data.shade_flat()
     bpy.ops.wm.save_as_mainfile(filepath=BLEND)
     print(tabla_v2(piezas))
     print("Render:", B.render_vistas("cuervo_v2", B.partes() + piezas))
@@ -1105,6 +1179,7 @@ def detalle_v2():
         if os.path.exists(ruta):
             os.remove(ruta)
     bpy.ops.wm.save_as_mainfile(filepath=BLEND)
+    render_neutro_y_silueta(piezas)  # cambia luces y materiales: va después de guardar
     return piezas
 
 
