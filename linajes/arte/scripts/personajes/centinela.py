@@ -598,7 +598,7 @@ def d_capa():
     _, _, ac, am = T.caja_parte("LeftUpperArm")
     hombro_x = abs(ac.x) + am.x
     tela = T.capa(NOMBRE, "tela-dorada", ancho=hombro_x / tm.x * 0.92, vuelo=1.5, pliegues=5, hondo=0.028,
-                  columnas=24, filas=32, cuadros=55, grosor=0.01, tiras=3, corte_desde=0.4,
+                  columnas=24, filas=32, cuadros=55, grosor=0.01, tiras=1,
                   choques_extra=[o for o in piezas_detalle() if o.name.startswith(f"{NOMBRE}_Peto")])
     atras = tmax.y + 0.03
 

@@ -25,6 +25,11 @@ import bpy  # noqa: E402
 import centinela as CS  # noqa: E402  (aros)
 import cuervo as C  # noqa: E402  (cáscaras y BVH)
 import trajes as T  # noqa: E402
+
+T.RADIO_MINIMO = 0.01  # GUIA-ESTILO 2.1: sin remaches microscópicos
+T.REDONDEZ_MAXIMA = 0.12  # placas con chaflán, no almohadones
+T.CAPA_ANGULAR = True  # capa en láminas con pliegues angulares
+B.MATERIALES["charol"] = {**B.MATERIALES["charol"], "hex": "1d2230", "rugosidad": 0.35}  # sin brillo de espejo
 from mathutils import Matrix, Vector  # noqa: E402
 
 NOMBRE = "Mascarada"
@@ -813,7 +818,7 @@ def detalle():
     grupos = {clave: (tope, [o.name for o in piezas if _pieza_de(o.name) == clave]) for clave, tope in PRESUPUESTO.items()}
     recetas = {o.name: PORCELANA for o in piezas if _pieza_de(o.name) in MASCARAS or o.name.endswith("_Armadura") and _pieza_de(o.name) != "Chaleco"}
     recetas.update({o.name: GUANTE for o in piezas if _pieza_de(o.name) == "Guantes"})
-    D.terminar(piezas, grupos, "mascarada", recetas=recetas)
+    D.terminar(piezas, grupos, "mascarada", recetas=recetas, estilo="comic")
     bpy.ops.wm.save_as_mainfile(filepath=BLEND)
     print(tabla_triangulos(piezas))
     _renders(piezas, "mascarada")

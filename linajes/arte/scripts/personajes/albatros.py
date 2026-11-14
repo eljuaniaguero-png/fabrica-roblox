@@ -22,6 +22,13 @@ import base as B  # noqa: E402
 import cuervo as C  # noqa: E402  (_miles)
 import bpy  # noqa: E402
 import trajes as T  # noqa: E402
+
+T.RADIO_MINIMO = 0.01  # GUIA-ESTILO 2.1: sin remaches microscópicos
+T.REDONDEZ_MAXIMA = 0.12  # placas con chaflán, no almohadones
+T.CAPA_ANGULAR = True  # capa en láminas con pliegues angulares
+B.MATERIALES["oro"] = {**B.MATERIALES["oro"], "rugosidad": 0.48, "metal": 0.6}  # dorado mate, no espejo negro
+B.MATERIALES["azul-marino"] = {**B.MATERIALES["azul-marino"], "hex": "28344a"}  # un escalón más claro
+B.MATERIALES["azul-marino-oscuro"] = {**B.MATERIALES["azul-marino-oscuro"], "hex": "1f2840"}
 from mathutils import Matrix, Vector  # noqa: E402
 
 NOMBRE = "Albatros"
@@ -651,7 +658,7 @@ def detalle():
     bpy.ops.wm.save_as_mainfile(filepath=BLEND)
     # El emblema es una plancha fina de oro: sin bisel (con bisel no entra en 500 triángulos).
     grupos = {clave: (tope, [o.name for o in piezas if _pieza_de(o.name) == clave]) for clave, tope in PRESUPUESTO.items() if clave != "Emblema"}
-    D.terminar(piezas, grupos, "albatros")
+    D.terminar(piezas, grupos, "albatros", estilo="comic")
     bpy.ops.wm.save_as_mainfile(filepath=BLEND)
     print(tabla_triangulos(piezas))
     _renders(piezas, "albatros")
