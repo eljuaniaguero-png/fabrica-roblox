@@ -13,6 +13,7 @@ tags: [prompts, indice]
 > 4. En cada punto de control, revisá las casillas antes de dar el OK. Cuando lo aprobás, tildalo acá.
 
 ## Ya hecho
+- [ ] [[P00 Gemini - Biblia de estilo gráfico]] (Juani, en Gemini: 10 láminas de referencia)
 - [x] [[P01 Carpeta del juego y reglas de estilo]]
 - [x] [[P02 Maniquí R15, materiales, luz y scripts base]]
 - [x] [[P04 Centinela Solar]]
