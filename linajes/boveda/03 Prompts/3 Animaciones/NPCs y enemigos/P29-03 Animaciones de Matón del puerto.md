@@ -27,7 +27,7 @@ Pegá cada bloque **por separado** en Gemini (en inglés). La línea de arriba d
 
 **Referencia 1: Poses de Matón del puerto** → guardar como `linajes/arte/referencias/gemini/anim-matondelpuerto/poses.png`
 ```
-Animation pose sheet of a harbor thug in a leather jacket with a chain for a stylized Roblox superhero game: Patrullar (loop 32).; Alerta (20).; Perseguir (loop 20).; Golpe 1 (20): Aviso 4, Impacto 12.; Golpe 2 con cadena (28): Aviso 8, Impacto 18.; Recibir golpe (10).; Derrota (40).; Rendirse, manos arriba (loop 30).. Grey background. Style: dark comic-book 3D game art, stylized Roblox-scale proportions, heavy shape detail (layered plates, seams, rivets, bevels), wet night city lit by neon, faction color only in accents, worn textures (scratches, light edges, grime in joints). Original design: no DC or Marvel characters, no existing game assets, no logos, no readable text, no watermarks.
+Animation pose sheet of a harbor thug in a leather jacket with a chain for a stylized Roblox superhero game: Patrullar (loop 32).; Alerta (20).; Perseguir (loop 20).; Golpe 1 (20): Aviso 4, Impacto 12.; Golpe 2 con cadena (28): Aviso 8, Impacto 18.; Recibir golpe (10).; Derrota (40).; Rendirse, manos arriba (loop 30).. Grey background. Style: stylized dark graphic-novel comic 3D game art, crisp blocky Roblox R15 proportions, clean flat beveled planes with sharp edges and subtle painted ink seam lines (NO rounded pillows, NO noisy rivets, NO clay surface), muted weathered industrial harbor palette illuminated by directional sodium-orange glow against cool slate fog, high value separation, zero cyberpunk neon signs. Original design: no DC or Marvel characters, no existing game assets, no logos, no readable text, no watermarks.
 ```
 
 ## 4. El bloque para Claude

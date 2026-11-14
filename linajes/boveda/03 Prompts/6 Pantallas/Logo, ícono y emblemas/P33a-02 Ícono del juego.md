@@ -29,7 +29,7 @@ Pegá cada bloque **por separado** en Gemini (en inglés). La línea de arriba d
 
 **Referencia 1: Ícono del juego (imagen final, 4 versiones)** → guardar como `linajes/arte/referencias/gemini/logo/icono.png`
 ```
-Square 1:1 game icon for a Roblox superhero game: close-up of a mysterious masked hero in dark armor with glowing cyan (#3fe0f0) eyes, a huge solar eclipse behind the head (black disc, orange #f2652b and gold #ffb347 ring), foggy harbor with cranes and neon behind, rain, orange rim light, comic-book shading, very readable small. No text.
+Square 1:1 game icon for a Roblox superhero game: close-up of a mysterious masked hero in dark armor with glowing cyan (#3fe0f0) eyes, a huge solar eclipse behind the head (black disc, orange #f2652b and gold #ffb347 ring), foggy harbor with cranes and warm sodium lamps behind, rain, orange rim light, comic-book shading, very readable small. No text.
 ```
 
 ## 4. El bloque para Claude

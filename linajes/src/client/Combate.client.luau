@@ -7,11 +7,13 @@ local Debris = game:GetService("Debris")
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService = game:GetService("RunService")
+local TweenService = game:GetService("TweenService")
 local UserInputService = game:GetService("UserInputService")
 
 local Config = require(ReplicatedStorage:WaitForChild("Shared"):WaitForChild("Config"))
 local EfectosGolpe = require(script.Parent:WaitForChild("EfectosGolpe"))
 local Niveles = require(ReplicatedStorage:WaitForChild("Shared"):WaitForChild("Niveles"))
+local Tema = require(script.Parent:WaitForChild("Tema"))
 local remoto = ReplicatedStorage:WaitForChild("Combate") :: RemoteEvent
 
 local C = Config.Combate
@@ -108,10 +110,11 @@ local function numero(objetivo: Model, texto: string, color: Color3)
 	local t = Instance.new("TextLabel")
 	t.Size = UDim2.fromScale(1, 1)
 	t.BackgroundTransparency = 1
-	t.Font = Enum.Font.GothamBlack
+	t.FontFace = Tema.LetraGruesa
 	t.TextScaled = true
 	t.TextColor3 = color
-	t.TextStrokeTransparency = 0.3
+	t.TextStrokeColor3 = Tema.Fondo
+	t.TextStrokeTransparency = 0.35
 	t.Text = texto
 	t.Parent = gui
 	gui.Parent = r
@@ -226,31 +229,60 @@ local function avanzar()
 	end)
 end
 
--- Contador de golpes y daño acumulado.
+-- Contador de golpes y daño acumulado: número grande fino a la derecha, sin caja.
+local gui = Tema.pantalla("Combate", 1)
 local golpes, acumulado, contadorHasta = 0, 0, 0
-local contador = Instance.new("TextLabel")
-contador.AnchorPoint = Vector2.new(1, 0.5)
-contador.Position = UDim2.new(1, -40, 0.42, 0)
-contador.Size = UDim2.fromOffset(260, 80)
-contador.BackgroundTransparency = 1
-contador.Font = Enum.Font.GothamBlack
-contador.TextScaled = true
-contador.TextColor3 = Color3.new(1, 1, 1)
-contador.TextStrokeTransparency = 0.2
-contador.TextXAlignment = Enum.TextXAlignment.Right
+local contador = Tema.grupo(
+	gui,
+	Vector2.new(1, 0.5),
+	UDim2.new(1, -Config.Hud.Margen, 0.44, 0),
+	Vector2.new(260, 150)
+)
 contador.Visible = false
+local function linea(texto: string, y: number, opciones: Tema.OpcionesTexto): TextLabel
+	local t = Tema.texto(contador, texto, opciones)
+	t.AnchorPoint = Vector2.new(1, 0)
+	t.Position = UDim2.new(1, 0, 0, y)
+	t.TextXAlignment = Enum.TextXAlignment.Right
+	return t
+end
+local cuenta = linea("0", 0, { tam = 84, letra = Tema.LetraGruesa })
+local palabra = linea("", 92, { tam = 16 })
+local suma = linea("", 116, { tam = 14, letra = Tema.LetraFina, transparencia = 0.35 })
+local escalaCuenta = Instance.new("UIScale")
+escalaCuenta.Parent = cuenta
 
 local function contar(danio: number)
 	golpes += 1
 	acumulado += danio
 	contadorHasta = os.clock() + C.ContadorDura
-	contador.Text = string.format(
-		"%d " .. (if golpes == 1 then "GOLPE" else "GOLPES") .. "\n%d",
-		golpes,
-		math.round(acumulado)
-	)
+	cuenta.Text = tostring(golpes)
+	palabra.Text = Tema.espaciar(if golpes == 1 then "GOLPE" else "GOLPES", 3)
+	palabra.TextColor3 = Tema.color(jugador:GetAttribute("Linaje"))
+	suma.Text = string.format("%d de daño", math.round(acumulado))
 	contador.Visible = true
-	contador.Rotation = math.random(-4, 4)
+	escalaCuenta.Scale = 1.25
+	TweenService:Create(escalaCuenta, TweenInfo.new(0.18, Enum.EasingStyle.Quad), { Scale = 1 })
+		:Play()
+end
+
+-- Arriba al centro: nombre y vida del último rival que golpeaste (como la barra de jefe).
+local rival = Tema.grupo(gui, Vector2.new(0.5, 0), UDim2.new(0.5, 0, 0, 52), Vector2.new(520, 50))
+rival.Visible = false
+local nombreRival = Tema.texto(rival, "", { tam = 16, alineado = Enum.TextXAlignment.Center })
+nombreRival.AnchorPoint = Vector2.new(0.5, 0)
+nombreRival.Position = UDim2.fromScale(0.5, 0)
+local _, vidaRival = Tema.barra(rival, Vector2.new(0, 30), 520, 3, Tema.Vida)
+local objetivo: Model? = nil
+local rivalHasta = 0
+
+local function marcarRival(m: Model)
+	objetivo = m
+	rivalHasta = os.clock() + Config.Hud.RivalDura
+	local dueno = Players:GetPlayerFromCharacter(m)
+	local nombre = if dueno then dueno.DisplayName else (m:GetAttribute("Nombre") or m.Name)
+	nombreRival.Text = Tema.espaciar(string.upper(tostring(nombre)), 4)
+	rival.Visible = true
 end
 
 -- Hit-stop: el golpe propio se frena un instante al conectar.
@@ -410,6 +442,7 @@ remoto.OnClientEvent:Connect(function(tipo: string, a: any, b: any, _c: any, d: 
 		numero(a, tostring(math.round(b)), if fuerte then color else Color3.fromRGB(255, 225, 120))
 		if d == personaje then
 			contar(b)
+			marcarRival(a)
 			sacudir(if fuerte then C.SacudidaFuerte else C.Sacudida)
 			if accion and accion.IsPlaying then
 				frenar(accion, C.VelocidadGolpes, C.HitStop)
@@ -448,29 +481,7 @@ remoto.OnClientEvent:Connect(function(tipo: string, a: any, b: any, _c: any, d: 
 	end
 end)
 
--- Barras: vida roja y energía cian, arriba a la izquierda.
-local gui = Instance.new("ScreenGui")
-gui.Name = "Barras"
-gui.ResetOnSpawn = false
-
-local function barra(y: number, color: Color3): Frame
-	local fondo = Instance.new("Frame")
-	fondo.Position = UDim2.fromOffset(16, y)
-	fondo.Size = UDim2.fromOffset(240, 16)
-	fondo.BackgroundColor3 = Color3.fromRGB(27, 31, 42)
-	fondo.BorderSizePixel = 0
-	fondo.Parent = gui
-	local lleno = Instance.new("Frame")
-	lleno.Size = UDim2.fromScale(1, 1)
-	lleno.BackgroundColor3 = color
-	lleno.BorderSizePixel = 0
-	lleno.Parent = fondo
-	return lleno
-end
-
-contador.Parent = gui
-local vida = barra(16, Color3.fromRGB(210, 58, 74))
-local energia = barra(36, Color3.fromRGB(44, 123, 229))
+-- Vida, energía y nivel están en client/Estado.client.luau.
 gui.Parent = jugador:WaitForChild("PlayerGui")
 
 RunService.RenderStepped:Connect(function()
@@ -478,13 +489,13 @@ RunService.RenderStepped:Connect(function()
 		contador.Visible = false
 		golpes, acumulado = 0, 0
 	end
-	local h, p = humanoid, personaje
-	if h and p then
-		vida.Size = UDim2.fromScale(math.clamp(h.Health / h.MaxHealth, 0, 1), 1)
-		local e = p:GetAttribute("Energia")
-		if typeof(e) == "number" then
-			energia.Size = UDim2.fromScale(math.clamp(e / C.Energia, 0, 1), 1)
-		end
+	local o = objetivo
+	local h = o and o:FindFirstChildOfClass("Humanoid")
+	if rival.Visible and (not (o and h and o.Parent) or os.clock() > rivalHasta) then
+		rival.Visible = false
+		objetivo = nil
+	elseif h then
+		vidaRival.Size = UDim2.fromScale(math.clamp(h.Health / math.max(h.MaxHealth, 1), 0, 1), 1)
 	end
 end)
 

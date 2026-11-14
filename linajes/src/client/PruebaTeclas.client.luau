@@ -8,6 +8,7 @@ local RunService = game:GetService("RunService")
 local UserInputService = game:GetService("UserInputService")
 
 local Config = require(ReplicatedStorage:WaitForChild("Shared"):WaitForChild("Config"))
+local Tema = require(script.Parent:WaitForChild("Tema"))
 
 local P = Config.PruebaTeclas
 if not P.Activas then
@@ -160,22 +161,35 @@ RunService.Heartbeat:Connect(function()
 	end
 end)
 
--- Cartel chico con las teclas.
-local gui = Instance.new("ScreenGui")
-gui.Name = "PruebaTeclas"
-gui.ResetOnSpawn = false
-local texto = Instance.new("TextLabel")
-texto.AnchorPoint = Vector2.new(0, 1)
-texto.Position = UDim2.new(0, 12, 1, -12)
+-- Controles escondidos: abajo a la derecha solo dice "H  CONTROLES"; H muestra u oculta la lista.
+local gui = Tema.pantalla("PruebaTeclas", 2)
+local esquina = Tema.grupo(
+	gui,
+	Vector2.new(1, 1),
+	UDim2.new(1, -Config.Hud.Margen, 1, -48),
+	Vector2.new(700, 120)
+)
+local pista = Tema.texto(esquina, "H  CONTROLES", {
+	tam = 12,
+	letra = Tema.LetraFina,
+	transparencia = 0.5,
+	espaciado = 2,
+})
+pista.AnchorPoint = Vector2.new(1, 1)
+pista.Position = UDim2.fromScale(1, 1)
+local texto =
+	Tema.texto(esquina, P.Cartel, { tam = 14, letra = Tema.LetraFina, transparencia = 0.1 })
+texto.AnchorPoint = Vector2.new(1, 1)
+texto.Position = UDim2.new(1, 0, 1, -24)
 texto.AutomaticSize = Enum.AutomaticSize.XY
-texto.BackgroundColor3 = Color3.new(0, 0, 0)
-texto.BackgroundTransparency = 0.45
-texto.TextColor3 = Color3.new(1, 1, 1)
-texto.TextSize = 14
-texto.Font = Enum.Font.GothamMedium
-texto.TextXAlignment = Enum.TextXAlignment.Left
-texto.Text = P.Cartel
-texto.Parent = gui
+texto.TextXAlignment = Enum.TextXAlignment.Right
+texto.LineHeight = 1.3
+texto.Visible = false
+UserInputService.InputBegan:Connect(function(entrada, usado)
+	if not usado and entrada.KeyCode == Config.Hud.TeclaControles then
+		texto.Visible = not texto.Visible
+	end
+end)
 gui.Parent = jugador:WaitForChild("PlayerGui")
 
 jugador.CharacterAdded:Connect(cargar)

@@ -27,7 +27,7 @@ Pegá cada bloque **por separado** en Gemini (en inglés). La línea de arriba d
 
 **Referencia 1: Hoja de efectos: Efectos de Piroquinesis** → guardar como `linajes/arte/referencias/gemini/efecto-efectosdepiroquinesis/ref-1.png`
 ```
-VFX concept sheet for a stylized Roblox superhero brawler at night: pyrokinesis: fireball with orange #f2652b core, cone flamethrower, low wall of fire, burning status flicker. Bold simple shapes readable on a phone, dark background, no text. Style: dark comic-book 3D game art, stylized Roblox-scale proportions, heavy shape detail (layered plates, seams, rivets, bevels), wet night city lit by neon, faction color only in accents, worn textures (scratches, light edges, grime in joints). Original design: no DC or Marvel characters, no existing game assets, no logos, no readable text, no watermarks.
+VFX concept sheet for a stylized Roblox superhero brawler at night: pyrokinesis: fireball with orange #f2652b core, cone flamethrower, low wall of fire, burning status flicker. Bold simple shapes readable on a phone, dark background, no text. Style: stylized 3D game VFX concept sheet, bold directional silhouettes with dark comic ink outlines and crisp cel-shaded energy cores (NO blurry white glow blobs, NO generic spark stars), dark moody slate background #080A0E, legible at phone scale. Original design: no DC or Marvel characters, no existing game assets, no logos, no readable text, no watermarks.
 ```
 
 ## 4. El bloque para Claude

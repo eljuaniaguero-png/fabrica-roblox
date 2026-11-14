@@ -1164,6 +1164,47 @@ Config.Niveles = {
 	XpPorBaja = 60,
 }
 
+-- HUD (estilo r0aring/Bladebound): poco, fino, sin cajas; el único color fuerte es el del Linaje.
+-- Maqueta para Figma en arte/hud/hud-maqueta.svg (medidas para 1080 px de alto).
+Config.Hud = {
+	Colores = {
+		Hueso = "#EDE6D6", -- textos y líneas
+		Vida = "#B8343A",
+		Danio = "#E8C9A0", -- lo que se acaba de perder, se vacía detrás de la vida
+		Xp = "#C9A55A",
+		Fondo = "#080A0E",
+	},
+	AltoBase = 1080, -- todo se escala según el alto de la pantalla
+	EscalaMin = 0.62,
+	EscalaMax = 1.25,
+	Margen = 72,
+	AnchoVida = 380,
+	AnchoEnergia = 300,
+	TamRombo = 92,
+	SeparacionRombos = 112,
+	DanioEspera = 0.45, -- segundos antes de que se vacíe la marca de daño
+	BarraMaton = { Ancho = 86, Alto = 4, Altura = 4, Distancia = 80 }, -- barra fina sobre cada matón
+	RivalDura = 4, -- segundos que se ve la barra del rival después del último golpe
+	TeclaControles = Enum.KeyCode.H,
+	-- Imágenes de arte/hud/listas/ (hechas con Gemini). Vacías = se dibujan con líneas.
+	Imagenes = {
+		MarcoRombo = "",
+		Ornamento = "",
+		Vineta = "",
+		Iconos = {
+			PunoSismico = "",
+			GolpePiso = "",
+			Embestida = "",
+			Contragolpe = "",
+			PasoFantasma = "",
+			LluviaGolpes = "",
+			BolaFuego = "",
+			Chorro = "",
+			MuroFuego = "",
+		},
+	},
+}
+
 -- Sonidos del combate (ForgeGUI). Se pueden cambiar por propios.
 Config.Sonidos = {
 	Variacion = 0.12,

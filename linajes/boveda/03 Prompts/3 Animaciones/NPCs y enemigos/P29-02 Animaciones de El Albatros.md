@@ -27,7 +27,7 @@ Pegá cada bloque **por separado** en Gemini (en inglés). La línea de arriba d
 
 **Referencia 1: Poses de El Albatros** → guardar como `linajes/arte/referencias/gemini/anim-elalbatros/poses.png`
 ```
-Animation pose sheet of a short wide harbor boss in a navy captain's coat with a harpoon cane for a stylized Roblox superhero game: Apoyado en el bastón-arpón (loop 90).; Contar monedas (loop 60).; Saludar tocándose la gorra (30).; Hablar señalando con el bastón (loop 60).; Enojado: golpe del bastón al piso (30).. Grey background. Style: dark comic-book 3D game art, stylized Roblox-scale proportions, heavy shape detail (layered plates, seams, rivets, bevels), wet night city lit by neon, faction color only in accents, worn textures (scratches, light edges, grime in joints). Original design: no DC or Marvel characters, no existing game assets, no logos, no readable text, no watermarks.
+Animation pose sheet of a short wide harbor boss in a navy captain's coat with a harpoon cane for a stylized Roblox superhero game: Apoyado en el bastón-arpón (loop 90).; Contar monedas (loop 60).; Saludar tocándose la gorra (30).; Hablar señalando con el bastón (loop 60).; Enojado: golpe del bastón al piso (30).. Grey background. Style: stylized dark graphic-novel comic 3D game art, crisp blocky Roblox R15 proportions, clean flat beveled planes with sharp edges and subtle painted ink seam lines (NO rounded pillows, NO noisy rivets, NO clay surface), muted weathered industrial harbor palette illuminated by directional sodium-orange glow against cool slate fog, high value separation, zero cyberpunk neon signs. Original design: no DC or Marvel characters, no existing game assets, no logos, no readable text, no watermarks.
 ```
 
 ## 4. El bloque para Claude

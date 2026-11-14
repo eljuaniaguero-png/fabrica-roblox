@@ -6,9 +6,11 @@ local CollectionService = game:GetService("CollectionService")
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService = game:GetService("RunService")
+local TweenService = game:GetService("TweenService")
 local UserInputService = game:GetService("UserInputService")
 
 local Config = require(ReplicatedStorage:WaitForChild("Shared"):WaitForChild("Config"))
+local Tema = require(script.Parent:WaitForChild("Tema"))
 local remoto = ReplicatedStorage:WaitForChild("Poderes") :: RemoteEvent
 
 local P = Config.Poderes
@@ -173,43 +175,104 @@ UserInputService.InputBegan:Connect(function(entrada, usado)
 	end
 end)
 
--- Cartel con el Linaje y las recargas.
-local gui = Instance.new("ScreenGui")
-gui.Name = "Poderes"
-gui.ResetOnSpawn = false
-local texto = Instance.new("TextLabel")
-texto.AnchorPoint = Vector2.new(0.5, 1)
-texto.Position = UDim2.new(0.5, 0, 1, -16)
-texto.Size = UDim2.fromOffset(620, 54)
-texto.BackgroundColor3 = Color3.fromRGB(14, 16, 22)
-texto.BackgroundTransparency = 0.3
-texto.TextColor3 = Color3.new(1, 1, 1)
-texto.Font = Enum.Font.GothamBold
-texto.TextSize = 15
-texto.Parent = gui
+-- Abajo al centro: los tres poderes en rombos, con la recarga encima del ícono.
+local H = Config.Hud
+local gui = Tema.pantalla("Poderes", 1)
+local ANCHO = H.SeparacionRombos * 2 + H.TamRombo + 160
+local caja =
+	Tema.grupo(gui, Vector2.new(0.5, 1), UDim2.new(0.5, 0, 1, -40), Vector2.new(ANCHO, 150))
+local medio = ANCHO / 2
+Tema.ornamento(caja, Vector2.new(medio, 24), 360)
+local cambia = Tema.texto(
+	caja,
+	"T  CAMBIA",
+	{ tam = 12, letra = Tema.LetraFina, transparencia = 0.5, espaciado = 2 }
+)
+cambia.Position = UDim2.fromOffset(medio + H.SeparacionRombos + H.TamRombo / 2 + 16, 82)
+cambia.Visible = P.CambioLibre == true
+
+type Ranura =
+	{ caja: Frame, icono: ImageLabel, letra: TextLabel, recarga: TextLabel, lista: boolean }
+local ranuras: { [string]: Ranura } = {}
+for i, tecla in { "Z", "X", "C" } do
+	local centro = Vector2.new(medio + (i - 2) * H.SeparacionRombos, 92)
+	local r = Tema.rombo(caja, centro, H.TamRombo, true)
+	local icono = Instance.new("ImageLabel")
+	icono.AnchorPoint = Vector2.new(0.5, 0.5)
+	icono.Position = UDim2.fromScale(0.5, 0.5)
+	icono.Size = UDim2.fromOffset(H.TamRombo * 0.6, H.TamRombo * 0.6)
+	icono.BackgroundTransparency = 1
+	icono.ImageColor3 = Tema.Hueso
+	icono.ZIndex = 5
+	icono.Parent = r
+	-- Sin ícono subido, la letra va adentro del rombo en el color del Linaje.
+	local letra = Tema.texto(r, tecla, { tam = 22, alineado = Enum.TextXAlignment.Center })
+	letra.AutomaticSize = Enum.AutomaticSize.None
+	letra.Size = UDim2.fromScale(1, 1)
+	letra.ZIndex = 5
+	local recarga = Tema.texto(
+		r,
+		"",
+		{ tam = 30, letra = Tema.LetraGruesa, alineado = Enum.TextXAlignment.Center }
+	)
+	recarga.AutomaticSize = Enum.AutomaticSize.None
+	recarga.Size = UDim2.fromScale(1, 1)
+	recarga.ZIndex = 6
+	recarga.TextStrokeTransparency = 0.2
+	local abajo = Tema.texto(
+		caja,
+		tecla,
+		{ tam = 14, transparencia = 0.3, alineado = Enum.TextXAlignment.Center }
+	)
+	abajo.AnchorPoint = Vector2.new(0.5, 0)
+	abajo.Position = UDim2.fromOffset(centro.X, centro.Y + H.TamRombo / 2 + 2)
+	ranuras[tecla] = { caja = r, icono = icono, letra = letra, recarga = recarga, lista = true }
+end
 gui.Parent = jugador:WaitForChild("PlayerGui")
 
+-- Destello corto del rombo cuando el poder vuelve a estar listo.
+local function avisarListo(r: Ranura, color: Color3)
+	local escala = Instance.new("UIScale")
+	escala.Scale = 1.18
+	escala.Parent = r.caja
+	TweenService:Create(escala, TweenInfo.new(0.25, Enum.EasingStyle.Back), { Scale = 1 }):Play()
+	r.icono.ImageColor3 = color
+	TweenService:Create(r.icono, TweenInfo.new(0.5), { ImageColor3 = Tema.Hueso }):Play()
+	task.delay(0.3, function()
+		escala:Destroy()
+	end)
+end
+
+local linajeVisto: unknown = nil
 RunService.RenderStepped:Connect(function()
 	local linaje = jugador:GetAttribute("Linaje")
 	local datos = typeof(linaje) == "string" and P.Linajes[linaje]
+	caja.Visible = datos ~= nil and datos ~= false
 	if not datos then
 		return
 	end
-	local partes = {}
-	for _, tecla in { "Z", "X", "C" } do
+	local color = Tema.color(linaje)
+	local nuevo = linaje ~= linajeVisto
+	linajeVisto = linaje
+	for tecla, r in ranuras do
 		local d = (datos :: any)[tecla]
+		if nuevo then
+			local id = (H.Imagenes.Iconos :: any)[d.Accion] or ""
+			r.icono.Image = id
+			r.icono.Visible = id ~= ""
+			r.letra.Visible = id == ""
+			r.letra.TextColor3 = color
+		end
 		local falta = (listo[linaje .. tecla] or 0) - os.clock()
-		table.insert(
-			partes,
-			string.format(
-				"%s %s%s",
-				tecla,
-				d.Nombre,
-				if falta > 0 then string.format(" (%.0f)", math.ceil(falta)) else ""
-			)
-		)
+		local lista = falta <= 0
+		r.recarga.Text = if lista then "" else tostring(math.ceil(falta))
+		r.icono.ImageTransparency = if lista then 0 else 0.7
+		r.letra.TextTransparency = if lista then 0 else 0.7
+		if lista and not r.lista and not nuevo then
+			avisarListo(r, color)
+		end
+		r.lista = lista
 	end
-	texto.Text = string.format("%s  (T cambia)\n%s", linaje, table.concat(partes, "   "))
 end)
 
 jugador.CharacterAdded:Connect(cargar)

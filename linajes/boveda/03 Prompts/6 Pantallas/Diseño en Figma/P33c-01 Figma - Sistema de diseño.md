@@ -27,7 +27,7 @@ Pegá cada bloque **por separado** en Gemini (en inglés). La línea de arriba d
 
 **Referencia 1: Referencia: Sistema de diseño** → guardar como `linajes/arte/referencias/gemini/interfaz/sistemadediseo.png`
 ```
-UI mockup for an original dark comic-book superhero game: a UI design system sheet: color swatches, type scale, buttons in four states, bars, cooldown icons, skill nodes, tabs, windows. High contrast, rounded shapes, readable on a phone, no readable text. Style: dark comic-book 3D game art, stylized Roblox-scale proportions, heavy shape detail (layered plates, seams, rivets, bevels), wet night city lit by neon, faction color only in accents, worn textures (scratches, light edges, grime in joints). Original design: no DC or Marvel characters, no existing game assets, no logos, no readable text, no watermarks.
+UI mockup for an original dark comic-book superhero game: a UI design system sheet: color swatches, type scale, buttons in four states, bars, cooldown icons, skill nodes, tabs, windows. High contrast, sharp angular shapes, readable on a phone, no readable text. Style: ultra-minimal dark editorial game UI, transparent HUD over a soft #080A0E edge vignette, flat sharp-cornered panels #0D1017 at 88% with 1px bone-white #EDE6D6 hairline borders, condensed uppercase Oswald-like type, faction color only in thin accents (NO rounded boxes, NO cyan cyberpunk borders, NO ornate silver frames, NO rainbow gradients). Original design: no DC or Marvel characters, no existing game assets, no logos, no readable text, no watermarks.
 ```
 
 ## 4. El bloque para Claude
@@ -39,7 +39,7 @@ imágenes de linajes/arte/referencias/gemini/interfaz/. Código en linajes/arte/
 números en linajes/src/shared/Config.luau, stylua y selene sin errores.
 
 - En el archivo de Figma "Linajes del Eclipse - Interfaz" (crealo si no existe, con el conector de Figma), página "Sistema de diseño".
-- Contenido: variables de color (fondo #0e1016, superficie, tinta, eclipse #f2652b, corona #ffb347, vida #d23a4a, energía #2c7be5, escudo #3fc1b0, bandos y rarezas), estilos de texto (Saira Condensed títulos, Barlow texto) y componentes: botón (normal, encima, apretado, bloqueado), barra, ícono con recarga, nodo del árbol, pestaña, ventana, fila de jugador, aviso.
+- Contenido: variables de color (fondo #0e1016, superficie, tinta, eclipse #f2652b, corona #ffb347, vida #d23a4a, energía #2c7be5, escudo #3fc1b0, bandos y rarezas), estilos de texto (Oswald SemiBold títulos, Oswald Regular texto, Oswald Light metadatos) y componentes: botón (normal, encima, apretado, bloqueado), barra, ícono con recarga, nodo del árbol, pestaña, ventana, fila de jugador, aviso.
 - Dos marcos: compu 1920x1080 y celular 844x390 con los bordes seguros marcados.
 - Usá los componentes del Sistema de diseño (P33c-01) y los íconos de linajes/arte/2d/.
 - Mostrame capturas y el link. Con mi OK: piezas que no se hagan con Frames como PNG @2x en linajes/arte/2d/figma/ y medidas en linajes/arte/2d/figma/medidas.md.

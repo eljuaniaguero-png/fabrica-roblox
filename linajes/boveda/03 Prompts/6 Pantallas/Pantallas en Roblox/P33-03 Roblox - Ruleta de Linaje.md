@@ -26,7 +26,7 @@ Pegá cada bloque **por separado** en Gemini (en inglés). La línea de arriba d
 
 **Referencia 1: Cómo se ve en el juego: Ruleta de Linaje** → guardar como `linajes/arte/referencias/gemini/interfaz/ruletadelinaje-juego.png`
 ```
-In-game screenshot mockup on a phone of an original dark superhero Roblox game showing: roulette wheel with rarity list and percentages, pity counter, spin button. No readable text. Style: dark comic-book 3D game art, stylized Roblox-scale proportions, heavy shape detail (layered plates, seams, rivets, bevels), wet night city lit by neon, faction color only in accents, worn textures (scratches, light edges, grime in joints). Original design: no DC or Marvel characters, no existing game assets, no logos, no readable text, no watermarks.
+In-game screenshot mockup on a phone of an original dark superhero Roblox game showing: roulette wheel with rarity list and percentages, pity counter, spin button. No readable text. Style: ultra-minimal dark editorial game UI, transparent HUD over a soft #080A0E edge vignette, flat sharp-cornered panels #0D1017 at 88% with 1px bone-white #EDE6D6 hairline borders, condensed uppercase Oswald-like type, faction color only in thin accents (NO rounded boxes, NO cyan cyberpunk borders, NO ornate silver frames, NO rainbow gradients). Original design: no DC or Marvel characters, no existing game assets, no logos, no readable text, no watermarks.
 ```
 
 ## 4. El bloque para Claude
@@ -40,7 +40,7 @@ números en linajes/src/shared/Config.luau, stylua y selene sin errores.
 - Mirá la página "Ruleta de Linaje" del Figma y linajes/arte/2d/figma/medidas.md: Roblox tiene que quedar igual (si este texto y Figma no coinciden, manda Figma).
 - Módulo linajes/src/client/ui/ruletadelinaje.luau. Contenido: ruleta a la izquierda, lista por rareza con % a la derecha (en la Beta, solo 3 Comunes con 33,3 % y aviso), contador Seguro N/40, botón Tirar (1 ficha).
 - Frames, UICorner, UIStroke y UIGradient donde se pueda; imágenes subidas por MCP solo donde no, con ID en Config.luau.
-- Fuentes parecidas a Saira Condensed y Barlow con Font.new.
+- Solo Oswald (SemiBold títulos, Regular texto, Light metadatos) desde linajes/src/client/Tema.luau; nada de GothamBlack ni otras familias.
 - Captura en 1920x1080 y 844x390 al lado del marco de Figma.
 
 PRUEBA: Play en compu y en el emulador de celular (844x390), consola sin rojo, captura. Mostrámela y

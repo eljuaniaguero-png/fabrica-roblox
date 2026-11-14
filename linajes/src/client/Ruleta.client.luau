@@ -5,41 +5,69 @@ local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local Config = require(ReplicatedStorage:WaitForChild("Shared"):WaitForChild("Config"))
+local Tema = require(script.Parent:WaitForChild("Tema"))
 local remoto = ReplicatedStorage:WaitForChild("Ruleta") :: RemoteEvent
 
 local R = Config.Ruleta
 local jugador = Players.LocalPlayer
 
-local gui = Instance.new("ScreenGui")
-gui.Name = "Ruleta"
-gui.ResetOnSpawn = false
+local gui = Tema.pantalla("Ruleta", 5)
 
+-- Arriba a la derecha: solo texto y una línea, sin caja.
+local esquina = Tema.grupo(
+	gui,
+	Vector2.new(1, 0),
+	UDim2.new(1, -Config.Hud.Margen, 0, 48),
+	Vector2.new(200, 64)
+)
 local abrir = Instance.new("TextButton")
-abrir.AnchorPoint = Vector2.new(1, 0)
-abrir.Position = UDim2.new(1, -16, 0, 60)
-abrir.Size = UDim2.fromOffset(170, 40)
-abrir.BackgroundColor3 = Color3.fromRGB(242, 101, 43)
-abrir.TextColor3 = Color3.new(1, 1, 1)
-abrir.Font = Enum.Font.GothamBold
-abrir.TextSize = 15
-abrir.Parent = gui
+abrir.Size = UDim2.fromScale(1, 1)
+abrir.BackgroundTransparency = 1
+abrir.Text = ""
+abrir.Parent = esquina
+local titulo = Tema.texto(esquina, "RULETA", { tam = 16, espaciado = 4 })
+titulo.AnchorPoint = Vector2.new(1, 0)
+titulo.Position = UDim2.fromScale(1, 0)
+local raya = Instance.new("Frame")
+raya.AnchorPoint = Vector2.new(1, 0)
+raya.Position = UDim2.new(1, 0, 0, 28)
+raya.Size = UDim2.fromOffset(120, 1)
+raya.BackgroundColor3 = Tema.Hueso
+raya.BackgroundTransparency = 0.6
+raya.BorderSizePixel = 0
+raya.Parent = esquina
+local fichasTexto =
+	Tema.texto(esquina, "", { tam = 13, letra = Tema.LetraFina, transparencia = 0.4 })
+fichasTexto.AnchorPoint = Vector2.new(1, 0)
+fichasTexto.Position = UDim2.new(1, 0, 0, 34)
+abrir.MouseEnter:Connect(function()
+	raya.BackgroundTransparency = 0.1
+end)
+abrir.MouseLeave:Connect(function()
+	raya.BackgroundTransparency = 0.6
+end)
 
 local panel = Instance.new("Frame")
 panel.AnchorPoint = Vector2.new(0.5, 0.5)
 panel.Position = UDim2.fromScale(0.5, 0.5)
 panel.Size = UDim2.fromOffset(380, 330)
-panel.BackgroundColor3 = Color3.fromRGB(14, 16, 22)
+panel.BackgroundColor3 = Tema.Fondo
+panel.BackgroundTransparency = 0.15
 panel.BorderSizePixel = 0
 panel.Visible = false
 panel.Parent = gui
+local bordePanel = Instance.new("UIStroke")
+bordePanel.Color = Tema.Hueso
+bordePanel.Transparency = 0.7
+bordePanel.Parent = panel
 
 local lista = Instance.new("TextLabel")
 lista.Position = UDim2.fromOffset(20, 14)
 lista.Size = UDim2.new(1, -40, 0, 180)
 lista.BackgroundTransparency = 1
-lista.TextColor3 = Color3.fromRGB(238, 240, 244)
-lista.Font = Enum.Font.GothamMedium
-lista.TextSize = 17
+lista.TextColor3 = Tema.Hueso
+lista.FontFace = Tema.LetraFina
+lista.TextSize = 18
 lista.TextXAlignment = Enum.TextXAlignment.Left
 lista.TextYAlignment = Enum.TextYAlignment.Top
 lista.Parent = panel
@@ -48,8 +76,8 @@ local resultado = Instance.new("TextLabel")
 resultado.Position = UDim2.fromOffset(20, 200)
 resultado.Size = UDim2.new(1, -40, 0, 46)
 resultado.BackgroundTransparency = 1
-resultado.TextColor3 = Color3.fromRGB(255, 179, 71)
-resultado.Font = Enum.Font.GothamBlack
+resultado.TextColor3 = Tema.Xp
+resultado.FontFace = Tema.LetraGruesa
 resultado.TextScaled = true
 resultado.Text = ""
 resultado.Parent = panel
@@ -57,11 +85,16 @@ resultado.Parent = panel
 local tirar = Instance.new("TextButton")
 tirar.Position = UDim2.new(0, 20, 1, -70)
 tirar.Size = UDim2.new(1, -40, 0, 54)
-tirar.BackgroundColor3 = Color3.fromRGB(242, 101, 43)
-tirar.TextColor3 = Color3.new(1, 1, 1)
-tirar.Font = Enum.Font.GothamBold
+tirar.BackgroundTransparency = 1
+tirar.TextColor3 = Tema.Hueso
+tirar.FontFace = Tema.Letra
 tirar.TextSize = 18
 tirar.Parent = panel
+local bordeTirar = Instance.new("UIStroke")
+bordeTirar.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+bordeTirar.Color = Tema.Hueso
+bordeTirar.Transparency = 0.4
+bordeTirar.Parent = tirar
 
 local nombres: { [string]: string } = {}
 do
@@ -88,7 +121,8 @@ local function actualizar()
 	local fichas = jugador:GetAttribute("Fichas")
 	local linaje = jugador:GetAttribute("Linaje")
 	local n = if typeof(fichas) == "number" then fichas else 0
-	abrir.Text = string.format("Ruleta · %d Fichas", n)
+	fichasTexto.Text =
+		Tema.espaciar(string.format("%d %s", n, if n == 1 then "FICHA" else "FICHAS"), 2)
 	tirar.Text = if linaje == nil
 		then "Tirar gratis"
 		else string.format("Tirar por 1 Ficha (tenés %d)", n)

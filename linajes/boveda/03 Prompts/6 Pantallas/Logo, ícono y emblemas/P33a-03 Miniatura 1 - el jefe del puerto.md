@@ -29,7 +29,7 @@ Pegá cada bloque **por separado** en Gemini (en inglés). La línea de arriba d
 
 **Referencia 1: Miniatura 1: el jefe del puerto (imagen final, 4 versiones)** → guardar como `linajes/arte/referencias/gemini/logo/miniatura-1.png`
 ```
-Roblox thumbnail 16:9, dark comic-book style: three blocky heroes jumping toward a huge brute with hydraulic piston arms and a red-visor welding helmet at a rusty foggy harbor with cranes and containers, giant solar eclipse in the sky, cyan neon, sparks, motion lines. Original designs only. No text.
+Roblox thumbnail 16:9, dark comic-book style: three blocky heroes jumping toward a huge brute with hydraulic piston arms and a red-visor welding helmet at a rusty foggy harbor with cranes and containers, giant solar eclipse in the sky, sodium-orange glow against cool slate fog, sparks, motion lines. Original designs only. No text.
 ```
 
 ## 4. El bloque para Claude

@@ -27,7 +27,7 @@ Pegá cada bloque **por separado** en Gemini (en inglés). La línea de arriba d
 
 **Referencia 1: Poses de Matón con implantes** → guardar como `linajes/arte/referencias/gemini/anim-matonconimplantes/poses.png`
 ```
-Animation pose sheet of a harbor thug with a steel piston arm for a stylized Roblox superhero game: Las mismas que el matón del puerto.; Puño hidráulico (36): Aviso 14, carga, Impacto 24.. Grey background. Style: dark comic-book 3D game art, stylized Roblox-scale proportions, heavy shape detail (layered plates, seams, rivets, bevels), wet night city lit by neon, faction color only in accents, worn textures (scratches, light edges, grime in joints). Original design: no DC or Marvel characters, no existing game assets, no logos, no readable text, no watermarks.
+Animation pose sheet of a harbor thug with a steel piston arm for a stylized Roblox superhero game: Las mismas que el matón del puerto.; Puño hidráulico (36): Aviso 14, carga, Impacto 24.. Grey background. Style: stylized dark graphic-novel comic 3D game art, crisp blocky Roblox R15 proportions, clean flat beveled planes with sharp edges and subtle painted ink seam lines (NO rounded pillows, NO noisy rivets, NO clay surface), muted weathered industrial harbor palette illuminated by directional sodium-orange glow against cool slate fog, high value separation, zero cyberpunk neon signs. Original design: no DC or Marvel characters, no existing game assets, no logos, no readable text, no watermarks.
 ```
 
 ## 4. El bloque para Claude
