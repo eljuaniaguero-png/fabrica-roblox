@@ -30,6 +30,9 @@ local function cargar(personaje: Model)
 		FuerzaBruta = Config.Animaciones.linaje_fuerzabruta,
 		Reflejos = Config.Animaciones.linaje_reflejos,
 		Piroquinesis = Config.Animaciones.linaje_piroquinesis,
+		Electro = Config.Animaciones.linaje_electro,
+		Criogenia = Config.Animaciones.linaje_criogenia,
+		Telequinesis = Config.Animaciones.linaje_telequinesis,
 	}
 	for linaje, grupo in grupos do
 		for nombre, id in grupo do
@@ -151,6 +154,10 @@ local function usar(tecla: string)
 				accion:Stop(0.1)
 			end
 		end)
+	elseif datos.Accion == "PistaHelada" and r then
+		-- Patina sobre la pista que arma adelante (el servidor la crea).
+		tocar(linaje .. "PistaHelada")
+		mover(r.CFrame.LookVector * (datos.Alcance / 0.6), 0.6)
 	elseif datos.Accion == "PasoFantasma" then
 		tocar(linaje .. "PasoFantasma")
 		pasoFantasma(datos.Alcance)

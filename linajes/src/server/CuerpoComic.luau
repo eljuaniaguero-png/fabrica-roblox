@@ -71,6 +71,28 @@ local function pegar(
 	copia.Parent = personaje
 end
 
+-- Cambia la cara de un personaje vestido con CuerpoComic; nil restaura su cara base.
+function CuerpoComic.cara(personaje: Model, textura: string?)
+	local destino = textura or (personaje:GetAttribute("CaraBase") :: string?)
+	if typeof(destino) ~= "string" or destino == "" then
+		return
+	end
+	local cabeza = personaje:FindFirstChild("Cuerpo_Head")
+	if not cabeza then
+		return
+	end
+	local decal = cabeza:FindFirstChild("Cara")
+	if decal and decal:IsA("Decal") then
+		decal.Texture = destino
+	else
+		local nueva = Instance.new("Decal")
+		nueva.Name = "Cara"
+		nueva.Face = Enum.NormalId.Front
+		nueva.Texture = destino
+		nueva.Parent = cabeza
+	end
+end
+
 -- Viste al personaje. Con `apariencia` usa lo elegido en el creador; sin ella, al azar fijo por
 -- `semilla` (maniquí de práctica). Si ya estaba vestido, saca lo anterior primero.
 function CuerpoComic.vestir(personaje: Model, semilla: number, apariencia: Apariencia?)
@@ -115,18 +137,8 @@ function CuerpoComic.vestir(personaje: Model, semilla: number, apariencia: Apari
 			warn("CuerpoComic: falta la pieza", nombre)
 		end
 	end
-	local cabeza = personaje:FindFirstChild("Cuerpo_Head")
-	if cabeza then
-		local vieja = cabeza:FindFirstChild("Cara")
-		if vieja then
-			vieja:Destroy()
-		end
-		local decal = Instance.new("Decal")
-		decal.Name = "Cara"
-		decal.Face = Enum.NormalId.Front
-		decal.Texture = cara
-		decal.Parent = cabeza
-	end
+	personaje:SetAttribute("CaraBase", cara)
+	CuerpoComic.cara(personaje, cara)
 end
 
 return CuerpoComic

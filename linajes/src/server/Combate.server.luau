@@ -79,15 +79,30 @@ local function enZona(posicion: Vector3): boolean
 	return (Vector3.new(posicion.X, 0, posicion.Z) - A.ZonaCentro).Magnitude <= A.ZonaRadio
 end
 
-local function aturdir(personaje: Model)
+local EXP_COMIC = Config.Cuerpo.Comic.Expresiones
+
+local function actualizarCaraEstado(personaje: Model, textura: string?)
+	local hum = personaje:FindFirstChildOfClass("Humanoid")
+	if hum and hum.Health > 0 then
+		CuerpoComic.cara(personaje, textura)
+	end
+end
+
+local function aturdir(personaje: Model, tiempo: number?)
+	local dura = tiempo or C.AturdeParry
 	local e = estadoDe(personaje)
 	local ahora = os.clock()
-	e.aturdidoHasta = ahora + C.AturdeParry
+	if ahora + dura <= e.aturdidoHasta then
+		return
+	end
+	e.aturdidoHasta = ahora + dura
 	e.bloqueoDesde = nil
 	personaje:SetAttribute("Aturdido", true)
-	task.delay(C.AturdeParry, function()
+	actualizarCaraEstado(personaje, EXP_COMIC.dolor)
+	task.delay(dura, function()
 		if os.clock() >= e.aturdidoHasta - 0.01 then
 			personaje:SetAttribute("Aturdido", false)
+			actualizarCaraEstado(personaje, nil)
 		end
 	end)
 end
@@ -101,11 +116,23 @@ local function frenar(personaje: Model, tiempo: number)
 	e.aturdidoHasta = hasta
 	e.bloqueoDesde = nil
 	personaje:SetAttribute("Frenado", true)
+	actualizarCaraEstado(personaje, EXP_COMIC.dolor)
 	task.delay(tiempo, function()
 		if os.clock() >= e.aturdidoHasta - 0.01 then
 			personaje:SetAttribute("Frenado", false)
+			actualizarCaraEstado(personaje, nil)
 		end
 	end)
+end
+
+-- Un NPC cerca de un jugador queda con la física en ese cliente, que pisa la velocidad que pone el
+-- servidor. Antes de empujarlo, el servidor la retoma.
+local function tomarFisica(raiz: BasePart)
+	if not raiz.Anchored then
+		pcall(function()
+			raiz:SetNetworkOwner(nil)
+		end)
+	end
 end
 
 local function empujar(objetivo: Model, raiz: BasePart, direccion: Vector3, tipo: string)
@@ -123,6 +150,7 @@ local function empujar(objetivo: Model, raiz: BasePart, direccion: Vector3, tipo
 	if jugador then
 		remoto:FireClient(jugador, "Empuje", velocidad)
 	else
+		tomarFisica(raiz)
 		raiz.AssemblyLinearVelocity = velocidad
 	end
 end
@@ -208,6 +236,7 @@ pegarA = function(atacante: Model, objetivo: Model, danio: number, tipo: string,
 	local estabaVivo = h.Health > 0
 	h:TakeDamage(danio)
 	if estabaVivo and h.Health <= 0 then
+		CuerpoComic.cara(objetivo, EXP_COMIC.derrotado)
 		local ganador = Players:GetPlayerFromCharacter(atacante)
 		-- Solo cuentan los jugadores: el maniquí no da Fichas.
 		if ganador and Players:GetPlayerFromCharacter(objetivo) then
@@ -298,10 +327,17 @@ local function pedirGolpe(personaje: Model, e: Estado, variante: unknown)
 	e.libreDesde = ahora + (g.Espera + g.Recarga) * C.Tolerancia
 	local esFuerte = g.Tipo == "Rompe" or g.Tipo == "Lanza" or g.Tipo == "Piso"
 	remoto:FireAllClients("Ataca", personaje, math.max(e.paso, 1), esFuerte)
+	-- Estática (pasiva de Electro): el 4.º golpe del combo electrocuta.
+	local danio = g.Danio
+	local jugador = Players:GetPlayerFromCharacter(personaje)
+	if jugador and jugador:GetAttribute("Linaje") == "Electro" and e.paso == #C.Golpes then
+		danio += Config.Poderes.EstaticaDanio
+		remoto:FireAllClients("Estatica", personaje)
+	end
 	task.delay(g.Impacto, function()
 		resolverGolpe(
 			personaje,
-			g.Danio,
+			danio,
 			g.Tipo,
 			if g.Tipo == "Normal" then C.Alcance else C.AlcancePatada
 		)
@@ -401,6 +437,21 @@ api.Name = "CombateApi"
 api.OnInvoke = function(accion: string, a: Model, b: any, c: any, d: any, e2: any)
 	if accion == "Pegar" then
 		pegarA(a, b, c, d, e2)
+	elseif accion == "Aturdir" then
+		-- Descarga de Electro, congelado de Criogenia: no se mueve ni ataca por `b` segundos.
+		aturdir(a, b)
+	elseif accion == "Mover" then
+		-- Levantar de Telequinesis: le pone una velocidad (en el cliente si es un jugador).
+		local _, r = partes(a)
+		if r then
+			local jugador = Players:GetPlayerFromCharacter(a)
+			if jugador then
+				remoto:FireClient(jugador, "Empuje", b)
+			else
+				tomarFisica(r)
+				r.AssemblyLinearVelocity = b
+			end
+		end
 	elseif accion == "Contra" then
 		local e = estadoDe(a)
 		e.contraHasta = os.clock() + b
@@ -538,6 +589,9 @@ local function ropaMaton(m: Model, numero: number)
 			copia.Parent = m
 		end
 	end
+	local caraMaton = Config.Cuerpo.Comic.CarasNpc.Maton
+	m:SetAttribute("CaraBase", caraMaton)
+	CuerpoComic.cara(m, caraMaton)
 end
 
 -- Borde rojo para distinguirlo de un jugador. La barra de vida la dibuja el cliente.

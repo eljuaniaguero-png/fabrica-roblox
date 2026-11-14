@@ -2,6 +2,7 @@
 -- Golpe por capas + geometría 3D cómic: tajos, anillos inclinados, luz dinámica, escudo, parry y dash.
 -- Sin blanco puro: el núcleo es Hueso y la tinta oscura define la silueta para que el Bloom no queme la forma.
 
+local CollectionService = game:GetService("CollectionService")
 local Debris = game:GetService("Debris")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local TweenService = game:GetService("TweenService")
@@ -9,6 +10,7 @@ local TweenService = game:GetService("TweenService")
 local Config = require(ReplicatedStorage:WaitForChild("Shared"):WaitForChild("Config"))
 
 local E = Config.Efectos
+local EB = E.Beta
 local NUCLEO = Color3.fromHex(Config.Hud.Colores.Hueso)
 local TINTA = Color3.fromHex(Config.Hud.Colores.Fondo)
 
@@ -111,6 +113,54 @@ function EfectosGolpe.anillo3D(
 	Debris:AddItem(grupo, dura + 0.05)
 end
 
+local function emisorCapa(
+	soporte: BasePart,
+	textura: string,
+	tam: number,
+	color: Color3,
+	vida: number,
+	brillo: number,
+	giro: number?,
+	profundidad: number?,
+	flipbook: boolean?,
+	horizontal: boolean?
+)
+	local e = Instance.new("ParticleEmitter")
+	e.Texture = textura
+	if flipbook then
+		e.FlipbookLayout = Enum.ParticleFlipbookLayout.Grid4x4
+		e.FlipbookMode = Enum.ParticleFlipbookMode.OneShot
+	end
+	if horizontal then
+		e.Orientation = Enum.ParticleOrientation.VelocityPerpendicular
+		e.EmissionDirection = Enum.NormalId.Top
+	end
+	e.Color = ColorSequence.new(color)
+	e.LightEmission = brillo
+	e.LightInfluence = 0
+	e.Lifetime = NumberRange.new(vida)
+	e.Speed = NumberRange.new(if horizontal then 0.01 else 0)
+	e.Size = if horizontal
+		then NumberSequence.new({
+			NumberSequenceKeypoint.new(0, tam * 0.25),
+			NumberSequenceKeypoint.new(0.45, tam * 0.9),
+			NumberSequenceKeypoint.new(1, tam),
+		})
+		else NumberSequence.new(tam)
+	e.Transparency = if horizontal
+		then NumberSequence.new({
+			NumberSequenceKeypoint.new(0, 0.05),
+			NumberSequenceKeypoint.new(0.7, 0.35),
+			NumberSequenceKeypoint.new(1, 1),
+		})
+		else NumberSequence.new(0)
+	e.Rotation = NumberRange.new(giro or math.random(0, 359))
+	e.ZOffset = profundidad or 2
+	e.Rate = 0
+	e.Parent = soporte
+	e:Emit(1)
+end
+
 -- Media luna 3D de tajo cómic: centro claro/Linaje y filo de tinta detrás.
 function EfectosGolpe.tajo(
 	origenCf: CFrame,
@@ -177,33 +227,46 @@ function EfectosGolpe.tajo(
 		})
 	end
 	Debris:AddItem(grupo, dura + 0.06)
+
+	local soporteTajo = parteVfx(
+		plano * CFrame.new(0, 0, -2.8 * s),
+		Vector3.one * 0.2,
+		color,
+		Enum.Material.SmoothPlastic,
+		1
+	)
+	emisorCapa(soporteTajo, EB.TajoArco, 6.2 * s, TINTA, dura * 0.85, 0, inclinacionDeg, 1)
+	emisorCapa(soporteTajo, EB.TajoArco, 5.4 * s, color, dura, 0.95, inclinacionDeg, 2)
+	Debris:AddItem(soporteTajo, dura + 0.08)
 end
 
-local function capa(
-	soporte: BasePart,
-	textura: string,
-	tam: number,
-	color: Color3,
-	vida: number,
-	brillo: number,
-	giro: number?,
-	profundidad: number?
-)
-	local e = Instance.new("ParticleEmitter")
-	e.Texture = textura
-	e.FlipbookLayout = Enum.ParticleFlipbookLayout.Grid4x4
-	e.FlipbookMode = Enum.ParticleFlipbookMode.OneShot
-	e.Color = ColorSequence.new(color)
-	e.LightEmission = brillo
-	e.LightInfluence = 0
-	e.Lifetime = NumberRange.new(vida)
-	e.Speed = NumberRange.new(0)
-	e.Size = NumberSequence.new(tam)
-	e.Rotation = NumberRange.new(giro or math.random(0, 359))
-	e.ZOffset = profundidad or 2
-	e.Rate = 0
-	e.Parent = soporte
-	e:Emit(1)
+-- Grieta cómic en el asfalto bajo impactos fuertes o rupturas de guardia.
+function EfectosGolpe.grieta(punto: Vector3, tamano: number, dura: number?)
+	local filtro = RaycastParams.new()
+	filtro.FilterType = Enum.RaycastFilterType.Exclude
+	filtro.FilterDescendantsInstances = CollectionService:GetTagged("Combatiente")
+	local hit = workspace:Raycast(punto + Vector3.new(0, 2.5, 0), Vector3.new(0, -10, 0), filtro)
+	if not hit then
+		return
+	end
+	local t = dura or 1.4
+	local orient = CFrame.lookAlong(hit.Position + hit.Normal * 0.04, hit.Normal)
+		* CFrame.Angles(-math.pi / 2, 0, 0)
+		* CFrame.Angles(0, math.random() * 6.28, 0)
+	local placa =
+		parteVfx(orient, Vector3.new(tamano, 0.08, tamano), TINTA, Enum.Material.SmoothPlastic, 1)
+	local decal = Instance.new("Decal")
+	decal.Face = Enum.NormalId.Top
+	decal.Texture = EB.GrietaPiso
+	decal.Color3 = TINTA
+	decal.Transparency = 0.08
+	decal.Parent = placa
+	task.delay(t * 0.55, function()
+		if decal.Parent then
+			tween(decal, t * 0.45, Enum.EasingStyle.Quad, { Transparency = 1 })
+		end
+	end)
+	Debris:AddItem(placa, t + 0.06)
 end
 
 local function chispas(soporte: BasePart, color: Color3, cantidad: number, velocidad: number?)
@@ -231,20 +294,33 @@ end
 
 function EfectosGolpe.reproducir(punto: Vector3, fuerte: boolean, color: Color3, escala: number?)
 	local s = (if fuerte then E.EscalaFuerte else 1) * (escala or 1)
-	local soporte = Instance.new("Part")
-	soporte.Anchored = true
-	soporte.CanCollide = false
-	soporte.CanQuery = false
-	soporte.CanTouch = false
-	soporte.Transparency = 1
-	soporte.Size = Vector3.one * 0.2
-	soporte.Position = punto
-	soporte.Parent = workspace
-	capa(soporte, E.Destello, E.TamDestello * 1.65 * s, TINTA, 0.1, 0, nil, 1)
-	capa(soporte, E.Destello, E.TamDestello * 1.35 * s, color, 0.2, 1)
-	capa(soporte, E.Destello, E.TamDestello * 0.85 * s, NUCLEO, 0.12, 0.65)
-	capa(soporte, E.Anillo, E.TamAnillo * s, color, 0.24, 1)
-	capa(soporte, E.Arco, E.TamArco * s, NUCLEO, 0.16, 0.65)
+	local soporte =
+		parteVfx(CFrame.new(punto), Vector3.one * 0.2, color, Enum.Material.SmoothPlastic, 1)
+	emisorCapa(
+		soporte,
+		EB.ImpactoFlipbook4x4,
+		E.TamDestello * 1.5 * s,
+		TINTA,
+		0.16,
+		0,
+		nil,
+		1,
+		true
+	)
+	emisorCapa(
+		soporte,
+		EB.ImpactoFlipbook4x4,
+		E.TamDestello * 1.25 * s,
+		color,
+		0.22,
+		1,
+		nil,
+		2,
+		true
+	)
+	emisorCapa(soporte, EB.DestelloParry, E.TamDestello * 0.8 * s, NUCLEO, 0.14, 0.75, nil, 3)
+	emisorCapa(soporte, E.Anillo, E.TamAnillo * s, color, 0.24, 1, nil, 2, true)
+	emisorCapa(soporte, E.Arco, E.TamArco * s, NUCLEO, 0.16, 0.65, nil, 3, true)
 	chispas(soporte, color, if fuerte then 32 else 16, if fuerte then 78 else 58)
 
 	local inclinado = CFrame.new(punto)
@@ -266,18 +342,46 @@ function EfectosGolpe.reproducir(punto: Vector3, fuerte: boolean, color: Color3,
 	)
 
 	if fuerte then
-		capa(soporte, E.Lineas, E.TamLineas * s / E.EscalaFuerte, color, 0.25, 1)
-		capa(soporte, E.Humo, E.TamHumo * s / E.EscalaFuerte, Color3.fromHex("#8d90a0"), 0.55, 0)
+		emisorCapa(soporte, EB.OndaChoque, E.TamAnillo * 1.25 * s, color, 0.28, 0.9, 0, 2)
+		emisorCapa(
+			soporte,
+			E.Lineas,
+			E.TamLineas * s / E.EscalaFuerte,
+			color,
+			0.25,
+			1,
+			nil,
+			2,
+			true
+		)
+		emisorCapa(
+			soporte,
+			E.Humo,
+			E.TamHumo * s / E.EscalaFuerte,
+			Color3.fromHex("#8d90a0"),
+			0.55,
+			0,
+			nil,
+			1,
+			true
+		)
 		local cruzado = CFrame.new(punto)
 			* CFrame.Angles(math.rad(-35), math.random() * 6.28, math.rad(28))
 		EfectosGolpe.anillo3D(cruzado, 1.6 * s, 7.4 * s, NUCLEO, 0.28, 0.18 * s)
+		EfectosGolpe.grieta(punto, 7.5 * s, 1.35)
 	end
 	Debris:AddItem(soporte, 0.85)
 end
 
--- Estallido radial de parry: doble anillo cruzado + púas de estrella + luz fría.
+-- Estallido radial de parry: destello cómic 3 capas + doble anillo cruzado + púas.
 function EfectosGolpe.parry(punto: Vector3, color: Color3)
 	EfectosGolpe.reproducir(punto, true, color, 1.15)
+	local estrellaSoporte =
+		parteVfx(CFrame.new(punto), Vector3.one * 0.2, color, Enum.Material.SmoothPlastic, 1)
+	emisorCapa(estrellaSoporte, EB.DestelloParry, 11.5, TINTA, 0.22, 0, 0, 2)
+	emisorCapa(estrellaSoporte, EB.DestelloParry, 9.5, color, 0.26, 1, 0, 3)
+	emisorCapa(estrellaSoporte, EB.DestelloParry, 5.8, NUCLEO, 0.18, 0.85, 0, 4)
+	Debris:AddItem(estrellaSoporte, 0.4)
 	local cfBase = CFrame.new(punto)
 	EfectosGolpe.anillo3D(
 		cfBase * CFrame.Angles(math.rad(38), 0, math.rad(25)),
@@ -307,9 +411,10 @@ function EfectosGolpe.parry(punto: Vector3, color: Color3)
 	end
 end
 
--- Destello de ruptura de guardia: fragmentos angulares + ondas carmesí/hueso.
+-- Destello de ruptura de guardia: grieta en asfalto + onda radial + fragmentos angulares.
 function EfectosGolpe.rupturaGuardia(punto: Vector3, color: Color3)
 	EfectosGolpe.reproducir(punto, true, color, 1.3)
+	EfectosGolpe.grieta(punto, 10, 2.0)
 	local cfBase = CFrame.new(punto)
 	EfectosGolpe.anillo3D(cfBase * CFrame.Angles(math.rad(90), 0, 0), 1.4, 8.8, color, 0.3, 0.34)
 	for _ = 1, 8 do
@@ -393,74 +498,54 @@ function EfectosGolpe.dash(personaje: Model, raiz: BasePart, rumbo: Vector3, col
 	end
 end
 
--- Destello de aviso para leer ataques enemigos (ventana de parry).
+-- Destello y retícula cómic de aviso para leer ataques enemigos (ventana de parry).
 function EfectosGolpe.aviso(objetivo: Model)
 	local r = objetivo:FindFirstChild("HumanoidRootPart")
 	if not (r and r:IsA("BasePart")) then
 		return
 	end
-	local pos = r.Position + Vector3.new(0, 1.6, 0) + r.CFrame.LookVector * 0.8
+	local pos = r.Position + Vector3.new(0, 1.7, 0) + r.CFrame.LookVector * 0.85
 	local rojo = Color3.fromRGB(255, 58, 58)
-	local estrella = parteVfx(
-		CFrame.new(pos) * CFrame.Angles(0, 0, math.pi / 4),
-		Vector3.new(0.25, 3.4, 0.25),
-		rojo
-	)
-	local cruz = parteVfx(
-		CFrame.new(pos) * CFrame.Angles(0, 0, -math.pi / 4),
-		Vector3.new(0.25, 3.4, 0.25),
-		NUCLEO
-	)
-	tween(
-		estrella,
-		0.26,
-		Enum.EasingStyle.Quad,
-		{ Size = Vector3.new(0.05, 5.2, 0.05), Transparency = 1 }
-	)
-	tween(
-		cruz,
-		0.26,
-		Enum.EasingStyle.Quad,
-		{ Size = Vector3.new(0.05, 4.4, 0.05), Transparency = 1 }
-	)
+	local soporte =
+		parteVfx(CFrame.new(pos), Vector3.one * 0.2, rojo, Enum.Material.SmoothPlastic, 1)
+	local cartel = Instance.new("BillboardGui")
+	cartel.Size = UDim2.fromScale(4.4, 4.4)
+	cartel.LightInfluence = 0
+	cartel.Parent = soporte
+	local img = Instance.new("ImageLabel")
+	img.AnchorPoint = Vector2.new(0.5, 0.5)
+	img.Position = UDim2.fromScale(0.5, 0.5)
+	img.Size = UDim2.fromScale(1, 1)
+	img.BackgroundTransparency = 1
+	img.Image = EB.AvisoSuelo
+	img.ImageColor3 = rojo
+	img.Parent = cartel
+	tween(img, 0.26, Enum.EasingStyle.Back, {
+		Size = UDim2.fromScale(0.65, 0.65),
+		ImageTransparency = 1,
+	})
 	EfectosGolpe.anillo3D(
 		CFrame.new(pos) * CFrame.Angles(math.pi / 2, 0, 0),
-		3.4,
+		3.6,
 		0.6,
 		rojo,
 		0.26,
-		0.18
+		0.2
 	)
-	Debris:AddItem(estrella, 0.28)
-	Debris:AddItem(cruz, 0.28)
+	Debris:AddItem(soporte, 0.3)
 end
 
--- Onda plana en el piso + anillo 3D nítido.
+-- Onda plana en el piso + anillo 3D nítido (+ grieta cómic en impactos grandes).
 function EfectosGolpe.onda(centro: Vector3, radio: number, color: Color3)
-	local soporte = Instance.new("Part")
-	soporte.Anchored = true
-	soporte.CanCollide = false
-	soporte.CanQuery = false
-	soporte.CanTouch = false
-	soporte.Transparency = 1
-	soporte.Size = Vector3.one * 0.2
-	soporte.Position = centro + Vector3.new(0, 0.3, 0)
-	soporte.Parent = workspace
-	local e = Instance.new("ParticleEmitter")
-	e.Texture = E.Anillo
-	e.FlipbookLayout = Enum.ParticleFlipbookLayout.Grid4x4
-	e.FlipbookMode = Enum.ParticleFlipbookMode.OneShot
-	e.Orientation = Enum.ParticleOrientation.VelocityPerpendicular
-	e.EmissionDirection = Enum.NormalId.Top
-	e.Color = ColorSequence.new(color)
-	e.LightEmission = 1
-	e.LightInfluence = 0
-	e.Lifetime = NumberRange.new(0.32)
-	e.Speed = NumberRange.new(0.01)
-	e.Size = NumberSequence.new(radio * 2.3)
-	e.Rate = 0
-	e.Parent = soporte
-	e:Emit(1)
+	local soporte = parteVfx(
+		CFrame.new(centro + Vector3.new(0, 0.3, 0)),
+		Vector3.one * 0.2,
+		color,
+		Enum.Material.SmoothPlastic,
+		1
+	)
+	emisorCapa(soporte, EB.OndaChoque, radio * 2.25, color, 0.32, 1, 0, 2, false, true)
+	emisorCapa(soporte, EB.OndaChoque, radio * 1.45, NUCLEO, 0.22, 0.75, 45, 3, false, true)
 	EfectosGolpe.anillo3D(
 		CFrame.new(centro + Vector3.new(0, 0.35, 0)),
 		radio * 0.25,
@@ -469,6 +554,9 @@ function EfectosGolpe.onda(centro: Vector3, radio: number, color: Color3)
 		0.3,
 		0.28
 	)
+	if radio >= 10 then
+		EfectosGolpe.grieta(centro, radio * 0.9, 1.5)
+	end
 	Debris:AddItem(soporte, 0.7)
 end
 

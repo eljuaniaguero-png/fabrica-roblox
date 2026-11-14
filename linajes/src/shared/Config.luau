@@ -234,6 +234,26 @@ Config.Cuerpo.Comic = {
 		"rbxassetid://131546855294230",
 		"rbxassetid://112533320464128",
 		"rbxassetid://130513753581230",
+		"rbxassetid://80453883129193", -- Cómic neutral (esclerótica #EDE6D6)
+		"rbxassetid://116456393081205", -- Cómic enojado
+		"rbxassetid://78954832669422", -- Cómic concentrado
+		"rbxassetid://122098850207044", -- Cómic contento
+	},
+	-- Expresiones cómic 256×256 con esclerótica hueso #EDE6D6 (arte/personajes/caras/).
+	Expresiones = {
+		neutral = "rbxassetid://80453883129193",
+		enojado = "rbxassetid://116456393081205",
+		concentrado = "rbxassetid://78954832669422",
+		dolor = "rbxassetid://100447728483668",
+		sorprendido = "rbxassetid://79484104959415",
+		contento = "rbxassetid://122098850207044",
+		cansado = "rbxassetid://127921642231808",
+		derrotado = "rbxassetid://139246533140440",
+	},
+	CarasNpc = {
+		Maton = "rbxassetid://104241901328828",
+		Tano = "rbxassetid://107061829557554",
+		Albatros = "rbxassetid://117544597355864",
 	},
 }
 -- Creador de personaje (client/Creador.client.luau + server/Cuerpo.server.luau). Cada opción guarda
@@ -253,7 +273,7 @@ Config.Cuerpo.Creador = {
 	},
 	Oscurecer = 0.55, -- forro, bolsillos y puños: la campera elegida, más oscura
 	Espera = 0.12, -- segundos mínimos entre cambios (el servidor ignora los que llegan antes)
-	Inicial = { Piel = 4, Cara = 1, Peinado = 1, Pelo = 8, Campera = 1, Acento = 1, Pantalon = 1 },
+	Inicial = { Piel = 4, Cara = 4, Peinado = 1, Pelo = 8, Campera = 1, Acento = 1, Pantalon = 1 },
 }
 
 -- Diferencia mínima de color (0 a 1,7) entre pelo y piel cuando el pelo sale al azar.
@@ -486,21 +506,21 @@ Config.Ruleta = {
 			Nombre = "Electro",
 			Rareza = "Poco común",
 			Peso = 11.67,
-			Disponible = false,
+			Disponible = true,
 		},
 		{
 			Linaje = "Criogenia",
 			Nombre = "Criogenia",
 			Rareza = "Poco común",
 			Peso = 11.67,
-			Disponible = false,
+			Disponible = true,
 		},
 		{
 			Linaje = "Telequinesis",
 			Nombre = "Telequinesis",
 			Rareza = "Poco común",
 			Peso = 11.66,
-			Disponible = false,
+			Disponible = true,
 		},
 	},
 }
@@ -509,7 +529,7 @@ Config.Ruleta = {
 -- Impacto: segundos desde que se aprieta hasta que el servidor resuelve la habilidad.
 Config.Poderes = {
 	CambioLibre = true, -- T cambia de Linaje; se apaga cuando esté la ruleta
-	Orden = { "FuerzaBruta", "Reflejos", "Piroquinesis" },
+	Orden = { "FuerzaBruta", "Reflejos", "Piroquinesis", "Electro", "Criogenia", "Telequinesis" },
 	MargenRecarga = 0.2,
 	MargenRed = 4,
 	QuemaVeces = 3,
@@ -517,10 +537,30 @@ Config.Poderes = {
 	BolaVelocidad = 90,
 	MuroDura = 4,
 	MuroGrosor = 3,
+	-- Poco comunes (notas de la bóveda: 06 Linajes).
+	EstaticaDanio = 8, -- Electro: el 4.º golpe del combo electrocuta
+	CadenaSalto = 14, -- Electro: distancia máxima entre un rival y el siguiente del rayo
+	EscarchaMax = 5, -- Criogenia: cargas para congelar
+	EscarchaDura = 4, -- segundos sin sumar cargas hasta que se borran
+	CongeladoDura = 1.5,
+	LanzaVelocidad = 110,
+	LanzaEscarcha = 2,
+	MuroHielo = { Ancho = 10, Alto = 6, Grosor = 1.5, Dura = 5, Distancia = 8 },
+	PistaDura = 4, -- Criogenia: segundos que queda la pista
+	PistaAncho = 5,
+	LanzarVelocidad = 95, -- Telequinesis: objeto lanzado
+	LanzarAgarre = 20, -- Mano invisible: busca objetos sueltos (tag "Suelto") hasta acá
+	LanzarPesado = 10, -- daño extra si el objeto suelto pesa más que PesoPesado
+	PesoPesado = 40,
+	LevantarAltura = 9,
 	Colores = {
 		FuerzaBruta = Color3.fromHex("#f2a23a"),
 		Reflejos = Color3.fromHex("#3fe0f0"),
 		Piroquinesis = Color3.fromHex("#f2652b"),
+		-- Matriz de la Guía de estilo (3.3, colores estandarizados).
+		Electro = Color3.fromHex("#4db8ff"),
+		Criogenia = Color3.fromHex("#7ce8ff"),
+		Telequinesis = Color3.fromHex("#a46cf0"),
 	},
 	Linajes = {
 		FuerzaBruta = {
@@ -612,6 +652,96 @@ Config.Poderes = {
 				Energia = 25,
 				Alcance = 10,
 				Impacto = 0.6,
+			},
+		},
+		Electro = {
+			Z = {
+				Nombre = "Rayo en cadena",
+				Accion = "RayoCadena",
+				Danios = { 20, 15, 10 }, -- uno por salto
+				Danio = 20,
+				Recarga = 6,
+				Energia = 20,
+				Alcance = 30,
+				Impacto = 0.35,
+			},
+			X = {
+				Nombre = "Descarga",
+				Accion = "Descarga",
+				Danio = 25,
+				Aturde = 0.6,
+				Recarga = 10,
+				Energia = 25,
+				Alcance = 8,
+				Impacto = 0.45,
+			},
+			C = {
+				Nombre = "Salto de cable",
+				Accion = "SaltoCable",
+				Danio = 10,
+				Recarga = 12,
+				Energia = 20,
+				Alcance = 25,
+				Impacto = 0.15,
+			},
+		},
+		Criogenia = {
+			Z = {
+				Nombre = "Lanza de hielo",
+				Accion = "LanzaHielo",
+				Danio = 20,
+				Recarga = 5,
+				Energia = 15,
+				Alcance = 35,
+				Impacto = 0.35,
+			},
+			X = {
+				Nombre = "Muro de hielo",
+				Accion = "MuroHielo",
+				Danio = 0,
+				Recarga = 11,
+				Energia = 25,
+				Alcance = 8,
+				Impacto = 0.5,
+			},
+			C = {
+				Nombre = "Pista helada",
+				Accion = "PistaHelada",
+				Danio = 0,
+				Recarga = 12,
+				Energia = 20,
+				Alcance = 20,
+				Impacto = 0.15,
+			},
+		},
+		Telequinesis = {
+			Z = {
+				Nombre = "Lanzar",
+				Accion = "Lanzar",
+				Danio = 25,
+				Recarga = 5,
+				Energia = 20,
+				Alcance = 30,
+				Impacto = 0.4,
+			},
+			X = {
+				Nombre = "Levantar",
+				Accion = "Levantar",
+				Danio = 20,
+				Dura = 2,
+				Recarga = 10,
+				Energia = 25,
+				Alcance = 25,
+				Impacto = 0.35,
+			},
+			C = {
+				Nombre = "Onda",
+				Accion = "Onda",
+				Danio = 15,
+				Recarga = 9,
+				Energia = 20,
+				Alcance = 15,
+				Impacto = 0.3,
 			},
 		},
 	},
@@ -729,6 +859,23 @@ Config.Animaciones = {
 		CargaCarrera = "rbxassetid://139137804608398",
 		CargaFrenada = "rbxassetid://132329831457405",
 		Contenedor = "rbxassetid://93000774808385",
+	},
+	-- Poco comunes: animaciones PRESTADAS de los Comunes hasta que estén las propias (P27-04/05/06).
+	-- Para reemplazarlas alcanza con cambiar el ID acá.
+	linaje_electro = {
+		RayoCadena = "rbxassetid://73899188252872", -- prestada: BolaFuego
+		Descarga = "rbxassetid://77792023879204", -- prestada: GolpePiso
+		SaltoCable = "rbxassetid://86385013535898", -- prestada: PasoFantasma
+	},
+	linaje_criogenia = {
+		LanzaHielo = "rbxassetid://73899188252872", -- prestada: BolaFuego
+		MuroHielo = "rbxassetid://128169833720239", -- prestada: MuroFuego
+		PistaHelada = "rbxassetid://70565357213088", -- prestada: EmbestidaInicio
+	},
+	linaje_telequinesis = {
+		Lanzar = "rbxassetid://73899188252872", -- prestada: BolaFuego
+		Levantar = "rbxassetid://128292249326676", -- prestada: ChorroInicio
+		Onda = "rbxassetid://92821448797182", -- prestada: PunoSismico
 	},
 	linaje_fuerzabruta = {
 		PunoSismico = "rbxassetid://92821448797182",
@@ -960,6 +1107,18 @@ Config.Efectos = {
 	TamHumo = 10.5,
 	EscalaFuerte = 1.55,
 	ColorEscombro = "#2E3138", -- cuñas de piso que saltan (asfalto del puerto)
+	-- Sprites VFX Beta (arte/vfx/): impactos 3 capas, Beam eléctrico y flipbook 4×4 cómic.
+	Beta = {
+		GrietaPiso = "rbxassetid://96908085573626",
+		OndaChoque = "rbxassetid://115555420435650",
+		TajoArco = "rbxassetid://134363391915110",
+		DestelloParry = "rbxassetid://116923247756972",
+		RayoTira = "rbxassetid://121276698683039",
+		AnilloTelequinesis = "rbxassetid://106720328492764",
+		HieloEscarcha = "rbxassetid://79199733705078",
+		AvisoSuelo = "rbxassetid://73567539131035",
+		ImpactoFlipbook4x4 = "rbxassetid://124490335577996",
+	},
 	-- Tope: 150 partículas activas por efecto (Ritmo x Vida de cada capa).
 	Fuego = {
 		ColorLuz = "#ff8a30",
@@ -1208,21 +1367,21 @@ Config.Hud = {
 		Xp = "#C9A55A",
 		Fondo = "#080A0E",
 	},
-	AltoBase = 900, -- todo se escala según el alto de la pantalla
+	AltoBase = 840, -- todo se escala según el alto de la pantalla
 	EscalaMin = 0.85,
 	EscalaMax = 1.38,
-	Margen = 42,
-	AnchoVida = 390,
-	AnchoEnergia = 310,
-	TamRombo = 100,
-	SeparacionRombos = 124,
+	Margen = 32,
+	AnchoVida = 370,
+	AnchoEnergia = 295,
+	TamRombo = 108,
+	SeparacionRombos = 132,
 	DanioEspera = 0.45, -- segundos antes de que se vacíe la marca de daño
-	BarraMaton = { Ancho = 112, Alto = 7, Altura = 4.3, Distancia = 90 }, -- barra sobre cada matón
+	BarraMaton = { Ancho = 122, Alto = 8, Altura = 4.3, Distancia = 90 }, -- barra sobre cada matón
 	RivalDura = 5, -- segundos que se ve la barra del rival después del último golpe
 	TeclaControles = Enum.KeyCode.H,
 	-- Menú principal: tamaño y animaciones.
 	MenuUI = {
-		Zoom = 1.24, -- todo el menú (1 = tamaño de diseño a 1280x720)
+		Zoom = 1.30, -- todo el menú (1 = tamaño de diseño a 1280x720)
 		ZoomFondo = 1.12, -- el fondo es un poco más grande para poder moverlo con paralaje
 		PaneoSegundos = 10, -- ida (y otro tanto de vuelta) del paneo del fondo
 		PaneoDistancia = 0.035, -- cuánto se corre el fondo (fracción de pantalla)
@@ -1231,8 +1390,7 @@ Config.Hud = {
 		EntradaSegundos = 0.55,
 		Escalonado = 0.06, -- segundos entre una fila y la siguiente al entrar
 	},
-	-- Imágenes de arte/hud/listas/ y arte/2d/. Las primeras 12 ya están subidas (14 nov 2026);
-	-- las 33 nuevas quedan en "" (fallback limpio) hasta aprobar linajes/arte en MCP Permissions.
+	-- Imágenes oficiales de UI, HUD, Linajes, Monedas y Controles en Roblox Cloud.
 	Imagenes = {
 		MarcoRombo = "rbxassetid://105043766784101",
 		Ornamento = "rbxassetid://110297614604446",
@@ -1247,9 +1405,19 @@ Config.Hud = {
 			BolaFuego = "rbxassetid://140551605631623",
 			Chorro = "rbxassetid://136111392514119",
 			MuroFuego = "rbxassetid://80571953169913",
+			RayoCadena = "rbxassetid://87808098380833",
+			Descarga = "rbxassetid://91857360135134",
+			SaltoCable = "rbxassetid://72192678349796",
+			LanzaHielo = "rbxassetid://104894879277584",
+			MuroHielo = "rbxassetid://92609793519237",
+			PistaHelada = "rbxassetid://119141879262303",
+			Lanzar = "rbxassetid://99688467901027",
+			Levantar = "rbxassetid://94988565276293",
+			Onda = "rbxassetid://135551961327445",
 		},
 		Controles = {
 			Ataque = "rbxassetid://83329021917927",
+			Rompeguardia = "rbxassetid://129514896890993",
 			Dash = "rbxassetid://118012238370304",
 			Bloqueo = "rbxassetid://84609757356223",
 			Gancho = "rbxassetid://129731819469863",
@@ -1290,6 +1458,12 @@ Config.Hud = {
 			Candado = "rbxassetid://121962152222588",
 			Flecha = "rbxassetid://78063733587601",
 			Estrella = "rbxassetid://93997249463570",
+			Duelo = "rbxassetid://124251617350714",
+			Tienda = "rbxassetid://88629552366594",
+			Creador = "rbxassetid://96322515551251",
+			Fundador = "rbxassetid://134100506895045",
+			Espacios = "rbxassetid://127535904316364",
+			Arena = "rbxassetid://106977869731145",
 		},
 	},
 }

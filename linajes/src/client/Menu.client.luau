@@ -532,13 +532,13 @@ local function crearItemMenu(
 	return btn, rombo, txt
 end
 
-local btnContinuar, _, txtContinuar = crearItemMenu(yBase, "CONTINUAR", true, "")
+local btnContinuar, _, txtContinuar = crearItemMenu(yBase, "CONTINUAR", true, IM.Menu.Arena)
 botonPrincipalTxt = txtContinuar
 subPrincipalTxt = Tema.texto(columna, "", { tam = 17, letra = Tema.LetraFina, color = GRIS })
 subPrincipalTxt.Position = UDim2.fromOffset(42, yBase + 46)
 
 -- Fila 2: ESPACIOS < 1 / 3 >
-local _, _, _ = crearItemMenu(yBase + paso, "ESPACIOS", false, "")
+local _, _, _ = crearItemMenu(yBase + paso, "ESPACIOS", false, IM.Menu.Espacios)
 local espacioActual = 1
 local totalEspacios = 3
 local textoEspacio = Tema.texto(columna, "1 / 3", {
@@ -548,8 +548,8 @@ local textoEspacio = Tema.texto(columna, "1 / 3", {
 	alineado = Enum.TextXAlignment.Center,
 })
 textoEspacio.AutomaticSize = Enum.AutomaticSize.None
-textoEspacio.Position = UDim2.fromOffset(334, yBase + paso + 6)
-textoEspacio.Size = UDim2.fromOffset(76, 34)
+textoEspacio.Position = UDim2.fromOffset(298, yBase + paso + 6)
+textoEspacio.Size = UDim2.fromOffset(72, 34)
 local notaEspacio = Tema.texto(columna, "", { tam = 16, letra = Tema.LetraFina, color = APAGADO })
 notaEspacio.Position = UDim2.fromOffset(42, yBase + paso + 44)
 
@@ -578,8 +578,8 @@ local function crearFlecha(x: number, rotacion: number, textoAlt: string): TextB
 	return fbtn
 end
 
-local btnEspAnt = crearFlecha(294, 180, "‹")
-local btnEspSig = crearFlecha(408, 0, "›")
+local btnEspAnt = crearFlecha(256, 180, "‹")
+local btnEspSig = crearFlecha(368, 0, "›")
 
 local function refrescarEspacios()
 	textoEspacio.TextTransparency = 1
@@ -601,7 +601,7 @@ refrescarEspacios()
 
 local btnArbol = crearItemMenu(yBase + paso * 2, "ÁRBOL Y PODERES", false, IM.Menu.Arbol)
 local btnAjustes = crearItemMenu(yBase + paso * 3, "AJUSTES", false, IM.Menu.Ajustes)
-local btnPersonaje = crearItemMenu(yBase + paso * 4, "PERSONAJE", false, "")
+local btnPersonaje = crearItemMenu(yBase + paso * 4, "PERSONAJE", false, IM.Menu.Creador)
 
 -- Panel derecho secundario (Árbol / Ajustes / Créditos)
 local cajon = Instance.new("CanvasGroup")

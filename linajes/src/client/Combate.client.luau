@@ -540,7 +540,7 @@ end)
 
 -- Botones e indicadores táctiles / PC abajo a la derecha (sobre H Controles).
 local tactil = UserInputService.TouchEnabled
-local tamBtn = if tactil then 64 else 50
+local tamBtn = if tactil then 70 else 60
 local controles = Tema.grupo(
 	gui,
 	Vector2.new(1, 1),
@@ -601,7 +601,7 @@ local function crearAccion(
 end
 
 local btnAtaque = crearAccion(1, "LMB", "GOLPE", imgsControl.Ataque)
-local btnRompe = crearAccion(2, "RMB", "ROMPE", "")
+local btnRompe = crearAccion(2, "RMB", "ROMPE", imgsControl.Rompeguardia)
 local btnDash, _, icoDash = crearAccion(3, "Q", "DASH", imgsControl.Dash)
 local btnBloqueo, bordeBloqueo, icoBloqueo = crearAccion(4, "F", "BLOQ", imgsControl.Bloqueo)
 

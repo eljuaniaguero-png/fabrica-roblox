@@ -174,6 +174,292 @@ local function muroDeFuego(atacante: Model, datos: any)
 	end
 end
 
+-- ---------------------------------------------------------------------------
+-- Poco comunes: Electro, Criogenia y Telequinesis (notas de la bóveda, 06 Linajes)
+-- ---------------------------------------------------------------------------
+
+local function masCercano(
+	atacante: Model,
+	desde: Vector3,
+	alcance: number,
+	excluir: { [Model]: boolean }
+): Model?
+	local mejor, distancia = nil, alcance
+	for _, m in CollectionService:GetTagged("Combatiente") do
+		if m ~= atacante and m:IsA("Model") and not excluir[m] then
+			local r = raizDe(m)
+			if r then
+				local d = (r.Position - desde).Magnitude
+				if d <= distancia then
+					mejor, distancia = m, d
+				end
+			end
+		end
+	end
+	return mejor
+end
+
+-- Electro Z: el rayo pega al rival de adelante y salta a los más cercanos (20 / 15 / 10).
+local function rayoCadena(atacante: Model, datos: any)
+	local r = raizDe(atacante)
+	if not r then
+		return
+	end
+	local primero = rivales(atacante, r.Position, r.CFrame.LookVector, datos.Alcance, 0.5)[1]
+	local puntos = { r.Position + r.CFrame.LookVector * 2 }
+	local tocados: { [Model]: boolean } = {}
+	local actual = primero
+	for i, danio in datos.Danios do
+		if not actual then
+			break
+		end
+		local ra = raizDe(actual)
+		if not ra then
+			break
+		end
+		tocados[actual] = true
+		table.insert(puntos, ra.Position)
+		pegar(atacante, actual, danio, if i == 1 then "Normal" else "Suave", direccionA(r, actual))
+		actual = masCercano(atacante, ra.Position, P.CadenaSalto, tocados)
+	end
+	if #puntos == 1 then -- nadie adelante: el rayo se pierde en el aire
+		table.insert(puntos, r.Position + r.CFrame.LookVector * datos.Alcance)
+	end
+	remoto:FireAllClients("Rayo", puntos)
+end
+
+-- Electro X: descarga alrededor; aturde un instante.
+local function descarga(atacante: Model, datos: any)
+	local r = raizDe(atacante)
+	if r then
+		for _, m in rivales(atacante, r.Position, r.CFrame.LookVector, datos.Alcance, -1) do
+			pegar(atacante, m, datos.Danio, "Normal", direccionA(r, m))
+			api:Invoke("Aturdir", m, datos.Aturde)
+		end
+	end
+end
+
+-- Electro C: viaja por un rayo hasta el rival de adelante (o hasta el alcance) y le pega al llegar.
+local function saltoCable(atacante: Model, datos: any)
+	local r = raizDe(atacante)
+	if not r then
+		return
+	end
+	local desde = r.Position
+	local frente = r.CFrame.LookVector
+	local m = rivales(atacante, r.Position, frente, datos.Alcance, 0.3)[1]
+	local rm = m and raizDe(m)
+	local destino: Vector3
+	if rm then
+		destino = rm.Position - direccionA(r, m :: Model) * 3
+	else
+		-- Sin rival: hasta donde no haya pared.
+		local filtro = RaycastParams.new()
+		filtro.FilterDescendantsInstances = { atacante }
+		filtro.FilterType = Enum.RaycastFilterType.Exclude
+		local choque = workspace:Raycast(desde, frente * datos.Alcance, filtro)
+		destino = if choque then choque.Position - frente * 2 else desde + frente * datos.Alcance
+	end
+	atacante:PivotTo(CFrame.lookAt(destino, destino + frente))
+	remoto:FireAllClients("Rayo", { desde, destino })
+	if m and rm then
+		pegar(atacante, m, datos.Danio, "Normal", frente)
+	end
+end
+
+-- Criogenia, pasiva Escarcha: cada carga suma; a las 5, congelado.
+local escarcha: { [Model]: { cargas: number, hasta: number } } = {}
+
+local function sumarEscarcha(m: Model, cargas: number)
+	local ahora = os.clock()
+	local e = escarcha[m]
+	if not e or ahora > e.hasta then
+		e = { cargas = 0, hasta = 0 }
+		escarcha[m] = e
+	end
+	local actual = e :: { cargas: number, hasta: number }
+	actual.cargas += cargas
+	actual.hasta = ahora + P.EscarchaDura
+	if actual.cargas >= P.EscarchaMax then
+		escarcha[m] = nil
+		m:SetAttribute("Escarcha", 0)
+		api:Invoke("Aturdir", m, P.CongeladoDura)
+		remoto:FireAllClients("Congelado", m, P.CongeladoDura)
+	else
+		m:SetAttribute("Escarcha", actual.cargas)
+	end
+end
+
+-- Proyectil genérico: el servidor lo mueve invisible y resuelve el choque; cada cliente lo dibuja.
+local function proyectil(
+	atacante: Model,
+	tipo: string,
+	velocidad: number,
+	alcance: number,
+	alChocar: (Model, Vector3) -> ()
+)
+	local r = raizDe(atacante)
+	if not r then
+		return
+	end
+	local frente = r.CFrame.LookVector
+	local pos = r.Position + frente * 3
+	remoto:FireAllClients("Proyectil", tipo, pos, frente, alcance, velocidad)
+	local recorrido = 0
+	local conexion: RBXScriptConnection
+	conexion = RunService.Heartbeat:Connect(function(dt)
+		local paso = velocidad * dt
+		recorrido += paso
+		pos += frente * paso
+		local cerca = rivales(atacante, pos, frente, 4, -1)
+		if cerca[1] or recorrido >= alcance then
+			conexion:Disconnect()
+			remoto:FireAllClients("Choca", tipo, pos)
+			for _, m in cerca do
+				alChocar(m, frente)
+			end
+		end
+	end)
+end
+
+local function lanzaHielo(atacante: Model, datos: any)
+	proyectil(atacante, "LanzaHielo", P.LanzaVelocidad, datos.Alcance, function(m, frente)
+		pegar(atacante, m, datos.Danio, "Normal", frente)
+		sumarEscarcha(m, P.LanzaEscarcha)
+	end)
+end
+
+local function hielo(nombre: string, tam: Vector3, cf: CFrame, colision: boolean): Part
+	local p = Instance.new("Part")
+	p.Name = nombre
+	p.Size = tam
+	p.CFrame = cf
+	p.Anchored = true
+	p.CanCollide = colision
+	p.CanQuery = colision
+	p.CanTouch = false
+	p.Material = Enum.Material.Ice
+	p.Color = P.Colores.Criogenia
+	p.Transparency = 0.15
+	p:AddTag("HieloCriogenia")
+	p.Parent = workspace
+	return p
+end
+
+-- Criogenia X: muro de hielo adelante que tapa el paso unos segundos.
+local function muroHielo(atacante: Model, _datos: any)
+	local r = raizDe(atacante)
+	if not r then
+		return
+	end
+	local M = P.MuroHielo
+	local escala = Niveles.tamano(atacante)
+	local base = r.CFrame * CFrame.new(0, -3 + M.Alto * escala / 2, -M.Distancia)
+	local muro = hielo("MuroHielo", Vector3.new(M.Ancho, M.Alto, M.Grosor) * escala, base, true)
+	Debris:AddItem(muro, M.Dura)
+end
+
+-- Criogenia C: pista de hielo adelante; el rival que la pisa resbala y suma Escarcha.
+local function pistaHelada(atacante: Model, datos: any)
+	local r = raizDe(atacante)
+	if not r then
+		return
+	end
+	local largo = datos.Alcance
+	local cf = r.CFrame * CFrame.new(0, -2.9, -largo / 2)
+	local pista = hielo("PistaHelada", Vector3.new(P.PistaAncho, 0.3, largo), cf, false)
+	Debris:AddItem(pista, P.PistaDura)
+	local proximo: { [Model]: number } = {}
+	local fin = os.clock() + P.PistaDura
+	while os.clock() < fin and pista.Parent do
+		for _, m in CollectionService:GetTagged("Combatiente") do
+			local rm = m:IsA("Model") and m ~= atacante and raizDe(m)
+			if rm and os.clock() >= (proximo[m] or 0) then
+				local p = pista.CFrame:PointToObjectSpace(rm.Position)
+				if
+					math.abs(p.X) <= P.PistaAncho / 2 + 1
+					and math.abs(p.Z) <= largo / 2
+					and p.Y < 5
+				then
+					proximo[m] = os.clock() + 1
+					sumarEscarcha(m, 1)
+					local lado = pista.CFrame.RightVector * (if p.X >= 0 then 1 else -1)
+					api:Invoke("Mover", m, lado * 30) -- resbala de costado
+				end
+			end
+		end
+		task.wait(0.1)
+	end
+end
+
+-- Telequinesis Z: agarra el objeto suelto más cercano (tag "Suelto") y lo tira. Sin objetos
+-- cerca, arranca un pedazo del piso.
+local function lanzar(atacante: Model, datos: any)
+	local r = raizDe(atacante)
+	if not r then
+		return
+	end
+	local objeto: BasePart? = nil
+	local mejor = P.LanzarAgarre
+	for _, o in CollectionService:GetTagged("Suelto") do
+		if o:IsA("BasePart") and o:IsDescendantOf(workspace) then
+			local d = (o.Position - r.Position).Magnitude
+			if d < mejor then
+				objeto, mejor = o, d
+			end
+		end
+	end
+	local extra = 0
+	if objeto then
+		if objeto.AssemblyMass >= P.PesoPesado then
+			extra = P.LanzarPesado
+		end
+		objeto:Destroy() -- lo "agarra": el que vuela lo dibuja cada cliente
+	end
+	local tipo = if extra > 0 then "LanzarPesado" else "Lanzar"
+	proyectil(atacante, tipo, P.LanzarVelocidad, datos.Alcance, function(m, frente)
+		pegar(atacante, m, datos.Danio + extra, "Lanza", frente)
+	end)
+end
+
+-- Telequinesis X: levanta al rival de adelante, lo deja flotando y lo estrella contra el piso.
+local function levantar(atacante: Model, datos: any)
+	local r = raizDe(atacante)
+	if not r then
+		return
+	end
+	local m = rivales(atacante, r.Position, r.CFrame.LookVector, datos.Alcance, 0.4)[1]
+	if not m then
+		return
+	end
+	local rm = raizDe(m)
+	if not rm then
+		return
+	end
+	api:Invoke("Aturdir", m, datos.Dura + 0.2)
+	remoto:FireAllClients("Levitar", m, datos.Dura)
+	-- Lo sostiene a LevantarAltura sobre donde estaba: cada instante corrige la velocidad hacia esa
+	-- altura (sube rápido y queda flotando).
+	local altura = rm.Position.Y + P.LevantarAltura
+	local fin = os.clock() + datos.Dura
+	while os.clock() < fin and m.Parent do
+		local r2 = raizDe(m)
+		if not r2 then
+			break
+		end
+		local sube = math.clamp((altura - r2.Position.Y) * 8, -20, 60)
+		api:Invoke("Mover", m, Vector3.new(0, sube, 0))
+		task.wait(0.05)
+	end
+	if m.Parent and raizDe(m) then
+		pegar(atacante, m, datos.Danio, "Piso", Vector3.zero)
+	end
+end
+
+-- Telequinesis C: empujón en cono que tira a todos para atrás.
+local function onda(atacante: Model, datos: any)
+	golpeArea(atacante, datos, "Lanza", 0.5)
+end
 -- Cada habilidad: qué hace el servidor después de su Impacto.
 local acciones: { [string]: (Model, any) -> () } = {
 	PunoSismico = function(a, d)
@@ -216,6 +502,15 @@ local acciones: { [string]: (Model, any) -> () } = {
 		end
 	end,
 	MuroFuego = muroDeFuego,
+	RayoCadena = rayoCadena,
+	Descarga = descarga,
+	SaltoCable = saltoCable,
+	LanzaHielo = lanzaHielo,
+	MuroHielo = muroHielo,
+	PistaHelada = pistaHelada,
+	Lanzar = lanzar,
+	Levantar = levantar,
+	Onda = onda,
 }
 
 remoto.OnServerEvent:Connect(function(jugador, pedido)
@@ -268,6 +563,10 @@ remoto.OnServerEvent:Connect(function(jugador, pedido)
 			acciones[datos.Accion](personaje, datos)
 		end
 	end)
+end)
+
+CollectionService:GetInstanceRemovedSignal("Combatiente"):Connect(function(m)
+	escarcha[m :: Model] = nil
 end)
 
 Players.PlayerRemoving:Connect(function(jugador)

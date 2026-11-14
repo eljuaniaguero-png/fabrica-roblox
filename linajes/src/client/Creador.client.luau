@@ -113,9 +113,21 @@ panel.Size = UDim2.fromOffset(520, 640)
 panel.BackgroundTransparency = 1
 panel.Parent = contenido
 
+local tieneIconoCreador = Config.Hud.Imagenes.Menu.Creador ~= ""
+if tieneIconoCreador then
+	local icoCreador = Instance.new("ImageLabel")
+	icoCreador.Position = UDim2.fromOffset(0, 3)
+	icoCreador.Size = UDim2.fromOffset(32, 32)
+	icoCreador.BackgroundTransparency = 1
+	icoCreador.ScaleType = Enum.ScaleType.Fit
+	icoCreador.Image = Config.Hud.Imagenes.Menu.Creador
+	icoCreador.ImageColor3 = Tema.Hueso
+	icoCreador.Parent = panel
+end
+
 local titulo =
 	Tema.texto(panel, Tema.espaciar("TU PERSONAJE", 3), { tam = 32, letra = Tema.LetraGruesa })
-titulo.Position = UDim2.fromOffset(0, 0)
+titulo.Position = UDim2.fromOffset(if tieneIconoCreador then 42 else 0, 0)
 local sub =
 	Tema.texto(panel, "Así te ven en la arena. Lo podés cambiar después desde el menú.", {
 		tam = 16,
