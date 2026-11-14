@@ -8,6 +8,7 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService = game:GetService("RunService")
 
 local Config = require(ReplicatedStorage:WaitForChild("Shared"):WaitForChild("Config"))
+local EfectosGolpe = require(script.Parent:WaitForChild("EfectosGolpe"))
 local Niveles = require(ReplicatedStorage:WaitForChild("Shared"):WaitForChild("Niveles"))
 
 local F = Config.Efectos.Fuego
@@ -180,6 +181,22 @@ function Fuego.explosion(centro: Vector3, escala: number)
 		escalar({ c }, escala)
 		c.emisor:Emit(cantidad)
 	end
+	EfectosGolpe.anillo3D(
+		CFrame.new(centro),
+		1.5 * escala,
+		9.5 * escala,
+		Color3.fromHex("#ff6a18"),
+		0.28,
+		0.3
+	)
+	EfectosGolpe.anillo3D(
+		CFrame.new(centro) * CFrame.Angles(math.rad(40), 0, math.rad(30)),
+		1.2 * escala,
+		7.8 * escala,
+		Color3.fromHex("#ffd58a"),
+		0.24,
+		0.22
+	)
 	luz(soporte, F.Explosion.Luz)
 	Debris:AddItem(soporte, 1.6)
 end

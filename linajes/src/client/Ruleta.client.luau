@@ -16,19 +16,19 @@ local gui = Tema.pantalla("Ruleta", 5)
 
 -- Arriba a la derecha: botón editorial + Ficha Eclipse si existe el ícono.
 local esquina =
-	Tema.grupo(gui, Vector2.new(1, 0), UDim2.new(1, -H.Margen, 0, 48), Vector2.new(210, 64))
+	Tema.grupo(gui, Vector2.new(1, 0), UDim2.new(1, -H.Margen, 0, 42), Vector2.new(250, 74))
 local abrir = Instance.new("TextButton")
 abrir.Size = UDim2.fromScale(1, 1)
 abrir.BackgroundTransparency = 1
 abrir.Text = ""
 abrir.Parent = esquina
-local titulo = Tema.texto(esquina, "RULETA", { tam = 16, espaciado = 4 })
+local titulo = Tema.texto(esquina, "RULETA", { tam = 20, espaciado = 4 })
 titulo.AnchorPoint = Vector2.new(1, 0)
 titulo.Position = UDim2.fromScale(1, 0)
 local raya = Instance.new("Frame")
 raya.AnchorPoint = Vector2.new(1, 0)
-raya.Position = UDim2.new(1, 0, 0, 28)
-raya.Size = UDim2.fromOffset(120, 1)
+raya.Position = UDim2.new(1, 0, 0, 32)
+raya.Size = UDim2.fromOffset(146, 2)
 raya.BackgroundColor3 = Tema.Hueso
 raya.BackgroundTransparency = 0.6
 raya.BorderSizePixel = 0
@@ -36,8 +36,8 @@ raya.Parent = esquina
 
 local iconoFicha = Instance.new("ImageLabel")
 iconoFicha.AnchorPoint = Vector2.new(1, 0)
-iconoFicha.Position = UDim2.new(1, 0, 0, 33)
-iconoFicha.Size = UDim2.fromOffset(18, 18)
+iconoFicha.Position = UDim2.new(1, 0, 0, 38)
+iconoFicha.Size = UDim2.fromOffset(22, 22)
 iconoFicha.BackgroundTransparency = 1
 iconoFicha.ScaleType = Enum.ScaleType.Fit
 iconoFicha.Image = H.Imagenes.Monedas.FichaEclipse
@@ -45,9 +45,9 @@ iconoFicha.Visible = H.Imagenes.Monedas.FichaEclipse ~= ""
 iconoFicha.Parent = esquina
 
 local fichasTexto =
-	Tema.texto(esquina, "", { tam = 13, letra = Tema.LetraFina, transparencia = 0.4 })
+	Tema.texto(esquina, "", { tam = 16, letra = Tema.LetraFina, transparencia = 0.3 })
 fichasTexto.AnchorPoint = Vector2.new(1, 0)
-fichasTexto.Position = UDim2.new(1, if iconoFicha.Visible then -24 else 0, 0, 34)
+fichasTexto.Position = UDim2.new(1, if iconoFicha.Visible then -28 else 0, 0, 39)
 
 abrir.MouseEnter:Connect(function()
 	raya.BackgroundTransparency = 0.1
@@ -59,29 +59,29 @@ end)
 local panel = Instance.new("Frame")
 panel.AnchorPoint = Vector2.new(0.5, 0.5)
 panel.Position = UDim2.fromScale(0.5, 0.5)
-panel.Size = UDim2.fromOffset(440, 400)
+panel.Size = UDim2.fromOffset(510, 446)
 panel.BackgroundColor3 = Tema.Fondo
-panel.BackgroundTransparency = 0.1
+panel.BackgroundTransparency = 0.08
 panel.BorderSizePixel = 0
 panel.Visible = false
 panel.Parent = gui
 local bordePanel = Instance.new("UIStroke")
 bordePanel.Color = Tema.Hueso
-bordePanel.Transparency = 0.72
+bordePanel.Transparency = 0.65
 bordePanel.Parent = panel
 
-local encabezado = Tema.texto(panel, Tema.espaciar("RULETA DEL ECLIPSE", 3), { tam = 18 })
-encabezado.Position = UDim2.fromOffset(22, 16)
+local encabezado = Tema.texto(panel, Tema.espaciar("RULETA DEL ECLIPSE", 3), { tam = 21 })
+encabezado.Position = UDim2.fromOffset(24, 18)
 
 local cerrar = Instance.new("TextButton")
 cerrar.AnchorPoint = Vector2.new(1, 0)
 cerrar.Position = UDim2.new(1, -12, 0, 10)
-cerrar.Size = UDim2.fromOffset(32, 32)
+cerrar.Size = UDim2.fromOffset(38, 38)
 cerrar.BackgroundTransparency = 1
 cerrar.Text = "×"
 cerrar.TextColor3 = Tema.Hueso
 cerrar.FontFace = Tema.LetraFina
-cerrar.TextSize = 24
+cerrar.TextSize = 28
 cerrar.Parent = panel
 cerrar.Activated:Connect(function()
 	panel.Visible = false
@@ -90,8 +90,8 @@ end)
 -- Rueda central / visual superior
 local rueda = Instance.new("ImageLabel")
 rueda.AnchorPoint = Vector2.new(0.5, 0.5)
-rueda.Position = UDim2.fromOffset(58, 86)
-rueda.Size = UDim2.fromOffset(64, 64)
+rueda.Position = UDim2.fromOffset(66, 94)
+rueda.Size = UDim2.fromOffset(74, 74)
 rueda.BackgroundTransparency = 1
 rueda.ScaleType = Enum.ScaleType.Fit
 rueda.Image = H.Imagenes.Menu.RuedaRuleta
@@ -99,37 +99,37 @@ rueda.Visible = H.Imagenes.Menu.RuedaRuleta ~= ""
 rueda.Parent = panel
 
 local romboResultado = if not rueda.Visible
-	then Tema.rombo(panel, Vector2.new(58, 86), 44, true)
+	then Tema.rombo(panel, Vector2.new(66, 94), 52, true)
 	else nil
 
 local resIcono = Instance.new("ImageLabel")
 resIcono.AnchorPoint = Vector2.new(0, 0.5)
-resIcono.Position = UDim2.fromOffset(104, 86)
-resIcono.Size = UDim2.fromOffset(32, 32)
+resIcono.Position = UDim2.fromOffset(118, 94)
+resIcono.Size = UDim2.fromOffset(36, 36)
 resIcono.BackgroundTransparency = 1
 resIcono.ScaleType = Enum.ScaleType.Fit
 resIcono.Visible = false
 resIcono.Parent = panel
 
 local resultado = Instance.new("TextLabel")
-resultado.Position = UDim2.fromOffset(104, 62)
-resultado.Size = UDim2.new(1, -124, 0, 48)
+resultado.Position = UDim2.fromOffset(118, 68)
+resultado.Size = UDim2.new(1, -140, 0, 52)
 resultado.BackgroundTransparency = 1
 resultado.TextColor3 = Tema.Xp
 resultado.FontFace = Tema.LetraGruesa
-resultado.TextSize = 28
+resultado.TextSize = 32
 resultado.TextXAlignment = Enum.TextXAlignment.Left
 resultado.Text = "LISTA PARA GIRAR"
 resultado.Parent = panel
 
 -- Tabla de probabilidades por Linaje
 local listaMarco = Instance.new("Frame")
-listaMarco.Position = UDim2.fromOffset(22, 134)
-listaMarco.Size = UDim2.new(1, -44, 0, 186)
+listaMarco.Position = UDim2.fromOffset(24, 148)
+listaMarco.Size = UDim2.new(1, -48, 0, 214)
 listaMarco.BackgroundTransparency = 1
 listaMarco.Parent = panel
 local ordenLista = Instance.new("UIListLayout")
-ordenLista.Padding = UDim.new(0, 4)
+ordenLista.Padding = UDim.new(0, 5)
 ordenLista.Parent = listaMarco
 
 local nombres: { [string]: string } = {}
@@ -143,9 +143,9 @@ do
 	end
 	for _, o in R.Opciones do
 		local fila = Instance.new("Frame")
-		fila.Size = UDim2.new(1, 0, 0, 26)
+		fila.Size = UDim2.new(1, 0, 0, 31)
 		fila.BackgroundColor3 = Color3.fromRGB(20, 24, 34)
-		fila.BackgroundTransparency = if o.Disponible then 0.55 else 0.78
+		fila.BackgroundTransparency = if o.Disponible then 0.5 else 0.76
 		fila.BorderSizePixel = 0
 		fila.Parent = listaMarco
 
@@ -159,7 +159,7 @@ do
 			local ico = Instance.new("ImageLabel")
 			ico.AnchorPoint = Vector2.new(0, 0.5)
 			ico.Position = UDim2.new(0, 8, 0.5, 0)
-			ico.Size = UDim2.fromOffset(18, 18)
+			ico.Size = UDim2.fromOffset(20, 20)
 			ico.BackgroundTransparency = 1
 			ico.ScaleType = Enum.ScaleType.Fit
 			ico.Image = idIco
@@ -169,8 +169,8 @@ do
 		else
 			local punto = Instance.new("Frame")
 			punto.AnchorPoint = Vector2.new(0, 0.5)
-			punto.Position = UDim2.new(0, 11, 0.5, 0)
-			punto.Size = UDim2.fromOffset(8, 8)
+			punto.Position = UDim2.new(0, 12, 0.5, 0)
+			punto.Size = UDim2.fromOffset(9, 9)
 			punto.Rotation = 45
 			punto.BackgroundColor3 = colorLinaje
 			punto.BorderSizePixel = 0
@@ -178,39 +178,39 @@ do
 		end
 
 		local txt = Tema.texto(fila, string.format("%s  ·  %s", o.Nombre, o.Rareza), {
-			tam = 14,
+			tam = 16,
 			letra = if o.Disponible then Tema.Letra else Tema.LetraFina,
 			color = if o.Disponible then Tema.Hueso else Color3.fromHex("#7D8594"),
 		})
-		txt.Position = UDim2.fromOffset(34, 4)
+		txt.Position = UDim2.fromOffset(38, 5)
 
 		local pctTexto = if o.Disponible and total > 0
 			then string.format("%.2f%%", o.Peso / total * 100)
 			else "PRONTO"
 		local pct = Tema.texto(fila, pctTexto, {
-			tam = 13,
+			tam = 15,
 			letra = Tema.LetraFina,
 			color = colorLinaje,
 			alineado = Enum.TextXAlignment.Right,
 		})
 		pct.AnchorPoint = Vector2.new(1, 0)
-		pct.Position = UDim2.new(1, -10, 0, 5)
+		pct.Position = UDim2.new(1, -12, 0, 6)
 	end
 end
 
 local tirar = Instance.new("TextButton")
-tirar.Position = UDim2.new(0, 22, 1, -64)
-tirar.Size = UDim2.new(1, -44, 0, 46)
+tirar.Position = UDim2.new(0, 24, 1, -70)
+tirar.Size = UDim2.new(1, -48, 0, 50)
 tirar.BackgroundColor3 = Color3.fromRGB(22, 27, 38)
-tirar.BackgroundTransparency = 0.2
+tirar.BackgroundTransparency = 0.16
 tirar.TextColor3 = Tema.Hueso
 tirar.FontFace = Tema.Letra
-tirar.TextSize = 17
+tirar.TextSize = 19
 tirar.Parent = panel
 local bordeTirar = Instance.new("UIStroke")
 bordeTirar.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
 bordeTirar.Color = Tema.Hueso
-bordeTirar.Transparency = 0.4
+bordeTirar.Transparency = 0.35
 bordeTirar.Parent = tirar
 
 local function mostrarResultado(idLinaje: string, etiqueta: string, color: Color3)
@@ -218,8 +218,8 @@ local function mostrarResultado(idLinaje: string, etiqueta: string, color: Color
 	resIcono.Image = img
 	resIcono.ImageColor3 = color
 	resIcono.Visible = img ~= ""
-	resultado.Position = UDim2.fromOffset(if resIcono.Visible then 144 else 104, 62)
-	resultado.Size = UDim2.new(1, if resIcono.Visible then -164 else -124, 0, 48)
+	resultado.Position = UDim2.fromOffset(if resIcono.Visible then 162 else 118, 68)
+	resultado.Size = UDim2.new(1, if resIcono.Visible then -182 else -140, 0, 52)
 	resultado.Text = etiqueta
 	resultado.TextColor3 = color
 end

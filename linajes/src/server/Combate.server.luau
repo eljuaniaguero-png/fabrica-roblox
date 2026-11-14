@@ -164,7 +164,7 @@ pegarA = function(atacante: Model, objetivo: Model, danio: number, tipo: string,
 	local deFrente = raizAtacante ~= nil
 		and r.CFrame.LookVector:Dot((raizAtacante.Position - r.Position).Unit) > 0
 	local fuerte = tipo ~= "Normal" and tipo ~= "Suave"
-	-- El martillazo desde el aire rompe el bloqueo.
+	-- El martillazo desde el aire o golpe fuerte rompen la guardia.
 	if e.bloqueoDesde and deFrente and tipo ~= "Piso" and tipo ~= "Rompe" and tipo ~= "Suave" then
 		if ahora - e.bloqueoDesde <= C.VentanaParry then
 			aturdir(atacante)
@@ -179,13 +179,21 @@ pegarA = function(atacante: Model, objetivo: Model, danio: number, tipo: string,
 			e.bloqueoDesde = nil -- sin energía se rompe la guardia
 		end
 	else
-		remoto:FireAllClients("Golpeado", objetivo, danio, fuerte, atacante)
+		local rompioGuardia = e.bloqueoDesde ~= nil and (tipo == "Piso" or tipo == "Rompe")
+		if rompioGuardia then
+			local energia = (objetivo:GetAttribute("Energia") :: number?) or 0
+			objetivo:SetAttribute("Energia", math.max(energia - C.EnergiaBloqueo * 2, 0))
+			aturdir(objetivo)
+			remoto:FireAllClients("GuardiaRota", objetivo, danio, atacante)
+		else
+			remoto:FireAllClients("Golpeado", objetivo, danio, fuerte, atacante)
+		end
 		e.golpesSeguidos = if ahora - e.ultimoRecibido > C.VentanaDesgaste
 			then 1
 			else e.golpesSeguidos + 1
 		e.ultimoRecibido = ahora
 		local freno = C.Freno * C.DesgasteFreno ^ (e.golpesSeguidos - 1)
-		if tipo ~= "Suave" then
+		if tipo ~= "Suave" and not rompioGuardia then
 			frenar(objetivo, if fuerte then C.FrenoLanzado else freno)
 		end
 		if tipo == "Lanza" or tipo == "Piso" or tipo == "Rompe" then
@@ -274,7 +282,10 @@ local function pedirGolpe(personaje: Model, e: Estado, variante: unknown)
 	if variante == "Aire" and raiz and enElAire(personaje, raiz) then
 		g = C.Variantes.Aire
 		e.paso = 0
-	elseif variante == "Arriba" and vigente and e.paso == #C.Golpes - 1 then
+	elseif variante == "Fuerte" then
+		g = C.Variantes.Fuerte
+		e.paso = 0
+	elseif variante == "Arriba" then
 		g = C.Variantes.Arriba
 		e.paso = 0
 	elseif variante == "Dash" and ahora - e.dashEn <= C.VentanaDash then
@@ -285,7 +296,8 @@ local function pedirGolpe(personaje: Model, e: Estado, variante: unknown)
 	end
 	e.ultimoGolpe = ahora
 	e.libreDesde = ahora + (g.Espera + g.Recarga) * C.Tolerancia
-	remoto:FireAllClients("Ataca", personaje, math.max(e.paso, 1))
+	local esFuerte = g.Tipo == "Rompe" or g.Tipo == "Lanza" or g.Tipo == "Piso"
+	remoto:FireAllClients("Ataca", personaje, math.max(e.paso, 1), esFuerte)
 	task.delay(g.Impacto, function()
 		resolverGolpe(
 			personaje,
@@ -330,6 +342,7 @@ remoto.OnServerEvent:Connect(function(jugador, pedido, variante)
 			e.dashEn = ahora
 			e.invulnerableHasta = ahora + C.DashInvulnerable
 			e.bloqueoDesde = nil
+			e.libreDesde = 0 -- permite cancelar recuperación y pegar enseguida
 		end
 	end
 end)

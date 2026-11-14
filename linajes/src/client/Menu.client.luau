@@ -40,33 +40,33 @@ botonGui.ResetOnSpawn = false
 local esquinaMenu = Tema.grupo(
 	botonGui,
 	Vector2.new(1, 0),
-	UDim2.new(1, -(H.Margen + 152), 0, 48),
-	Vector2.new(150, 46)
+	UDim2.new(1, -(H.Margen + 206), 0, 42),
+	Vector2.new(150, 52)
 )
 local abrirMenuBtn = Instance.new("TextButton")
 abrirMenuBtn.Size = UDim2.fromScale(1, 1)
 abrirMenuBtn.BackgroundTransparency = 1
 abrirMenuBtn.Text = ""
 abrirMenuBtn.Parent = esquinaMenu
-local txtAbrir = Tema.texto(esquinaMenu, "M  MENÚ", { tam = 20, espaciado = 3 })
+local txtAbrir = Tema.texto(esquinaMenu, "M  ·  MENÚ", { tam = 20, espaciado = 3 })
 txtAbrir.AnchorPoint = Vector2.new(1, 0)
 txtAbrir.Position = UDim2.fromScale(1, 0)
 local rayaAbrir = Instance.new("Frame")
 rayaAbrir.AnchorPoint = Vector2.new(1, 0)
-rayaAbrir.Position = UDim2.new(1, 0, 0, 34)
-rayaAbrir.Size = UDim2.fromOffset(118, 2)
+rayaAbrir.Position = UDim2.new(1, 0, 0, 32)
+rayaAbrir.Size = UDim2.fromOffset(116, 2)
 rayaAbrir.BackgroundColor3 = Tema.Hueso
-rayaAbrir.BackgroundTransparency = 0.65
+rayaAbrir.BackgroundTransparency = 0.6
 rayaAbrir.BorderSizePixel = 0
 rayaAbrir.Parent = esquinaMenu
 abrirMenuBtn.MouseEnter:Connect(function()
-	rayaAbrir.BackgroundTransparency = 0.15
+	rayaAbrir.BackgroundTransparency = 0.1
 end)
 abrirMenuBtn.MouseLeave:Connect(function()
-	rayaAbrir.BackgroundTransparency = 0.65
+	rayaAbrir.BackgroundTransparency = 0.6
 end)
 
--- Fondo atmosférico + viñeta lateral izquierda.
+-- Fondo atmosférico + viñeta lateral izquierda + halo del eclipse en movimiento.
 local fondo = Instance.new("Frame")
 fondo.Size = UDim2.fromScale(1, 1)
 fondo.BackgroundColor3 = Color3.fromHex("#080A0E")
@@ -74,28 +74,103 @@ fondo.BackgroundTransparency = if IM.Menu.Fondo ~= "" then 0 else 1
 fondo.BorderSizePixel = 0
 fondo.Parent = gui
 
+local fondoImg: ImageLabel? = nil
 if IM.Menu.Fondo ~= "" then
-	local fondoImg = Instance.new("ImageLabel")
-	fondoImg.AnchorPoint = Vector2.new(0.5, 0.5)
-	fondoImg.Position = UDim2.fromScale(0.5, 0.5)
-	fondoImg.Size = UDim2.fromScale(MU.ZoomFondo, MU.ZoomFondo)
-	fondoImg.BackgroundTransparency = 1
-	fondoImg.ScaleType = Enum.ScaleType.Crop
-	fondoImg.Image = IM.Menu.Fondo
-	fondoImg.Parent = fondo
-	-- Paneo lento de ida y vuelta: la escena "respira" sin distraer.
+	local img = Instance.new("ImageLabel")
+	img.AnchorPoint = Vector2.new(0.5, 0.5)
+	img.Position = UDim2.fromScale(0.5, 0.5)
+	img.Size = UDim2.fromScale(MU.ZoomFondo, MU.ZoomFondo)
+	img.BackgroundTransparency = 1
+	img.ScaleType = Enum.ScaleType.Crop
+	img.Image = IM.Menu.Fondo
+	img.Parent = fondo
+	fondoImg = img
+	-- Chispa viva en la mecha del farol + chispitas flotando alrededor (sin discos duros encima).
+	local brilloFarol = Instance.new("Frame")
+	brilloFarol.AnchorPoint = Vector2.new(0.5, 0.5)
+	brilloFarol.Position = UDim2.fromScale(0.834, 0.352)
+	brilloFarol.Size = UDim2.fromOffset(10, 10)
+	brilloFarol.Rotation = 45
+	brilloFarol.BackgroundColor3 = Color3.fromHex("#FFD27D")
+	brilloFarol.BackgroundTransparency = 0.48
+	brilloFarol.BorderSizePixel = 0
+	brilloFarol.ZIndex = 2
+	brilloFarol.Parent = fondo
 	TweenService:Create(
-		fondoImg,
-		TweenInfo.new(MU.PaneoSegundos, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut, -1, true),
-		{ Position = UDim2.fromScale(0.5 - MU.PaneoDistancia, 0.5 + MU.PaneoDistancia * 0.5) }
+		brilloFarol,
+		TweenInfo.new(1.3, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut, -1, true),
+		{ Size = UDim2.fromOffset(16, 16), BackgroundTransparency = 0.82 }
 	):Play()
+
+	for idx = 1, 5 do
+		local mota = Instance.new("Frame")
+		mota.AnchorPoint = Vector2.new(0.5, 0.5)
+		local bx = if idx <= 3 then 0.82 + (idx - 2) * 0.025 else 0.39 + (idx - 4) * 0.04
+		local by = if idx <= 3 then 0.36 + (idx - 2) * 0.03 else 0.41 + (idx - 4) * 0.03
+		mota.Position = UDim2.fromScale(bx, by)
+		mota.Size = UDim2.fromOffset(4, 4)
+		mota.Rotation = 45
+		mota.BackgroundColor3 = if idx <= 3 then Color3.fromHex("#F5A638") else COFRADIA
+		mota.BackgroundTransparency = 0.4
+		mota.BorderSizePixel = 0
+		mota.ZIndex = 2
+		mota.Parent = fondo
+		TweenService:Create(
+			mota,
+			TweenInfo.new(
+				2 + idx * 0.45,
+				Enum.EasingStyle.Sine,
+				Enum.EasingDirection.InOut,
+				-1,
+				true
+			),
+			{
+				Position = UDim2.fromScale(
+					bx + (if idx % 2 == 0 then 0.012 else -0.012),
+					by - 0.03
+				),
+				BackgroundTransparency = 0.85,
+			}
+		):Play()
+	end
+else
+	-- Anillos geométricos del eclipse girando suave detrás de la cámara viva.
+	local function crearCorona(
+		lado: number,
+		giroFin: number,
+		segs: number,
+		color: Color3,
+		trans: number
+	)
+		local marco = Instance.new("Frame")
+		marco.AnchorPoint = Vector2.new(0.5, 0.5)
+		marco.Position = UDim2.fromScale(0.67, 0.44)
+		marco.Size = UDim2.fromOffset(lado, lado)
+		marco.Rotation = 15
+		marco.BackgroundTransparency = 1
+		marco.ZIndex = 2
+		marco.Parent = fondo
+		local trazo = Instance.new("UIStroke")
+		trazo.Color = color
+		trazo.Thickness = 1.6
+		trazo.Transparency = trans
+		trazo.Parent = marco
+		TweenService:Create(
+			marco,
+			TweenInfo.new(segs, Enum.EasingStyle.Linear, Enum.EasingDirection.InOut, -1),
+			{ Rotation = marco.Rotation + giroFin }
+		):Play()
+		return marco
+	end
+	crearCorona(380, 360, 26, COFRADIA, 0.45)
+	crearCorona(290, -360, 19, Tema.Xp, 0.58)
 end
 
 -- El fondo pintado ya trae su eclipse: el suelto va solo si no hay fondo (si no, salen dos).
 if IM.Menu.Eclipse ~= "" and IM.Menu.Fondo == "" then
 	local eclipseImg = Instance.new("ImageLabel")
 	eclipseImg.AnchorPoint = Vector2.new(0.5, 0.5)
-	eclipseImg.Position = UDim2.fromScale(0.68, 0.42)
+	eclipseImg.Position = UDim2.fromScale(0.67, 0.42)
 	eclipseImg.Size = UDim2.fromScale(0.46, 0.72)
 	eclipseImg.BackgroundTransparency = 1
 	eclipseImg.ScaleType = Enum.ScaleType.Fit
@@ -105,6 +180,30 @@ if IM.Menu.Eclipse ~= "" and IM.Menu.Fondo == "" then
 	eclipseImg.Parent = fondo
 end
 
+-- Resplandor bajo cálido del puerto que respira lento.
+local resplandor = Instance.new("Frame")
+resplandor.AnchorPoint = Vector2.new(0, 1)
+resplandor.Position = UDim2.fromScale(0, 1)
+resplandor.Size = UDim2.fromScale(1, 0.5)
+resplandor.BackgroundColor3 = COFRADIA
+resplandor.BackgroundTransparency = 0.88
+resplandor.BorderSizePixel = 0
+resplandor.ZIndex = 2
+resplandor.Parent = fondo
+local resGrad = Instance.new("UIGradient")
+resGrad.Rotation = -90
+resGrad.Transparency = NumberSequence.new({
+	NumberSequenceKeypoint.new(0, 0.35),
+	NumberSequenceKeypoint.new(0.55, 0.85),
+	NumberSequenceKeypoint.new(1, 1),
+})
+resGrad.Parent = resplandor
+TweenService:Create(
+	resplandor,
+	TweenInfo.new(4.2, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut, -1, true),
+	{ BackgroundTransparency = 0.76 }
+):Play()
+
 local velo = Instance.new("Frame")
 velo.Size = UDim2.fromScale(1, 1)
 velo.BackgroundColor3 = Color3.fromHex("#080A0E")
@@ -113,9 +212,9 @@ velo.ZIndex = 3
 velo.Parent = fondo
 local grad = Instance.new("UIGradient")
 grad.Transparency = NumberSequence.new({
-	NumberSequenceKeypoint.new(0, 0.1),
-	NumberSequenceKeypoint.new(0.45, 0.45),
-	NumberSequenceKeypoint.new(1, 0.86),
+	NumberSequenceKeypoint.new(0, 0.06),
+	NumberSequenceKeypoint.new(0.42, 0.42),
+	NumberSequenceKeypoint.new(1, 0.9),
 })
 grad.Parent = velo
 
@@ -180,22 +279,22 @@ local COLORES_BRASA =
 
 local function lanzarBrasa()
 	local b = Instance.new("Frame")
-	local lado = math.random(3, 6)
+	local lado = math.random(4, 8)
 	b.AnchorPoint = Vector2.new(0.5, 0.5)
 	b.Size = UDim2.fromOffset(lado, lado)
 	b.Rotation = 45
 	b.BackgroundColor3 = COLORES_BRASA[math.random(1, #COLORES_BRASA)]
-	b.BackgroundTransparency = 0.15
+	b.BackgroundTransparency = 0.1
 	b.BorderSizePixel = 0
 	b.ZIndex = 4
-	local x = math.random(30, 100) / 100
-	b.Position = UDim2.fromScale(x, 1.02)
+	local x = math.random(8, 100) / 100
+	b.Position = UDim2.fromScale(x, 1.03)
 	b.Parent = capaBrasas
-	local dura = math.random(60, 110) / 10
-	local deriva = math.random(-8, 8) / 100
+	local dura = math.random(45, 90) / 10
+	local deriva = math.random(-12, 12) / 100
 	TweenService:Create(b, TweenInfo.new(dura, Enum.EasingStyle.Sine, Enum.EasingDirection.Out), {
-		Position = UDim2.fromScale(x + deriva, math.random(15, 55) / 100),
-		Rotation = 45 + math.random(-180, 180),
+		Position = UDim2.fromScale(x + deriva, math.random(8, 52) / 100),
+		Rotation = 45 + math.random(-220, 220),
 		BackgroundTransparency = 1,
 	}):Play()
 	task.delay(dura, function()
@@ -231,7 +330,7 @@ local function ajustarEscala()
 		return
 	end
 	local v = cam.ViewportSize
-	local s = math.clamp(math.min(v.X / 1280, v.Y / 720), 0.52, 1.15) * MU.Zoom
+	local s = math.clamp(math.min(v.X / 1280, v.Y / 720), 0.56, 1.12) * MU.Zoom
 	escalaUI.Scale = s
 	contenido.Size = UDim2.fromScale(1 / s, 1 / s)
 end
@@ -246,45 +345,69 @@ end
 conectarCamara()
 workspace:GetPropertyChangedSignal("CurrentCamera"):Connect(conectarCamara)
 
--- Columna izquierda editorial
--- CanvasGroup: se puede fundir entera al abrir. Sin Tema.grupo: ese escalaba por segunda vez
--- y dejaba todo al 67 % (por eso se veía chiquito).
+-- Columna izquierda editorial (dimensionada para lucir grande sin recortar en 720p).
 local columna = Instance.new("CanvasGroup")
 columna.AnchorPoint = Vector2.new(0, 0.5)
-columna.Position = UDim2.new(0, 68, 0.5, 0)
-columna.Size = UDim2.fromOffset(560, 600)
+columna.Position = UDim2.new(0, 48, 0.5, 0)
+columna.Size = UDim2.fromOffset(540, 530)
 columna.BackgroundTransparency = 1
 columna.Parent = contenido
+
+local puntoSector = Instance.new("Frame")
+puntoSector.AnchorPoint = Vector2.new(0, 0.5)
+puntoSector.Position = UDim2.fromOffset(4, 9)
+puntoSector.Size = UDim2.fromOffset(8, 8)
+puntoSector.Rotation = 45
+puntoSector.BackgroundColor3 = COFRADIA
+puntoSector.BorderSizePixel = 0
+puntoSector.Parent = columna
+TweenService:Create(
+	puntoSector,
+	TweenInfo.new(1.4, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut, -1, true),
+	{ Size = UDim2.fromOffset(11, 11) }
+):Play()
 
 local sector = Tema.texto(
 	columna,
 	Tema.espaciar("PUERTO ÓXIDO  ·  SECTOR PORTUARIO", 3),
-	{ tam = 15, letra = Tema.LetraFina, color = GRIS }
+	{ tam = 16, letra = Tema.LetraFina, color = GRIS }
 )
-sector.Position = UDim2.fromOffset(0, 0)
+sector.Position = UDim2.fromOffset(22, 0)
 
 if IM.Menu.Logo ~= "" then
 	local logoImg = Instance.new("ImageLabel")
-	logoImg.Position = UDim2.fromOffset(-8, 22)
-	logoImg.Size = UDim2.fromOffset(470, 104)
+	logoImg.Position = UDim2.fromOffset(0, 18)
+	logoImg.Size = UDim2.fromOffset(102, 102)
 	logoImg.BackgroundTransparency = 1
 	logoImg.ScaleType = Enum.ScaleType.Fit
 	logoImg.Image = IM.Menu.Logo
 	logoImg.Parent = columna
+	local titulo = Tema.texto(
+		columna,
+		Tema.espaciar("LINAJES", 4),
+		{ tam = 46, letra = Tema.LetraGruesa, color = Tema.Hueso }
+	)
+	titulo.Position = UDim2.fromOffset(116, 24)
+	local subTitulo = Tema.texto(
+		columna,
+		Tema.espaciar("DEL ECLIPSE", 4),
+		{ tam = 18, letra = Tema.Letra, color = Tema.Xp }
+	)
+	subTitulo.Position = UDim2.fromOffset(118, 76)
 else
 	local titulo = Tema.texto(
 		columna,
 		Tema.espaciar("LINAJES DEL ECLIPSE", 3),
-		{ tam = 40, letra = Tema.LetraGruesa, color = Tema.Hueso }
+		{ tam = 48, letra = Tema.LetraGruesa, color = Tema.Hueso }
 	)
-	titulo.Position = UDim2.fromOffset(0, 26)
+	titulo.Position = UDim2.fromOffset(0, 24)
 end
 
-Tema.ornamento(columna, Vector2.new(200, 136), 400)
+Tema.ornamento(columna, Vector2.new(240, 130), 480)
 
 -- Botonera principal
-local yBase = 176
-local paso = 82
+local yBase = 150
+local paso = 74
 local filasMenu: { Frame } = {}
 local romboActivo: Frame? = nil
 local RAPIDO = TweenInfo.new(0.18, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
@@ -303,15 +426,30 @@ local function crearItemMenu(
 ): (TextButton, Frame, TextLabel)
 	local fila = Instance.new("Frame")
 	fila.Position = UDim2.fromOffset(0, filaY)
-	fila.Size = UDim2.fromOffset(470, 60)
+	fila.Size = UDim2.fromOffset(490, 56)
 	fila.BackgroundTransparency = 1
 	fila.Parent = columna
 	table.insert(filasMenu, fila)
 
+	-- Barrido de luz detrás de la fila al pasar el cursor.
+	local banda = Instance.new("Frame")
+	banda.Size = UDim2.fromScale(0, 1)
+	banda.BackgroundColor3 = COFRADIA
+	banda.BackgroundTransparency = 0.72
+	banda.BorderSizePixel = 0
+	banda.Parent = fila
+	local bandaGrad = Instance.new("UIGradient")
+	bandaGrad.Transparency = NumberSequence.new({
+		NumberSequenceKeypoint.new(0, 0.15),
+		NumberSequenceKeypoint.new(0.75, 0.75),
+		NumberSequenceKeypoint.new(1, 1),
+	})
+	bandaGrad.Parent = banda
+
 	local rombo = Instance.new("Frame")
 	rombo.AnchorPoint = Vector2.new(0.5, 0.5)
-	rombo.Position = UDim2.fromOffset(12, 22)
-	rombo.Size = UDim2.fromOffset(if activo then 17 else 14, if activo then 17 else 14)
+	rombo.Position = UDim2.fromOffset(14, 24)
+	rombo.Size = UDim2.fromOffset(if activo then 20 else 15, if activo then 20 else 15)
 	rombo.Rotation = 45
 	rombo.BackgroundColor3 = Tema.Hueso
 	rombo.BackgroundTransparency = if activo then 0 else 1
@@ -319,19 +457,19 @@ local function crearItemMenu(
 	rombo.Parent = fila
 	local bordeR = Instance.new("UIStroke")
 	bordeR.Color = if activo then Tema.Hueso else GRIS
-	bordeR.Thickness = 1.4
+	bordeR.Thickness = 1.6
 	bordeR.Parent = rombo
 
 	local txt = Tema.texto(fila, Tema.espaciar(etiqueta, 3), {
-		tam = if activo then 32 else 26,
-		letra = if activo then Tema.Letra else Tema.LetraFina,
+		tam = if activo then 36 else 28,
+		letra = if activo then Tema.LetraGruesa else Tema.Letra,
 		color = if activo then Tema.Hueso else GRIS,
 	})
-	txt.Position = UDim2.fromOffset(38, 2)
+	txt.Position = UDim2.fromOffset(42, 2)
 
 	-- Raya que crece debajo del texto al pasar el mouse.
 	local raya = Instance.new("Frame")
-	raya.Position = UDim2.fromOffset(38, 44)
+	raya.Position = UDim2.fromOffset(42, 46)
 	raya.Size = UDim2.fromOffset(0, 2)
 	raya.BackgroundColor3 = Tema.Hueso
 	raya.BorderSizePixel = 0
@@ -340,8 +478,8 @@ local function crearItemMenu(
 	if iconoId ~= "" then
 		local ico = Instance.new("ImageLabel")
 		ico.AnchorPoint = Vector2.new(0, 0.5)
-		ico.Position = UDim2.fromOffset(400, 22)
-		ico.Size = UDim2.fromOffset(28, 28)
+		ico.Position = UDim2.fromOffset(424, 24)
+		ico.Size = UDim2.fromOffset(30, 30)
 		ico.BackgroundTransparency = 1
 		ico.ScaleType = Enum.ScaleType.Fit
 		ico.Image = iconoId
@@ -358,8 +496,9 @@ local function crearItemMenu(
 
 	local function encender()
 		-- SONIDO: pasar por un botón del menú (Config.Sonidos)
-		tween(txt, RAPIDO, { TextColor3 = Tema.Hueso, Position = UDim2.fromOffset(50, 2) })
-		tween(rombo, RAPIDO, { BackgroundTransparency = 0.25, Rotation = 135 })
+		tween(txt, RAPIDO, { TextColor3 = Tema.Hueso, Position = UDim2.fromOffset(58, 2) })
+		tween(rombo, RAPIDO, { BackgroundTransparency = 0.15, Rotation = 135 })
+		tween(banda, RAPIDO, { Size = UDim2.fromScale(1, 1) })
 		tween(
 			raya,
 			RAPIDO,
@@ -369,9 +508,10 @@ local function crearItemMenu(
 	local function apagar()
 		tween(txt, RAPIDO, {
 			TextColor3 = if activo then Tema.Hueso else GRIS,
-			Position = UDim2.fromOffset(38, 2),
+			Position = UDim2.fromOffset(42, 2),
 		})
 		tween(rombo, RAPIDO, { BackgroundTransparency = if activo then 0 else 1, Rotation = 45 })
+		tween(banda, RAPIDO, { Size = UDim2.fromScale(0, 1) })
 		tween(raya, RAPIDO, { Size = UDim2.fromOffset(0, 2) })
 	end
 	btn.MouseEnter:Connect(encender)
@@ -380,9 +520,9 @@ local function crearItemMenu(
 	btn.SelectionLost:Connect(apagar)
 	btn.Activated:Connect(function()
 		-- SONIDO: tocar un botón del menú
-		rombo.Size += UDim2.fromOffset(8, 8)
+		rombo.Size += UDim2.fromOffset(9, 9)
 		tween(rombo, TweenInfo.new(0.3, Enum.EasingStyle.Back), {
-			Size = UDim2.fromOffset(if activo then 17 else 14, if activo then 17 else 14),
+			Size = UDim2.fromOffset(if activo then 20 else 15, if activo then 20 else 15),
 		})
 	end)
 	if activo then
@@ -395,23 +535,23 @@ end
 local btnContinuar, _, txtContinuar = crearItemMenu(yBase, "CONTINUAR", true, "")
 botonPrincipalTxt = txtContinuar
 subPrincipalTxt = Tema.texto(columna, "", { tam = 17, letra = Tema.LetraFina, color = GRIS })
-subPrincipalTxt.Position = UDim2.fromOffset(38, yBase + 44)
+subPrincipalTxt.Position = UDim2.fromOffset(42, yBase + 46)
 
 -- Fila 2: ESPACIOS < 1 / 3 >
 local _, _, _ = crearItemMenu(yBase + paso, "ESPACIOS", false, "")
 local espacioActual = 1
 local totalEspacios = 3
 local textoEspacio = Tema.texto(columna, "1 / 3", {
-	tam = 22,
+	tam = 24,
 	letra = Tema.Letra,
 	color = Tema.Hueso,
 	alineado = Enum.TextXAlignment.Center,
 })
 textoEspacio.AutomaticSize = Enum.AutomaticSize.None
-textoEspacio.Position = UDim2.fromOffset(318, yBase + paso + 6)
-textoEspacio.Size = UDim2.fromOffset(84, 32)
+textoEspacio.Position = UDim2.fromOffset(334, yBase + paso + 6)
+textoEspacio.Size = UDim2.fromOffset(76, 34)
 local notaEspacio = Tema.texto(columna, "", { tam = 16, letra = Tema.LetraFina, color = APAGADO })
-notaEspacio.Position = UDim2.fromOffset(38, yBase + paso + 44)
+notaEspacio.Position = UDim2.fromOffset(42, yBase + paso + 44)
 
 local function crearFlecha(x: number, rotacion: number, textoAlt: string): TextButton
 	local fbtn = Instance.new("TextButton")
@@ -438,8 +578,8 @@ local function crearFlecha(x: number, rotacion: number, textoAlt: string): TextB
 	return fbtn
 end
 
-local btnEspAnt = crearFlecha(272, 180, "‹")
-local btnEspSig = crearFlecha(404, 0, "›")
+local btnEspAnt = crearFlecha(294, 180, "‹")
+local btnEspSig = crearFlecha(408, 0, "›")
 
 local function refrescarEspacios()
 	textoEspacio.TextTransparency = 1
@@ -466,8 +606,8 @@ local btnCreditos = crearItemMenu(yBase + paso * 4, "CRÉDITOS", false, "")
 -- Panel derecho secundario (Árbol / Ajustes / Créditos)
 local cajon = Instance.new("CanvasGroup")
 cajon.AnchorPoint = Vector2.new(1, 0)
-cajon.Position = UDim2.new(1, -68, 0, 74)
-cajon.Size = UDim2.fromOffset(500, 360)
+cajon.Position = UDim2.new(1, -48, 0, 26)
+cajon.Size = UDim2.fromOffset(445, 250)
 cajon.BackgroundColor3 = Color3.fromRGB(13, 16, 23)
 cajon.BackgroundTransparency = 0.1
 cajon.BorderSizePixel = 0
@@ -582,10 +722,10 @@ local function abrirSeccion(nombre: string)
 	cajon.Visible = true
 	if estabaCerrado then
 		cajon.GroupTransparency = 1
-		cajon.Position = UDim2.new(1, -28, 0, 74)
+		cajon.Position = UDim2.new(1, -18, 0, 26)
 		tween(cajon, TweenInfo.new(0.28, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {
 			GroupTransparency = 0,
-			Position = UDim2.new(1, -68, 0, 74),
+			Position = UDim2.new(1, -48, 0, 26),
 		})
 	end
 	limpiarCajon()
@@ -666,7 +806,7 @@ local function abrirSeccion(nombre: string)
 
 		agregarFilaCajon(
 			"ATAJOS PC Y MÓVIL",
-			"LMB Golpe · Q Dash · F Bloqueo · Z/X/C Poderes · M Menú",
+			"LMB Golpe · RMB Rompe · E Levanta · Q Dash · F Parry · Z/X/C Poderes",
 			IM.Controles.Ataque,
 			GRIS
 		)
@@ -701,15 +841,15 @@ end)
 -- Tarjeta resumen abajo a la derecha (bando, linaje activo, monedas)
 local tarjeta = Instance.new("CanvasGroup")
 tarjeta.AnchorPoint = Vector2.new(1, 1)
-tarjeta.Position = UDim2.new(1, -68, 1, -56)
-tarjeta.Size = UDim2.fromOffset(470, 280)
+tarjeta.Position = UDim2.new(1, -48, 1, -36)
+tarjeta.Size = UDim2.fromOffset(445, 256)
 tarjeta.BackgroundColor3 = Color3.fromRGB(13, 16, 23)
-tarjeta.BackgroundTransparency = 0.12
+tarjeta.BackgroundTransparency = 0.1
 tarjeta.BorderSizePixel = 0
 tarjeta.Parent = contenido
 local bordeTarjeta = Instance.new("UIStroke")
 bordeTarjeta.Color = Tema.Hueso
-bordeTarjeta.Transparency = 0.82
+bordeTarjeta.Transparency = 0.72
 bordeTarjeta.Parent = tarjeta
 
 local acentoBando = Instance.new("Frame")
@@ -868,13 +1008,13 @@ end
 local function animarEntrada()
 	-- SONIDO: abrir el menú (golpe grave suave)
 	columna.GroupTransparency = 1
-	columna.Position = UDim2.new(0, 28, 0.5, 0)
+	columna.Position = UDim2.new(0, 12, 0.5, 0)
 	tween(
 		columna,
 		TweenInfo.new(MU.EntradaSegundos, Enum.EasingStyle.Quint, Enum.EasingDirection.Out),
 		{
 			GroupTransparency = 0,
-			Position = UDim2.new(0, 68, 0.5, 0),
+			Position = UDim2.new(0, 48, 0.5, 0),
 		}
 	)
 	for i, fila in filasMenu do
@@ -889,16 +1029,51 @@ local function animarEntrada()
 		end)
 	end
 	tarjeta.GroupTransparency = 1
-	tarjeta.Position = UDim2.new(1, -68, 1, -16)
+	tarjeta.Position = UDim2.new(1, -48, 1, 0)
 	task.delay(MU.Escalonado * (#filasMenu + 1), function()
 		tween(tarjeta, TweenInfo.new(0.5, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {
 			GroupTransparency = 0,
-			Position = UDim2.new(1, -68, 1, -56),
+			Position = UDim2.new(1, -48, 1, -36),
 		})
 	end)
 	-- Fundido desde negro.
 	telon.BackgroundTransparency = 0
-	tween(telon, TweenInfo.new(0.9, Enum.EasingStyle.Sine), { BackgroundTransparency = 1 })
+	tween(telon, TweenInfo.new(0.85, Enum.EasingStyle.Sine), { BackgroundTransparency = 1 })
+end
+
+-- Luz de recorte cálida/linaje alrededor del héroe mientras el menú está abierto.
+local luzHeroe: PointLight? = nil
+
+local function actualizarLuzHeroe(abierto: boolean)
+	if luzHeroe and not abierto then
+		luzHeroe:Destroy()
+		luzHeroe = nil
+		return
+	end
+	if not abierto then
+		return
+	end
+	local p = jugador.Character
+	local r = p and p:FindFirstChild("HumanoidRootPart")
+	if not (r and r:IsA("BasePart")) then
+		return
+	end
+	local existente = luzHeroe
+	local luz: PointLight
+	if existente and existente.Parent then
+		luz = existente
+	else
+		local nueva = Instance.new("PointLight")
+		nueva.Name = "LuzMenuHeroe"
+		nueva.Shadows = true
+		nueva.Range = 22
+		nueva.Brightness = 3.2
+		nueva.Parent = r
+		luz = nueva
+		luzHeroe = nueva
+	end
+	local col = Tema.color(jugador:GetAttribute("Linaje"))
+	luz.Color = col:Lerp(Color3.fromHex("#ffd6a0"), 0.35)
 end
 
 local function setAbierto(abierto: boolean)
@@ -906,9 +1081,27 @@ local function setAbierto(abierto: boolean)
 	botonGui.Enabled = not abierto
 	jugador:SetAttribute("MenuAbierto", abierto)
 	aplicarVisibilidadHud(abierto)
+	actualizarLuzHeroe(abierto)
+	local cam = workspace.CurrentCamera
 	if abierto then
+		if cam then
+			cam.CameraType = Enum.CameraType.Scriptable
+		end
 		animarEntrada()
 	else
+		if cam then
+			local p = jugador.Character
+			local hum = p and p:FindFirstChildOfClass("Humanoid")
+			local r = p and p:FindFirstChild("HumanoidRootPart")
+			if hum then
+				cam.CameraSubject = hum
+			end
+			cam.CameraType = Enum.CameraType.Custom
+			cam.FieldOfView = Config.Mundo.Camara.FOV
+			if r and r:IsA("BasePart") then
+				cam.CFrame = r.CFrame * CFrame.new(0, 4.5, 13)
+			end
+		end
 		cajon.Visible = false
 		panelActivo = nil
 	end
@@ -919,21 +1112,65 @@ if romboActivo then
 	local r = romboActivo
 	TweenService:Create(
 		r,
-		TweenInfo.new(1.1, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut, -1, true),
-		{ Size = UDim2.fromOffset(21, 21) }
+		TweenInfo.new(1.0, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut, -1, true),
+		{ Size = UDim2.fromOffset(25, 25), Rotation = 135 }
 	):Play()
 end
 
--- Brasas: solo mientras el menú está abierto.
+-- Brasas + paralaje suave de la portada + cámara 3D mientras el menú está abierto.
 local proximaBrasa = 0
-RunService.RenderStepped:Connect(function()
+local tiempoMenu = 0
+RunService.RenderStepped:Connect(function(dt: number)
 	if not gui.Enabled then
 		return
 	end
 	local ahora = os.clock()
+	tiempoMenu += math.min(dt, 0.05)
 	if ahora >= proximaBrasa then
 		proximaBrasa = ahora + 1 / MU.BrasasPorSegundo
 		lanzarBrasa()
+	end
+	local mouse = UserInputService:GetMouseLocation()
+	local cam = workspace.CurrentCamera
+	local mx = 0
+	local my = 0
+	if cam then
+		local v = cam.ViewportSize
+		mx = if v.X > 0 then (mouse.X / v.X - 0.5) else 0
+		my = if v.Y > 0 then (mouse.Y / v.Y - 0.5) else 0
+	end
+	if fondoImg then
+		local panX = math.sin(tiempoMenu * (math.pi * 2 / MU.PaneoSegundos)) * MU.PaneoDistancia
+		local panY = math.cos(tiempoMenu * (math.pi / MU.PaneoSegundos))
+			* (MU.PaneoDistancia * 0.45)
+		fondoImg.Position = UDim2.fromScale(0.5 + panX - mx * 0.025, 0.5 + panY - my * 0.018)
+	end
+	if cam then
+		if cam.CameraType ~= Enum.CameraType.Scriptable then
+			cam.CameraType = Enum.CameraType.Scriptable
+		end
+		local p = jugador.Character
+		local r = p and p:FindFirstChild("HumanoidRootPart")
+		local heroCf = if r and r:IsA("BasePart")
+			then CFrame.new(r.Position) * (r.CFrame - r.CFrame.Position)
+			else CFrame.new(Config.Arena.ZonaCentro + Vector3.new(0, 3, 0))
+		local orbita = math.sin(tiempoMenu * 0.28) * 2.2
+		local respiro = math.sin(tiempoMenu * 0.45) * 0.35
+		-- Cámara delante-izquierda del héroe: lo deja en el tercio derecho libre de las letras.
+		local desde = (heroCf * CFrame.new(
+			4.2 + orbita + mx * 1.4,
+			1.15 + respiro - my * 0.8,
+			-10.5
+		)).Position
+		local hacia = (heroCf * CFrame.new(-3.0, 0.85, 0)).Position
+		cam.CFrame = CFrame.lookAt(desde, hacia)
+		cam.FieldOfView = 54 + math.sin(tiempoMenu * 0.35) * 1.4
+	end
+end)
+
+jugador.CharacterAdded:Connect(function()
+	if gui.Enabled then
+		task.defer(actualizarLuzHeroe, true)
 	end
 end)
 

@@ -33,42 +33,46 @@ end
 
 local gui = Tema.pantalla("Estado", 1)
 local caja =
-	Tema.grupo(gui, Vector2.new(0, 1), UDim2.new(0, H.Margen, 1, -40), Vector2.new(560, 100))
+	Tema.grupo(gui, Vector2.new(0, 1), UDim2.new(0, H.Margen, 1, -34), Vector2.new(640, 118))
 
-local rombo = Tema.rombo(caja, Vector2.new(30, 36), 70, true)
-local nivel = Tema.texto(rombo, "1", { tam = 24, alineado = Enum.TextXAlignment.Center })
+local rombo = Tema.rombo(caja, Vector2.new(40, 46), 88, true)
+local nivel = Tema.texto(
+	rombo,
+	"1",
+	{ tam = 32, letra = Tema.LetraGruesa, alineado = Enum.TextXAlignment.Center }
+)
 nivel.AutomaticSize = Enum.AutomaticSize.None
 nivel.Size = UDim2.fromScale(1, 1)
 nivel.ZIndex = 5
 
-local X = 78
+local X = 102
 local iconoLinaje = Instance.new("ImageLabel")
 iconoLinaje.Position = UDim2.fromOffset(X, 0)
-iconoLinaje.Size = UDim2.fromOffset(22, 22)
+iconoLinaje.Size = UDim2.fromOffset(28, 28)
 iconoLinaje.BackgroundTransparency = 1
 iconoLinaje.ScaleType = Enum.ScaleType.Fit
 iconoLinaje.Visible = false
 iconoLinaje.Parent = caja
 
-local linaje = Tema.texto(caja, "", { tam = 15 })
+local linaje = Tema.texto(caja, "", { tam = 20 })
 linaje.Position = UDim2.fromOffset(X, 2)
-local numeros = Tema.texto(caja, "", { tam = 14, letra = Tema.LetraFina, transparencia = 0.25 })
+local numeros = Tema.texto(caja, "", { tam = 18, letra = Tema.LetraFina, transparencia = 0.2 })
 numeros.AnchorPoint = Vector2.new(1, 0)
-numeros.Position = UDim2.fromOffset(X + H.AnchoVida, 2)
+numeros.Position = UDim2.fromOffset(X + H.AnchoVida, 3)
 
-local fondoVida, vida = Tema.barra(caja, Vector2.new(X, 26), H.AnchoVida, 7, Tema.Vida)
+local fondoVida, vida = Tema.barra(caja, Vector2.new(X, 32), H.AnchoVida, 12, Tema.Vida)
 local danio = Instance.new("Frame")
 danio.Size = UDim2.fromScale(1, 1)
 danio.BackgroundColor3 = Tema.Danio
-danio.BackgroundTransparency = 0.15
+danio.BackgroundTransparency = 0.12
 danio.BorderSizePixel = 0
 danio.ZIndex = 2
 danio.Parent = fondoVida
 
-local _, energia = Tema.barra(caja, Vector2.new(X, 40), H.AnchoEnergia, 3, Tema.Hueso)
-local _, xp = Tema.barra(caja, Vector2.new(X, 52), H.AnchoVida, 1, Tema.Xp)
-local textoXp = Tema.texto(caja, "", { tam = 12, letra = Tema.LetraFina, transparencia = 0.45 })
-textoXp.Position = UDim2.fromOffset(X, 60)
+local _, energia = Tema.barra(caja, Vector2.new(X, 50), H.AnchoEnergia, 5, Tema.Hueso)
+local _, xp = Tema.barra(caja, Vector2.new(X, 62), H.AnchoVida, 2, Tema.Xp)
+local textoXp = Tema.texto(caja, "", { tam = 15, letra = Tema.LetraFina, transparencia = 0.35 })
+textoXp.Position = UDim2.fromOffset(X, 70)
 
 local function actualizarDatos()
 	local l = jugador:GetAttribute("Linaje")
@@ -76,7 +80,7 @@ local function actualizarDatos()
 	iconoLinaje.Image = idLinaje
 	iconoLinaje.ImageColor3 = Tema.color(l)
 	iconoLinaje.Visible = idLinaje ~= ""
-	linaje.Position = UDim2.fromOffset(if idLinaje ~= "" then X + 28 else X, 2)
+	linaje.Position = UDim2.fromOffset(if idLinaje ~= "" then X + 34 else X, 2)
 	linaje.Text = if typeof(l) == "string"
 		then Tema.espaciar(string.upper(nombres[l] or l), 3)
 		else ""

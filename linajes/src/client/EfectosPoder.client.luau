@@ -7,6 +7,7 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local TweenService = game:GetService("TweenService")
 
 local Config = require(ReplicatedStorage:WaitForChild("Shared"):WaitForChild("Config"))
+local CamaraCombate = require(script.Parent:WaitForChild("CamaraCombate"))
 local EfectosGolpe = require(script.Parent:WaitForChild("EfectosGolpe"))
 local Fuego = require(script.Parent:WaitForChild("Fuego"))
 local Niveles = require(ReplicatedStorage:WaitForChild("Shared"):WaitForChild("Niveles"))
@@ -109,44 +110,106 @@ end
 local efectos: { [string]: (Model, BasePart, any) -> () } = {
 	PunoSismico = function(_p, r)
 		local punto = piso(r) + r.CFrame.LookVector * 6
-		anillo(punto, 9, POLVO)
-		escombros(punto, 7, 28)
-		estallido(punto, POLVO, 30, 34)
+		anillo(punto, 10, POLVO)
+		EfectosGolpe.tajo(r.CFrame, 12, POLVO, escalaActual * 1.4, true)
+		escombros(punto, 10, 32)
+		estallido(punto, POLVO, 34, 38)
+		CamaraCombate.sacudir(1.0, r.CFrame.LookVector)
+		CamaraCombate.zoom(-5)
 	end,
 	GolpePiso = function(_p, r)
-		anillo(piso(r), 12, POLVO)
+		local base = piso(r)
+		anillo(base, 13, POLVO)
+		-- Pilares de roca angulosos que brotan en corona alrededor del golpe.
+		for i = 1, 6 do
+			local ang = (i / 6) * math.pi * 2
+			local cf = CFrame.new(
+				base + Vector3.new(math.cos(ang) * 4.5, -1.6, math.sin(ang) * 4.5)
+			) * CFrame.Angles(math.rad(-22), ang, 0)
+			local pico = Instance.new("WedgePart")
+			pico.Anchored = true
+			pico.CanCollide = false
+			pico.CanQuery = false
+			pico.CanTouch = false
+			pico.Material = Enum.Material.Slate
+			pico.Color = ESCOMBRO
+			pico.Size = Vector3.new(1.5, 4.2, 2.0) * escalaActual
+			pico.CFrame = cf
+			pico.Parent = workspace
+			TweenService:Create(pico, TweenInfo.new(0.14, Enum.EasingStyle.Back), {
+				CFrame = cf + Vector3.new(0, 2.2, 0),
+			}):Play()
+			task.delay(0.28, function()
+				TweenService:Create(pico, TweenInfo.new(0.35), {
+					CFrame = cf - Vector3.new(0, 1.5, 0),
+					Transparency = 1,
+				}):Play()
+			end)
+			Debris:AddItem(pico, 0.7)
+		end
 		task.delay(0.08, function()
-			anillo(piso(r), 8, HUESO)
+			anillo(base, 9, HUESO)
 		end)
-		escombros(piso(r), 14, 36)
-		estallido(piso(r), POLVO, 40, 42)
+		escombros(base, 16, 40)
+		estallido(base, POLVO, 42, 44)
+		CamaraCombate.sacudir(1.4, Vector3.new(0, 1, 0))
+		CamaraCombate.zoom(-7)
 	end,
 	Embestida = function(_p, r)
-		anillo(piso(r), 8, POLVO)
-		estallido(r.Position, POLVO, 30, 30)
-		escombros(piso(r), 6, 24)
+		anillo(piso(r), 9, POLVO)
+		EfectosGolpe.anillo3D(
+			r.CFrame * CFrame.new(0, 0.4, -2) * CFrame.Angles(math.pi / 2, 0, 0),
+			2.2,
+			6.5 * escalaActual,
+			POLVO,
+			0.25,
+			0.28
+		)
+		estallido(r.Position, POLVO, 32, 34)
+		escombros(piso(r), 8, 28)
+		CamaraCombate.zoom(6)
+		CamaraCombate.sacudir(0.8, r.CFrame.LookVector)
 	end,
-	Contragolpe = function(p, _r, d)
+	Contragolpe = function(p, r, d)
 		aura(p, REFLEJO, d.Dura)
+		EfectosGolpe.anillo3D(r.CFrame, 2.0, 5.2, REFLEJO, 0.28, 0.2)
 	end,
 	PasoFantasma = function(p, r)
 		fantasma(p, REFLEJO)
-		estallido(r.Position, REFLEJO, 30, 36)
+		EfectosGolpe.anillo3D(
+			r.CFrame * CFrame.Angles(math.pi / 2, 0, 0),
+			1.8,
+			7.2,
+			REFLEJO,
+			0.25,
+			0.26
+		)
+		estallido(r.Position, REFLEJO, 32, 38)
+		CamaraCombate.zoom(7)
 	end,
 	LluviaGolpes = function(p, r, d)
 		aura(p, REFLEJO, 1)
 		task.spawn(function()
-			for _ = 1, d.Golpes do
+			for i = 1, d.Golpes do
 				if not p.Parent then
 					return
 				end
-				estallido(r.Position + r.CFrame.LookVector * 5, REFLEJO, 10, 26)
+				local ang = if i % 2 == 0 then 36 else -36
+				EfectosGolpe.tajo(
+					r.CFrame,
+					ang + math.random(-14, 14),
+					REFLEJO,
+					escalaActual * 1.15,
+					false
+				)
+				estallido(r.Position + r.CFrame.LookVector * 5, REFLEJO, 12, 28)
 				task.wait(1 / d.Golpes)
 			end
 		end)
 	end,
 	Chorro = function(_p, r, d)
 		Fuego.chorro(r, d.Dura, escalaActual)
+		CamaraCombate.sacudir(0.55, r.CFrame.LookVector)
 	end,
 }
 

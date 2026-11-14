@@ -11,6 +11,7 @@ local TweenService = game:GetService("TweenService")
 local UserInputService = game:GetService("UserInputService")
 
 local Config = require(ReplicatedStorage:WaitForChild("Shared"):WaitForChild("Config"))
+local CamaraCombate = require(script.Parent:WaitForChild("CamaraCombate"))
 local EfectosGolpe = require(script.Parent:WaitForChild("EfectosGolpe"))
 local Niveles = require(ReplicatedStorage:WaitForChild("Shared"):WaitForChild("Niveles"))
 local Tema = require(script.Parent:WaitForChild("Tema"))
@@ -27,7 +28,7 @@ local raiz: BasePart? = nil
 local accion: AnimationTrack? = nil
 local libreDesde, ultimoGolpe, paso, dashListo, dashEn = 0, 0, 0, 0, 0
 local bloqueando = false
-local cola: { pedido: string, cuando: number }? = nil
+local cola: { pedido: string, variante: string?, cuando: number }? = nil
 
 local function cargar(nuevo: Model)
 	personaje = nuevo
@@ -152,49 +153,43 @@ local function impacto(objetivo: Model, fuerte: boolean, color: Color3, escala: 
 	EfectosGolpe.reproducir(r.Position, fuerte, color, escala)
 end
 
--- Arco: la mano deja una estela mientras pega.
-local function arco(atacante: Model, numeroGolpe: number)
+local ANGULOS_TAJO = { 26, -30, -76, 8 }
+
+-- Arco: estela en la mano + media luna 3D cómic delante del ataque.
+local function arco(atacante: Model, numeroGolpe: number, fuerte: boolean?)
+	local color = colorDe(atacante)
 	local mano = atacante:FindFirstChild(if numeroGolpe % 2 == 0 then "LeftHand" else "RightHand")
-	if not (mano and mano:IsA("BasePart")) then
-		return
+	if mano and mano:IsA("BasePart") then
+		local a0, a1 = Instance.new("Attachment"), Instance.new("Attachment")
+		a0.Position = Vector3.new(0, 1.3, 0)
+		a1.Position = Vector3.new(0, -1.3, 0)
+		a0.Parent = mano
+		a1.Parent = mano
+		local estela = Instance.new("Trail")
+		estela.Attachment0 = a0
+		estela.Attachment1 = a1
+		estela.Lifetime = 0.22
+		estela.LightEmission = 1
+		estela.FaceCamera = true
+		estela.Color = ColorSequence.new(Color3.new(1, 1, 1), color)
+		estela.Transparency = NumberSequence.new(0, 1)
+		estela.Parent = mano
+		Debris:AddItem(estela, 0.75)
+		Debris:AddItem(a0, 0.75)
+		Debris:AddItem(a1, 0.75)
 	end
-	local a0, a1 = Instance.new("Attachment"), Instance.new("Attachment")
-	a0.Position = Vector3.new(0, 1, 0)
-	a1.Position = Vector3.new(0, -1, 0)
-	a0.Parent = mano
-	a1.Parent = mano
-	local estela = Instance.new("Trail")
-	estela.Attachment0 = a0
-	estela.Attachment1 = a1
-	estela.Lifetime = 0.18
-	estela.LightEmission = 1
-	estela.FaceCamera = true
-	estela.Color = ColorSequence.new(Color3.new(1, 1, 1), colorDe(atacante))
-	estela.Transparency = NumberSequence.new(0.05, 1)
-	estela.Parent = mano
-	Debris:AddItem(estela, 0.75)
-	Debris:AddItem(a0, 0.75)
-	Debris:AddItem(a1, 0.75)
+	local r = atacante:FindFirstChild("HumanoidRootPart")
+	if r and r:IsA("BasePart") then
+		local ang = ANGULOS_TAJO[(numeroGolpe - 1) % #ANGULOS_TAJO + 1]
+		EfectosGolpe.tajo(r.CFrame, ang, color, Niveles.tamano(atacante), fuerte)
+	end
 end
 
-local function sacudir(fuerza: number)
-	local h = humanoid
-	if not h then
-		return
-	end
-	local fin = os.clock() + 0.16
-	task.spawn(function()
-		while os.clock() < fin do
-			local k = (fin - os.clock()) / 0.16 * fuerza
-			h.CameraOffset =
-				Vector3.new(math.random(-10, 10) / 10 * k, math.random(-10, 10) / 10 * k, 0)
-			RunService.RenderStepped:Wait()
-		end
-		h.CameraOffset = Vector3.zero
-	end)
+local function sacudir(fuerza: number, dir: Vector3?)
+	CamaraCombate.sacudir(fuerza, dir)
 end
 
--- Paso hacia el rival más cercano que esté adelante.
+-- Paso hacia el rival más cercano o hacia el rumbo de la cámara.
 local function avanzar()
 	local r = raiz
 	if not r then
@@ -205,7 +200,8 @@ local function avanzar()
 	for _, otro in CollectionService:GetTagged("Combatiente") do
 		if otro ~= personaje then
 			local ro = otro:FindFirstChild("HumanoidRootPart")
-			if ro and ro:IsA("BasePart") then
+			local ho = otro:FindFirstChildOfClass("Humanoid")
+			if ro and ro:IsA("BasePart") and ho and ho.Health > 0 then
 				local d = (ro.Position - r.Position).Magnitude
 				if d < distancia then
 					mejor, distancia = ro, d
@@ -214,6 +210,13 @@ local function avanzar()
 		end
 	end
 	if not mejor then
+		local cam = workspace.CurrentCamera
+		if cam then
+			local mira = Vector3.new(cam.CFrame.LookVector.X, 0, cam.CFrame.LookVector.Z)
+			if mira.Magnitude > 0.05 then
+				r.CFrame = CFrame.lookAt(r.Position, r.Position + mira.Unit)
+			end
+		end
 		return
 	end
 	local objetivo = mejor :: BasePart
@@ -229,14 +232,14 @@ local function avanzar()
 	end)
 end
 
--- Contador de golpes y daño acumulado: número grande fino a la derecha, sin caja.
+-- Contador de golpes y daño acumulado: número grande a la derecha, sin caja.
 local gui = Tema.pantalla("Combate", 1)
 local golpes, acumulado, contadorHasta = 0, 0, 0
 local contador = Tema.grupo(
 	gui,
 	Vector2.new(1, 0.5),
 	UDim2.new(1, -Config.Hud.Margen, 0.44, 0),
-	Vector2.new(260, 150)
+	Vector2.new(310, 180)
 )
 contador.Visible = false
 local function linea(texto: string, y: number, opciones: Tema.OpcionesTexto): TextLabel
@@ -246,9 +249,9 @@ local function linea(texto: string, y: number, opciones: Tema.OpcionesTexto): Te
 	t.TextXAlignment = Enum.TextXAlignment.Right
 	return t
 end
-local cuenta = linea("0", 0, { tam = 84, letra = Tema.LetraGruesa })
-local palabra = linea("", 92, { tam = 16 })
-local suma = linea("", 116, { tam = 14, letra = Tema.LetraFina, transparencia = 0.35 })
+local cuenta = linea("0", 0, { tam = 104, letra = Tema.LetraGruesa })
+local palabra = linea("", 108, { tam = 20 })
+local suma = linea("", 136, { tam = 17, letra = Tema.LetraFina, transparencia = 0.28 })
 local escalaCuenta = Instance.new("UIScale")
 escalaCuenta.Parent = cuenta
 
@@ -261,18 +264,18 @@ local function contar(danio: number)
 	palabra.TextColor3 = Tema.color(jugador:GetAttribute("Linaje"))
 	suma.Text = string.format("%d de daño", math.round(acumulado))
 	contador.Visible = true
-	escalaCuenta.Scale = 1.25
+	escalaCuenta.Scale = 1.28
 	TweenService:Create(escalaCuenta, TweenInfo.new(0.18, Enum.EasingStyle.Quad), { Scale = 1 })
 		:Play()
 end
 
 -- Arriba al centro: nombre y vida del último rival que golpeaste (como la barra de jefe).
-local rival = Tema.grupo(gui, Vector2.new(0.5, 0), UDim2.new(0.5, 0, 0, 52), Vector2.new(520, 50))
+local rival = Tema.grupo(gui, Vector2.new(0.5, 0), UDim2.new(0.5, 0, 0, 42), Vector2.new(640, 62))
 rival.Visible = false
-local nombreRival = Tema.texto(rival, "", { tam = 16, alineado = Enum.TextXAlignment.Center })
+local nombreRival = Tema.texto(rival, "", { tam = 20, alineado = Enum.TextXAlignment.Center })
 nombreRival.AnchorPoint = Vector2.new(0.5, 0)
 nombreRival.Position = UDim2.fromScale(0.5, 0)
-local _, vidaRival = Tema.barra(rival, Vector2.new(0, 30), 520, 3, Tema.Vida)
+local _, vidaRival = Tema.barra(rival, Vector2.new(0, 34), 640, 8, Tema.Vida)
 local objetivo: Model? = nil
 local rivalHasta = 0
 
@@ -295,20 +298,25 @@ local function frenar(pista: AnimationTrack, velocidad: number, tiempo: number)
 	end)
 end
 
-local function golpear(): boolean
+local function golpear(varianteForzada: string?): boolean
 	local ahora = os.clock()
 	if ahora < libreDesde or bloqueando or aturdido() then
 		return false
 	end
 	local vigente = ahora - ultimoGolpe <= C.ReinicioCombo
 	local h = humanoid
-	local variante: string? = nil
-	if h and h.FloorMaterial == Enum.Material.Air then
-		variante = "Aire"
-	elseif ahora - dashEn <= C.VentanaDash then
-		variante = "Dash"
-	elseif vigente and paso == #C.Golpes - 1 and UserInputService:IsKeyDown(K.S) then
-		variante = "Arriba"
+	local variante: string? = varianteForzada
+	if not variante then
+		if h and h.FloorMaterial == Enum.Material.Air then
+			variante = "Aire"
+		elseif ahora - dashEn <= C.VentanaDash then
+			variante = "Dash"
+		elseif
+			UserInputService:IsKeyDown(K.Space)
+			or (vigente and paso == #C.Golpes - 1 and UserInputService:IsKeyDown(K.S))
+		then
+			variante = "Arriba"
+		end
 	end
 	local g: any
 	if variante then
@@ -324,7 +332,8 @@ local function golpear(): boolean
 	ultimoGolpe = ahora
 	remoto:FireServer("Golpe", variante)
 	avanzar()
-	arco(personaje :: Model, math.max(paso, 1))
+	local fuerte = g.Tipo == "Rompe" or g.Tipo == "Lanza" or g.Tipo == "Piso"
+	arco(personaje :: Model, math.max(paso, if fuerte then 4 else 1), fuerte)
 	tocar(g.Anim or ("Golpe" .. paso), C.VelocidadGolpes)
 	return true
 end
@@ -337,6 +346,7 @@ local function dash(): boolean
 	end
 	dashListo = ahora + C.DashRecarga
 	dashEn = ahora
+	libreDesde = 0 -- cancela recuperación de golpe para encadenar esquive + ataque
 	remoto:FireServer("Dash")
 	if bloqueando then
 		bloqueando = false
@@ -352,7 +362,10 @@ local function dash(): boolean
 	elseif UserInputService:IsKeyDown(K.D) then
 		nombre, direccion = "DashDerecha", derecha
 	end
+	r.CFrame = CFrame.lookAt(r.Position, r.Position + adelante)
 	tocar(nombre)
+	EfectosGolpe.dash(personaje :: Model, r, direccion, colorDe(personaje))
+	CamaraCombate.zoom(8)
 	task.spawn(function()
 		local fin = os.clock() + C.DashTiempo
 		while os.clock() < fin do
@@ -364,10 +377,10 @@ local function dash(): boolean
 	return true
 end
 
-local function pedir(pedido: string)
-	local hecho = if pedido == "Golpe" then golpear() else dash()
+local function pedir(pedido: string, variante: string?)
+	local hecho = if pedido == "Golpe" then golpear(variante) else dash()
 	if not hecho then
-		cola = { pedido = pedido, cuando = os.clock() }
+		cola = { pedido = pedido, variante = variante, cuando = os.clock() }
 	end
 end
 
@@ -377,6 +390,9 @@ local function bloquear()
 	end
 	bloqueando = true
 	remoto:FireServer("BloqueoInicio")
+	if raiz then
+		EfectosGolpe.bloqueo(raiz, colorDe(personaje), false)
+	end
 	local pista = tocar("BloqueoInicio")
 	if pista then
 		pista.Stopped:Once(function()
@@ -404,6 +420,10 @@ UserInputService.InputBegan:Connect(function(entrada, usado)
 	end
 	if entrada.UserInputType == Enum.UserInputType.MouseButton1 then
 		pedir("Golpe")
+	elseif entrada.UserInputType == Enum.UserInputType.MouseButton2 then
+		pedir("Golpe", "Fuerte")
+	elseif entrada.KeyCode == K.E then
+		pedir("Golpe", "Arriba")
 	elseif entrada.KeyCode == K.Q then
 		pedir("Dash")
 	elseif entrada.KeyCode == K.F then
@@ -422,7 +442,7 @@ RunService.Heartbeat:Connect(function()
 	local c = cola
 	if c then
 		local vencida = os.clock() - c.cuando > C.ColaTeclas
-		local salio = not vencida and (if c.pedido == "Golpe" then golpear() else dash())
+		local salio = not vencida and (if c.pedido == "Golpe" then golpear(c.variante) else dash())
 		if vencida or salio then
 			cola = nil
 		end
@@ -432,7 +452,7 @@ end)
 remoto.OnClientEvent:Connect(function(tipo: string, a: any, b: any, _c: any, d: any)
 	if tipo == "Ataca" then
 		if a ~= personaje then
-			arco(a, b)
+			arco(a, b, _c == true)
 		end
 	elseif tipo == "Golpeado" then
 		local fuerte = _c == true
@@ -444,11 +464,16 @@ remoto.OnClientEvent:Connect(function(tipo: string, a: any, b: any, _c: any, d: 
 			contar(b)
 			marcarRival(a)
 			sacudir(if fuerte then C.SacudidaFuerte else C.Sacudida)
+			CamaraCombate.zoom(if fuerte then -6 else -2.5)
+			if fuerte then
+				CamaraCombate.destelloImpacto(false)
+			end
 			if accion and accion.IsPlaying then
 				frenar(accion, C.VelocidadGolpes, C.HitStop)
 			end
 		elseif a == personaje then
 			sacudir(C.SacudidaFuerte)
+			CamaraCombate.zoom(-4)
 			if accion then
 				accion:Stop(0.03)
 			end
@@ -456,13 +481,44 @@ remoto.OnClientEvent:Connect(function(tipo: string, a: any, b: any, _c: any, d: 
 			accion:Play(0.03)
 		end
 		sonar(a, if fuerte then "GolpeFuerte" else "Golpe") -- SONIDO: golpe conecta
+	elseif tipo == "GuardiaRota" then
+		destello(a, Color3.fromRGB(255, 70, 70))
+		numero(a, "¡GUARDIA ROTA!", Color3.fromRGB(255, 95, 95))
+		local ra = a:FindFirstChild("HumanoidRootPart")
+		if ra and ra:IsA("BasePart") then
+			EfectosGolpe.rupturaGuardia(ra.Position, colorDe(_c))
+		end
+		if _c == personaje or a == personaje then
+			CamaraCombate.sacudir(C.SacudidaFuerte * 1.2)
+			CamaraCombate.zoom(-8)
+			CamaraCombate.destelloImpacto(true)
+			if _c == personaje then
+				contar(b)
+				marcarRival(a)
+			end
+		end
+		sonar(a, "GolpeFuerte")
 	elseif tipo == "Bloqueado" then
 		destello(a, Color3.fromRGB(120, 170, 255))
 		numero(a, tostring(math.round(b)), Color3.fromRGB(150, 190, 255))
+		local ra = a:FindFirstChild("HumanoidRootPart")
+		if ra and ra:IsA("BasePart") then
+			EfectosGolpe.bloqueo(ra, Color3.fromRGB(120, 185, 255), true)
+		end
 		sonar(a, "Bloqueo") -- SONIDO: bloqueo
 	elseif tipo == "Parry" then
-		destello(a, Color3.fromRGB(63, 224, 240))
-		numero(a, "¡PARRY!", Color3.fromRGB(63, 224, 240))
+		local azul = Color3.fromRGB(63, 224, 240)
+		destello(a, azul)
+		numero(a, "¡PARRY!", azul)
+		local ra = a:FindFirstChild("HumanoidRootPart")
+		if ra and ra:IsA("BasePart") then
+			EfectosGolpe.parry(ra.Position, azul)
+		end
+		if a == personaje or b == personaje then
+			CamaraCombate.sacudir(C.SacudidaFuerte * 1.15)
+			CamaraCombate.zoom(-9)
+			CamaraCombate.destelloImpacto(true)
+		end
 		if a == personaje then
 			tocar("Parry")
 			local pista = accion
@@ -473,6 +529,7 @@ remoto.OnClientEvent:Connect(function(tipo: string, a: any, b: any, _c: any, d: 
 		-- SONIDO: parry, propio y no metálico
 	elseif tipo == "Aviso" then
 		destello(a, Color3.fromRGB(255, 42, 42))
+		EfectosGolpe.aviso(a)
 	elseif tipo == "Empuje" then
 		local r = raiz
 		if r then
@@ -483,12 +540,12 @@ end)
 
 -- Botones e indicadores táctiles / PC abajo a la derecha (sobre H Controles).
 local tactil = UserInputService.TouchEnabled
-local tamBtn = if tactil then 54 else 38
+local tamBtn = if tactil then 64 else 50
 local controles = Tema.grupo(
 	gui,
 	Vector2.new(1, 1),
-	UDim2.new(1, -Config.Hud.Margen, 1, -100),
-	Vector2.new(tamBtn * 3 + 28, tamBtn + 26)
+	UDim2.new(1, -Config.Hud.Margen, 1, -86),
+	Vector2.new(tamBtn * 4 + 42, tamBtn + 30)
 )
 local imgsControl = Config.Hud.Imagenes.Controles
 
@@ -503,18 +560,18 @@ local function crearAccion(
 	btn.Position = UDim2.fromOffset(x, 0)
 	btn.Size = UDim2.fromOffset(tamBtn, tamBtn)
 	btn.BackgroundColor3 = Tema.Fondo
-	btn.BackgroundTransparency = if tactil then 0.25 else 0.45
+	btn.BackgroundTransparency = if tactil then 0.2 else 0.35
 	btn.Text = if imagenId == "" then teclaTexto else ""
 	btn.TextColor3 = Tema.Hueso
 	btn.FontFace = Tema.Letra
-	btn.TextSize = if tactil then 16 else 13
+	btn.TextSize = if tactil then 18 else 14
 	btn.AutoButtonColor = tactil
 	btn.Parent = controles
 
 	local borde = Instance.new("UIStroke")
 	borde.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
 	borde.Color = Tema.Hueso
-	borde.Transparency = if tactil then 0.35 else 0.65
+	borde.Transparency = if tactil then 0.3 else 0.55
 	borde.Parent = btn
 
 	local ico: ImageLabel? = nil
@@ -532,23 +589,27 @@ local function crearAccion(
 	end
 
 	local pie = Tema.texto(controles, if tactil or imagenId == "" then etiqueta else teclaTexto, {
-		tam = 11,
+		tam = 13,
 		letra = Tema.LetraFina,
-		transparencia = 0.35,
+		transparencia = 0.25,
 		alineado = Enum.TextXAlignment.Center,
 	})
 	pie.AutomaticSize = Enum.AutomaticSize.None
-	pie.Position = UDim2.fromOffset(x, tamBtn + 4)
-	pie.Size = UDim2.fromOffset(tamBtn, 16)
+	pie.Position = UDim2.fromOffset(x, tamBtn + 5)
+	pie.Size = UDim2.fromOffset(tamBtn, 18)
 	return btn, borde, ico
 end
 
 local btnAtaque = crearAccion(1, "LMB", "GOLPE", imgsControl.Ataque)
-local btnDash, _, icoDash = crearAccion(2, "Q", "DASH", imgsControl.Dash)
-local btnBloqueo, bordeBloqueo, icoBloqueo = crearAccion(3, "F", "BLOQ", imgsControl.Bloqueo)
+local btnRompe = crearAccion(2, "RMB", "ROMPE", "")
+local btnDash, _, icoDash = crearAccion(3, "Q", "DASH", imgsControl.Dash)
+local btnBloqueo, bordeBloqueo, icoBloqueo = crearAccion(4, "F", "BLOQ", imgsControl.Bloqueo)
 
 btnAtaque.Activated:Connect(function()
 	pedir("Golpe")
+end)
+btnRompe.Activated:Connect(function()
+	pedir("Golpe", "Fuerte")
 end)
 btnDash.Activated:Connect(function()
 	pedir("Dash")

@@ -170,17 +170,17 @@ local esquina = Tema.grupo(
 	Vector2.new(700, 120)
 )
 local pista = Tema.texto(esquina, "H  CONTROLES", {
-	tam = 12,
+	tam = 15,
 	letra = Tema.LetraFina,
-	transparencia = 0.5,
+	transparencia = 0.4,
 	espaciado = 2,
 })
 pista.AnchorPoint = Vector2.new(1, 1)
 pista.Position = UDim2.fromScale(1, 1)
 local texto =
-	Tema.texto(esquina, P.Cartel, { tam = 14, letra = Tema.LetraFina, transparencia = 0.1 })
+	Tema.texto(esquina, P.Cartel, { tam = 16, letra = Tema.LetraFina, transparencia = 0.08 })
 texto.AnchorPoint = Vector2.new(1, 1)
-texto.Position = UDim2.new(1, 0, 1, -24)
+texto.Position = UDim2.new(1, 0, 1, -28)
 texto.AutomaticSize = Enum.AutomaticSize.XY
 texto.TextXAlignment = Enum.TextXAlignment.Right
 texto.LineHeight = 1.3

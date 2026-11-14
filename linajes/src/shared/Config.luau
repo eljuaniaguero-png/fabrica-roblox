@@ -260,77 +260,85 @@ Config.Combate = {
 	Energia = 100,
 	EnergiaPorSegundo = 8,
 	Golpes = {
-		{ Danio = 8, Impacto = 0.27, Espera = 0.45, Tipo = "Normal", Recarga = 0 },
-		{ Danio = 8, Impacto = 0.27, Espera = 0.45, Tipo = "Normal", Recarga = 0 },
-		{ Danio = 10, Impacto = 0.36, Espera = 0.55, Tipo = "Normal", Recarga = 0 },
-		{ Danio = 14, Impacto = 0.53, Espera = 0.8, Tipo = "Lanza", Recarga = 1.4 },
+		{ Danio = 8, Impacto = 0.14, Espera = 0.24, Tipo = "Normal", Recarga = 0 },
+		{ Danio = 9, Impacto = 0.15, Espera = 0.26, Tipo = "Normal", Recarga = 0 },
+		{ Danio = 11, Impacto = 0.19, Espera = 0.31, Tipo = "Normal", Recarga = 0 },
+		{ Danio = 16, Impacto = 0.28, Espera = 0.44, Tipo = "Lanza", Recarga = 0.52 },
 	},
-	-- Variantes: Aire (clic en el aire), Arriba (S + clic en el 4.º golpe), Dash (clic justo después del dash).
+	-- Variantes: Aire (clic en el aire), Arriba (E o Espacio+clic), Fuerte (clic derecho, rompe guardia), Dash (clic tras dash).
 	Variantes = {
 		Aire = {
-			Danio = 16,
-			Impacto = 0.53,
-			Espera = 0.8,
+			Danio = 18,
+			Impacto = 0.28,
+			Espera = 0.44,
 			Tipo = "Piso",
-			Recarga = 1.2,
+			Recarga = 0.55,
 			Anim = "GolpeAire",
 		},
 		Arriba = {
-			Danio = 12,
-			Impacto = 0.36,
-			Espera = 0.6,
+			Danio = 14,
+			Impacto = 0.22,
+			Espera = 0.34,
 			Tipo = "Arriba",
-			Recarga = 0.5,
+			Recarga = 0.3,
 			Anim = "Golpe3",
 		},
+		Fuerte = {
+			Danio = 18,
+			Impacto = 0.3,
+			Espera = 0.48,
+			Tipo = "Rompe",
+			Recarga = 0.65,
+			Anim = "Golpe4",
+		},
 		Dash = {
-			Danio = 10,
-			Impacto = 0.27,
-			Espera = 0.45,
+			Danio = 12,
+			Impacto = 0.15,
+			Espera = 0.25,
 			Tipo = "Normal",
 			Recarga = 0,
 			Anim = "Golpe1",
 		},
 	},
-	VentanaDash = 0.45, -- tiempo después del dash para el golpe de dash
+	VentanaDash = 0.55, -- tiempo después del dash para el golpe de dash
 	AlturaAire = 1.2, -- el servidor cuenta aire desde esta altura sobre el piso
-	SubeArriba = 62,
-	BajaPiso = 70,
-	VelocidadGolpes = 0.75,
-	ReinicioCombo = 1.1, -- desde el último pedido de golpe
-	Proteccion = 1.2, -- el lanzado no recibe daño ni freno al levantarse
-	DesgasteFreno = 0.8, -- cada golpe seguido frena menos
+	SubeArriba = 68,
+	BajaPiso = 72,
+	VelocidadGolpes = 1.22,
+	ReinicioCombo = 1.15, -- desde el último pedido de golpe
+	Proteccion = 1.0, -- el lanzado no recibe daño ni freno al levantarse
+	DesgasteFreno = 0.82, -- cada golpe seguido frena menos
 	VentanaDesgaste = 2.5,
-	Tolerancia = 0.75, -- el servidor acepta el golpe antes: tapa la demora de la red
-	Alcance = 9,
-	AlcancePatada = 11,
-	ConoGolpe = 0, -- 1 es justo adelante, 0 es todo el frente
-	Empuje = 12, -- retroceso de los golpes 1 a 3
-	Lanza = 58, -- el 4.º golpe lanza
-	LanzaArriba = 26,
-	Freno = 0.55, -- segundos que el golpeado no puede actuar
-	FrenoLanzado = 1.1,
-	Asistencia = 12, -- distancia a la que el golpe busca al rival
-	Avance = 42, -- velocidad del paso al golpear
-	AvanceTiempo = 0.12,
-	Cercania = 3.6, -- no avanza más cerca que esto
+	Tolerancia = 0.7, -- el servidor acepta el golpe antes: tapa la demora de la red
+	Alcance = 10.5,
+	AlcancePatada = 13,
+	ConoGolpe = -0.15, -- 1 es justo adelante, 0 es todo el frente, -0.15 perdona ángulos cerrados
+	Empuje = 14, -- retroceso de los golpes 1 a 3
+	Lanza = 62, -- el 4.º golpe o rompeguardia lanza
+	LanzaArriba = 28,
+	Freno = 0.48, -- segundos que el golpeado no puede actuar
+	FrenoLanzado = 1.0,
+	Asistencia = 16, -- distancia a la que el golpe busca al rival
+	Avance = 54, -- velocidad del paso al golpear
+	AvanceTiempo = 0.14,
+	Cercania = 3.4, -- no avanza más cerca que esto
 	ColorChispas = Color3.fromHex("#3fe0f0"), -- después sale del Linaje
-	Sacudida = 0.35,
-	SacudidaFuerte = 0.9,
-	ContadorDura = 1.6,
-	FrenaBloqueo = 0.7,
+	Sacudida = 0.55,
+	SacudidaFuerte = 1.25,
+	ContadorDura = 1.9,
+	FrenaBloqueo = 0.75,
 	EnergiaBloqueo = 10,
-	VentanaParry = 0.2,
-	AturdeParry = 1,
-	DashDistancia = 20,
-	DashTiempo = 0.2,
-	DashRecarga = 1.5,
-	DashInvulnerable = 0.25,
-	ColaTeclas = 0.15,
-	PedidosPorSegundo = 10,
-	HitStop = 0.07,
-	HitStopParry = 0.12,
-	Destello = 0.12,
+	VentanaParry = 0.24,
+	AturdeParry = 1.1,
+	DashDistancia = 24,
+	DashTiempo = 0.16,
+	DashRecarga = 0.85,
+	DashInvulnerable = 0.28,
+	ColaTeclas = 0.22,
+	PedidosPorSegundo = 14,
+	HitStop = 0.06,
+	HitStopParry = 0.14,
+	Destello = 0.14,
 	ManiquiDistancia = 38,
 	ManiquiSemilla = 7,
 	ManiquiPausa = 3,
@@ -346,10 +354,10 @@ Config.Combate = {
 		Detecta = 110,
 		Golpea = 7,
 		SinPiezas = { Maton_Panuelo = true, Maton_Cadena = true },
-		Embestida = { Desde = 14, Hasta = 40, Rapidez = 70, Dura = 0.28, Recarga = 4 },
-		Bloqueo = { Chance = 0.35, Dura = 0.8, Recarga = 3 },
-		Pausa = 0.9,
-		Aviso = 0.3,
+		Embestida = { Desde = 14, Hasta = 40, Rapidez = 70, Dura = 0.28, Recarga = 3.5 },
+		Bloqueo = { Chance = 0.35, Dura = 0.75, Recarga = 3 },
+		Pausa = 0.85,
+		Aviso = 0.42,
 		Danio = 10,
 		Vuelve = 6,
 		Xp = 60,
@@ -598,7 +606,7 @@ Config.PruebaTeclas = {
 	EsperaCombo = 0.75, -- parte del golpe que tiene que pasar antes del siguiente
 	VelocidadCombo = 0.75, -- 1 es la velocidad original
 	SaltoAire = 38,
-	Cartel = "Click: combo   S + click en el 4.º: levanta   Click en el aire: martillazo   Click tras el dash: golpe de dash\nQ + WASD: dash   F: bloqueo (justo antes del golpe: parry)   Z X C: poderes   T: cambia Linaje\nShift: correr más   Ctrl: rápido   Y: vuelo",
+	Cartel = "Click Izq: combo   Click Der: rompeguardia   E / Espacio+Click: levanta   Click en aire: martillazo\nQ + WASD: dash (cancela golpes)   F: bloqueo (justo antes: parry)   Z X C: poderes   T: Linaje   M: menú",
 }
 
 Config.Animaciones = {
@@ -918,14 +926,14 @@ Config.Efectos = {
 	Arco = "rbxassetid://73680797455213",
 	Humo = "rbxassetid://74115882130548",
 	Lineas = "rbxassetid://76247666580830",
-	LlamaSuave = "rbxassetid://99334182566198",
-	HumoSuave = "rbxassetid://105936420504829",
-	TamDestello = 6,
-	TamAnillo = 7,
-	TamArco = 8,
-	TamLineas = 15,
-	TamHumo = 9,
-	EscalaFuerte = 1.5,
+	LlamaSuave = "rbxassetid://92495499682051",
+	HumoSuave = "rbxassetid://74115882130548",
+	TamDestello = 7.5,
+	TamAnillo = 9.5,
+	TamArco = 11,
+	TamLineas = 18,
+	TamHumo = 10.5,
+	EscalaFuerte = 1.55,
 	ColorEscombro = "#2E3138", -- cuñas de piso que saltan (asfalto del puerto)
 	-- Tope: 150 partículas activas por efecto (Ritmo x Vida de cada capa).
 	Fuego = {
@@ -1175,28 +1183,28 @@ Config.Hud = {
 		Xp = "#C9A55A",
 		Fondo = "#080A0E",
 	},
-	AltoBase = 1080, -- todo se escala según el alto de la pantalla
-	EscalaMin = 0.62,
-	EscalaMax = 1.25,
-	Margen = 72,
-	AnchoVida = 380,
-	AnchoEnergia = 300,
-	TamRombo = 92,
-	SeparacionRombos = 112,
+	AltoBase = 900, -- todo se escala según el alto de la pantalla
+	EscalaMin = 0.85,
+	EscalaMax = 1.38,
+	Margen = 42,
+	AnchoVida = 390,
+	AnchoEnergia = 310,
+	TamRombo = 100,
+	SeparacionRombos = 124,
 	DanioEspera = 0.45, -- segundos antes de que se vacíe la marca de daño
-	BarraMaton = { Ancho = 86, Alto = 4, Altura = 4, Distancia = 80 }, -- barra fina sobre cada matón
-	RivalDura = 4, -- segundos que se ve la barra del rival después del último golpe
+	BarraMaton = { Ancho = 112, Alto = 7, Altura = 4.3, Distancia = 90 }, -- barra sobre cada matón
+	RivalDura = 5, -- segundos que se ve la barra del rival después del último golpe
 	TeclaControles = Enum.KeyCode.H,
 	-- Menú principal: tamaño y animaciones.
 	MenuUI = {
-		Zoom = 1.15, -- todo el menú (1 = tamaño de diseño a 1280x720)
-		ZoomFondo = 1.08, -- el fondo es un poco más grande para poder moverlo
-		PaneoSegundos = 22, -- ida (y otro tanto de vuelta) del paneo del fondo
-		PaneoDistancia = 0.02, -- cuánto se corre el fondo (fracción de pantalla)
-		NieblaSegundos = 28,
-		BrasasPorSegundo = 3,
-		EntradaSegundos = 0.6,
-		Escalonado = 0.07, -- segundos entre una fila y la siguiente al entrar
+		Zoom = 1.24, -- todo el menú (1 = tamaño de diseño a 1280x720)
+		ZoomFondo = 1.12, -- el fondo es un poco más grande para poder moverlo con paralaje
+		PaneoSegundos = 10, -- ida (y otro tanto de vuelta) del paneo del fondo
+		PaneoDistancia = 0.035, -- cuánto se corre el fondo (fracción de pantalla)
+		NieblaSegundos = 20,
+		BrasasPorSegundo = 8,
+		EntradaSegundos = 0.55,
+		Escalonado = 0.06, -- segundos entre una fila y la siguiente al entrar
 	},
 	-- Imágenes de arte/hud/listas/ y arte/2d/. Las primeras 12 ya están subidas (14 nov 2026);
 	-- las 33 nuevas quedan en "" (fallback limpio) hasta aprobar linajes/arte en MCP Permissions.
