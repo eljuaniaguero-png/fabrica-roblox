@@ -19,6 +19,9 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 import base as B  # noqa: E402
 import bpy  # noqa: E402
 import trajes as T  # noqa: E402
+
+T.RADIO_MINIMO = 0.01  # GUIA-ESTILO 2.1: sin remaches microscópicos
+T.REDONDEZ_MAXIMA = 0.12  # placas con chaflán, no almohadones
 from mathutils import Matrix, Vector  # noqa: E402
 
 NOMBRE = "Cuervo"
@@ -1080,7 +1083,7 @@ def detalle_v2():
     grupos = {clave: (tope, [o.name for o in piezas if _pieza_de(o.name) == clave]) for clave, tope in PRESUPUESTO_V2.items()}
     # Las plumas de la capa no llevan líneas de panel ni remaches: solo rayones y bordes gastados.
     plumas = {"rayones": 1.0, "bordes": 0.6, "suciedad": 0.5}
-    D.terminar(piezas, grupos, "cuervo", recetas={f"{NOMBRE}_Capa_Acero": plumas})
+    D.terminar(piezas, grupos, "cuervo", recetas={f"{NOMBRE}_Capa_Acero": plumas}, estilo="comic")
     bpy.ops.wm.save_as_mainfile(filepath=BLEND)
     print(tabla_v2(piezas))
     print("Render:", B.render_vistas("cuervo_v2", B.partes() + piezas))

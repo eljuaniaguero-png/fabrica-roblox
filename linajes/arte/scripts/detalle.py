@@ -14,6 +14,10 @@ Toma las mallas del boceto detallado (una por material) y les hace, en orden:
 6. Material final por malla (TEX_<malla>) con esas tres texturas: es lo que va a SurfaceAppearance
    en Roblox (ColorMap, RoughnessMap, NormalMap; Metalness es un número por malla).
 
+Modo "comic" (GUIA-ESTILO 2.1, personajes del elenco): bisel seco de 1 corte, copia alta SIN
+subdividir (nada de "almohadones"), sin remaches ni ruido fino (nada de "estática de TV"), líneas de
+tinta #0E1016 pintadas en el color, aristas aclaradas y piso de oscuridad #1D2230.
+
 Uso desde un script de personaje:
 
     import detalle as D
@@ -114,6 +118,27 @@ RECETAS = {
 SIN_HORNEAR = {"aceite", "ventana-luz", "neon-azul", "neon-faro", "neon-sirena", "neon-fuego", "vidrio-sucio", "charco", "neon-cofradia", "neon-farola", "neon-cian", "neon-eclipse", "neon-aviso", "liquido-rojo", "visor-cian"}  # brillan: se quedan con su material
 
 
+TINTA = "0e1016"
+PISO_OSCURO = "1d2230"  # ningún tono base de personaje cómic más oscuro que esto
+
+
+def _luma(rgb):
+    return 0.2126 * rgb[0] + 0.7152 * rgb[1] + 0.0722 * rgb[2]
+
+
+def color_con_piso(hex_):
+    """Color de `hex_`, aclarado (sin cambiar el tono) hasta la luminancia de #1D2230."""
+    c = B.color(hex_)
+    piso = _luma(B.color(PISO_OSCURO))
+    actual = _luma(c)
+    if actual >= piso:
+        return c
+    if actual <= 0:
+        return B.color(PISO_OSCURO)
+    k = piso / actual
+    return (min(c[0] * k, 1.0), min(c[1] * k, 1.0), min(c[2] * k, 1.0), 1.0)
+
+
 def _material_base(obj):
     """Nombre de la guía (acero, tela-oscura...) del material de la malla."""
     return obj.data.materials[0].name.removeprefix("MAT_")
@@ -211,13 +236,15 @@ def _remaches(bm, low, paso_z, separacion=0.032, radio=0.0065):
     return n
 
 
-def copia_alta(low, receta, niveles=2, max_caras=400_000):
+def copia_alta(low, receta, niveles=2, max_caras=400_000, comic=False):
     """Copia subdividida de la malla baja (con remaches si la receta los pide). No se renderiza
     ni se exporta: solo sirve para hornear."""
     nombre = low.name + "_Alto"
     viejo = bpy.data.objects.get(nombre)
     if viejo:
         bpy.data.objects.remove(viejo)
+    if comic:
+        niveles = 0  # la forma del bisel queda seca: sin almohadones
     bm = bmesh.new()
     bm.from_mesh(low.data)
     caras = len(bm.faces)
@@ -234,8 +261,10 @@ def copia_alta(low, receta, niveles=2, max_caras=400_000):
         sub.levels = sub.render_levels = niveles
         sub.boundary_smooth = "PRESERVE_CORNERS"
         T._aplicar(alto)
+    else:
+        bpy.context.view_layer.update()  # sin modificador nadie la mete al grafo: el horneado no la vería
     alto.data.shade_smooth()
-    if receta.get("remaches") and receta.get("paneles"):
+    if receta.get("remaches") and receta.get("paneles") and not comic:
         extra = bmesh.new()
         _remaches(extra, low, receta["paneles"][0])
         if extra.verts:
@@ -315,7 +344,7 @@ class _Nodos:
         return self.rango(dist, ancho, ancho * 0.35), dist
 
 
-def material_horneo(nombre, base, receta, semilla=0):
+def material_horneo(nombre, base, receta, semilla=0, comic=False):
     """Material procedural de la copia alta. Tiene tres salidas, que se conectan de a una para
     hornear: color con desgaste, rugosidad y la superficie con relieve (para el normal map)."""
     d = B.MATERIALES[base]
@@ -331,8 +360,10 @@ def material_horneo(nombre, base, receta, semilla=0):
 
     alto = []  # (salida 0-1, profundidad en metros): relieve
     color = N.nodo("ShaderNodeRGB")
-    color.outputs[0].default_value = B.color(d["hex"])
+    color.outputs[0].default_value = color_con_piso(d["hex"]) if comic else B.color(d["hex"])
     col = color.outputs[0]
+    if comic:
+        return _material_comic(mat, N, salida, z, x, col, d, receta)
     rug = N.nodo("ShaderNodeValue")
     rug.outputs[0].default_value = d.get("rugosidad", 0.5)
     rug = rug.outputs[0]
@@ -450,6 +481,59 @@ def material_horneo(nombre, base, receta, semilla=0):
     return mat
 
 
+def _material_comic(mat, N, salida, z, x, col, d, receta):
+    """Superficie cómic: color plano, líneas de tinta, aristas aclaradas y juntas apenas sucias.
+    Cero ruido procedural (ni manchas, ni rayones, ni trama, ni grano)."""
+    rug = N.nodo("ShaderNodeValue")
+    rug.outputs[0].default_value = max(d.get("rugosidad", 0.5), 0.45)
+    rug = rug.outputs[0]
+    alto = []
+    tinta = None
+    # Líneas de tinta: divisiones de placa (metal) o costuras (tela y cuero), más espaciadas que antes.
+    if receta.get("paneles"):
+        pz, _ = receta["paneles"]
+        tinta, _ = N.linea(z, pz * 2.5, 0.0016)  # solo divisiones horizontales: nada de grilla
+    elif receta.get("costuras"):
+        pz, _ = receta["costuras"]
+        tinta, _ = N.linea(z, pz * 1.5, 0.0013)
+    if tinta is not None:
+        alto.append((N.mate("SUBTRACT", 1.0, tinta), 0.0008))
+    # Aristas aclaradas: donde la normal biselada se aparta de la real.
+    bisel = N.nodo("ShaderNodeBevel", samples=8, **{"Radius": 0.008})
+    geo = N.nodo("ShaderNodeNewGeometry")
+    punto_b = N.nodo("ShaderNodeVectorMath", operation="DOT_PRODUCT")
+    N.unir(bisel.outputs[0], punto_b.inputs[0])
+    N.unir(geo.outputs["Normal"], punto_b.inputs[1])
+    borde = N.rango(punto_b.outputs["Value"], 0.99, 0.93)
+    claro = N.nodo("ShaderNodeMix", data_type="RGBA", blend_type="MULTIPLY", clamp_factor=False)
+    claro.inputs[0].default_value = 1.0
+    N.unir(col, claro.inputs[6])
+    claro.inputs[7].default_value = (1.3, 1.3, 1.3, 1.0)
+    col = N.mezclar(N.mate("MULTIPLY", borde, 0.9), col, claro.outputs[2])
+    # Juntas: oclusión suave (sin ruido), mucho menos que el modo realista.
+    oclusion = N.nodo("ShaderNodeAmbientOcclusion", samples=16, only_local=False, **{"Distance": 0.03})
+    sucio = N.rango(N.mate("SUBTRACT", 1.0, oclusion.outputs["AO"]), 0.2, 0.8)
+    col = N.mezclar(N.mate("MULTIPLY", sucio, 0.35 * receta.get("suciedad", 0.5)), col, B.color(TINTA))
+    # Tinta encima de todo.
+    if tinta is not None:
+        col = N.mezclar(N.mate("MULTIPLY", tinta, 0.95), col, B.color(TINTA))
+    normal = None
+    for valor, profundidad in alto:
+        bump = N.nodo("ShaderNodeBump", **{"Strength": 1.0, "Distance": profundidad})
+        N.unir(valor, bump.inputs["Height"])
+        normal = bump.outputs["Normal"]
+    sup = N.nodo("ShaderNodeBsdfPrincipled")
+    if normal is not None:
+        N.unir(normal, sup.inputs["Normal"])
+    em_color = N.nodo("ShaderNodeEmission")
+    N.unir(col, em_color.inputs["Color"])
+    em_rug = N.nodo("ShaderNodeEmission")
+    N.unir(rug, em_rug.inputs["Color"])
+    mat["_salidas"] = {"color": em_color.name, "rugosidad": em_rug.name, "normal": sup.name}
+    N.unir(sup.outputs[0], salida.inputs["Surface"])
+    return mat
+
+
 def _conectar_salida(mat, cual):
     arbol = mat.node_tree
     nodo = arbol.nodes[mat["_salidas"][cual]]
@@ -490,12 +574,12 @@ def _imagen(nombre, lado, no_color):
     return img
 
 
-def hornear(low, alto, carpeta, lado=1024, semilla=0, receta=None):
+def hornear(low, alto, carpeta, lado=1024, semilla=0, receta=None, comic=False):
     """Hornea color, rugosidad y normal de `alto` sobre `low` y le arma el material final.
     Las texturas quedan en blender/texturas/<carpeta>/<malla>_{color,rugosidad,normal}.png."""
     base = _material_base(low)
     receta = receta if receta is not None else RECETAS.get(base, {})
-    mat_alto = material_horneo("HORNEO_" + low.name, base, receta, semilla)
+    mat_alto = material_horneo("HORNEO_" + low.name, base, receta, semilla, comic)
     alto.data.materials.clear()
     alto.data.materials.append(mat_alto)
 
@@ -563,21 +647,23 @@ def hornear(low, alto, carpeta, lado=1024, semilla=0, receta=None):
 # ---------------------------------------------------------------------------
 
 
-def terminar(objs, presupuesto, carpeta, ancho=0.03 * B.STUD, lados=None, recetas=None, sin_bisel=(), sin_hornear=()):
+def terminar(objs, presupuesto, carpeta, ancho=0.03 * B.STUD, lados=None, recetas=None, sin_bisel=(), sin_hornear=(), estilo="realista"):
     """Aplica todo el nivel de detalle a `objs`. `presupuesto` = {pieza: (tope, [mallas])}: si una
     pieza se pasa con bisel de 2 segmentos, prueba con 1 y después reduce cada malla en proporción.
     `lados` = {malla: px} para cambiar el tamaño de textura (por defecto 1024).
-    `recetas` = {malla: receta} para cambiar la superficie de una malla (ej. plumas sin paneles)."""
+    `recetas` = {malla: receta} para cambiar la superficie de una malla (ej. plumas sin paneles).
+    `estilo="comic"`: bisel de 1 corte, sin subdividir, sin ruido y con tinta (ver arriba)."""
+    comic = estilo == "comic"
     lados = lados or {}
     recetas = recetas or {}
     originales = {o.name: o.data.copy() for o in objs}
     for tope, nombres in presupuesto.values():
         grupo = [bpy.data.objects[n] for n in nombres if n in bpy.data.objects]
-        for segmentos in (2, 1):
+        for segmentos in (1,) if comic else (2, 1):
             for o in grupo:
                 o.data = originales[o.name].copy()
                 if o.name not in sin_bisel:  # piezas de muchas partes chicas: el bisel va solo en la textura
-                    biselar(o, ancho, segmentos)
+                    biselar(o, ancho, segmentos, angulo=35 if comic else 30)
             total = sum(B.triangulos(o) for o in grupo)
             if total <= tope:
                 break
@@ -589,13 +675,17 @@ def terminar(objs, presupuesto, carpeta, ancho=0.03 * B.STUD, lados=None, receta
     dispositivo = preparar_cycles()
     print("Horneando con", dispositivo)
     altos = []
+    for o in [o for o in objs if not o.data.polygons]:  # eran solo remaches chicos (modo cómic): se borran
+        print("  vacía, se borra:", o.name)
+        objs.remove(o)  # la lista es la del script: así no la usa después
+        bpy.data.objects.remove(o)
     for i, o in enumerate(objs):
         desplegar_uv(o)
         if _material_base(o) in SIN_HORNEAR or o.name in sin_bisel or o.name in sin_hornear:  # sin bisel la copia suavizada sale redonda; las muy largas cuelgan el horneado
             continue
         receta = recetas.get(o.name, RECETAS.get(_material_base(o), {}))
-        alto = copia_alta(o, receta)
-        hornear(o, alto, carpeta, lados.get(o.name, 1024), semilla=i, receta=receta)
+        alto = copia_alta(o, receta, comic=comic)
+        hornear(o, alto, carpeta, lados.get(o.name, 1024), semilla=i, receta=receta, comic=comic)
         altos.append(alto)
         print("  horneada", o.name)
     motores = {m.identifier for m in bpy.types.RenderSettings.bl_rna.properties["engine"].enum_items}

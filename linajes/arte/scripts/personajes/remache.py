@@ -26,6 +26,14 @@ import base as B  # noqa: E402
 import cuervo as C  # noqa: E402  (_miles)
 import bpy  # noqa: E402
 import trajes as T  # noqa: E402
+
+T.RADIO_MINIMO = 0.01  # GUIA-ESTILO 2.1: sin remaches microscópicos
+T.REDONDEZ_MAXIMA = 0.12  # placas con chaflán, no almohadones
+# GUIA-ESTILO 2.4: Remache más claro para leerse contra su galpón rojo y oscuro (solo en este modelo).
+B.MATERIALES["tela-oscura"] = {**B.MATERIALES["tela-oscura"], "hex": "3a4252"}
+B.MATERIALES["oxido"] = {**B.MATERIALES["oxido"], "hex": "8a5c40"}
+B.MATERIALES["negro"] = {**B.MATERIALES["negro"], "hex": "2b3242"}  # botas y mangueras: placa secundaria
+B.MATERIALES["cuero"] = {**B.MATERIALES["cuero"], "hex": "4a3626"}  # correas legibles
 from mathutils import Matrix, Vector  # noqa: E402
 
 NOMBRE = "Remache"
@@ -616,7 +624,7 @@ def detalle():
     piezas = armar_detalle()
     bpy.ops.wm.save_as_mainfile(filepath=BLEND)
     grupos = {clave: (tope, [o.name for o in piezas if _pieza_de(o.name) == clave]) for clave, tope in PRESUPUESTO.items()}
-    D.terminar(piezas, grupos, "remache")
+    D.terminar(piezas, grupos, "remache", estilo="comic")
     bpy.ops.wm.save_as_mainfile(filepath=BLEND)
     print(tabla_triangulos(piezas))
     _renders(piezas, "remache")

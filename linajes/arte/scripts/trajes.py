@@ -47,7 +47,7 @@ def caja_parte(nombre):
 
 def bloque_redondo(bm, centro, mitades, redondez=0.35, segmentos=24, anillos=16):
     """Superelipsoide: una caja con las esquinas redondeadas (redondez 0 = caja, 1 = esfera)."""
-    e = max(0.05, redondez)
+    e = max(0.05, min(redondez, REDONDEZ_MAXIMA))
     hecho = bmesh.ops.create_uvsphere(bm, u_segments=segmentos, v_segments=anillos, radius=1.0)
     for v in hecho["verts"]:
         x, y, z = v.co
@@ -188,8 +188,20 @@ def cilindro(bm, base, hacia, radio, lados=12, radio_fin=None):
     return hecho["verts"]
 
 
+# Remaches más chicos que esto no se modelan (GUIA-ESTILO 2.1: nada de remaches microscópicos que
+# ensucian la silueta). Los personajes cómic lo suben a 0,01 m; en 0 se modelan todos (como antes).
+RADIO_MINIMO = 0.0
+# Tope de redondez de los bloques: los personajes cómic lo bajan para que las placas sean cajas con
+# chaflán y no almohadones (GUIA-ESTILO 2.1). En 1 no cambia nada.
+REDONDEZ_MAXIMA = 1.0
+# Capa cómic: láminas planas con pliegues en zigzag (sin simular tela). GUIA-ESTILO 2.1.
+CAPA_ANGULAR = False
+
+
 def remache(bm, centro, radio=0.007, afuera=(0, -1, 0)):
     """Remache o tornillo: media esfera achatada que mira hacia `afuera`."""
+    if radio < RADIO_MINIMO:
+        return []
     hecho = bmesh.ops.create_uvsphere(bm, u_segments=6, v_segments=4, radius=radio)
     giro = Vector((0, 0, 1)).rotation_difference(Vector(afuera)).to_matrix().to_4x4()
     m = Matrix.Translation(centro) @ giro @ Matrix.Diagonal((1, 1, 0.45, 1))
@@ -370,6 +382,9 @@ def capa(
     arriba = tmax.z - 0.02
     atras = tmax.y + 0.03
     medio_ancho = tmitades.x * ancho
+    if CAPA_ANGULAR:
+        columnas, filas = pliegues * 2, 5
+        grosor = max(grosor, 0.025)
 
     bm = bmesh.new()
     filas_v = []
@@ -379,6 +394,10 @@ def capa(
         for i in range(columnas + 1):
             s = i / columnas * 2 - 1
             x = tcentro.x + s * medio_ancho * (1 + (vuelo - 1) * t)
+            if CAPA_ANGULAR:  # zigzag: cada pliegue son dos caras planas, más hondo abajo
+                ola = hondo * 1.4 * (i % 2) * (0.5 + 0.8 * t)
+                fila.append(bm.verts.new((x, atras + ola + 0.05 * t, arriba - t * largo)))
+                continue
             ola = hondo * math.sin((s + 1) * math.pi * pliegues) * (1 - 0.6 * t)
             fila.append(bm.verts.new((x, atras + ola + 0.02 * t, arriba - t * largo)))
         filas_v.append(fila)
@@ -398,6 +417,24 @@ def capa(
     obj = bpy.data.objects.new(nombre, me)
     bpy.context.scene.collection.objects.link(obj)
 
+    if not CAPA_ANGULAR:
+        _simular_tela(obj, nombre, columnas, cuadros, choques_extra)
+
+    # Espesor y sombreado; queda pegada a UpperTorso.
+    mod = obj.modifiers.new("Espesor", "SOLIDIFY")
+    mod.thickness = grosor
+    mod.offset = 0.0
+    _aplicar(obj)
+    obj.data.shade_smooth()
+    if CAPA_ANGULAR:
+        obj.data.set_sharp_from_angle(angle=math.radians(20))  # pliegues con arista viva
+    B.aplicar_material(obj, material)
+    B.pegar_a_hueso(obj, "UpperTorso")
+    return obj
+
+
+def _simular_tela(obj, nombre, columnas, cuadros, choques_extra):
+    """Cuelga la capa con simulación de tela y deja la malla horneada."""
     # La fila de arriba queda fija (prendida a los hombros).
     grupo = obj.vertex_groups.new(name="Prendida")
     grupo.add(list(range(columnas + 1)), 1.0, "REPLACE")
@@ -442,13 +479,3 @@ def capa(
     bpy.data.meshes.remove(vieja)
     horneada.name = nombre
     obj.vertex_groups.clear()
-
-    # Espesor y sombreado; queda pegada a UpperTorso.
-    mod = obj.modifiers.new("Espesor", "SOLIDIFY")
-    mod.thickness = grosor
-    mod.offset = 0.0
-    _aplicar(obj)
-    obj.data.shade_smooth()
-    B.aplicar_material(obj, material)
-    B.pegar_a_hueso(obj, "UpperTorso")
-    return obj

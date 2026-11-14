@@ -24,6 +24,10 @@ import base as B  # noqa: E402
 import cuervo as C  # noqa: E402  (cáscaras, plumas y BVH)
 import bpy  # noqa: E402
 import trajes as T  # noqa: E402
+
+T.RADIO_MINIMO = 0.01  # GUIA-ESTILO 2.1: sin remaches microscópicos
+T.REDONDEZ_MAXIMA = 0.12  # placas con chaflán, no almohadones
+T.CAPA_ANGULAR = True  # capa en láminas con pliegues angulares
 from mathutils import Matrix, Vector  # noqa: E402
 
 NOMBRE = "Centinela"
@@ -693,7 +697,7 @@ def detalle():
     piezas = armar_detalle()
     bpy.ops.wm.save_as_mainfile(filepath=BLEND)
     grupos = {clave: (tope, [o.name for o in piezas if _pieza_de(o.name) == clave]) for clave, tope in PRESUPUESTO.items()}
-    D.terminar(piezas, grupos, "centinela")
+    D.terminar(piezas, grupos, "centinela", estilo="comic")
     pivote_corona()
     bpy.ops.wm.save_as_mainfile(filepath=BLEND)
     print(tabla_triangulos(piezas))
