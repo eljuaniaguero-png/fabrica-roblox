@@ -15,18 +15,9 @@ local remoto = ReplicatedStorage:WaitForChild("Poderes") :: RemoteEvent
 local P = Config.Poderes
 local POLVO = P.Colores.FuerzaBruta
 local REFLEJO = P.Colores.Reflejos
-
-local function suelta(tamano: Vector3, color: Color3, material: Enum.Material): Part
-	local p = Instance.new("Part")
-	p.Size = tamano
-	p.Color = color
-	p.Material = material
-	p.Anchored = true
-	p.CanCollide = false
-	p.CanQuery = false
-	p.CanTouch = false
-	return p
-end
+local HUESO = Color3.fromHex(Config.Hud.Colores.Hueso)
+local TINTA = Color3.fromHex(Config.Hud.Colores.Fondo)
+local ESCOMBRO = Color3.fromHex(Config.Efectos.ColorEscombro)
 
 local escalaActual = 1
 
@@ -34,13 +25,19 @@ local function anillo(centro: Vector3, radio: number, color: Color3)
 	EfectosGolpe.onda(centro, radio * escalaActual, color)
 end
 
--- Bloques de piso que saltan.
+-- Cuñas de piso que saltan: escombros angulosos del color del suelo, no cubos lisos.
 local function escombros(centro: Vector3, cantidad: number, fuerza: number)
 	for _ = 1, cantidad do
-		local t = math.random(5, 14) / 10
-		local p = suelta(Vector3.new(t, t, t), Color3.fromHex("#3a3f4b"), Enum.Material.Concrete)
-		p.Anchored = false
+		local p = Instance.new("WedgePart")
+		p.Size =
+			Vector3.new(math.random(3, 9) / 10, math.random(5, 14) / 10, math.random(6, 16) / 10)
+		p.Color = ESCOMBRO:Lerp(TINTA, math.random() * 0.4)
+		p.Material = Enum.Material.Slate
+		p.CanCollide = false
+		p.CanQuery = false
+		p.CanTouch = false
 		p.CFrame = CFrame.new(centro + Vector3.new(math.random(-4, 4), 0.5, math.random(-4, 4)))
+			* CFrame.Angles(math.random() * 6.28, math.random() * 6.28, math.random() * 6.28)
 		p.Parent = workspace
 		p.AssemblyLinearVelocity =
 			Vector3.new(math.random(-20, 20), fuerza + math.random(0, 20), math.random(-20, 20))
@@ -59,17 +56,39 @@ local function raizDe(personaje: Model): BasePart?
 	return if r and r:IsA("BasePart") then r else nil
 end
 
--- Figura fantasma en el lugar donde estaba el cuerpo.
+-- Figura fantasma: la silueta real del cuerpo (copias de sus mallas) en 3 trazos que se apagan.
 local function fantasma(personaje: Model, color: Color3)
-	for _, parte in personaje:GetChildren() do
-		if parte:IsA("MeshPart") and parte.Transparency < 1 and parte.Size.Magnitude > 0.8 then
-			local copia = suelta(parte.Size, color, Enum.Material.Neon)
-			copia.CFrame = parte.CFrame
-			copia.Transparency = 0.45
-			copia.Parent = workspace
-			TweenService:Create(copia, TweenInfo.new(0.4), { Transparency = 1 }):Play()
-			Debris:AddItem(copia, 0.45)
+	local raiz = raizDe(personaje)
+	local atras = if raiz then -raiz.CFrame.LookVector else Vector3.zero
+	for paso = 0, 2 do
+		local grupo = Instance.new("Model")
+		grupo.Name = "Fantasma"
+		for _, parte in personaje:GetChildren() do
+			if parte:IsA("MeshPart") and parte.Transparency < 1 and parte.Size.Magnitude > 0.8 then
+				local copia = parte:Clone()
+				copia:ClearAllChildren()
+				copia.Anchored = true
+				copia.CanCollide = false
+				copia.CanQuery = false
+				copia.CanTouch = false
+				copia.Color = color
+				copia.Material = Enum.Material.SmoothPlastic
+				copia.TextureID = ""
+				copia.Transparency = 0.5 + paso * 0.15
+				copia.CFrame = parte.CFrame + atras * paso * 1.6
+				copia.Parent = grupo
+				TweenService:Create(copia, TweenInfo.new(0.35 + paso * 0.05), { Transparency = 1 })
+					:Play()
+			end
 		end
+		local tinta = Instance.new("Highlight")
+		tinta.FillTransparency = 1
+		tinta.OutlineColor = TINTA
+		tinta.OutlineTransparency = 0.2 + paso * 0.25
+		tinta.DepthMode = Enum.HighlightDepthMode.Occluded
+		tinta.Parent = grupo
+		grupo.Parent = workspace
+		Debris:AddItem(grupo, 0.5)
 	end
 end
 
@@ -97,7 +116,7 @@ local efectos: { [string]: (Model, BasePart, any) -> () } = {
 	GolpePiso = function(_p, r)
 		anillo(piso(r), 12, POLVO)
 		task.delay(0.08, function()
-			anillo(piso(r), 8, Color3.new(1, 1, 1))
+			anillo(piso(r), 8, HUESO)
 		end)
 		escombros(piso(r), 14, 36)
 		estallido(piso(r), POLVO, 40, 42)

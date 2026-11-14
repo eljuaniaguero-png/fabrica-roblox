@@ -76,10 +76,7 @@ humanoid.Running:Connect(function(v)
 		return
 	end
 	local estado = humanoid:GetState()
-	if
-		estado == Enum.HumanoidStateType.Running
-		or estado == Enum.HumanoidStateType.RunningNoPhysics
-	then
+	if estado == Enum.HumanoidStateType.Running or estado == Enum.HumanoidStateType.RunningNoPhysics then
 		-- Si está terminando de caer, deja que la caída amortigüe antes de cambiar.
 		if actual ~= "SaltarCaer" or not pistas.SaltarCaer.IsPlaying then
 			enElPiso()

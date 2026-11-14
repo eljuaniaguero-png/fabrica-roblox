@@ -38,8 +38,7 @@ function Apariencia.limpiar(d: any): Datos
 	local peinado = if typeof(t.Peinado) == "string" and table.find(C.Peinados, t.Peinado)
 		then t.Peinado
 		else base.Peinado
-	local colorPelo = if typeof(t.ColorPelo) == "string"
-			and string.match(t.ColorPelo, "^%x%x%x%x%x%x$")
+	local colorPelo = if typeof(t.ColorPelo) == "string" and string.match(t.ColorPelo, "^%x%x%x%x%x%x$")
 		then t.ColorPelo
 		else base.ColorPelo
 	return {
@@ -131,8 +130,7 @@ local function contextura(personaje: Model, nombre: string)
 			local factor = factores[m.Part0.Name]
 			local hijo = m.Part1.Name
 			if factor and factor ~= 1 and hijo ~= "UpperTorso" and hijo ~= "Head" then
-				m.C0 = CFrame.new(m.C0.Position.X * factor, m.C0.Position.Y, m.C0.Position.Z)
-					* m.C0.Rotation
+				m.C0 = CFrame.new(m.C0.Position.X * factor, m.C0.Position.Y, m.C0.Position.Z) * m.C0.Rotation
 			end
 		end
 	end

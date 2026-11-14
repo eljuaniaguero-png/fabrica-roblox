@@ -1,5 +1,6 @@
 --!strict
--- Golpe por capas: destello, anillo, arco, chispas y, si es fuerte, humo y líneas.
+-- Golpe por capas: tinta oscura detrás, destello, anillo, arco, chispas y, si es fuerte, humo y líneas.
+-- Sin blanco puro: el núcleo es Hueso y brilla poco, para que el Bloom no queme la forma.
 -- Texturas propias (arte/scripts/efectos). Solo se ve: no decide nada.
 
 local Debris = game:GetService("Debris")
@@ -8,7 +9,8 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Config = require(ReplicatedStorage:WaitForChild("Shared"):WaitForChild("Config"))
 
 local E = Config.Efectos
-local BLANCO = Color3.new(1, 1, 1)
+local NUCLEO = Color3.fromHex(Config.Hud.Colores.Hueso)
+local TINTA = Color3.fromHex(Config.Hud.Colores.Fondo)
 
 local EfectosGolpe = {}
 
@@ -19,7 +21,8 @@ local function capa(
 	color: Color3,
 	vida: number,
 	brillo: number,
-	giro: number?
+	giro: number?,
+	profundidad: number?
 )
 	local e = Instance.new("ParticleEmitter")
 	e.Texture = textura
@@ -32,7 +35,7 @@ local function capa(
 	e.Speed = NumberRange.new(0)
 	e.Size = NumberSequence.new(tam)
 	e.Rotation = NumberRange.new(giro or math.random(0, 359))
-	e.ZOffset = 2
+	e.ZOffset = profundidad or 2
 	e.Rate = 0
 	e.Parent = soporte
 	e:Emit(1)
@@ -40,7 +43,7 @@ end
 
 local function chispas(soporte: BasePart, color: Color3, cantidad: number)
 	local e = Instance.new("ParticleEmitter")
-	e.Color = ColorSequence.new(BLANCO, color)
+	e.Color = ColorSequence.new(NUCLEO, color)
 	e.LightEmission = 1
 	e.LightInfluence = 0
 	e.Orientation = Enum.ParticleOrientation.VelocityParallel
@@ -67,10 +70,11 @@ function EfectosGolpe.reproducir(punto: Vector3, fuerte: boolean, color: Color3,
 	soporte.Size = Vector3.one * 0.2
 	soporte.Position = punto
 	soporte.Parent = workspace
+	capa(soporte, E.Destello, E.TamDestello * 1.6 * s, TINTA, 0.1, 0, nil, 1) -- marco de impacto cómic
 	capa(soporte, E.Destello, E.TamDestello * 1.35 * s, color, 0.2, 1)
-	capa(soporte, E.Destello, E.TamDestello * s, BLANCO, 0.14, 1)
+	capa(soporte, E.Destello, E.TamDestello * 0.8 * s, NUCLEO, 0.12, 0.6)
 	capa(soporte, E.Anillo, E.TamAnillo * s, color, 0.26, 1)
-	capa(soporte, E.Arco, E.TamArco * s, BLANCO, 0.17, 1)
+	capa(soporte, E.Arco, E.TamArco * s, NUCLEO, 0.17, 0.6)
 	chispas(soporte, color, if fuerte then 26 else 12)
 	if fuerte then
 		capa(soporte, E.Lineas, E.TamLineas * s / E.EscalaFuerte, color, 0.24, 1)

@@ -1,9 +1,15 @@
 --!strict
--- Barra de vida sobre cada matón. Se dibuja en el cliente: solo muestra.
+-- Barra de vida sobre cada matón: línea fina de 86 x 4 px con el estilo editorial de Tema.
+-- Se dibuja en el cliente: solo muestra.
 
 local CollectionService = game:GetService("CollectionService")
 local Players = game:GetService("Players")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
+local Config = require(ReplicatedStorage:WaitForChild("Shared"):WaitForChild("Config"))
+local Tema = require(script.Parent:WaitForChild("Tema"))
+
+local B = Config.Hud.BarraMaton
 local gui = Players.LocalPlayer:WaitForChild("PlayerGui")
 
 local function ponerBarra(m: Instance)
@@ -18,18 +24,24 @@ local function ponerBarra(m: Instance)
 	local cartel = Instance.new("BillboardGui")
 	cartel.Name = "BarraMaton"
 	cartel.Adornee = raiz
-	cartel.Size = UDim2.fromOffset(90, 9)
-	cartel.StudsOffsetWorldSpace = Vector3.new(0, 4, 0)
+	cartel.Size = UDim2.fromOffset(B.Ancho, B.Alto)
+	cartel.StudsOffsetWorldSpace = Vector3.new(0, B.Altura, 0)
 	cartel.AlwaysOnTop = true
-	cartel.MaxDistance = 80
+	cartel.MaxDistance = B.Distancia
 	cartel.ResetOnSpawn = false
 	local fondo = Instance.new("Frame")
 	fondo.Size = UDim2.fromScale(1, 1)
-	fondo.BackgroundColor3 = Color3.fromRGB(27, 31, 42)
+	fondo.BackgroundColor3 = Tema.Fondo
+	fondo.BackgroundTransparency = 0.25
 	fondo.BorderSizePixel = 0
 	fondo.Parent = cartel
+	local borde = Instance.new("UIStroke")
+	borde.Color = Tema.Hueso
+	borde.Transparency = 0.82
+	borde.Thickness = 1
+	borde.Parent = fondo
 	local lleno = Instance.new("Frame")
-	lleno.BackgroundColor3 = Color3.fromRGB(210, 58, 74)
+	lleno.BackgroundColor3 = Tema.Vida
 	lleno.BorderSizePixel = 0
 	lleno.Parent = fondo
 	local function actualizar()

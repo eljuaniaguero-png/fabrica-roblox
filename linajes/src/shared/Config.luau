@@ -926,6 +926,7 @@ Config.Efectos = {
 	TamLineas = 15,
 	TamHumo = 9,
 	EscalaFuerte = 1.5,
+	ColorEscombro = "#2E3138", -- cuñas de piso que saltan (asfalto del puerto)
 	-- Tope: 150 partículas activas por efecto (Ritmo x Vida de cada capa).
 	Fuego = {
 		ColorLuz = "#ff8a30",
@@ -1186,21 +1187,21 @@ Config.Hud = {
 	BarraMaton = { Ancho = 86, Alto = 4, Altura = 4, Distancia = 80 }, -- barra fina sobre cada matón
 	RivalDura = 4, -- segundos que se ve la barra del rival después del último golpe
 	TeclaControles = Enum.KeyCode.H,
-	-- Imágenes de arte/hud/listas/ (hechas con Gemini). Vacías = se dibujan con líneas.
+	-- Imágenes de arte/hud/listas/ (subidas el 14 nov 2026). Vacías = se dibujan con líneas.
 	Imagenes = {
-		MarcoRombo = "",
-		Ornamento = "",
-		Vineta = "",
+		MarcoRombo = "rbxassetid://105043766784101",
+		Ornamento = "rbxassetid://110297614604446",
+		Vineta = "rbxassetid://102942803449325",
 		Iconos = {
-			PunoSismico = "",
-			GolpePiso = "",
-			Embestida = "",
-			Contragolpe = "",
-			PasoFantasma = "",
-			LluviaGolpes = "",
-			BolaFuego = "",
-			Chorro = "",
-			MuroFuego = "",
+			PunoSismico = "rbxassetid://88189629136780",
+			GolpePiso = "rbxassetid://134218112979490",
+			Embestida = "rbxassetid://138320428912316",
+			Contragolpe = "rbxassetid://115891521342025",
+			PasoFantasma = "rbxassetid://126983879003629",
+			LluviaGolpes = "rbxassetid://115565576530880",
+			BolaFuego = "rbxassetid://140551605631623",
+			Chorro = "rbxassetid://136111392514119",
+			MuroFuego = "rbxassetid://80571953169913",
 		},
 	},
 }

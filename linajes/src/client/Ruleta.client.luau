@@ -14,12 +14,7 @@ local jugador = Players.LocalPlayer
 local gui = Tema.pantalla("Ruleta", 5)
 
 -- Arriba a la derecha: solo texto y una línea, sin caja.
-local esquina = Tema.grupo(
-	gui,
-	Vector2.new(1, 0),
-	UDim2.new(1, -Config.Hud.Margen, 0, 48),
-	Vector2.new(200, 64)
-)
+local esquina = Tema.grupo(gui, Vector2.new(1, 0), UDim2.new(1, -Config.Hud.Margen, 0, 48), Vector2.new(200, 64))
 local abrir = Instance.new("TextButton")
 abrir.Size = UDim2.fromScale(1, 1)
 abrir.BackgroundTransparency = 1
@@ -36,8 +31,7 @@ raya.BackgroundColor3 = Tema.Hueso
 raya.BackgroundTransparency = 0.6
 raya.BorderSizePixel = 0
 raya.Parent = esquina
-local fichasTexto =
-	Tema.texto(esquina, "", { tam = 13, letra = Tema.LetraFina, transparencia = 0.4 })
+local fichasTexto = Tema.texto(esquina, "", { tam = 13, letra = Tema.LetraFina, transparencia = 0.4 })
 fichasTexto.AnchorPoint = Vector2.new(1, 0)
 fichasTexto.Position = UDim2.new(1, 0, 0, 34)
 abrir.MouseEnter:Connect(function()
@@ -108,10 +102,7 @@ do
 	local filas = { "Probabilidades" }
 	for _, o in R.Opciones do
 		if o.Disponible then
-			table.insert(
-				filas,
-				string.format("%s (%s): %.2f %%", o.Nombre, o.Rareza, o.Peso / total * 100)
-			)
+			table.insert(filas, string.format("%s (%s): %.2f %%", o.Nombre, o.Rareza, o.Peso / total * 100))
 		end
 	end
 	lista.Text = table.concat(filas, "\n")
@@ -121,11 +112,8 @@ local function actualizar()
 	local fichas = jugador:GetAttribute("Fichas")
 	local linaje = jugador:GetAttribute("Linaje")
 	local n = if typeof(fichas) == "number" then fichas else 0
-	fichasTexto.Text =
-		Tema.espaciar(string.format("%d %s", n, if n == 1 then "FICHA" else "FICHAS"), 2)
-	tirar.Text = if linaje == nil
-		then "Tirar gratis"
-		else string.format("Tirar por 1 Ficha (tenés %d)", n)
+	fichasTexto.Text = Tema.espaciar(string.format("%d %s", n, if n == 1 then "FICHA" else "FICHAS"), 2)
+	tirar.Text = if linaje == nil then "Tirar gratis" else string.format("Tirar por 1 Ficha (tenés %d)", n)
 	if linaje == nil and jugador:GetAttribute("DatosListos") == true then
 		panel.Visible = true
 	end
