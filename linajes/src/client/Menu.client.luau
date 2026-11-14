@@ -4,7 +4,9 @@
 
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local RunService = game:GetService("RunService")
 local SoundService = game:GetService("SoundService")
+local TweenService = game:GetService("TweenService")
 local UserInputService = game:GetService("UserInputService")
 
 local Config = require(ReplicatedStorage:WaitForChild("Shared"):WaitForChild("Config"))
@@ -13,6 +15,7 @@ local Tema = require(script.Parent:WaitForChild("Tema"))
 local H = Config.Hud
 local P = Config.Poderes
 local IM = H.Imagenes
+local MU = H.MenuUI
 local jugador = Players.LocalPlayer
 local playerGui = jugador:WaitForChild("PlayerGui")
 
@@ -38,20 +41,20 @@ local esquinaMenu = Tema.grupo(
 	botonGui,
 	Vector2.new(1, 0),
 	UDim2.new(1, -(H.Margen + 152), 0, 48),
-	Vector2.new(120, 38)
+	Vector2.new(150, 46)
 )
 local abrirMenuBtn = Instance.new("TextButton")
 abrirMenuBtn.Size = UDim2.fromScale(1, 1)
 abrirMenuBtn.BackgroundTransparency = 1
 abrirMenuBtn.Text = ""
 abrirMenuBtn.Parent = esquinaMenu
-local txtAbrir = Tema.texto(esquinaMenu, "M  MENÚ", { tam = 15, espaciado = 3 })
+local txtAbrir = Tema.texto(esquinaMenu, "M  MENÚ", { tam = 20, espaciado = 3 })
 txtAbrir.AnchorPoint = Vector2.new(1, 0)
 txtAbrir.Position = UDim2.fromScale(1, 0)
 local rayaAbrir = Instance.new("Frame")
 rayaAbrir.AnchorPoint = Vector2.new(1, 0)
-rayaAbrir.Position = UDim2.new(1, 0, 0, 28)
-rayaAbrir.Size = UDim2.fromOffset(92, 1)
+rayaAbrir.Position = UDim2.new(1, 0, 0, 34)
+rayaAbrir.Size = UDim2.fromOffset(118, 2)
 rayaAbrir.BackgroundColor3 = Tema.Hueso
 rayaAbrir.BackgroundTransparency = 0.65
 rayaAbrir.BorderSizePixel = 0
@@ -73,11 +76,19 @@ fondo.Parent = gui
 
 if IM.Menu.Fondo ~= "" then
 	local fondoImg = Instance.new("ImageLabel")
-	fondoImg.Size = UDim2.fromScale(1, 1)
+	fondoImg.AnchorPoint = Vector2.new(0.5, 0.5)
+	fondoImg.Position = UDim2.fromScale(0.5, 0.5)
+	fondoImg.Size = UDim2.fromScale(MU.ZoomFondo, MU.ZoomFondo)
 	fondoImg.BackgroundTransparency = 1
 	fondoImg.ScaleType = Enum.ScaleType.Crop
 	fondoImg.Image = IM.Menu.Fondo
 	fondoImg.Parent = fondo
+	-- Paneo lento de ida y vuelta: la escena "respira" sin distraer.
+	TweenService:Create(
+		fondoImg,
+		TweenInfo.new(MU.PaneoSegundos, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut, -1, true),
+		{ Position = UDim2.fromScale(0.5 - MU.PaneoDistancia, 0.5 + MU.PaneoDistancia * 0.5) }
+	):Play()
 end
 
 -- El fondo pintado ya trae su eclipse: el suelto va solo si no hay fondo (si no, salen dos).
@@ -108,6 +119,90 @@ grad.Transparency = NumberSequence.new({
 })
 grad.Parent = velo
 
+-- Banda de niebla que se desplaza de costado.
+-- Va dentro de un CanvasGroup con degradé vertical: así se esfuma arriba y no deja un borde recto.
+local nieblaCaja = Instance.new("CanvasGroup")
+nieblaCaja.AnchorPoint = Vector2.new(0, 1)
+nieblaCaja.Position = UDim2.fromScale(0, 1)
+nieblaCaja.Size = UDim2.fromScale(1, 0.45)
+nieblaCaja.BackgroundTransparency = 1
+nieblaCaja.ZIndex = 3
+nieblaCaja.Parent = fondo
+local nieblaAlto = Instance.new("UIGradient")
+nieblaAlto.Rotation = 90
+nieblaAlto.Transparency = NumberSequence.new({
+	NumberSequenceKeypoint.new(0, 1),
+	NumberSequenceKeypoint.new(0.5, 0),
+	NumberSequenceKeypoint.new(1, 0.3),
+})
+nieblaAlto.Parent = nieblaCaja
+local niebla = Instance.new("Frame")
+niebla.Size = UDim2.fromScale(1, 1)
+niebla.BackgroundColor3 = Color3.fromHex("#9FB4CC")
+niebla.BackgroundTransparency = 0
+niebla.BorderSizePixel = 0
+niebla.ZIndex = 3
+niebla.Parent = nieblaCaja
+local nieblaGrad = Instance.new("UIGradient")
+nieblaGrad.Rotation = 0
+nieblaGrad.Transparency = NumberSequence.new({
+	NumberSequenceKeypoint.new(0, 1),
+	NumberSequenceKeypoint.new(0.25, 0.93),
+	NumberSequenceKeypoint.new(0.5, 1),
+	NumberSequenceKeypoint.new(0.75, 0.9),
+	NumberSequenceKeypoint.new(1, 1),
+})
+nieblaGrad.Offset = Vector2.new(-0.5, 0)
+nieblaGrad.Parent = niebla
+TweenService:Create(
+	nieblaGrad,
+	TweenInfo.new(MU.NieblaSegundos, Enum.EasingStyle.Linear, Enum.EasingDirection.InOut, -1),
+	{ Offset = Vector2.new(0.5, 0) }
+):Play()
+
+-- Telón negro para el fundido de entrada (arriba de todo el fondo).
+local telon = Instance.new("Frame")
+telon.Size = UDim2.fromScale(1, 1)
+telon.BackgroundColor3 = Color3.fromHex("#080A0E")
+telon.BackgroundTransparency = 1
+telon.BorderSizePixel = 0
+telon.ZIndex = 9
+telon.Parent = fondo
+
+-- Brasas: chispas chicas que suben desde abajo, se mecen y se apagan.
+local capaBrasas = Instance.new("Frame")
+capaBrasas.Size = UDim2.fromScale(1, 1)
+capaBrasas.BackgroundTransparency = 1
+capaBrasas.ZIndex = 4
+capaBrasas.Parent = fondo
+local COLORES_BRASA =
+	{ Color3.fromHex("#F2A23A"), Color3.fromHex("#F2652B"), Color3.fromHex("#FFD58A") }
+
+local function lanzarBrasa()
+	local b = Instance.new("Frame")
+	local lado = math.random(3, 6)
+	b.AnchorPoint = Vector2.new(0.5, 0.5)
+	b.Size = UDim2.fromOffset(lado, lado)
+	b.Rotation = 45
+	b.BackgroundColor3 = COLORES_BRASA[math.random(1, #COLORES_BRASA)]
+	b.BackgroundTransparency = 0.15
+	b.BorderSizePixel = 0
+	b.ZIndex = 4
+	local x = math.random(30, 100) / 100
+	b.Position = UDim2.fromScale(x, 1.02)
+	b.Parent = capaBrasas
+	local dura = math.random(60, 110) / 10
+	local deriva = math.random(-8, 8) / 100
+	TweenService:Create(b, TweenInfo.new(dura, Enum.EasingStyle.Sine, Enum.EasingDirection.Out), {
+		Position = UDim2.fromScale(x + deriva, math.random(15, 55) / 100),
+		Rotation = 45 + math.random(-180, 180),
+		BackgroundTransparency = 1,
+	}):Play()
+	task.delay(dura, function()
+		b:Destroy()
+	end)
+end
+
 if IM.Vineta ~= "" then
 	local vin = Instance.new("ImageLabel")
 	vin.Size = UDim2.fromScale(1, 1)
@@ -136,7 +231,7 @@ local function ajustarEscala()
 		return
 	end
 	local v = cam.ViewportSize
-	local s = math.clamp(math.min(v.X / 1280, v.Y / 720), 0.52, 1.15)
+	local s = math.clamp(math.min(v.X / 1280, v.Y / 720), 0.52, 1.15) * MU.Zoom
 	escalaUI.Scale = s
 	contenido.Size = UDim2.fromScale(1 / s, 1 / s)
 end
@@ -152,20 +247,26 @@ conectarCamara()
 workspace:GetPropertyChangedSignal("CurrentCamera"):Connect(conectarCamara)
 
 -- Columna izquierda editorial
-local columna =
-	Tema.grupo(contenido, Vector2.new(0, 0.5), UDim2.new(0, 68, 0.5, 0), Vector2.new(540, 560))
+-- CanvasGroup: se puede fundir entera al abrir. Sin Tema.grupo: ese escalaba por segunda vez
+-- y dejaba todo al 67 % (por eso se veía chiquito).
+local columna = Instance.new("CanvasGroup")
+columna.AnchorPoint = Vector2.new(0, 0.5)
+columna.Position = UDim2.new(0, 68, 0.5, 0)
+columna.Size = UDim2.fromOffset(560, 600)
+columna.BackgroundTransparency = 1
+columna.Parent = contenido
 
 local sector = Tema.texto(
 	columna,
 	Tema.espaciar("PUERTO ÓXIDO  ·  SECTOR PORTUARIO", 3),
-	{ tam = 12, letra = Tema.LetraFina, color = GRIS }
+	{ tam = 15, letra = Tema.LetraFina, color = GRIS }
 )
 sector.Position = UDim2.fromOffset(0, 0)
 
 if IM.Menu.Logo ~= "" then
 	local logoImg = Instance.new("ImageLabel")
-	logoImg.Position = UDim2.fromOffset(-8, 18)
-	logoImg.Size = UDim2.fromOffset(420, 92)
+	logoImg.Position = UDim2.fromOffset(-8, 22)
+	logoImg.Size = UDim2.fromOffset(470, 104)
 	logoImg.BackgroundTransparency = 1
 	logoImg.ScaleType = Enum.ScaleType.Fit
 	logoImg.Image = IM.Menu.Logo
@@ -179,11 +280,18 @@ else
 	titulo.Position = UDim2.fromOffset(0, 26)
 end
 
-Tema.ornamento(columna, Vector2.new(175, 114), 350)
+Tema.ornamento(columna, Vector2.new(200, 136), 400)
 
 -- Botonera principal
-local yBase = 166
-local paso = 72
+local yBase = 176
+local paso = 82
+local filasMenu: { Frame } = {}
+local romboActivo: Frame? = nil
+local RAPIDO = TweenInfo.new(0.18, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
+
+local function tween(obj: Instance, info: TweenInfo, props: { [string]: any })
+	TweenService:Create(obj, info, props):Play()
+end
 local botonPrincipalTxt: TextLabel
 local subPrincipalTxt: TextLabel
 
@@ -195,14 +303,15 @@ local function crearItemMenu(
 ): (TextButton, Frame, TextLabel)
 	local fila = Instance.new("Frame")
 	fila.Position = UDim2.fromOffset(0, filaY)
-	fila.Size = UDim2.fromOffset(420, 52)
+	fila.Size = UDim2.fromOffset(470, 60)
 	fila.BackgroundTransparency = 1
 	fila.Parent = columna
+	table.insert(filasMenu, fila)
 
 	local rombo = Instance.new("Frame")
 	rombo.AnchorPoint = Vector2.new(0.5, 0.5)
-	rombo.Position = UDim2.fromOffset(10, 18)
-	rombo.Size = UDim2.fromOffset(if activo then 13 else 11, if activo then 13 else 11)
+	rombo.Position = UDim2.fromOffset(12, 22)
+	rombo.Size = UDim2.fromOffset(if activo then 17 else 14, if activo then 17 else 14)
 	rombo.Rotation = 45
 	rombo.BackgroundColor3 = Tema.Hueso
 	rombo.BackgroundTransparency = if activo then 0 else 1
@@ -214,17 +323,25 @@ local function crearItemMenu(
 	bordeR.Parent = rombo
 
 	local txt = Tema.texto(fila, Tema.espaciar(etiqueta, 3), {
-		tam = if activo then 24 else 20,
+		tam = if activo then 32 else 26,
 		letra = if activo then Tema.Letra else Tema.LetraFina,
 		color = if activo then Tema.Hueso else GRIS,
 	})
-	txt.Position = UDim2.fromOffset(32, 2)
+	txt.Position = UDim2.fromOffset(38, 2)
+
+	-- Raya que crece debajo del texto al pasar el mouse.
+	local raya = Instance.new("Frame")
+	raya.Position = UDim2.fromOffset(38, 44)
+	raya.Size = UDim2.fromOffset(0, 2)
+	raya.BackgroundColor3 = Tema.Hueso
+	raya.BorderSizePixel = 0
+	raya.Parent = fila
 
 	if iconoId ~= "" then
 		local ico = Instance.new("ImageLabel")
 		ico.AnchorPoint = Vector2.new(0, 0.5)
-		ico.Position = UDim2.fromOffset(296, 18)
-		ico.Size = UDim2.fromOffset(20, 20)
+		ico.Position = UDim2.fromOffset(400, 22)
+		ico.Size = UDim2.fromOffset(28, 28)
 		ico.BackgroundTransparency = 1
 		ico.ScaleType = Enum.ScaleType.Fit
 		ico.Image = iconoId
@@ -239,54 +356,78 @@ local function crearItemMenu(
 	btn.Text = ""
 	btn.Parent = fila
 
-	btn.MouseEnter:Connect(function()
-		txt.TextColor3 = Tema.Hueso
-		rombo.BackgroundTransparency = 0.25
+	local function encender()
+		-- SONIDO: pasar por un botón del menú (Config.Sonidos)
+		tween(txt, RAPIDO, { TextColor3 = Tema.Hueso, Position = UDim2.fromOffset(50, 2) })
+		tween(rombo, RAPIDO, { BackgroundTransparency = 0.25, Rotation = 135 })
+		tween(
+			raya,
+			RAPIDO,
+			{ Size = UDim2.fromOffset(txt.AbsoluteSize.X / math.max(escalaUI.Scale, 0.01), 2) }
+		)
+	end
+	local function apagar()
+		tween(txt, RAPIDO, {
+			TextColor3 = if activo then Tema.Hueso else GRIS,
+			Position = UDim2.fromOffset(38, 2),
+		})
+		tween(rombo, RAPIDO, { BackgroundTransparency = if activo then 0 else 1, Rotation = 45 })
+		tween(raya, RAPIDO, { Size = UDim2.fromOffset(0, 2) })
+	end
+	btn.MouseEnter:Connect(encender)
+	btn.SelectionGained:Connect(encender)
+	btn.MouseLeave:Connect(apagar)
+	btn.SelectionLost:Connect(apagar)
+	btn.Activated:Connect(function()
+		-- SONIDO: tocar un botón del menú
+		rombo.Size += UDim2.fromOffset(8, 8)
+		tween(rombo, TweenInfo.new(0.3, Enum.EasingStyle.Back), {
+			Size = UDim2.fromOffset(if activo then 17 else 14, if activo then 17 else 14),
+		})
 	end)
-	btn.MouseLeave:Connect(function()
-		txt.TextColor3 = if activo then Tema.Hueso else GRIS
-		rombo.BackgroundTransparency = if activo then 0 else 1
-	end)
+	if activo then
+		romboActivo = rombo
+	end
 
 	return btn, rombo, txt
 end
 
 local btnContinuar, _, txtContinuar = crearItemMenu(yBase, "CONTINUAR", true, "")
 botonPrincipalTxt = txtContinuar
-subPrincipalTxt = Tema.texto(columna, "", { tam = 13, letra = Tema.LetraFina, color = GRIS })
-subPrincipalTxt.Position = UDim2.fromOffset(32, yBase + 34)
+subPrincipalTxt = Tema.texto(columna, "", { tam = 17, letra = Tema.LetraFina, color = GRIS })
+subPrincipalTxt.Position = UDim2.fromOffset(38, yBase + 44)
 
 -- Fila 2: ESPACIOS < 1 / 3 >
 local _, _, _ = crearItemMenu(yBase + paso, "ESPACIOS", false, "")
 local espacioActual = 1
 local totalEspacios = 3
 local textoEspacio = Tema.texto(columna, "1 / 3", {
-	tam = 16,
+	tam = 22,
 	letra = Tema.Letra,
 	color = Tema.Hueso,
 	alineado = Enum.TextXAlignment.Center,
 })
 textoEspacio.AutomaticSize = Enum.AutomaticSize.None
-textoEspacio.Position = UDim2.fromOffset(244, yBase + paso + 4)
-textoEspacio.Size = UDim2.fromOffset(66, 26)
-local notaEspacio = Tema.texto(columna, "", { tam = 12, letra = Tema.LetraFina, color = APAGADO })
-notaEspacio.Position = UDim2.fromOffset(32, yBase + paso + 32)
+textoEspacio.Position = UDim2.fromOffset(318, yBase + paso + 6)
+textoEspacio.Size = UDim2.fromOffset(84, 32)
+local notaEspacio = Tema.texto(columna, "", { tam = 16, letra = Tema.LetraFina, color = APAGADO })
+notaEspacio.Position = UDim2.fromOffset(38, yBase + paso + 44)
 
 local function crearFlecha(x: number, rotacion: number, textoAlt: string): TextButton
 	local fbtn = Instance.new("TextButton")
-	fbtn.Position = UDim2.fromOffset(x, yBase + paso + 2)
-	fbtn.Size = UDim2.fromOffset(32, 32)
+	fbtn.Position = UDim2.fromOffset(x, yBase + paso)
+	fbtn.Size = UDim2.fromOffset(44, 44)
 	fbtn.BackgroundTransparency = 1
 	fbtn.Text = if IM.Menu.Flecha == "" then textoAlt else ""
 	fbtn.TextColor3 = Tema.Hueso
 	fbtn.FontFace = Tema.Letra
-	fbtn.TextSize = 18
+	fbtn.TextSize = 26
 	fbtn.Parent = columna
 	if IM.Menu.Flecha ~= "" then
 		local img = Instance.new("ImageLabel")
 		img.AnchorPoint = Vector2.new(0.5, 0.5)
 		img.Position = UDim2.fromScale(0.5, 0.5)
-		img.Size = UDim2.fromOffset(18, 18)
+		img.Size = UDim2.fromOffset(26, 26)
 		img.Rotation = rotacion
 		img.BackgroundTransparency = 1
 		img.ScaleType = Enum.ScaleType.Fit
@@ -297,10 +438,12 @@ local function crearFlecha(x: number, rotacion: number, textoAlt: string): TextB
 	return fbtn
 end
 
-local btnEspAnt = crearFlecha(212, 180, "‹")
-local btnEspSig = crearFlecha(310, 0, "›")
+local btnEspAnt = crearFlecha(272, 180, "‹")
+local btnEspSig = crearFlecha(404, 0, "›")
 
 local function refrescarEspacios()
+	textoEspacio.TextTransparency = 1
+	tween(textoEspacio, RAPIDO, { TextTransparency = 0 })
 	textoEspacio.Text = string.format("%d / %d", espacioActual, totalEspacios)
 	notaEspacio.Text = if espacioActual == 1
 		then "Ranura activa"
@@ -321,10 +464,10 @@ local btnAjustes = crearItemMenu(yBase + paso * 3, "AJUSTES", false, IM.Menu.Aju
 local btnCreditos = crearItemMenu(yBase + paso * 4, "CRÉDITOS", false, "")
 
 -- Panel derecho secundario (Árbol / Ajustes / Créditos)
-local cajon = Instance.new("Frame")
+local cajon = Instance.new("CanvasGroup")
 cajon.AnchorPoint = Vector2.new(1, 0)
 cajon.Position = UDim2.new(1, -68, 0, 74)
-cajon.Size = UDim2.fromOffset(420, 300)
+cajon.Size = UDim2.fromOffset(500, 360)
 cajon.BackgroundColor3 = Color3.fromRGB(13, 16, 23)
 cajon.BackgroundTransparency = 0.1
 cajon.BorderSizePixel = 0
@@ -335,22 +478,22 @@ bordeCajon.Color = Tema.Hueso
 bordeCajon.Transparency = 0.8
 bordeCajon.Parent = cajon
 
-local cajonTitulo = Tema.texto(cajon, "", { tam = 18, espaciado = 3 })
+local cajonTitulo = Tema.texto(cajon, "", { tam = 22, espaciado = 3 })
 cajonTitulo.Position = UDim2.fromOffset(22, 18)
 
 local cerrarCajon = Instance.new("TextButton")
 cerrarCajon.AnchorPoint = Vector2.new(1, 0)
 cerrarCajon.Position = UDim2.new(1, -12, 0, 12)
-cerrarCajon.Size = UDim2.fromOffset(30, 30)
+cerrarCajon.Size = UDim2.fromOffset(40, 40)
 cerrarCajon.BackgroundTransparency = 1
 cerrarCajon.Text = "×"
 cerrarCajon.TextColor3 = GRIS
 cerrarCajon.FontFace = Tema.LetraFina
-cerrarCajon.TextSize = 22
+cerrarCajon.TextSize = 30
 cerrarCajon.Parent = cajon
 
 local cajonCuerpo = Instance.new("Frame")
-cajonCuerpo.Position = UDim2.fromOffset(22, 58)
+cajonCuerpo.Position = UDim2.fromOffset(22, 64)
 cajonCuerpo.Size = UDim2.new(1, -44, 1, -76)
 cajonCuerpo.BackgroundTransparency = 1
 cajonCuerpo.Parent = cajon
@@ -379,7 +522,7 @@ local function agregarFilaCajon(
 	color: Color3?
 ): TextButton
 	local fila = Instance.new("TextButton")
-	fila.Size = UDim2.new(1, 0, 0, 48)
+	fila.Size = UDim2.new(1, 0, 0, 60)
 	fila.BackgroundColor3 = Color3.fromRGB(20, 24, 34)
 	fila.BackgroundTransparency = 0.45
 	fila.BorderSizePixel = 0
@@ -391,7 +534,7 @@ local function agregarFilaCajon(
 		local img = Instance.new("ImageLabel")
 		img.AnchorPoint = Vector2.new(0, 0.5)
 		img.Position = UDim2.new(0, 12, 0.5, 0)
-		img.Size = UDim2.fromOffset(26, 26)
+		img.Size = UDim2.fromOffset(32, 32)
 		img.BackgroundTransparency = 1
 		img.ScaleType = Enum.ScaleType.Fit
 		img.Image = iconoId
@@ -399,11 +542,27 @@ local function agregarFilaCajon(
 		img.Parent = fila
 	end
 
-	local offsetX = if iconoId ~= "" then 50 else 14
-	local t1 = Tema.texto(fila, tituloTxt, { tam = 14, color = color or Tema.Hueso })
+	local offsetX = if iconoId ~= "" then 56 else 14
+	local t1 = Tema.texto(fila, tituloTxt, { tam = 18, color = color or Tema.Hueso })
 	t1.Position = UDim2.fromOffset(offsetX, 6)
-	local t2 = Tema.texto(fila, detalleTxt, { tam = 12, letra = Tema.LetraFina, color = GRIS })
-	t2.Position = UDim2.fromOffset(offsetX, 25)
+	local t2 = Tema.texto(fila, detalleTxt, { tam = 15, letra = Tema.LetraFina, color = GRIS })
+	t2.Position = UDim2.fromOffset(offsetX, 32)
+	fila.MouseEnter:Connect(function()
+		tween(fila, RAPIDO, { BackgroundTransparency = 0.2 })
+	end)
+	fila.MouseLeave:Connect(function()
+		tween(fila, RAPIDO, { BackgroundTransparency = 0.45 })
+	end)
+	-- Las filas entran una detrás de otra.
+	local orden = #cajonCuerpo:GetChildren()
+	fila.BackgroundTransparency = 1
+	t1.TextTransparency = 1
+	t2.TextTransparency = 1
+	task.delay(orden * 0.05, function()
+		tween(fila, RAPIDO, { BackgroundTransparency = 0.45 })
+		tween(t1, RAPIDO, { TextTransparency = 0 })
+		tween(t2, RAPIDO, { TextTransparency = 0 })
+	end)
 	return fila
 end
 
@@ -418,8 +577,17 @@ local function abrirSeccion(nombre: string)
 		panelActivo = nil
 		return
 	end
+	local estabaCerrado = not cajon.Visible
 	panelActivo = nombre
 	cajon.Visible = true
+	if estabaCerrado then
+		cajon.GroupTransparency = 1
+		cajon.Position = UDim2.new(1, -28, 0, 74)
+		tween(cajon, TweenInfo.new(0.28, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {
+			GroupTransparency = 0,
+			Position = UDim2.new(1, -68, 0, 74),
+		})
+	end
 	limpiarCajon()
 
 	if nombre == "Arbol" then
@@ -531,10 +699,10 @@ btnCreditos.Activated:Connect(function()
 end)
 
 -- Tarjeta resumen abajo a la derecha (bando, linaje activo, monedas)
-local tarjeta = Instance.new("Frame")
+local tarjeta = Instance.new("CanvasGroup")
 tarjeta.AnchorPoint = Vector2.new(1, 1)
 tarjeta.Position = UDim2.new(1, -68, 1, -56)
-tarjeta.Size = UDim2.fromOffset(420, 236)
+tarjeta.Size = UDim2.fromOffset(470, 280)
 tarjeta.BackgroundColor3 = Color3.fromRGB(13, 16, 23)
 tarjeta.BackgroundTransparency = 0.12
 tarjeta.BorderSizePixel = 0
@@ -552,18 +720,18 @@ acentoBando.Parent = tarjeta
 
 local icoBando = Instance.new("ImageLabel")
 icoBando.Position = UDim2.fromOffset(22, 20)
-icoBando.Size = UDim2.fromOffset(50, 50)
+icoBando.Size = UDim2.fromOffset(58, 58)
 icoBando.BackgroundTransparency = 1
 icoBando.ScaleType = Enum.ScaleType.Fit
 icoBando.Parent = tarjeta
 
-local txtBando = Tema.texto(tarjeta, "", { tam = 17, espaciado = 2 })
-txtBando.Position = UDim2.fromOffset(86, 22)
-local txtStats = Tema.texto(tarjeta, "", { tam = 12, letra = Tema.LetraFina, color = GRIS })
-txtStats.Position = UDim2.fromOffset(86, 48)
+local txtBando = Tema.texto(tarjeta, "", { tam = 21, espaciado = 2 })
+txtBando.Position = UDim2.fromOffset(94, 22)
+local txtStats = Tema.texto(tarjeta, "", { tam = 15, letra = Tema.LetraFina, color = GRIS })
+txtStats.Position = UDim2.fromOffset(94, 54)
 
 local divisor = Instance.new("Frame")
-divisor.Position = UDim2.fromOffset(22, 88)
+divisor.Position = UDim2.fromOffset(22, 98)
 divisor.Size = UDim2.new(1, -44, 0, 1)
 divisor.BackgroundColor3 = Tema.Hueso
 divisor.BackgroundTransparency = 0.85
@@ -571,32 +739,32 @@ divisor.BorderSizePixel = 0
 divisor.Parent = tarjeta
 
 local icoLinajeCard = Instance.new("ImageLabel")
-icoLinajeCard.Position = UDim2.fromOffset(24, 104)
-icoLinajeCard.Size = UDim2.fromOffset(42, 42)
+icoLinajeCard.Position = UDim2.fromOffset(24, 114)
+icoLinajeCard.Size = UDim2.fromOffset(50, 50)
 icoLinajeCard.BackgroundTransparency = 1
 icoLinajeCard.ScaleType = Enum.ScaleType.Fit
 icoLinajeCard.Parent = tarjeta
 
-local txtLinajeCard = Tema.texto(tarjeta, "", { tam = 16, espaciado = 2 })
-txtLinajeCard.Position = UDim2.fromOffset(80, 104)
-local txtPoderesCard = Tema.texto(tarjeta, "", { tam = 12, letra = Tema.LetraFina, color = GRIS })
-txtPoderesCard.Position = UDim2.fromOffset(80, 128)
+local txtLinajeCard = Tema.texto(tarjeta, "", { tam = 20, espaciado = 2 })
+txtLinajeCard.Position = UDim2.fromOffset(88, 114)
+local txtPoderesCard = Tema.texto(tarjeta, "", { tam = 15, letra = Tema.LetraFina, color = GRIS })
+txtPoderesCard.Position = UDim2.fromOffset(88, 144)
 
 local function crearMoneda(idx: number, imgId: string, etiquetaDef: string): TextLabel
-	local cx = 24 + (idx - 1) * 130
+	local cx = 24 + (idx - 1) * 146
 	if imgId ~= "" then
 		local mImg = Instance.new("ImageLabel")
-		mImg.Position = UDim2.fromOffset(cx, 178)
-		mImg.Size = UDim2.fromOffset(24, 24)
+		mImg.Position = UDim2.fromOffset(cx, 204)
+		mImg.Size = UDim2.fromOffset(32, 32)
 		mImg.BackgroundTransparency = 1
 		mImg.ScaleType = Enum.ScaleType.Fit
 		mImg.Image = imgId
 		mImg.Parent = tarjeta
 	end
-	local val = Tema.texto(tarjeta, "0", { tam = 15, espaciado = 1 })
-	val.Position = UDim2.fromOffset(cx + (if imgId ~= "" then 32 else 0), 178)
-	local nom = Tema.texto(tarjeta, etiquetaDef, { tam = 10, letra = Tema.LetraFina, color = GRIS })
-	nom.Position = UDim2.fromOffset(cx + (if imgId ~= "" then 32 else 0), 198)
+	local val = Tema.texto(tarjeta, "0", { tam = 20, espaciado = 1 })
+	val.Position = UDim2.fromOffset(cx + (if imgId ~= "" then 40 else 0), 200)
+	local nom = Tema.texto(tarjeta, etiquetaDef, { tam = 13, letra = Tema.LetraFina, color = GRIS })
+	nom.Position = UDim2.fromOffset(cx + (if imgId ~= "" then 40 else 0), 228)
 	return val
 end
 
@@ -643,9 +811,9 @@ local function actualizarMenu()
 	local bandoImg = (IM.Bandos :: any)[bando] or IM.Bandos.Neutral
 	icoBando.Image = bandoImg
 	icoBando.Visible = bandoImg ~= ""
-	local xBando = if icoBando.Visible then 86 else 24
+	local xBando = if icoBando.Visible then 94 else 24
 	txtBando.Position = UDim2.fromOffset(xBando, 22)
-	txtStats.Position = UDim2.fromOffset(xBando, 48)
+	txtStats.Position = UDim2.fromOffset(xBando, 54)
 
 	local nombresBando: { [string]: string } = {
 		Cofradia = "COFRADÍA CARMESÍ",
@@ -663,9 +831,9 @@ local function actualizarMenu()
 	icoLinajeCard.Image = linImg
 	icoLinajeCard.ImageColor3 = if tieneLinaje then colorL else GRIS
 	icoLinajeCard.Visible = linImg ~= ""
-	local xLin = if icoLinajeCard.Visible then 80 else 24
-	txtLinajeCard.Position = UDim2.fromOffset(xLin, 104)
-	txtPoderesCard.Position = UDim2.fromOffset(xLin, 128)
+	local xLin = if icoLinajeCard.Visible then 88 else 24
+	txtLinajeCard.Position = UDim2.fromOffset(xLin, 114)
+	txtPoderesCard.Position = UDim2.fromOffset(xLin, 144)
 	txtLinajeCard.Text = string.upper(nombreL)
 	txtLinajeCard.TextColor3 = if tieneLinaje then colorL else Tema.Hueso
 	txtPoderesCard.Text = if tieneLinaje
@@ -697,16 +865,77 @@ local function aplicarVisibilidadHud(abierto: boolean)
 	end
 end
 
+local function animarEntrada()
+	-- SONIDO: abrir el menú (golpe grave suave)
+	columna.GroupTransparency = 1
+	columna.Position = UDim2.new(0, 28, 0.5, 0)
+	tween(
+		columna,
+		TweenInfo.new(MU.EntradaSegundos, Enum.EasingStyle.Quint, Enum.EasingDirection.Out),
+		{
+			GroupTransparency = 0,
+			Position = UDim2.new(0, 68, 0.5, 0),
+		}
+	)
+	for i, fila in filasMenu do
+		local destino = UDim2.fromOffset(0, fila.Position.Y.Offset) -- todas van en x = 0
+		fila.Position = destino - UDim2.fromOffset(60, 0)
+		task.delay(MU.Escalonado * i, function()
+			tween(
+				fila,
+				TweenInfo.new(0.5, Enum.EasingStyle.Quint, Enum.EasingDirection.Out),
+				{ Position = destino }
+			)
+		end)
+	end
+	tarjeta.GroupTransparency = 1
+	tarjeta.Position = UDim2.new(1, -68, 1, -16)
+	task.delay(MU.Escalonado * (#filasMenu + 1), function()
+		tween(tarjeta, TweenInfo.new(0.5, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {
+			GroupTransparency = 0,
+			Position = UDim2.new(1, -68, 1, -56),
+		})
+	end)
+	-- Fundido desde negro.
+	telon.BackgroundTransparency = 0
+	tween(telon, TweenInfo.new(0.9, Enum.EasingStyle.Sine), { BackgroundTransparency = 1 })
+end
+
 local function setAbierto(abierto: boolean)
 	gui.Enabled = abierto
 	botonGui.Enabled = not abierto
 	jugador:SetAttribute("MenuAbierto", abierto)
 	aplicarVisibilidadHud(abierto)
-	if not abierto then
+	if abierto then
+		animarEntrada()
+	else
 		cajon.Visible = false
 		panelActivo = nil
 	end
 end
+
+-- Latido del rombo de CONTINUAR (invita a tocarlo).
+if romboActivo then
+	local r = romboActivo
+	TweenService:Create(
+		r,
+		TweenInfo.new(1.1, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut, -1, true),
+		{ Size = UDim2.fromOffset(21, 21) }
+	):Play()
+end
+
+-- Brasas: solo mientras el menú está abierto.
+local proximaBrasa = 0
+RunService.RenderStepped:Connect(function()
+	if not gui.Enabled then
+		return
+	end
+	local ahora = os.clock()
+	if ahora >= proximaBrasa then
+		proximaBrasa = ahora + 1 / MU.BrasasPorSegundo
+		lanzarBrasa()
+	end
+end)
 
 playerGui.ChildAdded:Connect(function(hijo)
 	if hijo:IsA("ScreenGui") and (HUD_OCULTOS[hijo.Name] or hijo.Name == "Vineta") then

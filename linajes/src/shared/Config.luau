@@ -1187,6 +1187,17 @@ Config.Hud = {
 	BarraMaton = { Ancho = 86, Alto = 4, Altura = 4, Distancia = 80 }, -- barra fina sobre cada matón
 	RivalDura = 4, -- segundos que se ve la barra del rival después del último golpe
 	TeclaControles = Enum.KeyCode.H,
+	-- Menú principal: tamaño y animaciones.
+	MenuUI = {
+		Zoom = 1.15, -- todo el menú (1 = tamaño de diseño a 1280x720)
+		ZoomFondo = 1.08, -- el fondo es un poco más grande para poder moverlo
+		PaneoSegundos = 22, -- ida (y otro tanto de vuelta) del paneo del fondo
+		PaneoDistancia = 0.02, -- cuánto se corre el fondo (fracción de pantalla)
+		NieblaSegundos = 28,
+		BrasasPorSegundo = 3,
+		EntradaSegundos = 0.6,
+		Escalonado = 0.07, -- segundos entre una fila y la siguiente al entrar
+	},
 	-- Imágenes de arte/hud/listas/ y arte/2d/. Las primeras 12 ya están subidas (14 nov 2026);
 	-- las 33 nuevas quedan en "" (fallback limpio) hasta aprobar linajes/arte en MCP Permissions.
 	Imagenes = {
