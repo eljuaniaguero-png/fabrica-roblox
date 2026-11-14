@@ -49,7 +49,9 @@ function Civiles.recetaAlAzar(r: Random, lluvia: boolean?): Receta
 	for _, pieza in piezas do
 		local color1 = if C.Pelos[pieza] then elegir(r, C.PaletaPelo) else elegir(r, C.PaletaRopa)
 		local color2 = C.Color2Fijo[pieza]
-			or (if C.Pelos[pieza] then elegir(r, C.PaletaAccesorioPelo) else elegir(r, C.PaletaRopa))
+			or (
+				if C.Pelos[pieza] then elegir(r, C.PaletaAccesorioPelo) else elegir(r, C.PaletaRopa)
+			)
 		receta[pieza] = { color1, color2 }
 	end
 	return receta
@@ -142,7 +144,11 @@ function Civiles.telefono(personaje: Model, mostrar: boolean)
 	for _, d in personaje:GetChildren() do
 		if d:GetAttribute("PiezaCivil") == "Telefono" then
 			d:Destroy()
-		elseif d:IsA("BasePart") and d:GetAttribute("PiezaCivil") ~= nil and d:GetAttribute("Hueso") == "RightHand" then
+		elseif
+			d:IsA("BasePart")
+			and d:GetAttribute("PiezaCivil") ~= nil
+			and d:GetAttribute("Hueso") == "RightHand"
+		then
 			d.Transparency = if mostrar then 1 else 0
 		end
 	end

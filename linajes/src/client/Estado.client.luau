@@ -42,6 +42,14 @@ nivel.Size = UDim2.fromScale(1, 1)
 nivel.ZIndex = 5
 
 local X = 78
+local iconoLinaje = Instance.new("ImageLabel")
+iconoLinaje.Position = UDim2.fromOffset(X, 0)
+iconoLinaje.Size = UDim2.fromOffset(22, 22)
+iconoLinaje.BackgroundTransparency = 1
+iconoLinaje.ScaleType = Enum.ScaleType.Fit
+iconoLinaje.Visible = false
+iconoLinaje.Parent = caja
+
 local linaje = Tema.texto(caja, "", { tam = 15 })
 linaje.Position = UDim2.fromOffset(X, 2)
 local numeros = Tema.texto(caja, "", { tam = 14, letra = Tema.LetraFina, transparencia = 0.25 })
@@ -64,6 +72,11 @@ textoXp.Position = UDim2.fromOffset(X, 60)
 
 local function actualizarDatos()
 	local l = jugador:GetAttribute("Linaje")
+	local idLinaje = if typeof(l) == "string" then ((H.Imagenes.Linajes :: any)[l] or "") else ""
+	iconoLinaje.Image = idLinaje
+	iconoLinaje.ImageColor3 = Tema.color(l)
+	iconoLinaje.Visible = idLinaje ~= ""
+	linaje.Position = UDim2.fromOffset(if idLinaje ~= "" then X + 28 else X, 2)
 	linaje.Text = if typeof(l) == "string"
 		then Tema.espaciar(string.upper(nombres[l] or l), 3)
 		else ""

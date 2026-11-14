@@ -163,7 +163,12 @@ end)
 
 -- Controles escondidos: abajo a la derecha solo dice "H  CONTROLES"; H muestra u oculta la lista.
 local gui = Tema.pantalla("PruebaTeclas", 2)
-local esquina = Tema.grupo(gui, Vector2.new(1, 1), UDim2.new(1, -Config.Hud.Margen, 1, -48), Vector2.new(700, 120))
+local esquina = Tema.grupo(
+	gui,
+	Vector2.new(1, 1),
+	UDim2.new(1, -Config.Hud.Margen, 1, -48),
+	Vector2.new(700, 120)
+)
 local pista = Tema.texto(esquina, "H  CONTROLES", {
 	tam = 12,
 	letra = Tema.LetraFina,
@@ -172,7 +177,8 @@ local pista = Tema.texto(esquina, "H  CONTROLES", {
 })
 pista.AnchorPoint = Vector2.new(1, 1)
 pista.Position = UDim2.fromScale(1, 1)
-local texto = Tema.texto(esquina, P.Cartel, { tam = 14, letra = Tema.LetraFina, transparencia = 0.1 })
+local texto =
+	Tema.texto(esquina, P.Cartel, { tam = 14, letra = Tema.LetraFina, transparencia = 0.1 })
 texto.AnchorPoint = Vector2.new(1, 1)
 texto.Position = UDim2.new(1, 0, 1, -24)
 texto.AutomaticSize = Enum.AutomaticSize.XY

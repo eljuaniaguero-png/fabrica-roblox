@@ -399,7 +399,7 @@ local function soltarBloqueo()
 end
 
 UserInputService.InputBegan:Connect(function(entrada, usado)
-	if usado then
+	if usado or jugador:GetAttribute("MenuAbierto") == true then
 		return
 	end
 	if entrada.UserInputType == Enum.UserInputType.MouseButton1 then
@@ -481,10 +481,113 @@ remoto.OnClientEvent:Connect(function(tipo: string, a: any, b: any, _c: any, d: 
 	end
 end)
 
+-- Botones e indicadores táctiles / PC abajo a la derecha (sobre H Controles).
+local tactil = UserInputService.TouchEnabled
+local tamBtn = if tactil then 54 else 38
+local controles = Tema.grupo(
+	gui,
+	Vector2.new(1, 1),
+	UDim2.new(1, -Config.Hud.Margen, 1, -100),
+	Vector2.new(tamBtn * 3 + 28, tamBtn + 26)
+)
+local imgsControl = Config.Hud.Imagenes.Controles
+
+local function crearAccion(
+	orden: number,
+	teclaTexto: string,
+	etiqueta: string,
+	imagenId: string
+): (TextButton, UIStroke, ImageLabel?)
+	local x = (orden - 1) * (tamBtn + 12)
+	local btn = Instance.new("TextButton")
+	btn.Position = UDim2.fromOffset(x, 0)
+	btn.Size = UDim2.fromOffset(tamBtn, tamBtn)
+	btn.BackgroundColor3 = Tema.Fondo
+	btn.BackgroundTransparency = if tactil then 0.25 else 0.45
+	btn.Text = if imagenId == "" then teclaTexto else ""
+	btn.TextColor3 = Tema.Hueso
+	btn.FontFace = Tema.Letra
+	btn.TextSize = if tactil then 16 else 13
+	btn.AutoButtonColor = tactil
+	btn.Parent = controles
+
+	local borde = Instance.new("UIStroke")
+	borde.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+	borde.Color = Tema.Hueso
+	borde.Transparency = if tactil then 0.35 else 0.65
+	borde.Parent = btn
+
+	local ico: ImageLabel? = nil
+	if imagenId ~= "" then
+		local img = Instance.new("ImageLabel")
+		img.AnchorPoint = Vector2.new(0.5, 0.5)
+		img.Position = UDim2.fromScale(0.5, 0.5)
+		img.Size = UDim2.fromOffset(math.round(tamBtn * 0.66), math.round(tamBtn * 0.66))
+		img.BackgroundTransparency = 1
+		img.ScaleType = Enum.ScaleType.Fit
+		img.Image = imagenId
+		img.ImageColor3 = Tema.Hueso
+		img.Parent = btn
+		ico = img
+	end
+
+	local pie = Tema.texto(controles, if tactil or imagenId == "" then etiqueta else teclaTexto, {
+		tam = 11,
+		letra = Tema.LetraFina,
+		transparencia = 0.35,
+		alineado = Enum.TextXAlignment.Center,
+	})
+	pie.AutomaticSize = Enum.AutomaticSize.None
+	pie.Position = UDim2.fromOffset(x, tamBtn + 4)
+	pie.Size = UDim2.fromOffset(tamBtn, 16)
+	return btn, borde, ico
+end
+
+local btnAtaque = crearAccion(1, "LMB", "GOLPE", imgsControl.Ataque)
+local btnDash, _, icoDash = crearAccion(2, "Q", "DASH", imgsControl.Dash)
+local btnBloqueo, bordeBloqueo, icoBloqueo = crearAccion(3, "F", "BLOQ", imgsControl.Bloqueo)
+
+btnAtaque.Activated:Connect(function()
+	pedir("Golpe")
+end)
+btnDash.Activated:Connect(function()
+	pedir("Dash")
+end)
+btnBloqueo.InputBegan:Connect(function(entrada)
+	if
+		entrada.UserInputType == Enum.UserInputType.Touch
+		or entrada.UserInputType == Enum.UserInputType.MouseButton1
+	then
+		bloquear()
+	end
+end)
+btnBloqueo.InputEnded:Connect(function(entrada)
+	if
+		entrada.UserInputType == Enum.UserInputType.Touch
+		or entrada.UserInputType == Enum.UserInputType.MouseButton1
+	then
+		soltarBloqueo()
+	end
+end)
+
 -- Vida, energía y nivel están en client/Estado.client.luau.
 gui.Parent = jugador:WaitForChild("PlayerGui")
 
 RunService.RenderStepped:Connect(function()
+	local dashEnRecarga = os.clock() < dashListo
+	local transparenciaDash = if dashEnRecarga then 0.68 else 0
+	if icoDash then
+		icoDash.ImageTransparency = transparenciaDash
+	else
+		btnDash.TextTransparency = transparenciaDash
+	end
+	local colorLinaje = Tema.color(jugador:GetAttribute("Linaje"))
+	bordeBloqueo.Color = if bloqueando then colorLinaje else Tema.Hueso
+	bordeBloqueo.Transparency = if bloqueando then 0.05 else (if tactil then 0.35 else 0.65)
+	if icoBloqueo then
+		icoBloqueo.ImageColor3 = if bloqueando then colorLinaje else Tema.Hueso
+	end
+
 	if contador.Visible and os.clock() > contadorHasta then
 		contador.Visible = false
 		golpes, acumulado = 0, 0

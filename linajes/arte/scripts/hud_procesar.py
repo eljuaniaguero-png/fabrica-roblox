@@ -13,10 +13,11 @@ RAIZ = Path(__file__).resolve().parents[1] / "hud"
 FUENTE = RAIZ / "fuente"
 SALIDA = RAIZ / "listas"
 
-# TamaÃ±o final de cada tipo (Roblox achica todo a 1024 como mÃ¡ximo).
+# Tamaños final de cada tipo (Roblox achica todo a 1024 como máximo).
 TAMANOS = {
     "marco-rombo": (512, 512),
     "linea-ornamento": (1024, 256),
+    "rueda-ruleta": (512, 512),
 }
 TAMANO_ICONO = (256, 256)
 UMBRAL_NEGRO = 18  # todo lo mÃ¡s oscuro que esto es fondo

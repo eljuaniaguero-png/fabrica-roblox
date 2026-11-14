@@ -1187,7 +1187,8 @@ Config.Hud = {
 	BarraMaton = { Ancho = 86, Alto = 4, Altura = 4, Distancia = 80 }, -- barra fina sobre cada matón
 	RivalDura = 4, -- segundos que se ve la barra del rival después del último golpe
 	TeclaControles = Enum.KeyCode.H,
-	-- Imágenes de arte/hud/listas/ (subidas el 14 nov 2026). Vacías = se dibujan con líneas.
+	-- Imágenes de arte/hud/listas/ y arte/2d/. Las primeras 12 ya están subidas (14 nov 2026);
+	-- las 33 nuevas quedan en "" (fallback limpio) hasta aprobar linajes/arte en MCP Permissions.
 	Imagenes = {
 		MarcoRombo = "rbxassetid://105043766784101",
 		Ornamento = "rbxassetid://110297614604446",
@@ -1202,6 +1203,49 @@ Config.Hud = {
 			BolaFuego = "rbxassetid://140551605631623",
 			Chorro = "rbxassetid://136111392514119",
 			MuroFuego = "rbxassetid://80571953169913",
+		},
+		Controles = {
+			Ataque = "rbxassetid://83329021917927",
+			Dash = "rbxassetid://118012238370304",
+			Bloqueo = "rbxassetid://84609757356223",
+			Gancho = "rbxassetid://129731819469863",
+		},
+		Linajes = {
+			FuerzaBruta = "rbxassetid://94324682841882",
+			Reflejos = "rbxassetid://105699452384119",
+			Piroquinesis = "rbxassetid://119012094558653",
+			Electro = "rbxassetid://127796100685588",
+			Criogenia = "rbxassetid://134674096070572",
+			Telequinesis = "rbxassetid://83273442409681",
+			OrigenEstelar = "rbxassetid://85409588360272",
+			SangreAbisal = "rbxassetid://119732862916523",
+			SombraViva = "rbxassetid://85176824061362",
+			Velocista = "rbxassetid://110232578768363",
+			Eclipse = "rbxassetid://109724177899599",
+			HerenciaOlimpica = "rbxassetid://98650226606459",
+		},
+		Bandos = {
+			Cofradia = "rbxassetid://78704019102483",
+			Liga = "rbxassetid://70879279158704",
+			Neutral = "rbxassetid://96841112019833",
+			Vigilantes = "rbxassetid://120226425340896",
+		},
+		Monedas = {
+			Chatarra = "rbxassetid://90391861358584",
+			Chip = "rbxassetid://89648098911928",
+			FichaEclipse = "rbxassetid://124704276773316",
+		},
+		Menu = {
+			Fondo = "rbxassetid://74454214942461",
+			Eclipse = "rbxassetid://123480298019967",
+			Logo = "rbxassetid://99434099999973",
+			RuedaRuleta = "rbxassetid://89645569827308",
+			Arbol = "rbxassetid://79506899108770",
+			Ajustes = "rbxassetid://122198131879757",
+			Taller = "rbxassetid://136591132306191",
+			Candado = "rbxassetid://121962152222588",
+			Flecha = "rbxassetid://78063733587601",
+			Estrella = "rbxassetid://93997249463570",
 		},
 	},
 }

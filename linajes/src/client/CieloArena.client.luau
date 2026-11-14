@@ -52,7 +52,11 @@ RunService.RenderStepped:Connect(function()
 	carpeta.Parent = if adentro then camara else nil
 	if adentro then
 		for _, p in paneles do
-			p.parte.CFrame = CFrame.lookAt(pos + p.lado, pos, if p.lado.Y ~= 0 then Vector3.zAxis else Vector3.yAxis)
+			p.parte.CFrame = CFrame.lookAt(
+				pos + p.lado,
+				pos,
+				if p.lado.Y ~= 0 then Vector3.zAxis else Vector3.yAxis
+			)
 		end
 	end
 end)

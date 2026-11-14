@@ -52,6 +52,9 @@ remoto.OnServerEvent:Connect(function(jugador, pedido)
 	end
 	ultimo[jugador] = ahora
 	local linaje = sortear()
-	Perfiles.cambiar(jugador, { Linaje = linaje, Fichas = if gratis then d.Fichas else d.Fichas - 1 })
+	Perfiles.cambiar(
+		jugador,
+		{ Linaje = linaje, Fichas = if gratis then d.Fichas else d.Fichas - 1 }
+	)
 	remoto:FireClient(jugador, linaje)
 end)

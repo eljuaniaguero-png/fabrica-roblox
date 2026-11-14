@@ -160,7 +160,7 @@ local function usar(tecla: string)
 end
 
 UserInputService.InputBegan:Connect(function(entrada, usado)
-	if usado then
+	if usado or jugador:GetAttribute("MenuAbierto") == true then
 		return
 	end
 	local tecla = entrada.KeyCode
@@ -175,21 +175,74 @@ UserInputService.InputBegan:Connect(function(entrada, usado)
 	end
 end)
 
--- Abajo al centro: los tres poderes en rombos, con la recarga encima del ícono.
+-- Abajo al centro: los tres poderes en rombos, T cambia a la izquierda y gadget G a la derecha.
 local H = Config.Hud
 local gui = Tema.pantalla("Poderes", 1)
-local ANCHO = H.SeparacionRombos * 2 + H.TamRombo + 160
+local ANCHO = H.SeparacionRombos * 4 + H.TamRombo + 90
 local caja =
 	Tema.grupo(gui, Vector2.new(0.5, 1), UDim2.new(0.5, 0, 1, -40), Vector2.new(ANCHO, 150))
 local medio = ANCHO / 2
 Tema.ornamento(caja, Vector2.new(medio, 24), 360)
-local cambia = Tema.texto(
-	caja,
-	"T  CAMBIA",
-	{ tam = 12, letra = Tema.LetraFina, transparencia = 0.5, espaciado = 2 }
-)
-cambia.Position = UDim2.fromOffset(medio + H.SeparacionRombos + H.TamRombo / 2 + 16, 82)
+
+local cambia = Instance.new("TextButton")
+cambia.AnchorPoint = Vector2.new(1, 0.5)
+cambia.Position = UDim2.fromOffset(medio - H.SeparacionRombos - H.TamRombo / 2 - 18, 92)
+cambia.Size = UDim2.fromOffset(96, 36)
+cambia.BackgroundTransparency = 1
+cambia.Text = "T  CAMBIA"
+cambia.TextColor3 = Tema.Hueso
+cambia.TextTransparency = 0.45
+cambia.FontFace = Tema.LetraFina
+cambia.TextSize = 13
 cambia.Visible = P.CambioLibre == true
+cambia.Parent = caja
+cambia.Activated:Connect(function()
+	remoto:FireServer("Cambiar")
+end)
+
+-- Ranura satélite del gadget (G - Gancho táctico del Taller)
+local centroGancho = Vector2.new(medio + H.SeparacionRombos * 2, 92)
+local tamGancho = math.round(H.TamRombo * 0.8)
+local romboGancho = Tema.rombo(caja, centroGancho, tamGancho, true)
+local icoGancho = Instance.new("ImageLabel")
+icoGancho.AnchorPoint = Vector2.new(0.5, 0.5)
+icoGancho.Position = UDim2.fromScale(0.5, 0.5)
+icoGancho.Size = UDim2.fromOffset(tamGancho * 0.56, tamGancho * 0.56)
+icoGancho.BackgroundTransparency = 1
+icoGancho.ScaleType = Enum.ScaleType.Fit
+icoGancho.Image = H.Imagenes.Controles.Gancho
+icoGancho.ImageColor3 = Tema.Hueso
+icoGancho.ImageTransparency = 0.65
+icoGancho.Visible = H.Imagenes.Controles.Gancho ~= ""
+icoGancho.ZIndex = 5
+icoGancho.Parent = romboGancho
+if not icoGancho.Visible then
+	local gTxt = Tema.texto(
+		romboGancho,
+		"G",
+		{ tam = 18, transparencia = 0.55, alineado = Enum.TextXAlignment.Center }
+	)
+	gTxt.AutomaticSize = Enum.AutomaticSize.None
+	gTxt.Size = UDim2.fromScale(1, 1)
+	gTxt.ZIndex = 5
+end
+if H.Imagenes.Menu.Candado ~= "" then
+	local candado = Instance.new("ImageLabel")
+	candado.AnchorPoint = Vector2.new(0.5, 0.5)
+	candado.Position = UDim2.fromScale(0.76, 0.76)
+	candado.Size = UDim2.fromOffset(16, 16)
+	candado.BackgroundTransparency = 1
+	candado.ScaleType = Enum.ScaleType.Fit
+	candado.Image = H.Imagenes.Menu.Candado
+	candado.ImageColor3 = Tema.Hueso
+	candado.ImageTransparency = 0.25
+	candado.ZIndex = 7
+	candado.Parent = romboGancho
+end
+local etiquetaGancho =
+	Tema.texto(caja, "G", { tam = 13, transparencia = 0.45, alineado = Enum.TextXAlignment.Center })
+etiquetaGancho.AnchorPoint = Vector2.new(0.5, 0)
+etiquetaGancho.Position = UDim2.fromOffset(centroGancho.X, centroGancho.Y + tamGancho / 2 + 2)
 
 type Ranura =
 	{ caja: Frame, icono: ImageLabel, letra: TextLabel, recarga: TextLabel, lista: boolean }
@@ -219,6 +272,17 @@ for i, tecla in { "Z", "X", "C" } do
 	recarga.Size = UDim2.fromScale(1, 1)
 	recarga.ZIndex = 6
 	recarga.TextStrokeTransparency = 0.2
+	local boton = Instance.new("TextButton")
+	boton.AnchorPoint = Vector2.new(0.5, 0.5)
+	boton.Position = UDim2.fromScale(0.5, 0.5)
+	boton.Size = UDim2.fromScale(1.15, 1.15)
+	boton.BackgroundTransparency = 1
+	boton.Text = ""
+	boton.ZIndex = 8
+	boton.Parent = r
+	boton.Activated:Connect(function()
+		usar(tecla)
+	end)
 	local abajo = Tema.texto(
 		caja,
 		tecla,

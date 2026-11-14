@@ -16,7 +16,8 @@ local Tiempo = require(ReplicatedStorage.Shared.Tiempo)
 local atmosfera = Lighting:FindFirstChildOfClass("Atmosphere") or Instance.new("Atmosphere")
 atmosfera.Parent = Lighting
 
-local correccion = Lighting:FindFirstChildOfClass("ColorCorrectionEffect") or Instance.new("ColorCorrectionEffect")
+local correccion = Lighting:FindFirstChildOfClass("ColorCorrectionEffect")
+	or Instance.new("ColorCorrectionEffect")
 correccion.Parent = Lighting
 local bloom = Lighting:FindFirstChildOfClass("BloomEffect")
 local rayos = Lighting:FindFirstChildOfClass("SunRaysEffect")
@@ -130,7 +131,9 @@ local ciudadActual = ""
 
 local function ponerNiebla(ciudad: string)
 	ponerCielo(if ciudad == "Arena" then Luz.Cielo else cieloOriginal)
-	local n = if ciudad == "Arena" then Luz.Niebla else Config.Mundo.Niebla[ciudad] or Config.Mundo.Niebla.Bahia
+	local n = if ciudad == "Arena"
+		then Luz.Niebla
+		else Config.Mundo.Niebla[ciudad] or Config.Mundo.Niebla.Bahia
 	TweenService:Create(atmosfera, TweenInfo.new(3), {
 		Density = n.Densidad,
 		Haze = n.Bruma,
@@ -160,7 +163,9 @@ RunService.RenderStepped:Connect(function(dt)
 		ponerNoche()
 		return
 	end
-	local hora = if ciudadActual == "CiudadVortice" then Config.Mundo.HoraNocheEterna else Tiempo.hora()
+	local hora = if ciudadActual == "CiudadVortice"
+		then Config.Mundo.HoraNocheEterna
+		else Tiempo.hora()
 	Lighting.ClockTime = hora
 	ponerLuz(hora)
 end)

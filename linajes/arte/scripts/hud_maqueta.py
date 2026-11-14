@@ -3,7 +3,7 @@
     python linajes/arte/scripts/hud_maqueta.py
 
 Las medidas son para una pantalla de 1920x1080 y son las mismas que usa client/Hud.client.luau
-(Config.Hud). Si cambiÃ¡s algo en Figma, pasÃ¡ los nÃºmeros a Config.Hud.
+(Config.Hud). Si cambiás algo en Figma, pasá los números a Config.Hud.
 """
 
 import base64
@@ -19,7 +19,7 @@ EDGE = r"C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe"
 HUESO = "#EDE6D6"
 VIDA = "#B8343A"
 DANIO = "#E8C9A0"
-LINAJE = "#F2652B"  # Piroquinesis: el Ãºnico color fuerte
+LINAJE = "#F2652B"  # Piroquinesis: el único color fuerte
 XP = "#C9A55A"
 W, H = 1920, 1080
 
@@ -44,14 +44,14 @@ def rombo(cx: float, cy: float, r: float, trazo: str, ancho: float, relleno: str
     return f'<polygon points="{p}" fill="{relleno}" stroke="{trazo}" stroke-width="{ancho}"/>'
 
 
-def ranura(cx: float, cy: float, tecla: str, icono: str, recarga: str | None) -> str:
-    r = 46
+def ranura(cx: float, cy: float, tecla: str, icono: str, recarga: str | None, r: float = 46) -> str:
     partes = [f'<g id="Ranura {tecla}">']
     partes.append(rombo(cx, cy, r - 6, "none", 0, "rgba(8,10,14,0.55)"))
     marco = imagen("marco-rombo", cx - r, cy - r, r * 2, r * 2)
     partes.append(marco or rombo(cx, cy, r - 4, HUESO, 1.5))
     op = "0.35" if recarga else "1"
-    ico = imagen(icono, cx - 29, cy - 29, 58, 58, f'opacity="{op}"')
+    ico_tam = int(r * 1.26)
+    ico = imagen(icono, cx - ico_tam / 2, cy - ico_tam / 2, ico_tam, ico_tam, f'opacity="{op}"')
     partes.append(
         ico
         or f'<text x="{cx}" y="{cy + 8}" text-anchor="middle" class="t" font-size="22" fill="{LINAJE}" opacity="{op}">{tecla}</text>'
@@ -70,6 +70,7 @@ def ranura(cx: float, cy: float, tecla: str, icono: str, recarga: str | None) ->
 def svg() -> str:
     c = []
     c.append(
+        '<?xml version="1.0" encoding="UTF-8"?>\n'
         f'<svg xmlns="http://www.w3.org/2000/svg" width="{W}" height="{H}" viewBox="0 0 {W} {H}">'
         "<style>@import url('https://fonts.googleapis.com/css2?family=Oswald:wght@300;400;600&amp;display=swap');"
         ".t{font-family:Oswald,'Arial Narrow',sans-serif;font-weight:400}"
@@ -79,7 +80,7 @@ def svg() -> str:
     vin = imagen("vineta", 0, 0, W, H, 'preserveAspectRatio="none"')
     c.append(f'<g id="Vineta">{vin}</g>')
 
-    # Abajo a la izquierda: nivel, Linaje, vida, energÃ­a y experiencia.
+    # Abajo a la izquierda: nivel, Linaje, vida, energía y experiencia.
     x0, y0 = 72, 960
     c.append('<g id="Estado">')
     c.append(rombo(x0 + 30, y0 + 22, 30, HUESO, 1.5, "rgba(8,10,14,0.55)"))
@@ -95,7 +96,7 @@ def svg() -> str:
     c.append(f'<rect x="{bx}" y="{y0 + 26}" width="{300 * 0.62}" height="3" fill="{LINAJE}"/>')
     c.append(f'<rect x="{bx}" y="{y0 + 38}" width="380" height="1" fill="{HUESO}" opacity="0.15"/>')
     c.append(f'<rect x="{bx}" y="{y0 + 38}" width="{380 * 0.5}" height="1" fill="{XP}"/>')
-    c.append(f'<text x="{bx}" y="{y0 + 58}" class="f" font-size="12" fill="{HUESO}" opacity="0.55" letter-spacing="3">NIVEL 5  Â·  444 / 878</text>')
+    c.append(f'<text x="{bx}" y="{y0 + 58}" class="f" font-size="12" fill="{HUESO}" opacity="0.55" letter-spacing="3">NIVEL 5  ·  444 / 878</text>')
     c.append("</g>")
 
     # Abajo al centro: las tres habilidades en rombos.
@@ -106,12 +107,13 @@ def svg() -> str:
     c.append(ranura(cx - paso, cy, "Z", "icono-bola-fuego", None))
     c.append(ranura(cx, cy, "X", "icono-chorro", "4"))
     c.append(ranura(cx + paso, cy, "C", "icono-muro-fuego", None))
-    c.append(f'<text x="{cx + paso * 1.75}" y="{cy + 6}" class="f" font-size="12" fill="{HUESO}" opacity="0.5" letter-spacing="2">T  CAMBIA</text>')
+    c.append(ranura(cx + paso * 2.0, cy + 6, "G", "gadget-gancho", None, r=34))
+    c.append(f'<text x="{cx + paso * 2.65}" y="{cy + 6}" class="f" font-size="12" fill="{HUESO}" opacity="0.5" letter-spacing="2">T  CAMBIA</text>')
     c.append("</g>")
 
-    # Arriba al centro: el rival que estÃ¡s golpeando (como la barra del jefe de la referencia).
+    # Arriba al centro: el rival que estás golpeando (como la barra del jefe de la referencia).
     c.append('<g id="Rival">')
-    c.append(f'<text x="{W / 2}" y="70" text-anchor="middle" class="t" font-size="16" fill="{HUESO}" letter-spacing="5">MATÃ“N DEL PUERTO</text>')
+    c.append(f'<text x="{W / 2}" y="70" text-anchor="middle" class="t" font-size="16" fill="{HUESO}" letter-spacing="5">MATÓN DEL PUERTO</text>')
     c.append(f'<rect x="{W / 2 - 260}" y="84" width="520" height="3" fill="{HUESO}" opacity="0.15"/>')
     c.append(f'<rect x="{W / 2 - 260}" y="84" width="{520 * 0.45}" height="3" fill="{VIDA}"/>')
     c.append("</g>")
@@ -127,7 +129,7 @@ def svg() -> str:
     c.append('<g id="Contador">')
     c.append(f'<text x="{W - 96}" y="470" text-anchor="end" class="t" font-size="84" fill="{HUESO}" font-weight="600">7</text>')
     c.append(f'<text x="{W - 96}" y="500" text-anchor="end" class="t" font-size="16" fill="{LINAJE}" letter-spacing="5">GOLPES</text>')
-    c.append(f'<text x="{W - 96}" y="524" text-anchor="end" class="f" font-size="14" fill="{HUESO}" opacity="0.6">184 de daÃ±o</text>')
+    c.append(f'<text x="{W - 96}" y="524" text-anchor="end" class="f" font-size="14" fill="{HUESO}" opacity="0.6">184 de daño</text>')
     c.append("</g>")
 
     c.append(f'<g id="Ayuda"><text x="{W - 72}" y="1018" text-anchor="end" class="f" font-size="12" fill="{HUESO}" opacity="0.45" letter-spacing="2">H  CONTROLES</text></g>')

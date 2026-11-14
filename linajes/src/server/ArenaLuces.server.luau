@@ -18,7 +18,13 @@ local function en(x: number, y: number, z: number): CFrame
 	return CFrame.new(O + Vector3.new(x, y, z))
 end
 
-local function parte(tam: Vector3, cf: CFrame, hex: string, material: Enum.Material, solido: boolean?): Part
+local function parte(
+	tam: Vector3,
+	cf: CFrame,
+	hex: string,
+	material: Enum.Material,
+	solido: boolean?
+): Part
 	local p = Instance.new("Part")
 	p.Anchored = true
 	p.CanCollide = solido == true
@@ -54,13 +60,24 @@ end
 local function galpon()
 	local G = Luz.Galpon
 	local x, alto = G.X, 18
-	parte(Vector3.new(26, alto, 60), en(x + 13.5, alto / 2, G.Z), "#23252b", Enum.Material.Metal, true)
+	parte(
+		Vector3.new(26, alto, 60),
+		en(x + 13.5, alto / 2, G.Z),
+		"#23252b",
+		Enum.Material.Metal,
+		true
+	)
 	local giro = CFrame.identity
 	for i = -2, 2 do
 		local z = G.Z + i * 12
-		pieza(if i == 0 then "Galpon_ParedPorton" else "Galpon_Pared", en(x, alto / 2, z) * giro, 1.5)
+		pieza(
+			if i == 0 then "Galpon_ParedPorton" else "Galpon_Pared",
+			en(x, alto / 2, z) * giro,
+			1.5
+		)
 		if i ~= 0 then
-			local ventana = parte(Vector3.new(0.3, 4, 6), en(x - 1, 12, z), G.Ventana, Enum.Material.Neon)
+			local ventana =
+				parte(Vector3.new(0.3, 4, 6), en(x - 1, 12, z), G.Ventana, Enum.Material.Neon)
 			foco(ventana, G.LuzVentana)
 		end
 	end
@@ -73,7 +90,8 @@ local function galpon()
 		Enum.Material.Metal,
 		true
 	)
-	local derrame = parte(Vector3.new(1, 1, 1), en(x - 5, 4, G.Z), G.Ventana, Enum.Material.SmoothPlastic)
+	local derrame =
+		parte(Vector3.new(1, 1, 1), en(x - 5, 4, G.Z), G.Ventana, Enum.Material.SmoothPlastic)
 	derrame.Transparency = 1
 	foco(derrame, G.LuzPuerta)
 end
@@ -88,10 +106,20 @@ local function barco()
 	parte(Vector3.new(24, 10, 20), en(B.X + 58, 50, z), "#b4b1a8", Enum.Material.Metal)
 	parte(Vector3.new(3, 22, 3), en(B.X + 58, 66, z), "#3a3d44", Enum.Material.Metal)
 	for i = 0, 5 do
-		parte(Vector3.new(3, 2.6, 0.3), en(B.X + 44 + i * 5.6, 36, z + 12.2), Luz.Galpon.Ventana, Enum.Material.Neon)
+		parte(
+			Vector3.new(3, 2.6, 0.3),
+			en(B.X + 44 + i * 5.6, 36, z + 12.2),
+			Luz.Galpon.Ventana,
+			Enum.Material.Neon
+		)
 	end
 	for _, x in B.Luces do
-		local l = parte(Vector3.new(1.2, 1.2, 1.2), en(B.X + x, 24, z + 15), "#fff2d0", Enum.Material.Neon)
+		local l = parte(
+			Vector3.new(1.2, 1.2, 1.2),
+			en(B.X + x, 24, z + 15),
+			"#fff2d0",
+			Enum.Material.Neon
+		)
 		foco(l, B.Luz)
 	end
 end
@@ -99,7 +127,12 @@ end
 local function luzRoja()
 	local lamparas: { Part } = {}
 	for _, x in M.Porticos do
-		local l = parte(Vector3.new(2, 2, 2), en(x, Luz.Roja.Y, Luz.Roja.Z), "#ff2a20", Enum.Material.Neon)
+		local l = parte(
+			Vector3.new(2, 2, 2),
+			en(x, Luz.Roja.Y, Luz.Roja.Z),
+			"#ff2a20",
+			Enum.Material.Neon
+		)
 		table.insert(lamparas, l)
 	end
 	task.spawn(function()
