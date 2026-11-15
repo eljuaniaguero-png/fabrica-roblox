@@ -15,6 +15,7 @@ local CuerpoComic = require(script.Parent.CuerpoComic)
 local Estadisticas = require(ReplicatedStorage.Shared.Estadisticas)
 local Niveles = require(ReplicatedStorage.Shared.Niveles)
 local Perfiles = require(script.Parent.Perfiles)
+local Analitica = require(script.Parent.Analitica)
 
 local function hitoMinuto1(jugador: Player?, hito: string)
 	if not jugador then
@@ -494,6 +495,7 @@ local function prepararPeleador(personaje: Model)
 					jugador,
 					{ Chatarra = d.Chatarra + Config.Monedas.ChatarraPorMuerte }
 				)
+				Analitica.gana(jugador, Config.Monedas.ChatarraPorMuerte, d.Chatarra, "Caer")
 			end
 		end)
 	end

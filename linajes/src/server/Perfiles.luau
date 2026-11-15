@@ -9,6 +9,7 @@ local ServerStorage = game:GetService("ServerStorage")
 local Config = require(ReplicatedStorage.Shared.Config)
 local Niveles = require(ReplicatedStorage.Shared.Niveles)
 local ProfileStore = require(ServerStorage.ServerPackages.ProfileStore) :: any
+local Analitica = require(script.Parent.Analitica)
 
 local G = Config.Guardado
 local CR = Config.Cuerpo.Creador
@@ -137,6 +138,7 @@ function Perfiles.sumarBaja(jugador: Player)
 			Chatarra = d.Chatarra + Config.Monedas.ChatarraPorBaja,
 		})
 		Perfiles.sumarXp(jugador, Config.Niveles.XpPorBaja)
+		Analitica.gana(jugador, Config.Monedas.ChatarraPorBaja, d.Chatarra, "Baja")
 	end
 end
 
@@ -163,6 +165,7 @@ local function alEntrar(jugador: Player)
 	if jugador.Parent == Players then
 		perfiles[jugador] = perfil
 		mostrar(jugador, perfil.Data)
+		Analitica.paso(jugador, "Entro")
 	else
 		perfil:EndSession()
 	end

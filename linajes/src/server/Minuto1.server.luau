@@ -8,6 +8,7 @@ local RunService = game:GetService("RunService")
 
 local Config = require(ReplicatedStorage.Shared.Config)
 local Perfiles = require(script.Parent.Perfiles)
+local Analitica = require(script.Parent.Analitica)
 
 local M = Config.Minuto1
 local HITOS = { "Despertar", "Combate", "Defensa", "Poder", "Maton" }
@@ -56,6 +57,8 @@ local function revisarCompleto(jugador: Player)
 	})
 	Perfiles.sumarXp(jugador, M.RecompensaXp)
 	remoto:FireClient(jugador, "Completado", M.RecompensaChatarra, M.RecompensaXp)
+	Analitica.paso(jugador, "PrimerMinuto")
+	Analitica.gana(jugador, M.RecompensaChatarra, d.Chatarra, "Tutorial")
 end
 
 local function marcar(jugador: Player, hito: string)
@@ -68,6 +71,7 @@ local function marcar(jugador: Player, hito: string)
 	end
 	if jugador:GetAttribute("M1_" .. hito) ~= true then
 		jugador:SetAttribute("M1_" .. hito, true)
+		Analitica.paso(jugador, hito)
 		revisarCompleto(jugador)
 	end
 end

@@ -65,7 +65,7 @@ end)
 local panel = Instance.new("Frame")
 panel.AnchorPoint = Vector2.new(0.5, 0.5)
 panel.Position = UDim2.fromScale(0.5, 0.5)
-panel.Size = UDim2.fromOffset(600, 470)
+panel.Size = UDim2.fromOffset(660, 470)
 panel.BackgroundColor3 = Tema.Fondo
 panel.BackgroundTransparency = 0.08
 panel.BorderSizePixel = 0
@@ -171,7 +171,7 @@ ordenLista.Padding = UDim.new(0, 5)
 ordenLista.Parent = listaMarco
 
 local nombres: { [string]: string } = {}
-local filasLinaje: { [string]: { borde: UIStroke, comprar: TextButton } } = {}
+local filasLinaje: { [string]: { borde: UIStroke, comprar: TextButton, siempre: TextButton } } = {}
 
 -- string.upper no pasa a mayúscula las letras con tilde ("Común" quedaba "COMúN").
 local function mayus(texto: string): string
@@ -248,7 +248,7 @@ do
 			alineado = Enum.TextXAlignment.Right,
 		})
 		pct.AnchorPoint = Vector2.new(1, 0)
-		pct.Position = UDim2.new(1, -156, 0, 6)
+		pct.Position = UDim2.new(1, -256, 0, 6)
 
 		local precio = (S.PrecioLinajeVida :: any)[o.Rareza] or 0
 		local comprar = Instance.new("TextButton")
@@ -266,11 +266,49 @@ do
 		bordeComprar.Color = colorLinaje
 		bordeComprar.Transparency = 0.45
 		bordeComprar.Parent = comprar
+		-- Para siempre con Robux (pase). Sin ID en Config: "PRONTO".
+		local idPase = (S.PasesLinaje :: any)[o.Linaje] or 0
+		local siempre = Instance.new("TextButton")
+		siempre.AnchorPoint = Vector2.new(1, 0.5)
+		siempre.Position = UDim2.new(1, -152, 0.5, 0)
+		siempre.Size = UDim2.fromOffset(94, 24)
+		siempre.BackgroundColor3 = Color3.fromRGB(22, 27, 38)
+		siempre.AutoButtonColor = idPase > 0
+		siempre.Text = if idPase > 0 then "PARA SIEMPRE · R$" else "PARA SIEMPRE · PRONTO"
+		siempre.TextColor3 = if idPase > 0 then ORO else GRIS
+		siempre.TextTransparency = if idPase > 0 then 0 else 0.35
+		siempre.FontFace = Tema.LetraFina
+		siempre.TextSize = 11
+		siempre.Parent = fila
+		local bordeSiempre = Instance.new("UIStroke")
+		bordeSiempre.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+		bordeSiempre.Color = ORO
+		bordeSiempre.Transparency = if idPase > 0 then 0.4 else 0.8
+		bordeSiempre.Parent = siempre
+		siempre.Activated:Connect(function()
+			if idPase > 0 then
+				remoto:FireServer("PedirPase", o.Linaje)
+			end
+		end)
 		comprar.Activated:Connect(function()
 			-- SONIDO: comprar
-			remoto:FireServer("Comprar", o.Linaje)
+			if jugador:GetAttribute("Pase_" .. o.Linaje) == true then
+				remoto:FireServer("Elegir", o.Linaje) -- ya es tuyo: gratis y para siempre
+			else
+				remoto:FireServer("Comprar", o.Linaje)
+			end
 		end)
-		filasLinaje[o.Linaje] = { borde = bordeFila, comprar = comprar }
+		local function refrescarPase()
+			local tuyo = jugador:GetAttribute("Pase_" .. o.Linaje) == true
+			comprar.Text = if tuyo
+				then "ELEGIR  ·  ES TUYO"
+				else string.format("1 VIDA  ·  %d CHATARRA", precio)
+			comprar.TextColor3 = if tuyo then ORO else Tema.Hueso
+			siempre.Visible = not tuyo
+		end
+		jugador:GetAttributeChangedSignal("Pase_" .. o.Linaje):Connect(refrescarPase)
+		refrescarPase()
+		filasLinaje[o.Linaje] = { borde = bordeFila, comprar = comprar, siempre = siempre }
 	end
 	subSeguro.Text = Tema.espaciar(
 		string.format(
@@ -325,6 +363,7 @@ local function resaltarFila(activo: unknown, variante: boolean)
 		item.borde.Transparency = if es then 0.1 else 0.86
 		item.borde.Thickness = if es then 1.5 else 1
 		item.comprar.Visible = not es
+		item.siempre.Visible = not es and jugador:GetAttribute("Pase_" .. clave) ~= true
 	end
 end
 

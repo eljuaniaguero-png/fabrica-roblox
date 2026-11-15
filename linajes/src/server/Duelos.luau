@@ -8,6 +8,7 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local Config = require(ReplicatedStorage.Shared.Config)
 local Perfiles = require(script.Parent.Perfiles)
+local Analitica = require(script.Parent.Analitica)
 
 local D = Config.Sandbox.Duelo
 
@@ -113,6 +114,7 @@ local function terminar(ganador: Player?, perdedor: Player?)
 		local d = Perfiles.datos(ganador)
 		if d then
 			Perfiles.cambiar(ganador, { Chatarra = d.Chatarra + D.PremioChatarra })
+			Analitica.gana(ganador, D.PremioChatarra, d.Chatarra, "Duelo")
 		end
 		local aviso = avisos[ganador]
 		if aviso then

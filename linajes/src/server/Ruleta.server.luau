@@ -3,12 +3,14 @@
 -- Cada vez que entrás a un modo tirás GRATIS. Otra tirada o un Linaje directo se pagan con Chatarra,
 -- que solo se gana jugando: ninguna tirada se vende por Robux.
 
+local MarketplaceService = game:GetService("MarketplaceService")
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local Config = require(ReplicatedStorage.Shared.Config)
 local Perfiles = require(script.Parent.Perfiles)
 local Duelos = require(script.Parent.Duelos)
+local Analitica = require(script.Parent.Analitica)
 
 local R = Config.Ruleta
 local S = Config.Sandbox
@@ -50,6 +52,43 @@ local function sortear(): string
 	end
 	return R.Opciones[1].Linaje
 end
+
+-- Pases de Linaje permanente: el atributo Pase_<Linaje> le avisa al cliente cuáles tiene.
+local function idPase(linaje: string): number
+	local id = (S.PasesLinaje :: any)[linaje]
+	return if typeof(id) == "number" then id else 0
+end
+
+local function revisarPases(jugador: Player)
+	for linaje in S.PasesLinaje do
+		local id = idPase(linaje)
+		if id > 0 then
+			local ok, tiene = pcall(function()
+				return MarketplaceService:UserOwnsGamePassAsync(jugador.UserId, id)
+			end)
+			if ok and tiene then
+				jugador:SetAttribute("Pase_" .. linaje, true)
+			end
+		end
+	end
+end
+
+MarketplaceService.PromptGamePassPurchaseFinished:Connect(function(jugador, id, compro)
+	if not compro then
+		return
+	end
+	for linaje in S.PasesLinaje do
+		if idPase(linaje) == id then
+			-- Roblox ya validó la compra; igual se vuelve a preguntar para no confiar en el evento solo.
+			local ok, tiene = pcall(function()
+				return MarketplaceService:UserOwnsGamePassAsync(jugador.UserId, id)
+			end)
+			if ok and tiene then
+				jugador:SetAttribute("Pase_" .. linaje, true)
+			end
+		end
+	end
+end)
 
 local function avisar(jugador: Player, texto: string)
 	remoto:FireClient(jugador, "Aviso", texto)
@@ -96,6 +135,7 @@ remoto.OnServerEvent:Connect(function(jugador: Player, pedido: unknown, dato: un
 		jugador:SetAttribute("Modo", dato)
 		jugador:SetAttribute("TiradaGratis", true)
 		remoto:FireClient(jugador, "Abrir", dato)
+		Analitica.paso(jugador, "EligioModo")
 	elseif pedido == "Tirar" then
 		if ahora - (ultimo[jugador] or 0) < R.Espera then
 			return
@@ -119,6 +159,29 @@ remoto.OnServerEvent:Connect(function(jugador: Player, pedido: unknown, dato: un
 			if esGratis then nil else { Chatarra = d.Chatarra - S.PrecioTirada }
 		)
 		remoto:FireClient(jugador, "Resultado", linaje, variante)
+		Analitica.paso(jugador, "TiroRuleta")
+		if not esGratis then
+			Analitica.gasta(jugador, S.PrecioTirada, d.Chatarra, "Tirada")
+		end
+	elseif pedido == "Elegir" then
+		-- Linaje de un pase comprado con Robux: se elige gratis y queda (no es por una vida).
+		if typeof(dato) ~= "string" or not opcion(dato) then
+			return
+		end
+		if jugador:GetAttribute("Pase_" .. dato) ~= true then
+			return
+		end
+		ultimo[jugador] = ahora
+		linajeBase[jugador] = nil
+		jugador:SetAttribute("LinajeVida", nil)
+		ponerLinaje(jugador, dato, false)
+		remoto:FireClient(jugador, "Resultado", dato, false)
+	elseif pedido == "PedirPase" then
+		if typeof(dato) ~= "string" or not opcion(dato) or idPase(dato) <= 0 then
+			return
+		end
+		ultimo[jugador] = ahora
+		MarketplaceService:PromptGamePassPurchase(jugador, idPase(dato))
 	elseif pedido == "Comprar" then
 		-- Un Linaje elegido, por Chatarra y por UNA vida: al caer vuelve el de la ruleta.
 		if typeof(dato) ~= "string" then
@@ -139,6 +202,7 @@ remoto.OnServerEvent:Connect(function(jugador: Player, pedido: unknown, dato: un
 		end
 		ponerLinaje(jugador, dato, false, { Chatarra = d.Chatarra - precio })
 		jugador:SetAttribute("LinajeVida", true)
+		Analitica.gasta(jugador, precio, d.Chatarra, "LinajeVida_" .. dato)
 		remoto:FireClient(jugador, "Resultado", dato, false)
 	elseif pedido == "Listo" then
 		-- Cierra la ruleta: en 1 V 1 entra a la fila de duelos.
@@ -151,6 +215,7 @@ end)
 
 -- Al caer se pierde el Linaje comprado por una vida y vuelve el de la ruleta.
 local function conectar(jugador: Player)
+	task.spawn(revisarPases, jugador)
 	jugador.CharacterAdded:Connect(function()
 		local base = linajeBase[jugador]
 		if base then

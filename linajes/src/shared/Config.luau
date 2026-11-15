@@ -643,6 +643,17 @@ Config.Sandbox = {
 			Telequinesis = "#ffd34d",
 		},
 	},
+	-- Linaje permanente con Robux: un pase por Linaje (sin azar: comprás el que elegís).
+	-- Los IDs los crea Juani en Creator Hub (Monetización → Pases). Con 0, el botón dice "PRONTO".
+	-- Precio sugerido: Común 99 R$, Poco común 199 R$ (escalera de ideas/monetizacion.md).
+	PasesLinaje = {
+		FuerzaBruta = 0,
+		Reflejos = 0,
+		Piroquinesis = 0,
+		Electro = 0,
+		Criogenia = 0,
+		Telequinesis = 0,
+	},
 	-- Despertar: con 5 bajas seguidas (sin caer) se habilita con G. Dura poco y pega más.
 	Despertar = { Racha = 5, Dura = 25, Danio = 1.3, Recarga = 0.5 },
 	-- 1 V 1: ring aparte, flotando lejos de la arena. Solo se pegan entre los dos.
