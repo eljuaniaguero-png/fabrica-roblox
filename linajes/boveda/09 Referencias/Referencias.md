@@ -52,3 +52,12 @@ Volver a [[00 Inicio]]
 - [[Referencias de sandbox]]: cómo funcionan los juegos de pelea libre, votaciones, eventos y elección de poder.
 
 - [[Referencias de pelea en Roblox]]: 10 juegos, por qué nuestro combate se siente flojo y qué agregar.
+
+## Búsqueda del 15 nov 2026: lo que falta del Sandbox
+- [[Referencias de mapas del sandbox]]: cómo armar varios mapas en el mismo servidor, regla 60/40, destrucción que vuelve sola y propuesta de 4 arenas por nivel.
+- [[Referencias de zonas de NPCs y eventos]]: cómo mezclar jugadores y NPCs por zonas de nivel, carteles de entrada y barra de participación en jefes de mundo (El Capataz y Dron de seguridad).
+- [[Referencias de duelos 1v1]]: anillo de duelo en vivo en el centro de la arena, invitación chica, colisión anti-terceros (`PhysicsService`), barras enfrentadas y anti-farmeo.
+- [[Referencias de tienda y progresión]]: en qué gastar la Chatarra (ropa mezclable, tintes, efectos de KO y ficha diaria) y cómo presentar el Pack Fundador y los Estilos de Linaje sin pay-to-win.
+
+## Búsqueda del 15 nov 2026: hacer el juego lindo
+- [[Referencias para hacer el juego lindo]]: luz de Roblox, escenario de cómic, piso mojado falso, límite de 31 Highlights y HUD de rachas para celular.
