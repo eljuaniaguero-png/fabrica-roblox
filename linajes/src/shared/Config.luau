@@ -1650,6 +1650,81 @@ Config.Sonidos = {
 	Bloqueo = { Id = "rbxassetid://134479353254444", Volumen = 0.7 },
 }
 
+-- Enemigos del sandbox (bóveda: 01 Juego/Enemigos del sandbox). Zonas relativas a Arena.Mapa.Centro;
+-- cuanto más lejos de la zona segura, más nivel. Los tipos parten de Config.Combate.Matones.
+Config.Enemigos = {
+	Vuelve = 6, -- segundos hasta que aparece otro en la zona
+	AlturaPiso = 3, -- un punto más alto que esto (arriba de un contenedor) no sirve para aparecer
+	PorNivel = { Vida = 0.07, Danio = 0.04, Premio = 0.08 },
+	Tipos = {
+		Maton = {
+			Nombre = "MATÓN",
+			Escala = 1,
+			Vida = 180,
+			Danio = 10,
+			Velocidad = 18,
+			Bloqueo = 0.35,
+			EmbestidaRecarga = 3.5,
+			Xp = 60,
+			Chatarra = 6,
+			Gorro = 1,
+			Borde = "#e63c3c",
+		},
+		Rapido = {
+			Nombre = "CARTERISTA",
+			Escala = 0.9,
+			Vida = 120,
+			Danio = 7,
+			Velocidad = 24,
+			Bloqueo = 0.15,
+			EmbestidaRecarga = 2,
+			Xp = 50,
+			Chatarra = 5,
+			Gorro = 3,
+			Borde = "#e8c23a",
+		},
+		Pesado = {
+			Nombre = "MATÓN PESADO",
+			Escala = 1.25,
+			Vida = 320,
+			Danio = 16,
+			Velocidad = 14,
+			Bloqueo = 0.55,
+			EmbestidaRecarga = 5,
+			Xp = 110,
+			Chatarra = 12,
+			Gorro = 2,
+			Borde = "#f2652b",
+		},
+	},
+	Zonas = {
+		{
+			Nombre = "MUELLE",
+			Centro = { -20, -80 },
+			Radio = 34,
+			Nivel = { 1, 6 },
+			Tipos = { "Maton", "Rapido" },
+			Max = 4,
+		},
+		{
+			Nombre = "CONTENEDORES",
+			Centro = { 95, 25 },
+			Radio = 34,
+			Nivel = { 6, 15 },
+			Tipos = { "Maton", "Rapido", "Pesado" },
+			Max = 5,
+		},
+		{
+			Nombre = "GRÚAS",
+			Centro = { 20, 92 },
+			Radio = 30,
+			Nivel = { 15, 30 },
+			Tipos = { "Pesado", "Maton" },
+			Max = 4,
+		},
+	},
+}
+
 Config.Minuto1 = {
 	RecompensaChatarra = 50,
 	RecompensaXp = 100,

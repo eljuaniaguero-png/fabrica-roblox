@@ -263,7 +263,14 @@ pegarA = function(atacante: Model, objetivo: Model, danio: number, tipo: string,
 			Perfiles.sumarBaja(ganador)
 		end
 		if ganador and objetivo:GetAttribute("Maton") then
-			Perfiles.sumarXp(ganador, C.Matones.Xp)
+			-- Premio según tipo y nivel del enemigo (Config.Enemigos).
+			local xp = objetivo:GetAttribute("PremioXp")
+			local chatarra = objetivo:GetAttribute("PremioChatarra")
+			Perfiles.sumarXp(ganador, if typeof(xp) == "number" then xp else C.Matones.Xp)
+			local datos = Perfiles.datos(ganador)
+			if datos and typeof(chatarra) == "number" then
+				Perfiles.cambiar(ganador, { Chatarra = datos.Chatarra + chatarra })
+			end
 		end
 	end
 end
@@ -600,6 +607,7 @@ end
 
 -- Modelo propio: esconde la ropa del cuerpo común y suelda las piezas de ServerStorage.MatonRopa.
 local function ropaMaton(m: Model, numero: number)
+	-- numero elige el gorro (1 a 3): cada tipo de enemigo tiene el suyo.
 	local carpeta = ServerStorage:FindFirstChild("MatonRopa")
 	if not carpeta then
 		warn("Combate: falta ServerStorage.MatonRopa")
@@ -643,10 +651,10 @@ local function ropaMaton(m: Model, numero: number)
 end
 
 -- Borde rojo para distinguirlo de un jugador. La barra de vida la dibuja el cliente.
-local function marcarMaton(m: Model)
+local function marcarMaton(m: Model, color: Color3)
 	local borde = Instance.new("Highlight")
 	borde.FillTransparency = 1
-	borde.OutlineColor = Color3.fromRGB(230, 60, 60)
+	borde.OutlineColor = color
 	borde.DepthMode = Enum.HighlightDepthMode.Occluded
 	borde.Parent = m
 end
@@ -668,9 +676,47 @@ local function objetivoDe(r: BasePart): BasePart?
 	return mejor
 end
 
--- Matón: busca al jugador cercano, se acerca, avisa y pega. Si se traba, se corre de costado.
-local function crearMaton(punto: { number }, numero: number)
-	local M = C.Matones
+-- Lugar al azar sobre el piso de una zona de enemigos (no arriba de contenedores).
+local function puntoEnZona(zona: any): Vector3
+	local centro = Config.Arena.Mapa.Centro + Vector3.new(zona.Centro[1], 0, zona.Centro[2])
+	local filtro = RaycastParams.new()
+	filtro.FilterDescendantsInstances = CollectionService:GetTagged(TAG)
+	filtro.FilterType = Enum.RaycastFilterType.Exclude
+	for _ = 1, 20 do
+		local a = math.random() * math.pi * 2
+		local d = math.sqrt(math.random()) * zona.Radio
+		local x, z = centro.X + math.cos(a) * d, centro.Z + math.sin(a) * d
+		local golpe = workspace:Raycast(Vector3.new(x, 80, z), Vector3.new(0, -120, 0), filtro)
+		if golpe and golpe.Position.Y <= Config.Enemigos.AlturaPiso then
+			return golpe.Position + Vector3.new(0, 4, 0)
+		end
+	end
+	return centro + Vector3.new(0, 4, 0)
+end
+
+local crearEnemigo: (number) -> ()
+
+-- Enemigo: busca al jugador cercano, se acerca, avisa y pega. Si se traba, se corre de costado.
+-- Tipo y nivel salen de su zona (Config.Enemigos); al morir aparece otro en la misma zona.
+crearEnemigo = function(zonaIdx: number)
+	local EN = Config.Enemigos
+	local zona = EN.Zonas[zonaIdx]
+	local tipoNombre = zona.Tipos[math.random(1, #zona.Tipos)]
+	local T = (EN.Tipos :: any)[tipoNombre]
+	local nivel = math.random(zona.Nivel[1], zona.Nivel[2])
+	local extra = nivel - 1
+	local vidaMax = math.round(T.Vida * (1 + extra * EN.PorNivel.Vida))
+	local danio = T.Danio * (1 + extra * EN.PorNivel.Danio)
+	local M = table.clone(C.Matones)
+	M.Vida = vidaMax
+	M.Danio = danio
+	M.Velocidad = T.Velocidad
+	M.Golpea = C.Matones.Golpea * T.Escala -- los grandes pegan desde más lejos
+	M.Bloqueo = table.clone(C.Matones.Bloqueo)
+	M.Bloqueo.Chance = T.Bloqueo
+	M.Embestida = table.clone(C.Matones.Embestida)
+	M.Embestida.Recarga = T.EmbestidaRecarga
+	local numero = T.Gorro
 	local molde = StarterPlayer:FindFirstChild("StarterCharacter")
 	if not (molde and molde:IsA("Model")) then
 		return
@@ -682,19 +728,27 @@ local function crearMaton(punto: { number }, numero: number)
 			s:Destroy()
 		end
 	end
-	local base = Config.Arena.Mapa.Centro + Vector3.new(punto[1], 4, punto[2])
+	local base = puntoEnZona(zona)
 	m:PivotTo(CFrame.new(base))
 	m:SetAttribute("Maton", true)
+	m:SetAttribute("Tipo", tipoNombre)
+	m:SetAttribute("Nivel", nivel)
+	m:SetAttribute("Nombre", string.format("%s  ·  NV %d", T.Nombre, nivel))
+	m:SetAttribute("PremioXp", math.round(T.Xp * (1 + extra * EN.PorNivel.Premio)))
+	m:SetAttribute("PremioChatarra", math.round(T.Chatarra * (1 + extra * EN.PorNivel.Premio)))
 	m.Parent = workspace
-	CuerpoComic.vestir(m, M.Semilla + numero)
+	CuerpoComic.vestir(m, M.Semilla + zonaIdx * 10 + math.random(1, 9))
 	ropaMaton(m, numero)
+	if T.Escala ~= 1 then
+		m:ScaleTo(T.Escala) -- tamaño distinto por tipo (se lee de lejos)
+	end
 	prepararPeleador(m)
 	local h = m:WaitForChild("Humanoid") :: Humanoid
 	h.MaxHealth = M.Vida
 	h.Health = M.Vida
 	h.WalkSpeed = M.Velocidad
 	h.DisplayDistanceType = Enum.HumanoidDisplayDistanceType.None
-	marcarMaton(m)
+	marcarMaton(m, Color3.fromHex(T.Borde))
 	local animator = h:FindFirstChildOfClass("Animator")
 	if not animator then
 		animator = Instance.new("Animator")
@@ -781,7 +835,12 @@ local function crearMaton(punto: { number }, numero: number)
 						)
 						golpes[i]:Play()
 						task.wait(C.Golpes[i].Impacto)
-						resolverGolpe(m, M.Danio, if i == 3 then "Lanza" else "Normal")
+						resolverGolpe(
+							m,
+							M.Danio,
+							if i == 3 then "Lanza" else "Normal",
+							C.Alcance * T.Escala
+						)
 						task.wait(0.14)
 					end
 					listo = os.clock() + M.Pausa
@@ -793,9 +852,9 @@ local function crearMaton(punto: { number }, numero: number)
 		end
 	end)
 	h.Died:Once(function()
-		task.wait(M.Vuelve)
+		task.wait(EN.Vuelve)
 		m:Destroy()
-		crearMaton(punto, numero)
+		crearEnemigo(zonaIdx)
 	end)
 end
 
@@ -808,8 +867,10 @@ local function primerManiqui(personaje: Model)
 	local r = personaje:WaitForChild("HumanoidRootPart") :: BasePart
 	task.wait(1)
 	crearManiqui(r.CFrame)
-	for i, punto in C.Matones.Puntos do
-		task.spawn(crearMaton, punto, i)
+	for zonaIdx, zona in Config.Enemigos.Zonas do
+		for _ = 1, zona.Max do
+			task.spawn(crearEnemigo, zonaIdx)
+		end
 	end
 end
 
