@@ -860,22 +860,22 @@ Config.Animaciones = {
 		CargaFrenada = "rbxassetid://132329831457405",
 		Contenedor = "rbxassetid://93000774808385",
 	},
-	-- Poco comunes: animaciones PRESTADAS de los Comunes hasta que estén las propias (P27-04/05/06).
-	-- Para reemplazarlas alcanza con cambiar el ID acá.
+	-- Poco comunes (P27-04/05/06), hechas con arte/scripts/animaciones/linaje-poco-comunes.py.
+	-- Marcadores: Impacto en todas; Sale y Llega en SaltoCable; Agarra en Lanzar; Suelta en Levantar.
 	linaje_electro = {
-		RayoCadena = "rbxassetid://73899188252872", -- prestada: BolaFuego
-		Descarga = "rbxassetid://77792023879204", -- prestada: GolpePiso
-		SaltoCable = "rbxassetid://86385013535898", -- prestada: PasoFantasma
+		RayoCadena = "rbxassetid://119025205660347",
+		Descarga = "rbxassetid://117106856750145",
+		SaltoCable = "rbxassetid://86097197413818",
 	},
 	linaje_criogenia = {
-		LanzaHielo = "rbxassetid://73899188252872", -- prestada: BolaFuego
-		MuroHielo = "rbxassetid://128169833720239", -- prestada: MuroFuego
-		PistaHelada = "rbxassetid://70565357213088", -- prestada: EmbestidaInicio
+		LanzaHielo = "rbxassetid://100909685015203",
+		MuroHielo = "rbxassetid://83593499097431",
+		PistaHelada = "rbxassetid://97889418995026",
 	},
 	linaje_telequinesis = {
-		Lanzar = "rbxassetid://73899188252872", -- prestada: BolaFuego
-		Levantar = "rbxassetid://128292249326676", -- prestada: ChorroInicio
-		Onda = "rbxassetid://92821448797182", -- prestada: PunoSismico
+		Lanzar = "rbxassetid://112509247938658",
+		Levantar = "rbxassetid://74911200218800",
+		Onda = "rbxassetid://134024808173959",
 	},
 	linaje_fuerzabruta = {
 		PunoSismico = "rbxassetid://92821448797182",
