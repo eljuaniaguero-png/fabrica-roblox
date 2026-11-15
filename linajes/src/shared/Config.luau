@@ -543,6 +543,17 @@ Config.Arena = {
 	ZonaRadio = 22,
 	ProteccionAparecer = 4,
 	Reaparicion = 2,
+	-- Cajas y barriles para la Telequinesis (server/ArenaSueltos.server.luau).
+	Sueltos = {
+		Cantidad = 10,
+		Vuelve = 15, -- segundos hasta que aparece otro cuando se usa uno
+		Borde = 20, -- studs desde el borde de la arena
+		AlturaPiso = 3, -- más alto que esto es arriba de un contenedor: no va
+		ProporcionBarriles = 0.4,
+		Caja = { Tam = Vector3.new(3, 3, 3), Densidad = 0.6, Color = "#8a5a36" },
+		-- Barril: pesado (pasa Config.Poderes.PesoPesado, hace más daño al lanzarlo).
+		Barril = { Tam = Vector3.new(4, 3, 3), Densidad = 2.5, Color = "#8e2a22" },
+	},
 	-- Plano de la arena (server/ArenaMapa.server.luau). Posiciones relativas a Centro.
 	Mapa = {
 		Centro = Vector3.new(-330, 0, 1035),
@@ -682,7 +693,7 @@ Config.Poderes = {
 	CongeladoDura = 1.5,
 	LanzaVelocidad = 110,
 	LanzaEscarcha = 2,
-	MuroHielo = { Ancho = 10, Alto = 6, Grosor = 1.5, Dura = 5, Distancia = 8 },
+	MuroHielo = { Ancho = 10, Alto = 6, Grosor = 1.5, Dura = 5, Distancia = 8, Vida = 30 }, -- un combo completo lo rompe
 	PistaDura = 4, -- Criogenia: segundos que queda la pista
 	PistaAncho = 5,
 	LanzarVelocidad = 95, -- Telequinesis: objeto lanzado

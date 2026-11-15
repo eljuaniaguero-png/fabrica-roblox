@@ -225,7 +225,7 @@ local function rayoCadena(atacante: Model, datos: any)
 	if #puntos == 1 then -- nadie adelante: el rayo se pierde en el aire
 		table.insert(puntos, r.Position + r.CFrame.LookVector * datos.Alcance)
 	end
-	remoto:FireAllClients("Rayo", puntos)
+	remoto:FireAllClients("Rayo", puntos, primero ~= nil)
 end
 
 -- Electro X: descarga alrededor; aturde un instante.
@@ -261,7 +261,7 @@ local function saltoCable(atacante: Model, datos: any)
 		destino = if choque then choque.Position - frente * 2 else desde + frente * datos.Alcance
 	end
 	atacante:PivotTo(CFrame.lookAt(destino, destino + frente))
-	remoto:FireAllClients("Rayo", { desde, destino })
+	remoto:FireAllClients("Rayo", { desde, destino }, true)
 	if m and rm then
 		pegar(atacante, m, datos.Danio, "Normal", frente)
 	end
@@ -356,6 +356,9 @@ local function muroHielo(atacante: Model, _datos: any)
 	local escala = Niveles.tamano(atacante)
 	local base = r.CFrame * CFrame.new(0, -3 + M.Alto * escala / 2, -M.Distancia)
 	local muro = hielo("MuroHielo", Vector3.new(M.Ancho, M.Alto, M.Grosor) * escala, base, true)
+	-- Se puede romper a golpes (Combate.server descuenta Vida a lo que tenga el tag Rompible).
+	muro:SetAttribute("Vida", M.Vida)
+	muro:AddTag("Rompible")
 	Debris:AddItem(muro, M.Dura)
 end
 
@@ -554,7 +557,13 @@ remoto.OnServerEvent:Connect(function(jugador, pedido)
 	end
 	propias[clave] = ahora + datos.Recarga
 	personaje:SetAttribute("Energia", energia - datos.Energia)
-	if datos.Accion == "BolaFuego" then
+	do
+		local ev = script.Parent:FindFirstChild("Minuto1Hito")
+		if ev and ev:IsA("BindableEvent") then
+			ev:Fire(jugador, "Poder")
+		end
+	end
+	if datos.Impacto > 0 then
 		remoto:FireAllClients("Carga", personaje, datos)
 	end
 	task.delay(datos.Impacto, function()

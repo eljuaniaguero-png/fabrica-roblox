@@ -88,14 +88,23 @@ local function tocar(nombre: string, velocidad: number?): AnimationTrack?
 	return pista
 end
 
--- Efecto: destello sobre el que recibe. SONIDO: golpe, en Config cuando estén los sonidos.
-local function destello(objetivo: Instance, color: Color3)
+-- Efecto: destello sobre el que recibe (GUIA-ESTILO §3.1: micro impact-frame Hueso #EDE6D6 0.06s en golpes fuertes).
+local function destello(objetivo: Instance, color: Color3, fuerte: boolean?)
 	local luz = Instance.new("Highlight")
 	luz.Adornee = objetivo
-	luz.FillColor = color
-	luz.FillTransparency = 0.35
-	luz.OutlineTransparency = 1
+	luz.FillColor = if fuerte then Tema.Hueso else color
+	luz.FillTransparency = if fuerte then 0.12 else 0.38
+	luz.OutlineColor = Tema.Fondo
+	luz.OutlineTransparency = if fuerte then 0.1 else 0.45
 	luz.Parent = objetivo
+	if fuerte then
+		task.delay(0.06, function()
+			if luz.Parent then
+				luz.FillColor = color
+				luz.FillTransparency = 0.42
+			end
+		end)
+	end
 	Debris:AddItem(luz, C.Destello)
 end
 
@@ -155,7 +164,7 @@ end
 
 local ANGULOS_TAJO = { 26, -30, -76, 8 }
 
--- Arco: estela en la mano + media luna 3D cómic delante del ataque.
+-- Arco: estela en la mano + media luna 3D cómic delante del ataque (LightEmission <= 0.65 sin blanco puro).
 local function arco(atacante: Model, numeroGolpe: number, fuerte: boolean?)
 	local color = colorDe(atacante)
 	local mano = atacante:FindFirstChild(if numeroGolpe % 2 == 0 then "LeftHand" else "RightHand")
@@ -169,10 +178,10 @@ local function arco(atacante: Model, numeroGolpe: number, fuerte: boolean?)
 		estela.Attachment0 = a0
 		estela.Attachment1 = a1
 		estela.Lifetime = 0.22
-		estela.LightEmission = 1
+		estela.LightEmission = 0.65
 		estela.FaceCamera = true
-		estela.Color = ColorSequence.new(Color3.new(1, 1, 1), color)
-		estela.Transparency = NumberSequence.new(0, 1)
+		estela.Color = ColorSequence.new(Tema.Hueso, color)
+		estela.Transparency = NumberSequence.new(0.08, 1)
 		estela.Parent = mano
 		Debris:AddItem(estela, 0.75)
 		Debris:AddItem(a0, 0.75)
@@ -232,7 +241,7 @@ local function avanzar()
 	end)
 end
 
--- Contador de golpes y daño acumulado: número grande a la derecha, sin caja.
+-- Contador de golpes y daño acumulado: número grande a la derecha, sin caja (GUIA-ESTILO §5.1).
 local gui = Tema.pantalla("Combate", 1)
 local golpes, acumulado, contadorHasta = 0, 0, 0
 local contador = Tema.grupo(
@@ -259,31 +268,70 @@ local function contar(danio: number)
 	golpes += 1
 	acumulado += danio
 	contadorHasta = os.clock() + C.ContadorDura
+	local colorLinaje = Tema.color(jugador:GetAttribute("Linaje"))
 	cuenta.Text = tostring(golpes)
+	cuenta.TextColor3 = if golpes >= 8
+		then colorLinaje
+		elseif golpes >= 4 then Color3.fromHex("#ffd34d")
+		else Tema.Hueso
 	palabra.Text = Tema.espaciar(if golpes == 1 then "GOLPE" else "GOLPES", 3)
-	palabra.TextColor3 = Tema.color(jugador:GetAttribute("Linaje"))
-	suma.Text = string.format("%d de daño", math.round(acumulado))
+	palabra.TextColor3 = colorLinaje
+	suma.Text = string.format("%d DE DAÑO", math.round(acumulado))
 	contador.Visible = true
 	escalaCuenta.Scale = 1.28
 	TweenService:Create(escalaCuenta, TweenInfo.new(0.18, Enum.EasingStyle.Quad), { Scale = 1 })
 		:Play()
 end
 
--- Arriba al centro: nombre y vida del último rival que golpeaste (como la barra de jefe).
-local rival = Tema.grupo(gui, Vector2.new(0.5, 0), UDim2.new(0.5, 0, 0, 42), Vector2.new(640, 62))
+-- Arriba al centro: nombre, ornamento, barra con rastro #E8C9A0 (0.45 s) y lectura de vida del rival (GUIA-ESTILO §5.1).
+local rival = Tema.grupo(gui, Vector2.new(0.5, 0), UDim2.new(0.5, 0, 0, 38), Vector2.new(640, 68))
 rival.Visible = false
-local nombreRival = Tema.texto(rival, "", { tam = 20, alineado = Enum.TextXAlignment.Center })
+local nombreRival = Tema.texto(rival, "", {
+	tam = 20,
+	letra = Tema.LetraGruesa,
+	alineado = Enum.TextXAlignment.Center,
+})
 nombreRival.AnchorPoint = Vector2.new(0.5, 0)
 nombreRival.Position = UDim2.fromScale(0.5, 0)
-local _, vidaRival = Tema.barra(rival, Vector2.new(0, 34), 640, 8, Tema.Vida)
+Tema.ornamento(rival, Vector2.new(320, 27), 240)
+local fondoRival, vidaRival = Tema.barra(rival, Vector2.new(0, 35), 640, 8, Tema.Vida)
+local rastroRival = Instance.new("Frame")
+rastroRival.Size = UDim2.fromScale(1, 1)
+rastroRival.BackgroundColor3 = Tema.Danio
+rastroRival.BackgroundTransparency = 0.12
+rastroRival.BorderSizePixel = 0
+rastroRival.ZIndex = 2
+rastroRival.Parent = fondoRival
+vidaRival.ZIndex = 3
+local numerosRival = Tema.texto(rival, "", {
+	tam = 13,
+	letra = Tema.LetraFina,
+	transparencia = 0.32,
+	alineado = Enum.TextXAlignment.Right,
+})
+numerosRival.AnchorPoint = Vector2.new(1, 0)
+numerosRival.Position = UDim2.fromOffset(640, 46)
+
 local objetivo: Model? = nil
 local rivalHasta = 0
+local rivalParteDanio, rivalBajoEn, rivalAntes = 1, 0, 1
 
 local function marcarRival(m: Model)
+	if objetivo ~= m then
+		local h = m:FindFirstChildOfClass("Humanoid")
+		local frac = if h then math.clamp(h.Health / math.max(h.MaxHealth, 1), 0, 1) else 1
+		rivalParteDanio, rivalAntes, rivalBajoEn = frac, frac, os.clock()
+		vidaRival.Size = UDim2.fromScale(frac, 1)
+		rastroRival.Size = UDim2.fromScale(frac, 1)
+	end
 	objetivo = m
 	rivalHasta = os.clock() + Config.Hud.RivalDura
 	local dueno = Players:GetPlayerFromCharacter(m)
-	local nombre = if dueno then dueno.DisplayName else (m:GetAttribute("Nombre") or m.Name)
+	local nombre = if dueno
+		then dueno.DisplayName
+		else (m:GetAttribute("Nombre") or (if m.Name == "Maton"
+			then "Matón del Puerto"
+			else m.Name))
 	nombreRival.Text = Tema.espaciar(string.upper(tostring(nombre)), 4)
 	rival.Visible = true
 end
@@ -449,15 +497,78 @@ RunService.Heartbeat:Connect(function()
 	end
 end)
 
+-- Algo rompible (muro de hielo) se parte: cuñas del mismo color que saltan y se encogen.
+local function seRompe(centro: Vector3, tam: Vector3, color: Color3)
+	-- SONIDO: hielo que se quiebra
+	for _ = 1, 14 do
+		local p = Instance.new("WedgePart")
+		p.Size =
+			Vector3.new(math.random(5, 12) / 10, math.random(8, 20) / 10, math.random(6, 14) / 10)
+		p.Color = color
+		p.Material = Enum.Material.Ice
+		p.Transparency = 0.2
+		p.CanCollide = false
+		p.CanQuery = false
+		p.CanTouch = false
+		local off = Vector3.new(
+			(math.random() - 0.5) * tam.X,
+			(math.random() - 0.5) * tam.Y,
+			(math.random() - 0.5) * tam.Z
+		)
+		p.CFrame = CFrame.new(centro + off) * CFrame.Angles(math.random() * 6, math.random() * 6, 0)
+		p.Parent = workspace
+		p.AssemblyLinearVelocity = off.Unit * math.random(15, 30)
+			+ Vector3.new(0, math.random(10, 25), 0)
+		TweenService:Create(p, TweenInfo.new(1.1), { Size = Vector3.one * 0.1, Transparency = 1 })
+			:Play()
+		Debris:AddItem(p, 1.2)
+	end
+end
+
 remoto.OnClientEvent:Connect(function(tipo: string, a: any, b: any, _c: any, d: any)
+	if
+		tipo == "SeRompe"
+		and typeof(a) == "Vector3"
+		and typeof(b) == "Vector3"
+		and typeof(_c) == "Color3"
+	then
+		seRompe(a, b, _c)
+		return
+	end
 	if tipo == "Ataca" then
 		if a ~= personaje then
 			arco(a, b, _c == true)
+		elseif _c == true or b == 4 then
+			local r = raiz
+			if r then
+				local color = colorDe(personaje)
+				EfectosGolpe.impactoFuerza(
+					r.CFrame * CFrame.new(0, 0.3, -3.2),
+					1.6,
+					if _c == true then 5.2 else 3.8,
+					color,
+					0.16
+				)
+			end
+		end
+	elseif tipo == "Estatica" and typeof(a) == "Instance" and a:IsA("Model") then
+		local ra = a:FindFirstChild("HumanoidRootPart")
+		if ra and ra:IsA("BasePart") then
+			local electro = Config.Poderes.Colores.Electro
+			EfectosGolpe.runa3D(
+				ra.CFrame * CFrame.new(0, 0.2, -2.8) * CFrame.Angles(math.pi / 2, 0, 0),
+				2.0,
+				5.8,
+				electro,
+				0.26,
+				Config.Efectos.Beta.RelampagoArco
+			)
+			EfectosGolpe.luz(ra.Position, electro, 6, 18, 0.2)
 		end
 	elseif tipo == "Golpeado" then
 		local fuerte = _c == true
-		destello(a, Color3.new(1, 1, 1))
 		local color = colorDe(d)
+		destello(a, color, fuerte)
 		impacto(a, fuerte, color, Niveles.tamano(d))
 		numero(a, tostring(math.round(b)), if fuerte then color else Color3.fromRGB(255, 225, 120))
 		if d == personaje then
@@ -482,7 +593,7 @@ remoto.OnClientEvent:Connect(function(tipo: string, a: any, b: any, _c: any, d: 
 		end
 		sonar(a, if fuerte then "GolpeFuerte" else "Golpe") -- SONIDO: golpe conecta
 	elseif tipo == "GuardiaRota" then
-		destello(a, Color3.fromRGB(255, 70, 70))
+		destello(a, Color3.fromRGB(255, 70, 70), true)
 		numero(a, "¡GUARDIA ROTA!", Color3.fromRGB(255, 95, 95))
 		local ra = a:FindFirstChild("HumanoidRootPart")
 		if ra and ra:IsA("BasePart") then
@@ -508,7 +619,7 @@ remoto.OnClientEvent:Connect(function(tipo: string, a: any, b: any, _c: any, d: 
 		sonar(a, "Bloqueo") -- SONIDO: bloqueo
 	elseif tipo == "Parry" then
 		local azul = Color3.fromRGB(63, 224, 240)
-		destello(a, azul)
+		destello(a, azul, true)
 		numero(a, "¡PARRY!", azul)
 		local ra = a:FindFirstChild("HumanoidRootPart")
 		if ra and ra:IsA("BasePart") then
@@ -538,91 +649,166 @@ remoto.OnClientEvent:Connect(function(tipo: string, a: any, b: any, _c: any, d: 
 	end
 end)
 
--- Botones e indicadores táctiles / PC abajo a la derecha (sobre H Controles).
+-- Botonera de combate en rombos 45° abajo a la derecha (GUIA-ESTILO §4.1 & ref-ui-sandbox-pantallas).
 local tactil = UserInputService.TouchEnabled
-local tamBtn = if tactil then 70 else 60
+local tamRombo = if tactil then 80 else 68
+local sepRombo = if tactil then 88 else 76
+local anchoControles = sepRombo * 3 + tamRombo + 16
 local controles = Tema.grupo(
 	gui,
 	Vector2.new(1, 1),
-	UDim2.new(1, -Config.Hud.Margen, 1, -86),
-	Vector2.new(tamBtn * 4 + 42, tamBtn + 30)
+	UDim2.new(1, -Config.Hud.Margen, 1, -78),
+	Vector2.new(anchoControles, tamRombo + 36)
 )
 local imgsControl = Config.Hud.Imagenes.Controles
+local AMBAR_ROMPE = Color3.fromHex("#f2a23a")
+
+type AccionUI = {
+	rombo: Frame,
+	btn: TextButton,
+	borde: UIStroke,
+	ico: ImageLabel?,
+	velo: Frame,
+	reloj: TextLabel,
+	escala: UIScale,
+}
 
 local function crearAccion(
 	orden: number,
 	teclaTexto: string,
 	etiqueta: string,
-	imagenId: string
-): (TextButton, UIStroke, ImageLabel?)
-	local x = (orden - 1) * (tamBtn + 12)
-	local btn = Instance.new("TextButton")
-	btn.Position = UDim2.fromOffset(x, 0)
-	btn.Size = UDim2.fromOffset(tamBtn, tamBtn)
-	btn.BackgroundColor3 = Tema.Fondo
-	btn.BackgroundTransparency = if tactil then 0.2 else 0.35
-	btn.Text = if imagenId == "" then teclaTexto else ""
-	btn.TextColor3 = Tema.Hueso
-	btn.FontFace = Tema.Letra
-	btn.TextSize = if tactil then 18 else 14
-	btn.AutoButtonColor = tactil
-	btn.Parent = controles
+	imagenId: string,
+	colorBase: Color3?
+): AccionUI
+	local cx = math.round(tamRombo * 0.5) + (orden - 1) * sepRombo
+	local cy = math.round(tamRombo * 0.5)
+	local marcoRombo = Tema.rombo(controles, Vector2.new(cx, cy), tamRombo, true)
+	local acento = colorBase or Tema.Hueso
+
+	local escala = Instance.new("UIScale")
+	escala.Parent = marcoRombo
+
+	local ladoInterno = math.round((tamRombo - 18) / 1.4142)
+	local diamante = Instance.new("Frame")
+	diamante.AnchorPoint = Vector2.new(0.5, 0.5)
+	diamante.Position = UDim2.fromScale(0.5, 0.5)
+	diamante.Size = UDim2.fromOffset(ladoInterno, ladoInterno)
+	diamante.Rotation = 45
+	diamante.BackgroundTransparency = 1
+	diamante.ClipsDescendants = true
+	diamante.ZIndex = 4
+	diamante.Parent = marcoRombo
 
 	local borde = Instance.new("UIStroke")
 	borde.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
-	borde.Color = Tema.Hueso
-	borde.Transparency = if tactil then 0.3 else 0.55
-	borde.Parent = btn
+	borde.Color = acento
+	borde.Transparency = if colorBase then 0.35 else 0.72
+	borde.Thickness = 1
+	borde.Parent = diamante
+
+	local velo = Instance.new("Frame")
+	velo.AnchorPoint = Vector2.new(0.5, 1)
+	velo.Position = UDim2.fromScale(0.5, 1)
+	velo.Size = UDim2.fromScale(1, 0)
+	velo.BackgroundColor3 = Tema.Fondo
+	velo.BackgroundTransparency = 0.18
+	velo.BorderSizePixel = 0
+	velo.ZIndex = 4
+	velo.Parent = diamante
 
 	local ico: ImageLabel? = nil
 	if imagenId ~= "" then
 		local img = Instance.new("ImageLabel")
 		img.AnchorPoint = Vector2.new(0.5, 0.5)
 		img.Position = UDim2.fromScale(0.5, 0.5)
-		img.Size = UDim2.fromOffset(math.round(tamBtn * 0.66), math.round(tamBtn * 0.66))
+		img.Size = UDim2.fromOffset(math.round(tamRombo * 0.54), math.round(tamRombo * 0.54))
 		img.BackgroundTransparency = 1
 		img.ScaleType = Enum.ScaleType.Fit
 		img.Image = imagenId
-		img.ImageColor3 = Tema.Hueso
-		img.Parent = btn
+		img.ImageColor3 = acento
+		img.ZIndex = 5
+		img.Parent = marcoRombo
 		ico = img
 	end
 
-	local pie = Tema.texto(controles, if tactil or imagenId == "" then etiqueta else teclaTexto, {
-		tam = 13,
+	local reloj = Tema.texto(marcoRombo, "", {
+		tam = 18,
+		letra = Tema.LetraGruesa,
+		color = Tema.Hueso,
+		alineado = Enum.TextXAlignment.Center,
+	})
+	reloj.AutomaticSize = Enum.AutomaticSize.None
+	reloj.Size = UDim2.fromScale(1, 1)
+	reloj.ZIndex = 6
+
+	local btn = Instance.new("TextButton")
+	btn.AnchorPoint = Vector2.new(0.5, 0.5)
+	btn.Position = UDim2.fromScale(0.5, 0.5)
+	btn.Size = UDim2.fromScale(1.08, 1.08)
+	btn.BackgroundTransparency = 1
+	btn.Text = if imagenId == "" then teclaTexto else ""
+	btn.TextColor3 = acento
+	btn.FontFace = Tema.Letra
+	btn.TextSize = if tactil then 16 else 13
+	btn.ZIndex = 8
+	btn.Parent = marcoRombo
+
+	local textoPie = if tactil then etiqueta else string.format("%s · %s", teclaTexto, etiqueta)
+	local pie = Tema.texto(controles, textoPie, {
+		tam = 11,
 		letra = Tema.LetraFina,
-		transparencia = 0.25,
+		color = acento,
+		transparencia = 0.2,
 		alineado = Enum.TextXAlignment.Center,
 	})
 	pie.AutomaticSize = Enum.AutomaticSize.None
-	pie.Position = UDim2.fromOffset(x, tamBtn + 5)
-	pie.Size = UDim2.fromOffset(tamBtn, 18)
-	return btn, borde, ico
+	pie.AnchorPoint = Vector2.new(0.5, 0)
+	pie.Position = UDim2.fromOffset(cx, tamRombo + 2)
+	pie.Size = UDim2.fromOffset(sepRombo, 16)
+
+	return {
+		rombo = marcoRombo,
+		btn = btn,
+		borde = borde,
+		ico = ico,
+		velo = velo,
+		reloj = reloj,
+		escala = escala,
+	}
 end
 
-local btnAtaque = crearAccion(1, "LMB", "GOLPE", imgsControl.Ataque)
-local btnRompe = crearAccion(2, "RMB", "ROMPE", imgsControl.Rompeguardia)
-local btnDash, _, icoDash = crearAccion(3, "Q", "DASH", imgsControl.Dash)
-local btnBloqueo, bordeBloqueo, icoBloqueo = crearAccion(4, "F", "BLOQ", imgsControl.Bloqueo)
+local function pulsarAccion(ui: AccionUI)
+	ui.escala.Scale = 0.9
+	TweenService:Create(ui.escala, TweenInfo.new(0.16, Enum.EasingStyle.Back), { Scale = 1 }):Play()
+end
 
-btnAtaque.Activated:Connect(function()
+local uiAtaque = crearAccion(1, "LMB", "GOLPE", imgsControl.Ataque)
+local uiRompe = crearAccion(2, "RMB", "ROMPE", imgsControl.Rompeguardia, AMBAR_ROMPE)
+local uiDash = crearAccion(3, "Q", "DASH", imgsControl.Dash)
+local uiBloqueo = crearAccion(4, "F", "BLOQ", imgsControl.Bloqueo)
+
+uiAtaque.btn.Activated:Connect(function()
+	pulsarAccion(uiAtaque)
 	pedir("Golpe")
 end)
-btnRompe.Activated:Connect(function()
+uiRompe.btn.Activated:Connect(function()
+	pulsarAccion(uiRompe)
 	pedir("Golpe", "Fuerte")
 end)
-btnDash.Activated:Connect(function()
+uiDash.btn.Activated:Connect(function()
+	pulsarAccion(uiDash)
 	pedir("Dash")
 end)
-btnBloqueo.InputBegan:Connect(function(entrada)
+uiBloqueo.btn.InputBegan:Connect(function(entrada)
 	if
 		entrada.UserInputType == Enum.UserInputType.Touch
 		or entrada.UserInputType == Enum.UserInputType.MouseButton1
 	then
+		pulsarAccion(uiBloqueo)
 		bloquear()
 	end
 end)
-btnBloqueo.InputEnded:Connect(function(entrada)
+uiBloqueo.btn.InputEnded:Connect(function(entrada)
 	if
 		entrada.UserInputType == Enum.UserInputType.Touch
 		or entrada.UserInputType == Enum.UserInputType.MouseButton1
@@ -634,32 +820,54 @@ end)
 -- Vida, energía y nivel están en client/Estado.client.luau.
 gui.Parent = jugador:WaitForChild("PlayerGui")
 
-RunService.RenderStepped:Connect(function()
-	local dashEnRecarga = os.clock() < dashListo
+RunService.RenderStepped:Connect(function(dt)
+	local ahora = os.clock()
+	local faltaDash = dashListo - ahora
+	local dashEnRecarga = faltaDash > 0
+	local fracDash = if dashEnRecarga
+		then math.clamp(faltaDash / math.max(C.DashRecarga, 0.1), 0, 1)
+		else 0
+	uiDash.velo.Size = UDim2.fromScale(1, fracDash)
+	uiDash.reloj.Text = if dashEnRecarga then string.format("%.1f", faltaDash) else ""
 	local transparenciaDash = if dashEnRecarga then 0.68 else 0
-	if icoDash then
-		icoDash.ImageTransparency = transparenciaDash
+	if uiDash.ico then
+		uiDash.ico.ImageTransparency = transparenciaDash
 	else
-		btnDash.TextTransparency = transparenciaDash
-	end
-	local colorLinaje = Tema.color(jugador:GetAttribute("Linaje"))
-	bordeBloqueo.Color = if bloqueando then colorLinaje else Tema.Hueso
-	bordeBloqueo.Transparency = if bloqueando then 0.05 else (if tactil then 0.35 else 0.65)
-	if icoBloqueo then
-		icoBloqueo.ImageColor3 = if bloqueando then colorLinaje else Tema.Hueso
+		uiDash.btn.TextTransparency = transparenciaDash
 	end
 
-	if contador.Visible and os.clock() > contadorHasta then
+	local colorLinaje = Tema.color(jugador:GetAttribute("Linaje"))
+	uiBloqueo.borde.Color = if bloqueando then colorLinaje else Tema.Hueso
+	uiBloqueo.borde.Transparency = if bloqueando then 0.05 else 0.72
+	uiBloqueo.borde.Thickness = if bloqueando then 2 else 1
+	if uiBloqueo.ico then
+		uiBloqueo.ico.ImageColor3 = if bloqueando then colorLinaje else Tema.Hueso
+	end
+
+	if contador.Visible and ahora > contadorHasta then
 		contador.Visible = false
 		golpes, acumulado = 0, 0
 	end
 	local o = objetivo
 	local h = o and o:FindFirstChildOfClass("Humanoid")
-	if rival.Visible and (not (o and h and o.Parent) or os.clock() > rivalHasta) then
+	if rival.Visible and (not (o and h and o.Parent) or ahora > rivalHasta) then
 		rival.Visible = false
 		objetivo = nil
 	elseif h then
-		vidaRival.Size = UDim2.fromScale(math.clamp(h.Health / math.max(h.MaxHealth, 1), 0, 1), 1)
+		local maxR = math.max(h.MaxHealth, 1)
+		local parte = math.clamp(h.Health / maxR, 0, 1)
+		if parte < rivalAntes then
+			rivalBajoEn = ahora
+		end
+		rivalAntes = parte
+		if parte >= rivalParteDanio then
+			rivalParteDanio = parte
+		elseif ahora - rivalBajoEn > Config.Hud.DanioEspera then
+			rivalParteDanio = math.max(parte, rivalParteDanio - dt * 0.9)
+		end
+		vidaRival.Size = UDim2.fromScale(parte, 1)
+		rastroRival.Size = UDim2.fromScale(rivalParteDanio, 1)
+		numerosRival.Text = string.format("%d / %d", math.ceil(h.Health), maxR)
 	end
 end)
 

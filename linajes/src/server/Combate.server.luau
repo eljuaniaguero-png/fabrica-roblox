@@ -14,6 +14,16 @@ local CuerpoComic = require(script.Parent.CuerpoComic)
 local Niveles = require(ReplicatedStorage.Shared.Niveles)
 local Perfiles = require(script.Parent.Perfiles)
 
+local function hitoMinuto1(jugador: Player?, hito: string)
+	if not jugador then
+		return
+	end
+	local ev = script.Parent:FindFirstChild("Minuto1Hito")
+	if ev and ev:IsA("BindableEvent") then
+		ev:Fire(jugador, hito)
+	end
+end
+
 local C = Config.Combate
 local TAG = "Combatiente"
 
@@ -235,6 +245,15 @@ pegarA = function(atacante: Model, objetivo: Model, danio: number, tipo: string,
 	end
 	local estabaVivo = h.Health > 0
 	h:TakeDamage(danio)
+	do
+		local atacanteJugador = Players:GetPlayerFromCharacter(atacante)
+		if atacanteJugador then
+			hitoMinuto1(atacanteJugador, "Combate")
+			if objetivo:GetAttribute("Maton") then
+				hitoMinuto1(atacanteJugador, "Maton")
+			end
+		end
+	end
 	if estabaVivo and h.Health <= 0 then
 		CuerpoComic.cara(objetivo, EXP_COMIC.derrotado)
 		local ganador = Players:GetPlayerFromCharacter(atacante)
@@ -248,6 +267,30 @@ pegarA = function(atacante: Model, objetivo: Model, danio: number, tipo: string,
 	end
 end
 
+-- Objetos que se rompen a golpes (muro de hielo): tag Rompible y atributo Vida.
+local function golpearRompibles(atacante: Model, r: BasePart, danio: number, alcance: number)
+	for _, o in CollectionService:GetTagged("Rompible") do
+		if o:IsA("BasePart") and o.Parent then
+			local cerca = o.CFrame:PointToObjectSpace(r.Position)
+			local borde = o.Size / 2 + Vector3.one * alcance
+			local hacia = Vector3.new(o.Position.X - r.Position.X, 0, o.Position.Z - r.Position.Z)
+			local adelante = hacia.Magnitude < 0.1
+				or r.CFrame.LookVector:Dot(hacia.Unit) >= C.ConoGolpe - 0.3
+			if math.abs(cerca.X) <= borde.X and math.abs(cerca.Z) <= borde.Z and adelante then
+				local vida = ((o:GetAttribute("Vida") :: number?) or 0)
+					- danio * Niveles.danio(atacante)
+				if vida <= 0 then
+					remoto:FireAllClients("SeRompe", o.Position, o.Size, o.Color)
+					o:Destroy()
+				else
+					o:SetAttribute("Vida", vida)
+					o.Transparency = math.min(o.Transparency + 0.1, 0.6) -- se va agrietando
+				end
+			end
+		end
+	end
+end
+
 local function resolverGolpe(atacante: Model, danio: number, tipo: string, alcance: number?)
 	local _, r = partes(atacante)
 	if not r then
@@ -256,6 +299,7 @@ local function resolverGolpe(atacante: Model, danio: number, tipo: string, alcan
 	if os.clock() < estadoDe(atacante).aturdidoHasta then
 		return
 	end
+	golpearRompibles(atacante, r, danio, (alcance or C.Alcance) * Niveles.tamano(atacante))
 	for _, otro in CollectionService:GetTagged(TAG) do
 		if otro ~= atacante and otro:IsA("Model") then
 			local _, ro = partes(otro)
@@ -369,6 +413,7 @@ remoto.OnServerEvent:Connect(function(jugador, pedido, variante)
 			and ((personaje:GetAttribute("Energia") :: number?) or 0) > 0
 		then
 			e.bloqueoDesde = ahora
+			hitoMinuto1(jugador, "Defensa")
 		end
 	elseif pedido == "BloqueoFin" then
 		e.bloqueoDesde = nil
@@ -379,6 +424,7 @@ remoto.OnServerEvent:Connect(function(jugador, pedido, variante)
 			e.invulnerableHasta = ahora + C.DashInvulnerable
 			e.bloqueoDesde = nil
 			e.libreDesde = 0 -- permite cancelar recuperación y pegar enseguida
+			hitoMinuto1(jugador, "Defensa")
 		end
 	end
 end)
