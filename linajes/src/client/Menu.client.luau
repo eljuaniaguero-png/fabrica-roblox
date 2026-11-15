@@ -10,6 +10,8 @@ local TweenService = game:GetService("TweenService")
 local UserInputService = game:GetService("UserInputService")
 
 local Config = require(ReplicatedStorage:WaitForChild("Shared"):WaitForChild("Config"))
+local Estadisticas = require(ReplicatedStorage:WaitForChild("Shared"):WaitForChild("Estadisticas"))
+local remotoStats = ReplicatedStorage:WaitForChild("Estadisticas") :: RemoteEvent
 local Tema = require(script.Parent:WaitForChild("Tema"))
 
 local H = Config.Hud
@@ -607,7 +609,7 @@ local btnPersonaje = crearItemMenu(yBase + paso * 4, "PERSONAJE", false, IM.Menu
 local cajon = Instance.new("CanvasGroup")
 cajon.AnchorPoint = Vector2.new(1, 0)
 cajon.Position = UDim2.new(1, -48, 0, 26)
-cajon.Size = UDim2.fromOffset(445, 250)
+cajon.Size = UDim2.fromOffset(445, 360) -- alto: entran el árbol de estadísticas y los poderes
 cajon.BackgroundColor3 = Color3.fromRGB(13, 16, 23)
 cajon.BackgroundTransparency = 0.1
 cajon.BorderSizePixel = 0
@@ -632,16 +634,22 @@ cerrarCajon.FontFace = Tema.LetraFina
 cerrarCajon.TextSize = 30
 cerrarCajon.Parent = cajon
 
-local cajonCuerpo = Instance.new("Frame")
+local cajonCuerpo = Instance.new("ScrollingFrame")
 cajonCuerpo.Position = UDim2.fromOffset(22, 64)
 cajonCuerpo.Size = UDim2.new(1, -44, 1, -76)
 cajonCuerpo.BackgroundTransparency = 1
+cajonCuerpo.BorderSizePixel = 0
+cajonCuerpo.ScrollBarThickness = 4
+cajonCuerpo.ScrollBarImageColor3 = COFRADIA
+cajonCuerpo.AutomaticCanvasSize = Enum.AutomaticSize.Y
+cajonCuerpo.CanvasSize = UDim2.new()
 cajonCuerpo.Parent = cajon
 local cajonLista = Instance.new("UIListLayout")
 cajonLista.Padding = UDim.new(0, 8)
 cajonLista.Parent = cajonCuerpo
 
 local panelActivo: string? = nil
+local cerrarParaJuego: (() -> ())? = nil
 cerrarCajon.Activated:Connect(function()
 	cajon.Visible = false
 	panelActivo = nil
@@ -732,6 +740,42 @@ local function abrirSeccion(nombre: string)
 
 	if nombre == "Arbol" then
 		cajonTitulo.Text = Tema.espaciar("ÁRBOL Y PODERES", 3)
+		-- Árbol de estadísticas: una fila por estadística; tocarla gasta un punto (el servidor valida).
+		local ES = Config.Estadisticas
+		local libres = Estadisticas.libres(jugador)
+		agregarFilaCajon(
+			string.format("PUNTOS LIBRES: %d", libres),
+			string.format(
+				"1 punto por nivel  ·  %d / %d usados",
+				Estadisticas.gastados(jugador),
+				ES.MaxTotal
+			),
+			"",
+			if libres > 0 then Tema.Xp else GRIS
+		)
+		for _, stat in ES.Orden do
+			local info = (ES.Stats :: any)[stat]
+			local n = Estadisticas.nivel(jugador, stat)
+			local total = info.PorNivel * n
+			local puede, motivo = Estadisticas.puede(jugador, stat)
+			local fila = agregarFilaCajon(
+				string.format("%s   %d / %d", info.Nombre, n, ES.MaxPorStat),
+				string.format(
+					info.Texto,
+					if info.PorNivel < 1 then math.round(total * 100) else total
+				)
+					.. "  ·  "
+					.. motivo,
+				"",
+				if puede then Tema.Hueso else APAGADO
+			)
+			fila.Activated:Connect(function()
+				if Estadisticas.puede(jugador, stat) then
+					-- SONIDO: subir una estadística
+					remotoStats:FireServer(stat)
+				end
+			end)
+		end
 		local l = jugador:GetAttribute("Linaje")
 		local datos = if typeof(l) == "string" then (P.Linajes :: any)[l] else nil
 		local c = Tema.color(l)
@@ -762,11 +806,31 @@ local function abrirSeccion(nombre: string)
 		else
 			agregarFilaCajon(
 				"SIN LINAJE DESPERTADO",
-				"Tocá JUGAR para girar la Ruleta gratis y obtener un Linaje.",
+				"Tocá DESPERTAR para girar la Ruleta gratis y obtener un Linaje.",
 				IM.Menu.RuedaRuleta,
 				Tema.Xp
 			)
 		end
+	elseif nombre == "Modos" then
+		cajonTitulo.Text = Tema.espaciar("ARSENAL Y MODOS", 3)
+		agregarFilaCajon(
+			"RANGO FUNDADOR  ·  BETA",
+			"Emblema exclusivo de Puerto Óxido en prueba abierta",
+			IM.Menu.Fundador,
+			Color3.fromHex("#ffd34d")
+		)
+		agregarFilaCajon(
+			"ARENA DE DUELOS 1V1",
+			"Cola competitiva entre linajes · Próximamente",
+			IM.Menu.Duelo,
+			LIGA
+		)
+		agregarFilaCajon(
+			"TIENDA DEL PUERTO",
+			"Canjeá Chatarra y Chips por aspectos · Próximamente",
+			IM.Menu.Tienda,
+			COFRADIA
+		)
 	elseif nombre == "Ajustes" then
 		cajonTitulo.Text = Tema.espaciar("AJUSTES", 3)
 		local fVineta = agregarFilaCajon(
@@ -814,6 +878,23 @@ local function abrirSeccion(nombre: string)
 		fCreditos.Activated:Connect(function()
 			abrirSeccion("Creditos")
 		end)
+		if RunService:IsStudio() then
+			local fIntro = agregarFilaCajon(
+				"REPETIR GUÍA MINUTO 1",
+				"Reinicia el recorrido inicial y la baliza en la Arena",
+				IM.Menu.Estrella,
+				Color3.fromHex("#ffd34d")
+			)
+			fIntro.Activated:Connect(function()
+				local rM1 = ReplicatedStorage:FindFirstChild("Minuto1")
+				if rM1 and rM1:IsA("RemoteEvent") then
+					rM1:FireServer("Reiniciar")
+				end
+				if cerrarParaJuego then
+					cerrarParaJuego()
+				end
+			end)
+		end
 	elseif nombre == "Creditos" then
 		cajonTitulo.Text = Tema.espaciar("CRÉDITOS", 3)
 		agregarFilaCajon(
@@ -831,6 +912,18 @@ local function abrirSeccion(nombre: string)
 		agregarFilaCajon("SISTEMA BASE", "Combate, Ruleta y Progresión de Linajes", "", GRIS)
 	end
 end
+
+-- Si el árbol está abierto y cambian los puntos, se vuelve a dibujar.
+local function refrescarArbol()
+	if panelActivo == "Arbol" and cajon.Visible then
+		panelActivo = nil
+		abrirSeccion("Arbol")
+	end
+end
+for _, stat in Config.Estadisticas.Orden do
+	jugador:GetAttributeChangedSignal("St_" .. stat):Connect(refrescarArbol)
+end
+jugador:GetAttributeChangedSignal("Nivel"):Connect(refrescarArbol)
 
 btnArbol.Activated:Connect(function()
 	abrirSeccion("Arbol")
@@ -868,8 +961,38 @@ icoBando.Parent = tarjeta
 
 local txtBando = Tema.texto(tarjeta, "", { tam = 21, espaciado = 2 })
 txtBando.Position = UDim2.fromOffset(94, 22)
+local icoEstrella = Instance.new("ImageLabel")
+icoEstrella.Position = UDim2.fromOffset(94, 54)
+icoEstrella.Size = UDim2.fromOffset(18, 18)
+icoEstrella.BackgroundTransparency = 1
+icoEstrella.ScaleType = Enum.ScaleType.Fit
+icoEstrella.Image = IM.Menu.Estrella
+icoEstrella.ImageColor3 = Color3.fromHex("#ffd34d")
+icoEstrella.Visible = false
+icoEstrella.Parent = tarjeta
 local txtStats = Tema.texto(tarjeta, "", { tam = 15, letra = Tema.LetraFina, color = GRIS })
 txtStats.Position = UDim2.fromOffset(94, 54)
+
+-- Botón compacto sobre la tarjeta resumen para explorar Rango Fundador, Duelo y Tienda.
+local btnModos = Instance.new("TextButton")
+btnModos.AnchorPoint = Vector2.new(1, 1)
+btnModos.Position = UDim2.new(1, -48, 1, -304)
+btnModos.Size = UDim2.fromOffset(220, 34)
+btnModos.BackgroundColor3 = Color3.fromRGB(19, 23, 33)
+btnModos.BackgroundTransparency = 0.14
+btnModos.Text = Tema.espaciar("MODOS Y TIENDA  ·  BETA", 1)
+btnModos.TextColor3 = Tema.Hueso
+btnModos.FontFace = Tema.Letra
+btnModos.TextSize = 12
+btnModos.Parent = contenido
+local bordeModos = Instance.new("UIStroke")
+bordeModos.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+bordeModos.Color = Color3.fromHex("#ffd34d")
+bordeModos.Transparency = 0.45
+bordeModos.Parent = btnModos
+btnModos.Activated:Connect(function()
+	abrirSeccion("Modos")
+end)
 
 local divisor = Instance.new("Frame")
 divisor.Position = UDim2.fromOffset(22, 98)
@@ -933,7 +1056,7 @@ local function actualizarMenu()
 	local nombreL = if tieneLinaje
 		then (nombresLinaje[l :: string] or (l :: string))
 		else "SIN LINAJE"
-	botonPrincipalTxt.Text = Tema.espaciar(if tieneLinaje then "CONTINUAR" else "JUGAR", 3)
+	botonPrincipalTxt.Text = Tema.espaciar(if tieneLinaje then "CONTINUAR" else "DESPERTAR", 3)
 	subPrincipalTxt.Text = string.format(
 		"%s  ·  %s  ·  %s  ·  NIVEL %d",
 		string.upper(jugador.DisplayName),
@@ -954,7 +1077,9 @@ local function actualizarMenu()
 	icoBando.Visible = bandoImg ~= ""
 	local xBando = if icoBando.Visible then 94 else 24
 	txtBando.Position = UDim2.fromOffset(xBando, 22)
-	txtStats.Position = UDim2.fromOffset(xBando, 54)
+	icoEstrella.Visible = racha >= 1
+	icoEstrella.Position = UDim2.fromOffset(xBando, 54)
+	txtStats.Position = UDim2.fromOffset(if racha >= 1 then xBando + 24 else xBando, 54)
 
 	local nombresBando: { [string]: string } = {
 		Cofradia = "COFRADÍA CARMESÍ",
@@ -992,6 +1117,7 @@ local HUD_OCULTOS: { [string]: boolean } = {
 	Combate = true,
 	Ruleta = true,
 	PruebaTeclas = true,
+	Minuto1 = true,
 }
 
 local function aplicarVisibilidadHud(abierto: boolean)
@@ -1189,6 +1315,9 @@ end)
 btnContinuar.Activated:Connect(function()
 	setAbierto(false)
 end)
+cerrarParaJuego = function()
+	setAbierto(false)
+end
 abrirMenuBtn.Activated:Connect(function()
 	setAbierto(true)
 end)

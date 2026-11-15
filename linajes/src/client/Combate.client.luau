@@ -11,6 +11,7 @@ local TweenService = game:GetService("TweenService")
 local UserInputService = game:GetService("UserInputService")
 
 local Config = require(ReplicatedStorage:WaitForChild("Shared"):WaitForChild("Config"))
+local Estadisticas = require(ReplicatedStorage:WaitForChild("Shared"):WaitForChild("Estadisticas"))
 local CamaraCombate = require(script.Parent:WaitForChild("CamaraCombate"))
 local EfectosGolpe = require(script.Parent:WaitForChild("EfectosGolpe"))
 local Niveles = require(ReplicatedStorage:WaitForChild("Shared"):WaitForChild("Niveles"))
@@ -42,15 +43,15 @@ local function cargar(nuevo: Model)
 		anim.AnimationId = id
 		pistas[nombre] = animator:LoadAnimation(anim)
 	end
-	h.WalkSpeed = Config.PruebaTeclas.Caminar
+	h.WalkSpeed = Estadisticas.velocidad(Config.PruebaTeclas.Caminar)
 	nuevo:GetAttributeChangedSignal("Frenado"):Connect(function()
 		h.WalkSpeed = if nuevo:GetAttribute("Frenado") == true
 			then 0
-			else Config.PruebaTeclas.Caminar
+			else Estadisticas.velocidad(Config.PruebaTeclas.Caminar)
 	end)
 	nuevo:GetAttributeChangedSignal("Aturdido"):Connect(function()
 		local aturdido = nuevo:GetAttribute("Aturdido") == true
-		h.WalkSpeed = if aturdido then 0 else Config.PruebaTeclas.Caminar
+		h.WalkSpeed = if aturdido then 0 else Estadisticas.velocidad(Config.PruebaTeclas.Caminar)
 		if aturdido then
 			bloqueando = false
 			if accion then

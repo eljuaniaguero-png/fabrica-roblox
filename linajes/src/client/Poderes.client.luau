@@ -10,6 +10,7 @@ local TweenService = game:GetService("TweenService")
 local UserInputService = game:GetService("UserInputService")
 
 local Config = require(ReplicatedStorage:WaitForChild("Shared"):WaitForChild("Config"))
+local Estadisticas = require(ReplicatedStorage:WaitForChild("Shared"):WaitForChild("Estadisticas"))
 local Tema = require(script.Parent:WaitForChild("Tema"))
 local remoto = ReplicatedStorage:WaitForChild("Poderes") :: RemoteEvent
 
@@ -131,7 +132,7 @@ local function usar(tecla: string)
 	then
 		return
 	end
-	listo[clave] = os.clock() + datos.Recarga
+	listo[clave] = os.clock() + datos.Recarga * Estadisticas.recarga(personaje)
 	remoto:FireServer(tecla)
 	local r = raiz
 	if datos.Accion == "Embestida" and r then
@@ -249,17 +250,50 @@ if H.Imagenes.Menu.Candado ~= "" then
 	candado.ZIndex = 7
 	candado.Parent = romboGancho
 end
-local etiquetaGancho =
-	Tema.texto(caja, "G", { tam = 16, transparencia = 0.35, alineado = Enum.TextXAlignment.Center })
+local etiquetaGancho = Tema.texto(
+	caja,
+	"G  ·  GANCHO",
+	{ tam = 14, transparencia = 0.35, alineado = Enum.TextXAlignment.Center }
+)
 etiquetaGancho.AnchorPoint = Vector2.new(0.5, 0)
 etiquetaGancho.Position = UDim2.fromOffset(centroGancho.X, centroGancho.Y + tamGancho / 2 + 4)
 
-type Ranura =
-	{ caja: Frame, icono: ImageLabel, letra: TextLabel, recarga: TextLabel, lista: boolean }
+type Ranura = {
+	caja: Frame,
+	velo: Frame,
+	icono: ImageLabel,
+	letra: TextLabel,
+	recarga: TextLabel,
+	abajo: TextLabel,
+	nombre: TextLabel,
+	lista: boolean,
+}
 local ranuras: { [string]: Ranura } = {}
 for i, tecla in { "Z", "X", "C" } do
-	local centro = Vector2.new(medio + (i - 2) * H.SeparacionRombos, 108)
+	local centro = Vector2.new(medio + (i - 2) * H.SeparacionRombos, 106)
 	local r = Tema.rombo(caja, centro, H.TamRombo, true)
+
+	local ladoInterno = math.round((H.TamRombo - 24) / 1.4142)
+	local mascara = Instance.new("Frame")
+	mascara.AnchorPoint = Vector2.new(0.5, 0.5)
+	mascara.Position = UDim2.fromScale(0.5, 0.5)
+	mascara.Size = UDim2.fromOffset(ladoInterno, ladoInterno)
+	mascara.Rotation = 45
+	mascara.BackgroundTransparency = 1
+	mascara.ClipsDescendants = true
+	mascara.ZIndex = 4
+	mascara.Parent = r
+
+	local velo = Instance.new("Frame")
+	velo.AnchorPoint = Vector2.new(0.5, 1)
+	velo.Position = UDim2.fromScale(0.5, 1)
+	velo.Size = UDim2.fromScale(1, 0)
+	velo.BackgroundColor3 = Tema.Fondo
+	velo.BackgroundTransparency = 0.2
+	velo.BorderSizePixel = 0
+	velo.ZIndex = 4
+	velo.Parent = mascara
+
 	local icono = Instance.new("ImageLabel")
 	icono.AnchorPoint = Vector2.new(0.5, 0.5)
 	icono.Position = UDim2.fromScale(0.5, 0.5)
@@ -296,11 +330,30 @@ for i, tecla in { "Z", "X", "C" } do
 	local abajo = Tema.texto(
 		caja,
 		tecla,
-		{ tam = 17, transparencia = 0.25, alineado = Enum.TextXAlignment.Center }
+		{ tam = 16, transparencia = 0.15, alineado = Enum.TextXAlignment.Center }
 	)
 	abajo.AnchorPoint = Vector2.new(0.5, 0)
-	abajo.Position = UDim2.fromOffset(centro.X, centro.Y + H.TamRombo / 2 + 4)
-	ranuras[tecla] = { caja = r, icono = icono, letra = letra, recarga = recarga, lista = true }
+	abajo.Position = UDim2.fromOffset(centro.X, centro.Y + H.TamRombo / 2 + 2)
+
+	local nombre = Tema.texto(caja, "", {
+		tam = 11,
+		letra = Tema.LetraFina,
+		transparencia = 0.32,
+		alineado = Enum.TextXAlignment.Center,
+	})
+	nombre.AnchorPoint = Vector2.new(0.5, 0)
+	nombre.Position = UDim2.fromOffset(centro.X, centro.Y + H.TamRombo / 2 + 20)
+
+	ranuras[tecla] = {
+		caja = r,
+		velo = velo,
+		icono = icono,
+		letra = letra,
+		recarga = recarga,
+		abajo = abajo,
+		nombre = nombre,
+		lista = true,
+	}
 end
 gui.Parent = jugador:WaitForChild("PlayerGui")
 
@@ -328,6 +381,9 @@ RunService.RenderStepped:Connect(function()
 	local color = Tema.color(linaje)
 	local nuevo = linaje ~= linajeVisto
 	linajeVisto = linaje
+	local p = jugador.Character
+	local eAttr = p and p:GetAttribute("Energia")
+	local energiaActual = if typeof(eAttr) == "number" then eAttr else Config.Combate.Energia
 	for tecla, r in ranuras do
 		local d = (datos :: any)[tecla]
 		if nuevo then
@@ -336,12 +392,21 @@ RunService.RenderStepped:Connect(function()
 			r.icono.Visible = id ~= ""
 			r.letra.Visible = id == ""
 			r.letra.TextColor3 = color
+			r.nombre.Text = Tema.espaciar(string.upper(d.Nombre or d.Accion), 1)
+			r.nombre.TextColor3 = color
 		end
 		local falta = (listo[linaje .. tecla] or 0) - os.clock()
 		local lista = falta <= 0
+		local sinEnergia = energiaActual < (d.Energia or 0)
+		local fracRecarga = if lista
+			then 0
+			else math.clamp(falta / math.max(d.Recarga or 1, 0.1), 0, 1)
+		r.velo.Size = UDim2.fromScale(1, fracRecarga)
 		r.recarga.Text = if lista then "" else tostring(math.ceil(falta))
-		r.icono.ImageTransparency = if lista then 0 else 0.7
-		r.letra.TextTransparency = if lista then 0 else 0.7
+		local opacidad = if not lista then 0.72 elseif sinEnergia then 0.48 else 0
+		r.icono.ImageTransparency = opacidad
+		r.letra.TextTransparency = opacidad
+		r.abajo.TextColor3 = if sinEnergia and lista then Tema.Vida else Tema.Hueso
 		if lista and not r.lista and not nuevo then
 			avisarListo(r, color)
 		end

@@ -9,6 +9,7 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService = game:GetService("RunService")
 
 local Config = require(ReplicatedStorage.Shared.Config)
+local Estadisticas = require(ReplicatedStorage.Shared.Estadisticas)
 local Niveles = require(ReplicatedStorage.Shared.Niveles)
 local api = script.Parent:WaitForChild("CombateApi") :: BindableFunction
 
@@ -555,7 +556,7 @@ remoto.OnServerEvent:Connect(function(jugador, pedido)
 	if ahora < (propias[clave] or 0) - P.MargenRecarga or energia < datos.Energia then
 		return
 	end
-	propias[clave] = ahora + datos.Recarga
+	propias[clave] = ahora + datos.Recarga * Estadisticas.recarga(personaje)
 	personaje:SetAttribute("Energia", energia - datos.Energia)
 	do
 		local ev = script.Parent:FindFirstChild("Minuto1Hito")

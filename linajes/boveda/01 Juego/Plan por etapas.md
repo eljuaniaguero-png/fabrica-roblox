@@ -75,6 +75,7 @@ Juani estima **unas 2 semanas** para el sandbox. Se mide de verdad cuando el com
 > [!note] Decisiones del 14 nov 2026
 > - El sandbox sale con los **6 Linajes** (confirmado): faltan Electro, Criogenia y Telequinesis.
 > - Orden después del combate: **progresión y creador** primero. Creador de personaje y guardado de apariencia y monedas: **hechos** (14 nov). El árbol de puntos (P37) sigue pendiente.
+> - **Árbol de estadísticas: hecho** (15 nov): 1 punto por nivel, 6 estadísticas de 10 niveles, tope 40, se reparte desde ÁRBOL Y PODERES del menú. Pendientes: el reinicio semanal de puntos y el árbol propio de cada Linaje (el otro punto por nivel).
 > - Chatarra: 10 por baja (`Config.Monedas`), no se vende por Robux. Chips: todavía no se ganan.
 > - Espacios de personaje: por ahora 1; los otros 2 quedan "Próximamente" (el extra va con el pack fundador).
 

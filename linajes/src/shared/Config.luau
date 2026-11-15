@@ -1499,6 +1499,26 @@ Config.Efectos = {
 }
 
 -- Progresión: cada nivel agranda y refuerza todos los ataques. Se suma a los puntos de la bóveda.
+-- Árbol de estadísticas (bóveda: 06 Linajes/Estadísticas y movimiento). 1 punto por nivel de
+-- personaje; cada estadística tiene 10 niveles y entre todas suman 40 como máximo.
+Config.Estadisticas = {
+	PuntosPorNivel = 1,
+	MaxPorStat = 10,
+	MaxTotal = 40,
+	NivelUltimo = 40, -- nivel de personaje que pide el último nivel de cada estadística
+	Espera = 0.15, -- segundos mínimos entre pedidos (el servidor ignora los que llegan antes)
+	Orden = { "Vida", "Energia", "Fuerza", "Velocidad", "Defensa", "Recarga" },
+	-- PorNivel menor a 1 es un porcentaje (0.03 = 3 %).
+	Stats = {
+		Vida = { Nombre = "VIDA", PorNivel = 30, Texto = "+%d de vida" },
+		Energia = { Nombre = "ENERGÍA", PorNivel = 8, Texto = "+%d de energía" },
+		Fuerza = { Nombre = "FUERZA", PorNivel = 0.03, Texto = "+%d %% de daño" },
+		Velocidad = { Nombre = "VELOCIDAD", PorNivel = 0.02, Texto = "+%d %% al caminar y correr" },
+		Defensa = { Nombre = "DEFENSA", PorNivel = 0.02, Texto = "-%d %% de daño recibido" },
+		Recarga = { Nombre = "RECARGA", PorNivel = 0.02, Texto = "-%d %% de recarga" },
+	},
+}
+
 Config.Niveles = {
 	Maximo = 100,
 	ColorBarra = "#e8b923",

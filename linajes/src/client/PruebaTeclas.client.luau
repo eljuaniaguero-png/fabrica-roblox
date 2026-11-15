@@ -8,6 +8,7 @@ local RunService = game:GetService("RunService")
 local UserInputService = game:GetService("UserInputService")
 
 local Config = require(ReplicatedStorage:WaitForChild("Shared"):WaitForChild("Config"))
+local Estadisticas = require(ReplicatedStorage:WaitForChild("Shared"):WaitForChild("Estadisticas"))
 local Tema = require(script.Parent:WaitForChild("Tema"))
 
 local P = Config.PruebaTeclas
@@ -45,7 +46,7 @@ local function cargar(personaje: Model)
 	local animator = h:WaitForChild("Animator") :: Animator
 	humanoid = h
 	raiz = personaje:WaitForChild("HumanoidRootPart") :: BasePart
-	h.WalkSpeed = P.Caminar
+	h.WalkSpeed = Estadisticas.velocidad(P.Caminar)
 	table.clear(pistas)
 	local function sumar(nombre: string, id: string)
 		local anim = Instance.new("Animation")
@@ -130,9 +131,9 @@ UserInputService.InputBegan:Connect(function(entrada, usado)
 	elseif tecla == K.V then
 		iniciarYSeguir("CargarInicio", "CargarLoop", K.V)
 	elseif tecla == K.LeftShift and h then
-		h.WalkSpeed = P.Correr
+		h.WalkSpeed = Estadisticas.velocidad(P.Correr)
 	elseif tecla == K.LeftControl and h then
-		h.WalkSpeed = P.CorrerRapido
+		h.WalkSpeed = Estadisticas.velocidad(P.CorrerRapido)
 	elseif tecla == K.Y then
 		local personaje = jugador.Character
 		if personaje then
@@ -149,7 +150,7 @@ UserInputService.InputEnded:Connect(function(entrada)
 	elseif tecla == K.V or tecla == K.P or tecla == K.L or tecla == K.H then
 		soltar()
 	elseif (tecla == K.LeftShift or tecla == K.LeftControl) and h then
-		h.WalkSpeed = P.Caminar
+		h.WalkSpeed = Estadisticas.velocidad(P.Caminar)
 	end
 end)
 

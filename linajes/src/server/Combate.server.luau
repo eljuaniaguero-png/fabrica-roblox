@@ -11,6 +11,7 @@ local StarterPlayer = game:GetService("StarterPlayer")
 
 local Config = require(ReplicatedStorage.Shared.Config)
 local CuerpoComic = require(script.Parent.CuerpoComic)
+local Estadisticas = require(ReplicatedStorage.Shared.Estadisticas)
 local Niveles = require(ReplicatedStorage.Shared.Niveles)
 local Perfiles = require(script.Parent.Perfiles)
 
@@ -184,7 +185,7 @@ pegarA = function(atacante: Model, objetivo: Model, danio: number, tipo: string,
 	if desde and enZona(desde.Position) then
 		return
 	end
-	danio *= Niveles.danio(atacante)
+	danio *= Niveles.danio(atacante) * Estadisticas.defensa(objetivo)
 	-- Contragolpe: esquiva y responde. Solo sirve contra golpes, no contra quemaduras.
 	if ahora < e.contraHasta and tipo ~= "Suave" then
 		e.contraHasta = 0
@@ -431,9 +432,9 @@ end)
 
 local function prepararPeleador(personaje: Model)
 	local h = personaje:WaitForChild("Humanoid") :: Humanoid
-	h.MaxHealth = C.Vida
-	h.Health = C.Vida
-	personaje:SetAttribute("Energia", C.Energia)
+	h.MaxHealth = Estadisticas.vidaMax(personaje)
+	h.Health = h.MaxHealth
+	personaje:SetAttribute("Energia", Estadisticas.energiaMax(personaje))
 	personaje:SetAttribute("Aturdido", false)
 	CollectionService:AddTag(personaje, TAG)
 	local jugador = Players:GetPlayerFromCharacter(personaje)
@@ -514,8 +515,9 @@ task.spawn(function()
 		task.wait(0.25)
 		for _, m in CollectionService:GetTagged(TAG) do
 			local energia = m:GetAttribute("Energia")
-			if typeof(energia) == "number" and energia < C.Energia then
-				m:SetAttribute("Energia", math.min(energia + C.EnergiaPorSegundo * 0.25, C.Energia))
+			local tope = Estadisticas.energiaMax(m)
+			if typeof(energia) == "number" and energia < tope then
+				m:SetAttribute("Energia", math.min(energia + C.EnergiaPorSegundo * 0.25, tope))
 			end
 		end
 	end

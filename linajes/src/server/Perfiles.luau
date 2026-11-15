@@ -11,9 +11,13 @@ local Niveles = require(ReplicatedStorage.Shared.Niveles)
 local ProfileStore = require(ServerStorage.ServerPackages.ProfileStore) :: any
 
 local G = Config.Guardado
+local CR = Config.Cuerpo.Creador
+
 local almacen = ProfileStore.New(G.Almacen, {
 	SchemaVersion = G.Version,
 	Linaje = "",
+	Bando = "Neutral",
+	TutorialHecho = false,
 	Fichas = 0,
 	Bajas = 0,
 	MejorRacha = 0,
@@ -21,16 +25,24 @@ local almacen = ProfileStore.New(G.Almacen, {
 	Xp = 0,
 	Chatarra = 0,
 	Chips = 0,
+	-- Árbol de estadísticas: niveles comprados de cada una (Config.Estadisticas).
+	Stats = { Vida = 0, Energia = 0, Fuerza = 0, Velocidad = 0, Defensa = 0, Recarga = 0 },
 	-- Creador de personaje. Creada = false: al entrar se abre el creador.
 	Apariencia = {
 		Creada = false,
-		Piel = Config.Cuerpo.Creador.Inicial.Piel,
-		Cara = Config.Cuerpo.Creador.Inicial.Cara,
-		Peinado = Config.Cuerpo.Creador.Inicial.Peinado,
-		Pelo = Config.Cuerpo.Creador.Inicial.Pelo,
-		Campera = Config.Cuerpo.Creador.Inicial.Campera,
-		Acento = Config.Cuerpo.Creador.Inicial.Acento,
-		Pantalon = Config.Cuerpo.Creador.Inicial.Pantalon,
+		Piel = CR.Inicial.Piel,
+		Cara = CR.Inicial.Cara,
+		Peinado = CR.Inicial.Peinado,
+		Pelo = CR.Inicial.Pelo,
+		Marca = CR.Inicial.Marca,
+		Contextura = CR.Inicial.Contextura,
+		Altura = CR.Inicial.Altura,
+		Campera = CR.Inicial.Campera,
+		Acento = CR.Inicial.Acento,
+		Remera = CR.Inicial.Remera,
+		Pantalon = CR.Inicial.Pantalon,
+		Zapatillas = CR.Inicial.Zapatillas,
+		Bando = CR.Inicial.Bando,
 	},
 })
 
@@ -39,10 +51,18 @@ local perfiles: { [Player]: any } = {}
 
 local function mostrar(jugador: Player, datos: any)
 	jugador:SetAttribute("Linaje", if datos.Linaje ~= "" then datos.Linaje else nil)
+	jugador:SetAttribute(
+		"Bando",
+		if typeof(datos.Bando) == "string" and datos.Bando ~= "" then datos.Bando else "Neutral"
+	)
+	jugador:SetAttribute("TutorialHecho", datos.TutorialHecho == true)
 	jugador:SetAttribute("Fichas", datos.Fichas)
 	jugador:SetAttribute("Bajas", datos.Bajas)
 	jugador:SetAttribute("Nivel", datos.Nivel)
 	jugador:SetAttribute("Xp", datos.Xp)
+	for stat, nivel in datos.Stats do
+		jugador:SetAttribute("St_" .. stat, nivel)
+	end
 	jugador:SetAttribute("Chatarra", datos.Chatarra)
 	jugador:SetAttribute("Chips", datos.Chips)
 	jugador:SetAttribute("AparienciaCreada", datos.Apariencia.Creada)

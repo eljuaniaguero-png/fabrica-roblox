@@ -4,6 +4,7 @@
 local Players = game:GetService("Players")
 
 local Config = require(script.Parent.Config)
+local Estadisticas = require(script.Parent.Estadisticas)
 
 local N = Config.Niveles
 
@@ -16,7 +17,7 @@ local function nivelDe(personaje: Model?): number
 end
 
 function Niveles.danio(personaje: Model?): number
-	return 1 + (nivelDe(personaje) - 1) * N.DanioPorNivel
+	return (1 + (nivelDe(personaje) - 1) * N.DanioPorNivel) * Estadisticas.fuerza(personaje)
 end
 
 function Niveles.tamano(personaje: Model?): number
