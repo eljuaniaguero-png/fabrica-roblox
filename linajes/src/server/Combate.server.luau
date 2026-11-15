@@ -527,10 +527,32 @@ do
 	zona.CanCollide = false
 	zona.CanQuery = false
 	zona.CanTouch = false
-	zona.Material = Enum.Material.Neon
-	zona.Color = Color3.fromHex("#3fe0f0")
-	zona.Transparency = 0.85
+	-- Antes era un disco cian Neon que teñía todo el piso: ahora relleno casi invisible y un borde
+	-- de trazos hueso pintados en el piso (se lee como marca de puerto, no como luz).
+	zona.Material = Enum.Material.SmoothPlastic
+	zona.Color = Color3.fromHex("#2c3754")
+	zona.Transparency = 0.9
 	zona.Parent = workspace
+	local trazos = 36
+	for i = 1, trazos do
+		local a = (i / trazos) * math.pi * 2
+		local r = Config.Arena.ZonaRadio
+		local p = Instance.new("Part")
+		p.Name = "ZonaSeguraBorde"
+		p.Anchored = true
+		p.CanCollide = false
+		p.CanQuery = false
+		p.CanTouch = false
+		p.CastShadow = false
+		p.Material = Enum.Material.SmoothPlastic
+		p.Color = Color3.fromHex("#EDE6D6")
+		p.Transparency = 0.35
+		p.Size = Vector3.new(0.6, 0.06, r * 2 * math.pi / trazos * 0.55)
+		local pos = Config.Arena.ZonaCentro + Vector3.new(math.cos(a) * r, 0.24, math.sin(a) * r)
+		p.CFrame = CFrame.lookAt(pos, Config.Arena.ZonaCentro + Vector3.new(0, 0.24, 0))
+			* CFrame.Angles(0, math.pi / 2, 0)
+		p.Parent = zona
+	end
 end
 
 -- API para Poderes.server.luau: el daño pasa siempre por acá.

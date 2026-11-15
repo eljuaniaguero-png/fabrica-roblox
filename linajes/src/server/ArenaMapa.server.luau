@@ -396,6 +396,13 @@ local function zonaSegura()
 	local inicio = workspace:FindFirstChild("SpawnLocation")
 	if inicio and inicio:IsA("BasePart") then
 		inicio.Position = Config.Arena.ZonaCentro + Vector3.new(0, 0.5, 0)
+		-- Sin la estrella de Roblox ni la placa clara: se veía como un cartel blanco en el piso.
+		inicio.Transparency = 1
+		for _, d in inicio:GetChildren() do
+			if d:IsA("Decal") then
+				d:Destroy()
+			end
+		end
 	end
 end
 
@@ -475,7 +482,25 @@ local function fondo()
 	end
 end
 
+-- Foco sodio alto sobre el círculo del centro: la luz más fuerte de la arena.
+local function focoCentral()
+	local F = Luz.Foco
+	local lampara =
+		pieza(carpeta, Vector3.new(3, 1, 3), en(0, F.Altura, 0), "Sodio", Enum.Material.Neon, false)
+	lampara.Transparency = 1
+	local luz = Instance.new("SpotLight")
+	luz.Face = Enum.NormalId.Bottom
+	luz.Color = Color3.fromHex(F.Color)
+	luz.Brightness = F.Brillo
+	luz.Range = F.Alcance
+	luz.Angle = F.Angulo
+	luz.Shadows = true
+	luz.Parent = lampara
+	reflejoPiso(0, 0, F.Charco, F.Charco, F.Color, 0.16)
+end
+
 piso()
+focoCentral()
 fondo()
 circulo()
 pasarela()

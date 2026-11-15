@@ -583,6 +583,12 @@ Config.Arena = {
 			{ -48, -32, 18, 12 },
 			{ 46, 36, 15, 10 },
 			{ 4, -56, 20, 11 },
+			-- Más charcos bajo faroles: el reflejo de color es lo que hace "mojado" el piso.
+			{ 40, -38, 12, 8 },
+			{ -40, 40, 12, 9 },
+			{ 96, 14, 11, 8 },
+			{ -96, -54, 12, 8 },
+			{ 0, 100, 14, 9 },
 		},
 		Faroles = {
 			{ 122, 96, 1 },

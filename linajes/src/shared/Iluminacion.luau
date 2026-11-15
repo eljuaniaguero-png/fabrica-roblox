@@ -3,23 +3,27 @@
 
 return {
 	Hora = 21.35,
-	Ambiente = "1f283d",
-	Exterior = "4c6294",
-	Brillo = 1.35,
-	Exposicion = 0.24,
-	Tinte = "e8eeff",
-	Contraste = 0.26,
-	Saturacion = 0.04,
-	Resplandor = 0.48,
+	-- Valores de la Guía de estilo 1.1 (Puerto Óxido, noche), ajustados el 15 nov 2026:
+	-- sombras azul pizarra (nunca negras) y un solo foco cálido en el centro.
+	-- La tabla de la Guía quedaba muy oscura en Roblox: más brillo y exposición, mismos tonos.
+	Ambiente = "3a4870",
+	Exterior = "6478ad",
+	Brillo = 2.4,
+	Exposicion = 0.45,
+	Tinte = "eef0ff",
+	Contraste = 0.14,
+	Saturacion = -0.02,
+	Resplandor = 0.26,
 	ResplandorUmbral = 1.65,
 	ResplandorTamano = 22,
 	-- Niebla: lo lejano se funde con leve tinte eclipse hacia el horizonte.
 	Niebla = {
-		Densidad = 0.28,
-		Bruma = 0.52,
-		Color = "23314d",
-		Decaimiento = "4a242c",
-		Destello = 0.12,
+		Densidad = 0.36,
+		Desplazamiento = 0.25, -- el horizonte se funde con el cielo pintado
+		Bruma = 1.6,
+		Color = "2a3550",
+		Decaimiento = "2e2232", -- leve tinte del eclipse a lo lejos
+		Destello = 0.15,
 	},
 	RayosSol = { Intensidad = 0.06, Dispersion = 0.42 },
 	Eclipse = {
@@ -31,18 +35,21 @@ return {
 	Borde = { Color = "9cc0ff", Brillo = 0.65, Alcance = 18 },
 	-- Farolas cálidas y reflectores fríos, colocados por server/ArenaMapa.server.luau.
 	-- Angulo chico = cono de luz marcado en el piso, no una mancha pareja.
-	Calida = { Color = "f29a3a", Brillo = 9, Alcance = 48, Angulo = 74, Haz = 0.84 },
-	Fria = { Color = "8ab8ff", Brillo = 11, Alcance = 68, Angulo = 52, Haz = 0.82 },
+	Calida = { Color = "f29a3a", Brillo = 9, Alcance = 48, Angulo = 74, Haz = 0.9 },
+	Fria = { Color = "8ab8ff", Brillo = 11, Alcance = 68, Angulo = 52, Haz = 0.94 }, -- haz casi invisible: de arriba parecía una ruta
+	-- Foco sodio sobre el círculo central: guía la vista a la pelea (Guía 1.1, regla 2).
+	Foco = { Altura = 46, Color = "f29a3a", Brillo = 12, Alcance = 80, Angulo = 64, Charco = 34 },
 	PisoBrillo = 0.06,
 	CharcoBrillo = 0.68,
 	-- Noche de verdad: azul casi negro con estrellas tenues pintadas en la textura.
+	-- Cielo propio (arte/cielo/): degradé azul noche, nubes con tinta y resplandor sodio del puerto.
 	Cielo = {
-		Bk = "rbxassetid://137180182185044",
+		Bk = "rbxassetid://129994114880332",
 		Dn = "rbxassetid://70751777794900",
-		Ft = "rbxassetid://137180182185044",
-		Lf = "rbxassetid://137180182185044",
-		Rt = "rbxassetid://137180182185044",
-		Up = "rbxassetid://89737934447295",
+		Ft = "rbxassetid://129994114880332",
+		Lf = "rbxassetid://129994114880332",
+		Rt = "rbxassetid://129994114880332",
+		Up = "rbxassetid://101980913952007",
 	},
 	Estrellas = 900,
 	-- De noche Roblox apaga el skybox: la arena lo dibuja con paneles lejanos que siguen

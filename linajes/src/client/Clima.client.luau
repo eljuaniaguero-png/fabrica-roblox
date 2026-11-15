@@ -83,6 +83,9 @@ local function ponerNoche()
 	Lighting.OutdoorAmbient = hexa(Luz.Exterior)
 	Lighting.Brightness = Luz.Brillo
 	Lighting.ExposureCompensation = Luz.Exposicion
+	-- El metal (contenedores, grúas) refleja el cielo: guía oficial de Future lighting.
+	Lighting.EnvironmentDiffuseScale = 1
+	Lighting.EnvironmentSpecularScale = 1
 	Lighting.ColorShift_Top = Color3.fromHex("#2f446b")
 	Lighting.ColorShift_Bottom = Color3.fromHex("#181e2c")
 	correccion.TintColor = hexa(Luz.Tinte)
@@ -147,6 +150,7 @@ local function ponerNiebla(ciudad: string)
 		else Config.Mundo.Niebla[ciudad] or Config.Mundo.Niebla.Bahia
 	TweenService:Create(atmosfera, TweenInfo.new(3), {
 		Density = n.Densidad,
+		Offset = (n :: any).Desplazamiento or 0,
 		Haze = n.Bruma,
 		Glare = n.Destello or 0,
 		Color = Color3.fromHex(n.Color),
