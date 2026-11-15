@@ -83,6 +83,8 @@ local function ponerNoche()
 	Lighting.OutdoorAmbient = hexa(Luz.Exterior)
 	Lighting.Brightness = Luz.Brillo
 	Lighting.ExposureCompensation = Luz.Exposicion
+	Lighting.ColorShift_Top = Color3.fromHex("#2f446b")
+	Lighting.ColorShift_Bottom = Color3.fromHex("#181e2c")
 	correccion.TintColor = hexa(Luz.Tinte)
 	correccion.Contrast = Luz.Contraste
 	correccion.Saturation = Luz.Saturacion
@@ -90,6 +92,11 @@ local function ponerNoche()
 		bloom.Intensity = Luz.Resplandor
 		bloom.Threshold = Luz.ResplandorUmbral
 		bloom.Size = Luz.ResplandorTamano
+	end
+	if rayos and Luz.RayosSol then
+		rayos.Enabled = true
+		rayos.Intensity = Luz.RayosSol.Intensidad
+		rayos.Spread = Luz.RayosSol.Dispersion
 	end
 end
 
@@ -105,6 +112,10 @@ local function borde(raiz: BasePart, prendido: boolean)
 		nueva.Parent = raiz
 		luz = nueva
 	end
+	local linaje = Players.LocalPlayer:GetAttribute("Linaje")
+	local tint = typeof(linaje) == "string" and (Config.Poderes.Colores :: any)[linaje]
+	local baseBorde = hexa(Luz.Borde.Color);
+	(luz :: PointLight).Color = if tint then baseBorde:Lerp(tint, 0.22) else baseBorde;
 	(luz :: PointLight).Enabled = prendido
 end
 

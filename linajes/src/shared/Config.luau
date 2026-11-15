@@ -1551,6 +1551,8 @@ Config.Hud = {
 	BarraMaton = { Ancho = 122, Alto = 8, Altura = 4.3, Distancia = 90 }, -- barra sobre cada matón
 	RivalDura = 5, -- segundos que se ve la barra del rival después del último golpe
 	TeclaControles = Enum.KeyCode.H,
+	-- Rombo G del gancho: oculto en el sandbox (el gancho llega con el Taller, modo historia).
+	MostrarGancho = false,
 	-- Menú principal: tamaño y animaciones.
 	MenuUI = {
 		Zoom = 1.30, -- todo el menú (1 = tamaño de diseño a 1280x720)

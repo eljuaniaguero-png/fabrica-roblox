@@ -70,8 +70,19 @@ bordePanel.Color = Tema.Hueso
 bordePanel.Transparency = 0.65
 bordePanel.Parent = panel
 
-local encabezado = Tema.texto(panel, Tema.espaciar("RULETA DEL ECLIPSE", 3), { tam = 21 })
-encabezado.Position = UDim2.fromOffset(24, 18)
+local encabezado = Tema.texto(panel, Tema.espaciar("RULETA DEL ECLIPSE", 3), {
+	tam = 21,
+	letra = Tema.LetraGruesa,
+})
+encabezado.Position = UDim2.fromOffset(24, 16)
+
+local subSeguro =
+	Tema.texto(panel, Tema.espaciar("6 LINAJES  ·  COMÚN 65%  ·  POCO COMÚN 35%", 1), {
+		tam = 11,
+		letra = Tema.LetraFina,
+		color = Color3.fromHex("#9fa7b5"),
+	})
+subSeguro.Position = UDim2.fromOffset(24, 41)
 
 local cerrar = Instance.new("TextButton")
 cerrar.AnchorPoint = Vector2.new(1, 0)
@@ -87,24 +98,38 @@ cerrar.Activated:Connect(function()
 	panel.Visible = false
 end)
 
--- Rueda central / visual superior
+-- Rueda central / visual superior + puntero rombo dorado arriba
 local rueda = Instance.new("ImageLabel")
 rueda.AnchorPoint = Vector2.new(0.5, 0.5)
-rueda.Position = UDim2.fromOffset(66, 94)
-rueda.Size = UDim2.fromOffset(74, 74)
+rueda.Position = UDim2.fromOffset(66, 100)
+rueda.Size = UDim2.fromOffset(72, 72)
 rueda.BackgroundTransparency = 1
 rueda.ScaleType = Enum.ScaleType.Fit
 rueda.Image = H.Imagenes.Menu.RuedaRuleta
 rueda.Visible = H.Imagenes.Menu.RuedaRuleta ~= ""
 rueda.Parent = panel
 
+local puntero = Instance.new("Frame")
+puntero.AnchorPoint = Vector2.new(0.5, 0.5)
+puntero.Position = UDim2.fromOffset(66, 62)
+puntero.Size = UDim2.fromOffset(9, 9)
+puntero.Rotation = 45
+puntero.BackgroundColor3 = Color3.fromHex("#ffd34d")
+puntero.BorderSizePixel = 0
+puntero.ZIndex = 5
+puntero.Parent = panel
+local bordePuntero = Instance.new("UIStroke")
+bordePuntero.Color = Tema.Fondo
+bordePuntero.Thickness = 1.5
+bordePuntero.Parent = puntero
+
 local romboResultado = if not rueda.Visible
-	then Tema.rombo(panel, Vector2.new(66, 94), 52, true)
+	then Tema.rombo(panel, Vector2.new(66, 100), 52, true)
 	else nil
 
 local resIcono = Instance.new("ImageLabel")
 resIcono.AnchorPoint = Vector2.new(0, 0.5)
-resIcono.Position = UDim2.fromOffset(118, 94)
+resIcono.Position = UDim2.fromOffset(118, 100)
 resIcono.Size = UDim2.fromOffset(36, 36)
 resIcono.BackgroundTransparency = 1
 resIcono.ScaleType = Enum.ScaleType.Fit
@@ -112,19 +137,19 @@ resIcono.Visible = false
 resIcono.Parent = panel
 
 local resultado = Instance.new("TextLabel")
-resultado.Position = UDim2.fromOffset(118, 68)
+resultado.Position = UDim2.fromOffset(118, 74)
 resultado.Size = UDim2.new(1, -140, 0, 52)
 resultado.BackgroundTransparency = 1
 resultado.TextColor3 = Tema.Xp
 resultado.FontFace = Tema.LetraGruesa
-resultado.TextSize = 32
+resultado.TextSize = 30
 resultado.TextXAlignment = Enum.TextXAlignment.Left
 resultado.Text = "LISTA PARA GIRAR"
 resultado.Parent = panel
 
--- Tabla de probabilidades por Linaje
+-- Tabla de probabilidades por Linaje (con barra lateral de 3 px por rareza/linaje)
 local listaMarco = Instance.new("Frame")
-listaMarco.Position = UDim2.fromOffset(24, 148)
+listaMarco.Position = UDim2.fromOffset(24, 150)
 listaMarco.Size = UDim2.new(1, -48, 0, 214)
 listaMarco.BackgroundTransparency = 1
 listaMarco.Parent = panel
@@ -133,6 +158,7 @@ ordenLista.Padding = UDim.new(0, 5)
 ordenLista.Parent = listaMarco
 
 local nombres: { [string]: string } = {}
+local filasLinaje: { [string]: { fila: Frame, borde: UIStroke } } = {}
 do
 	local total = 0
 	for _, o in R.Opciones do
@@ -144,12 +170,26 @@ do
 	for _, o in R.Opciones do
 		local fila = Instance.new("Frame")
 		fila.Size = UDim2.new(1, 0, 0, 31)
-		fila.BackgroundColor3 = Color3.fromRGB(20, 24, 34)
-		fila.BackgroundTransparency = if o.Disponible then 0.5 else 0.76
+		fila.BackgroundColor3 = Color3.fromRGB(16, 20, 29)
+		fila.BackgroundTransparency = if o.Disponible then 0.35 else 0.72
 		fila.BorderSizePixel = 0
 		fila.Parent = listaMarco
 
 		local colorLinaje = if o.Disponible then Tema.color(o.Linaje) else Color3.fromHex("#565E6D")
+
+		local bordeFila = Instance.new("UIStroke")
+		bordeFila.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+		bordeFila.Color = Tema.Hueso
+		bordeFila.Transparency = 0.86
+		bordeFila.Thickness = 1
+		bordeFila.Parent = fila
+		filasLinaje[o.Linaje] = { fila = fila, borde = bordeFila }
+
+		local barraIzq = Instance.new("Frame")
+		barraIzq.Size = UDim2.new(0, 3, 1, 0)
+		barraIzq.BackgroundColor3 = colorLinaje
+		barraIzq.BorderSizePixel = 0
+		barraIzq.Parent = fila
 
 		local idIco = (H.Imagenes.Linajes :: any)[o.Linaje] or ""
 		if not o.Disponible and H.Imagenes.Menu.Candado ~= "" then
@@ -158,7 +198,7 @@ do
 		if idIco ~= "" then
 			local ico = Instance.new("ImageLabel")
 			ico.AnchorPoint = Vector2.new(0, 0.5)
-			ico.Position = UDim2.new(0, 8, 0.5, 0)
+			ico.Position = UDim2.new(0, 12, 0.5, 0)
 			ico.Size = UDim2.fromOffset(20, 20)
 			ico.BackgroundTransparency = 1
 			ico.ScaleType = Enum.ScaleType.Fit
@@ -169,7 +209,7 @@ do
 		else
 			local punto = Instance.new("Frame")
 			punto.AnchorPoint = Vector2.new(0, 0.5)
-			punto.Position = UDim2.new(0, 12, 0.5, 0)
+			punto.Position = UDim2.new(0, 15, 0.5, 0)
 			punto.Size = UDim2.fromOffset(9, 9)
 			punto.Rotation = 45
 			punto.BackgroundColor3 = colorLinaje
@@ -177,19 +217,23 @@ do
 			punto.Parent = fila
 		end
 
-		local txt = Tema.texto(fila, string.format("%s  ·  %s", o.Nombre, o.Rareza), {
-			tam = 16,
-			letra = if o.Disponible then Tema.Letra else Tema.LetraFina,
-			color = if o.Disponible then Tema.Hueso else Color3.fromHex("#7D8594"),
-		})
-		txt.Position = UDim2.fromOffset(38, 5)
+		local txt = Tema.texto(
+			fila,
+			string.format("%s  ·  %s", string.upper(o.Nombre), string.upper(o.Rareza)),
+			{
+				tam = 15,
+				letra = if o.Disponible then Tema.Letra else Tema.LetraFina,
+				color = if o.Disponible then Tema.Hueso else Color3.fromHex("#7D8594"),
+			}
+		)
+		txt.Position = UDim2.fromOffset(40, 6)
 
 		local pctTexto = if o.Disponible and total > 0
 			then string.format("%.2f%%", o.Peso / total * 100)
 			else "PRONTO"
 		local pct = Tema.texto(fila, pctTexto, {
 			tam = 15,
-			letra = Tema.LetraFina,
+			letra = Tema.LetraGruesa,
 			color = colorLinaje,
 			alineado = Enum.TextXAlignment.Right,
 		})
@@ -213,15 +257,47 @@ bordeTirar.Color = Tema.Hueso
 bordeTirar.Transparency = 0.35
 bordeTirar.Parent = tirar
 
+local cerrarPelear = Instance.new("TextButton")
+cerrarPelear.Position = UDim2.new(0, 24, 1, -70)
+cerrarPelear.Size = UDim2.new(1, -48, 0, 50)
+cerrarPelear.BackgroundColor3 = Color3.fromHex("#f2652b")
+cerrarPelear.Text = Tema.espaciar("LISTO · IR A PELEAR", 2)
+cerrarPelear.TextColor3 = Tema.Hueso
+cerrarPelear.FontFace = Tema.LetraGruesa
+cerrarPelear.TextSize = 18
+cerrarPelear.Visible = false
+cerrarPelear.ZIndex = 6
+cerrarPelear.Parent = panel
+local bordeCerrar = Instance.new("UIStroke")
+bordeCerrar.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+bordeCerrar.Color = Color3.fromHex("#ffd34d")
+bordeCerrar.Thickness = 2
+bordeCerrar.Parent = cerrarPelear
+
+cerrarPelear.Activated:Connect(function()
+	cerrarPelear.Visible = false
+	panel.Visible = false
+end)
+
+local function resaltarFila(activo: unknown)
+	for clave, item in filasLinaje do
+		local es = clave == activo
+		item.borde.Color = if es then Tema.color(clave) else Tema.Hueso
+		item.borde.Transparency = if es then 0.1 else 0.86
+		item.borde.Thickness = if es then 1.5 else 1
+	end
+end
+
 local function mostrarResultado(idLinaje: string, etiqueta: string, color: Color3)
 	local img = (H.Imagenes.Linajes :: any)[idLinaje] or ""
 	resIcono.Image = img
 	resIcono.ImageColor3 = color
 	resIcono.Visible = img ~= ""
-	resultado.Position = UDim2.fromOffset(if resIcono.Visible then 162 else 118, 68)
+	resultado.Position = UDim2.fromOffset(if resIcono.Visible then 162 else 118, 74)
 	resultado.Size = UDim2.new(1, if resIcono.Visible then -182 else -140, 0, 52)
 	resultado.Text = etiqueta
 	resultado.TextColor3 = color
+	resaltarFila(idLinaje)
 end
 
 local function actualizar()
@@ -233,6 +309,10 @@ local function actualizar()
 	tirar.Text = if linaje == nil
 		then "Tirar gratis"
 		else string.format("Tirar por 1 Ficha (tenés %d)", n)
+	resaltarFila(linaje)
+	if n >= 1 then
+		cerrarPelear.Visible = false
+	end
 	if linaje == nil and jugador:GetAttribute("DatosListos") == true then
 		panel.Visible = true
 	end
@@ -263,6 +343,10 @@ remoto.OnClientEvent:Connect(function(linaje: string)
 	end
 	mostrarResultado(linaje, "¡" .. (nombres[linaje] or linaje) .. "!", Tema.color(linaje))
 	-- SONIDO: resultado de la ruleta
+	local nFichas = jugador:GetAttribute("Fichas")
+	if typeof(nFichas) ~= "number" or nFichas < 1 then
+		cerrarPelear.Visible = true
+	end
 end)
 
 for _, atributo in { "Fichas", "Linaje", "DatosListos" } do

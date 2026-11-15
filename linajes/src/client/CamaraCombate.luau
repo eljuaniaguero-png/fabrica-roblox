@@ -80,7 +80,10 @@ function CamaraCombate.conectar()
 		if not cam then
 			return
 		end
-		if jugador:GetAttribute("MenuAbierto") == true then
+		if
+			jugador:GetAttribute("MenuAbierto") == true
+			or jugador:GetAttribute("EnCreador") == true
+		then
 			return
 		end
 

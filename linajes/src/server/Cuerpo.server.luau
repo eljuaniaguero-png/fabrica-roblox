@@ -16,18 +16,51 @@ local remoto = Instance.new("RemoteEvent")
 remoto.Name = "Creador"
 remoto.Parent = ReplicatedStorage
 
--- Cuántas opciones tiene cada campo (el valor va de 1 a este número).
+-- Cuántas opciones tiene cada campo (el valor va de 1 a este número; Marca permite 0 = ninguna).
 local MAXIMOS: { [string]: number } = {
 	Piel = #Config.Cuerpo.TonosPiel,
 	Cara = #Config.Cuerpo.Comic.Caras,
 	Peinado = #Config.Cuerpo.Comic.Peinados,
 	Pelo = #Config.Cuerpo.ColoresPelo,
+	Marca = #Config.Cuerpo.Marcas,
+	Contextura = #CR.Contexturas,
+	Altura = #CR.Alturas,
 	Campera = #CR.Campera,
 	Acento = #CR.Acento,
+	Remera = #CR.Remera,
 	Pantalon = #CR.Pantalon,
+	Zapatillas = #CR.Zapatillas,
+	Bando = #CR.Bandos,
+}
+
+local MINIMOS: { [string]: number } = {
+	Marca = 0,
+}
+
+local CAMPOS_PRESET = {
+	"Piel",
+	"Cara",
+	"Peinado",
+	"Pelo",
+	"Marca",
+	"Contextura",
+	"Altura",
+	"Campera",
+	"Acento",
+	"Remera",
+	"Pantalon",
+	"Zapatillas",
+	"Bando",
 }
 
 local ultimoCambio: { [Player]: number } = {}
+
+local function sincronizarBando(datos: any)
+	local idx = datos.Apariencia.Bando
+	if typeof(idx) == "number" and CR.Bandos[idx] then
+		datos.Bando = CR.Bandos[idx]
+	end
+end
 
 local function vestir(jugador: Player)
 	local personaje = jugador.Character
@@ -63,20 +96,52 @@ remoto.OnServerEvent:Connect(function(jugador: Player, campo: unknown, valor: un
 	end
 	if campo == "Confirmar" then
 		datos.Apariencia.Creada = true
+		sincronizarBando(datos)
 		Perfiles.cambiar(jugador, {})
+		return
+	elseif campo == "Azar" then
+		for c, maximo in MAXIMOS do
+			if c == "Marca" then
+				datos.Apariencia.Marca = if math.random() < 0.45 then 0 else math.random(1, maximo)
+			else
+				datos.Apariencia[c] = math.random(1, maximo)
+			end
+		end
+		sincronizarBando(datos)
+		Perfiles.cambiar(jugador, {})
+		vestir(jugador)
+		return
+	elseif campo == "Predefinido" then
+		if typeof(valor) ~= "number" or valor ~= valor or valor % 1 ~= 0 then
+			return
+		end
+		local preset = CR.Predefinidos[valor]
+		if not preset then
+			return
+		end
+		for _, c in CAMPOS_PRESET do
+			datos.Apariencia[c] = (preset :: any)[c]
+		end
+		sincronizarBando(datos)
+		Perfiles.cambiar(jugador, {})
+		vestir(jugador)
 		return
 	end
 	-- Validación: campo conocido y número entero dentro del rango.
 	if typeof(campo) ~= "string" or typeof(valor) ~= "number" then
 		return
 	end
-	local maximo = MAXIMOS[campo :: string]
-	local n = valor :: number
-	if not maximo or n ~= n or n % 1 ~= 0 or n < 1 or n > maximo then
+	local maximo = MAXIMOS[campo]
+	local minimo = MINIMOS[campo] or 1
+	local n = valor
+	if not maximo or n ~= n or n % 1 ~= 0 or n < minimo or n > maximo then
 		return
 	end
-	datos.Apariencia[campo :: string] = n
-	Perfiles.cambiar(jugador, {}) -- refresca los atributos Ap_*
+	datos.Apariencia[campo] = n
+	if campo == "Bando" then
+		sincronizarBando(datos)
+	end
+	Perfiles.cambiar(jugador, {}) -- refresca los atributos Ap_* y Bando
 	vestir(jugador)
 end)
 

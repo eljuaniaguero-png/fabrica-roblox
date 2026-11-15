@@ -41,8 +41,8 @@ local function capa(padre: Instance, c: any, ritmo: boolean): Capa
 		e.FlipbookMode = Enum.ParticleFlipbookMode.OneShot
 	end
 	e.Color = colores(c.Colores)
-	e.LightEmission = c.Brillo
-	e.LightInfluence = 0
+	e.LightEmission = math.clamp(c.Brillo, 0, 0.7)
+	e.LightInfluence = if c.Brillo == 0 then 0.25 else 0
 	e.Lifetime = NumberRange.new(c.Vida[1], c.Vida[2])
 	e.Speed = NumberRange.new(c.Rapidez[1], c.Rapidez[2])
 	e.SpreadAngle = Vector2.new(c.Abertura, c.Abertura)
@@ -185,7 +185,7 @@ function Fuego.explosion(centro: Vector3, escala: number)
 		CFrame.new(centro),
 		1.5 * escala,
 		9.5 * escala,
-		Color3.fromHex("#ff6a18"),
+		Color3.fromHex("#f2652b"),
 		0.28,
 		0.3
 	)
@@ -193,9 +193,27 @@ function Fuego.explosion(centro: Vector3, escala: number)
 		CFrame.new(centro) * CFrame.Angles(math.rad(40), 0, math.rad(30)),
 		1.2 * escala,
 		7.8 * escala,
-		Color3.fromHex("#ffd58a"),
+		Color3.fromHex("#ffd56b"),
 		0.24,
 		0.22
+	)
+	EfectosGolpe.runa3D(
+		CFrame.new(centro + Vector3.new(0, 0.16, 0)),
+		2.2 * escala,
+		10.5 * escala,
+		Color3.fromHex("#f2652b"),
+		0.38,
+		Config.Efectos.Beta.ImpactoFuerza
+	)
+	EfectosGolpe.grieta(centro, 8.5 * escala, 1.5, Color3.fromHex("#161218"))
+	EfectosGolpe.fragmentos3D(
+		centro,
+		7,
+		Color3.fromHex("#f2652b"),
+		Vector3.new(0.45, 0.95, 0.55) * escala,
+		22,
+		Enum.Material.Slate,
+		true
 	)
 	luz(soporte, F.Explosion.Luz)
 	Debris:AddItem(soporte, 1.6)

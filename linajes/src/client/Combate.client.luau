@@ -756,16 +756,16 @@ local function crearAccion(
 
 	local textoPie = if tactil then etiqueta else string.format("%s · %s", teclaTexto, etiqueta)
 	local pie = Tema.texto(controles, textoPie, {
-		tam = 11,
-		letra = Tema.LetraFina,
+		tam = 13,
+		letra = Tema.Letra,
 		color = acento,
-		transparencia = 0.2,
+		transparencia = 0.1,
 		alineado = Enum.TextXAlignment.Center,
 	})
 	pie.AutomaticSize = Enum.AutomaticSize.None
 	pie.AnchorPoint = Vector2.new(0.5, 0)
 	pie.Position = UDim2.fromOffset(cx, tamRombo + 2)
-	pie.Size = UDim2.fromOffset(sepRombo, 16)
+	pie.Size = UDim2.fromOffset(sepRombo, 18)
 
 	return {
 		rombo = marcoRombo,

@@ -115,6 +115,73 @@ local function luzHacia(parte: BasePart, datos: any)
 	luz.Parent = parte
 end
 
+local function hazLuz(
+	desde: Vector3,
+	hasta: Vector3,
+	anchoArriba: number,
+	anchoAbajo: number,
+	datos: any
+)
+	local soporte = pieza(
+		carpeta,
+		Vector3.one * 0.2,
+		CFrame.new(desde),
+		"Asfalto",
+		Enum.Material.SmoothPlastic,
+		false
+	)
+	soporte.Transparency = 1
+	local a0 = Instance.new("Attachment")
+	a0.Parent = soporte
+	local a1 = Instance.new("Attachment")
+	a1.WorldPosition = hasta
+	a1.Parent = soporte
+	for _, frenteCam in { true, false } do
+		local b = Instance.new("Beam")
+		b.Attachment0 = a0
+		b.Attachment1 = a1
+		b.Width0 = anchoArriba
+		b.Width1 = anchoAbajo
+		b.Color = ColorSequence.new(Color3.fromHex(datos.Color))
+		b.LightEmission = 1
+		b.LightInfluence = 0
+		b.Transparency = NumberSequence.new(datos.Haz or 0.86, 1)
+		b.FaceCamera = frenteCam
+		b.Segments = 1
+		b.Parent = soporte
+	end
+end
+
+local function reflejoPiso(
+	x: number,
+	z: number,
+	ancho: number,
+	largo: number,
+	tonoHex: string,
+	fuerza: number
+)
+	local placa = pieza(
+		carpeta,
+		Vector3.new(ancho, 0.04, largo),
+		en(x, 0.14, z),
+		"Asfalto",
+		Enum.Material.SmoothPlastic,
+		false
+	)
+	placa.Transparency = 1
+	local sg = Instance.new("SurfaceGui")
+	sg.Face = Enum.NormalId.Top
+	sg.LightInfluence = 0
+	sg.Parent = placa
+	local img = Instance.new("ImageLabel")
+	img.Size = UDim2.fromScale(1, 1)
+	img.BackgroundTransparency = 1
+	img.Image = Luz.Texturas.Reflejo
+	img.ImageColor3 = Color3.fromHex(tonoHex)
+	img.ImageTransparency = 1 - fuerza
+	img.Parent = sg
+end
+
 local function farol(x: number, z: number, con: boolean)
 	poner("Prop_Farola", en(x, 11, z), nil, 1.5)
 	local bulbo = pieza(
@@ -127,6 +194,9 @@ local function farol(x: number, z: number, con: boolean)
 	)
 	if con then
 		luzHacia(bulbo, Luz.Calida)
+		local p = (en(x, 20.3, z)).Position
+		hazLuz(p, Vector3.new(p.X, O.Y + 0.15, p.Z), 1.3, 15, Luz.Calida)
+		reflejoPiso(x, z, 13, 13, Luz.Calida.Color, 0.28)
 	end
 end
 
@@ -136,6 +206,9 @@ local function reflector(x: number, z: number)
 	local foco =
 		pieza(carpeta, Vector3.new(5, 1, 2), en(x, 34, z), "Reflector", Enum.Material.Neon, false)
 	luzHacia(foco, Luz.Fria)
+	local origen = en(x, 33.8, z).Position
+	hazLuz(origen, Vector3.new(O.X + x * 0.45, O.Y + 0.15, O.Z + z * 0.35), 2.2, 22, Luz.Fria)
+	reflejoPiso(x * 0.45, z * 0.35, 18, 22, Luz.Fria.Color, 0.22)
 end
 
 local function piso()
@@ -176,7 +249,13 @@ local function piso()
 			false
 		)
 		p.Reflectance = Luz.CharcoBrillo
-		p.Transparency = 0.15
+		p.Transparency = 0.28
+		local decal = Instance.new("Decal")
+		decal.Face = Enum.NormalId.Top
+		decal.Texture = Luz.Texturas.Charco
+		decal.Color3 = Color3.fromHex("#1a2232")
+		decal.Transparency = 0.35
+		decal.Parent = p
 	end
 end
 

@@ -203,7 +203,8 @@ cambia.TextStrokeColor3 = Tema.Fondo
 cambia.TextStrokeTransparency = 0.35
 cambia.FontFace = Tema.LetraFina
 cambia.TextSize = 14
-cambia.Visible = P.CambioLibre == true
+-- Herramienta de prueba: solo en Studio (tapaba al personaje).
+cambia.Visible = P.CambioLibre == true and RunService:IsStudio()
 cambia.Parent = caja
 cambia.Activated:Connect(function()
 	remoto:FireServer("Cambiar")
@@ -250,6 +251,7 @@ if H.Imagenes.Menu.Candado ~= "" then
 	candado.ZIndex = 7
 	candado.Parent = romboGancho
 end
+romboGancho.Visible = H.MostrarGancho
 local etiquetaGancho = Tema.texto(
 	caja,
 	"G  ·  GANCHO",
@@ -257,6 +259,7 @@ local etiquetaGancho = Tema.texto(
 )
 etiquetaGancho.AnchorPoint = Vector2.new(0.5, 0)
 etiquetaGancho.Position = UDim2.fromOffset(centroGancho.X, centroGancho.Y + tamGancho / 2 + 4)
+etiquetaGancho.Visible = H.MostrarGancho
 
 type Ranura = {
 	caja: Frame,
@@ -336,9 +339,9 @@ for i, tecla in { "Z", "X", "C" } do
 	abajo.Position = UDim2.fromOffset(centro.X, centro.Y + H.TamRombo / 2 + 2)
 
 	local nombre = Tema.texto(caja, "", {
-		tam = 11,
-		letra = Tema.LetraFina,
-		transparencia = 0.32,
+		tam = 15,
+		letra = Tema.Letra,
+		transparencia = 0.08,
 		alineado = Enum.TextXAlignment.Center,
 	})
 	nombre.AnchorPoint = Vector2.new(0.5, 0)

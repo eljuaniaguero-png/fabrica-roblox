@@ -2,33 +2,39 @@
 -- Noche del puerto: todos los valores de luz de la arena. Los aplica client/Clima.client.luau.
 
 return {
-	Hora = 1,
-	Ambiente = "2c3754",
-	Exterior = "46557a",
-	Brillo = 0.9,
-	Exposicion = 0.2,
-	Tinte = "eef0fa",
-	Contraste = 0.22,
-	Saturacion = -0.14,
-	Resplandor = 0.5,
-	ResplandorUmbral = 1.7,
-	ResplandorTamano = 18,
-	-- Niebla: lo lejano se funde en azul grisáceo, nunca queda recortado contra el negro.
+	Hora = 21.35,
+	Ambiente = "1f283d",
+	Exterior = "4c6294",
+	Brillo = 1.35,
+	Exposicion = 0.24,
+	Tinte = "e8eeff",
+	Contraste = 0.26,
+	Saturacion = 0.04,
+	Resplandor = 0.48,
+	ResplandorUmbral = 1.65,
+	ResplandorTamano = 22,
+	-- Niebla: lo lejano se funde con leve tinte eclipse hacia el horizonte.
 	Niebla = {
-		Densidad = 0.35,
-		Bruma = 0.4,
-		Color = "2a3550",
-		Decaimiento = "2a3550",
-		Destello = 0,
+		Densidad = 0.28,
+		Bruma = 0.52,
+		Color = "23314d",
+		Decaimiento = "4a242c",
+		Destello = 0.12,
 	},
-	-- Luz suave que sigue al personaje para que nunca se pierda.
-	Borde = { Color = "a9c4ff", Brillo = 0.4, Alcance = 16 },
+	RayosSol = { Intensidad = 0.06, Dispersion = 0.42 },
+	Eclipse = {
+		Color = "f26b3a",
+		Tamano = 108,
+		Direccion = Vector3.new(-0.18, 0.34, -0.92).Unit,
+	},
+	-- Luz suave que sigue al personaje para destacar la silueta cómic sin lavar sombras.
+	Borde = { Color = "9cc0ff", Brillo = 0.65, Alcance = 18 },
 	-- Farolas cálidas y reflectores fríos, colocados por server/ArenaMapa.server.luau.
 	-- Angulo chico = cono de luz marcado en el piso, no una mancha pareja.
-	Calida = { Color = "f29a3a", Brillo = 7, Alcance = 44, Angulo = 72, Haz = 0.9 },
-	Fria = { Color = "cfe3ff", Brillo = 9, Alcance = 60, Angulo = 55, Haz = 0.88 },
-	PisoBrillo = 0.04,
-	CharcoBrillo = 0.55,
+	Calida = { Color = "f29a3a", Brillo = 9, Alcance = 48, Angulo = 74, Haz = 0.84 },
+	Fria = { Color = "8ab8ff", Brillo = 11, Alcance = 68, Angulo = 52, Haz = 0.82 },
+	PisoBrillo = 0.06,
+	CharcoBrillo = 0.68,
 	-- Noche de verdad: azul casi negro con estrellas tenues pintadas en la textura.
 	Cielo = {
 		Bk = "rbxassetid://137180182185044",

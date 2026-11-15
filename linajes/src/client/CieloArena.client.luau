@@ -10,6 +10,8 @@ local Luz = require(Shared:WaitForChild("Iluminacion"))
 
 local M = Config.Arena.Mapa
 local D = Luz.CieloDistancia
+local EC = Luz.Eclipse
+local eclipseId = Config.Hud.Imagenes.Menu.Eclipse
 local caras = {
 	{ Id = Luz.Cielo.Ft, Lado = Vector3.new(0, 0, -D) },
 	{ Id = Luz.Cielo.Bk, Lado = Vector3.new(0, 0, D) },
@@ -44,7 +46,39 @@ for _, c in caras do
 	table.insert(paneles, { parte = p, lado = c.Lado })
 end
 
-RunService.RenderStepped:Connect(function()
+-- Eclipse solar flotando sobre el mar del puerto en dirección al horizonte norte.
+local panelEclipse: Part? = nil
+local imgEclipse: ImageLabel? = nil
+if eclipseId ~= "" and EC then
+	local ep = Instance.new("Part")
+	ep.Name = "EclipseCielo"
+	ep.Anchored = true
+	ep.CanCollide = false
+	ep.CanQuery = false
+	ep.CanTouch = false
+	ep.CastShadow = false
+	ep.Transparency = 1
+	ep.Size = Vector3.new(EC.Tamano, EC.Tamano, 1)
+	local egui = Instance.new("SurfaceGui")
+	egui.Face = Enum.NormalId.Front
+	egui.LightInfluence = 0
+	egui.Brightness = 1.6
+	egui.Parent = ep
+	local img = Instance.new("ImageLabel")
+	img.Size = UDim2.fromScale(1, 1)
+	img.BackgroundTransparency = 1
+	img.Image = eclipseId
+	img.ImageColor3 = Color3.fromHex(EC.Color)
+	img.ImageTransparency = 0.08
+	img.Parent = egui
+	ep.Parent = carpeta
+	panelEclipse = ep
+	imgEclipse = img
+end
+
+local tiempo = 0
+RunService.RenderStepped:Connect(function(dt: number)
+	tiempo += math.min(dt, 0.05)
 	local camara = workspace.CurrentCamera
 	local pos = camara.CFrame.Position
 	local d = pos - M.Centro
@@ -57,6 +91,12 @@ RunService.RenderStepped:Connect(function()
 				pos,
 				if p.lado.Y ~= 0 then Vector3.zAxis else Vector3.yAxis
 			)
+		end
+		if panelEclipse and EC then
+			panelEclipse.CFrame = CFrame.lookAt(pos + EC.Direccion * (D - 18), pos)
+			if imgEclipse then
+				imgEclipse.Rotation = (tiempo * 2.5) % 360
+			end
 		end
 	end
 end)
