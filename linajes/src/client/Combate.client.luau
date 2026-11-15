@@ -498,6 +498,110 @@ RunService.Heartbeat:Connect(function()
 	end
 end)
 
+-- Aviso de ataque fuerte (Guía 3.2): disco rojo en el piso con borde nítido; una onda crece desde el
+-- centro y toca el borde justo cuando pega. Salí del círculo.
+local function avisoPiso(centro: Vector3, radio: number, dura: number)
+	local function disco(diametro: number, transparencia: number, color: Color3): Part
+		local p = Instance.new("Part")
+		p.Shape = Enum.PartType.Cylinder
+		p.Size = Vector3.new(0.1, diametro, diametro)
+		p.CFrame = CFrame.new(centro + Vector3.new(0, 0.08, 0)) * CFrame.Angles(0, 0, math.rad(90))
+		p.Anchored = true
+		p.CanCollide = false
+		p.CanQuery = false
+		p.CanTouch = false
+		p.Material = Enum.Material.Neon
+		p.Color = color
+		p.Transparency = transparencia
+		p.Parent = workspace
+		Debris:AddItem(p, dura + 0.3)
+		return p
+	end
+	local borde = disco(radio * 2, 0.35, Color3.fromHex("#ff6b5b"))
+	local relleno = disco(radio * 2 - 0.8, 0.72, Color3.fromHex("#d6333a"))
+	relleno.CFrame += Vector3.new(0, 0.01, 0)
+	local onda = disco(0.5, 0.45, Color3.fromHex("#ff6b5b"))
+	onda.CFrame += Vector3.new(0, 0.02, 0)
+	TweenService:Create(onda, TweenInfo.new(dura, Enum.EasingStyle.Linear), {
+		Size = Vector3.new(0.1, radio * 2, radio * 2),
+	}):Play()
+	task.delay(dura, function()
+		-- SONIDO: golpazo del jefe contra el piso
+		for _, p in { borde, relleno, onda } do
+			TweenService:Create(p, TweenInfo.new(0.25), { Transparency = 1 }):Play()
+		end
+	end)
+end
+
+-- Cartel grande arriba al centro cuando aparece, cae o se va el jefe.
+local cartelGui = Instance.new("ScreenGui")
+cartelGui.Name = "AvisoJefe"
+cartelGui.ResetOnSpawn = false
+cartelGui.IgnoreGuiInset = true
+cartelGui.DisplayOrder = 6
+cartelGui.Parent = jugador:WaitForChild("PlayerGui")
+local cartelGrupo =
+	Tema.grupo(cartelGui, Vector2.new(0.5, 0), UDim2.new(0.5, 0, 0, 120), Vector2.new(720, 96))
+local cartelTitulo = Tema.texto(
+	cartelGrupo,
+	"",
+	{ tam = 40, letra = Tema.LetraGruesa, alineado = Enum.TextXAlignment.Center }
+)
+cartelTitulo.AutomaticSize = Enum.AutomaticSize.None
+cartelTitulo.Size = UDim2.new(1, 0, 0, 48)
+local cartelSub = Tema.texto(
+	cartelGrupo,
+	"",
+	{ tam = 18, color = Tema.Hueso, alineado = Enum.TextXAlignment.Center }
+)
+cartelSub.AutomaticSize = Enum.AutomaticSize.None
+cartelSub.Position = UDim2.fromOffset(0, 54)
+cartelSub.Size = UDim2.new(1, 0, 0, 24)
+cartelGrupo.Visible = false
+local turnoCartel = 0
+
+local function cartelJefe(que: string, nombre: any, extra: any)
+	local n = if typeof(nombre) == "string" then nombre else "EL JEFE"
+	local titulo, sub, color
+	if que == "Aparece" then
+		titulo = Tema.espaciar(n, 2)
+		sub = string.format(
+			"Apareció en %s. Todos los que le peguen se llevan premio y 1 Ficha.",
+			if typeof(extra) == "string" then extra else "la arena"
+		)
+		color = Color3.fromHex("#ffb347")
+		-- SONIDO: aparece el jefe (golpe grave y sirena del puerto)
+	elseif que == "Derrotado" then
+		titulo = Tema.espaciar("JEFE DERROTADO", 2)
+		sub = string.format(
+			"%s cayó. Premio para %s.",
+			n,
+			if typeof(extra) == "number" and extra == 1
+				then "1 jugador"
+				else string.format(
+					"%d jugadores",
+					if typeof(extra) == "number" then extra else 0
+				)
+		)
+		color = Tema.Xp
+	else
+		titulo = Tema.espaciar("EL JEFE SE FUE", 2)
+		sub = string.format("%s se cansó de esperar. Vuelve en unos minutos.", n)
+		color = Tema.Hueso
+	end
+	turnoCartel += 1
+	local turno = turnoCartel
+	cartelTitulo.Text = titulo
+	cartelTitulo.TextColor3 = color
+	cartelSub.Text = sub
+	cartelGrupo.Visible = true
+	task.delay(6, function()
+		if turnoCartel == turno then
+			cartelGrupo.Visible = false
+		end
+	end)
+end
+
 -- Algo rompible (muro de hielo) se parte: cuñas del mismo color que saltan y se encogen.
 local function seRompe(centro: Vector3, tam: Vector3, color: Color3)
 	-- SONIDO: hielo que se quiebra
@@ -642,6 +746,10 @@ remoto.OnClientEvent:Connect(function(tipo: string, a: any, b: any, _c: any, d: 
 	elseif tipo == "Aviso" then
 		destello(a, Color3.fromRGB(255, 42, 42))
 		EfectosGolpe.aviso(a)
+	elseif tipo == "Golpazo" and typeof(a) == "Vector3" and typeof(b) == "number" then
+		avisoPiso(a, b, if typeof(_c) == "number" then _c else 1)
+	elseif tipo == "Jefe" and typeof(a) == "string" then
+		cartelJefe(a, b, _c)
 	elseif tipo == "Empuje" then
 		local r = raiz
 		if r then

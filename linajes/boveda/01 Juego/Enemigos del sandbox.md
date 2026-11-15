@@ -26,6 +26,13 @@ Cuando hay más mapas, cada mapa tiene sus propias zonas.
 
 **Por nivel**: +7 % de vida, +4 % de daño y +8 % de premio. Se ven distintos por **tamaño**, **gorro** y **color del borde**, y arriba de la cabeza dicen su **nombre y nivel**.
 
+## Jefe que aparece cada tanto: El Capataz
+- Aparece **cada 6 minutos** (el primero a los 2) en Contenedores o en Grúas, con un **cartel para todo el servidor**.
+- Es un matón enorme (1,7 de tamaño), nivel 20, unos **3.000 de vida**. Además del combo, tiene el **golpazo**: marca un **círculo rojo en el piso**, avisa 1,1 s y pega 35 a todos los que quedan adentro.
+- **Premio para todos los que le pegaron** (no solo el que lo remata): **700 XP, 80 Chatarra y 1 Ficha** para la Ruleta.
+- Si nadie lo derrota en **4 minutos**, se va ("vuelve en unos minutos").
+- Es un jefe de la arena, no Remache: Remache sigue siendo el jefe de la historia y entra cuando se importe su modelo.
+
 ## Reglas
 - No entran a la zona segura ni atacan ahí.
 - Si no hay nadie cerca vuelven a su lugar; al morir, a los 6 s aparece otro en la zona.

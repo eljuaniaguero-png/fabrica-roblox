@@ -1696,6 +1696,32 @@ Config.Enemigos = {
 			Gorro = 2,
 			Borde = "#f2652b",
 		},
+		-- Jefe que aparece cada tanto (Config.Enemigos.Jefe). Nivel fijo; no reaparece al morir.
+		Jefe = {
+			Nombre = "EL CAPATAZ",
+			Escala = 1.7,
+			Vida = 1300, -- con el nivel 20 queda en unos 3.000: uno solo puede, en grupo es rápido
+			Danio = 20,
+			Velocidad = 15,
+			Bloqueo = 0.25,
+			EmbestidaRecarga = 4,
+			Xp = 0, -- el premio del jefe se reparte aparte (Jefe.Premio)
+			Chatarra = 0,
+			Gorro = 1,
+			Borde = "#ffb347",
+			Nivel = 20,
+			-- Golpazo: marca un círculo rojo en el piso y pega a todos adentro.
+			Golpazo = { Cada = 7, Radio = 16, Aviso = 1.1, Danio = 35 },
+		},
+	},
+	Jefe = {
+		PrimeroA = 120, -- segundos desde que entra el primer jugador
+		PrimeroAStudio = 15, -- en Studio, para probar rápido
+		Cada = 360, -- segundos entre un jefe y el siguiente
+		DuraMax = 240, -- si nadie lo derrota, se va
+		Zonas = { 2, 3 }, -- aparece en una de estas zonas (índices de Zonas)
+		-- Premio para TODOS los que le pegaron (no solo el que lo remata).
+		Premio = { Xp = 700, Chatarra = 80, Fichas = 1 },
 	},
 	Zonas = {
 		{

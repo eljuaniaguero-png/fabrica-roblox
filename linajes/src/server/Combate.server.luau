@@ -5,6 +5,7 @@
 
 local CollectionService = game:GetService("CollectionService")
 local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local ServerStorage = game:GetService("ServerStorage")
 local StarterPlayer = game:GetService("StarterPlayer")
@@ -168,6 +169,9 @@ end
 
 local pegarA: (Model, Model, number, string, Vector3) -> ()
 
+-- Daño que hizo cada jugador al jefe actual: todos los que pegaron se llevan el premio.
+local aportesJefe: { [Model]: { [Player]: number } } = {}
+
 pegarA = function(atacante: Model, objetivo: Model, danio: number, tipo: string, direccion: Vector3)
 	local h, r = partes(objetivo)
 	if not (h and r) then
@@ -255,6 +259,14 @@ pegarA = function(atacante: Model, objetivo: Model, danio: number, tipo: string,
 			end
 		end
 	end
+	if objetivo:GetAttribute("Jefe") then
+		local quien = Players:GetPlayerFromCharacter(atacante)
+		if quien then
+			local lista = aportesJefe[objetivo] or {}
+			aportesJefe[objetivo] = lista
+			lista[quien] = (lista[quien] or 0) + danio
+		end
+	end
 	if estabaVivo and h.Health <= 0 then
 		CuerpoComic.cara(objetivo, EXP_COMIC.derrotado)
 		local ganador = Players:GetPlayerFromCharacter(atacante)
@@ -262,7 +274,7 @@ pegarA = function(atacante: Model, objetivo: Model, danio: number, tipo: string,
 		if ganador and Players:GetPlayerFromCharacter(objetivo) then
 			Perfiles.sumarBaja(ganador)
 		end
-		if ganador and objetivo:GetAttribute("Maton") then
+		if ganador and objetivo:GetAttribute("Maton") and not objetivo:GetAttribute("Jefe") then
 			-- Premio según tipo y nivel del enemigo (Config.Enemigos).
 			local xp = objetivo:GetAttribute("PremioXp")
 			local chatarra = objetivo:GetAttribute("PremioChatarra")
@@ -694,16 +706,17 @@ local function puntoEnZona(zona: any): Vector3
 	return centro + Vector3.new(0, 4, 0)
 end
 
-local crearEnemigo: (number) -> ()
+local crearEnemigo: (number, string?) -> Model?
 
 -- Enemigo: busca al jugador cercano, se acerca, avisa y pega. Si se traba, se corre de costado.
 -- Tipo y nivel salen de su zona (Config.Enemigos); al morir aparece otro en la misma zona.
-crearEnemigo = function(zonaIdx: number)
+crearEnemigo = function(zonaIdx: number, forzado: string?): Model?
 	local EN = Config.Enemigos
 	local zona = EN.Zonas[zonaIdx]
-	local tipoNombre = zona.Tipos[math.random(1, #zona.Tipos)]
+	local tipoNombre = forzado or zona.Tipos[math.random(1, #zona.Tipos)]
 	local T = (EN.Tipos :: any)[tipoNombre]
-	local nivel = math.random(zona.Nivel[1], zona.Nivel[2])
+	local esJefe = forzado == "Jefe"
+	local nivel = T.Nivel or math.random(zona.Nivel[1], zona.Nivel[2])
 	local extra = nivel - 1
 	local vidaMax = math.round(T.Vida * (1 + extra * EN.PorNivel.Vida))
 	local danio = T.Danio * (1 + extra * EN.PorNivel.Danio)
@@ -719,10 +732,10 @@ crearEnemigo = function(zonaIdx: number)
 	local numero = T.Gorro
 	local molde = StarterPlayer:FindFirstChild("StarterCharacter")
 	if not (molde and molde:IsA("Model")) then
-		return
+		return nil
 	end
 	local m = molde:Clone()
-	m.Name = "Maton"
+	m.Name = if esJefe then "Jefe" else "Maton"
 	for _, s in m:GetDescendants() do
 		if s:IsA("BaseScript") then
 			s:Destroy()
@@ -731,6 +744,7 @@ crearEnemigo = function(zonaIdx: number)
 	local base = puntoEnZona(zona)
 	m:PivotTo(CFrame.new(base))
 	m:SetAttribute("Maton", true)
+	m:SetAttribute("Jefe", esJefe)
 	m:SetAttribute("Tipo", tipoNombre)
 	m:SetAttribute("Nivel", nivel)
 	m:SetAttribute("Nombre", string.format("%s  ·  NV %d", T.Nombre, nivel))
@@ -787,6 +801,36 @@ crearEnemigo = function(zonaIdx: number)
 		end
 	end)
 
+	-- Golpazo del jefe: círculo rojo en el piso, aviso y golpe fuerte a todos los que quedan adentro.
+	local golpazoListo = os.clock() + 3
+	local function golpazo(r: BasePart): boolean
+		local G = T.Golpazo
+		if not G or os.clock() < golpazoListo then
+			return false
+		end
+		golpazoListo = os.clock() + G.Cada
+		h:MoveTo(r.Position)
+		local centro = r.Position - Vector3.new(0, 2.8 * T.Escala, 0)
+		remoto:FireAllClients("Golpazo", centro, G.Radio, G.Aviso)
+		fuerte:Play(0.05)
+		task.wait(G.Aviso)
+		if h.Health <= 0 then
+			return true
+		end
+		for _, jugador in Players:GetPlayers() do
+			local p = jugador.Character
+			local rp = p and p:FindFirstChild("HumanoidRootPart")
+			if p and rp and rp:IsA("BasePart") then
+				local plano = Vector3.new(rp.Position.X - centro.X, 0, rp.Position.Z - centro.Z)
+				if plano.Magnitude <= G.Radio then
+					local dir = if plano.Magnitude > 0.1 then plano.Unit else Vector3.zAxis
+					pegarA(m, p, G.Danio, "Rompe", dir)
+				end
+			end
+		end
+		return true
+	end
+
 	task.spawn(function()
 		local listo = 0
 		local embestidaLista = 0
@@ -799,7 +843,9 @@ crearEnemigo = function(zonaIdx: number)
 			if r and objetivo then
 				local d = (objetivo.Position - r.Position).Magnitude
 				local E = M.Embestida
-				if d >= E.Desde and d <= E.Hasta and os.clock() >= embestidaLista then
+				if T.Golpazo and d <= T.Golpazo.Radio and golpazo(r) then
+					listo = os.clock() + M.Pausa
+				elseif d >= E.Desde and d <= E.Hasta and os.clock() >= embestidaLista then
 					embestidaLista = os.clock() + E.Recarga
 					local fin = os.clock() + E.Dura
 					local rumbo = Vector3.new(
@@ -852,10 +898,58 @@ crearEnemigo = function(zonaIdx: number)
 		end
 	end)
 	h.Died:Once(function()
+		if esJefe then
+			return -- el jefe lo maneja su propio ciclo (no reaparece)
+		end
 		task.wait(EN.Vuelve)
 		m:Destroy()
 		crearEnemigo(zonaIdx)
 	end)
+	return m
+end
+
+-- Jefe: aparece cada tanto en una zona, avisa a todo el servidor y reparte el premio entre todos
+-- los que le pegaron. Si nadie lo derrota en DuraMax, se va.
+local function cicloJefe()
+	local J = Config.Enemigos.Jefe
+	task.wait(if RunService:IsStudio() then J.PrimeroAStudio else J.PrimeroA)
+	while true do
+		if #Players:GetPlayers() > 0 then
+			local zonaIdx = J.Zonas[math.random(1, #J.Zonas)]
+			local zona = Config.Enemigos.Zonas[zonaIdx]
+			local jefe = crearEnemigo(zonaIdx, "Jefe")
+			if jefe then
+				local nombre = Config.Enemigos.Tipos.Jefe.Nombre
+				remoto:FireAllClients("Jefe", "Aparece", nombre, zona.Nombre)
+				local h = jefe:FindFirstChildOfClass("Humanoid")
+				local fin = os.clock() + J.DuraMax
+				while h and h.Health > 0 and jefe.Parent and os.clock() < fin do
+					task.wait(0.5)
+				end
+				if h and h.Health <= 0 then
+					local cuantos = 0
+					for jugador in aportesJefe[jefe] or {} do
+						local datos = Perfiles.datos(jugador)
+						if datos then
+							cuantos += 1
+							Perfiles.sumarXp(jugador, J.Premio.Xp)
+							Perfiles.cambiar(jugador, {
+								Chatarra = datos.Chatarra + J.Premio.Chatarra,
+								Fichas = datos.Fichas + J.Premio.Fichas,
+							})
+						end
+					end
+					remoto:FireAllClients("Jefe", "Derrotado", nombre, cuantos)
+					task.wait(4)
+				else
+					remoto:FireAllClients("Jefe", "SeFue", nombre)
+				end
+				aportesJefe[jefe] = nil
+				jefe:Destroy()
+			end
+		end
+		task.wait(J.Cada)
+	end
 end
 
 local hayManiqui = false
@@ -872,6 +966,7 @@ local function primerManiqui(personaje: Model)
 			task.spawn(crearEnemigo, zonaIdx)
 		end
 	end
+	task.spawn(cicloJefe)
 end
 
 Players.PlayerAdded:Connect(function(jugador)
