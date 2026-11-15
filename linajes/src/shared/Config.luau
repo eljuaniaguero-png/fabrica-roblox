@@ -1653,7 +1653,10 @@ Config.Sonidos = {
 -- Enemigos del sandbox (bóveda: 01 Juego/Enemigos del sandbox). Zonas relativas a Arena.Mapa.Centro;
 -- cuanto más lejos de la zona segura, más nivel. Los tipos parten de Config.Combate.Matones.
 Config.Enemigos = {
-	Vuelve = 6, -- segundos hasta que aparece otro en la zona
+	Vuelve = 10, -- segundos hasta que aparece otro en la zona
+	-- Color de los efectos de los enemigos (golpes, tajos, muerte): violeta, para no confundirlos
+	-- con los de los jugadores (que usan el color de su Linaje). El jefe tiene el suyo.
+	ColorVfx = "#b04dff",
 	AlturaPiso = 3, -- un punto más alto que esto (arriba de un contenedor) no sirve para aparecer
 	PorNivel = { Vida = 0.07, Danio = 0.04, Premio = 0.08 },
 	Tipos = {
@@ -1709,6 +1712,7 @@ Config.Enemigos = {
 			Chatarra = 0,
 			Gorro = 1,
 			Borde = "#ffb347",
+			ColorVfx = "#ff5a1f",
 			Nivel = 20,
 			-- Golpazo: marca un círculo rojo en el piso y pega a todos adentro.
 			Golpazo = { Cada = 7, Radio = 16, Aviso = 1.1, Danio = 35 },
@@ -1730,7 +1734,7 @@ Config.Enemigos = {
 			Radio = 34,
 			Nivel = { 1, 6 },
 			Tipos = { "Maton", "Rapido" },
-			Max = 4,
+			Max = 2,
 		},
 		{
 			Nombre = "CONTENEDORES",
@@ -1738,7 +1742,7 @@ Config.Enemigos = {
 			Radio = 34,
 			Nivel = { 6, 15 },
 			Tipos = { "Maton", "Rapido", "Pesado" },
-			Max = 5,
+			Max = 3,
 		},
 		{
 			Nombre = "GRÚAS",
@@ -1746,7 +1750,7 @@ Config.Enemigos = {
 			Radio = 30,
 			Nivel = { 15, 30 },
 			Tipos = { "Pesado", "Maton" },
-			Max = 4,
+			Max = 2,
 		},
 	},
 }

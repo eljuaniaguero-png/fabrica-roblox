@@ -11,9 +11,9 @@ Decidido el 15 nov 2026 (pedido de Juani: "NPCs que te atacan para que los mates
 ## Zonas (arena de Puerto Óxido)
 | Zona | Nivel de los enemigos | Quiénes aparecen | Cuántos a la vez |
 |---|---|---|---|
-| **Muelle** | 1 a 6 | Matón, Carterista | 4 |
-| **Contenedores** | 6 a 15 | Matón, Carterista, Matón pesado | 5 |
-| **Grúas** | 15 a 30 | Matón pesado, Matón | 4 |
+| **Muelle** | 1 a 6 | Matón, Carterista | 2 |
+| **Contenedores** | 6 a 15 | Matón, Carterista, Matón pesado | 3 |
+| **Grúas** | 15 a 30 | Matón pesado, Matón | 2 |
 
 Cuando hay más mapas, cada mapa tiene sus propias zonas.
 
@@ -35,7 +35,9 @@ Cuando hay más mapas, cada mapa tiene sus propias zonas.
 
 ## Reglas
 - No entran a la zona segura ni atacan ahí.
-- Si no hay nadie cerca vuelven a su lugar; al morir, a los 6 s aparece otro en la zona.
+- Si no hay nadie cerca vuelven a su lugar; al morir, a los 10 s aparece otro en la zona (con un sello en el piso).
+- **Efectos en violeta**: los golpes, tajos y la muerte de los enemigos son violetas (el jefe, naranja), para no confundirlos con los tuyos, que son del color de tu Linaje. Al morir estallan en esquirlas y al que lo derrotó le flota "+XP" y "+Chatarra".
+- Menos enemigos a la vez (7 en total, antes 13), pedido de Juani el 15 nov.
 - El servidor decide todo (vida, daño y premio).
 
 ## Pendiente

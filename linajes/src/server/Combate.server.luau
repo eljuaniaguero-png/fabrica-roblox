@@ -270,6 +270,9 @@ pegarA = function(atacante: Model, objetivo: Model, danio: number, tipo: string,
 	if estabaVivo and h.Health <= 0 then
 		CuerpoComic.cara(objetivo, EXP_COMIC.derrotado)
 		local ganador = Players:GetPlayerFromCharacter(atacante)
+		if objetivo:GetAttribute("Maton") then
+			remoto:FireAllClients("Derribado", objetivo) -- estallido en el color del enemigo
+		end
 		-- Solo cuentan los jugadores: el maniquí no da Fichas.
 		if ganador and Players:GetPlayerFromCharacter(objetivo) then
 			Perfiles.sumarBaja(ganador)
@@ -283,6 +286,7 @@ pegarA = function(atacante: Model, objetivo: Model, danio: number, tipo: string,
 			if datos and typeof(chatarra) == "number" then
 				Perfiles.cambiar(ganador, { Chatarra = datos.Chatarra + chatarra })
 			end
+			remoto:FireClient(ganador, "Premio", objetivo, xp, chatarra) -- "+60 XP" flotando
 		end
 	end
 end
@@ -750,6 +754,7 @@ crearEnemigo = function(zonaIdx: number, forzado: string?): Model?
 	m:SetAttribute("Nombre", string.format("%s  ·  NV %d", T.Nombre, nivel))
 	m:SetAttribute("PremioXp", math.round(T.Xp * (1 + extra * EN.PorNivel.Premio)))
 	m:SetAttribute("PremioChatarra", math.round(T.Chatarra * (1 + extra * EN.PorNivel.Premio)))
+	m:SetAttribute("ColorVfx", Color3.fromHex(T.ColorVfx or EN.ColorVfx))
 	m.Parent = workspace
 	CuerpoComic.vestir(m, M.Semilla + zonaIdx * 10 + math.random(1, 9))
 	ropaMaton(m, numero)
@@ -763,6 +768,9 @@ crearEnemigo = function(zonaIdx: number, forzado: string?): Model?
 	h.WalkSpeed = M.Velocidad
 	h.DisplayDistanceType = Enum.HumanoidDisplayDistanceType.None
 	marcarMaton(m, Color3.fromHex(T.Borde))
+	if not esJefe then
+		remoto:FireAllClients("EnemigoAparece", m) -- sello en el piso
+	end
 	local animator = h:FindFirstChildOfClass("Animator")
 	if not animator then
 		animator = Instance.new("Animator")
@@ -920,7 +928,7 @@ local function cicloJefe()
 			local jefe = crearEnemigo(zonaIdx, "Jefe")
 			if jefe then
 				local nombre = Config.Enemigos.Tipos.Jefe.Nombre
-				remoto:FireAllClients("Jefe", "Aparece", nombre, zona.Nombre)
+				remoto:FireAllClients("Jefe", "Aparece", nombre, zona.Nombre, jefe)
 				local h = jefe:FindFirstChildOfClass("Humanoid")
 				local fin = os.clock() + J.DuraMax
 				while h and h.Health > 0 and jefe.Parent and os.clock() < fin do

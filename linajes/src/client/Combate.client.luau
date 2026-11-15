@@ -150,6 +150,12 @@ end
 
 -- Chispas y anillo en el punto del golpe.
 local function colorDe(atacante: Model?): Color3
+	-- Los enemigos traen su color de efectos (violeta; el jefe, naranja) para no confundirse con
+	-- los jugadores, que usan el color de su Linaje.
+	local propio = atacante and atacante:GetAttribute("ColorVfx")
+	if typeof(propio) == "Color3" then
+		return propio
+	end
 	local dueno = atacante and Players:GetPlayerFromCharacter(atacante)
 	local linaje = dueno and dueno:GetAttribute("Linaje")
 	return typeof(linaje) == "string" and (Config.Poderes.Colores :: any)[linaje] or C.ColorChispas
@@ -630,6 +636,108 @@ local function seRompe(centro: Vector3, tam: Vector3, color: Color3)
 	end
 end
 
+-- Posición del piso debajo de un personaje (para sellos y ondas).
+local function pisoDe(m: Model): Vector3?
+	local r = m:FindFirstChild("HumanoidRootPart")
+	local h = m:FindFirstChildOfClass("Humanoid")
+	if not (r and r:IsA("BasePart")) then
+		return nil
+	end
+	local alto = if h then h.HipHeight + r.Size.Y * 0.5 else 3
+	return r.Position - Vector3.new(0, alto, 0)
+end
+
+-- Enemigo derrotado: estallido, esquirlas y onda en su color.
+local function derribado(m: Model)
+	local r = m:FindFirstChild("HumanoidRootPart")
+	local piso = pisoDe(m)
+	if not (r and r:IsA("BasePart") and piso) then
+		return
+	end
+	local color = colorDe(m)
+	local escala = Niveles.tamano(m)
+	EfectosGolpe.luz(r.Position, color, 10, 22, 0.35)
+	EfectosGolpe.fragmentos3D(
+		r.Position,
+		12,
+		color,
+		Vector3.new(0.7, 0.7, 0.7) * escala,
+		22,
+		Enum.Material.Neon,
+		true
+	)
+	EfectosGolpe.onda(piso, 7 * escala, color)
+	EfectosGolpe.runa3D(CFrame.new(piso + Vector3.new(0, 0.15, 0)), 2, 10 * escala, color, 0.6)
+end
+
+-- Premio del que lo derrotó: "+XP" y "+Chatarra" flotando y subiendo.
+local function premioFlotante(m: Model, xp: number, chatarra: number?)
+	local r = m:FindFirstChild("HumanoidRootPart")
+	if not (r and r:IsA("BasePart")) then
+		return
+	end
+	local cartel = Instance.new("BillboardGui")
+	cartel.Size = UDim2.fromOffset(200, 70)
+	cartel.StudsOffset = Vector3.new(0, 4.5, 0)
+	cartel.AlwaysOnTop = true
+	cartel.Adornee = r
+	local lista = Instance.new("UIListLayout")
+	lista.HorizontalAlignment = Enum.HorizontalAlignment.Center
+	lista.Parent = cartel
+	local function fila(texto: string, color: Color3)
+		local t = Instance.new("TextLabel")
+		t.Size = UDim2.fromScale(1, 0.5)
+		t.BackgroundTransparency = 1
+		t.FontFace = Tema.LetraGruesa
+		t.TextScaled = true
+		t.TextColor3 = color
+		t.TextStrokeColor3 = Tema.Fondo
+		t.TextStrokeTransparency = 0.2
+		t.Text = texto
+		t.Parent = cartel
+		TweenService
+			:Create(t, TweenInfo.new(1.4, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {
+				TextTransparency = 1,
+				TextStrokeTransparency = 1,
+			})
+			:Play()
+	end
+	fila(string.format("+%d XP", math.round(xp)), Color3.fromRGB(255, 214, 92))
+	if chatarra and chatarra > 0 then
+		fila(string.format("+%d CHATARRA", math.round(chatarra)), Color3.fromRGB(190, 205, 215))
+	end
+	cartel.Parent = workspace
+	TweenService:Create(cartel, TweenInfo.new(1.4, Enum.EasingStyle.Quad), {
+		StudsOffset = Vector3.new(0, 8, 0),
+	}):Play()
+	Debris:AddItem(cartel, 1.5)
+end
+
+-- Aparece un enemigo: sello que se abre en el piso.
+local function enemigoAparece(m: Model)
+	local piso = pisoDe(m)
+	if piso then
+		EfectosGolpe.runa3D(CFrame.new(piso + Vector3.new(0, 0.15, 0)), 1, 9, colorDe(m), 0.7)
+	end
+end
+
+-- Llega el jefe: pilar, onda grande y sacudida para todos los que están cerca.
+local function jefeLlega(m: Model)
+	task.wait(0.1)
+	local piso = pisoDe(m)
+	if not piso then
+		return
+	end
+	local color = colorDe(m)
+	EfectosGolpe.columnaDespertar(piso, color, 1.6)
+	EfectosGolpe.onda(piso, 18, color)
+	EfectosGolpe.luz(piso + Vector3.new(0, 6, 0), color, 14, 40, 0.8)
+	local r = raiz
+	if r and (r.Position - piso).Magnitude < 90 then
+		sacudir(C.SacudidaFuerte)
+	end
+end
+
 remoto.OnClientEvent:Connect(function(tipo: string, a: any, b: any, _c: any, d: any)
 	if
 		tipo == "SeRompe"
@@ -750,6 +858,20 @@ remoto.OnClientEvent:Connect(function(tipo: string, a: any, b: any, _c: any, d: 
 		avisoPiso(a, b, if typeof(_c) == "number" then _c else 1)
 	elseif tipo == "Jefe" and typeof(a) == "string" then
 		cartelJefe(a, b, _c)
+		if a == "Aparece" and typeof(d) == "Instance" and d:IsA("Model") then
+			task.spawn(jefeLlega, d)
+		end
+	elseif tipo == "Derribado" and typeof(a) == "Instance" and a:IsA("Model") then
+		derribado(a)
+	elseif
+		tipo == "Premio"
+		and typeof(a) == "Instance"
+		and a:IsA("Model")
+		and typeof(b) == "number"
+	then
+		premioFlotante(a, b, if typeof(_c) == "number" then _c else nil)
+	elseif tipo == "EnemigoAparece" and typeof(a) == "Instance" and a:IsA("Model") then
+		enemigoAparece(a)
 	elseif tipo == "Empuje" then
 		local r = raiz
 		if r then
