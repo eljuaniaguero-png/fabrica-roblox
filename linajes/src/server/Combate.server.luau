@@ -100,6 +100,17 @@ local function actualizarCaraEstado(personaje: Model, textura: string?)
 	end
 end
 
+-- Aturdido y Frenado comparten el mismo reloj (aturdidoHasta): cuando se cumple, se sacan LOS DOS.
+-- Antes cada uno sacaba solo el suyo y, si se pisaban (te aturden y enseguida te frenan), el
+-- primero quedaba prendido para siempre y no andaba ninguna tecla de combate.
+local function liberarSiTermino(personaje: Model, e: any)
+	if os.clock() >= e.aturdidoHasta - 0.01 then
+		personaje:SetAttribute("Aturdido", false)
+		personaje:SetAttribute("Frenado", false)
+		actualizarCaraEstado(personaje, nil)
+	end
+end
+
 local function aturdir(personaje: Model, tiempo: number?)
 	local dura = tiempo or C.AturdeParry
 	local e = estadoDe(personaje)
@@ -111,12 +122,7 @@ local function aturdir(personaje: Model, tiempo: number?)
 	e.bloqueoDesde = nil
 	personaje:SetAttribute("Aturdido", true)
 	actualizarCaraEstado(personaje, EXP_COMIC.dolor)
-	task.delay(dura, function()
-		if os.clock() >= e.aturdidoHasta - 0.01 then
-			personaje:SetAttribute("Aturdido", false)
-			actualizarCaraEstado(personaje, nil)
-		end
-	end)
+	task.delay(dura, liberarSiTermino, personaje, e)
 end
 
 local function frenar(personaje: Model, tiempo: number)
@@ -129,12 +135,7 @@ local function frenar(personaje: Model, tiempo: number)
 	e.bloqueoDesde = nil
 	personaje:SetAttribute("Frenado", true)
 	actualizarCaraEstado(personaje, EXP_COMIC.dolor)
-	task.delay(tiempo, function()
-		if os.clock() >= e.aturdidoHasta - 0.01 then
-			personaje:SetAttribute("Frenado", false)
-			actualizarCaraEstado(personaje, nil)
-		end
-	end)
+	task.delay(tiempo, liberarSiTermino, personaje, e)
 end
 
 -- Un NPC cerca de un jugador queda con la física en ese cliente, que pisa la velocidad que pone el
@@ -459,6 +460,7 @@ local function prepararPeleador(personaje: Model)
 	h.Health = h.MaxHealth
 	personaje:SetAttribute("Energia", Estadisticas.energiaMax(personaje))
 	personaje:SetAttribute("Aturdido", false)
+	personaje:SetAttribute("Frenado", false)
 	CollectionService:AddTag(personaje, TAG)
 	local jugador = Players:GetPlayerFromCharacter(personaje)
 	if jugador then
