@@ -227,7 +227,8 @@ Config.Cuerpo.Ropa = {
 -- Cuerpo oficial cómic urbano: piezas en ServerStorage.CuerpoComic (arte/scripts/personajes/cuerpo_comic.py).
 Config.Cuerpo.Comic = {
 	Piezas = { "Cuerpo", "Remera", "Campera", "Cinturon", "Pantalon", "Zapatillas" },
-	Peinados = { "PeloPuntas", "PeloCorto", "PeloFlequillo" },
+	Peinados = { "PeloPuntas", "PeloCorto", "PeloFlequillo", "PeloCresta", "Rapado" },
+	NombresPeinados = { "Puntas", "Corto", "Flequillo", "Cresta", "Rapado" },
 	ColorPelo = Color3.fromHex("#4468AE"), -- por defecto; el creador deja elegir otro
 	Texturas = { Pelo = "rbxassetid://93286191132215", Zapatillas = "rbxassetid://117152327461014" },
 	Caras = {
@@ -263,6 +264,23 @@ Config.Cuerpo.Creador = {
 	Campera = { "28436f", "2b2f38", "4a5a3a", "6b2a2a", "3f485c", "5a3fa0", "8a6a3a", "d7d2c4" },
 	Acento = { "c2213a", "f2a23a", "3fc1b0", "2f6fdb", "6b5ba8", "e6e3da", "1c1714", "f2652b" },
 	Pantalon = { "242a39", "1c1714", "3a2a20", "3f485c", "4a5a3a", "6b6f78" },
+	Remera = { "e6e3da", "1c1714", "2b3852", "7d242c", "3e523a", "d7a83c", "5a3fa0", "3b414c" },
+	Zapatillas = { "a3a2a5", "1c1714", "c2213a", "28436f", "d7d2c4", "e8a33c" },
+	Contexturas = { "Normal", "Ancha", "Delgada" },
+	Alturas = { "Baja", "Media", "Alta" },
+	Bandos = { "Neutral", "Cofradia", "Liga", "Vigilantes" },
+	BandoNombres = {
+		Neutral = "Sin Bando",
+		Cofradia = "Cofradía",
+		Liga = "Liga Sur",
+		Vigilantes = "Vigilantes",
+	},
+	BandoColores = {
+		Neutral = "28303d",
+		Cofradia = "f2652b",
+		Liga = "3fe0f0",
+		Vigilantes = "ffd34d",
+	},
 	-- Color original de cada pieza en ServerStorage.CuerpoComic -> qué opción la tiñe.
 	Molde = {
 		d8a06f = "Piel",
@@ -270,10 +288,123 @@ Config.Cuerpo.Creador = {
 		["17233b"] = "CamperaOscura",
 		c2213a = "Acento",
 		["242a39"] = "Pantalon",
+		e6e3da = "Remera",
 	},
 	Oscurecer = 0.55, -- forro, bolsillos y puños: la campera elegida, más oscura
-	Espera = 0.12, -- segundos mínimos entre cambios (el servidor ignora los que llegan antes)
-	Inicial = { Piel = 4, Cara = 4, Peinado = 1, Pelo = 8, Campera = 1, Acento = 1, Pantalon = 1 },
+	Espera = 0.08, -- segundos mínimos entre cambios (el servidor ignora los que llegan antes)
+	Inicial = {
+		Piel = 4,
+		Cara = 4,
+		Peinado = 1,
+		Pelo = 8,
+		Marca = 0,
+		Contextura = 1,
+		Altura = 2,
+		Campera = 1,
+		Acento = 1,
+		Remera = 1,
+		Pantalon = 1,
+		Zapatillas = 1,
+		Bando = 1,
+	},
+	Predefinidos = {
+		{
+			Nombre = "URBANO",
+			Piel = 4,
+			Cara = 4,
+			Peinado = 1,
+			Pelo = 8,
+			Marca = 0,
+			Contextura = 1,
+			Altura = 2,
+			Campera = 1,
+			Acento = 1,
+			Remera = 1,
+			Pantalon = 1,
+			Zapatillas = 1,
+			Bando = 1,
+		},
+		{
+			Nombre = "SOMBRA",
+			Piel = 2,
+			Cara = 6,
+			Peinado = 3,
+			Pelo = 1,
+			Marca = 2,
+			Contextura = 3,
+			Altura = 2,
+			Campera = 2,
+			Acento = 7,
+			Remera = 2,
+			Pantalon = 2,
+			Zapatillas = 2,
+			Bando = 3,
+		},
+		{
+			Nombre = "TITÁN",
+			Piel = 6,
+			Cara = 2,
+			Peinado = 4,
+			Pelo = 2,
+			Marca = 1,
+			Contextura = 2,
+			Altura = 3,
+			Campera = 4,
+			Acento = 2,
+			Remera = 2,
+			Pantalon = 3,
+			Zapatillas = 3,
+			Bando = 2,
+		},
+		{
+			Nombre = "PUERTO",
+			Piel = 5,
+			Cara = 1,
+			Peinado = 2,
+			Pelo = 4,
+			Marca = 4,
+			Contextura = 2,
+			Altura = 2,
+			Campera = 7,
+			Acento = 6,
+			Remera = 1,
+			Pantalon = 3,
+			Zapatillas = 5,
+			Bando = 4,
+		},
+		{
+			Nombre = "NEÓN",
+			Piel = 3,
+			Cara = 3,
+			Peinado = 4,
+			Pelo = 11,
+			Marca = 5,
+			Contextura = 1,
+			Altura = 2,
+			Campera = 6,
+			Acento = 3,
+			Remera = 2,
+			Pantalon = 1,
+			Zapatillas = 4,
+			Bando = 3,
+		},
+		{
+			Nombre = "ECLIPSE",
+			Piel = 7,
+			Cara = 6,
+			Peinado = 1,
+			Pelo = 12,
+			Marca = 6,
+			Contextura = 1,
+			Altura = 3,
+			Campera = 8,
+			Acento = 8,
+			Remera = 2,
+			Pantalon = 2,
+			Zapatillas = 6,
+			Bando = 2,
+		},
+	},
 }
 
 -- Diferencia mínima de color (0 a 1,7) entre pelo y piel cuando el pelo sale al azar.
@@ -435,7 +566,13 @@ Config.Arena = {
 		},
 		Reflectores = { { 60, -112 } },
 		Grupos = { { -72, -66 }, { 72, -66 }, { -60, 66 }, { 72, 66 } },
-		Charcos = {},
+		Charcos = {
+			{ -18, 12, 16, 11 },
+			{ 26, -18, 14, 9 },
+			{ -48, -32, 18, 12 },
+			{ 46, 36, 15, 10 },
+			{ 4, -56, 20, 11 },
+		},
 		Faroles = {
 			{ 122, 96, 1 },
 			{ -122, 40, 1 },
@@ -863,19 +1000,19 @@ Config.Animaciones = {
 	-- Poco comunes (P27-04/05/06), hechas con arte/scripts/animaciones/linaje-poco-comunes.py.
 	-- Marcadores: Impacto en todas; Sale y Llega en SaltoCable; Agarra en Lanzar; Suelta en Levantar.
 	linaje_electro = {
-		RayoCadena = "rbxassetid://119025205660347",
-		Descarga = "rbxassetid://117106856750145",
-		SaltoCable = "rbxassetid://86097197413818",
+		RayoCadena = "rbxassetid://108637834229287",
+		Descarga = "rbxassetid://75727394697336",
+		SaltoCable = "rbxassetid://133672321229998",
 	},
 	linaje_criogenia = {
-		LanzaHielo = "rbxassetid://100909685015203",
-		MuroHielo = "rbxassetid://83593499097431",
-		PistaHelada = "rbxassetid://97889418995026",
+		LanzaHielo = "rbxassetid://92625000418060",
+		MuroHielo = "rbxassetid://70914875736202",
+		PistaHelada = "rbxassetid://123527362995404",
 	},
 	linaje_telequinesis = {
-		Lanzar = "rbxassetid://112509247938658",
-		Levantar = "rbxassetid://74911200218800",
-		Onda = "rbxassetid://134024808173959",
+		Lanzar = "rbxassetid://81263873846968",
+		Levantar = "rbxassetid://136256296226849",
+		Onda = "rbxassetid://125422513185502",
 	},
 	linaje_fuerzabruta = {
 		PunoSismico = "rbxassetid://92821448797182",
@@ -1118,6 +1255,10 @@ Config.Efectos = {
 		HieloEscarcha = "rbxassetid://79199733705078",
 		AvisoSuelo = "rbxassetid://73567539131035",
 		ImpactoFlipbook4x4 = "rbxassetid://124490335577996",
+		RunaEclipse = "rbxassetid://130707177057284",
+		CristalHielo = "rbxassetid://103213043780437",
+		RelampagoArco = "rbxassetid://128817829092949",
+		ImpactoFuerza = "rbxassetid://135185640094426",
 	},
 	-- Tope: 150 partículas activas por efecto (Ritmo x Vida de cada capa).
 	Fuego = {
@@ -1474,6 +1615,11 @@ Config.Sonidos = {
 	Golpe = { Id = "rbxassetid://116089304319844", Volumen = 0.7 },
 	GolpeFuerte = { Id = "rbxassetid://122802277794974", Volumen = 0.9 },
 	Bloqueo = { Id = "rbxassetid://134479353254444", Volumen = 0.7 },
+}
+
+Config.Minuto1 = {
+	RecompensaChatarra = 50,
+	RecompensaXp = 100,
 }
 
 return Config

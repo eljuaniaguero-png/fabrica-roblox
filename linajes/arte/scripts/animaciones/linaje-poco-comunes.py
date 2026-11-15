@@ -30,342 +30,384 @@ A.BLEND = os.path.join(A.B.BLENDER, "animaciones-linajes.blend")
 # ---------------------------------------------------------------------------
 # Electro
 # ---------------------------------------------------------------------------
+# Lenguaje: nervioso y rápido. Torso torcido, un brazo tenso tirado para atrás, rodillas
+# flexionadas y cortes secos (sin pasos suaves entre poses). La cara siempre despejada.
+
+E = con(
+    G,
+    raiz=(0, 0, -0.18),
+    LowerTorso=(10, 0, -26),
+    UpperTorso=(8, 0, -18),
+    Head=(6, 0, 30),
+    RightUpperArm=(46, -34, 10),  # brazo de atrás, tenso
+    RightLowerArm=(-24, 0, 0),
+    LeftUpperArm=(-40, 26, -10),
+    LeftLowerArm=(-96, 0, 0),
+)
 
 
 def rayo_cadena(t):
-    # Estocada con la mano izquierda: el brazo se recoge al pecho y sale recto (Impacto 10).
-    # El cuerpo queda de perfil, flaco, para que el brazo estirado sea toda la silueta.
-    recoge = con(
-        G,
-        raiz=(0, 0.06, -0.15),
-        UpperTorso=(4, 0, 30),
-        Head=(10, 0, -12),
-        LeftUpperArm=(-30, 30, -20),
-        LeftLowerArm=(-140, 0, 0),
-        RightUpperArm=(30, -10, 10),
-        RightLowerArm=(-90, 0, 0),
+    # Prepara: se carga torcido para atrás, la mano izquierda recogida al hombro (no tapa la cara).
+    carga = con(
+        E,
+        raiz=(0, 0.1, -0.22),
+        UpperTorso=(4, 0, 38),
+        Head=(4, 0, -26),
+        LeftUpperArm=(-10, 50, -30),
+        LeftLowerArm=(-130, 0, 0),
+        RightUpperArm=(60, -40, 10),
     )
+    # Golpe: estocada larga, brazo izquierdo recto y el derecho latigueado atrás.
     dispara = con(
-        G,
-        raiz=(0, -0.14, -0.17),
-        LowerTorso=(10, 0, -30),
-        UpperTorso=(4, 0, -52),
-        Head=(4, 0, 78),
-        LeftUpperArm=(-92, 4, 0),
-        LeftLowerArm=(-2, 0, 0),
-        RightUpperArm=(50, -14, 10),
-        RightLowerArm=(-70, 0, 0),
-        LeftUpperLeg=(-48, -6, 30),
-        RightUpperLeg=(16, 6, 30),
-        LeftLowerLeg=(68, 0, 0),
-        RightLowerLeg=(40, 0, 0),
+        E,
+        raiz=(0, -0.2, -0.24),
+        LowerTorso=(14, 0, -40),
+        UpperTorso=(10, 0, -56),
+        Head=(-2, 0, 84),
+        LeftUpperArm=(-94, 2, 0),
+        LeftLowerArm=(0, 0, 0),
+        RightUpperArm=(70, -50, 20),
+        RightLowerArm=(-4, 0, 0),
+        LeftUpperLeg=(-60, -8, 34),
+        RightUpperLeg=(26, 8, 34),
+        LeftLowerLeg=(72, 0, 0),
+        RightLowerLeg=(30, 0, 0),
     )
-    tiembla = con(dispara, raiz=(0, -0.12, -0.17), LeftUpperArm=(-88, 6, 0), UpperTorso=(4, 0, -48))
-    return actuar(t, 24, [(0, G), (6, recoge, "sale"), (10, dispara, "seco"), (15, tiembla, "sale"), (24, G)], {"Head": -1})
+    # Recupera: el rayo lo sacude; hombros arriba, brazo cae flojo, torso vuelve de golpe.
+    sacude = con(
+        E,
+        raiz=(0, -0.06, -0.14),
+        UpperTorso=(-8, 0, 16),
+        Head=(-12, 0, 10),
+        LeftUpperArm=(-40, -16, 0),
+        LeftLowerArm=(-40, 0, 0),
+        RightUpperArm=(20, -20, 0),
+        RightLowerArm=(-110, 0, 0),
+    )
+    return actuar(t, 24, [(0, G), (6, carga, "seco"), (10, dispara, "seco"), (16, sacude, "seco"), (24, G, "sale")], {"Head": -1})
 
 
 def descarga(t):
-    # Se cierra sobre sí mismo (brazos cruzados, agachado) y estalla abierto en cruz (Impacto 13).
-    cierra = con(
-        G,
-        raiz=(0, 0, -0.3),
-        LowerTorso=(22, 0, 0),
-        UpperTorso=(18, 0, 0),
-        Head=(26, 0, 0),
-        LeftUpperArm=(-50, 46, -20),
-        RightUpperArm=(-50, -46, 20),
-        LeftLowerArm=(-130, 0, 0),
-        RightLowerArm=(-130, 0, 0),
-        LeftUpperLeg=(-70, -14, 0),
-        RightUpperLeg=(-70, 14, 0),
-        LeftLowerLeg=(110, 0, 0),
-        RightLowerLeg=(110, 0, 0),
+    # Prepara: agachado, puños a la cadera y cabeza abajo (junta la carga).
+    junta = con(
+        E,
+        raiz=(0, 0, -0.34),
+        LowerTorso=(26, 0, 0),
+        UpperTorso=(22, 0, 0),
+        Head=(30, 0, 0),
+        LeftUpperArm=(30, 22, 0),
+        RightUpperArm=(30, -22, 0),
+        LeftLowerArm=(-100, 0, 0),
+        RightLowerArm=(-100, 0, 0),
+        LeftUpperLeg=(-76, -16, 0),
+        RightUpperLeg=(-76, 16, 0),
+        LeftLowerLeg=(116, 0, 0),
+        RightLowerLeg=(116, 0, 0),
         LeftFoot=(-30, 0, 0),
         RightFoot=(-30, 0, 0),
     )
+    # Golpe: se para de un salto con los dos brazos abiertos en diagonal HACIA ABAJO (simétrico,
+    # cabeza derecha y mentón arriba: nada de dab).
     estalla = con(
         G,
-        raiz=(0, 0, -0.04),
-        LowerTorso=(-6, 0, 0),
-        UpperTorso=(-16, 0, 0),
-        Head=(-22, 0, 0),
-        LeftUpperArm=(10, -84, 0),
-        RightUpperArm=(10, 84, 0),
-        LeftLowerArm=(-6, 0, 0),
-        RightLowerArm=(-6, 0, 0),
-        LeftUpperLeg=(-10, -22, 0),
-        RightUpperLeg=(-10, 22, 0),
-        LeftLowerLeg=(14, 0, 0),
-        RightLowerLeg=(14, 0, 0),
-        LeftFoot=(-4, 0, 0),
-        RightFoot=(-4, 0, 0),
+        raiz=(0, 0, 0.06),
+        LowerTorso=(-8, 0, 0),
+        UpperTorso=(-20, 0, 0),
+        Head=(-18, 0, 0),
+        LeftUpperArm=(20, -50, 0),
+        RightUpperArm=(20, 50, 0),
+        LeftLowerArm=(-10, 0, 0),
+        RightLowerArm=(-10, 0, 0),
+        LeftUpperLeg=(-6, -24, 0),
+        RightUpperLeg=(-6, 24, 0),
+        LeftLowerLeg=(8, 0, 0),
+        RightLowerLeg=(8, 0, 0),
+        LeftFoot=(-2, 0, 0),
+        RightFoot=(-2, 0, 0),
     )
-    queda = con(estalla, raiz=(0, 0, -0.07), LeftUpperArm=(6, -74, 0), RightUpperArm=(6, 74, 0), Head=(-12, 0, 0))
-    return actuar(t, 34, [(0, G), (9, cierra, "sale"), (13, pasarse(cierra, estalla, 0.06), "seco"), (20, queda, "sale"), (34, G)], {"Head": -1})
+    # Recupera: cae sobre una rodilla, las manos todavía chispeando a los costados.
+    cae = con(
+        E,
+        raiz=(0, -0.04, -0.4),
+        LowerTorso=(30, 0, -10),
+        UpperTorso=(24, 0, 10),
+        Head=(-10, 0, 0),
+        LeftUpperArm=(10, -30, 0),
+        RightUpperArm=(10, 30, 0),
+        LeftLowerArm=(-60, 0, 0),
+        RightLowerArm=(-60, 0, 0),
+        LeftUpperLeg=(-90, -10, 10),
+        RightUpperLeg=(0, 10, 10),
+        LeftLowerLeg=(90, 0, 0),
+        RightLowerLeg=(120, 0, 0),
+        RightFoot=(40, 0, 0),
+    )
+    return actuar(t, 34, [(0, G), (9, junta, "seco"), (13, estalla, "seco"), (22, cae, "sale"), (34, G)], {"Head": -1})
 
 
 def salto_cable(t):
-    # Se tira de cabeza convertido en rayo (Sale 4) y llega clavando el hombro izquierdo (Llega 6).
+    # Prepara (Sale 4): se tira de cabeza; Golpe (Llega 6): clava el hombro; Recupera: se
+    # endereza de un tirón y sacude la cabeza.
     sale = con(
-        G,
+        E,
         raiz=(0, -0.22, -0.2),
-        LowerTorso=(46, 0, -10),
+        LowerTorso=(50, 0, -10),
         UpperTorso=(20, 0, -20),
-        Head=(-40, 0, 28),
+        Head=(-44, 0, 28),
         LeftUpperArm=(-150, 6, 0),
         LeftLowerArm=(-4, 0, 0),
-        RightUpperArm=(40, -8, 0),
+        RightUpperArm=(60, -30, 0),
         RightLowerArm=(-10, 0, 0),
         LeftUpperLeg=(-70, -6, 10),
-        RightUpperLeg=(30, 6, 10),
+        RightUpperLeg=(40, 6, 10),
         LeftLowerLeg=(90, 0, 0),
-        RightLowerLeg=(20, 0, 0),
+        RightLowerLeg=(16, 0, 0),
     )
     llega = con(
-        G,
-        raiz=(0, -0.1, -0.24),
-        LowerTorso=(18, 0, -40),
-        UpperTorso=(10, 0, -50),
-        Head=(-4, 0, 86),
-        LeftUpperArm=(-70, -10, 0),
-        LeftLowerArm=(-50, 0, 0),
-        RightUpperArm=(60, -20, 0),
-        RightLowerArm=(-40, 0, 0),
-        LeftUpperLeg=(-66, -6, 40),
-        RightUpperLeg=(22, 6, 40),
-        LeftLowerLeg=(86, 0, 0),
-        RightLowerLeg=(52, 0, 0),
+        E,
+        raiz=(0, -0.14, -0.28),
+        LowerTorso=(22, 0, -46),
+        UpperTorso=(14, 0, -56),
+        Head=(-6, 0, 88),
+        LeftUpperArm=(-60, -14, 0),
+        LeftLowerArm=(-60, 0, 0),
+        LeftUpperLeg=(-70, -6, 44),
+        RightUpperLeg=(26, 6, 44),
+        LeftLowerLeg=(90, 0, 0),
+        RightLowerLeg=(56, 0, 0),
     )
-    return actuar(t, 20, [(0, G), (4, sale, "seco"), (6, llega, "seco"), (11, con(llega, raiz=(0, -0.08, -0.2)), "sale"), (20, G)], {"Head": -1})
+    endereza = con(E, raiz=(0, 0.02, -0.1), UpperTorso=(-12, 0, 20), Head=(-16, 0, -20), LeftUpperArm=(-20, -10, 0))
+    return actuar(t, 20, [(0, G), (4, sale, "seco"), (6, llega, "seco"), (13, endereza, "seco"), (20, G, "sale")], {"Head": -1})
 
 
 # ---------------------------------------------------------------------------
 # Criogenia
 # ---------------------------------------------------------------------------
+# Lenguaje: pesado, pies plantados y piernas abiertas. Barridos amplios con todo el brazo, como
+# si el hielo pesara. Las poses llegan "sale" (se frenan con peso), nunca de golpe.
+
+PLANTADO = {
+    "LeftUpperLeg": (-40, -28, 0),
+    "RightUpperLeg": (-40, 28, 0),
+    "LeftLowerLeg": (64, 0, 0),
+    "RightLowerLeg": (64, 0, 0),
+    "LeftFoot": (-24, 0, 0),
+    "RightFoot": (-24, 0, 0),
+}
+C = con(G, raiz=(0, 0, -0.3), LowerTorso=(10, 0, 0), UpperTorso=(6, 0, 0), Head=(8, 0, 0), **PLANTADO)
 
 
 def lanza_hielo(t):
-    # Jabalina: el brazo derecho sube atrás de la cabeza y tira por arriba (Impacto 10). El
-    # izquierdo apunta adelante para equilibrar y baja al tirar.
-    arma = con(
-        G,
-        raiz=(0, 0.12, -0.12),
-        LowerTorso=(-6, 0, -34),
-        UpperTorso=(-12, 0, -40),
-        Head=(4, 0, 70),
-        RightUpperArm=(-150, -30, 30),
-        RightLowerArm=(-96, 0, 0),
-        LeftUpperArm=(-84, 10, 0),
-        LeftLowerArm=(-10, 0, 0),
-        LeftUpperLeg=(-22, -6, 34),
-        RightUpperLeg=(12, 6, 34),
-    )
-    tira = con(
-        G,
-        raiz=(0, -0.16, -0.16),
-        LowerTorso=(12, 0, -10),
-        UpperTorso=(12, 0, 56),
-        Head=(-10, 0, -44),
-        RightUpperArm=(-74, 6, 0),
-        RightLowerArm=(-4, 0, 0),
-        LeftUpperArm=(34, 24, 0),
+    # Prepara: el brazo derecho cruza el cuerpo y baja hasta la cadera izquierda (junta el frío).
+    junta = con(
+        C,
+        UpperTorso=(14, 0, 40),
+        Head=(14, 0, -30),
+        RightUpperArm=(-30, -70, 0),
+        RightLowerArm=(-30, 0, 0),
+        LeftUpperArm=(10, 30, 0),
         LeftLowerArm=(-60, 0, 0),
-        LeftUpperLeg=(-62, -6, 10),
-        RightUpperLeg=(24, 6, 10),
-        LeftLowerLeg=(84, 0, 0),
-        RightLowerLeg=(36, 0, 0),
     )
-    sigue = con(tira, raiz=(0, -0.14, -0.18), RightUpperArm=(-40, 10, 0), UpperTorso=(16, 0, 62), Head=(-12, 0, -50))
-    return actuar(t, 32, [(0, G), (7, arma, "sale"), (10, tira, "seco"), (16, sigue, "sale"), (32, G)], {"Head": -1})
+    # Golpe: barrido enorme hacia afuera y adelante; el brazo termina abierto a la altura del hombro.
+    barre = con(
+        C,
+        raiz=(0, -0.06, -0.34),
+        UpperTorso=(0, 0, -48),
+        Head=(4, 0, 40),
+        RightUpperArm=(-84, 50, 0),
+        RightLowerArm=(-4, 0, 0),
+        LeftUpperArm=(30, -40, 0),
+        LeftLowerArm=(-20, 0, 0),
+    )
+    # Recupera: el peso se va a la pierna derecha y el brazo baja despacio, abierto.
+    asienta = con(
+        C,
+        raiz=(0.05, 0, -0.32),
+        UpperTorso=(10, 0, -30),
+        Head=(10, 0, 26),
+        RightUpperArm=(-30, 64, 0),
+        RightLowerArm=(-10, 0, 0),
+        LeftUpperArm=(20, -10, 0),
+        LeftLowerArm=(-50, 0, 0),
+    )
+    return actuar(t, 32, [(0, G), (7, junta, "sale"), (10, barre, "seco"), (18, asienta, "sale"), (32, G, "suave")], {"Head": -1})
 
 
 def muro_hielo(t):
-    # Levanta el muro del piso: se agacha con las palmas abajo y se para tirando de los dos
-    # brazos hacia arriba (Impacto 15), como quien levanta una persiana pesada.
-    abajo = con(
-        G,
-        raiz=(0, -0.04, -0.34),
-        LowerTorso=(40, 0, 0),
-        UpperTorso=(20, 0, 0),
-        Head=(-30, 0, 0),
-        LeftUpperArm=(-40, -10, 0),
-        RightUpperArm=(-40, 10, 0),
-        LeftLowerArm=(-10, 0, 0),
-        RightLowerArm=(-10, 0, 0),
-        LeftUpperLeg=(-96, -14, 0),
-        RightUpperLeg=(-96, 14, 0),
-        LeftLowerLeg=(124, 0, 0),
-        RightLowerLeg=(124, 0, 0),
-        LeftFoot=(-26, 0, 0),
-        RightFoot=(-26, 0, 0),
+    # Prepara: sentadilla abierta, las dos palmas apoyadas en el piso adelante.
+    apoya = con(
+        C,
+        raiz=(0, -0.02, -0.46),
+        LowerTorso=(46, 0, 0),
+        UpperTorso=(22, 0, 0),
+        Head=(-26, 0, 0),
+        LeftUpperArm=(-36, -8, 0),
+        RightUpperArm=(-36, 8, 0),
+        LeftLowerArm=(-6, 0, 0),
+        RightLowerArm=(-6, 0, 0),
+        LeftUpperLeg=(-100, -30, 0),
+        RightUpperLeg=(-100, 30, 0),
+        LeftLowerLeg=(120, 0, 0),
+        RightLowerLeg=(120, 0, 0),
     )
-    arriba = con(
-        G,
-        raiz=(0, 0.04, -0.02),
-        LowerTorso=(-8, 0, 0),
-        UpperTorso=(-14, 0, 0),
-        Head=(-10, 0, 0),
-        LeftUpperArm=(-150, -16, 0),
-        RightUpperArm=(-150, 16, 0),
-        LeftLowerArm=(-30, 0, 0),
-        RightLowerArm=(-30, 0, 0),
-        LeftUpperLeg=(-8, -14, 0),
-        RightUpperLeg=(-8, 14, 0),
-        LeftLowerLeg=(12, 0, 0),
-        RightLowerLeg=(12, 0, 0),
-        LeftFoot=(-4, 0, 0),
-        RightFoot=(-4, 0, 0),
+    # Golpe: se levanta empujando con las dos manos juntas hacia adelante (el muro sale del piso).
+    empuja = con(
+        C,
+        raiz=(0, -0.08, -0.22),
+        LowerTorso=(-4, 0, 0),
+        UpperTorso=(-8, 0, 0),
+        Head=(-4, 0, 0),
+        LeftUpperArm=(-100, 14, 0),
+        RightUpperArm=(-100, -14, 0),
+        LeftLowerArm=(-6, 0, 0),
+        RightLowerArm=(-6, 0, 0),
     )
-    sostiene = con(arriba, raiz=(0, 0.03, -0.05), LeftUpperArm=(-138, -16, 0), RightUpperArm=(-138, 16, 0))
-    return actuar(t, 40, [(0, G), (9, abajo, "sale"), (15, pasarse(abajo, arriba, 0.05), "seco"), (24, sostiene, "sale"), (40, G)], {"Head": -1})
+    # Recupera: sostiene el muro, codos flexionados y el peso echado para atrás.
+    sostiene = con(
+        C,
+        raiz=(0, 0, -0.26),
+        LowerTorso=(0, 0, 0),
+        UpperTorso=(-16, 0, 0),
+        Head=(4, 0, 0),
+        LeftUpperArm=(-70, 20, 0),
+        RightUpperArm=(-70, -20, 0),
+        LeftLowerArm=(-60, 0, 0),
+        RightLowerArm=(-60, 0, 0),
+    )
+    return actuar(t, 40, [(0, G), (9, apoya, "sale"), (15, empuja, "seco"), (26, sostiene, "sale"), (40, G, "suave")], {"Head": -1})
 
 
 def pista_helada(t):
-    # Patinador de velocidad: muy bajo, torso casi horizontal, un brazo barre el piso adelante
-    # (Impacto 4) y el otro va atrás. Se sostiene deslizando 0,6 s y se endereza.
-    patina = con(
-        G,
-        raiz=(0, -0.08, -0.26),
-        LowerTorso=(34, 0, -10),
-        UpperTorso=(14, 0, 24),
-        Head=(-36, 0, -14),
-        RightUpperArm=(-100, 6, 0),
-        RightLowerArm=(-6, 0, 0),
-        LeftUpperArm=(70, 14, 0),
-        LeftLowerArm=(-14, 0, 0),
-        LeftUpperLeg=(-92, -6, 10),
-        RightUpperLeg=(6, 10, 10),
+    # Prepara: se agacha abierto con los dos brazos tirados atrás. Golpe: el brazo derecho barre
+    # el piso adelante (la pista nace ahí). Recupera: desliza en la otra pierna, brazos cambiados.
+    carga = con(
+        C,
+        raiz=(0, 0, -0.38),
+        LowerTorso=(24, 0, 0),
+        UpperTorso=(20, 0, 0),
+        Head=(-10, 0, 0),
+        LeftUpperArm=(50, 10, 0),
+        RightUpperArm=(50, -10, 0),
+        LeftLowerArm=(-10, 0, 0),
+        RightLowerArm=(-10, 0, 0),
+    )
+    barre = con(
+        C,
+        raiz=(0, -0.08, -0.34),
+        LowerTorso=(34, 0, -16),
+        UpperTorso=(16, 0, 20),
+        Head=(-30, 0, -10),
+        RightUpperArm=(-70, 20, 0),
+        RightLowerArm=(-4, 0, 0),
+        LeftUpperArm=(70, -10, 0),
+        LeftLowerArm=(-10, 0, 0),
+        LeftUpperLeg=(-90, -24, 10),
+        RightUpperLeg=(0, 24, 10),
         LeftLowerLeg=(100, 0, 0),
         RightLowerLeg=(30, 0, 0),
-        LeftFoot=(-10, 0, 0),
-        RightFoot=(20, 0, 0),
     )
-    cambia = con(patina, raiz=(0.03, -0.08, -0.24), UpperTorso=(18, 0, 14), RightUpperArm=(-90, 6, 0), LeftUpperArm=(60, 14, 0))
-    return actuar(t, 30, [(0, G), (4, patina, "seco"), (12, cambia), (20, patina), (30, G, "sale")], {"Head": -1})
+    desliza = con(
+        C,
+        raiz=(0, -0.06, -0.32),
+        LowerTorso=(30, 0, 16),
+        UpperTorso=(14, 0, -20),
+        Head=(-26, 0, 10),
+        LeftUpperArm=(-60, -20, 0),
+        LeftLowerArm=(-4, 0, 0),
+        RightUpperArm=(60, 10, 0),
+        RightLowerArm=(-10, 0, 0),
+        LeftUpperLeg=(0, -24, -10),
+        RightUpperLeg=(-90, 24, -10),
+        LeftLowerLeg=(30, 0, 0),
+        RightLowerLeg=(100, 0, 0),
+    )
+    return actuar(t, 30, [(0, G), (3, carga, "sale"), (5, barre, "seco"), (18, desliza, "sale"), (30, G, "suave")], {"Head": -1})
 
 
 # ---------------------------------------------------------------------------
 # Telequinesis
 # ---------------------------------------------------------------------------
+# Lenguaje: controlado y sin esfuerzo. Cuerpo erguido y casi quieto, cabeza apenas inclinada,
+# brazos abiertos con las palmas hacia afuera. Lo que se mueve es lo que controla, no él.
 
-# Mano izquierda a la sien: es la marca del Linaje en las tres habilidades.
-SIEN = {"LeftUpperArm": (-70, 34, -30), "LeftLowerArm": (-150, 0, 0)}
-PARADO = con(
+T = con(
     G,
-    raiz=(0, 0, -0.04),
-    LowerTorso=(2, 0, -10),
-    UpperTorso=(-2, 0, 0),
-    Head=(8, 0, 10),
-    LeftUpperLeg=(-12, -6, 10),
-    RightUpperLeg=(2, 6, 10),
-    LeftLowerLeg=(18, 0, 0),
-    RightLowerLeg=(14, 0, 0),
-    LeftFoot=(-6, 0, 0),
-    RightFoot=(-8, 0, 0),
+    raiz=(0, 0, -0.03),
+    LowerTorso=(0, 0, 0),
+    UpperTorso=(-4, 0, 0),
+    Head=(4, 10, 0),  # cabeza inclinada de costado
+    LeftUpperArm=(-20, -40, 0),
+    RightUpperArm=(-20, 40, 0),
+    LeftLowerArm=(-20, 0, 0),
+    RightLowerArm=(-20, 0, 0),
+    LeftUpperLeg=(-8, -6, 0),
+    RightUpperLeg=(-8, 6, 0),
+    LeftLowerLeg=(12, 0, 0),
+    RightLowerLeg=(12, 0, 0),
+    LeftFoot=(-4, 0, 0),
+    RightFoot=(-4, 0, 0),
 )
 
 
 def lanzar(t):
-    # El brazo derecho se abre al costado, palma arriba, "agarrando" el objeto (6) y barre en
-    # horizontal hasta apuntar al rival (Impacto 12). El cuerpo apenas gira.
-    agarra = con(
-        PARADO,
-        UpperTorso=(-4, 0, -24),
-        Head=(4, 0, 34),
-        RightUpperArm=(-10, 86, 0),
-        RightLowerArm=(-20, 0, 0),
-        **SIEN,
-    )
-    tira = con(
-        PARADO,
-        raiz=(0, -0.05, -0.06),
-        UpperTorso=(4, 0, 34),
-        Head=(8, 0, -24),
-        RightUpperArm=(-90, -14, 0),
-        RightLowerArm=(-2, 0, 0),
-        **SIEN,
-    )
-    queda = con(tira, UpperTorso=(4, 0, 28), RightUpperArm=(-84, -10, 0))
-    return actuar(t, 30, [(0, G), (6, agarra, "sale"), (12, pasarse(agarra, tira, 0.05), "seco"), (18, queda, "sale"), (30, G)], {"Head": -1})
+    # Prepara: abre los dos brazos a los costados (agarra el objeto con la mente, Agarra 6).
+    abre = con(T, Head=(0, 14, 0), LeftUpperArm=(-30, -76, 0), RightUpperArm=(-30, 76, 0), LeftLowerArm=(-8, 0, 0), RightLowerArm=(-8, 0, 0))
+    # Golpe: un solo brazo apunta al rival con la palma; el otro queda abierto. El cuerpo no se mueve.
+    apunta = con(T, Head=(0, -10, 0), RightUpperArm=(-92, 4, 0), RightLowerArm=(0, 0, 0), LeftUpperArm=(-30, -70, 0), LeftLowerArm=(-8, 0, 0))
+    # Recupera: baja los brazos despacio y queda flotando apenas.
+    flota = con(T, raiz=(0, 0, 0.03), Head=(-4, 12, 0), LeftUpperArm=(-10, -30, 0), RightUpperArm=(-40, 30, 0))
+    return actuar(t, 30, [(0, G), (6, abre, "suave"), (12, apunta, "sale"), (20, flota, "suave"), (30, G, "suave")], {"Head": -1})
 
 
 def levantar(t):
-    # La mano derecha sube despacio con la palma arriba y el rival sube con ella (Impacto 10).
-    # Lo sostiene temblando 2 s y baja el brazo de un tirón: ahí cae (Suelta 70).
+    # Prepara: palmas para abajo a la altura de la cintura. Golpe (10): sube las dos manos abiertas
+    # hasta los hombros y se eleva en puntas de pie; sostiene 2 s. Suelta (70): las abre hacia afuera.
     f = t * 84
-    tiembla = A.cos(2 * A.pi * f / 5) if 16 < f < 68 else 0.0
-    toma = con(PARADO, RightUpperArm=(-50, -6, 0), RightLowerArm=(-30, 0, 0), **SIEN)
+    tiembla = A.cos(2 * A.pi * f / 6) if 16 < f < 68 else 0.0
+    baja = con(T, LeftUpperArm=(-30, -20, 0), RightUpperArm=(-30, 20, 0), LeftLowerArm=(-30, 0, 0), RightLowerArm=(-30, 0, 0))
     sube = con(
-        PARADO,
-        raiz=(0, 0.03, -0.02),
-        UpperTorso=(-10, 0, 0),
-        Head=(-14 + 1.5 * tiembla, 0, 10),
-        RightUpperArm=(-134 + 2.5 * tiembla, -10, 0),
-        RightLowerArm=(-24, 0, 0),
-        **SIEN,
+        T,
+        raiz=(0, 0, 0.04),
+        Head=(-8, 10 + 2 * tiembla, 0),
+        LeftUpperArm=(-90 + 2 * tiembla, -30, 0),
+        RightUpperArm=(-90 - 2 * tiembla, 30, 0),
+        LeftLowerArm=(-10, 0, 0),
+        RightLowerArm=(-10, 0, 0),
+        LeftFoot=(20, 0, 0),
+        RightFoot=(20, 0, 0),
     )
-    baja = con(
-        PARADO,
-        raiz=(0, -0.06, -0.2),
-        LowerTorso=(24, 0, -10),
-        UpperTorso=(20, 0, 20),
-        Head=(-6, 0, -10),
-        RightUpperArm=(-34, -4, 0),
-        RightLowerArm=(-4, 0, 0),
-        LeftUpperLeg=(-50, -6, 10),
-        RightUpperLeg=(-30, 6, 10),
-        LeftLowerLeg=(70, 0, 0),
-        RightLowerLeg=(70, 0, 0),
-        LeftFoot=(-16, 0, 0),
-        RightFoot=(-24, 0, 0),
-        **SIEN,
-    )
-    return actuar(t, 84, [(0, G), (10, toma, "sale"), (18, sube, "suave"), (66, sube), (70, baja, "seco"), (76, baja), (84, G)], {"Head": -1})
+    suelta = con(T, raiz=(0, 0, -0.06), Head=(6, -8, 0), LeftUpperArm=(0, -70, 0), RightUpperArm=(0, 70, 0), LeftLowerArm=(-4, 0, 0), RightLowerArm=(-4, 0, 0))
+    return actuar(t, 84, [(0, G), (6, baja, "suave"), (10, sube, "sale"), (66, sube), (70, suelta, "seco"), (76, suelta), (84, G, "suave")], {"Head": -1})
 
 
 def onda(t):
-    # Las dos palmas se juntan a la cadera derecha (5) y empujan adelante con un paso (Impacto 9).
-    junta = con(
-        G,
-        raiz=(0, 0.08, -0.18),
-        LowerTorso=(6, 0, -36),
-        UpperTorso=(4, 0, -34),
-        Head=(10, 0, 62),
-        RightUpperArm=(30, -4, 0),
-        RightLowerArm=(-100, 0, 0),
-        LeftUpperArm=(-20, 60, 0),
-        LeftLowerArm=(-90, 0, 0),
-    )
-    empuja = con(
-        G,
-        raiz=(0, -0.18, -0.18),
-        LowerTorso=(10, 0, -10),
-        UpperTorso=(6, 0, 10),
+    # Prepara: junta las palmas frente al pecho (abajo de la cara). Golpe: las abre de golpe en
+    # abanico, hacia adelante y afuera. Recupera: deja los brazos abiertos y la cabeza ladeada.
+    junta = con(T, Head=(10, 0, 0), LeftUpperArm=(-60, 30, 0), RightUpperArm=(-60, -30, 0), LeftLowerArm=(-70, 0, 0), RightLowerArm=(-70, 0, 0))
+    abre = con(
+        T,
+        raiz=(0, 0, -0.02),
+        UpperTorso=(-10, 0, 0),
         Head=(-6, 0, 0),
-        LeftUpperArm=(-98, 14, 0),
-        RightUpperArm=(-98, -14, 0),
-        LeftLowerArm=(-4, 0, 0),
-        RightLowerArm=(-4, 0, 0),
-        LeftUpperLeg=(-66, -6, 10),
-        RightUpperLeg=(26, 6, 10),
-        LeftLowerLeg=(86, 0, 0),
-        RightLowerLeg=(30, 0, 0),
-        RightFoot=(10, 0, 0),
+        LeftUpperArm=(-70, -64, 0),
+        RightUpperArm=(-70, 64, 0),
+        LeftLowerArm=(-2, 0, 0),
+        RightLowerArm=(-2, 0, 0),
     )
-    queda = con(empuja, raiz=(0, -0.16, -0.18), LeftUpperArm=(-92, 14, 0), RightUpperArm=(-92, -14, 0))
-    return actuar(t, 27, [(0, G), (5, junta, "sale"), (9, pasarse(junta, empuja, 0.05), "seco"), (15, queda, "sale"), (27, G)], {"Head": -1})
+    queda = con(T, Head=(2, 16, 0), LeftUpperArm=(-36, -54, 0), RightUpperArm=(-36, 54, 0), LeftLowerArm=(-10, 0, 0), RightLowerArm=(-10, 0, 0))
+    return actuar(t, 27, [(0, G), (5, junta, "sale"), (9, abre, "seco"), (17, queda, "suave"), (27, G, "suave")], {"Head": -1})
 
 
 NUEVAS = {
-    "electro-rayo-cadena": (rayo_cadena, 24, False, "Action", (6, 10, 15)),
-    "electro-descarga": (descarga, 34, False, "Action", (9, 13, 20)),
-    "electro-salto-cable": (salto_cable, 20, False, "Action", (4, 6, 11)),
-    "criogenia-lanza-hielo": (lanza_hielo, 32, False, "Action", (7, 10, 16)),
-    "criogenia-muro-hielo": (muro_hielo, 40, False, "Action", (9, 15, 24)),
-    "criogenia-pista-helada": (pista_helada, 30, False, "Action", (4, 12, 20)),
-    "telequinesis-lanzar": (lanzar, 30, False, "Action", (6, 12, 18)),
+    "electro-rayo-cadena": (rayo_cadena, 24, False, "Action", (6, 10, 16)),
+    "electro-descarga": (descarga, 34, False, "Action", (9, 13, 22)),
+    "electro-salto-cable": (salto_cable, 20, False, "Action", (4, 6, 13)),
+    "criogenia-lanza-hielo": (lanza_hielo, 32, False, "Action", (7, 10, 18)),
+    "criogenia-muro-hielo": (muro_hielo, 40, False, "Action", (9, 15, 26)),
+    "criogenia-pista-helada": (pista_helada, 30, False, "Action", (3, 5, 18)),
+    "telequinesis-lanzar": (lanzar, 30, False, "Action", (6, 12, 20)),
     "telequinesis-levantar": (levantar, 84, False, "Action", (10, 40, 72)),
-    "telequinesis-onda": (onda, 27, False, "Action", (5, 9, 15)),
+    "telequinesis-onda": (onda, 27, False, "Action", (5, 9, 17)),
 }
 LINAJES = ("electro", "criogenia", "telequinesis")
 A.ANIMACIONES = NUEVAS
@@ -391,13 +433,14 @@ A.MARCADORES.update(
         "electro-salto-cable": [(4, "Sale"), (6, "Llega")],
         "criogenia-lanza-hielo": [(10, "Impacto")],
         "criogenia-muro-hielo": [(15, "Impacto")],
-        "criogenia-pista-helada": [(4, "Impacto")],
+        "criogenia-pista-helada": [(5, "Impacto")],
         "telequinesis-lanzar": [(6, "Agarra"), (12, "Impacto")],
         "telequinesis-levantar": [(10, "Impacto"), (70, "Suelta")],
         "telequinesis-onda": [(9, "Impacto")],
     }
 )
 A.GIRO_CAMARA.update({n: 60 for n in NUEVAS})
+A.GIF_VISTAS.update({n: {"frente": 30} for n in NUEVAS})
 A.B.LENTE *= 0.8
 
 
@@ -428,3 +471,6 @@ if __name__ == "__main__":
     if paso in ("renders", "todo"):
         for linaje in LINAJES:
             A.renders(linaje)
+    if paso in ("gifs", "todo"):
+        for linaje in LINAJES:
+            A.cuadros_gif(linaje)
