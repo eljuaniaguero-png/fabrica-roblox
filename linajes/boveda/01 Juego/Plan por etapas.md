@@ -72,6 +72,9 @@ Juani estima **unas 2 semanas** para el sandbox. Se mide de verdad cuando el com
 4. **Fase 2: modo historia** como pase, con todo lo que antes era "la primera versión" (tabla de abajo).
 5. **Fase 3**: el resto de las ciudades y los Linajes ([[#Plan original (sigue valiendo para después)]]).
 
+> [!important] Qué es el sandbox (Juani, 15 nov 2026)
+> El sandbox es **online**: en el mismo servidor hay **jugadores reales** y **NPCs enemigos que te atacan** para que los derrotes y subas de nivel. Tiene que haber **varios mapas** y **variedad** (enemigos, zonas). Antes de lanzar falta además **hacerlo lindo**: iluminación, modelos, efectos y HUD.
+
 > [!note] Decisiones del 14 nov 2026
 > - El sandbox sale con los **6 Linajes** (confirmado): faltan Electro, Criogenia y Telequinesis.
 > - Orden después del combate: **progresión y creador** primero. Creador de personaje y guardado de apariencia y monedas: **hechos** (14 nov). El árbol de puntos (P37) sigue pendiente.
