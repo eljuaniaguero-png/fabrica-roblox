@@ -5,8 +5,8 @@ tags: [inicio]
 
 RPG de superhéroes para Roblox: combate en tiempo real, multijugador, mundo abierto con 3 ciudades, poderes que te tocan al azar y evolucionan, y una historia que se arma distinta para cada jugador.
 
-> [!important] Dónde estamos (1 nov 2026)
-> Estamos haciendo la **Beta de Puerto Óxido** y **reescribiendo esta bóveda** para que todo esté explicado al detalle. Ver [[Progreso]] y [[Plan de reescritura]].
+> [!important] Dónde estamos (15 nov 2026)
+> Estamos terminando el **sandbox de pelea con 6 Linajes** (Fase 1 del [[Plan por etapas]]). Ya andan el combate, los 6 Linajes, la ruleta, el creador, el árbol de estadísticas y el [[Primer minuto]]. Ver [[Progreso]].
 
 ## Cómo usar esta bóveda
 1. **Qué es el juego**: [[Ficha del juego]]. Desde ahí se llega a todo.
@@ -48,4 +48,6 @@ RPG de superhéroes para Roblox: combate en tiempo real, multijugador, mundo abi
 - [[Calle viva]]: crimen, policía, atracos y noticias.
 - [[Cinemáticas (plan completo)]] y [[Animaciones (plan completo)]].
 - [[Plan por etapas]]: qué entra en la Beta y qué queda para después.
+- [[Primer minuto]]: qué hace el jugador apenas entra.
+- [[Archivo]]: notas viejas que ya no mandan (nada se borra).
 - Sistema de diseño online: https://claude.ai/artifact/WJxLkCEZEGJWzWzuyeU49y

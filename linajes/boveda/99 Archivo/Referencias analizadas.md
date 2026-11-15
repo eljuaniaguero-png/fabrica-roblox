@@ -1,6 +1,9 @@
 ---
 tags: [estilo, referencias]
 ---
+> [!warning] Archivado el 15 nov 2026
+> Lo reemplazan la [[Guía de estilo]] y las notas de [[Referencias]] (09 Referencias).
+
 # Referencias analizadas
 
 Las capturas de `Descargas\referencias` son de 4 tipos. De cada una tomamos **la idea**, nunca personajes, logos ni nombres.

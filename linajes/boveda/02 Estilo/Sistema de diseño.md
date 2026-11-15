@@ -30,6 +30,22 @@ tags: [estilo, ui, hud, diseno]
 
 ---
 
+## 1b. Mapa del HUD en partida (15 nov 2026)
+
+Cada esquina tiene **una sola función**. El centro de la pantalla queda libre para el personaje y la pelea.
+
+| Zona | Qué va | Script |
+|---|---|---|
+| Arriba a la izquierda | Lista **Primeros pasos** (solo en el [[Primer minuto]]) | `Minuto1.client` |
+| Arriba al centro | Barra del **rival** al pegarle; abajo de ella, los **avisos** (no se pisan) | `Combate.client`, `Minuto1.client` |
+| Arriba a la derecha | **M · Menú** y **Ruleta** con las Fichas | `Menu.client`, `Ruleta.client` |
+| Costado derecho | **Contador de combo** | `Combate.client` |
+| Abajo a la izquierda | Nivel, Linaje, **vida**, **energía**, XP y bando | `Estado.client` |
+| Abajo al centro | **Z X C** con su nombre debajo (el rombo G del gancho, oculto hasta el Taller: `Config.Hud.MostrarGancho`) | `Poderes.client` |
+| Abajo a la derecha | Controles: **click, click derecho, Q, F** (botones táctiles en celular) | `Combate.client` |
+
+Reglas: textos de al menos **13 px** a 1080p (los nombres de poderes, 15 px); todo escala con el alto de la pantalla (`Tema.grupo`); las herramientas de prueba (T · cambia Linaje) solo se ven en Studio.
+
 ## 2. Tipografía Única (`Oswald`)
 
 Cargada en `Tema.luau` vía `rbxasset://fonts/families/Oswald.json`. Ningún script cliente puede declarar otra familia tipográfica.

@@ -5,6 +5,9 @@ estado: propuesta-para-claude
 ---
 # Auditoría visual de modelos de personajes y plan de mejoras
 
+> [!check] Estado (15 nov 2026)
+> **Fase 0 hecha** (14 nov, commit `fd6297f`): sin rayas horizontales y neones sin quemar. Fases 1 y 2 pendientes; el arte está frenado hasta que el sandbox ande ([[Plan por etapas]]).
+
 > [!danger] Regla absoluta de este documento
 > **ESTÁ PROHIBIDO bajar triángulos porque sí.** Ningún problema estético actual se resuelve recortando geometría. Todos los modelos respetan el límite técnico de Roblox (`<= 20.000` triángulos por `MeshPart`) y sus presupuestos vigentes en [[Personajes]] y [[Nivel de detalle]]. El objetivo de cada cambio es **subir drásticamente la belleza, la lectura de silueta, el acabado cómic real (`estilo-02-protagonista.png`, `estilo-03-personajes.png`, `estilo-08-remache.png`) y la coherencia con [[Guía de estilo]]**, reasignando detalles dentro del presupuesto o usando mejor el relieve, las UV, los materiales y las proporciones.
 

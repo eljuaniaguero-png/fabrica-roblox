@@ -1,6 +1,9 @@
 ---
 tags: [plan]
 ---
+> [!warning] Archivado el 15 nov 2026
+> Ya se hizo (nov 2026): los prompts siguen la [[Plantilla de prompt]] y el estado está en [[Progreso]].
+
 # Plan de reescritura de la bóveda (1 nov 2026)
 
 Pedido de Juani: que **todos los prompts** sean muy específicos, hasta el mínimo detalle; que cada uno traiga **al menos 2 prompts para Gemini** que armen imágenes de referencia; **depurar lo viejo** de la bóveda y **actualizar todo con mucha información** (historia, Linajes, NPCs, modelos, todo), muy explicado.
