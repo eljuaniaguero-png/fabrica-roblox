@@ -3,6 +3,9 @@ tags: [juego, sandbox, enemigos]
 ---
 # Enemigos del sandbox
 
+> [!warning] Apagados desde el 15 nov 2026
+> Juani sacó los NPCs del sandbox (`Config.Enemigos.Activos = false`). El código y esta nota quedan para otros modos. Ver [[Sandbox - modos y ruleta]].
+
 > [!summary] En tres líneas
 > La arena tiene **3 zonas de enemigos**, cada una con su rango de nivel: cuanto más lejos de la zona segura, más difíciles. Los enemigos aparecen solos, te atacan si te acercás y, al derrotarlos, dan **XP y Chatarra** según su nivel. Así subís de nivel peleando contra NPCs mientras compartís el servidor con jugadores reales.
 

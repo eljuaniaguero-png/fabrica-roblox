@@ -556,7 +556,11 @@ remoto.OnServerEvent:Connect(function(jugador, pedido)
 	if ahora < (propias[clave] or 0) - P.MargenRecarga or energia < datos.Energia then
 		return
 	end
-	propias[clave] = ahora + datos.Recarga * Estadisticas.recarga(personaje)
+	local despierto = personaje:GetAttribute("Despierto") == true
+	propias[clave] = ahora
+		+ datos.Recarga
+			* Estadisticas.recarga(personaje)
+			* (if despierto then Config.Sandbox.Despertar.Recarga else 1)
 	personaje:SetAttribute("Energia", energia - datos.Energia)
 	do
 		local ev = script.Parent:FindFirstChild("Minuto1Hito")

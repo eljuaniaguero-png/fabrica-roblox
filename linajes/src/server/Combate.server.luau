@@ -190,7 +190,21 @@ pegarA = function(atacante: Model, objetivo: Model, danio: number, tipo: string,
 	if desde and enZona(desde.Position) then
 		return
 	end
+	-- 1 V 1: los que están en duelo solo se pegan entre ellos (y nadie de afuera les pega).
+	local jA, jO =
+		Players:GetPlayerFromCharacter(atacante), Players:GetPlayerFromCharacter(objetivo)
+	local dueloA = jA and jA:GetAttribute("DueloCon")
+	local dueloO = jO and jO:GetAttribute("DueloCon")
+	if (dueloA or dueloO) and not (jA and jO and dueloA == jO.UserId and dueloO == jA.UserId) then
+		return
+	end
 	danio *= Niveles.danio(atacante) * Estadisticas.defensa(objetivo)
+	if jA and jA:GetAttribute("Variante") == true then
+		danio *= Config.Sandbox.Variante.Danio
+	end
+	if atacante:GetAttribute("Despierto") == true then
+		danio *= Config.Sandbox.Despertar.Danio
+	end
 	-- Contragolpe: esquiva y responde. Solo sirve contra golpes, no contra quemaduras.
 	if ahora < e.contraHasta and tipo ~= "Suave" then
 		e.contraHasta = 0
@@ -255,7 +269,14 @@ pegarA = function(atacante: Model, objetivo: Model, danio: number, tipo: string,
 		local atacanteJugador = Players:GetPlayerFromCharacter(atacante)
 		if atacanteJugador then
 			hitoMinuto1(atacanteJugador, "Combate")
-			if objetivo:GetAttribute("Maton") then
+			if
+				objetivo:GetAttribute("Maton")
+				or (
+					fuerte
+					and not Config.Enemigos.Activos
+					and not Players:GetPlayerFromCharacter(objetivo)
+				)
+			then
 				hitoMinuto1(atacanteJugador, "Maton")
 			end
 		end
@@ -467,6 +488,13 @@ local function prepararPeleador(personaje: Model)
 		estadoDe(personaje).invulnerableHasta = os.clock() + Config.Arena.ProteccionAparecer
 		h.Died:Once(function()
 			Perfiles.cortarRacha(jugador)
+			local d = Perfiles.datos(jugador)
+			if d then
+				Perfiles.cambiar(
+					jugador,
+					{ Chatarra = d.Chatarra + Config.Monedas.ChatarraPorMuerte }
+				)
+			end
 		end)
 	end
 	personaje.Destroying:Once(function()
@@ -971,6 +999,9 @@ local function primerManiqui(personaje: Model)
 	local r = personaje:WaitForChild("HumanoidRootPart") :: BasePart
 	task.wait(1)
 	crearManiqui(r.CFrame)
+	if not Config.Enemigos.Activos then
+		return -- sandbox sin NPCs (Config.Enemigos.Activos)
+	end
 	for zonaIdx, zona in Config.Enemigos.Zonas do
 		for _ = 1, zona.Max do
 			task.spawn(crearEnemigo, zonaIdx)

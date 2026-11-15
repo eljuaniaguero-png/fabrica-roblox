@@ -619,7 +619,40 @@ Config.Guardado = { Almacen = "Linajes_v1", Version = 2 } -- 2: apariencia, Chat
 
 -- Monedas del juego (solo se ganan jugando; ninguna se vende por Robux).
 Config.Monedas = {
-	ChatarraPorBaja = 10,
+	ChatarraPorBaja = 10, -- por derrotar a otro jugador
+	ChatarraPorMuerte = 4, -- por caer (así el que pierde también junta para otra tirada)
+}
+
+-- Sandbox (bóveda: 01 Juego/Sandbox - modos y ruleta). Al entrar: MODOS → SANDBOX → Free for all
+-- o 1 V 1 → ruleta gratis. La Chatarra solo se gana jugando: NUNCA se vende por Robux, porque compra
+-- tiradas al azar (Guía §6).
+Config.Sandbox = {
+	PrecioTirada = 40, -- Chatarra por otra tirada si no te gustó el Linaje
+	-- Comprar un Linaje directo con Chatarra: dura una sola vida (al caer volvés al de la ruleta).
+	PrecioLinajeVida = { ["Común"] = 60, ["Poco común"] = 120 },
+	-- Variante: rara vez la ruleta te da tu Linaje en versión Variante (otro color y más daño).
+	Variante = {
+		Chance = 0.05, -- 5 %, se muestra en la ruleta
+		Danio = 1.1,
+		Colores = {
+			FuerzaBruta = "#ff3b6b",
+			Reflejos = "#7dff6a",
+			Piroquinesis = "#4d7dff",
+			Electro = "#ff4fd8",
+			Criogenia = "#9dffcf",
+			Telequinesis = "#ffd34d",
+		},
+	},
+	-- Despertar: con 5 bajas seguidas (sin caer) se habilita con G. Dura poco y pega más.
+	Despertar = { Racha = 5, Dura = 25, Danio = 1.3, Recarga = 0.5 },
+	-- 1 V 1: ring aparte, flotando lejos de la arena. Solo se pegan entre los dos.
+	Duelo = {
+		Centro = Vector3.new(-330, 120, 1600),
+		Radio = 34,
+		Separacion = 22,
+		Cuenta = 3, -- segundos de cuenta regresiva quietos
+		PremioChatarra = 30,
+	},
 }
 
 -- Ruleta (server/Ruleta.server.luau). Peso: % del plan de lanzamiento. Los no Disponibles no salen
@@ -1502,6 +1535,8 @@ Config.Efectos = {
 -- Árbol de estadísticas (bóveda: 06 Linajes/Estadísticas y movimiento). 1 punto por nivel de
 -- personaje; cada estadística tiene 10 niveles y entre todas suman 40 como máximo.
 Config.Estadisticas = {
+	-- Apagado el 15 nov 2026: el sandbox no tiene árbol (Juani). Con false, nadie suma nada.
+	Activas = false,
 	PuntosPorNivel = 1,
 	MaxPorStat = 10,
 	MaxTotal = 40,
@@ -1653,6 +1688,8 @@ Config.Sonidos = {
 -- Enemigos del sandbox (bóveda: 01 Juego/Enemigos del sandbox). Zonas relativas a Arena.Mapa.Centro;
 -- cuanto más lejos de la zona segura, más nivel. Los tipos parten de Config.Combate.Matones.
 Config.Enemigos = {
+	-- Apagados el 15 nov 2026 (Juani: "sacar NPCs" del sandbox). El código queda para otros modos.
+	Activos = false,
 	Vuelve = 10, -- segundos hasta que aparece otro en la zona
 	-- Color de los efectos de los enemigos (golpes, tajos, muerte): violeta, para no confundirlos
 	-- con los de los jugadores (que usan el color de su Linaje). El jefe tiene el suyo.

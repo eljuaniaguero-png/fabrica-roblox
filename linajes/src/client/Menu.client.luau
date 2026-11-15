@@ -499,7 +499,7 @@ local function crearItemMenu(
 	local function encender()
 		-- SONIDO: pasar por un botón del menú (Config.Sonidos)
 		tween(txt, RAPIDO, { TextColor3 = Tema.Hueso, Position = UDim2.fromOffset(58, 2) })
-		tween(rombo, RAPIDO, { BackgroundTransparency = 0.15, Rotation = 135 })
+		tween(rombo, RAPIDO, { BackgroundTransparency = 0.15 })
 		tween(banda, RAPIDO, { Size = UDim2.fromScale(1, 1) })
 		tween(
 			raya,
@@ -512,7 +512,7 @@ local function crearItemMenu(
 			TextColor3 = if activo then Tema.Hueso else GRIS,
 			Position = UDim2.fromOffset(42, 2),
 		})
-		tween(rombo, RAPIDO, { BackgroundTransparency = if activo then 0 else 1, Rotation = 45 })
+		tween(rombo, RAPIDO, { BackgroundTransparency = if activo then 0 else 1 })
 		tween(banda, RAPIDO, { Size = UDim2.fromScale(0, 1) })
 		tween(raya, RAPIDO, { Size = UDim2.fromOffset(0, 2) })
 	end
@@ -539,69 +539,10 @@ botonPrincipalTxt = txtContinuar
 subPrincipalTxt = Tema.texto(columna, "", { tam = 17, letra = Tema.LetraFina, color = GRIS })
 subPrincipalTxt.Position = UDim2.fromOffset(42, yBase + 46)
 
--- Fila 2: ESPACIOS < 1 / 3 >
-local _, _, _ = crearItemMenu(yBase + paso, "ESPACIOS", false, IM.Menu.Espacios)
-local espacioActual = 1
-local totalEspacios = 3
-local textoEspacio = Tema.texto(columna, "1 / 3", {
-	tam = 24,
-	letra = Tema.Letra,
-	color = Tema.Hueso,
-	alineado = Enum.TextXAlignment.Center,
-})
-textoEspacio.AutomaticSize = Enum.AutomaticSize.None
-textoEspacio.Position = UDim2.fromOffset(298, yBase + paso + 6)
-textoEspacio.Size = UDim2.fromOffset(72, 34)
-local notaEspacio = Tema.texto(columna, "", { tam = 16, letra = Tema.LetraFina, color = APAGADO })
-notaEspacio.Position = UDim2.fromOffset(42, yBase + paso + 44)
-
-local function crearFlecha(x: number, rotacion: number, textoAlt: string): TextButton
-	local fbtn = Instance.new("TextButton")
-	fbtn.Position = UDim2.fromOffset(x, yBase + paso)
-	fbtn.Size = UDim2.fromOffset(44, 44)
-	fbtn.BackgroundTransparency = 1
-	fbtn.Text = if IM.Menu.Flecha == "" then textoAlt else ""
-	fbtn.TextColor3 = Tema.Hueso
-	fbtn.FontFace = Tema.Letra
-	fbtn.TextSize = 26
-	fbtn.Parent = columna
-	if IM.Menu.Flecha ~= "" then
-		local img = Instance.new("ImageLabel")
-		img.AnchorPoint = Vector2.new(0.5, 0.5)
-		img.Position = UDim2.fromScale(0.5, 0.5)
-		img.Size = UDim2.fromOffset(26, 26)
-		img.Rotation = rotacion
-		img.BackgroundTransparency = 1
-		img.ScaleType = Enum.ScaleType.Fit
-		img.Image = IM.Menu.Flecha
-		img.ImageColor3 = Tema.Hueso
-		img.Parent = fbtn
-	end
-	return fbtn
-end
-
-local btnEspAnt = crearFlecha(256, 180, "‹")
-local btnEspSig = crearFlecha(368, 0, "›")
-
-local function refrescarEspacios()
-	textoEspacio.TextTransparency = 1
-	tween(textoEspacio, RAPIDO, { TextTransparency = 0 })
-	textoEspacio.Text = string.format("%d / %d", espacioActual, totalEspacios)
-	notaEspacio.Text = if espacioActual == 1
-		then "Ranura activa"
-		else "Ranura vacía  ·  Próximamente"
-end
-btnEspAnt.Activated:Connect(function()
-	espacioActual = if espacioActual <= 1 then totalEspacios else espacioActual - 1
-	refrescarEspacios()
-end)
-btnEspSig.Activated:Connect(function()
-	espacioActual = if espacioActual >= totalEspacios then 1 else espacioActual + 1
-	refrescarEspacios()
-end)
-refrescarEspacios()
-
-local btnArbol = crearItemMenu(yBase + paso * 2, "ÁRBOL Y PODERES", false, IM.Menu.Arbol)
+-- Modos del sandbox (15 nov 2026): debajo de SANDBOX, Free for all y 1 V 1. Cada uno abre la ruleta.
+local remotoRuleta = ReplicatedStorage:WaitForChild("Ruleta") :: RemoteEvent
+local btnFFA = crearItemMenu(yBase + paso, "FREE FOR ALL", false, IM.Menu.Arena)
+local btnDuelo = crearItemMenu(yBase + paso * 2, "1 V 1", false, "")
 local btnAjustes = crearItemMenu(yBase + paso * 3, "AJUSTES", false, IM.Menu.Ajustes)
 local btnPersonaje = crearItemMenu(yBase + paso * 4, "PERSONAJE", false, IM.Menu.Creador)
 
@@ -925,9 +866,6 @@ for _, stat in Config.Estadisticas.Orden do
 end
 jugador:GetAttributeChangedSignal("Nivel"):Connect(refrescarArbol)
 
-btnArbol.Activated:Connect(function()
-	abrirSeccion("Arbol")
-end)
 btnAjustes.Activated:Connect(function()
 	abrirSeccion("Ajustes")
 end)
@@ -940,6 +878,7 @@ tarjeta.Size = UDim2.fromOffset(445, 256)
 tarjeta.BackgroundColor3 = Color3.fromRGB(13, 16, 23)
 tarjeta.BackgroundTransparency = 0.1
 tarjeta.BorderSizePixel = 0
+tarjeta.Visible = false -- el sandbox no muestra bando ni monedas en el menú (Juani, 15 nov)
 tarjeta.Parent = contenido
 local bordeTarjeta = Instance.new("UIStroke")
 bordeTarjeta.Color = Tema.Hueso
@@ -984,6 +923,7 @@ btnModos.Text = Tema.espaciar("MODOS Y TIENDA  ·  BETA", 1)
 btnModos.TextColor3 = Tema.Hueso
 btnModos.FontFace = Tema.Letra
 btnModos.TextSize = 12
+btnModos.Visible = false
 btnModos.Parent = contenido
 local bordeModos = Instance.new("UIStroke")
 bordeModos.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
@@ -1056,14 +996,8 @@ local function actualizarMenu()
 	local nombreL = if tieneLinaje
 		then (nombresLinaje[l :: string] or (l :: string))
 		else "SIN LINAJE"
-	botonPrincipalTxt.Text = Tema.espaciar(if tieneLinaje then "CONTINUAR" else "DESPERTAR", 3)
-	subPrincipalTxt.Text = string.format(
-		"%s  ·  %s  ·  %s  ·  NIVEL %d",
-		string.upper(jugador.DisplayName),
-		string.upper(nombreL),
-		string.upper(bando),
-		nivel
-	)
+	botonPrincipalTxt.Text = Tema.espaciar("SANDBOX", 3)
+	subPrincipalTxt.Text = "MODOS  ·  ELEGÍ CÓMO PELEAR  ·  HISTORIA Y RANKED: PRONTO"
 
 	local coloresBando: { [string]: Color3 } = {
 		Cofradia = COFRADIA,
@@ -1240,7 +1174,7 @@ if romboActivo then
 	TweenService:Create(
 		r,
 		TweenInfo.new(1.0, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut, -1, true),
-		{ Size = UDim2.fromOffset(25, 25), Rotation = 135 }
+		{ Size = UDim2.fromOffset(24, 24) } -- solo late: girando pasaba por cuadrado y se veía cortado
 	):Play()
 end
 
@@ -1313,7 +1247,17 @@ btnPersonaje.Activated:Connect(function()
 	setAbierto(false)
 end)
 btnContinuar.Activated:Connect(function()
+	-- SANDBOX es el título del modo: tocarlo entra a Free for all.
 	setAbierto(false)
+	remotoRuleta:FireServer("Partida", "FFA")
+end)
+btnFFA.Activated:Connect(function()
+	setAbierto(false)
+	remotoRuleta:FireServer("Partida", "FFA")
+end)
+btnDuelo.Activated:Connect(function()
+	setAbierto(false)
+	remotoRuleta:FireServer("Partida", "Duelo")
 end)
 cerrarParaJuego = function()
 	setAbierto(false)

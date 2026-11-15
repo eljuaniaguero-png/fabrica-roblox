@@ -27,7 +27,12 @@ local PASOS = {
 	{ clave = "Combate", texto = "Conectá un golpe (LMB / E)" },
 	{ clave = "Defensa", texto = "Usá Dash o Bloqueo (Q / F)" },
 	{ clave = "Poder", texto = "Lanzá un poder (Z / X / C)" },
-	{ clave = "Maton", texto = "Desafiá a un Matón del puerto" },
+	{
+		clave = "Maton",
+		texto = if Config.Enemigos.Activos
+			then "Desafiá a un Matón del puerto"
+			else "Golpe fuerte al maniquí (Click der.)",
+	},
 }
 
 local gui = Tema.pantalla("Minuto1", 4)
@@ -361,7 +366,7 @@ RunService.Heartbeat:Connect(function()
 		pinGui.Enabled = false
 		return
 	end
-	local buscaMaton = jugador:GetAttribute("M1_Combate") == true
+	local buscaMaton = jugador:GetAttribute("M1_Combate") == true and Config.Enemigos.Activos
 	local mejorParte: BasePart? = nil
 	local mejorDist = 180
 	for _, m in CollectionService:GetTagged("Combatiente") do

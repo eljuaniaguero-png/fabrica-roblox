@@ -12,6 +12,9 @@ local E = Config.Estadisticas
 local Estadisticas = {}
 
 function Estadisticas.nivel(jugador: Player?, stat: string): number
+	if not E.Activas then
+		return 0 -- sandbox sin árbol: todos pelean con las mismas estadísticas
+	end
 	local v = jugador and jugador:GetAttribute("St_" .. stat)
 	return if typeof(v) == "number" then v else 0
 end

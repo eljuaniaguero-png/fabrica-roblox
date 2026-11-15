@@ -13,6 +13,8 @@ local Config = require(ReplicatedStorage:WaitForChild("Shared"):WaitForChild("Co
 local Estadisticas = require(ReplicatedStorage:WaitForChild("Shared"):WaitForChild("Estadisticas"))
 local Tema = require(script.Parent:WaitForChild("Tema"))
 local remoto = ReplicatedStorage:WaitForChild("Poderes") :: RemoteEvent
+local remotoDespertar = ReplicatedStorage:WaitForChild("Despertar") :: RemoteEvent
+local EfectosGolpe = require(script.Parent:WaitForChild("EfectosGolpe"))
 
 local P = Config.Poderes
 local K = Enum.KeyCode
@@ -180,6 +182,8 @@ UserInputService.InputBegan:Connect(function(entrada, usado)
 		usar("C")
 	elseif tecla == K.T then
 		remoto:FireServer("Cambiar")
+	elseif tecla == K.G then
+		remotoDespertar:FireServer("Activar") -- el servidor revisa la racha
 	end
 end)
 
@@ -260,6 +264,104 @@ local etiquetaGancho = Tema.texto(
 etiquetaGancho.AnchorPoint = Vector2.new(0.5, 0)
 etiquetaGancho.Position = UDim2.fromOffset(centroGancho.X, centroGancho.Y + tamGancho / 2 + 4)
 etiquetaGancho.Visible = H.MostrarGancho
+
+-- Despertar (sandbox): en el lugar del gancho. Se llena con la racha; con 5 bajas seguidas, G.
+local DE = Config.Sandbox.Despertar
+local romboDespertar = Tema.rombo(caja, centroGancho, tamGancho, true)
+romboDespertar.Visible = not H.MostrarGancho
+local letraDespertar = Tema.texto(
+	romboDespertar,
+	"G",
+	{ tam = 24, letra = Tema.LetraGruesa, alineado = Enum.TextXAlignment.Center }
+)
+letraDespertar.AutomaticSize = Enum.AutomaticSize.None
+letraDespertar.Size = UDim2.fromScale(1, 1)
+letraDespertar.ZIndex = 5
+local etiquetaDespertar =
+	Tema.texto(caja, "", { tam = 13, transparencia = 0.2, alineado = Enum.TextXAlignment.Center })
+etiquetaDespertar.AnchorPoint = Vector2.new(0.5, 0)
+etiquetaDespertar.Position = UDim2.fromOffset(centroGancho.X, centroGancho.Y + tamGancho / 2 + 4)
+etiquetaDespertar.Visible = romboDespertar.Visible
+local brilloDespertar: Tween? = nil
+
+local function actualizarDespertar()
+	local falta = jugador:GetAttribute("DespertarFalta")
+	local f = if typeof(falta) == "number" then falta else DE.Racha
+	local personaje = jugador.Character
+	local despierto = personaje ~= nil and personaje:GetAttribute("Despierto") == true
+	local listoYa = f == 0 and not despierto
+	letraDespertar.TextTransparency = if listoYa or despierto then 0 else 0.6
+	letraDespertar.TextColor3 = if listoYa then Color3.fromHex("#ffd34d") else Tema.Hueso
+	etiquetaDespertar.Text = if despierto
+		then "DESPIERTO"
+		elseif listoYa then "G  ·  ¡DESPERTAR!"
+		else string.format("DESPERTAR  ·  %d/%d", DE.Racha - math.min(f, DE.Racha), DE.Racha)
+	etiquetaDespertar.TextColor3 = if listoYa or despierto
+		then Color3.fromHex("#ffd34d")
+		else Tema.Hueso
+	if listoYa and not brilloDespertar then
+		brilloDespertar = TweenService:Create(
+			letraDespertar,
+			TweenInfo.new(0.5, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut, -1, true),
+			{ TextTransparency = 0.45 }
+		);
+		(brilloDespertar :: Tween):Play()
+	elseif not listoYa and brilloDespertar then
+		brilloDespertar:Cancel()
+		brilloDespertar = nil
+	end
+end
+jugador:GetAttributeChangedSignal("DespertarFalta"):Connect(actualizarDespertar)
+local function seguirPersonaje(personaje: Model)
+	personaje:GetAttributeChangedSignal("Despierto"):Connect(actualizarDespertar)
+	actualizarDespertar()
+end
+jugador.CharacterAdded:Connect(seguirPersonaje)
+if jugador.Character then
+	seguirPersonaje(jugador.Character)
+end
+actualizarDespertar()
+
+-- Efecto de Despertar para todos: pilar del Eclipse y aura del color del Linaje mientras dura.
+remotoDespertar.OnClientEvent:Connect(function(tipo: string, personaje: any, dura: any)
+	if tipo ~= "Despierta" or typeof(personaje) ~= "Instance" or not personaje:IsA("Model") then
+		return
+	end
+	local r = personaje:FindFirstChild("HumanoidRootPart")
+	if not (r and r:IsA("BasePart")) then
+		return
+	end
+	local dueno = Players:GetPlayerFromCharacter(personaje)
+	local linaje = dueno and dueno:GetAttribute("Linaje")
+	local color = Tema.color(linaje)
+	local hexV = dueno
+		and dueno:GetAttribute("Variante") == true
+		and typeof(linaje) == "string"
+		and (Config.Sandbox.Variante.Colores :: any)[linaje]
+	if typeof(hexV) == "string" then
+		color = Color3.fromHex(hexV)
+	end
+	-- SONIDO: despertar (golpe grave + coro)
+	EfectosGolpe.columnaDespertar(r.Position - Vector3.new(0, 3, 0), color, 1.2)
+	EfectosGolpe.onda(r.Position - Vector3.new(0, 3, 0), 14, color)
+	local aura = Instance.new("Highlight")
+	aura.Name = "AuraDespertar"
+	aura.FillColor = color
+	aura.FillTransparency = 0.7
+	aura.OutlineColor = color
+	aura.OutlineTransparency = 0
+	aura.Parent = personaje
+	local luz = Instance.new("PointLight")
+	luz.Color = color
+	luz.Range = 14
+	luz.Brightness = 2.5
+	luz.Parent = r
+	local d = if typeof(dura) == "number" then dura else DE.Dura
+	task.delay(d, function()
+		aura:Destroy()
+		luz:Destroy()
+	end)
+end)
 
 type Ranura = {
 	caja: Frame,

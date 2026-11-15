@@ -158,6 +158,12 @@ local function colorDe(atacante: Model?): Color3
 	end
 	local dueno = atacante and Players:GetPlayerFromCharacter(atacante)
 	local linaje = dueno and dueno:GetAttribute("Linaje")
+	if dueno and typeof(linaje) == "string" and dueno:GetAttribute("Variante") == true then
+		local hex = (Config.Sandbox.Variante.Colores :: any)[linaje]
+		if typeof(hex) == "string" then
+			return Color3.fromHex(hex) -- Variante: otro color para que se note
+		end
+	end
 	return typeof(linaje) == "string" and (Config.Poderes.Colores :: any)[linaje] or C.ColorChispas
 end
 
